@@ -1,0 +1,36 @@
+{
+  "name": "vue-data-ui",
+  "private": false,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "A Vue data visualization components library",
+  "keywords": ["Vue", "data visualization", "chart", "table"],
+  "author": "Alec Lloyd Probert",
+  "license": "MIT",
+  "files": ["dist"],
+  "main": "./dist/vue-data-ui.umd.cjs",
+  "module": "./dist/vue-data-ui.js",
+  "exports": {
+    ".": {
+      "import" : "./dist/vue-data-ui.js",
+      "export": "./dist/vue-data-ui.umd.cjs"
+    },
+    "./style.css" : "./dist/style.css"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1",
+    "xlsx": "^0.18.5",
+    "vue-data-ui": "file:../vue-data-ui"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "vite": "^4.4.5"
+  }
+}
