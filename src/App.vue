@@ -5,7 +5,29 @@ const dataset = ref([
         {
           name: "Series 1",
           series: [ -55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+          type: "bar",
+        },
+        {
+          name: "Series 2",
+          series: [-55, -34, -21, -13, -18, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
           type: "bar"
+        },
+        {
+          name: "Series 3",
+          series: [-55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+          type: "line"
+        },
+        {
+          name: "Series 4",
+          series: [0, 1, 2, 3, 5, null, 13, 21, 34, 55,],
+          type: "line"
+        },
+      ]);
+const dataset2 = ref([
+        {
+          name: "Series 1",
+          series: [ -55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+          type: "bar",
         },
         {
           name: "Series 2",
@@ -28,6 +50,8 @@ const dataset = ref([
         chart: {
           tooltip: {
             roundingPercentage: 0,
+            backgroundColor: "red",
+            color: "white"
           },
           userOptions: {
             show: true,
@@ -38,9 +62,11 @@ const dataset = ref([
           },
           grid: {
             labels: {
+              color: "red",
               axis: {
                 xLabel: "x label",
                 yLabel: "yLabel",
+                fontSize: 20,
               },
               xAxisLabels: {
                 values: [
@@ -300,7 +326,10 @@ const dataset = ref([
 
 <template>
   <div>
-    <VueUiXy :config="config" :dataset="dataset"/>
+    <div style="max-width:1000px; margin:0 auto">
+      <VueUiXy :config="config" :dataset="dataset"/>
+      <VueUiXy :config="config" :dataset="dataset2"/>
+    </div>
     <VueUiTable :header="head" :body="body"/>
   </div>
 </template>

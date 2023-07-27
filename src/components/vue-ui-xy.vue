@@ -90,12 +90,12 @@
             <!-- DEFS BARS -->
             <template v-for="(serie, i) in barSet" :key="`def_rect_${i}`">
                 <defs>
-                    <linearGradient :id="`rectGradient_pos_${i}`" x2="0%" y2="100%">
+                    <linearGradient :id="`rectGradient_pos_${i}_${uniqueId}`" x2="0%" y2="100%">
                         <stop offset="0%" :stop-color="serie.color"/>
                         <stop offset="62%" :stop-color="`${shiftHue(serie.color, 0.02)}DE`"/>
                         <stop offset="100%" :stop-color="`${shiftHue(serie.color, 0.05)}66`"/>
                     </linearGradient>
-                    <linearGradient :id="`rectGradient_neg_${i}`" x2="0%" y2="100%">
+                    <linearGradient :id="`rectGradient_neg_${i}_${uniqueId}`" x2="0%" y2="100%">
                         <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.05)}66`"/>
                         <stop offset="38%" :stop-color="`${shiftHue(serie.color, 0.02)}DE`"/>
                         <stop offset="100%" :stop-color="serie.color"/>
@@ -106,7 +106,7 @@
             <!-- DEFS PLOTS -->
             <template v-for="(serie, i) in plotSet" :key="`def_plot_${i}`">
                 <defs>
-                    <radialGradient :id="`plotGradient_${i}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <radialGradient :id="`plotGradient_${i}_${uniqueId}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
                         <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.05)}`"/>
                         <stop offset="100%" :stop-color="serie.color" />
                     </radialGradient>
@@ -116,7 +116,7 @@
             <!-- DEFS LINES -->
             <template v-for="(serie, i) in lineSet" :key="`def_line_${i}`">
                 <defs>
-                    <radialGradient :id="`lineGradient_${i}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <radialGradient :id="`lineGradient_${i}_${uniqueId}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
                         <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.05)}`"/>
                         <stop offset="100%" :stop-color="serie.color" />
                     </radialGradient>
@@ -134,7 +134,7 @@
                         :y="calcRectY(plot)"
                         :height="calcRectHeight(plot)"
                         :width="calcRectWidth()"
-                        :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i})`: `url(#rectGradient_neg_${i})` : serie.color"
+                        :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                     />
                 </g>
             </g>
@@ -150,7 +150,7 @@
                         :cx="plot.x"
                         :cy="plot.y"
                         :r="chartConfig.plot.radius"
-                        :fill="chartConfig.plot.useGradient ? `url(#plotGradient_${i})` : serie.color"
+                        :fill="chartConfig.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : serie.color"
                         :stroke="chartConfig.chart.backgroundColor"
                         stroke-width="0.5"
                     />
@@ -177,7 +177,7 @@
                         :cx="plot.x"
                         :cy="plot.y"
                         :r="chartConfig.line.radius"
-                        :fill="chartConfig.line.useGradient ? `url(#lineGradient_${i})` : serie.color"
+                        :fill="chartConfig.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
                         :stroke="chartConfig.chart.backgroundColor"
                         stroke-width="0.5"
                     />
@@ -254,6 +254,7 @@
                         :y="yLabel.y + chartConfig.chart.labels.fontSize / 3" 
                         :font-size="chartConfig.chart.grid.labels.fontSize" 
                         text-anchor="end"
+                        :fill="chartConfig.chart.grid.labels.color"
                     >
                         {{ canShowValue(yLabel.value) ? yLabel.value.toFixed(0) : '' }}
                     </text>
@@ -262,7 +263,7 @@
 
             <!-- AXIS LABELS -->
             <g>
-                <text v-if="chartConfig.chart.grid.labels.axis.yLabel" id="yAxisLabel" text-anchor="middle" style="transition: none">
+                <text v-if="chartConfig.chart.grid.labels.axis.yLabel" :font-size="chartConfig.chart.grid.labels.axis.fontSize" :fill="chartConfig.chart.grid.labels.color" id="yAxisLabel" text-anchor="middle" style="transition: none">
                     {{ chartConfig.chart.grid.labels.axis.yLabel }}
                 </text>
                 <text 
@@ -271,6 +272,7 @@
                     :x="chartConfig.chart.width / 2"
                     :y="drawingArea.bottom + chartConfig.chart.grid.labels.axis.fontSize + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3"
                     :font-size="chartConfig.chart.grid.labels.axis.fontSize"
+                    :fill="chartConfig.chart.grid.labels.color"
                 >
                     {{ chartConfig.chart.grid.labels.axis.xLabel }}
                 </text>
@@ -310,7 +312,7 @@
                             <span :style="`color:${legendItem.color}`" v-if="['plot'].includes(legendItem.type)">●</span>
                             <span :style="`color:${legendItem.color}`" v-if="['line'].includes(legendItem.type)">▬</span>
                             <span :style="`color:${legendItem.color}`" v-if="['bar'].includes(legendItem.type)">◼</span>
-                            <span>{{legendItem.name}}</span>
+                            <span :style="`color:${chartConfig.chart.legend.color}`">{{legendItem.name}}</span>
                         </div>
                     </div>
                 </foreignObject>
@@ -326,6 +328,7 @@
                     :y="drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3"
                     :x="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
                     :font-size="chartConfig.chart.grid.labels.xAxisLabels.fontSize"
+                    :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
                 >
                     {{ chartConfig.chart.grid.labels.xAxisLabels.values[i] || "" }}
                 </text>
@@ -351,7 +354,7 @@
         <div v-if="chartConfig.chart.legend.show && (!mutableConfig.legendInside || isPrinting)" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
             <div v-for="(legendItem, i) in absoluteDataset" :key="`div_legend_item_${i}`" @click="segregate(legendItem)" :class="{'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated' : segregatedSeries.includes(legendItem.id)}">
                 <span :style="`color:${legendItem.color}`" v-html="icons[legendItem.type]"/>
-                <span>{{legendItem.name}}</span>
+                <span :style="`color:${chartConfig.chart.legend.color}`">{{legendItem.name}}</span>
             </div>
         </div>
 
@@ -360,7 +363,7 @@
             class="vue-ui-xy-tooltip"
             ref="tooltip"
             v-if="chartConfig.chart.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px; left:${tooltipPosition.left}px`"
+            :style="`top:${tooltipPosition.top}px; left:${tooltipPosition.left}px; background-color:${chartConfig.chart.tooltip.backgroundColor}, color:${chartConfig.chart.tooltip.color}`"
             v-html="tooltipContent"
         />
 
@@ -394,6 +397,9 @@ import html2canvas from 'html2canvas';
 import JsPDF from "jspdf";
 import * as XLSX from 'xlsx';
 
+// TOD0:
+// . add emit on click (emit all data at given index, maybe choose which to emit if multiseries; so it could dynamically feed another chart)
+
 export default {
     name: "vue-ui-xy",
     props: {
@@ -411,6 +417,7 @@ export default {
         }
     },
     data(){
+        const uniqueId = `vue-data-ui-xy_${Math.random()}_${Math.random()}`;
         return {
             useSafeValues: true,
             defaultColors: [
@@ -454,6 +461,7 @@ export default {
                         stroke: "#e1e5e8",
                         showVerticalLines: false,
                         labels: {
+                            color: "black",
                             show: true,
                             fontSize: 10,
                             axis: {
@@ -462,6 +470,7 @@ export default {
                                 fontSize: 12,
                             },
                             xAxisLabels: {
+                                color: "black",
                                 show: true,
                                 values: [],
                                 fontSize: 6,
@@ -472,9 +481,10 @@ export default {
                         fontSize: 10,
                     },
                     legend: {
+                        color: "black",
                         show: true,
                         useDiv: true,
-                        fontSize: 16
+                        fontSize: 16,
                     },
                     title: {
                         show: true,
@@ -492,9 +502,11 @@ export default {
                         }
                     },
                     tooltip: {
+                        color: "white",
+                        backgroundColor: "white",
                         show: true,
                         showValue: true,
-                        showPercentage: true,
+                        showPercentage: false,
                         roundingValue: 0,
                         roundingPercentage: 0,
                     },
@@ -566,6 +578,7 @@ export default {
             selectedSerieIndex: null,
             selectedRowIndex: null,
             segregatedSeries: [],
+            uniqueId
         }
     },
     computed: {
@@ -594,7 +607,7 @@ export default {
                     series: datapoint.series.map(d => {
                         return this.isSafeValue(d) ? d : null
                     }),
-                    id: `uid_${i}`
+                    id: `uniqueId_${i}`
                 }
             });
         },
@@ -747,7 +760,7 @@ export default {
                     html += `<div><span style="color:${s.color}; margin-right: 3px">${this.icons[s.type]}</span>${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? s.value.toFixed(this.chartConfig.chart.tooltip.roundingValue) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
                 }
             });
-            return `<div style="font-variant-numeric: tabular-nums">${html}</div>`;
+            return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
         },
         tooltipPosition() {
             const tooltip = this.$refs.tooltip;
@@ -1236,13 +1249,10 @@ export default {
     transition: all 0.11s ease-in-out;
 }
 .vue-ui-xy-tooltip {
-    background: white;
-    color: black;
     border: 1px solid #e1e5e8;
     border-radius: 4px;
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
     max-width: 300px;
-    padding: 12px;
     position: fixed;
     z-index:1;
 }
