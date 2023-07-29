@@ -1,3 +1,5 @@
+![Screenshot](public/logo.png)
+
 npm i vue-data-ui
 
 # vue-data-ui

@@ -334,7 +334,7 @@ const dataset2 = ref([
       useChart: true,
     })
 
-    const darkConfig = ref(ref({
+    const darkConfig = ref({
     fontFamily: "inherit",
     maxHeight: 700,
     rowsPerPage: 25,
@@ -497,7 +497,7 @@ const dataset2 = ref([
         totalRows: "Total rows",
     },
     useChart: true
-}))
+})
 
 </script>
 
