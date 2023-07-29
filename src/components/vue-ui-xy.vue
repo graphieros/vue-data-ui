@@ -11,9 +11,9 @@
             </div>
         </div>
 
-        <details class="vue-ui-xy-user-options" data-html2canvas-ignore v-if="chartConfig.chart.userOptions.show" ref="details">
-            <summary style="`background:${chartConfig.chart.background};color:${chartConfig.chart.color}`">{{ chartConfig.chart.userOptions.title }}</summary>
-            <div class="vue-ui-xy-user-options-items">
+        <details class="vue-ui-xy-user-options" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`" data-html2canvas-ignore v-if="chartConfig.chart.userOptions.show" ref="details">
+            <summary :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">{{ chartConfig.chart.userOptions.title }}</summary>
+            <div class="vue-ui-xy-user-options-items" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">
                 <div class="vue-ui-xy-user-option-item">
                     <input type="checkbox" id="vue-ui-xy-option-datalabels" name="vue-ui-xy-option-datalabels"
                     v-model="mutableConfig.dataLabels.show">
@@ -1195,8 +1195,6 @@ export default {
     top:0;
     user-select:none;
     max-width: 300px;
-    background: inherit;
-    color: black;
 }
 .vue-ui-xy-user-options[open] {
     border: 1px solid #e1e5e8;

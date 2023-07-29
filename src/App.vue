@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
+import TableTest from "./components/vue-ui-table.vue";
 
 const dataset = ref([
         {
@@ -48,6 +49,8 @@ const dataset2 = ref([
 
       const config = ref({
         chart: {
+          color: "red",
+          background: "white",
           tooltip: {
             roundingPercentage: 0,
             backgroundColor: "red",
@@ -322,14 +325,188 @@ const dataset2 = ref([
       return generateRandomData();
       })
 
+      const tableTestDataset = {
+        header: head.value,
+        body: body.value,
+      }
+
+    const tableConfig = ref({
+      useChart: true,
+    })
+
+    const darkConfig = ref(ref({
+    fontFamily: "inherit",
+    maxHeight: 700,
+    rowsPerPage: 25,
+    style: {
+        th: {
+            backgroundColor: "#1a1a1a",
+            color:"#c4c9cc",
+            outline: "1px solid #7b8185",
+            selected: {
+                backgroundColor: "#42d392",
+                color: "#1a1a1a"
+            }
+        },
+        rows: {
+            even: {
+                backgroundColor: "#1a1a1a",
+                color: "#c4c9cc",
+                selectedCell: {
+                    backgroundColor: '#42d392',
+                    color: "#2D353C"
+                },
+                selectedNeighbors: {
+                    backgroundColor: "#075e37",
+                    color: "#FFFFFF"
+                }
+            },
+            odd: {
+                backgroundColor: "#2A2A2A",
+                color: "#FFFFFF",
+                selectedCell: {
+                    backgroundColor: '#5de8aa',
+                    color: "#2D353C"
+                },
+                selectedNeighbors: {
+                    backgroundColor: "#0c7a49",
+                    color: "#FFFFFF"
+                }
+            },
+        },
+        inputs: {
+            backgroundColor: "#FFFFFF",
+            color: "#2D353C",
+            border: "1px solid #CCCCCC",
+            accentColor: "#42d392"
+        },
+        dropdowns: {
+            backgroundColor: "#1a1a1a",
+            color: "#c4c9cc",
+            icons: {
+                selected: {
+                    color: "#42d392",
+                    unicode: "✔"
+                },
+                unselected: {
+                    color: "#ff6400",
+                    unicode: "✖"
+                }
+            }
+        },
+        infoBar: {
+            backgroundColor: "#1a1a1a",
+            color: "#FFFFFF"
+        },
+        pagination: {
+            buttons: {
+                backgroundColor: "#1a1a1a",
+                color: "#E1E5E8",
+                opacityDisabled: 0.3
+            },
+            navigationIndicator: {
+                backgroundColor: "#42d392"
+            }
+        },
+        exportMenu: {
+            backgroundColor: "#1a1a1a",
+            color: "#E1E5E8",
+            buttons: {
+                backgroundColor: "#42d392",
+                color: "#2D353C"
+            }
+        },
+        closeButtons: {
+            backgroundColor: "transparent",
+            color: "#ff6400",
+            borderRadius: "50%"
+        },
+        chart: {
+            modal: {
+                backgroundColor: "#1a1a1a",
+                color: "#E1E5E8",
+                buttons: {
+                  selected: {
+                      backgroundColor: "#42d392",
+                      color: "#1a1a1a"
+                    },
+                    unselected: {
+                      backgroundColor: "#1a1a1a",
+                      color: "#E1E5E8"
+                    }
+                }
+            },
+            layout: {
+                backgroundColor: "#1a1a1a",
+                axis: {
+                    stroke: "#ccd1d4",
+                    strokeWidth: 2,
+                },
+                bar: {
+                    fill: "#42d392",
+                    stroke: "#1a1a1a"
+                },
+                line: {
+                    stroke: "#42d392",
+                    strokeWidth: 4,
+                    plot: {
+                        fill: "#5fe3a8",
+                        stroke: "#FFFFFF",
+                        strokeWidth: 1,
+                        radius: {
+                            selected: 6,
+                            unselected: 4,
+                        }
+                    },
+                    selector: {
+                        stroke: "#ff6400",
+                        strokeWidth: 1,
+                        strokeDasharray: 5
+                    },
+                },
+                labels: {
+                    color: "#ccd1d4"
+                },
+                progression: {
+                    stroke: "#FFFFFF",
+                    strokeWidth: 2,
+                    strokeDasharray: 4,
+                    arrowSize: 7,
+                }
+            },
+        }
+    },
+    translations: {
+        average: "Average",
+        by: "by",
+        chooseCategoryColumn: "Choose category column",
+        exportAllButton: "XLSX all",
+        exportAllLabel: "Export all rows of your current filtered dataset",
+        exportPageButton: "XLSX page",
+        exportPageLabel: "Export rows of the current page",
+        from: "From",
+        inputPlaceholder: "Search...",
+        makeDonut: "Generate",
+        nb: "Nb",
+        page: "Page",
+        paginatorLabel: "Rows per page",
+        sizeWarning: "Displaying too many rows at a time can lead to slower performance",
+        sum: "Sum",
+        to: "To",
+        total: 'Total',
+        totalRows: "Total rows",
+    },
+    useChart: true
+}))
+
 </script>
 
 <template>
   <div>
-    <div style="max-width:1000px; margin:0 auto">
+    <div style="max-width:1000px; margin:0 auto" v-if="false">
       <VueUiXy :config="config" :dataset="dataset"/>
-      <VueUiXy :config="config" :dataset="dataset2"/>
     </div>
-    <VueUiTable :header="head" :body="body"/>
+    <TableTest :dataset="tableTestDataset" :config="darkConfig"/>
+    <VueUiTable :dataset="tableTestDataset" :config="tableConfig"/>
   </div>
 </template>

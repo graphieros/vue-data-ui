@@ -1,43 +1,43 @@
 <template>
-    <div class="smart-table-main" :style="`font-family: ${fontFamily}`">
-        <div class="smart-table-export-hub">
-            <button @click="isExportRequest = !isExportRequest" v-html="icons.export"/>
-            <div class="smart-table-export-hub-dropdown" :data-is-open="isExportRequest || 'false'">
-                <b class="smart-table-export-hub-title">
+    <div class="vue-ui-table-main" :style="`font-family: ${tableConfig.fontFamily}`">
+        <div class="vue-ui-table-export-hub">
+            <button @click="isExportRequest = !isExportRequest" v-html="icons.export" :style="`background:${tableConfig.style.exportMenu.backgroundColor};color:${tableConfig.style.exportMenu.color}`"/>
+            <div class="vue-ui-table-export-hub-dropdown" :data-is-open="isExportRequest || 'false'" :style="`background:${tableConfig.style.exportMenu.backgroundColor};color:${tableConfig.style.exportMenu.color}`">
+                <b class="vue-ui-table-export-hub-title">
                     Export
                 </b>
-                <button class="close-dropdown" @click="isExportRequest = false">
+                <button class="close-dropdown" @click="isExportRequest = false" :style="`background:${tableConfig.style.closeButtons.backgroundColor};color:${tableConfig.style.closeButtons.color};border-radius:${tableConfig.style.closeButtons.borderRadius}`">
                     ✖
                 </button>
-                <div class="smart-table-export-hub-options">
-                    <div class="smart-table-export-hub-option-wrapper">
+                <div class="vue-ui-table-export-hub-options">
+                    <div class="vue-ui-table-export-hub-option-wrapper">
                         <div class="label">
-                            {{ translations.exportAllLabel }} 
+                            {{ tableConfig.translations.exportAllLabel }} 
                             ({{ bodyCopy.length }})
                         </div>
-                        <button id="exportAll" @click="createXls('all')">
+                        <button id="exportAll" @click="createXls('all')" :style="`background:${tableConfig.style.exportMenu.buttons.backgroundColor};color:${tableConfig.style.exportMenu.buttons.color}`">
                             <div v-html="icons.fileDownload"/>
-                            <span>{{ translations.exportAllButton }}</span>
+                            <span>{{ tableConfig.translations.exportAllButton }}</span>
                         </button>
                     </div>
-                    <div class="smart-table-export-hub-option-wrapper">
+                    <div class="vue-ui-table-export-hub-option-wrapper">
                         <div class="label">
-                            {{ translations.exportPageLabel }}
+                            {{ tableConfig.translations.exportPageLabel }}
                         </div>
-                        <button id="exportPage" @click="createXls('page')">
+                        <button id="exportPage" @click="createXls('page')" :style="`background:${tableConfig.style.exportMenu.buttons.backgroundColor};color:${tableConfig.style.exportMenu.buttons.color}`">
                             <div v-html="icons.fileDownload"/>
-                            <span>{{ translations.exportPageButton }}</span>
+                            <span>{{ tableConfig.translations.exportPageButton }}</span>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
         <div 
-            class="smart-table__wrapper" 
-            :style="`max-height:${maxHeight}`" 
+            class="vue-ui-table__wrapper" 
+            :style="`max-height:${tableConfig.maxHeight}px`" 
             ref="tableWrapper"
         >  
-            <table class="smart-table">
+            <table class="vue-ui-table">
                 <!-- TABLE HEAD -->
                 <thead id="tableHead">
                     <!-- HEADERS -->
@@ -46,19 +46,14 @@
                         <th 
                             v-for="(th,i) in tableHead" 
                             :key="`thead_${i}`" 
-                            style="overflow: visible; position:relative"
+                            :style="`overflow: visible;background:${tableConfig.style.th.backgroundColor};color:${tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
                             :class="{'th-has-nan': hasNaN[i]}"
                         >
-                            <div 
-                                v-if="hasNumericTypes && ([constants.TEXT, constants.DATE].includes(th.type) || th.isPercentage)"
-                                class="th-fusion"
-                            >
-                                <span>{{ th.name }} 
-                                    <span v-if="th.isPercentage">
-                                        / {{ th.percentageTo }}
-                                    </span>
+                            <span v-if="hasNumericTypes && ([constants.TEXT, constants.DATE].includes(th.type) || th.isPercentage)">{{ th.name }} 
+                                <span v-if="th.isPercentage">
+                                    / {{ th.percentageTo }}
                                 </span>
-                            </div>
+                            </span>
                             <span v-else>{{ th.name }}</span>
                         </th>
                     </tr>
@@ -70,6 +65,7 @@
                                 v-for="(th,i) in tableHead" 
                                 :key="`thead_${i}`"
                                 :class="{'th-numeric': true, 'th-has-nan': hasNaN[i]}"
+                                :style="`background:${tableConfig.style.th.backgroundColor};color:${tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
                             >
                                 <span 
                                     v-if="th.sum && !hasNaN[i]" 
@@ -99,6 +95,7 @@
                                 v-for="(th,i) in tableHead" 
                                 :key="`thead_${i}`"
                                 :class="{'th-numeric': true, 'th-has-nan': hasNaN[i]}"
+                                :style="`background:${tableConfig.style.th.backgroundColor};color:${tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
                             >
                                 <span v-if="th.average && !hasNaN[i]">
                                     ~ {{ th.prefix }} 
@@ -115,6 +112,7 @@
                                 v-for="(th,i) in tableHead" 
                                 :key="`thead_${i}`"
                                 :class="{'th-has-nan': hasNaN[i]}"
+                                :style="`background:${tableConfig.style.th.backgroundColor};color:${tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
                             >
                                 <div class="th-filter">
                                     <!-- DATE -->
@@ -123,18 +121,19 @@
                                             <div class="date-wrapper--inputs">
                                                 <div class="date-fieldset">
                                                     <label :for="`from_${i}`">
-                                                        {{ translations.from }}
+                                                        {{ tableConfig.translations.from }}
                                                     </label>
                                                     <input 
                                                         :id="`from_${i}`" 
                                                         type="date" 
                                                         v-model="dates[i].from" 
                                                         @input="filterBody(); setFilterDatesIndexes(i)"
+                                                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
                                                     >
                                                 </div>
                                                 <div class="date-fieldset">
                                                     <label :for="`to_${i}`">
-                                                        {{ translations.to }}
+                                                        {{ tableConfig.translations.to }}
                                                     </label>
                                                     <input 
                                                         :id="`to_${i}`" 
@@ -142,6 +141,7 @@
                                                         v-model="dates[i].to" 
                                                         @input="filterBody(); 
                                                         setFilterDatesIndexes(i)"
+                                                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
                                                     >
                                                 </div>
                                             </div>
@@ -150,6 +150,7 @@
                                                     v-if="th.isSort" 
                                                     @click="sortTh(i, $event)" 
                                                     :class="{'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i])}"
+                                                    :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : tableConfig.style.pagination.buttons.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : tableConfig.style.pagination.buttons.color}`"
                                                 >
                                                     <span 
                                                         v-if="sorts[i] === constants.ASC" 
@@ -175,16 +176,18 @@
                                     <!-- SEARCH -->
                                     <input
                                         v-if="th.isSearch"
-                                        :placeholder="translations.inputPlaceholder"
+                                        :placeholder="tableConfig.translations.inputPlaceholder"
                                         v-model="searches[i]"
                                         @input="debounce(filterBody, 400)"
                                         :name="`search_${i}`"
+                                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
                                     >
                                     <!-- SORT -->
                                     <button 
                                         v-if="!hasNaN[i] && th.isSort && th.type !== constants.DATE"
                                         @click="sortTh(i, $event)"
                                         :class="{'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i])}"
+                                        :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : tableConfig.style.pagination.buttons.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : tableConfig.style.pagination.buttons.color}`"
                                     >
                                         <span 
                                             v-if="sorts[i] === constants.ASC" 
@@ -203,6 +206,7 @@
                                         @click="toggleMultiselect(i, th, $event)" 
                                         v-html="icons.filter"
                                         :class="{'th-button-active': multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length }"
+                                        :style="`background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : tableConfig.style.pagination.buttons.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : tableConfig.style.pagination.buttons.color}`"
                                     />
 
                                     <!-- SHOW CHART -->
@@ -211,6 +215,7 @@
                                         @click="showChart = !showChart"
                                         v-html="icons.chart"
                                         :class="{'th-button-active': showChart }"
+                                        :style="`background:${showChart ? '' : tableConfig.style.pagination.buttons.backgroundColor};color:${showChart ? '' : tableConfig.style.pagination.buttons.color}`"
                                     />
 
                                     <div v-if="th.rangeFilter && rangeFilters[i] && !hasNaN[i]" class="th-range-filter">
@@ -221,7 +226,8 @@
                                             :max="immutableRangeFilters[i].max" 
                                             :min="immutableRangeFilters[i].min" 
                                             v-model.number="rangeFilters[i].min"
-                                            @input="debounce(filterBody, 400)" 
+                                            @input="debounce(filterBody, 400)"
+                                            :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
                                         >
                                         <input 
                                             type="number" 
@@ -230,6 +236,7 @@
                                             :min="immutableRangeFilters[i].min" 
                                             v-model.number="rangeFilters[i].max"
                                             @input="debounce(filterBody, 400)" 
+                                            :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
                                         >
                                         <label :for="`rangeMax${i}`"><span style="color:grey">ᒪ</span> max <span style="color:grey">ᒧ</span></label>
                                     </div>
@@ -250,8 +257,9 @@
                                         v-if="th.isMultiselect"
                                         data-is-open="false"
                                         :id="`th_dropdown_${i}`"
+                                        :style="`background:${tableConfig.style.dropdowns.backgroundColor};color:${tableConfig.style.dropdowns.color}`"
                                     >
-                                        <button class="close-dropdown" @click="toggleMultiselect(i, th, $event)">
+                                        <button class="close-dropdown" @click="toggleMultiselect(i, th, $event)" :style="`background:${tableConfig.style.closeButtons.backgroundColor};color:${tableConfig.style.closeButtons.color}`">
                                             ✖
                                         </button>
                                         <span 
@@ -264,11 +272,11 @@
                                             :style="`opacity:${isDropdownOptionSelected(option, i) ? 1 : 0.5}`"
                                             tabindex="0"
                                         >
-                                            <span v-if="isDropdownOptionSelected(option, i)" style="color: green" class="th-icon-green">
-                                                ✔
+                                            <span v-if="isDropdownOptionSelected(option, i)" :style="`color:${tableConfig.style.dropdowns.icons.selected.color};margin-right:5px`" class="th-icon-green">
+                                                {{ tableConfig.style.dropdowns.icons.selected.unicode }}
                                             </span>
-                                            <span v-else style="color: red" class="th-icon-red">
-                                                ✖
+                                            <span v-else :style="`color:${tableConfig.style.dropdowns.icons.unselected.color};margin-right:5px`" class="th-icon-red">
+                                                {{ tableConfig.style.dropdowns.icons.unselected.unicode }}
                                             </span>
                                             <span>
                                                 {{ option }}
@@ -286,7 +294,8 @@
                         <th 
                             v-for="(colSelector, i) in tableHead" 
                             :key="`col_selector_${i}`"
-                            :class="{'smart-table-col-selector': !hasNaN[i], 'col-selector--selected': i === selectedColumn && !hasNaN[i], 'th-has-nan': hasNaN[i] }"
+                            :class="{'vue-ui-table-col-selector': !hasNaN[i], 'th-has-nan': hasNaN[i] }"
+                            :style="`background:${i === selectedColumn && !hasNaN[i] ? tableConfig.style.th.selected.backgroundColor : tableConfig.style.th.backgroundColor};color:${i === selectedColumn && !hasNaN[i] ? tableConfig.style.th.selected.color : tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
                         >
                             <div
                                 v-if="!hasNaN[i]"
@@ -302,35 +311,36 @@
 
                 <!-- TABLE BODY -->
                 <tbody @click="closeAllDropdowns" @keydown="navigateCell($event)">
-                    <tr v-for="(tr, i) in visibleRows" :key="`tbody_${i}`">
-                        <td class="smart-table-td-iteration">{{ tr.absoluteIndex + 1 }}</td>
+                    <tr v-for="(tr, i) in visibleRows" :key="`tbody_${i}`" :data-row="i % 2 === 0 ? 'odd' : 'even'" :class="`tr_${uid}`" :style="`${i % 2 === 0 ? `background:${tableConfig.style.rows.odd.backgroundColor};color:${tableConfig.style.rows.odd.color}` : `background:${tableConfig.style.rows.even.backgroundColor};color:${tableConfig.style.rows.even.color}`}`">
+                        <td class="vue-ui-table-td-iteration" :data-row="i % 2 === 0 ? 'odd' : 'even'">{{ tr.absoluteIndex + 1 }}</td>
                         <td 
+                            :data-row="i % 2 === 0 ? 'odd' : 'even'"
                             v-for="(td, j) in tr.td" 
                             :key="`td_${i}_${j}`"
-                            :style="isNumeric(td) || header[j].type === constants.DATE ? `text-align:right;font-variant-numeric: tabular-nums;` : ''"
+                            :style="isNumeric(td) || dataset.header[j].type === constants.DATE ? `text-align:right;font-variant-numeric: tabular-nums;` : ''"
                             @click="selectTd({
                                 td,
                                 rowIndex: i,
                                 colIndex: j,
-                                headerType: header[j].type,
+                                headerType: dataset.header[j].type,
                                 event: $event
                             })"
                             @keyup.enter="selectTd({
                                 td,
                                 rowIndex: i,
                                 colIndex: j,
-                                headerType: header[j].type,
+                                headerType: dataset.header[j].type,
                                 event: $event
                             })"
                             @keyup.space="selectTd({
                                 td,
                                 rowIndex: i,
                                 colIndex: j,
-                                headerType: header[j].type,
+                                headerType: dataset.header[j].type,
                                 event: $event
                             })"
-                            :class="{'td-numeric': header[j].type === constants.NUMERIC, 'td-focusable': true, 'td-has-nan': hasNaN[j]}"
-                            :id="`cell_${i}_${j}`"
+                            :class="{'td-numeric': dataset.header[j].type === constants.NUMERIC, 'td-focusable': true, 'td-has-nan': hasNaN[j]}"
+                            :id="`cell_${i}_${j}_${uid}`"
                             tabindex="0"
                         >
                             <!-- ICON -->
@@ -341,40 +351,40 @@
                             />
 
                             <!-- DATE -->
-                            <span v-if="header[j].type === constants.DATE">
-                                {{ header[j].prefix }} 
+                            <span v-if="dataset.header[j].type === constants.DATE">
+                                {{ dataset.header[j].prefix }} 
                                 {{ new Date(td).toLocaleString().slice(0,10) }} 
-                                {{ header[j].suffix }}
+                                {{ dataset.header[j].suffix }}
                             </span>
 
                             <!-- PERCENTAGE -->
-                            <span v-else-if="header[j].isPercentage">
-                                {{ Number((td * 100).toFixed(header[j].decimals)).toLocaleString() }}% 
+                            <span v-else-if="dataset.header[j].isPercentage">
+                                {{ Number((td * 100).toFixed(dataset.header[j].decimals)).toLocaleString() }}% 
                             </span>
 
                             <!-- NUMERIC VALUE WITH PERCENTAGE TO SUM OF ANOTHER COL -->
                             <span 
-                                v-else-if="(percentages[j] && header[j].percentageTo && !header[j].isPercentage)" 
+                                v-else-if="(percentages[j] && dataset.header[j].percentageTo && !dataset.header[j].isPercentage)" 
                                 :class="{'td-nan': isNaN(Number(td))}"
                             >
-                               {{ header[j].prefix }} 
-                               {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` : Number(td.toFixed(header[j].decimals)).toLocaleString() }} 
-                               {{ header[j].suffix }} 
-                               ({{ isNaN(Number(td)) ? '' : Number((td / getSum(percentages[j].referenceIndex) * 100).toFixed(header[j].decimals)).toLocaleString() }}%)
+                               {{ dataset.header[j].prefix }} 
+                               {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` : Number(td.toFixed(dataset.header[j].decimals)).toLocaleString() }} 
+                               {{ dataset.header[j].suffix }} 
+                               ({{ isNaN(Number(td)) ? '' : Number((td / getSum(percentages[j].referenceIndex) * 100).toFixed(dataset.header[j].decimals)).toLocaleString() }}%)
                             </span>
 
                             <!-- NUMERIC -->
-                            <span v-else-if="header[j].type === constants.NUMERIC" :class="{'td-nan': isNaN(Number(td))}">
-                               {{ header[j].prefix }} 
-                               {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` : Number(td.toFixed(header[j].decimals)).toLocaleString() }} 
-                               {{ header[j].suffix }}
+                            <span v-else-if="dataset.header[j].type === constants.NUMERIC" :class="{'td-nan': isNaN(Number(td))}">
+                               {{ dataset.header[j].prefix }} 
+                               {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` : Number(td.toFixed(dataset.header[j].decimals)).toLocaleString() }} 
+                               {{ dataset.header[j].suffix }}
                             </span>
 
                             <!-- ALL OTHER -->
                             <span v-else>
-                                {{ header[j].prefix }} 
+                                {{ dataset.header[j].prefix }} 
                                 {{ td }} 
-                                {{ header[j].suffix }}
+                                {{ dataset.header[j].suffix }}
                             </span>
                         </td>
                     </tr>
@@ -384,55 +394,56 @@
 
         <!-- INFO BAR (active if numeric cells are selected) -->
          <div 
-            :class="{'td-selector-info': true, 'td-selector-info--active': currentSelectionSpan.col !== undefined && currentSelectionSpan.rows.length}"
+            :class="{'td-selector-info': true, 'td-selector-info--active': currentSelectionSpan.col !== undefined && currentSelectionSpan.rows.length}" :style="`background:${tableConfig.style.infoBar.backgroundColor};color:${tableConfig.style.infoBar.color}`"
         >
             <template v-if="currentSelectionSpan.col !== undefined && currentSelectionSpan.rows.length">
                 <div v-html="icons.table" class="td-selector-icon"/>
                 <span>
                     <!-- NAME OF SELECTED COLUMN -->
                     <b>
-                        {{ header[currentSelectionSpan.col].name }} 
-                        <span v-if="header[currentSelectionSpan.col].isPercentage">
-                            / {{ header[percentages[currentSelectionSpan.col].referenceIndex].name }}
+                        {{ dataset.header[currentSelectionSpan.col].name }} 
+                        <span v-if="dataset.header[currentSelectionSpan.col].isPercentage">
+                            / {{ dataset.header[percentages[currentSelectionSpan.col].referenceIndex].name }}
                         </span>
                     </b>
 
                     <!-- NB OF SELECTED CELLS -->
                     <span style="margin-left:12px">
-                        {{ translations.nb }} : <b class="format-num">{{ currentSelectionSpan.rows.length }}</b>
+                        {{ tableConfig.translations.nb }} : <b class="format-num">{{ currentSelectionSpan.rows.length }}</b>
                     </span>
 
                     <!-- SUM OF SELECTED CELLS -->
                     <span style="margin-left: 12px">
-                        {{ translations.sum }} : 
-                        <b class="format-num" v-if="header[currentSelectionSpan.col].isPercentage">
+                        {{ tableConfig.translations.sum }} : 
+                        <b class="format-num" v-if="dataset.header[currentSelectionSpan.col].isPercentage">
                             {{selectedCellsCalculations.sumPercentage }}
                         </b>
                         <b v-else class="format-num">
-                            {{ header[currentSelectionSpan.col].prefix }}
+                            {{ dataset.header[currentSelectionSpan.col].prefix }}
                             {{ selectedCellsCalculations.sumRegular }} 
-                            {{ header[currentSelectionSpan.col].suffix }}
+                            {{ dataset.header[currentSelectionSpan.col].suffix }}
                         </b>
-                        <b v-if="header[currentSelectionSpan.col].isPercentage">%</b>
+                        <b v-if="dataset.header[currentSelectionSpan.col].isPercentage">%</b>
                     </span>
 
                     <!-- AVERAGE OF SELECTED CELLS -->
                     <span style="margin-left: 12px">
-                        {{ translations.average }} : 
-                        <b v-if="header[currentSelectionSpan.col].isPercentage" class="format-num">
+                        {{ tableConfig.translations.average }} : 
+                        <b v-if="dataset.header[currentSelectionSpan.col].isPercentage" class="format-num">
                             {{ selectedCellsCalculations.averagePercentage }}
                         </b>
                         <b v-else class="format-num">
-                            {{ header[currentSelectionSpan.col].prefix }} 
+                            {{ dataset.header[currentSelectionSpan.col].prefix }} 
                             {{ selectedCellsCalculations.averageRegular }} 
-                            {{ header[currentSelectionSpan.col].suffix }}
+                            {{ dataset.header[currentSelectionSpan.col].suffix }}
                         </b>
-                        <b v-if="header[currentSelectionSpan.col].isPercentage">%</b>
+                        <b v-if="dataset.header[currentSelectionSpan.col].isPercentage">%</b>
                     </span>
                 </span>
                 <button 
                     @click="resetSelection"
                     class="td-selector-info-reset"
+                    :style="`background:${tableConfig.style.closeButtons.backgroundColor};color:${tableConfig.style.closeButtons.color};border-radius:${tableConfig.style.closeButtons.borderRadius}`"
                 >
                     ✖
                 </button>
@@ -440,60 +451,63 @@
         </div>
 
         <!-- PAGINATOR -->
-        <div class="smart-table-paginator format-num" v-if="bodyCopy.length > 10">
-            {{ translations.totalRows }} : {{ body.length }} |  
-            {{ translations.paginatorLabel }} :
+        <div class="vue-ui-table-paginator format-num" v-if="bodyCopy.length > 10">
+            {{ tableConfig.translations.totalRows }} : {{ dataset.body.length }} |  
+            {{ tableConfig.translations.paginatorLabel }} :
             <select 
                 id="paginatorSelector" 
                 v-model.number="itemsPerPage" 
                 v-if="bodyCopy.length > 10" 
                 @change="resetSelection"
+                :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
             >
                 <template v-for="(option, i) in paginatorOptions">
                     <option 
                         :key="`paginator_option_${i}`" 
-                        v-if="bodyCopy.length > option || body.length === option"
+                        v-if="bodyCopy.length > option || dataset.body.length === option"
                     >
                         {{ option }}
                     </option>
                 </template>
             </select>
         </div>
-        <div class="smart-table-size-warning" v-if="itemsPerPage >= 250">
-            <span v-html="icons.warning"/>{{ translations.sizeWarning }}
+        <div class="vue-ui-table-size-warning" v-if="itemsPerPage >= 250">
+            <span v-html="icons.warning"/>{{ tableConfig.translations.sizeWarning }}
         </div>
 
         <!-- PAGINATION -->
         <div 
-            class="smart-table-navigation-indicator" 
+            class="vue-ui-table-navigation-indicator" 
             v-if="pages.length > 1 && pages.length <= 10" 
-            :style="`width:calc(${(currentPage / (pages.length - 1)) * 100}%)`"
+            :style="`background:${tableConfig.style.pagination.navigationIndicator.backgroundColor};width:calc(${(currentPage / (pages.length - 1)) * 100}%)`"
         />
-        <div class="smart-table-pagination format-num" v-if="pages.length > 1">
+        <div class="vue-ui-table-pagination format-num" v-if="pages.length > 1">
             <!-- PREVIOUS PAGE -->
             <button 
-                class="smart-table-navigation" 
+                class="vue-ui-table-navigation" 
                 @click.stop="navigate('previous')" 
                 v-html="icons.chevronLeft"
                 :disabled="currentPage === 0"
+                :style="`background:${tableConfig.style.pagination.buttons.backgroundColor};color:${tableConfig.style.pagination.buttons.color};opacity:${currentPage === 0 ? tableConfig.style.pagination.buttons.opacityDisabled : 1}`"
             />
             <template v-if="pages.length > 3">
                 <!-- FIRST PAGE -->
                 <button 
-                    class="smart-table-navigation" 
+                    class="vue-ui-table-navigation" 
                     @click.stop="navigate(1)" 
                     :disabled="currentPage === 0"
+                    :style="`background:${tableConfig.style.pagination.buttons.backgroundColor};color:${tableConfig.style.pagination.buttons.color};opacity:${currentPage === 0 ? tableConfig.style.pagination.buttons.opacityDisabled : 1}`"
                 >
                     1
                 </button>
                 <!-- PAGE SCROLLER -->
-                <div v-if="pages.length > 10" class="smart-table-page-scroller-wrapper">
+                <div v-if="pages.length > 10" class="vue-ui-table-page-scroller-wrapper">
                     <label for="pageScroller" style="font-size: 14px">
-                        {{ translations.page }} 
+                        {{ tableConfig.translations.page }} 
                         {{ currentPage + 1 }} / {{ pages.length }}
                     </label>
                     <input
-                        class="smart-table-page-scroller"
+                        class="vue-ui-table-page-scroller"
                         id="pageScroller"
                         type="range" 
                         step="1" 
@@ -501,40 +515,43 @@
                         :max="pages.length-1" 
                         @input="updateCurrentPage($event)" 
                         :value="currentPage"
+                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border};accent-color:${tableConfig.style.inputs.accentColor}`"
                     >
                 </div>
                 <span v-else>
-                    {{ translations.page }} 
+                    {{ tableConfig.translations.page }} 
                     {{ currentPage + 1 }} / {{ pages.length }}
                 </span>
                 <!-- LAST PAGE -->
                 <button 
-                    class="smart-table-navigation" 
+                    class="vue-ui-table-navigation" 
                     @click.stop="navigate(pages.length)" 
                     :disabled="currentPage === pages.length - 1"
+                    :style="`background:${tableConfig.style.pagination.buttons.backgroundColor};color:${tableConfig.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? tableConfig.style.pagination.buttons.opacityDisabled : 1}`"
                 >
                     {{ pages.length }}
                 </button>
             </template>
             <template v-else>
-                {{ translations.page }} 
+                {{ tableConfig.translations.page }} 
                 {{ currentPage + 1 }} / {{ pages.length }}
             </template>
             <!-- NEXT PAGE -->
             <button 
-                class="smart-table-navigation" 
+                class="vue-ui-table-navigation" 
                 @click.stop="navigate('next')" 
                 v-html="icons.chevronRight"
                 :disabled="currentPage === pages.length -1"
+                :style="`background:${tableConfig.style.pagination.buttons.backgroundColor};color:${tableConfig.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? tableConfig.style.pagination.buttons.opacityDisabled : 1}`"
             />
         </div>
 
         <!-- CHART MODAL -->
-        <div class="smart-table-chart-modal" 
+        <div class="vue-ui-table-chart-modal" 
             v-if="showChart && canChart" 
-            :style="`top:${clientY}px; left:${clientX}px`"
+            :style="`top:${clientY}px; left:${clientX}px;background:${tableConfig.style.chart.modal.backgroundColor};color:${tableConfig.style.chart.modal.color}`"
         >
-            <button class="close-chart-modal" @click="showChart = false">
+            <button class="close-chart-modal" @click="showChart = false" :style="`background:${tableConfig.style.closeButtons.backgroundColor};color:${tableConfig.style.closeButtons.color};border-radius:${tableConfig.style.closeButtons.borderRadius}`">
                 ✖
             </button>
             <div class="chart-modal-options">
@@ -543,27 +560,30 @@
                     @click="showDonutOptions = true" 
                     v-html="icons.donut" 
                     :class="{'is-active-chart' : chart.type === constants.DONUT || showDonutOptions}"
+                    :style="`background:${chart.type === constants.DONUT || showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.backgroundColor : tableConfig.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.color : tableConfig.style.chart.modal.buttons.unselected.color}`"
                 />
                 <button 
                     @click="chart.type = constants.LINE; showDonutOptions = false" 
                     v-html="icons.chart" 
                     :class="{'is-active-chart' : chart.type === constants.LINE && !showDonutOptions}"
+                    :style="`background:${chart.type === constants.LINE && !showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.backgroundColor : tableConfig.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.color : tableConfig.style.chart.modal.buttons.unselected.color}`"
                 />
                 <button 
                     @click="chart.type = constants.BAR; showDonutOptions = false" 
                     v-html="icons.bar" 
                     :class="{'is-active-chart' : chart.type === constants.BAR && !showDonutOptions}"
+                    :style="`background:${chart.type === constants.BAR && !showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.backgroundColor : tableConfig.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.color : tableConfig.style.chart.modal.buttons.unselected.color}`"
                 />
             </div>
 
             <!-- CHART TITLE -->
             <div style="margin-bottom:12px">
-                <b>{{ header[currentSelectionSpan.col].name }} 
-                    <span v-if="header[currentSelectionSpan.col].isPercentage && header[currentSelectionSpan.col].percentageTo">
-                        / {{ header[percentages[currentSelectionSpan.col].referenceIndex].name }}
+                <b>{{ dataset.header[currentSelectionSpan.col].name }} 
+                    <span v-if="dataset.header[currentSelectionSpan.col].isPercentage && dataset.header[currentSelectionSpan.col].percentageTo">
+                        / {{ dataset.header[percentages[currentSelectionSpan.col].referenceIndex].name }}
                     </span>
                     <span v-if="chart.type === constants.DONUT && selectedDonutCategory && selectedDonutCategory.name">
-                        {{ translations.by }}
+                        {{ tableConfig.translations.by }}
                         {{ selectedDonutCategory.name }}
                     </span>
                 </b>
@@ -574,20 +594,21 @@
                 ref="chartModal"
             >
                 <!-- DONUT OPTIONS -->
-                <div v-if="showDonutOptions && availableDonutCategories.length">
-                    <fieldset class="smart-table-fieldset">
+                <div v-if="showDonutOptions && availableDonutCategories.length" :style="`background:${tableConfig.style.chart.modal.backgroundColor};color:${tableConfig.style.chart.modal.color}`">
+                    <fieldset class="vue-ui-table-fieldset">
                         <legend>
-                            {{ translations.chooseCategoryColumn }}
+                            {{ tableConfig.translations.chooseCategoryColumn }}
                         </legend>
-                        <div class="smart-table-fieldset-wrapper">
+                        <div class="vue-ui-table-fieldset-wrapper">
                             <template v-for="(option, i) in availableDonutCategories" :key="`donut_radio_${i}`">
-                                <div class="smart-table-fieldset-option" >
+                                <div class="vue-ui-table-fieldset-option" >
                                     <input
                                         type="radio"
                                         :name="option.name"
                                         :id="option.name"
                                         :checked="selectedDonutCategory && option.name === selectedDonutCategory.name"
                                         @input="selectedDonutCategory = availableDonutCategories[i]"
+                                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border};accent-color:${tableConfig.style.inputs.accentColor}`"
                                     />
                                     <label 
                                         :for="option.name"
@@ -597,22 +618,22 @@
                                 </div>
                             </template>
                         </div>
-                        <button class="smart-table-generate-donut" :disabled="!selectedDonutCategory" @click="applyDonutOption">
+                        <button class="vue-ui-table-generate-donut" :disabled="!selectedDonutCategory" @click="applyDonutOption" :style="`background:${tableConfig.style.chart.modal.buttons.selected.backgroundColor};color:${tableConfig.style.chart.modal.buttons.selected.color}`">
                             <div style="margin-bottom: -3px" v-html="icons.donut"/>
-                            {{ translations.makeDonut }}
+                            {{ tableConfig.translations.makeDonut }}
                         </button>
                     </fieldset>
                 </div>
 
                 <!-- BAR | LINE CHARTS -->
                 <template v-if="[constants.BAR, constants.LINE].includes(chart.type) && !showDonutOptions">
-                    <svg :viewBox="`0 0 ${chart.width} ${chart.height}`" class="smart-table-chart-svg">
+                    <svg :viewBox="`0 0 ${chart.width} ${chart.height}`" class="vue-ui-table-chart-svg" :style="`background:${tableConfig.style.chart.layout.backgroundColor}`">
                         <defs>
-                            <marker id="arrowhead" markerWidth="7" markerHeight="7" 
-                            refX="0" refY="3.5" orient="auto">
+                            <marker id="arrowhead" :markerWidth="tableConfig.style.chart.layout.progression.arrowSize" :markerHeight="tableConfig.style.chart.layout.progression.arrowSize" 
+                            refX="0" :refY="tableConfig.style.chart.layout.progression.arrowSize/2" orient="auto">
                                 <polygon 
-                                    points="0 0, 7 3.5, 0 7" 
-                                    fill="grey"
+                                    :points="`0 0, ${tableConfig.style.chart.layout.progression.arrowSize} ${tableConfig.style.chart.layout.progression.arrowSize/2}, 0 ${tableConfig.style.chart.layout.progression.arrowSize}`" 
+                                    :fill="tableConfig.style.chart.layout.progression.stroke"
                                 />
                             </marker>
                         </defs>
@@ -624,8 +645,8 @@
                                 :x2="chart.width" 
                                 :y1="chartData.zero" 
                                 :y2="chartData.zero" 
-                                stroke="#ccd1d4" 
-                                stroke-width="2" 
+                                :stroke="tableConfig.style.chart.layout.axis.stroke" 
+                                :stroke-width="tableConfig.style.chart.layout.axis.strokeWidth" 
                                 stroke-linecap="round"
                             />
                             <line 
@@ -633,8 +654,8 @@
                                 :x2="0" 
                                 :y1="0" 
                                 :y2="chart.height" 
-                                stroke="#ccd1d4" 
-                                stroke-width="2" 
+                                :stroke="tableConfig.style.chart.layout.axis.stroke" 
+                                :stroke-width="tableConfig.style.chart.layout.axis.strokeWidth" 
                                 stroke-linecap="round"
                             />
                         </g>
@@ -676,8 +697,8 @@
                                     :y="calcRectY(plot.value, plot.y)" 
                                     :height="plot.value >= 0 ? chartData.zero - plot.y : plot.y - chartData.zero" 
                                     :width="chartData.slot" 
-                                    :fill="selectedPlot === i ? plot.value >= 0 ? 'url(#barGradientSelected)' : 'url(#barGradientSelectedNeg)' : plot.value >=0 ? 'url(#barGradient)' : 'url(#barGradient)'"  
-                                    stroke="white" 
+                                    :fill="tableConfig.style.chart.layout.bar.fill ? tableConfig.style.chart.layout.bar.fill : selectedPlot === i ? plot.value >= 0 ? 'url(#barGradientSelected)' : 'url(#barGradientSelectedNeg)' : plot.value >=0 ? 'url(#barGradient)' : 'url(#barGradient)'"  
+                                    :stroke="tableConfig.style.chart.layout.bar.stroke" 
                                     stroke-width="1"
                                 />
                                 <foreignObject 
@@ -688,9 +709,9 @@
                                     :width="chartData.slot < 100 ? 100 : chartData.slot" 
                                     style="overflow:visible"
                                 >
-                                    <div style="width:100%;text-align:center;font-size:20px">
+                                    <div :style="`width:100%;text-align:center;font-size:20px;color:${tableConfig.style.chart.layout.labels.color}`">
                                         {{ plot.prefix }} 
-                                        {{ Number(plot.value.toFixed(header[currentSelectionSpan.col].decimals)).toLocaleString() }}
+                                        {{ Number(plot.value.toFixed(dataset.header[currentSelectionSpan.col].decimals)).toLocaleString() }}
                                         {{ plot.suffix }}
                                     </div>
                                 </foreignObject>
@@ -704,8 +725,8 @@
                                     :y1="plot.y" 
                                     :x2="chartData.plots[i+1].x" 
                                     :y2="chartData.plots[i+1].y" 
-                                    stroke-width="3" 
-                                    stroke="#6376DD75"
+                                    :stroke-width="tableConfig.style.chart.layout.line.strokeWidth" 
+                                    :stroke="tableConfig.style.chart.layout.line.stroke"
                                 />
                                 <line 
                                     v-if="selectedPlot === i" 
@@ -713,17 +734,17 @@
                                     :y1="plot.y" 
                                     :x2="plot.x" 
                                     :y2="chart.height" 
-                                    stroke="grey" 
-                                    stroke-width="1" 
-                                    stroke-dasharray="3"
+                                    :stroke="tableConfig.style.chart.layout.line.selector.stroke" 
+                                    :stroke-width="tableConfig.style.chart.layout.line.selector.strokeWidth" 
+                                    :stroke-dasharray="tableConfig.style.chart.layout.line.selector.strokeDasharray"
                                 />
                                 <circle 
                                     :cx="plot.x" 
                                     :cy="plot.y" 
-                                    :r="selectedPlot === i ? 6 : 4" 
-                                    fill="#22348f" 
-                                    stroke="white" 
-                                    stroke-width="1"
+                                    :r="selectedPlot === i ? tableConfig.style.chart.layout.line.plot.radius.selected : tableConfig.style.chart.layout.line.plot.radius.unselected" 
+                                    :fill="tableConfig.style.chart.layout.line.plot.fill" 
+                                    :stroke="tableConfig.style.chart.layout.line.plot.stroke" 
+                                    :stroke-width="tableConfig.style.chart.layout.line.plot.strokeWidth"
                                 />
                                 <foreignObject 
                                     v-if="selectedPlot === i" 
@@ -737,9 +758,9 @@
                                     :width="chartData.slot < 100 ? 100 : chartData.slot" 
                                     style="overflow:visible"
                                 >
-                                    <div style="width:100%;text-align:center;font-size:20px">
+                                    <div :style="`width:100%;text-align:center;font-size:20px;color:${tableConfig.style.chart.layout.labels.color}`">
                                         {{ plot.prefix }} 
-                                        {{ Number(plot.value.toFixed(header[currentSelectionSpan.col].decimals)).toLocaleString() }} 
+                                        {{ Number(plot.value.toFixed(dataset.header[currentSelectionSpan.col].decimals)).toLocaleString() }} 
                                         {{ plot.suffix }}
                                     </div>
                                 </foreignObject>
@@ -747,7 +768,7 @@
                         </g>
 
                         <!-- MOUSE TRAPS -->
-                        <g v-for="(plot,i) in chartData.plots" :key="`trap_${i}`">
+                        <g v-for="(_,i) in chartData.plots" :key="`trap_${i}`">
                             <rect 
                                 :x="i * chartData.slot" 
                                 :y="0" :width="chartData.slot" 
@@ -765,20 +786,20 @@
                             :y1="chartData.progression.y1" 
                             :x2="chartData.progression.x2" 
                             :y2="chartData.progression.y2" 
-                            stroke="grey" 
-                            stroke-width="2" 
-                            stroke-dasharray="4"
+                            :stroke="tableConfig.style.chart.layout.progression.stroke"
+                            :stroke-width="tableConfig.style.chart.layout.progression.strokeWidth" 
+                            :stroke-dasharray="tableConfig.style.chart.layout.progression.strokeDasharray"
                             marker-end="url(#arrowhead)"
                         />
                     </svg>
-                    <div v-if="chartData.plots.length >=2" class="chart-trend">
+                    <div v-if="chartData.plots.length >=2" class="chart-trend" :style="`color:${tableConfig.style.chart.modal.color}`">
                         <span>---</span> Trend: <span>{{ chartData.progression.slope < 0 ? '+' : '-' }}</span> {{ ((Math.abs(chartData.progression.slope)) * 100).toFixed(1) }} %
                     </div>
                 </template>
 
                 <!-- DONUT CHART -->
                 <template v-if="[constants.DONUT].includes(chart.type) && !showDonutOptions">
-                    <svg viewBox="0 0 100 100" style="overflow: visible; padding: 0 24px" class="smart-table-donut-chart">
+                    <svg viewBox="0 0 100 100" :style="`overflow: visible; padding: 0 24px;background:${tableConfig.style.chart.layout.backgroundColor}`" class="vue-ui-table-donut-chart">
                         <path 
                             v-for="(arc, i) in currentDonut" 
                             :key="`arc_${i}`" 
@@ -797,46 +818,47 @@
                             width="30"
                             style="overflow:visible; display:flex;align-items:center;justify-content:center"
                         >
-                            <div v-if="isArcBigEnough(arc)" class="smart-table-donut-label">
+                            <div v-if="isArcBigEnough(arc)" class="vue-ui-table-donut-label" :style="`color:${tableConfig.style.chart.layout.labels.color}`">
                                 <b>{{ displayArcPercentage(arc, currentDonut) }}</b>
-                                <span class="smart-table-donut-label-name">{{ arc.name }}</span>
+                                <span class="vue-ui-table-donut-label-name">{{ arc.name }}</span>
                             </div>
                         </foreignObject>
 
-                        <text :x="50" :y="42" text-anchor="middle" font-size="6">
-                            {{ translations.total }}
+                        <text :x="50" :y="42" text-anchor="middle" font-size="6" :fill="tableConfig.style.chart.layout.labels.color">
+                            {{ tableConfig.translations.total }}
                         </text>
-                        <text :x="50" :y="48" text-anchor="middle" font-size="4">
-                            {{ header[currentSelectionSpan.col].prefix }}
+                        <text :x="50" :y="48" text-anchor="middle" font-size="4" :fill="tableConfig.style.chart.layout.labels.color">
+                            {{ dataset.header[currentSelectionSpan.col].prefix }}
                             {{ donutHollowLabels.total }}
-                            {{ header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
-                            {{ header[currentSelectionSpan.col].suffix }}
+                            {{ dataset.header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
+                            {{ dataset.header[currentSelectionSpan.col].suffix }}
                         </text>
-                        <text :x="50" :y="56" text-anchor="middle" font-size="6">
-                            {{ translations.average }}
+                        <text :x="50" :y="56" text-anchor="middle" font-size="6" :fill="tableConfig.style.chart.layout.labels.color">
+                            {{ tableConfig.translations.average }}
                         </text>
-                        <text :x="50" :y="62" text-anchor="middle" font-size="4">
-                            {{ header[currentSelectionSpan.col].prefix }}
+                        <text :x="50" :y="62" text-anchor="middle" font-size="4" :fill="tableConfig.style.chart.layout.labels.color">
+                            {{ dataset.header[currentSelectionSpan.col].prefix }}
                             {{ donutHollowLabels.average }}
-                            {{ header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
-                            {{ header[currentSelectionSpan.col].suffix }}
+                            {{ dataset.header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
+                            {{ dataset.header[currentSelectionSpan.col].suffix }}
                         </text>
                     </svg>
 
                     <!-- DONUT LEGEND  -->
-                    <div class="smart-table-donut-legend">
+                    <div class="vue-ui-table-donut-legend">
                         <div 
                             v-for="(legendItem, i) in currentDonut.filter(c => c.value > 0)" 
-                            class="smart-table-donut-legend-item" 
+                            class="vue-ui-table-donut-legend-item" 
                             :key="`donut_legend_${i}`"
+                            :style="`color:${tableConfig.style.chart.layout.labels.color}`"
                         >
                             <span :style="`color:${legendItem.color}`">●</span>
                             <span>{{ legendItem.name }} : </span>
                             <b>
-                                {{ header[currentSelectionSpan.col].prefix }}
+                                {{ dataset.header[currentSelectionSpan.col].prefix }}
                                 {{ getDonutLegendValue(legendItem.absoluteValue) }}
-                                {{ header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
-                                {{ header[currentSelectionSpan.col].suffix }}
+                                {{ dataset.header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
+                                {{ dataset.header[currentSelectionSpan.col].suffix }}
                             </b>
                             <span>({{ (legendItem.proportion * 100).toFixed(1) }}%)</span>
                         </div>
@@ -849,90 +871,235 @@
 </template>
 
 <script>
-// TODO: check null values and corrupted props
+// ISSUES:
+// bar chart with only neg values overflows top af
+// color of close button in dropdowns
+// line selector must start from relativeZero
+
 import * as XLSX from 'xlsx';
 
 export default {
     name: "vue-ui-table",
     props: {
-        locale: {
-            type: String,
-            default: "fr-fr"
-        },
-        header: {
-            /** Defines the shape of table columns
-             *  Datastructure is an array of objects with one object for each column:
-             * 
-             *  [
-             *      {
-             *          name: string; (displayed name)
-             *          type: string; "text" | "numeric" | "date"
-             *          average: boolean;
-             *          decimals: number | undefined;
-             *          sum: boolean; (if true, will display the sum in the table head)
-             *          isSort: boolean; (if true, will show a sort button in the table head)
-             *          isSearch: boolean; (if true, will show a search input in the table head)
-             *          isMultiselect: boolean; (if true, will build a dropdown based on categories provided in the body at this column index)
-             *          isPercentage: boolean; (if true, will push to the row a percentage based on the targeted column)
-             *          percentageTo: string; (must be the exact name of another column). If isPercentage = false; will show quantites with percentage / target column in the same cell
-             *          suffix: string; (append any string to all values related to this column, like €, $ etc)
-             *          prefix: string; (prepend any string to all values related to this column, like €, $ etc)
-             *          rangeFilter: boolean; (show min max inputs to filter numeric columns)
-             *      },
-             *      {...}
-             *  ]
-             * 
-             * 
-             */
-            type: Array,
-            default() {
-                return []
-            }
-        },
-        body: {
-            /** Defines the rows of the table
-             *  Datastructure is an array of objects, containing an optional meta attribute to manage icon insertions:
-             * 
-             *  [
-             *      {
-             *          meta: {
-             *              color: string;
-             *              markerIndices: number[]; (lists all column indices where an icon will be prepended)
-             *              unicodeIcon: string; (for example: '★')
-             *          },
-             *          td: array; (Must contain all data corresponding to each column designed in the header. IMPORTANT: if a column has isPercentage: true; set this index to an empty string, as data will be calculated and pushed to this index on mounted)
-             *      }
-             *  ]
-             */
-            type: Array,
-            default() {
-                return []
-            }
-        },
-        fontFamily: {
-            type: String,
-            default: "inherit"
-        },
-        maxHeight: {
-            type: String,
-            default: "500px"
-        },
-        rowsPerPage: {
-            type: Number,
-            default: 25,
-        },
-        translations: {
+        config: {
             type: Object,
             default() {
-                return {
-                    average: "Moyenne",
+                return {}
+            }
+        },
+        dataset: {
+            type: Object,
+            default() {
+                return {}
+            }
+        }
+        // header: {
+        //     /** Defines the shape of table columns
+        //      *  Datastructure is an array of objects with one object for each column:
+        //      * 
+        //      *  [
+        //      *      {
+        //      *          name: string; (displayed name)
+        //      *          type: string; "text" | "numeric" | "date"
+        //      *          average: boolean;
+        //      *          decimals: number | undefined;
+        //      *          sum: boolean; (if true, will display the sum in the table head)
+        //      *          isSort: boolean; (if true, will show a sort button in the table head)
+        //      *          isSearch: boolean; (if true, will show a search input in the table head)
+        //      *          isMultiselect: boolean; (if true, will build a dropdown based on categories provided in the body at this column index)
+        //      *          isPercentage: boolean; (if true, will push to the row a percentage based on the targeted column)
+        //      *          percentageTo: string; (must be the exact name of another column). If isPercentage = false; will show quantites with percentage / target column in the same cell
+        //      *          suffix: string; (append any string to all values related to this column, like €, $ etc)
+        //      *          prefix: string; (prepend any string to all values related to this column, like €, $ etc)
+        //      *          rangeFilter: boolean; (show min max inputs to filter numeric columns)
+        //      *      },
+        //      *      {...}
+        //      *  ]
+        //      * 
+        //      * 
+        //      */
+        //     type: Array,
+        //     default() {
+        //         return []
+        //     }
+        // },
+        // body: {
+        //     /** Defines the rows of the table
+        //      *  Datastructure is an array of objects, containing an optional meta attribute to manage icon insertions:
+        //      * 
+        //      *  [
+        //      *      {
+        //      *          meta: {
+        //      *              color: string;
+        //      *              markerIndices: number[]; (lists all column indices where an icon will be prepended)
+        //      *              unicodeIcon: string; (for example: '★')
+        //      *          },
+        //      *          td: array; (Must contain all data corresponding to each column designed in the header. IMPORTANT: if a column has isPercentage: true; set this index to an empty string, as data will be calculated and pushed to this index on mounted)
+        //      *      }
+        //      *  ]
+        //      */
+        //     type: Array,
+        //     default() {
+        //         return []
+        //     }
+        // },
+    },
+    data() {
+        const uid = `vue-ui-table-${Math.random()}`;
+        return {
+            uid,
+            defaultConfig: {
+                //locale:"fr-fr",
+                fontFamily: "inherit",
+                maxHeight: 500,
+                rowsPerPage: 25,
+                style: {
+                    th: {
+                        backgroundColor: "#E1E5E8",
+                        color:"#2D353C",
+                        outline: "1px solid #FFFFFF",
+                        selected: {
+                            backgroundColor: "#6376DD",
+                            color: "#FFFFFF"
+                        }
+                    },
+                    rows: {
+                        even: {
+                            backgroundColor: "#f3f5f7",
+                            color: "#2D353C",
+                            selectedCell: {
+                                backgroundColor: '#6375dd5b',
+                                color: "#2D353C"
+                            },
+                            selectedNeighbors: {
+                                backgroundColor: "#63dd821e",
+                                color: "#2D353C"
+                            }
+                        },
+                        odd: {
+                            backgroundColor: "#FFFFFF",
+                            color: "#2D353C",
+                            selectedCell: {
+                                backgroundColor: '#6375dd5b',
+                                color: "#2D353C"
+                            },
+                            selectedNeighbors: {
+                                backgroundColor: "#63dd821e",
+                                color: "#2D353C"
+                            }
+                        },
+                    },
+                    inputs: {
+                        backgroundColor: "#FFFFFF",
+                        color: "#2D353C",
+                        border: "1px solid #CCCCCC",
+                        accentColor: "#6376DD"
+                    },
+                    dropdowns: {
+                        backgroundColor: "#E1E5E8",
+                        color: "#2D353C",
+                        icons: {
+                            selected: {
+                                color: "#008000",
+                                unicode: "✔"
+                            },
+                            unselected: {
+                                color: "#ff0000",
+                                unicode: "✖"
+                            }
+                        }
+                    },
+                    infoBar: {
+                        backgroundColor: "#E1E5E8",
+                        color: "#2D353C"
+                    },
+                    pagination: {
+                        buttons: {
+                            backgroundColor: "#E1E5E8",
+                            color: "#2D353C",
+                            opacityDisabled: 0.5
+                        },
+                        navigationIndicator: {
+                            backgroundColor: "#6376DD"
+                        }
+                    },
+                    exportMenu: {
+                        backgroundColor: "#E1E5E8",
+                        color: "#2D353C",
+                        buttons: {
+                            backgroundColor: "#FAFAFA",
+                            color: "#2D353C"
+                        }
+                    },
+                    closeButtons: {
+                        backgroundColor: "transparent",
+                        color: "#2D353C",
+                        borderRadius: "50%"
+                    },
+                    chart: {
+                        modal: {
+                            backgroundColor: "#E1E5E8",
+                            color: "#2D353C",
+                            buttons: {
+                                selected: {
+                                    backgroundColor: "#6376DD",
+                                    color: "#FFFFFF"
+                                },
+                                unselected: {
+                                    backgroundColor: "#FFFFFF",
+                                    color: "#2D353C"
+                                }
+                            }
+                        },
+                        layout: {
+                            backgroundColor: "#FFFFFF",
+                            axis: {
+                                stroke: "#ccd1d4",
+                                strokeWidth: 2,
+                            },
+                            bar: {
+                                fill: "",
+                                stroke: "#FFFFFF"
+                            },
+                            line: {
+                                stroke: "#6376DD75",
+                                strokeWidth: 4,
+                                plot: {
+                                    fill: "#22348f",
+                                    stroke: "#FFFFFF",
+                                    strokeWidth: 1,
+                                    radius: {
+                                        selected: 6,
+                                        unselected: 4,
+                                    }
+                                },
+                                selector: {
+                                    stroke: "#ccc",
+                                    strokeWidth: 1,
+                                    strokeDasharray: 5
+                                },
+                            },
+                            labels: {
+                                color: "#2D353C"
+                            },
+                            progression: {
+                                stroke: "#2D353C",
+                                strokeWidth: 2,
+                                strokeDasharray: 4,
+                                arrowSize: 7,
+                            }
+                        },
+                    }
+                },
+                translations: {
+                    average: "Average",
                     by: "by",
                     chooseCategoryColumn: "Choose category column",
                     exportAllButton: "XLSX all",
                     exportAllLabel: "Export all rows of your current filtered dataset",
                     exportPageButton: "XLSX page",
                     exportPageLabel: "Export rows of the current page",
-                    from: "Du",
+                    from: "From",
                     inputPlaceholder: "Search...",
                     makeDonut: "Generate",
                     nb: "Nb",
@@ -940,20 +1107,13 @@ export default {
                     paginatorLabel: "Rows per page",
                     sizeWarning: "Displaying too many rows at a time can lead to slower performance",
                     sum: "Somme",
-                    to: "Au",
+                    to: "To",
                     total: 'Total',
                     totalRows: "Total rows",
-                }
-            }
-        },
-        useChart: {
-            type: Boolean,
-            default: true
-        }
-    },
-    data() {
-        return {
-            bodyCopy: JSON.parse(JSON.stringify(this.body)).map((el, i) => {
+                },
+                useChart: true
+            },
+            bodyCopy: JSON.parse(JSON.stringify(this.dataset.body)).map((el, i) => {
                 return {
                     ...el,
                     absoluteIndex: i,
@@ -1001,9 +1161,9 @@ export default {
             immutableRangeFilters: {},
             isExportRequest: false,
             isLoading: false,
-            itemsPerPage: this.rowsPerPage,
+            itemsPerPage: this.config.rowsPerPage ? this.config.rowsPerPage : 25,
             multiselects: {},
-            paginatorOptions: [...new Set([10, 25, 50, 100, 250, 500, this.rowsPerPage, this.body.length])].sort((a,b) => a - b),
+            paginatorOptions: [...new Set([10, 25, 50, 100, 250, 500, this.config.rowsPerPage ? this.config.rowsPerPage : 25, this.dataset.body.length])].sort((a,b) => a - b),
             palette: [
                 '#3366cc',
                 '#dc3912',
@@ -1047,13 +1207,13 @@ export default {
             showChart: false,
             showDonutOptions: false,
             sorts: {},
-            tableBody: JSON.parse(JSON.stringify(this.body)).map((el, i) => {
+            tableBody: JSON.parse(JSON.stringify(this.dataset.body)).map((el, i) => {
                 return {
                     ...el,
                     absoluteIndex: i
                 }
             }),
-            tableHead: JSON.parse(JSON.stringify(this.header)).map(head => {
+            tableHead: JSON.parse(JSON.stringify(this.dataset.header)).map(head => {
                 return {
                     average: Object.hasOwn(head, 'average') ? head.average : false,
                     decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
@@ -1073,11 +1233,11 @@ export default {
         }
     },
     mounted(){
-        if(this.header.length === 0) {
-            throw new Error("SmartTable error: missing header data.\nProvide an array of objects of type:\n{\n name: string;\n type: string; ('text' | 'numeric' | 'date')\n average: boolean;\n decimals: number | undefined;\n sum: boolean;\n isSort:boolean;\n isSearch: boolean;\n isMultiselect: boolean;\n isPercentage: boolean;\n percentageTo: string; (or '')\n}");
+        if(this.dataset.header.length === 0) {
+            throw new Error("vue-ui-table error: missing header data.\nProvide an array of objects of type:\n{\n name: string;\n type: string; ('text' | 'numeric' | 'date')\n average: boolean;\n decimals: number | undefined;\n sum: boolean;\n isSort:boolean;\n isSearch: boolean;\n isMultiselect: boolean;\n isPercentage: boolean;\n percentageTo: string; (or '')\n}");
         }
-        if(this.body.length === 0) {
-            throw new Error("SmartTable error: missing body data");
+        if(this.dataset.body.length === 0) {
+            throw new Error("vue-ui-table error: missing body data");
         }
         this.isLoading = true;
 
@@ -1110,13 +1270,13 @@ export default {
             return Object.keys(this.multiselects).map(index => {
                 return {
                     index,
-                    name: this.header[index].name,
+                    name: this.dataset.header[index].name,
                     options: this.multiselects[index],
                 }
             })
         },
         canChart() {
-            return this.useChart && this.currentSelectionSpan.rows.length > 1;
+            return this.tableConfig.useChart && this.currentSelectionSpan.rows.length > 1;
         },
         chartData() {
             if(!this.canChart) return [];
@@ -1131,14 +1291,14 @@ export default {
             const relativeZero = min >= 0 ? 0 : Math.abs(min);
             const absoluteMax = max + relativeZero;
 
-            const isPercentage = this.header[this.currentSelectionSpan.col].isPercentage;
+            const isPercentage = this.dataset.header[this.currentSelectionSpan.col].isPercentage;
             const plots = this.currentSelectionSpan.rows.map((row, i) => {
                 return {
                     x: (slot * i) + slot / 2,
                     y: (1 - ((row.value + relativeZero) / absoluteMax)) * height,
                     value: isPercentage ? row.value * 100 : row.value,
-                    suffix: isPercentage ? '%' : this.header[this.currentSelectionSpan.col].suffix ? this.header[this.currentSelectionSpan.col].suffix : '',
-                    prefix: this.header[this.currentSelectionSpan.col].prefix ? this.header[this.currentSelectionSpan.col].prefix : '',
+                    suffix: isPercentage ? '%' : this.dataset.header[this.currentSelectionSpan.col].suffix ? this.dataset.header[this.currentSelectionSpan.col].suffix : '',
+                    prefix: this.dataset.header[this.currentSelectionSpan.col].prefix ? this.dataset.header[this.currentSelectionSpan.col].prefix : '',
                     index: row.index,
                     absoluteValue: isPercentage ? Math.abs(row.value) * 100 : Math.abs(row.value)
                 }
@@ -1150,12 +1310,12 @@ export default {
         },
         donutHollowLabels() {
             return {
-                total: Number((this.currentDonut.map(el => el.absoluteValue).reduce((a, b) => a + b, 0) * (this.header[this.currentSelectionSpan.col].isPercentage ? 100 : 1)).toFixed(this.header[this.currentSelectionSpan.col].decimals) ).toLocaleString(),
-                average: Number((this.currentDonut.map(el => el.absoluteValue).reduce((a, b) => a + b, 0) / this.currentSelectionSpan.rows.length * (this.header[this.currentSelectionSpan.col].isPercentage ? 100 : 1)).toFixed(this.header[this.currentSelectionSpan.col].decimals)).toLocaleString()
+                total: Number((this.currentDonut.map(el => el.absoluteValue).reduce((a, b) => a + b, 0) * (this.dataset.header[this.currentSelectionSpan.col].isPercentage ? 100 : 1)).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals) ).toLocaleString(),
+                average: Number((this.currentDonut.map(el => el.absoluteValue).reduce((a, b) => a + b, 0) / this.currentSelectionSpan.rows.length * (this.dataset.header[this.currentSelectionSpan.col].isPercentage ? 100 : 1)).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString()
             }
         },
         hasNumericTypes() {
-            return this.header.map(h => h.type).includes(this.constants.NUMERIC);
+            return this.dataset.header.map(h => h.type).includes(this.constants.NUMERIC);
         },
         icons() {
             return {
@@ -1193,11 +1353,21 @@ export default {
         },
         selectedCellsCalculations() {
             return {
-                sumPercentage: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a,b) => a + b, 0) * 100).toFixed(this.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
-                sumRegular: Number(this.currentSelectionSpan.rows.map(r => r.value).reduce((a,b) => a + b, 0).toFixed(this.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
-                averagePercentage: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a,b) => a + b, 0) / this.currentSelectionSpan.rows.length * 100).toFixed(this.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
-                averageRegular: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a,b) => a + b, 0) / this.currentSelectionSpan.rows.length).toFixed(this.header[this.currentSelectionSpan.col].decimals)).toLocaleString()
+                sumPercentage: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a,b) => a + b, 0) * 100).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
+                sumRegular: Number(this.currentSelectionSpan.rows.map(r => r.value).reduce((a,b) => a + b, 0).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
+                averagePercentage: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a,b) => a + b, 0) / this.currentSelectionSpan.rows.length * 100).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
+                averageRegular: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a,b) => a + b, 0) / this.currentSelectionSpan.rows.length).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString()
             }
+        },
+        tableConfig() {
+            if(!Object.keys(this.config || {}).length) {
+                return this.defaultConfig
+            }
+
+            return this.treeShake({
+                defaultConfig: this.defaultConfig,
+                userConfig: this.config
+            });
         },
         visibleRows() {
             return this.pages[this.currentPage];
@@ -1234,7 +1404,7 @@ export default {
             return !this.hasNaN[colIndex] && (th.isSort || th.isSearch || th.isMultiselect || th.rangeFilter) && ![this.constants.DATE].includes(th.type);
         },
         createXls(selection = 'all') {
-            const head = this.header.map(h => h.name);
+            const head = this.dataset.header.map(h => h.name);
             const body = selection === 'all' ? this.bodyCopy.map(b => b.td) : this.visibleRows.map(r => r.td);
             const table = [head].concat(body);
 
@@ -1326,7 +1496,7 @@ export default {
                 .reduce((a,b) => a + b, 0) / this.bodyCopy.length;
         },
         getDatesRange(index) {
-            const dates = this.body.map(row => new Date(row.td[index]));
+            const dates = this.dataset.body.map(row => new Date(row.td[index]));
             const rawMin = new Date(Math.min(...dates));
             const rawMax = new Date(Math.max(...dates));
             const minYear = rawMin.getFullYear();
@@ -1343,10 +1513,10 @@ export default {
             }
         },
         getDonutLegendValue(value) {
-            return Number((value * (this.header[this.currentSelectionSpan.col].isPercentage ? 100 : 1)).toFixed(this.header[this.currentSelectionSpan.col].decimals)).toLocaleString();
+            return Number((value * (this.dataset.header[this.currentSelectionSpan.col].isPercentage ? 100 : 1)).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString();
         },
         getDropdownOptions(index) {
-            return [...new Set(this.body.map(el => {
+            return [...new Set(this.dataset.body.map(el => {
                 return el.td[index];
             }))]
         },
@@ -1449,15 +1619,15 @@ export default {
             if(![up, down, left, right].includes(keyCode)) return;
 
             const currentId = event.target.id;
-            const regex = /cell_(\d+)_(\d+)/;
+            const regex = /cell_(\d+)_(\d+)_vue-ui-table-(\d+)/;
             const match = currentId.match(regex);
             const currentRow = parseInt(match[1]);
             const currentCol = parseInt(match[2]);
 
-            const nextCellRow = document.getElementById(`cell_${currentRow}_${currentCol + 1}`);
-            const previousCellRow = document.getElementById(`cell_${currentRow}_${currentCol - 1}`);
-            const nextCellCol = document.getElementById(`cell_${currentRow + 1}_${currentCol}`);
-            const previousCellCol = document.getElementById(`cell_${currentRow - 1}_${currentCol}`);
+            const nextCellRow = document.getElementById(`cell_${currentRow}_${currentCol + 1}_${this.uid}`);
+            const previousCellRow = document.getElementById(`cell_${currentRow}_${currentCol - 1}_${this.uid}`);
+            const nextCellCol = document.getElementById(`cell_${currentRow + 1}_${currentCol}_${this.uid}`);
+            const previousCellCol = document.getElementById(`cell_${currentRow - 1}_${currentCol}_${this.uid}`);
 
             let nextCell;
             switch (true) {
@@ -1546,29 +1716,29 @@ export default {
                     if(th.isPercentage || th.percentageTo) {
                         Object.assign(this.percentages, {[i]: {
                             reference: th.percentageTo,
-                            referenceIndex: this.header.map(el => el.name).indexOf(th.percentageTo)
+                            referenceIndex: this.dataset.header.map(el => el.name).indexOf(th.percentageTo)
                         }});
                     }
 
                     if(th.rangeFilter) {
                         Object.assign(this.rangeFilters, {[i]: {
-                            min: Math.round(Math.min(...this.body.map(el => el.td).map(el => el[i]))),
-                            max: Math.round(Math.max(...this.body.map(el => el.td).map(el => el[i]))),
+                            min: Math.round(Math.min(...this.dataset.body.map(el => el.td).map(el => el[i]))),
+                            max: Math.round(Math.max(...this.dataset.body.map(el => el.td).map(el => el[i]))),
                         }});
                         Object.assign(this.immutableRangeFilters, {[i]: {
-                            min: Math.round(Math.min(...this.body.map(el => el.td).map(el => el[i]))),
-                            max: Math.round(Math.max(...this.body.map(el => el.td).map(el => el[i]))),
+                            min: Math.round(Math.min(...this.dataset.body.map(el => el.td).map(el => el[i]))),
+                            max: Math.round(Math.max(...this.dataset.body.map(el => el.td).map(el => el[i]))),
                         }});
                     }
 
                     if(th.isPercentage) {
-                        const baseIndex = this.header.map(el => el.name).indexOf(th.percentageTo);
-                        const sum = this.body.map(el => el.td[baseIndex]).reduce((a,b) => a + b, 0);
+                        const baseIndex = this.dataset.header.map(el => el.name).indexOf(th.percentageTo);
+                        const sum = this.dataset.body.map(el => el.td[baseIndex]).reduce((a,b) => a + b, 0);
                         searchHelper.push([i, baseIndex, sum]);
                     }
 
                     if(th.type === this.constants.NUMERIC && !th.isPercentage) {
-                        Object.assign(this.hasNaN, {[i]: this.includesNaN(this.body.map(el => Number(el.td[i])))})
+                        Object.assign(this.hasNaN, {[i]: this.includesNaN(this.dataset.body.map(el => Number(el.td[i])))})
                     }
                 });
                 
@@ -1580,13 +1750,13 @@ export default {
                     // Implements a sorting index for each column type
                     // Also applied on tableBody as it is used when reseting filters to initial state
                     el.td.forEach((td, i) => {
-                        if(this.header[i].type === this.constants.TEXT && this.header[i].isSearch) {
+                        if(this.dataset.header[i].type === this.constants.TEXT && this.dataset.header[i].isSearch) {
                             el[i] = this.stringToNumber(td);
                         }
-                        if(this.header[i].type === this.constants.DATE) {
+                        if(this.dataset.header[i].type === this.constants.DATE) {
                             el[i] = new Date(td).getTime();
                         }
-                        if(this.header[i].type === this.constants.NUMERIC) {
+                        if(this.dataset.header[i].type === this.constants.NUMERIC) {
                             el[i] = isNaN(Number(td)) ? i : td;
                         }
                         this.tableBody[index][i] = el[i];
@@ -1654,13 +1824,20 @@ export default {
             this.filterBody();
         },
         resetSelection() {
-            const highlightedCells = document.getElementsByClassName(this.cssClass.ROW);
-            Array.from(highlightedCells).forEach(td => {
-                td.classList.remove(this.cssClass.CELL);
-                td.classList.remove(this.cssClass.ROW);
-                td.classList.remove(this.cssClass.FIRST_TD);
-                td.classList.remove(this.cssClass.LAST_TD);
+            const rows = document.getElementsByClassName(`tr_${this.uid}`);
+
+            Array.from(rows).forEach(tr => {
+                Array.from(tr.getElementsByTagName("td")).forEach(td => {
+                    if(td.dataset.row === 'even') {
+                        td.style.background = this.tableConfig.style.rows.even.backgroundColor;
+                        td.style.color = this.tableConfig.style.rows.even.color;
+                    } else {
+                        td.style.background = this.tableConfig.style.rows.odd.backgroundColor;
+                        td.style.color = this.tableConfig.style.rows.odd.color;
+                    }
+                });
             });
+            Array.from(rows).forEach(tr => tr.dataset.selected = "false");
             if(this.currentPage > this.pages.length - 1) {
                 this.currentPage = this.pages.length - 1;
             }
@@ -1684,7 +1861,7 @@ export default {
                         colIndex: index,
                         headerType: this.constants.NUMERIC,
                         event: {
-                            currentTarget: document.getElementById(`cell_${i}_${index}`)
+                            currentTarget: document.getElementById(`cell_${i}_${index}_${this.uid}`)
                         }
                     });
                 });                
@@ -1715,32 +1892,50 @@ export default {
             this.currentSelectionSpan.col = colIndex;
 
             if(this.currentSelectionSpan.rows.map(row => row.index).includes(rowIndex)) {
+                tr.dataset.selected = "false";
                 this.currentSelectionSpan.rows = this.currentSelectionSpan.rows.filter(row => row.index !== rowIndex);
                 event.currentTarget.classList.remove(this.cssClass.CELL);
                 Array.from(tr.children).forEach((td, i) => {
-                    td.classList.remove(this.cssClass.ROW);
-                    if(i === 0) {
-                        td.classList.remove(this.cssClass.FIRST_TD);
+                    if(td.dataset.row === 'even') {
+                        td.style.background = this.tableConfig.style.rows.even.backgroundColor;
+                        td.style.color = this.tableConfig.style.rows.even.olor;
+                    } else {
+                        td.style.background = this.tableConfig.style.rows.odd.backgroundColor;
+                        td.style.color = this.tableConfig.style.rows.odd.color;
                     }
-                    if(i === tr.children.length - 1) {
-                        td.classList.remove(this.cssClass.LAST_TD);
-                    }
-                })
+                });
+                
+                if(event.currentTarget.dataset.row === 'even') {
+                    event.currentTarget.style.background = this.tableConfig.style.rows.even.backgroundColor;
+                    event.currentTarget.style.color = this.tableConfig.style.rows.even.color;
+                } else {
+                    event.currentTarget.style.background = this.tableConfig.style.rows.odd.backgroundColor;
+                    event.currentTarget.style.color = this.tableConfig.style.rows.odd.color;
+                }
+
             } else {
+                tr.dataset.selected = "true";
                 this.currentSelectionSpan.rows.push({
                     index: rowIndex,
                     value: td
                 });
-                event.currentTarget.classList.add(this.cssClass.CELL);
                 Array.from(tr.children).forEach((td, i) => {
-                    td.classList.add(this.cssClass.ROW);
-                    if(i === 0) {
-                        td.classList.add(this.cssClass.FIRST_TD);
-                    }
-                    if(i === tr.children.length - 1) {
-                        td.classList.add(this.cssClass.LAST_TD);
+                    if(td.dataset.row === 'even') {
+                        td.style.background = this.tableConfig.style.rows.even.selectedNeighbors.backgroundColor;
+                        td.style.color = this.tableConfig.style.rows.even.selectedNeighbors.color;
+                    } else {
+                        td.style.background = this.tableConfig.style.rows.odd.selectedNeighbors.backgroundColor;
+                        td.style.color = this.tableConfig.style.rows.odd.selectedNeighbors.color;
                     }
                 });
+
+                if(event.currentTarget.dataset.row === 'odd') {
+                    event.currentTarget.style.background = this.tableConfig.style.rows.odd.selectedCell.backgroundColor;
+                    event.currentTarget.style.color = this.tableConfig.style.rows.odd.selectedCell.color;
+                } else {
+                    event.currentTarget.style.background = this.tableConfig.style.rows.even.selectedCell.backgroundColor;
+                    event.currentTarget.style.color = this.tableConfig.style.rows.even.selectedCell.color;
+                }
             }
             this.currentSelectionSpan.rows = this.currentSelectionSpan.rows.sort((a,b) => a.index - b.index); // Guarantees the chart will display plots in the same order than the visible rows
 
@@ -1766,7 +1961,7 @@ export default {
                 this.sortByNumber(this.bodyCopy, this.currentFilter);
             }
             // percentage calculation
-            this.header.forEach((col, i) => {
+            this.dataset.header.forEach((col, i) => {
                 if(col.isPercentage) {
                     const referenceIndex = this.percentages[i].referenceIndex;
                     const sum = this.bodyCopy.map(el => el.td[referenceIndex]).reduce((a,b) => a + b, 0);
@@ -1994,55 +2189,91 @@ export default {
             this.clientY = e.clientY - (rect.height / 2);
             this.rafId = null;
         },
+        // treeshaking utils
+        treeShake({ defaultConfig, userConfig }) {
+            const finalConfig = {...defaultConfig};
+
+            Object.keys(finalConfig).forEach(key => {
+                if(Object.hasOwn(userConfig, key)) {
+                    const currentVal = userConfig[key]
+                    if(typeof currentVal === 'boolean'){
+                        finalConfig[key] = currentVal;
+                    } else if(["string", "number"].includes(typeof currentVal)) {
+                        if(this.isValidUserValue(currentVal)) {
+                            finalConfig[key] = currentVal;
+                        }
+                    } else if(Array.isArray(finalConfig[key])) {
+                        if(this.checkArray({ userConfig, key})) {
+                            finalConfig[key] = currentVal;
+                        }
+                    } else if(this.checkObj({ userConfig, key})){
+                        finalConfig[key] = this.treeShake({
+                            defaultConfig: finalConfig[key],
+                            userConfig: currentVal
+                        });
+                    }
+                }
+            });
+            return finalConfig;
+        },
+        checkArray({ userConfig, key }) {
+            return Object.hasOwn(userConfig, key) && Array.isArray(userConfig[key]) && userConfig[key].length;
+        },
+        checkObj({ userConfig, key}) {
+            return  Object.hasOwn(userConfig, key) && !Array.isArray(userConfig[key]) && typeof userConfig[key] === "object";
+        },
+        isValidUserValue(val) {
+            return ![null, undefined, NaN, Infinity, -Infinity].includes(val);
+        },
+        isSafeValue(val) {
+            return ![undefined, NaN, Infinity, -Infinity].includes(val)
+        },
+        checkNaN(val, fallback = 0) {
+            if(isNaN(val)) {
+                return fallback
+            }else {
+                return val
+            }
+        }
     }
 }
 </script>
 
 <style scoped>
-.smart-table-main {
+.vue-ui-table-main {
     height: fit-content;
     padding: 0 0 98px 0;
     position: relative;
 }
-.smart-table__wrapper {
-    color: #2D353C;
+.vue-ui-table__wrapper {
     overflow-x: auto;
     padding: 0px 12px 48px 12px;
     position: relative;
     width: calc(100% - 24px);
-    /* z-index: 100; */
 }
-thead {
+.vue-ui-table-main thead {
     position: sticky;
     top:0;
 }
-.smart-table {
+.vue-ui-table {
     width:100%;
     position: relative;
 }
-table {
+.vue-ui-table-main table {
     border-collapse:collapse;
 }
-th {
-    background-color: #E1E5E8;
-    outline:1px solid white;
-    background: radial-gradient(at top left, #cdd1d4, #e1e5e8);
-}
-th,
-td {
+.vue-ui-table-main th,
+.vue-ui-table-main td {
     padding: 3px 8px;
 }
-tr:nth-child(even) {
-    background-color: #f3f5f7;
-}
-tr td {
+.vue-ui-table-main tr td {
     outline: 1px solid white;
 }
-.th-numeric {
+.vue-ui-table-main .th-numeric {
     text-align:right;
     font-variant-numeric: tabular-nums;
 }
-.th-filter {
+.vue-ui-table-main .th-filter {
     align-items:center;
     display: flex;
     flex-direction: row;
@@ -2050,50 +2281,40 @@ tr td {
     justify-content: center;
     position: relative;
 }
-.th-fusion {
-    align-items:center;
-    background: radial-gradient(at top left, #cdd1d4, #e1e5e8);
-    display: flex;
-    height: 83px;
-    justify-content:center;
-    left:0px;
-    outline: 1px solid white;
-    position: absolute;
-    top:0px;
-    width: 100%;
-    z-index:10;
-}
-button {
+.vue-ui-table-main button {
     align-items:center;
     cursor: pointer;
     display: flex;
     justify-content:center;
     width:32px;
 }
-input {
+.vue-ui-table-main input {
     padding: 0 6px;
     font-family: "Satoshi"
 }
-button,
-input {
+.vue-ui-table-main button,
+.vue-ui-table-main input {
     border-radius: 6px;
-    border: 1px solid grey;
     height: 32px;
 }
-button:hover,
-button:focus,
-input:hover,
-input:focus {
+.vue-ui-table-main button {
+    border: 1px solid grey;
+}
+
+.vue-ui-table-main button:hover,
+.vue-ui-table-main button:focus,
+.vue-ui-table-main input:hover,
+.vue-ui-table-main input:focus {
     outline: 3px solid rgba(128, 128, 128, 0.432);
 }
-button.clicked {
+.vue-ui-table-main button.clicked {
     animation: clicked 0.15s ease-in-out;
 }
-button[disabled] {
+.vue-ui-table-main button[disabled] {
     cursor: not-allowed;
 }
-button[disabled]:focus,
-button[disabled]:hover {
+.vue-ui-table-main button[disabled]:focus,
+.vue-ui-table-main button[disabled]:hover {
     outline: none;
 }
 
@@ -2102,26 +2323,25 @@ button.th-reset:not(:disabled){
     border: 1px solid #F17171;
     color: white;
 }
-button.th-reset:not(:disabled):hover,
-button.th-reset:not(:disabled):focus {
+.vue-ui-table-main button.th-reset:not(:disabled):hover,
+.vue-ui-table-main button.th-reset:not(:disabled):focus {
     outline: 3px solid #f171717e;
 }
 
-[data-is-open="false"]  {
+.vue-ui-table-main [data-is-open="false"]  {
     transform: scale(0,0);
 }
 
-.th-dropdown[data-is-open="true"] {
+.vue-ui-table-main .th-dropdown[data-is-open="true"] {
     animation: open-dropdown 0.2s ease-in;
 }
 
-.th-dropdown[data-is-open="false"] {
+.vue-ui-table-main .th-dropdown[data-is-open="false"] {
     animation: close-dropdown 0.2s ease-in;
 }
 
-.th-dropdown {
+.vue-ui-table-main .th-dropdown {
     align-items:center;
-    background: radial-gradient(at top left, #d2d7db, #e1e5e8);
     border-radius: 8px;
     border: 1px solid white;
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.5);
@@ -2136,7 +2356,7 @@ button.th-reset:not(:disabled):focus {
     top: calc(100% + 12px);
 }
 
-.th-option {
+.vue-ui-table-main .th-option {
     border-radius: 6px;
     cursor: pointer;
     padding: 2px 6px;
@@ -2145,27 +2365,17 @@ button.th-reset:not(:disabled):focus {
     width: 100%;
     font-weight: 400;
 }
-.th-option:hover {
-    background-color: #fafafa;
+.vue-ui-table-main .th-option:hover {
+    background-color: rgba(255,255,255,0.1);
     box-shadow: 0 3px 6px -3px rgba(0,0,0,0.5);
     z-index: 1;
 }
 
-.th-icon-green {
-    text-shadow: 0 2px 4px rgba(0, 128, 0, 0.486);
-}
-
-.th-icon-red {
-    text-shadow: 0 2px 4px rgba(255, 0, 0, 0.486);
-}
-
-button.close-dropdown,
-button.close-chart-modal {
+.vue-ui-table-main button.close-dropdown,
+.vue-ui-table-main button.close-chart-modal {
     align-items: center;
-    background: transparent;
     border-radius: 50%;
     border:none;
-    color:#2d353c;
     display: flex;
     height: 20px;
     padding: 2px;
@@ -2175,24 +2385,24 @@ button.close-chart-modal {
     width:20px;
 }
 
-button.close-dropdown:hover,
-button.close-dropdown:focus,
-button.close-chart-modal:hover,
-button.close-char-modal:focus {
+.vue-ui-table-main button.close-dropdown:hover,
+.vue-ui-table-main button.close-dropdown:focus,
+.vue-ui-table-main button.close-chart-modal:hover,
+.vue-ui-table-main button.close-char-modal:focus {
     outline: 3px solid #2d353c71;
 }
 
-.th-button-active {
+.vue-ui-table-main .th-button-active {
     background: radial-gradient(at top, #968bf1, #6376DD);
     color: white;
 }
 
-.th-button-active:hover,
-.th-button-active:focus {
+.vue-ui-table-main .th-button-active:hover,
+.vue-ui-table-main .th-button-active:focus {
     outline: 3px solid #6375dd7a;
 }
 
-.th-date {
+.vue-ui-table-main .th-date {
     align-items:center;
     display: flex;
     flex-direction: row;
@@ -2201,7 +2411,7 @@ button.close-char-modal:focus {
     width:100%;
 }
 
-.date-wrapper--inputs {
+.vue-ui-table-main .date-wrapper--inputs {
     align-items:center;
     display: flex;
     flex-direction: column;
@@ -2210,12 +2420,12 @@ button.close-char-modal:focus {
     width: 100%;
 }
 
-.date-wrapper--button {
+.vue-ui-table-main .date-wrapper--button {
     display: flex;
     gap: 3px;
 }
 
-input[type="date"] {
+.vue-ui-table-main input[type="date"] {
     border-radius: 4px;
     font-size: 12px;
     font-variant-numeric: tabular-nums;
@@ -2223,7 +2433,7 @@ input[type="date"] {
     width: 100px;
 }
 
-.date-fieldset {
+.vue-ui-table-main .date-fieldset {
     align-items:center;
     display: flex;
     flex-direction: row;
@@ -2231,7 +2441,7 @@ input[type="date"] {
     justify-content: center;
     width:100%;
 }
-.date-fieldset label {
+.vue-ui-table-main .date-fieldset label {
     font-size: 12px;
     font-weight: 400;
 }
@@ -2248,25 +2458,12 @@ input[type="date"] {
     }
 }
 
-td.td-numeric {
+.vue-ui-table-main td.td-numeric {
     cursor:pointer;
 }
 
-td.smart-td-selected-neighbor {
-    background: radial-gradient(at top left, #82ecc41e, #63dd821e);
-}
-td.smart-td-selected {
-    background: radial-gradient(at top left, #9986ec5b, #6375dd5b);
-}
-td.smart-td-selected-first {
-    box-shadow: 3px 0 0 #6376DD inset;
-}
-td.smart-td-selected-last {
-    box-shadow: -3px 0px 0 #6376DD inset;
-}
-.td-selector-info {
+.vue-ui-table-main .td-selector-info {
     align-items:center;
-    background: linear-gradient(to right, transparent, #e1e5e8);
     border-radius: 0 0 6px 6px;
     bottom:76px;
     display: flex;
@@ -2281,10 +2478,7 @@ td.smart-td-selected-last {
     width: 100%;
     z-index: 1;
 }
-.td-selector-info--active {
-    background: linear-gradient(to right, transparent, #6375dd4f);
-}
-button.td-selector-info-reset {
+.vue-ui-table-main button.td-selector-info-reset {
     background: transparent;
     border:none;
     color:#F17171;
@@ -2293,19 +2487,19 @@ button.td-selector-info-reset {
     padding:0;
     width:14px;
 }
-button.td-selector-info-reset:hover,
-button.td-selector-info-reset:focus {
+.vue-ui-table-main button.td-selector-info-reset:hover,
+.vue-ui-table-main button.td-selector-info-reset:focus {
     outline: 3px solid #f171717e;
 }
-.format-num {
+.vue-ui-table-main .format-num {
     font-variant-numeric: tabular-nums;
 }
-.td-selector-icon {
+.vue-ui-table-main .td-selector-icon {
     margin-bottom: -5px;
     margin-right: 6px;
 }
 
-.smart-table-pagination {
+.vue-ui-table-main .vue-ui-table-pagination {
     align-items:center;
     bottom:24px;
     display: flex;
@@ -2318,32 +2512,31 @@ button.td-selector-info-reset:focus {
     z-index:1;
 }
 
-button.smart-table-navigation {
+.vue-ui-table-main button.vue-ui-table-navigation {
     height: 36px;
     padding: 1px;
     width: 36px;
 }
 
-.smart-table-navigation-indicator {
-    background: linear-gradient(to right, #6375dd88, #6376DD);
+.vue-ui-table-main .vue-ui-table-navigation-indicator {
     border-radius: 6px;
     bottom: 70px;
     height: 6px;
     position: absolute;
     transition: all 0.1s ease-in-out;
 }
-.smart-table-page-scroller-wrapper {
+.vue-ui-table-main .vue-ui-table-page-scroller-wrapper {
     align-items:center;
     display: flex;
     flex-direction: column;
     justify-content:center;
 }
-input.smart-table-page-scroller {
+.vue-ui-table-main input.vue-ui-table-page-scroller {
     cursor: pointer;
     height: 24px;
     padding: 0;
 }
-.smart-table-paginator {
+.vue-ui-table-main .vue-ui-table-paginator {
     position: absolute;
     bottom: 0;
     z-index: 2;
@@ -2356,11 +2549,11 @@ input.smart-table-page-scroller {
     align-items:center;
     width: calc(100% - 24px);
 }
-.smart-table-paginator select {
+.vue-ui-table-main .vue-ui-table-paginator select {
     border-radius: 3px;
 }
 
-.smart-table-size-warning {
+.vue-ui-table-main .vue-ui-table-size-warning {
     align-items:center;
     bottom:-24px;
     color:#F17171;
@@ -2375,11 +2568,10 @@ input.smart-table-page-scroller {
     width: 100%;
 }
 
-th.smart-table-col-selector {
+.vue-ui-table-main th.vue-ui-table-col-selector {
     height: 12px;
-    background: #e1e5e8;
 }
-.col-selector {
+.vue-ui-table-main .col-selector {
     align-items: center;
     cursor: pointer;
     display: flex;
@@ -2387,18 +2579,16 @@ th.smart-table-col-selector {
     justify-content: center;
     width:100%;
 }
-th.col-selector--selected {
+.vue-ui-table-main th.col-selector--selected {
     background: radial-gradient(at top left, #9586eb, #6376DD);
     color:white;
 }
-th.col-selector--selected div {
+.vue-ui-table-main th.col-selector--selected div {
     background: transparent;
     color: white;
 }
-
-.smart-table-chart-modal {
+.vue-ui-table-main .vue-ui-table-chart-modal {
     align-items:center;
-    background: radial-gradient(at top left, #e1e5e8, #eceef0);
     border-radius: 8px;
     border: 1px solid white;
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.3);
@@ -2415,39 +2605,28 @@ th.col-selector--selected div {
     user-select: none;
     z-index: 10000;
 }
-.smart-table-chart-svg{
-    background: white;
+.vue-ui-table-main .vue-ui-table-chart-svg{
     border-radius: 6px;
     margin-bottom: 12px;
     overflow: visible;
     padding: 12px;
     width: calc(100% - 24px);
-    box-shadow: 0 2px 4px -2px rgba(128, 128, 128, 0.6);
 }
-.smart-table-donut-chart {
-    background: white;
+.vue-ui-table-main .vue-ui-table-donut-chart {
     border-radius: 6px;
-    box-shadow: 0 2px 4px -2px rgba(128, 128, 128, 0.6);
 }
-
-th.invisible-cell {
-    background: white;
-    border-right:2px solid white;
-}
-td.smart-table-td-iteration {
-    background: #E1E5E8;
+.vue-ui-table-main td.vue-ui-table-td-iteration {
     font-size: 12px;
     font-variant-numeric: tabular-nums;
     text-align:right;
     user-select:none;
 }
-.chart-trend {
-    color: grey;
+.vue-ui-table-main .chart-trend {
     font-size: 12px;
     padding-left:12px;
 }
 
-.chart-modal-options {
+.vue-ui-table-main .chart-modal-options {
     bottom: 12px;
     display: flex;
     flex-direction: row;
@@ -2455,18 +2634,13 @@ td.smart-table-td-iteration {
     position: absolute;
     right: 24px;
 }
-.chart-modal-options button {
+.vue-ui-table-main .chart-modal-options button {
     height: 24px;
     padding: 3px;
     width: 24px;
 }
-.chart-modal-options button.is-active-chart {
-    background: radial-gradient(at top, #968bf1, #6376DD);
-    border:1px solid #6376DD;
-    color: white;
-}
 
-.th-range-filter {
+.vue-ui-table-main .th-range-filter {
     display: flex;
     align-items:center;
     justify-content:center;
@@ -2474,19 +2648,19 @@ td.smart-table-td-iteration {
     flex-direction: column;
 }
 
-.th-range-filter input {
+.vue-ui-table-main .th-range-filter input {
     height: 20px;
     width: 60px;
     font-variant-numeric: tabular-nums;
     font-size: 12px;
 }
-.th-range-filter label {
+.vue-ui-table-main .th-range-filter label {
     font-size:12px;
     font-weight: 400;
     margin-bottom: -3px;
 }
 
-.smart-table-fieldset-wrapper {
+.vue-ui-table-main .vue-ui-table-fieldset-wrapper {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -2494,31 +2668,29 @@ td.smart-table-td-iteration {
     margin-bottom: 12px;
 }
 
-.smart-table-fieldset {
+.vue-ui-table-main .vue-ui-table-fieldset {
     border-radius: 6px;
     margin-bottom: 24px;
     border: 1px solid white;
 }
 
-.smart-table-fieldset legend {
+.vue-ui-table-main .vue-ui-table-fieldset legend {
     color: grey;
 }
 
-.smart-table-fieldset-option {
+.vue-ui-table-main .vue-ui-table-fieldset-option {
     display: flex;
     align-items:center;
 }
 
-.smart-table-fieldset-option input {
+.vue-ui-table-main .vue-ui-table-fieldset-option input {
     height: 14px;
     width: 14px;
     border-radius: 50%;
 }
 
-button.smart-table-generate-donut {
+.vue-ui-table-main button.vue-ui-table-generate-donut {
     align-items:center;
-    background: radial-gradient(at top, #968bf1, #6376DD);
-    color:white;
     display: flex;
     gap: 3px;
     justify-content:center;
@@ -2530,16 +2702,11 @@ button.smart-table-generate-donut {
     width: fit-content;
 }
 
-input[type="radio"],
-input[type="range"] {
-    accent-color: #6376DD;
-}
-
-button.smart-table-generate-donut[disabled] {
+.vue-ui-table-main button.vue-ui-table-generate-donut[disabled] {
     opacity: 0.5;
 }
 
-.smart-table-donut-legend {
+.vue-ui-table-main .vue-ui-table-donut-legend {
     align-items:center;
     column-gap:12px;
     display: flex;
@@ -2551,7 +2718,7 @@ button.smart-table-generate-donut[disabled] {
     padding-bottom: 36px;
 }
 
-.smart-table-donut-legend-item {
+.vue-ui-table-main .vue-ui-table-donut-legend-item {
     align-items:center;
     display: flex;
     flex-direction: row;
@@ -2559,7 +2726,7 @@ button.smart-table-generate-donut[disabled] {
     justify-content:center;
 }
 
-.smart-table-donut-label {
+.vue-ui-table-main .vue-ui-table-donut-label {
     align-items: center;
     display: flex;
     flex-direction: column;
@@ -2570,28 +2737,27 @@ button.smart-table-generate-donut[disabled] {
     width:100%;
 }
 
-.smart-table-donut-label-name {
+.vue-ui-table-main .vue-ui-table-donut-label-name {
     font-size: 3px;
     line-height: 3px;
 }
 
-td:focus {
+.vue-ui-table-main td:focus {
     outline: 3px solid #202d7470;
 }
 
-.smart-table-export-hub {
+.vue-ui-table-main .vue-ui-table-export-hub {
     left: 5px;
     position: absolute;
     top:0;
     z-index: 1001;
 }
 
-.smart-table-export-hub-dropdown {
+.vue-ui-table-main .vue-ui-table-export-hub-dropdown {
     position: absolute;
     top: 40px;
     left: 0px;
     padding: 24px;
-    background: radial-gradient(at top left, #d2d7db, #e1e5e8);
     border-radius: 8px;
     border:1px solid white;
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.5);
@@ -2599,15 +2765,15 @@ td:focus {
     opacity:0;
 }
 
-.smart-table-export-hub-dropdown[data-is-open="true"] {
+.vue-ui-table-main .vue-ui-table-export-hub-dropdown[data-is-open="true"] {
     animation: open-dropdown 0.2s ease-in forwards;
 }
 
-.smart-table-export-hub-dropdown[data-is-open="false"] {
+.vue-ui-table-main .vue-ui-table-export-hub-dropdown[data-is-open="false"] {
     animation: close-dropdown 0.2s ease-in;
 }
 
-.smart-table-export-hub-options {
+.vue-ui-table-main .vue-ui-table-export-hub-options {
     margin-top: 12px;
     display: flex;
     flex-direction: column;
@@ -2616,7 +2782,7 @@ td:focus {
     justify-content:center;
 }
 
-.smart-table-export-hub-options button {
+.vue-ui-table-main .vue-ui-table-export-hub-options button {
     width: fit-content;
     display: flex;
     align-items:center;
@@ -2625,7 +2791,7 @@ td:focus {
     min-width: 130px;
 }
 
-.smart-table-export-hub-option-wrapper {
+.vue-ui-table-main .vue-ui-table-export-hub-option-wrapper {
     align-items:center;
     display: flex;
     flex-direction: row;
@@ -2633,18 +2799,18 @@ td:focus {
     justify-content:flex-start;
 }
 
-.smart-table-export-hub-option-wrapper .label {
+.vue-ui-table-main .vue-ui-table-export-hub-option-wrapper .label {
     font-size: 12px;
     line-height: 12px;
     margin-bottom: 6px;
     width: 100px;
 }
 
-.td-nan {
+.vue-ui-table-main .td-nan {
     background: #F17171;
 }
-.td-has-nan,
-.th-has-nan {
+.vue-ui-table-main .td-has-nan,
+.vue-ui-table-main .th-has-nan {
     background: #F17171;
     min-width:100px;
     color: white;
