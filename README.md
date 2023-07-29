@@ -4,12 +4,13 @@ npm i vue-data-ui
 
 # vue-data-ui
 
-Vue-data-ui is a Vue data visualization components library.
-It is currently in early stages.
+A user-empowering data visualization Vue components library.
+Currently in early stages.
 
 For the moment, it includes:
 
 ## VueUiTable
 ## VueUiXy
 
-Documentation will soon be available.
+Full documentation
+[Ineractive documentation](https://vue-data-ui.graphieros.com/)
