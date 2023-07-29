@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import TableTest from "./components/vue-ui-table.vue";
+import DonutTest from "./components/vue-ui-donut.vue";
 
 const dataset = ref([
         {
@@ -499,14 +500,21 @@ const dataset2 = ref([
     useChart: true
 })
 
+const donutTestDataset = [];
+
+const donutTestConfig = {};
+
 </script>
 
 <template>
   <div>
+    <div style="max-width:1000px; margin:0 auto">
+      <DonutTest/>
+    </div>
     <div style="max-width:1000px; margin:0 auto" v-if="false">
       <VueUiXy :config="config" :dataset="dataset"/>
     </div>
-    <TableTest :dataset="tableTestDataset" :config="darkConfig"/>
-    <VueUiTable :dataset="tableTestDataset" :config="tableConfig"/>
+    <TableTest :dataset="tableTestDataset" :config="darkConfig" v-if="false"/>
+    <VueUiTable :dataset="tableTestDataset" :config="tableConfig" v-if="false"/>
   </div>
 </template>
