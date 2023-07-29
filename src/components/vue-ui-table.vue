@@ -694,8 +694,8 @@
                                 </linearGradient>
                                 <rect 
                                     :x="plot.x - chartData.slot / 2" 
-                                    :y="calcRectY(plot.value, plot.y)" 
-                                    :height="plot.value >= 0 ? chartData.zero - plot.y : plot.y - chartData.zero" 
+                                    :y="chartData.isAllNegative ? 0 : calcRectY(plot.value, plot.y)" 
+                                    :height="plot.value >= 0 ? chartData.zero - plot.y : chartData.isAllNegative ? plot.y : plot.y - chartData.zero" 
                                     :width="chartData.slot" 
                                     :fill="tableConfig.style.chart.layout.bar.fill ? tableConfig.style.chart.layout.bar.fill : selectedPlot === i ? plot.value >= 0 ? 'url(#barGradientSelected)' : 'url(#barGradientSelectedNeg)' : plot.value >=0 ? 'url(#barGradient)' : 'url(#barGradient)'"  
                                     :stroke="tableConfig.style.chart.layout.bar.stroke" 
@@ -871,11 +871,6 @@
 </template>
 
 <script>
-// ISSUES:
-// bar chart with only neg values overflows top af
-// color of close button in dropdowns
-// line selector must start from relativeZero
-
 import * as XLSX from 'xlsx';
 
 export default {
@@ -1290,6 +1285,7 @@ export default {
 
             const relativeZero = min >= 0 ? 0 : Math.abs(min);
             const absoluteMax = max + relativeZero;
+            const isAllNegative = max < 0 && min < 0;
 
             const isPercentage = this.dataset.header[this.currentSelectionSpan.col].isPercentage;
             const plots = this.currentSelectionSpan.rows.map((row, i) => {
@@ -1306,7 +1302,7 @@ export default {
             
             const zero = height - (height * (relativeZero / absoluteMax));
 
-            return {zero, plots, slot, progression: plots.length >= 2 ? this.calcChartProgression(plots) : false };
+            return {isAllNegative, zero, plots, slot, progression: plots.length >= 2 ? this.calcChartProgression(plots) : false };
         },
         donutHollowLabels() {
             return {
