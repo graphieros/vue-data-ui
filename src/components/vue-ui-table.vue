@@ -873,6 +873,16 @@
 <script>
 import * as XLSX from 'xlsx';
 
+// TODO:
+// . add width="100%" to donut chart svg
+// . add callbax to all components
+// . table select whole col: avoid trigger selectTd loop
+// . emits:
+// .. onCellSelect, onPageChange, onReset, onError (ex: calc percentage on NaN)
+
+// IDEAS:
+// . treeselector (with sums & avgs & so on)
+
 export default {
     name: "vue-ui-table",
     props: {

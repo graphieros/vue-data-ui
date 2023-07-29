@@ -31,7 +31,8 @@
     "vue": "^3.3.4",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "vue-data-ui": "file:../vue-data-ui"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
