@@ -799,7 +799,7 @@
 
                 <!-- DONUT CHART -->
                 <template v-if="[constants.DONUT].includes(chart.type) && !showDonutOptions">
-                    <svg viewBox="0 0 100 100" :style="`overflow: visible; padding: 0 24px;background:${tableConfig.style.chart.layout.backgroundColor}`" class="vue-ui-table-donut-chart">
+                    <svg viewBox="0 0 100 100" :style="`max-width:100%; overflow: visible; padding: 0 24px;background:${tableConfig.style.chart.layout.backgroundColor}`" class="vue-ui-table-donut-chart">
                         <path 
                             v-for="(arc, i) in currentDonut" 
                             :key="`arc_${i}`" 
@@ -874,7 +874,6 @@
 import * as XLSX from 'xlsx';
 
 // TODO:
-// . add width="100%" to donut chart svg
 // . add callbax to all components
 // . table select whole col: avoid trigger selectTd loop
 // . emits:
