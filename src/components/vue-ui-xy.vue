@@ -15,24 +15,24 @@
             <summary :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">{{ chartConfig.chart.userOptions.title }}</summary>
             <div class="vue-ui-xy-user-options-items" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">
                 <div class="vue-ui-xy-user-option-item">
-                    <input type="checkbox" id="vue-ui-xy-option-datalabels" name="vue-ui-xy-option-datalabels"
+                    <input type="checkbox" :id="`vue-ui-xy-option-datalabels_${uniqueId}`" :name="`vue-ui-xy-option-datalabels_${uniqueId}`"
                     v-model="mutableConfig.dataLabels.show">
-                    <label for="vue-ui-xy-option-datalabels">{{ chartConfig.chart.userOptions.labels.dataLabels }}</label>
+                    <label :for="`vue-ui-xy-option-datalabels_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.dataLabels }}</label>
                 </div>
                 <div class="vue-ui-xy-user-option-item">
-                    <input type="checkbox" id="vue-ui-xy-option-title" name="vue-ui-xy-option-title"
+                    <input type="checkbox" :id="`vue-ui-xy-option-title_${uniqueId}`" :name="`vue-ui-xy-option-title_${uniqueId}`"
                     v-model="mutableConfig.titleInside">
-                    <label for="vue-ui-xy-option-title">{{ chartConfig.chart.userOptions.labels.titleInside }}</label>
+                    <label :for="`vue-ui-xy-option-title_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.titleInside }}</label>
                 </div>
                 <div class="vue-ui-xy-user-option-item">
-                    <input type="checkbox" id="vue-ui-xy-option-legend" name="vue-ui-xy-option-legend"
+                    <input type="checkbox" :id="`vue-ui-xy-option-legend_${uniqueId}`" :name="`vue-ui-xy-option-legend_${uniqueId}`"
                     v-model="mutableConfig.legendInside">
-                    <label for="vue-ui-xy-option-legend">{{ chartConfig.chart.userOptions.labels.legendInside }}</label>
+                    <label :for="`vue-ui-xy-option-legend_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.legendInside }}</label>
                 </div>
                 <div class="vue-ui-xy-user-option-item">
-                    <input type="checkbox" id="vue-ui-xy-option-table" name="vue-ui-xy-option-table"
+                    <input type="checkbox" :id="`vue-ui-xy-option-table_${uniqueId}`" :name="`vue-ui-xy-option-table_${uniqueId}`"
                     v-model="mutableConfig.showTable">
-                    <label for="vue-ui-xy-option-table">{{ chartConfig.chart.userOptions.labels.showTable }}</label>
+                    <label :for="`vue-ui-xy-option-table_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.showTable }}</label>
                 </div>
                 <button class="vue-ui-xy-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px">
                     <svg class="vue-ui-xy-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="#2c3e50" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -363,7 +363,7 @@
             class="vue-ui-xy-tooltip"
             ref="tooltip"
             v-if="chartConfig.chart.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px; left:${tooltipPosition.left}px; background-color:${chartConfig.chart.tooltip.backgroundColor}, color:${chartConfig.chart.tooltip.color}`"
+            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px; background-color:${chartConfig.chart.tooltip.backgroundColor};color:${chartConfig.chart.tooltip.color}`"
             v-html="tooltipContent"
         />
 
@@ -377,6 +377,14 @@
                             <div style="max-width: 200px; margin:0 auto">   
                                 <span :style="`color:${th.color}; margin-right:3px`">{{ icons[th.type] }}</span>{{ th.label }}
                             </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th style="text-align:right">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>
+                        </th>
+                        <th v-for="(_, i) in table.head" :key="`th_sum_${i}`">
+                            {{ relativeDataset[i].absoluteValues.reduce((a,b) => a + b, 0) }}
                         </th>
                     </tr>
                 </thead>
@@ -482,7 +490,7 @@ export default {
                         }
                     },
                     tooltip: {
-                        color: "white",
+                        color: "#2D353C",
                         backgroundColor: "white",
                         show: true,
                         showValue: true,
@@ -1090,9 +1098,10 @@ export default {
             }
         },
         generateXls() {
+            const title = [[this.chartConfig.chart.title.text], [this.chartConfig.chart.title.subtitle.text], [""]];
             const head = ["",...this.table.head.map(h => h.label)]
             const body = this.table.body
-            const table = [head].concat(body);
+            const table = title.concat([head]).concat(body);
 
             function s2ab(s) {
                 let buf = new ArrayBuffer(s.length);
@@ -1113,7 +1122,6 @@ export default {
             link.download = `${this.chartConfig.chart.title.text.replaceAll(" ", "_") || 'vue-ui-xy'}.xlsx`;
             link.click();
             window.URL.revokeObjectURL(link.href);
-            this.isExportRequest = false;
         },
     }
 }
@@ -1214,7 +1222,7 @@ export default {
     padding-right: 6px;
     font-variant-numeric: tabular-nums;
 }
-.vue-ui-xy-table th {
+.vue-ui-xy-table thead {
     border: 1px solid #e1e5e8;
     background: #fafafa;
     position: sticky;

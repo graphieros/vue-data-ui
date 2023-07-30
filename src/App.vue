@@ -518,30 +518,149 @@ const donutDataset = [
     color: "",
     values: [10]
   },
+  {
+    name: "serie 4",
+    color: "",
+    values: [20]
+  },
+  {
+    name: "serie 5",
+    color: "",
+    values: [7]
+  },
+  {
+    name: "serie 6",
+    color: "",
+    values: [12]
+  },
 ];
 
 const donutConfig = {
-  style: {
-    chart: {
-      useGradient: true,
-      backgroundColor: "#FFFFFF",
-      layout: {
+    style: {
+        fontFamily: "inherit",
+        chart: {
+            useGradient: true,
+            gradientIntensity: 40,
+            backgroundColor: "#000000",
+            color: "#FAFAFA",
+            layout: {
+                useDiv: false,
+                labels: {
+                    dataLabels: {
+                        show: true,
+                        hideUnderValue: 3,
+                    },
+                    percentage: {
+                        color: "#FAFAFA",
+                        bold: true,
+                        fontSize: 18
+                    },
+                    name: {
+                        color: "#FAFAFA",
+                        bold: false,
+                        fontSize: 14,
+                    },
+                    hollow: {
+                        total: {
+                            show: true,
+                            bold: false,
+                            fontSize: 18,
+                            color: "#FAFAFA",
+                            text:  "Total",
+                            offsetY: 0,
+                            value: {
+                                color: "#FAFAFA",
+                                fontSize: 18,
+                                bold: true,
+                                suffix: "",
+                                prefix: "",
+                                offsetY: 0,
+                                rounding: 0,
+                            }
+                        },
+                        average: {
+                            show: true,
+                            bold: false,
+                            fontSize: 18,
+                            color: "#FAFAFA",
+                            text:  "Average",
+                            offsetY: 0,
+                            value: {
+                                color: "#FAFAFA",
+                                fontSize: 18,
+                                bold: true,
+                                suffix: "",
+                                prefix: "",
+                                offsetY: 0,
+                                rounding: 0,
+                            }
+                        }
+                    }
+                },
+                donut: {
+                    strokeWidth: 64
+                },
+            },
+            legend: {
+                    backgroundColor: "#000000",
+                    color: "#FAFAFA",
+                    show: true,
+                    fontSize: 16,
+                    bold: false,
+                },
+            title: {
+                text: "Title",
+                color: "#FAFAFA",
+                fontSize: 20,
+                bold: true,
+                subtitle: {
+                    color: "#A1A1A1",
+                    text: "Subtitle",
+                    fontSize: 16,
+                    bold: false
+                }
+            },
+            tooltip: {
+                show: true,
+                color: "#FAFAFA",
+                backgroundColor: "#000000",
+                fontSize: 14,
+                showValue: true,
+                showPercentage: true,
+                roundingValue: 0,
+                roundingPercentage: 0,
+            }
+        }
+    },
+    userOptions: {
+        show: true,
+        title: "options",
         labels: {
+            dataLabels: "Show datalabels",
+            useDiv: "Title & legend inside",
+            showTable: "Show table"
         }
-      },
-      title: {
-        text: "Title",
-        useDiv: false,
-        bold: true,
-        subtitle: {
-          text: "Subtitle"
+    },
+    translations: {
+        total: "Total",
+        average: "Average",
+    },
+    table: {
+        show: false,
+        th: {
+            backgroundColor: "#000000",
+            color: "#FAFAFA",
+            outline: "1px solid #e1e5e8"
+        },
+        td: {
+            backgroundColor: "#000000",
+            color: "#FAFAFA",
+            outline: "1px solid #e1e5e8"
         }
-      }
     }
-  }
-};
+}
 
-const showLocalTest = ref(true);
+const showLocalTest = ref(false);
 
 // IDEAS:
 // . treeselector (with sums & avgs & so on)
@@ -555,8 +674,9 @@ const showLocalTest = ref(true);
       <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
     </div> -->
     <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
+      <VueUiDonut v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
       <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
-      <XyTest :config="config" :dataset="dataset" v-if="showLocalTest"/>
+      <XyTest :config="config"  :dataset="dataset" v-if="showLocalTest"/>
     </div>
     <div style="max-width:1000px; margin:0 auto">
       <XyTest :config="config" :dataset="dataset" v-if="showLocalTest"/>
