@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import TableTest from "./components/vue-ui-table.vue";
 import DonutTest from "./components/vue-ui-donut.vue";
+import XyTest from "./components/vue-ui-xy.vue"
 
 const dataset = ref([
         {
@@ -55,7 +56,8 @@ const dataset2 = ref([
           tooltip: {
             roundingPercentage: 0,
             backgroundColor: "red",
-            color: "white"
+            color: "white",
+            showPercentage: true,
           },
           userOptions: {
             show: true,
@@ -500,21 +502,67 @@ const dataset2 = ref([
     useChart: true
 })
 
-const donutTestDataset = [];
+const donutDataset = [
+  {
+    name: "serie 1",
+    color: "",
+    values: [1]
+  },
+  {
+    name: "serie 2",
+    color: "",
+    values: [2]
+  },
+  {
+    name: "serie 3",
+    color: "",
+    values: [10]
+  },
+];
 
-const donutTestConfig = {};
+const donutConfig = {
+  style: {
+    chart: {
+      useGradient: true,
+      backgroundColor: "#FFFFFF",
+      layout: {
+        labels: {
+        }
+      },
+      title: {
+        text: "Title",
+        useDiv: false,
+        bold: true,
+        subtitle: {
+          text: "Subtitle"
+        }
+      }
+    }
+  }
+};
+
+const showLocalTest = ref(true);
+
+// IDEAS:
+// . treeselector (with sums & avgs & so on)
+// . radar
 
 </script>
 
 <template>
   <div>
+    <!-- <div style="max-width:1000px; margin:0 auto">
+      <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
+    </div> -->
+    <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
+      <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
+      <XyTest :config="config" :dataset="dataset" v-if="showLocalTest"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto">
-      <DonutTest/>
+      <XyTest :config="config" :dataset="dataset" v-if="showLocalTest"/>
+      <VueUiXy :config="config" :dataset="dataset" v-if="!showLocalTest"/>
     </div>
-    <div style="max-width:1000px; margin:0 auto" v-if="false">
-      <VueUiXy :config="config" :dataset="dataset"/>
-    </div>
-    <TableTest :dataset="tableTestDataset" :config="darkConfig" v-if="false"/>
-    <VueUiTable :dataset="tableTestDataset" :config="tableConfig" v-if="false"/>
+    <TableTest :dataset="tableTestDataset" :config="darkConfig" v-if="showLocalTest"/>
+    <VueUiTable :dataset="tableTestDataset" :config="tableConfig" v-if="!showLocalTest"/>
   </div>
 </template>
