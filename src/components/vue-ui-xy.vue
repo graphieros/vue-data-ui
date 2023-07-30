@@ -1,6 +1,6 @@
 
 <template>
-    <div class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}`">
+    <div class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%`">
         <!-- TITLE AS OUTSIDE DIV -->
         <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show && (!mutableConfig.titleInside || isPrinting)" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <div class="vue-ui-xy-title-main" :style="`font-size:${chartConfig.chart.title.fontSize}px; color:${chartConfig.chart.title.color}; font-weight:${chartConfig.chart.title.bold ? 'bold': '400'}`">
@@ -396,6 +396,7 @@
 import html2canvas from 'html2canvas';
 import JsPDF from "jspdf";
 import * as XLSX from 'xlsx';
+import { treeShake, isSafeValue, checkNaN, palette } from '../lib';
 
 // TOD0:
 // . add emit on click (emit all data at given index, maybe choose which to emit if multiseries; so it could dynamically feed another chart)
@@ -420,35 +421,14 @@ export default {
         const uniqueId = `vue-data-ui-xy_${Math.random()}_${Math.random()}`;
         return {
             useSafeValues: true,
-            defaultColors: [
-                "#6376DD",
-                "#FEB019",
-                "#00E396",
-                "#FF4560",
-                "#775DD0",
-                "#3F51B5",
-                "#03A9F4",
-                "#4CAF50",
-                "#F9CE1D",
-                "#FF9800",
-                "#33B2DF",
-                "#546E7A",
-                "#D4526E",
-                "#13D8AA",
-                "#A5978B",
-                "#4ECDC4",
-                "#C7F464",
-                "#81D4FA",
-                "#546E7A",
-                "#FD6A6A"
-            ],
+            palette,
             defaultConfig: {
                 showWarnings: true,
                 showTable: true,
                 chart: {
                     fontFamily: "inherit",
                     backgroundColor: "#FFFFFF",
-                    color: "#000000",
+                    color: "#2D353C",
                     height: 300,
                     width: 500,
                     padding: {
@@ -461,7 +441,7 @@ export default {
                         stroke: "#e1e5e8",
                         showVerticalLines: false,
                         labels: {
-                            color: "black",
+                            color: "#2D353C",
                             show: true,
                             fontSize: 10,
                             axis: {
@@ -470,7 +450,7 @@ export default {
                                 fontSize: 12,
                             },
                             xAxisLabels: {
-                                color: "black",
+                                color: "#2D353C",
                                 show: true,
                                 values: [],
                                 fontSize: 6,
@@ -481,7 +461,7 @@ export default {
                         fontSize: 10,
                     },
                     legend: {
-                        color: "black",
+                        color: "#2D353C",
                         show: true,
                         useDiv: true,
                         fontSize: 16,
@@ -489,7 +469,7 @@ export default {
                     title: {
                         show: true,
                         useDiv: true,
-                        color: "#000000",
+                        color: "#2D353C",
                         text: "",
                         fontSize: 20,
                         bold: true,
@@ -527,7 +507,7 @@ export default {
                         show: false,
                         offsetY: -6,
                         rounding: 0,
-                        color: "#000000"
+                        color: "#2D353C"
                     }
                 },
                 line: {
@@ -538,7 +518,7 @@ export default {
                         show: false,
                         offsetY: -6,
                         rounding: 0,
-                        color: "#000000"
+                        color: "#2D353C"
                     }
 
                 },
@@ -549,7 +529,7 @@ export default {
                         show: false,
                         offsetY: -6,
                         rounding: 0,
-                        color: "#000000"
+                        color: "#2D353C"
                     }
                 },
                 table: {
@@ -617,7 +597,7 @@ export default {
                     ...datapoint,
                     series: datapoint.series.map(plot => plot + this.relativeZero),
                     absoluteValues: datapoint.series,
-                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.defaultColors[i]),
+                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.palette[i]),
                 }
             }).filter(s => !this.segregatedSeries.includes(s.id));
         },
@@ -627,7 +607,7 @@ export default {
                     ...datapoint,
                     series: datapoint.series.map(plot => plot + this.relativeZero),
                     absoluteValues: datapoint.series,
-                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.defaultColors[i]),
+                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.palette[i]),
                 }
             })
         },
@@ -857,32 +837,12 @@ export default {
 
     },
     methods: {
-        treeShake({ defaultConfig, userConfig }) {
-            const finalConfig = {...defaultConfig};
+        // lib
+        checkNaN,
+        isSafeValue,
+        treeShake,
 
-            Object.keys(finalConfig).forEach(key => {
-                if(Object.hasOwn(userConfig, key)) {
-                    const currentVal = userConfig[key]
-                    if(typeof currentVal === 'boolean'){
-                        finalConfig[key] = currentVal;
-                    } else if(["string", "number"].includes(typeof currentVal)) {
-                        if(this.isValidUserValue(currentVal)) {
-                            finalConfig[key] = currentVal;
-                        }
-                    } else if(Array.isArray(finalConfig[key])) {
-                        if(this.checkArray({ userConfig, key})) {
-                            finalConfig[key] = currentVal;
-                        }
-                    } else if(this.checkObj({ userConfig, key})){
-                        finalConfig[key] = this.treeShake({
-                            defaultConfig: finalConfig[key],
-                            userConfig: currentVal
-                        });
-                    }
-                }
-            });
-            return finalConfig;
-        },
+        // specific
         calcRectHeight(plot) {
             if(plot.value >= 0) {
                 return this.zero - plot.y;
@@ -1155,27 +1115,6 @@ export default {
             window.URL.revokeObjectURL(link.href);
             this.isExportRequest = false;
         },
-
-        // treeshaking utils
-        checkArray({ userConfig, key }) {
-            return Object.hasOwn(userConfig, key) && Array.isArray(userConfig[key]) && userConfig[key].length;
-        },
-        checkObj({ userConfig, key}) {
-            return  Object.hasOwn(userConfig, key) && !Array.isArray(userConfig[key]) && typeof userConfig[key] === "object";
-        },
-        isValidUserValue(val) {
-            return ![null, undefined, NaN, Infinity, -Infinity].includes(val);
-        },
-        isSafeValue(val) {
-            return ![undefined, NaN, Infinity, -Infinity].includes(val)
-        },
-        checkNaN(val, fallback = 0) {
-            if(isNaN(val)) {
-                return fallback
-            }else {
-                return val
-            }
-        }
     }
 }
 </script>

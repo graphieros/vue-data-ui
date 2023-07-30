@@ -872,15 +872,13 @@
 
 <script>
 import * as XLSX from 'xlsx';
+import { makeDonut, treeShake, palette } from "../lib";
 
 // TODO:
 // . add callbax to all components
 // . table select whole col: avoid trigger selectTd loop
 // . emits:
 // .. onCellSelect, onPageChange, onReset, onError (ex: calc percentage on NaN)
-
-// IDEAS:
-// . treeselector (with sums & avgs & so on)
 
 export default {
     name: "vue-ui-table",
@@ -1168,39 +1166,7 @@ export default {
             itemsPerPage: this.config.rowsPerPage ? this.config.rowsPerPage : 25,
             multiselects: {},
             paginatorOptions: [...new Set([10, 25, 50, 100, 250, 500, this.config.rowsPerPage ? this.config.rowsPerPage : 25, this.dataset.body.length])].sort((a,b) => a - b),
-            palette: [
-                '#3366cc',
-                '#dc3912',
-                '#ff9900',
-                '#109618',
-                '#990099',
-                '#0099c6',
-                '#dd4477',
-                '#66aa00',
-                '#b82e2e',
-                '#316395',
-                '#994499',
-                '#22aa99',
-                '#aaaa11',
-                '#6633cc',
-                '#e67300',
-                '#8b0707',
-                '#651067',
-                '#329262',
-                '#5574a6',
-                '#3b3eac',
-                '#b77322',
-                '#16d620',
-                '#b91383',
-                '#f4359e',
-                '#9c5935',
-                '#a9c413',
-                '#2a778d',
-                '#668d1c',
-                '#bea413',
-                '#0c5922',
-                '#743411',
-            ],
+            palette,
             percentages: {},
             rafId: null,
             rangeFilters: {},
@@ -1379,6 +1345,11 @@ export default {
         },
     },
     methods: {
+        // lib
+        treeShake,
+        makeDonut,
+
+        // specific
         applyDonutOption() {
             const donutSet = this.selectedDonutCategory.options.map((option, i) => {
                 return {
@@ -2046,9 +2017,7 @@ export default {
         },
 
         // DONUTS
-        addVector([a1, a2], [b1, b2]) {
-            return [a1 + b1, a2 + b2];
-        },
+        
         calcDonutMarkerConnectorColor(arc) {
             if(arc.proportion * 100 > 3) {
                 return arc.color;
@@ -2065,106 +2034,12 @@ export default {
             }
             return -2;
         },
-        createArc([cx, cy], [rx, ry], [position, ratio], phi) {
-            ratio = ratio % (2 * Math.PI);
-            const rotMatrix = this.rotateMatrix(phi);
-            const [sX, sY] = this.addVector(
-            this.matrixTimes(rotMatrix, [
-                rx * Math.cos(position),
-                ry * Math.sin(position),
-            ]),
-            [cx, cy]
-            );
-            const [eX, eY] = this.addVector(
-            this.matrixTimes(rotMatrix, [
-                rx * Math.cos(position + ratio),
-                ry * Math.sin(position + ratio),
-            ]),
-            [cx, cy]
-            );
-            const fA = ratio > Math.PI ? 1 : 0;
-            const fS = ratio > 0 ? 1 : 0;
-            return {
-                startX: sX,
-                startY: sY,
-                endX: eX,
-                endY: eY,
-                path: `M${sX} ${sY} A ${[
-                    rx,
-                    ry,
-                    (phi / (2 * Math.PI)) * 360,
-                    fA,
-                    fS,
-                    eX,
-                    eY,
-                ].join(" ")}`,
-            };
-        },
+        
         displayArcPercentage(arc, stepBreakdown) {
             return isNaN(arc.value / this.sumValues(stepBreakdown)) ? 0 : ((arc.value / this.sumValues(stepBreakdown)) * 100).toFixed(0) + "%";
         },
         isArcBigEnough(arc) {
             return arc.proportion * 100 > 3;
-        },
-        makeDonut(item, cx, cy, rx, ry) {
-            let { series } = item;
-            if (!series || item.base === 0)
-                return {
-                    ...series,
-                    proportion: 0,
-                    ratio: 0,
-                    path: "",
-                    startX: 0,
-                    startY: 0,
-                    endX: 0,
-                    center: {},
-                };
-                const sum = [...series]
-                .map((serie) => serie.value)
-                .reduce((a, b) => a + b, 0);
-                
-                const ratios = [];
-                let acc = 0;
-                for (let i = 0; i < series.length; i += 1) {
-                let proportion = series[i].value / sum;
-                const ratio = proportion * (Math.PI * 1.9999); // (Math.PI * 2) fails to display a donut with only one value > 0 as it goes full circle again
-                // midProportion & midRatio are used to find the midpoint of the arc to display markers
-                const midProportion = series[i].value / 2 / sum;
-                const midRatio = midProportion * (Math.PI * 2);
-                const { startX, startY, endX, endY, path } = this.createArc(
-                    [cx, cy],
-                    [rx, ry],
-                    [acc, ratio],
-                    110
-                );
-                ratios.push({
-                    ...series[i],
-                    proportion,
-                    ratio: ratio,
-                    path,
-                    startX,
-                    startY,
-                    endX,
-                    endY,
-                    center: this.createArc(
-                    [cx, cy],
-                    [rx * 1.45, ry * 1.45],
-                    [acc, midRatio],
-                    110
-                    ), // center of the arc, to display the marker. rx & ry are larger to be displayed with a slight offset
-                });
-                acc += ratio;
-                }
-            return ratios;
-        },
-        matrixTimes([[a, b], [c, d]], [x, y]) {
-            return [a * x + b * y, c * x + d * y];
-        },
-        rotateMatrix(x) {
-            return [
-            [Math.cos(x), -Math.sin(x)],
-            [Math.sin(x), Math.cos(x)],
-            ];
         },
         sumValues(source) {
             return [...source].map(s => s.value).reduce((a, b) => a + b, 0);
@@ -2194,52 +2069,6 @@ export default {
             this.clientY = e.clientY - (rect.height / 2);
             this.rafId = null;
         },
-        // treeshaking utils
-        treeShake({ defaultConfig, userConfig }) {
-            const finalConfig = {...defaultConfig};
-
-            Object.keys(finalConfig).forEach(key => {
-                if(Object.hasOwn(userConfig, key)) {
-                    const currentVal = userConfig[key]
-                    if(typeof currentVal === 'boolean'){
-                        finalConfig[key] = currentVal;
-                    } else if(["string", "number"].includes(typeof currentVal)) {
-                        if(this.isValidUserValue(currentVal)) {
-                            finalConfig[key] = currentVal;
-                        }
-                    } else if(Array.isArray(finalConfig[key])) {
-                        if(this.checkArray({ userConfig, key})) {
-                            finalConfig[key] = currentVal;
-                        }
-                    } else if(this.checkObj({ userConfig, key})){
-                        finalConfig[key] = this.treeShake({
-                            defaultConfig: finalConfig[key],
-                            userConfig: currentVal
-                        });
-                    }
-                }
-            });
-            return finalConfig;
-        },
-        checkArray({ userConfig, key }) {
-            return Object.hasOwn(userConfig, key) && Array.isArray(userConfig[key]) && userConfig[key].length;
-        },
-        checkObj({ userConfig, key}) {
-            return  Object.hasOwn(userConfig, key) && !Array.isArray(userConfig[key]) && typeof userConfig[key] === "object";
-        },
-        isValidUserValue(val) {
-            return ![null, undefined, NaN, Infinity, -Infinity].includes(val);
-        },
-        isSafeValue(val) {
-            return ![undefined, NaN, Infinity, -Infinity].includes(val)
-        },
-        checkNaN(val, fallback = 0) {
-            if(isNaN(val)) {
-                return fallback
-            }else {
-                return val
-            }
-        }
     }
 }
 </script>
