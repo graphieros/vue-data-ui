@@ -1,6 +1,6 @@
 
 <template>
-    <div class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}`">
+    <div class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%`">
         <!-- TITLE AS OUTSIDE DIV -->
         <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show && (!mutableConfig.titleInside || isPrinting)" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <div class="vue-ui-xy-title-main" :style="`font-size:${chartConfig.chart.title.fontSize}px; color:${chartConfig.chart.title.color}; font-weight:${chartConfig.chart.title.bold ? 'bold': '400'}`">
@@ -15,24 +15,24 @@
             <summary :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">{{ chartConfig.chart.userOptions.title }}</summary>
             <div class="vue-ui-xy-user-options-items" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">
                 <div class="vue-ui-xy-user-option-item">
-                    <input type="checkbox" id="vue-ui-xy-option-datalabels" name="vue-ui-xy-option-datalabels"
+                    <input type="checkbox" :id="`vue-ui-xy-option-datalabels_${uniqueId}`" :name="`vue-ui-xy-option-datalabels_${uniqueId}`"
                     v-model="mutableConfig.dataLabels.show">
-                    <label for="vue-ui-xy-option-datalabels">{{ chartConfig.chart.userOptions.labels.dataLabels }}</label>
+                    <label :for="`vue-ui-xy-option-datalabels_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.dataLabels }}</label>
                 </div>
                 <div class="vue-ui-xy-user-option-item">
-                    <input type="checkbox" id="vue-ui-xy-option-title" name="vue-ui-xy-option-title"
+                    <input type="checkbox" :id="`vue-ui-xy-option-title_${uniqueId}`" :name="`vue-ui-xy-option-title_${uniqueId}`"
                     v-model="mutableConfig.titleInside">
-                    <label for="vue-ui-xy-option-title">{{ chartConfig.chart.userOptions.labels.titleInside }}</label>
+                    <label :for="`vue-ui-xy-option-title_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.titleInside }}</label>
                 </div>
                 <div class="vue-ui-xy-user-option-item">
-                    <input type="checkbox" id="vue-ui-xy-option-legend" name="vue-ui-xy-option-legend"
+                    <input type="checkbox" :id="`vue-ui-xy-option-legend_${uniqueId}`" :name="`vue-ui-xy-option-legend_${uniqueId}`"
                     v-model="mutableConfig.legendInside">
-                    <label for="vue-ui-xy-option-legend">{{ chartConfig.chart.userOptions.labels.legendInside }}</label>
+                    <label :for="`vue-ui-xy-option-legend_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.legendInside }}</label>
                 </div>
                 <div class="vue-ui-xy-user-option-item">
-                    <input type="checkbox" id="vue-ui-xy-option-table" name="vue-ui-xy-option-table"
+                    <input type="checkbox" :id="`vue-ui-xy-option-table_${uniqueId}`" :name="`vue-ui-xy-option-table_${uniqueId}`"
                     v-model="mutableConfig.showTable">
-                    <label for="vue-ui-xy-option-table">{{ chartConfig.chart.userOptions.labels.showTable }}</label>
+                    <label :for="`vue-ui-xy-option-table_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.showTable }}</label>
                 </div>
                 <button class="vue-ui-xy-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px">
                     <svg class="vue-ui-xy-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="#2c3e50" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -363,7 +363,7 @@
             class="vue-ui-xy-tooltip"
             ref="tooltip"
             v-if="chartConfig.chart.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px; left:${tooltipPosition.left}px; background-color:${chartConfig.chart.tooltip.backgroundColor}, color:${chartConfig.chart.tooltip.color}`"
+            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px; background-color:${chartConfig.chart.tooltip.backgroundColor};color:${chartConfig.chart.tooltip.color}`"
             v-html="tooltipContent"
         />
 
@@ -377,6 +377,14 @@
                             <div style="max-width: 200px; margin:0 auto">   
                                 <span :style="`color:${th.color}; margin-right:3px`">{{ icons[th.type] }}</span>{{ th.label }}
                             </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th style="text-align:right">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>
+                        </th>
+                        <th v-for="(_, i) in table.head" :key="`th_sum_${i}`">
+                            {{ relativeDataset[i].absoluteValues.reduce((a,b) => a + b, 0) }}
                         </th>
                     </tr>
                 </thead>
@@ -396,6 +404,7 @@
 import html2canvas from 'html2canvas';
 import JsPDF from "jspdf";
 import * as XLSX from 'xlsx';
+import { treeShake, isSafeValue, checkNaN, palette } from '../lib';
 
 // TOD0:
 // . add emit on click (emit all data at given index, maybe choose which to emit if multiseries; so it could dynamically feed another chart)
@@ -420,35 +429,14 @@ export default {
         const uniqueId = `vue-data-ui-xy_${Math.random()}_${Math.random()}`;
         return {
             useSafeValues: true,
-            defaultColors: [
-                "#6376DD",
-                "#FEB019",
-                "#00E396",
-                "#FF4560",
-                "#775DD0",
-                "#3F51B5",
-                "#03A9F4",
-                "#4CAF50",
-                "#F9CE1D",
-                "#FF9800",
-                "#33B2DF",
-                "#546E7A",
-                "#D4526E",
-                "#13D8AA",
-                "#A5978B",
-                "#4ECDC4",
-                "#C7F464",
-                "#81D4FA",
-                "#546E7A",
-                "#FD6A6A"
-            ],
+            palette,
             defaultConfig: {
                 showWarnings: true,
                 showTable: true,
                 chart: {
                     fontFamily: "inherit",
                     backgroundColor: "#FFFFFF",
-                    color: "#000000",
+                    color: "#2D353C",
                     height: 300,
                     width: 500,
                     padding: {
@@ -461,7 +449,7 @@ export default {
                         stroke: "#e1e5e8",
                         showVerticalLines: false,
                         labels: {
-                            color: "black",
+                            color: "#2D353C",
                             show: true,
                             fontSize: 10,
                             axis: {
@@ -470,7 +458,7 @@ export default {
                                 fontSize: 12,
                             },
                             xAxisLabels: {
-                                color: "black",
+                                color: "#2D353C",
                                 show: true,
                                 values: [],
                                 fontSize: 6,
@@ -481,7 +469,7 @@ export default {
                         fontSize: 10,
                     },
                     legend: {
-                        color: "black",
+                        color: "#2D353C",
                         show: true,
                         useDiv: true,
                         fontSize: 16,
@@ -489,7 +477,7 @@ export default {
                     title: {
                         show: true,
                         useDiv: true,
-                        color: "#000000",
+                        color: "#2D353C",
                         text: "",
                         fontSize: 20,
                         bold: true,
@@ -502,7 +490,7 @@ export default {
                         }
                     },
                     tooltip: {
-                        color: "white",
+                        color: "#2D353C",
                         backgroundColor: "white",
                         show: true,
                         showValue: true,
@@ -527,7 +515,7 @@ export default {
                         show: false,
                         offsetY: -6,
                         rounding: 0,
-                        color: "#000000"
+                        color: "#2D353C"
                     }
                 },
                 line: {
@@ -538,7 +526,7 @@ export default {
                         show: false,
                         offsetY: -6,
                         rounding: 0,
-                        color: "#000000"
+                        color: "#2D353C"
                     }
 
                 },
@@ -549,7 +537,7 @@ export default {
                         show: false,
                         offsetY: -6,
                         rounding: 0,
-                        color: "#000000"
+                        color: "#2D353C"
                     }
                 },
                 table: {
@@ -617,7 +605,7 @@ export default {
                     ...datapoint,
                     series: datapoint.series.map(plot => plot + this.relativeZero),
                     absoluteValues: datapoint.series,
-                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.defaultColors[i]),
+                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.palette[i]),
                 }
             }).filter(s => !this.segregatedSeries.includes(s.id));
         },
@@ -627,7 +615,7 @@ export default {
                     ...datapoint,
                     series: datapoint.series.map(plot => plot + this.relativeZero),
                     absoluteValues: datapoint.series,
-                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.defaultColors[i]),
+                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.palette[i]),
                 }
             })
         },
@@ -857,32 +845,12 @@ export default {
 
     },
     methods: {
-        treeShake({ defaultConfig, userConfig }) {
-            const finalConfig = {...defaultConfig};
+        // lib
+        checkNaN,
+        isSafeValue,
+        treeShake,
 
-            Object.keys(finalConfig).forEach(key => {
-                if(Object.hasOwn(userConfig, key)) {
-                    const currentVal = userConfig[key]
-                    if(typeof currentVal === 'boolean'){
-                        finalConfig[key] = currentVal;
-                    } else if(["string", "number"].includes(typeof currentVal)) {
-                        if(this.isValidUserValue(currentVal)) {
-                            finalConfig[key] = currentVal;
-                        }
-                    } else if(Array.isArray(finalConfig[key])) {
-                        if(this.checkArray({ userConfig, key})) {
-                            finalConfig[key] = currentVal;
-                        }
-                    } else if(this.checkObj({ userConfig, key})){
-                        finalConfig[key] = this.treeShake({
-                            defaultConfig: finalConfig[key],
-                            userConfig: currentVal
-                        });
-                    }
-                }
-            });
-            return finalConfig;
-        },
+        // specific
         calcRectHeight(plot) {
             if(plot.value >= 0) {
                 return this.zero - plot.y;
@@ -1130,9 +1098,10 @@ export default {
             }
         },
         generateXls() {
+            const title = [[this.chartConfig.chart.title.text], [this.chartConfig.chart.title.subtitle.text], [""]];
             const head = ["",...this.table.head.map(h => h.label)]
             const body = this.table.body
-            const table = [head].concat(body);
+            const table = title.concat([head]).concat(body);
 
             function s2ab(s) {
                 let buf = new ArrayBuffer(s.length);
@@ -1153,29 +1122,7 @@ export default {
             link.download = `${this.chartConfig.chart.title.text.replaceAll(" ", "_") || 'vue-ui-xy'}.xlsx`;
             link.click();
             window.URL.revokeObjectURL(link.href);
-            this.isExportRequest = false;
         },
-
-        // treeshaking utils
-        checkArray({ userConfig, key }) {
-            return Object.hasOwn(userConfig, key) && Array.isArray(userConfig[key]) && userConfig[key].length;
-        },
-        checkObj({ userConfig, key}) {
-            return  Object.hasOwn(userConfig, key) && !Array.isArray(userConfig[key]) && typeof userConfig[key] === "object";
-        },
-        isValidUserValue(val) {
-            return ![null, undefined, NaN, Infinity, -Infinity].includes(val);
-        },
-        isSafeValue(val) {
-            return ![undefined, NaN, Infinity, -Infinity].includes(val)
-        },
-        checkNaN(val, fallback = 0) {
-            if(isNaN(val)) {
-                return fallback
-            }else {
-                return val
-            }
-        }
     }
 }
 </script>
@@ -1275,7 +1222,7 @@ export default {
     padding-right: 6px;
     font-variant-numeric: tabular-nums;
 }
-.vue-ui-xy-table th {
+.vue-ui-xy-table thead {
     border: 1px solid #e1e5e8;
     background: #fafafa;
     position: sticky;

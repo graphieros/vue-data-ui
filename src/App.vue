@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
 import TableTest from "./components/vue-ui-table.vue";
+import DonutTest from "./components/vue-ui-donut.vue";
+import XyTest from "./components/vue-ui-xy.vue"
 
 const dataset = ref([
         {
@@ -54,7 +56,8 @@ const dataset2 = ref([
           tooltip: {
             roundingPercentage: 0,
             backgroundColor: "red",
-            color: "white"
+            color: "white",
+            showPercentage: true,
           },
           userOptions: {
             show: true,
@@ -499,14 +502,187 @@ const dataset2 = ref([
     useChart: true
 })
 
+const donutDataset = [
+  {
+    name: "serie 1",
+    color: "",
+    values: [1]
+  },
+  {
+    name: "serie 2",
+    color: "",
+    values: [2]
+  },
+  {
+    name: "serie 3",
+    color: "",
+    values: [10]
+  },
+  {
+    name: "serie 4",
+    color: "",
+    values: [20]
+  },
+  {
+    name: "serie 5",
+    color: "",
+    values: [7]
+  },
+  {
+    name: "serie 6",
+    color: "",
+    values: [12]
+  },
+];
+
+const donutConfig = {
+    style: {
+        fontFamily: "inherit",
+        chart: {
+            useGradient: true,
+            gradientIntensity: 40,
+            backgroundColor: "#000000",
+            color: "#FAFAFA",
+            layout: {
+                useDiv: false,
+                labels: {
+                    dataLabels: {
+                        show: true,
+                        hideUnderValue: 3,
+                    },
+                    percentage: {
+                        color: "#FAFAFA",
+                        bold: true,
+                        fontSize: 18
+                    },
+                    name: {
+                        color: "#FAFAFA",
+                        bold: false,
+                        fontSize: 14,
+                    },
+                    hollow: {
+                        total: {
+                            show: true,
+                            bold: false,
+                            fontSize: 18,
+                            color: "#FAFAFA",
+                            text:  "Total",
+                            offsetY: 0,
+                            value: {
+                                color: "#FAFAFA",
+                                fontSize: 18,
+                                bold: true,
+                                suffix: "",
+                                prefix: "",
+                                offsetY: 0,
+                                rounding: 0,
+                            }
+                        },
+                        average: {
+                            show: true,
+                            bold: false,
+                            fontSize: 18,
+                            color: "#FAFAFA",
+                            text:  "Average",
+                            offsetY: 0,
+                            value: {
+                                color: "#FAFAFA",
+                                fontSize: 18,
+                                bold: true,
+                                suffix: "",
+                                prefix: "",
+                                offsetY: 0,
+                                rounding: 0,
+                            }
+                        }
+                    }
+                },
+                donut: {
+                    strokeWidth: 64
+                },
+            },
+            legend: {
+                    backgroundColor: "#000000",
+                    color: "#FAFAFA",
+                    show: true,
+                    fontSize: 16,
+                    bold: false,
+                },
+            title: {
+                text: "Title",
+                color: "#FAFAFA",
+                fontSize: 20,
+                bold: true,
+                subtitle: {
+                    color: "#A1A1A1",
+                    text: "Subtitle",
+                    fontSize: 16,
+                    bold: false
+                }
+            },
+            tooltip: {
+                show: true,
+                color: "#FAFAFA",
+                backgroundColor: "#000000",
+                fontSize: 14,
+                showValue: true,
+                showPercentage: true,
+                roundingValue: 0,
+                roundingPercentage: 0,
+            }
+        }
+    },
+    userOptions: {
+        show: true,
+        title: "options",
+        labels: {
+            dataLabels: "Show datalabels",
+            useDiv: "Title & legend inside",
+            showTable: "Show table"
+        }
+    },
+    translations: {
+        total: "Total",
+        average: "Average",
+    },
+    table: {
+        show: false,
+        th: {
+            backgroundColor: "#000000",
+            color: "#FAFAFA",
+            outline: "1px solid #e1e5e8"
+        },
+        td: {
+            backgroundColor: "#000000",
+            color: "#FAFAFA",
+            outline: "1px solid #e1e5e8"
+        }
+    }
+}
+
+const showLocalTest = ref(false);
+
+// IDEAS:
+// . treeselector (with sums & avgs & so on)
+// . radar
+
 </script>
 
 <template>
   <div>
-    <div style="max-width:1000px; margin:0 auto" v-if="false">
-      <VueUiXy :config="config" :dataset="dataset"/>
+    <!-- <div style="max-width:1000px; margin:0 auto">
+      <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
+    </div> -->
+    <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
+      <VueUiDonut v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
+      <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
+      <XyTest :config="config"  :dataset="dataset" v-if="showLocalTest"/>
     </div>
-    <TableTest :dataset="tableTestDataset" :config="darkConfig"/>
-    <VueUiTable :dataset="tableTestDataset" :config="tableConfig"/>
+    <div style="max-width:1000px; margin:0 auto">
+      <XyTest :config="config" :dataset="dataset" v-if="showLocalTest"/>
+      <VueUiXy :config="config" :dataset="dataset" v-if="!showLocalTest"/>
+    </div>
+    <TableTest :dataset="tableTestDataset" :config="darkConfig" v-if="showLocalTest"/>
+    <VueUiTable :dataset="tableTestDataset" :config="tableConfig" v-if="!showLocalTest"/>
   </div>
 </template>
