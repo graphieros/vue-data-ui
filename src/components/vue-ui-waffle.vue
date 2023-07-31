@@ -1,6 +1,10 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from "vue";
-import { treeShake, palette, convertColorToHex, shiftHue } from "../lib";
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue";
+import { treeShake, palette, shiftHue } from "../lib";
+import pdf from "../pdf";
+import * as XLSX from 'xlsx';
+
+// TODO: accept color formats
 
 const props = defineProps({
     config: {
@@ -18,7 +22,6 @@ const props = defineProps({
 });
 
 const uid = ref(`vue-ui-waffle-${Math.random()}`);
-
 const defaultConfig = ref({
     style: {
         fontFamily: "inherit",
@@ -81,6 +84,21 @@ const defaultConfig = ref({
             showTable: "Show table"
         }
     },
+    table: {
+        show: false,
+        th: {
+            backgroundColor: "#FAFAFA",
+            color: "#2D353C",
+            outline: "1px solid #e1e5e8"
+        },
+        td: {
+            backgroundColor: "#FFFFFF",
+            color: "#2D353C",
+            outline: "1px solid #e1e5e8",
+            roundingValue: 0,
+            roundingPercentage: 0
+        }
+    }
 });
 
 const isPrinting = ref(false);
@@ -320,6 +338,59 @@ function segregate(uid) {
         segregated.value.push(uid);
     }
 }
+
+const table = computed(() => {
+    const head = waffleSet.value.map(ds => {
+        return {
+            name: ds.name,
+            color: ds.color
+        }
+    });
+    const body = waffleSet.value.map(ds => ds.value);
+    return { head, body };
+});
+
+function generatePdf(){
+    isPrinting.value = true;
+    pdf({
+        domElement: document.getElementById(`vue-ui-waffle_${uid.value}`),
+        fileName: waffleConfig.value.style.chart.title.text || 'vue-ui-waffle'
+    }).finally(() => {
+        isPrinting.value = false;
+    });
+}
+
+function generateXls() {
+    nextTick(() => {
+        const labels = table.value.head.map((h,i) => {
+            return [[
+                h.name
+            ],[table.value.body[i]], [isNaN(table.value.body[i] / total.value) ? '-' : table.value.body[i] / total.value * 100]]
+        });
+        const tableXls = [[waffleConfig.value.style.chart.title.text],[waffleConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+    
+        function s2ab(s) {
+            let buf = new ArrayBuffer(s.length);
+            let view = new Uint8Array(buf);
+            for (let i = 0; i < s.length; i++) {
+                view[i] = s.charCodeAt(i) & 0xff;
+            }
+            return buf;
+        }
+    
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet(tableXls);
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+        const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = `${waffleConfig.value.style.chart.title.text.replaceAll(" ", "_") || 'vue-ui-waffle'}.xlsx`;
+        link.click();
+        window.URL.revokeObjectURL(link.href);
+    });
+}
+
 </script>
 
 <template>
@@ -371,7 +442,7 @@ function segregate(uid) {
         </details>
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;padding:24px;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" @click="closeDetails">
+        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" @click="closeDetails">
 
             <!-- DEFS -->
             <defs>
@@ -406,8 +477,7 @@ function segregate(uid) {
                 </text>
             </g>
 
-            <!-- SQUARES // COULD BE CUSTOM SHAPES TOO -->
-
+            <!-- RECTS -->
             <rect
                 v-for="(position, i) in positions"
                 @mouseover="useTooltip(i)"
@@ -463,6 +533,47 @@ function segregate(uid) {
         />
 
         <!-- DATA TABLE -->
+        <div @click="closeDetails" class="vue-ui-waffle-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+            <table>
+                <thead>
+                    <tr v-if="waffleConfig.style.chart.title.text">
+                        <th colspan="3" :style="`background:${waffleConfig.table.th.backgroundColor};color:${waffleConfig.table.th.color};outline:${waffleConfig.table.th.outline}`">
+                            <span>{{ waffleConfig.style.chart.title.text }}</span>
+                            <span v-if="waffleConfig.style.chart.title.subtitle.text">
+                                : {{ waffleConfig.style.chart.title.subtitle.text }}
+                            </span>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th align="right" :style="`background:${waffleConfig.table.th.backgroundColor};color:${waffleConfig.table.th.color};outline:${waffleConfig.table.th.outline};padding-right:6px`">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>
+                        </th>
+                        <th :style="`background:${waffleConfig.table.th.backgroundColor};color:${waffleConfig.table.th.color};outline:${waffleConfig.table.th.outline};text-align:right;padding-right:6px`">
+                            {{ total.toFixed(waffleConfig.table.td.roundingValue) }}
+                        </th>
+                        <th :style="`background:${waffleConfig.table.th.backgroundColor};color:${waffleConfig.table.th.color};outline:${waffleConfig.table.th.outline};text-align:right;padding-right:6px`">
+                            100%
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(th, i) in table.head">
+                        <td :style="`background:${waffleConfig.table.td.backgroundColor};color:${waffleConfig.table.td.color};outline:${waffleConfig.table.td.outline}`">
+                            <div style="max-width: 200px margin:0 auto">
+                                <span :style="`color:${th.color};margin-right:6px;`">◼</span>
+                                <span>{{ th.name }}</span>
+                            </div>
+                        </td>
+                        <td :style="`background:${waffleConfig.table.td.backgroundColor};color:${waffleConfig.table.td.color};outline:${waffleConfig.table.td.outline}`">
+                            {{ table.body[i].toFixed(waffleConfig.table.td.roundingValue) }}
+                        </td>
+                        <td :style="`background:${waffleConfig.table.td.backgroundColor};color:${waffleConfig.table.td.color};outline:${waffleConfig.table.td.outline}`">
+                            {{ isNaN(table.body[i] / total) ? "-" : (table.body[i] / total * 100).toFixed(waffleConfig.table.td.roundingPercentage) }}%
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </template>
 

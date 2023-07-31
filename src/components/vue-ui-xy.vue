@@ -1,6 +1,6 @@
 
 <template>
-    <div class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%`">
+    <div :id="`vue-ui-xy_${uniqueId}`" class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%`">
         <!-- TITLE AS OUTSIDE DIV -->
         <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show && (!mutableConfig.titleInside || isPrinting)" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <div class="vue-ui-xy-title-main" :style="`font-size:${chartConfig.chart.title.fontSize}px; color:${chartConfig.chart.title.color}; font-weight:${chartConfig.chart.title.bold ? 'bold': '400'}`">
@@ -401,8 +401,7 @@
 </template>
 
 <script>
-import html2canvas from 'html2canvas';
-import JsPDF from "jspdf";
+import pdf from '../pdf';
 import * as XLSX from 'xlsx';
 import { treeShake, isSafeValue, checkNaN, palette, shiftHue } from '../lib';
 
@@ -860,6 +859,7 @@ export default {
         isSafeValue,
         treeShake,
         shiftHue,
+        pdf,
 
         // specific
         calcRectHeight(plot) {
@@ -979,65 +979,14 @@ export default {
                 this.selectedSerieIndex = null;
             }
         },
-
         generatePdf(){
-            const chart = this.$refs.chart;
-            if(chart) {
-                this.isPrinting = true;
-                this.$nextTick(() => {
-                    const a4 = {
-                    height: 851.89,
-                    width: 595.28,
-                };
-                const pdf = new JsPDF("", "pt", "a4");
-                let contentWidth, contentHeight, imgWidth, imgHeight, pageData;
-                html2canvas(chart)
-                    .then((canvasChart) => {
-                        contentWidth = canvasChart.width;
-                        contentHeight = canvasChart.height;
-                        let leftHeight = contentHeight;
-                        const pageHeight = (contentWidth / a4.width) * a4.height;
-                        let position = 0;
-
-                        imgWidth = a4.width;
-                        imgHeight = (582.28 / contentWidth) * contentHeight;
-                        pageData = canvasChart.toDataURL("image/png", 1.0);
-                        if (leftHeight < pageHeight) {
-                        pdf.addImage(
-                            pageData,
-                            "PNG",
-                            33,
-                            24,
-                            imgWidth * 0.9,
-                            imgHeight * 0.9,
-                            "",
-                            "FAST"
-                        );
-                        } else {
-                        while (leftHeight > 0) {
-                            pdf.addImage(
-                            pageData,
-                            "PNG",
-                            33,
-                            position,
-                            imgWidth * 0.9,
-                            imgHeight * 0.9,
-                            "",
-                            "FAST"
-                            );
-                            leftHeight -= pageHeight;
-                            position -= a4.height - 24;
-                            if (leftHeight > 0) {
-                            pdf.addPage();
-                            }
-                        }
-                        }
-                        pdf.save(`${this.chartConfig.chart.title.text || 'vue-ui-xy'}.pdf`);
-                    }).finally(() => {
-                        this.isPrinting = false;
-                    })
-                })
-            }
+            this.isPrinting = true;
+            this.pdf({
+                domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
+                fileName: this.chartConfig.chart.title.text || 'vue-ui-xy'
+            }).finally(() => {
+                this.isPrinting = false;
+            });
         },
         generateXls() {
             const title = [[this.chartConfig.chart.title.text], [this.chartConfig.chart.title.subtitle.text], [""]];
