@@ -1,8 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { treeShake, makeDonut, palette, convertColorToHex } from '../lib';
-import html2canvas from 'html2canvas';
-import JsPDF from "jspdf";
+import pdf from "../pdf";
 import * as XLSX from 'xlsx';
 
 const props = defineProps({
@@ -160,7 +159,7 @@ const clientPosition = ref({
     y: 0
 });
 const isTooltip = ref(false);
-const tooltipContent = ref("TEST");
+const tooltipContent = ref("");
 const selectedSerie = ref(null);
 
 onMounted(() => {
@@ -177,7 +176,6 @@ function setClientPosition(e) {
 }
 
 const tooltipPosition = computed(() => {
-
     let offsetX = 0;
     let offsetY = 48;
     if(tooltip.value && donutChart.value) {
@@ -218,7 +216,7 @@ const mutableConfig = ref({
     },
     inside: donutConfig.value.style.chart.layout.useDiv,
     showTable: donutConfig.value.table.show,
-})
+});
 
 const svg = computed(() => {
     const height = mutableConfig.value.inside || isPrinting.value ? 512: 360;
@@ -330,62 +328,13 @@ function useTooltip(arc, i, showTooltip = true) {
 }
 
 function generatePdf(){
-    const chart = document.getElementById(`donut__${uid.value}`);
-    console.log(chart)
-    if(chart) {
-        isPrinting.value = true;
-            const a4 = {
-            height: 851.89,
-            width: 595.28,
-        };
-        const pdf = new JsPDF("", "pt", "a4");
-        let contentWidth, contentHeight, imgWidth, imgHeight, pageData;
-        html2canvas(chart)
-            .then((canvasChart) => {
-                contentWidth = canvasChart.width;
-                contentHeight = canvasChart.height;
-                let leftHeight = contentHeight;
-                const pageHeight = (contentWidth / a4.width) * a4.height;
-                let position = 0;
-
-                imgWidth = a4.width;
-                imgHeight = (582.28 / contentWidth) * contentHeight;
-                pageData = canvasChart.toDataURL("image/png", 1.0);
-                if (leftHeight < pageHeight) {
-                pdf.addImage(
-                    pageData,
-                    "PNG",
-                    33,
-                    24,
-                    imgWidth * 0.9,
-                    imgHeight * 0.9,
-                    "",
-                    "FAST"
-                );
-                } else {
-                while (leftHeight > 0) {
-                    pdf.addImage(
-                    pageData,
-                    "PNG",
-                    33,
-                    position,
-                    imgWidth * 0.9,
-                    imgHeight * 0.9,
-                    "",
-                    "FAST"
-                    );
-                    leftHeight -= pageHeight;
-                    position -= a4.height - 24;
-                    if (leftHeight > 0) {
-                    pdf.addPage();
-                    }
-                }
-                }
-                pdf.save(`${donutConfig.value.style.chart.title.text || 'vue-ui-donut'}.pdf`);
-            }).finally(() => {
-                isPrinting.value = false;
-            })
-    }
+    isPrinting.value = true;
+    pdf({
+        domElement: document.getElementById(`donut__${uid.value}`),
+        fileName: donutConfig.value.style.chart.title.text || 'vue-ui-donut'
+    }).finally(() => {
+        isPrinting.value = false;
+    });
 }
 
 const table = computed(() => {
@@ -482,7 +431,7 @@ function generateXls() {
             </div>
         </details>
 
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; padding: 0 24px;background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`" @click="closeDetails">
+        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`" @click="closeDetails">
             
             <!-- DEFS -->
             <defs>
@@ -705,13 +654,10 @@ function generateXls() {
                         <td :style="`background:${donutConfig.table.td.backgroundColor};color:${donutConfig.table.td.color};outline:${donutConfig.table.td.outline}`">
                             {{ isNaN(table.body[i] / total) ? "-" : (table.body[i] / total * 100).toFixed(donutConfig.table.td.roundingPercentage) }}%
                         </td>
-                        
                     </tr>
                 </tbody>
             </table>
         </div>
-        
-
     </div>
 </template>
 
