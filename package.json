@@ -1,9 +1,9 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "0.1.2",
+  "version": "0.1.4",
   "type": "module",
-  "description": "A Vue data visualization components library",
+  "description": "A user-empowering data visualization Vue components library",
   "keywords": ["Vue", "data visualization", "chart", "table"],
   "author": "Alec Lloyd Probert",
   "repository": {

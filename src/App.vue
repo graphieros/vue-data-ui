@@ -7,7 +7,7 @@ import XyTest from "./components/vue-ui-xy.vue"
 const dataset = ref([
         {
           name: "Series 1",
-          series: [ -55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+          series: [ -55.454, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
           type: "bar",
         },
         {
@@ -127,6 +127,12 @@ const dataset2 = ref([
         },
         plot: {
          
+        },
+        table: {
+          rounding: 1,
+          th: {
+            backgroundColor: "#FF0000"
+          }
         }
       });
 
@@ -607,6 +613,8 @@ const donutConfig = {
                     show: true,
                     fontSize: 16,
                     bold: false,
+                    roundingValue:2,
+                    roundingPercentage:2
                 },
             title: {
                 text: "Title",
@@ -655,7 +663,9 @@ const donutConfig = {
         td: {
             backgroundColor: "#000000",
             color: "#FAFAFA",
-            outline: "1px solid #e1e5e8"
+            outline: "1px solid #e1e5e8",
+            roundingValue: 1,
+            roundingPercentage: 1
         }
     }
 }
@@ -674,7 +684,7 @@ const showLocalTest = ref(false);
       <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
     </div> -->
     <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
-      <VueUiDonut v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
+      <VueUiDonut v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
       <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
       <XyTest :config="config"  :dataset="dataset" v-if="showLocalTest"/>
     </div>
