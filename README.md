@@ -1,6 +1,10 @@
-![Screenshot](public/logo.png)
+<p align="center">
+    <img src="public/logo.png">
+</p>
 
+```
 npm i vue-data-ui
+```
 
 # vue-data-ui
 
@@ -12,6 +16,7 @@ For the moment, it includes:
 ## VueUiTable
 ## VueUiXy
 ## VueUiDonut
+## VueUiWaffle
 
 Full documentation
 [Ineractive documentation](https://vue-data-ui.graphieros.com/)
