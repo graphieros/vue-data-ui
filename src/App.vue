@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import TableTest from "./components/vue-ui-table.vue";
 import DonutTest from "./components/vue-ui-donut.vue";
 import XyTest from "./components/vue-ui-xy.vue"
+import WaffleTest from "./components/vue-ui-waffle.vue";
 
 const dataset = ref([
         {
@@ -522,23 +523,13 @@ const donutDataset = [
   {
     name: "serie 3",
     color: "",
-    values: [10]
+    values: [3]
   },
   {
     name: "serie 4",
     color: "",
-    values: [20]
-  },
-  {
-    name: "serie 5",
-    color: "",
-    values: [7]
-  },
-  {
-    name: "serie 6",
-    color: "",
-    values: [12]
-  },
+    values: [3,5]
+  }
 ];
 
 const donutConfig = {
@@ -670,7 +661,11 @@ const donutConfig = {
     }
 }
 
-const showLocalTest = ref(false);
+const waffleConfig = ref({
+
+});
+
+const showLocalTest = ref(true);
 
 // IDEAS:
 // . treeselector (with sums & avgs & so on)
@@ -683,6 +678,9 @@ const showLocalTest = ref(false);
     <!-- <div style="max-width:1000px; margin:0 auto">
       <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
     </div> -->
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <WaffleTest v-if="showLocalTest" :dataset="donutDataset" :config="waffleConfig"/>
+    </div>
     <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
       <VueUiDonut v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
       <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>

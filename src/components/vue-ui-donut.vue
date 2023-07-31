@@ -160,7 +160,7 @@ const clientPosition = ref({
     y: 0
 });
 const isTooltip = ref(false);
-const tooltipContent = ref("TEST");
+const tooltipContent = ref("");
 const selectedSerie = ref(null);
 
 onMounted(() => {
@@ -177,7 +177,6 @@ function setClientPosition(e) {
 }
 
 const tooltipPosition = computed(() => {
-
     let offsetX = 0;
     let offsetY = 48;
     if(tooltip.value && donutChart.value) {
@@ -218,7 +217,7 @@ const mutableConfig = ref({
     },
     inside: donutConfig.value.style.chart.layout.useDiv,
     showTable: donutConfig.value.table.show,
-})
+});
 
 const svg = computed(() => {
     const height = mutableConfig.value.inside || isPrinting.value ? 512: 360;
@@ -705,13 +704,10 @@ function generateXls() {
                         <td :style="`background:${donutConfig.table.td.backgroundColor};color:${donutConfig.table.td.color};outline:${donutConfig.table.td.outline}`">
                             {{ isNaN(table.body[i] / total) ? "-" : (table.body[i] / total * 100).toFixed(donutConfig.table.td.roundingPercentage) }}%
                         </td>
-                        
                     </tr>
                 </tbody>
             </table>
         </div>
-        
-
     </div>
 </template>
 
