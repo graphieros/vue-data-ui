@@ -45,13 +45,13 @@ const defaultConfig = ref({
                 useDiv: true,
             },
             title: {
-                text: "Title",
+                text: "",
                 color: "#2D353C",
                 fontSize: 20,
                 bold: true,
                 subtitle: {
                     color: "#A1A1A1",
-                    text: "Subtitle",
+                    text: "",
                     fontSize: 16,
                     bold: false
                 }
@@ -390,7 +390,6 @@ function generateXls() {
         window.URL.revokeObjectURL(link.href);
     });
 }
-
 </script>
 
 <template>
@@ -401,7 +400,7 @@ function generateXls() {
         :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center`"
     >
         <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor}`">
+        <div v-if="(!mutableConfig.inside || isPrinting) && waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <div :style="`width:100%;text-align:center;color:${waffleConfig.style.chart.title.color};font-size:${waffleConfig.style.chart.title.fontSize}px;font-weight:${waffleConfig.style.chart.title.bold ? 'bold': ''}`">
                 {{ waffleConfig.style.chart.title.text }}
             </div>

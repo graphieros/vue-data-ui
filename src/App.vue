@@ -662,14 +662,89 @@ const donutConfig = {
 }
 
 const waffleConfig = ref({
-
+  style: {
+        fontFamily: "inherit",
+        chart: {
+            backgroundColor: "#FFFFFF",
+            color: "#2D353C",
+            layout: {
+                grid: {
+                    size: 20,
+                    spaceBetween: 2,
+                    vertical: false,
+                },
+                rect: {
+                    rounded: true,
+                    rounding: 2,
+                    stroke: "#2D353C",
+                    strokeWidth: 1,
+                    useGradient: true,
+                    gradientIntensity: 40,
+                },
+                useDiv: true,
+            },
+            title: {
+                text: "Title",
+                color: "#2D353C",
+                fontSize: 20,
+                bold: true,
+                subtitle: {
+                    color: "#A1A1A1",
+                    text: "Subtitle",
+                    fontSize: 16,
+                    bold: false
+                }
+            },
+            tooltip: {
+                show: true,
+                backgroundColor: "#FFFFFF",
+                color: "#2D353C",
+                fontSize: 14,
+                showValue: true,
+                showPercentage: true,
+                roundingValue: 0,
+                roundingPercentage: 0,
+            },
+            legend: {
+                show: true,
+                backgroundColor: "#FFFFFF",
+                color: "#2D353C",
+                fontSize: 14,
+                roundingValue: 0,
+                roundingPercentage: 0,
+            }
+        }
+    },
+    userOptions: {
+        show: true,
+        title: "options",
+        labels: {
+            useDiv: "Title & legend inside",
+            showTable: "Show table"
+        }
+    },
+    table: {
+        show: false,
+        th: {
+            backgroundColor: "#FAFAFA",
+            color: "#2D353C",
+            outline: "1px solid #e1e5e8"
+        },
+        td: {
+            backgroundColor: "#FFFFFF",
+            color: "#2D353C",
+            outline: "1px solid #e1e5e8",
+            roundingValue: 0,
+            roundingPercentage: 0
+        }
+    }
 });
 
-const showLocalTest = ref(true);
+const showLocalTest = ref(false);
 
 // IDEAS:
 // . treeselector (with sums & avgs & so on)
-// . radar
+// . radar chart
 
 </script>
 
@@ -680,6 +755,7 @@ const showLocalTest = ref(true);
     </div> -->
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <WaffleTest v-if="showLocalTest" :dataset="donutDataset" :config="waffleConfig"/>
+      <VueUiWaffle v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig"/>
     </div>
     <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
       <VueUiDonut v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
