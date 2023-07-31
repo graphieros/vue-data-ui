@@ -1143,6 +1143,7 @@ export default {
 }
 .vue-ui-xy {
     position: relative;
+    padding-top: 36px;
 }
 .vue-ui-xy-user-options {
     border-radius: 4px;

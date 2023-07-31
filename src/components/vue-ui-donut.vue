@@ -722,6 +722,7 @@ function generateXls() {
 .vue-ui-donut {
     user-select: none;
     position: relative;
+    padding-top: 36px;
 }
 .vue-ui-donut .vue-ui-donut-label {
     align-items: center;
@@ -764,7 +765,7 @@ function generateXls() {
     padding: 6px 12px;
     position: absolute;
     right:0;
-    top:0;
+    top:0px;
     max-width: 300px;
     text-align:left;
 }
