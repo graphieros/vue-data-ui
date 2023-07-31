@@ -374,7 +374,7 @@
                     <tr>
                         <th :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color}`"></th>
                         <th v-for="(th, i) in table.head" :key="`th_${i}`" :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color}`">
-                            <div style="max-width: 200px; margin:0 auto">   
+                            <div style="max-width: 200px; margin:0 auto;text-align:center">   
                                 <span :style="`color:${th.color}; margin-right:3px`">{{ icons[th.type] }}</span>{{ th.label }}
                             </div>
                         </th>
@@ -383,14 +383,14 @@
                         <th align="right" :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color}`">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>
                         </th>
-                        <th v-for="(_, i) in table.head" :key="`th_sum_${i}`" :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color}`">
+                        <th align="right" v-for="(_, i) in table.head" :key="`th_sum_${i}`" :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color};padding-right:6px`">
                             {{ relativeDataset[i].absoluteValues.reduce((a,b) => a + b, 0).toFixed(chartConfig.table.rounding) }}
                         </th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="(tr, i) in table.body" :key="`tr_${i}`" :class="{'vue-ui-xy-table-tr-selected': selectedSerieIndex === i || selectedRowIndex === i}" @mouseover="selectedRowIndex = i" @mouseleave="selectedRowIndex = null">
-                        <td v-for="(td, j) in tr" :key="`td_${i}_${j}`" :style="`background:${chartConfig.table.td.backgroundColor};color:${chartConfig.table.td.color}`">
+                        <td v-for="(td, j) in tr" :key="`td_${i}_${j}`" :style="`background:${chartConfig.table.td.backgroundColor};color:${chartConfig.table.td.color};padding-right:6px;`">
                             {{ td }}
                         </td>
                     </tr>
@@ -542,7 +542,6 @@ export default {
                 },
                 table: {
                     rounding: 0,
-                    show: false,
                     th: {
                         backgroundColor: "#FAFAFA",
                         color: "#2D353C",
