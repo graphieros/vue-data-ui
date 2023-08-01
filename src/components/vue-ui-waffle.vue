@@ -68,6 +68,7 @@ const defaultConfig = ref({
             },
             legend: {
                 show: true,
+                bold: true,
                 backgroundColor: "#FFFFFF",
                 color: "#2D353C",
                 fontSize: 14,
@@ -162,7 +163,8 @@ const waffleConfig = computed(() => {
 });
 
 const mutableConfig = ref({
-    inside: !waffleConfig.value.style.chart.layout.useDiv //!
+    inside: !waffleConfig.value.style.chart.layout.useDiv,
+    showTable: waffleConfig.value.table.show
 })
 
 const svg = computed(() => {
@@ -479,6 +481,17 @@ function generateXls() {
             <!-- RECTS -->
             <rect
                 v-for="(position, i) in positions"
+                :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
+                :x="position.x"
+                :y="position.y"
+                :height="rectDimension"
+                :width="rectDimension"
+                fill="white"
+                :stroke="waffleConfig.style.chart.layout.rect.stroke"
+                :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
+            />
+            <rect
+                v-for="(position, i) in positions"
                 @mouseover="useTooltip(i)"
                 @mouseleave="isTooltip = false; selectedSerie = null"
                 :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
@@ -486,7 +499,7 @@ function generateXls() {
                 :y="position.y"
                 :height="rectDimension"
                 :width="rectDimension"
-                :fill="`url(#gradient_${uid}_${i})`"
+                :fill="waffleConfig.style.chart.layout.rect.useGradient && waffleConfig.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
                 :stroke="waffleConfig.style.chart.layout.rect.stroke"
                 :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
             />
@@ -500,7 +513,7 @@ function generateXls() {
                 height="100"
                 style="overflow: visible;"
             >
-                <div class="vue-ui-waffle-legend" :style="`background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+                <div class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
                     <div v-for="(legendItem, i) in legendSet" class="vue-ui-waffle-legend-item" @click="segregate(legendItem.uid)" :style="`opacity:${segregated.includes(legendItem.uid) ? 0.5 : 1}`">
                         <span :style="`color:${legendItem.color};font-size:${waffleConfig.style.chart.legend.fontSize * 1.6}px`">◼</span>
                         <span>{{ legendItem.name }} : </span>
@@ -513,7 +526,7 @@ function generateXls() {
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="waffleConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-waffle-legend" :style="`background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+        <div v-if="waffleConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
             <div v-for="(legendItem, i) in legendSet" class="vue-ui-waffle-legend-item" @click="segregate(legendItem.uid)" :style="`opacity:${segregated.includes(legendItem.uid) ? 0.5 : 1}`">
                 <span :style="`color:${legendItem.color};font-size:${waffleConfig.style.chart.legend.fontSize * 1.6}px`">◼</span>
                 <span>{{ legendItem.name }} : </span>

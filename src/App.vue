@@ -665,19 +665,19 @@ const waffleConfig = ref({
   style: {
         fontFamily: "inherit",
         chart: {
-            backgroundColor: "#FFFFFF",
+            backgroundColor: "#000000",
             color: "#2D353C",
             layout: {
                 grid: {
                     size: 20,
-                    spaceBetween: 2,
+                    spaceBetween: 0,
                     vertical: false,
                 },
                 rect: {
                     rounded: true,
                     rounding: 2,
-                    stroke: "#2D353C",
-                    strokeWidth: 1,
+                    stroke: "#FFFFFF",
+                    strokeWidth: 2,
                     useGradient: true,
                     gradientIntensity: 40,
                 },
@@ -724,7 +724,7 @@ const waffleConfig = ref({
         }
     },
     table: {
-        show: false,
+        show: true,
         th: {
             backgroundColor: "#FAFAFA",
             color: "#2D353C",
