@@ -345,6 +345,7 @@
                         :fill="selectedSerieIndex === i || selectedRowIndex === i ? 'rgba(0,0,0,0.03)' : 'transparent'"
                         @mouseenter="toggleTooltip(true, i)"
                         @mouseleave="toggleTooltip(false)"
+                        @click="selectX(i)"
                     />
                 </g>
             </g>
@@ -963,6 +964,32 @@ export default {
         ratioToMax(value) {
             return value / this.absoluteMax;
         },
+        selectX(index) {
+            this.$emit('selectX', 
+                {
+                    dataset: this.relativeDataset.map(s => {
+                        return {
+                            name: s.name,
+                            value: [null, undefined, NaN].includes(s.absoluteValues[index]) ? null : s.absoluteValues[index],
+                            color: s.color,
+                            type: s.type
+                        }
+                    }),
+                    index,
+                    indexLabel: this.chartConfig.chart.grid.labels.xAxisLabels.values[index]
+                }
+            );
+        },
+        getData(){
+            return this.absoluteDataset.map(s => {
+                return {
+                    values: s.absoluteValues,
+                    color: s.color,
+                    name: s.name,
+                    type: s.type
+                }
+            });
+        },  
         segregate(legendItem){
             if(this.segregatedSeries.includes(legendItem.id)) {
                 this.segregatedSeries = this.segregatedSeries.filter(id => id !== legendItem.id);
@@ -970,6 +997,14 @@ export default {
                 if(this.segregatedSeries.length + 1 === this.safeDataset.length) return;
                 this.segregatedSeries.push(legendItem.id);
             }
+            this.$emit('selectLegend', this.relativeDataset.map(s => {
+                return {
+                    name: s.name,
+                    values: s.absoluteValues,
+                    color: s.color,
+                    type: s.type
+                }
+            }));
         },
         toggleTooltip(show, selectedIndex = null) {
             this.isTooltip = show;

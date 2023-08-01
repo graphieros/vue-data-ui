@@ -218,6 +218,12 @@ const proportions = computed(() => {
     return calculateProportions(numbers);
 });
 
+const immutableProportions = computed(() => {
+    const numbers = datasetCopy.value
+        .map((serie, i) => serie.values.reduce((a,b) => a + b));
+    return calculateProportions(numbers);
+});
+
 const waffleSet = computed(() => {
     return datasetCopy.value
         .filter((serie, i) => !segregated.value.includes(serie.uid))
@@ -232,6 +238,36 @@ const waffleSet = computed(() => {
             }
         })
         .sort((a,b) => b.value - a.value)
+});
+
+const immutableSet = computed(() => {
+    return datasetCopy.value
+        .map((serie, i) => {
+            return {
+                uid: serie.uid,
+                name: serie.name,
+                color: serie.color,
+                value: serie.values.reduce((a,b) => a + b, 0),
+                absoluteValues: serie.values,
+                proportion: immutableProportions.value[i] * Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)
+            }
+        })
+        .sort((a,b) => b.value - a.value)
+});
+
+function getData() {
+    return immutableSet.value.map(ds => {
+        return {
+            name: ds.name,
+            color: ds.color,
+            value: ds.value,
+            proportion: ds.proportion  / (Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2))
+        }
+    });
+}
+
+defineExpose({
+    getData
 });
 
 const cumulatedSet = computed(() => {
@@ -331,6 +367,8 @@ function useTooltip(index) {
     tooltipContent.value = html;
 }
 
+const emit = defineEmits(['selectLegend']);
+
 const segregated = ref([]);
 
 function segregate(uid) {
@@ -339,6 +377,14 @@ function segregate(uid) {
     }else {
         segregated.value.push(uid);
     }
+    emit('selectLegend', waffleSet.value.map(w => {
+        return {
+            name: w.name,
+            color: w.color,
+            value: w.value,
+            proportion: (w.proportion / (Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)))
+        }
+    }));
 }
 
 const table = computed(() => {

@@ -19,5 +19,4 @@ For the moment, it includes:
 ## VueUiWaffle
 ## VueUiRadar
 
-Full documentation
 [Ineractive documentation](https://vue-data-ui.graphieros.com/)

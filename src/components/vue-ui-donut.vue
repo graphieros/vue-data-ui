@@ -226,6 +226,8 @@ const svg = computed(() => {
     }
 });
 
+const emit = defineEmits(['selectLegend'])
+
 const segregated = ref([]);
 
 function segregate(index) {
@@ -234,7 +236,42 @@ function segregate(index) {
     }else {
         segregated.value.push(index);
     }
+    emit('selectLegend', donutSet.value.map(ds => {
+        return {
+            name: ds.name,
+            color: ds.color,
+            value: ds.value
+        }
+    }));
 }
+
+const immutableSet = computed(() => {
+    return props.dataset
+        .map((serie, i) => {
+            return {
+                name: serie.name,
+                color: serie.color || palette[i] || palette[i % palette.length],
+                value: serie.values.reduce((a,b) => a + b, 0),
+                absoluteValues: serie.values
+            }
+        })
+        .sort((a,b) => b.value - a.value)
+});
+
+function getData() {
+    return immutableSet.value.map(ds => {
+        return {
+            name: ds.name,
+            color: ds.color,
+            value: ds.value
+        }
+    });
+}
+
+defineExpose({
+    getData
+});
+
 
 const donutSet = computed(() => {
     return props.dataset
