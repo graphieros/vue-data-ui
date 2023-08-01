@@ -34,8 +34,8 @@
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-xy-option-table_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.showTable }}</label>
                 </div>
-                <button class="vue-ui-xy-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px">
-                    <svg class="vue-ui-xy-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="#2c3e50" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <button class="vue-ui-xy-button" @click="generatePdf" :disabled="isPrinting" :style="`margin-top: 12px; background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">
+                    <svg class="vue-ui-xy-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="chartConfig.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
                         <path d="M6 16v.01" />
@@ -45,7 +45,7 @@
                     </svg>
                     <span v-else>PDF</span>
                 </button>
-                <button class="vue-ui-xy-button" @click="generateXls">
+                <button class="vue-ui-xy-button" @click="generateXls" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">
                     XLSX
                 </button>
             </div>

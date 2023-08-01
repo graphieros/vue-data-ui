@@ -316,6 +316,47 @@ export function shiftHue(hexColor, shiftAmount) {
     return shiftedHexColor;
 }
 
+export function calcPolygonPoints({
+    centerX,
+    centerY,
+    outerPoints,
+    radius,
+    rotation
+}) {
+    const angle = Math.PI / outerPoints;
+    const angleOffsetToCenter = rotation;
+    let points = "";
+    const coordinates = [];
+    for (let i = 0; i < outerPoints * 2; i += 1) {
+        let currX = centerX + Math.cos(i * angle + angleOffsetToCenter) * radius;
+        let currY = centerY + Math.sin(i * angle + angleOffsetToCenter) * radius;
+        points += `${currX},${currY} `;
+        coordinates.push({ x: currX, y: currY });
+    }
+    return {
+        path: `M${points}Z`,
+        coordinates
+    };
+}
+
+export function createPolygonPath({
+    plot,
+    radius,
+    sides,
+    rotation = 0
+}) {
+    const centerX = plot.x;
+    const centerY = plot.y;
+    const outerPoints = sides / 2;
+    return calcPolygonPoints({
+        centerX,
+        centerY,
+        outerPoints,
+        radius: radius + 1,
+        rotation
+    });
+}
+
 const lib = {
     makeDonut,
     treeShake,
@@ -324,6 +365,7 @@ const lib = {
     checkNaN,
     palette,
     convertColorToHex,
-    shiftHue
+    shiftHue,
+    createPolygonPath
 };
 export default lib;

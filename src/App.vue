@@ -4,6 +4,7 @@ import TableTest from "./components/vue-ui-table.vue";
 import DonutTest from "./components/vue-ui-donut.vue";
 import XyTest from "./components/vue-ui-xy.vue"
 import WaffleTest from "./components/vue-ui-waffle.vue";
+import RadarTest from "./components/vue-ui-radar.vue";
 
 const dataset = ref([
         {
@@ -740,6 +741,155 @@ const waffleConfig = ref({
     }
 });
 
+const radarDataset = ref({
+  categories: [
+    {
+      name: "category 1"
+    },
+    {
+      name: "category 2"
+    },
+    {
+      name: "category 3"
+    }
+],
+  series: [
+    {
+      name: "Serie 1",
+      values: [1, 2, 3],
+      color: "",
+      target: 3
+    },
+    {
+      name: "Serie 2",
+      values: [2, 3, 4],
+      color: "",
+      target: 10
+    },
+    {
+      name: "Serie 3",
+      values: [3, 4, 5],
+      color: "",
+      target: 10
+    },
+    {
+      name: "Serie 4",
+      values: [4, 5, 6],
+      color: "",
+      target: 10
+    },
+    {
+      name: "Serie 5",
+      values: [5, 6, 7],
+      color: "",
+      target: 10
+    },
+    {
+      name: "Serie 6",
+      values: [6, 7, 8],
+      color: "",
+      target: 10
+    },
+  ]
+});
+
+const radarConfig = ref({
+  style: {
+        fontFamily: "inherit",
+        chart: {
+            backgroundColor: "#000000",
+            color: "#CCCCCC",
+            layout: {
+                useDiv: true,
+                plots: {
+                    show: true,
+                    radius: 2,
+                },
+                outerPolygon: {
+                    stroke: "#292929",
+                    strokeWidth: 1,
+                },
+                dataPolygon: {
+                    strokeWidth: 1,
+                    transparent: false,
+                    opacity: 20,
+                    useGradient: true,
+                },
+                grid: {
+                    show: true,
+                    stroke: "#292929",
+                    strokeWidth: 0.5,
+                    graduations: 5
+                },
+                labels: {
+                    dataLabels: {
+                        show: true,
+                        fontSize: 12,
+                        color: "#CCCCCC"
+                    }
+                },
+            },
+            title: {
+                text: "Title",
+                color: "#CCCCCC",
+                fontSize: 20,
+                bold: true,
+                subtitle: {
+                    color: "#A1A1A1",
+                    text: "Subtitle",
+                    fontSize: 16,
+                    bold: false
+                }
+            },
+            tooltip: {
+                show: true,
+                backgroundColor: "#000000",
+                color: "#CCCCCC",
+                fontSize: 14,
+                showValue: true,
+                showPercentage: true,
+                roundingValue: 0,
+                roundingPercentage: 0,
+            },
+            legend: {
+                show: true,
+                bold: true,
+                backgroundColor: "#000000",
+                color: "#CCCCCC",
+                fontSize: 14,
+                roundingPercentage: 0,
+            }
+        }
+    },
+    table: {
+        show: false,
+        th: {
+            backgroundColor: "#000000",
+            color: "#CCCCCC",
+            outline: "1px solid #e1e5e8"
+        },
+        td: {
+            backgroundColor: "#000000",
+            color: "#CCCCCC",
+            outline: "1px solid #e1e5e8",
+            roundingValue: 0,
+            roundingPercentage: 0
+        }
+    },
+    userOptions: {
+        show: true,
+        title: "options",
+        labels: {
+            useDiv: "Title & legend inside",
+            showTable: "Show table"
+        }
+    },
+    translations: {
+      target: "Target"
+    }
+});
+
+
 const showLocalTest = ref(false);
 
 // IDEAS:
@@ -753,6 +903,10 @@ const showLocalTest = ref(false);
     <!-- <div style="max-width:1000px; margin:0 auto">
       <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
     </div> -->
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiRadar v-if="!showLocalTest" :dataset="radarDataset" :config="radarConfig"/>
+      <RadarTest v-if="showLocalTest" :dataset="radarDataset" :config="radarConfig"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <WaffleTest v-if="showLocalTest" :dataset="donutDataset" :config="waffleConfig"/>
       <VueUiWaffle v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig"/>
