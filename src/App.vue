@@ -896,6 +896,42 @@ const showLocalTest = ref(false);
 // . treeselector (with sums & avgs & so on)
 // . radar chart
 
+const xytest = ref(null)
+
+function selectLegendXY(ds) {
+  console.log(ds);
+  const data = xytest.value.getData();
+  console.log('getData', data);
+}
+
+function selectX(x) {
+  console.log(x);
+}
+
+const donuttest = ref(null);
+
+function selectLegendDonut(d) {
+  console.log(d);
+  const data = donuttest.value.getData();
+  console.log('getData', data);
+}
+
+const waffletest = ref(null);
+
+function selectLegendWaffle(w) {
+  console.log(w);
+  const data = waffletest.value.getData();
+  console.log('getData', data);
+}
+
+const radartest = ref(null);
+
+function selectRadarLegend(r) {
+  console.log(r);
+  const data = radartest.value.getData();
+  console.log("getData", data);
+}
+
 </script>
 
 <template>
@@ -904,23 +940,22 @@ const showLocalTest = ref(false);
       <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
     </div> -->
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiRadar v-if="!showLocalTest" :dataset="radarDataset" :config="radarConfig"/>
-      <RadarTest v-if="showLocalTest" :dataset="radarDataset" :config="radarConfig"/>
+      <VueUiRadar ref="radartest" v-if="!showLocalTest" :dataset="radarDataset" :config="radarConfig" @selectLegend="selectRadarLegend"/>
+      <RadarTest ref="radartest" v-if="showLocalTest" :dataset="radarDataset" :config="radarConfig" @selectLegend="selectRadarLegend"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <WaffleTest v-if="showLocalTest" :dataset="donutDataset" :config="waffleConfig"/>
-      <VueUiWaffle v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig"/>
-    </div>
+      <VueUiWaffle ref="waffletest" v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
+      <WaffleTest ref="waffletest" v-if="showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
+    </div> 
     <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
-      <VueUiDonut v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
-      <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
-      <XyTest :config="config"  :dataset="dataset" v-if="showLocalTest"/>
-    </div>
+      <VueUiDonut ref="donuttest" v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
+      <DonutTest ref="donuttest" v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
+    </div> 
     <div style="max-width:1000px; margin:0 auto">
-      <XyTest :config="config" :dataset="dataset" v-if="showLocalTest"/>
-      <VueUiXy :config="config" :dataset="dataset" v-if="!showLocalTest"/>
+      <VueUiXy ref="xytest" :config="config" :dataset="dataset" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
+      <XyTest ref="xytest" :config="config" :dataset="dataset" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
     </div>
-    <TableTest :dataset="tableTestDataset" :config="darkConfig" v-if="showLocalTest"/>
     <VueUiTable :dataset="tableTestDataset" :config="tableConfig" v-if="!showLocalTest"/>
+    <TableTest :dataset="tableTestDataset" :config="darkConfig" v-if="showLocalTest"/>
   </div>
 </template>

@@ -196,6 +196,8 @@ const svg = computed(() => {
     }
 });
 
+const emit = defineEmits(['selectLegend']);
+
 const segregated = ref([]);
 
 function segregate(index) {
@@ -204,7 +206,28 @@ function segregate(index) {
     }else {
         segregated.value.push(index);
     }
+    emit('selectLegend', legend.value.filter((_, i) => !segregated.value.includes(i)).map(l => {
+        return {
+            name: l.name,
+            color: l.color,
+            proportion: l.totalProportion
+        }
+    }))
 }
+
+function getData() {
+    return legend.value.map(l => {
+        return {
+            name: l.name,
+            color: l.color,
+            proportion: l.totalProportion
+        }
+    })
+}
+
+defineExpose({
+    getData
+});
 
 const datasetCopy = computed(() => {
     return props.dataset.categories.map((c, i) => {
