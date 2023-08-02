@@ -357,6 +357,91 @@ export function createPolygonPath({
     });
 }
 
+export function calcStarPoints({
+    centerX,
+    centerY,
+    innerCirclePoints,
+    innerRadius,
+    outerRadius
+}) {
+    const angle = Math.PI / innerCirclePoints;
+      const angleOffsetToCenterStar = 60;
+      const totalPoints = innerCirclePoints * 2;
+      let points = "";
+      for (let i = 0; i < totalPoints; i += 1) {
+        let isEvenIndex = i % 2 == 0;
+        let r = isEvenIndex ? outerRadius : innerRadius;
+        let currX = centerX + Math.cos(i * angle + angleOffsetToCenterStar) * r;
+        let currY = centerY + Math.sin(i * angle + angleOffsetToCenterStar) * r;
+        points += `${currX},${currY} `;
+      }
+      return points;
+}
+
+export function createStar({
+    plot,
+    radius
+}) {
+    const centerX = plot.x;
+    const centerY = plot.y;
+    const innerCirclePoints = 5;
+    const innerRadius = (radius * 3.5) / innerCirclePoints;
+    const innerOuterRadiusRatio = 2;
+    const outerRadius = innerRadius * innerOuterRadiusRatio;
+    return calcStarPoints({
+        centerX,
+        centerY,
+        innerCirclePoints,
+        innerRadius,
+        outerRadius
+    })
+}
+
+export function giftWrap({ series }) {
+    series = series.sort((a, b) => a.x - b.x);
+      function polarAngle(a, b, c) {
+        const x = (a.x - b.x) * (c.x - b.x) + (a.y - b.y) * (c.y - b.y);
+        const y = (a.x - b.x) * (c.y - b.y) - (c.x - b.x) * (a.y - b.y);
+        return Math.atan2(y, x);
+      }
+      const perimeter = [];
+      let currentPoint;
+      currentPoint = series[0];
+      for (const p of series) {
+        if (p.x < currentPoint.x) {
+          currentPoint = p;
+        }
+      }
+      perimeter[0] = currentPoint;
+      let endpoint, secondlast;
+      let minAngle, newEnd;
+      endpoint = perimeter[0];
+      secondlast = { x: endpoint.x, y: endpoint.y + 1 };
+      do {
+        minAngle = Math.PI;
+        for (const p of series) {
+          currentPoint = polarAngle(secondlast, endpoint, p);
+          if (currentPoint <= minAngle) {
+            newEnd = p;
+            minAngle = currentPoint;
+          }
+        }
+        if (newEnd !== perimeter[0]) {
+          perimeter.push(newEnd);
+          secondlast = endpoint;
+          endpoint = newEnd;
+        }
+      } while (newEnd !== perimeter[0]);
+      let result;
+      perimeter.forEach((res) => {
+        if (res && res.x && res.y) {
+          result += `${Math.round(res.x)},${Math.round(res.y)} `;
+        }
+      });
+      result = result.replaceAll("undefined", "");
+      return result;
+}
+
 const lib = {
     makeDonut,
     treeShake,
@@ -366,6 +451,8 @@ const lib = {
     palette,
     convertColorToHex,
     shiftHue,
-    createPolygonPath
+    createPolygonPath,
+    createStar,
+    giftWrap
 };
 export default lib;

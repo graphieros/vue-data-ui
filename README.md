@@ -18,5 +18,6 @@ For the moment, it includes:
 ## VueUiDonut
 ## VueUiWaffle
 ## VueUiRadar
+## VueUiQuadrant
 
 [Ineractive documentation](https://vue-data-ui.graphieros.com/)

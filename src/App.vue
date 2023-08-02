@@ -5,6 +5,7 @@ import DonutTest from "./components/vue-ui-donut.vue";
 import XyTest from "./components/vue-ui-xy.vue"
 import WaffleTest from "./components/vue-ui-waffle.vue";
 import RadarTest from "./components/vue-ui-radar.vue";
+import QuadrantTest from "./components/vue-ui-quadrant.vue";
 
 const dataset = ref([
         {
@@ -889,6 +890,210 @@ const radarConfig = ref({
     }
 });
 
+const quadrantConfig = ref({
+  style: {
+        fontFamily: "inherit",
+        chart: {
+            height: 512, // change to size only ? impose ?
+            width: 512,
+            backgroundColor: "#1A1A1A",
+            color: "#CCCCCC",
+            layout: {
+                useDiv: true,
+                labels: {
+                    quadrantLabels: {
+                        show: true,
+                        tl: {
+                            text: "top left",
+                            color: "#CCCCCC",
+                            fontSize: 16,
+                            bold: true,
+                        },
+                        tr: {
+                            text: "top right",
+                            color: "#CCCCCC",
+                            fontSize: 16,
+                            bold: true,
+                        },
+                        br: {
+                            text: "bottom right",
+                            color: "#CCCCCC",
+                            fontSize: 16,
+                            bold: true,
+                        },
+                        bl: {
+                            text: "bottom left",
+                            color: "#CCCCCC",
+                            fontSize: 16,
+                            bold: true,
+                        },
+                    },
+                    plotLabels: {
+                        show: true,
+                        fontSize: 10,
+                        color: "#CCCCCC",
+                        offsetY: 10,
+                    },
+                    axisLabels: {
+                        show: true,
+                        fontSize: 14,
+                        color: {
+                            positive: "#CCCCCC",
+                            negative: "#CCCCCC"
+                        }
+                    }
+                },
+                grid: {
+                    stroke: "#AAAAAA",
+                    strokeWidth: 0.5,
+                    showArrows: true,
+                    graduations: {
+                        stroke: "#AAAAAA",
+                        strokeWidth: 0.5,
+                        show: true,
+                        steps: 5,
+                        fill: true,
+                        color: "#E1E5E8",
+                        roundingForce: 10,
+                    },
+                    xAxis: {
+                        min: -100,
+                        max: 100,
+                        auto: true,
+                        name: "xAxis"
+                    },
+                    yAxis: {
+                        min: -100,
+                        max: 100,
+                        auto: true,
+                        name: "yAxis"
+                    }
+                },
+                plots: {
+                    radius: 6,
+                    outline: true,
+                    outlineColor: "#CCCCCC",
+                    outlineWidth: 0.5,
+                },
+                areas: {
+                    show: true,
+                    opacity: 50,
+                    useGradient: true,
+                }
+            },
+            title: {
+                text: "Title",
+                color: "#FAFAFA",
+                fontSize: 20,
+                bold: true,
+                subtitle: {
+                    color: "#A1A1A1",
+                    text: "Subtitle",
+                    fontSize: 16,
+                    bold: false
+                }
+            },
+            tooltip: {
+                show: true,
+                backgroundColor: "#1A1A1A",
+                color: "#CCCCCC",
+                fontSize: 14,
+                roundingValue: 0,
+            },
+            legend: {
+                show: true,
+                bold: true,
+                backgroundColor: "#1A1A1A",
+                color: "#CCCCCC",
+                fontSize: 14,
+            }
+        }
+    },
+    table: {
+        show: false,
+        th: {
+            backgroundColor: "#FAFAFA",
+            color: "#2D353C",
+            outline: "1px solid #e1e5e8"
+        },
+        td: {
+            backgroundColor: "#1A1A1A",
+            color: "#2D353C",
+            outline: "1px solid #e1e5e8",
+            roundingValue: 0
+        }
+    },
+    userOptions: {
+        show: true,
+        title: "options",
+        labels: {
+            useDiv: "Title & legend inside",
+            showTable: "Show table",
+            showPlotLabels: "Show plot labels"
+        }
+    },
+    translations: {
+        category: "Category",
+        item: "Item",
+        side: "Side"
+    }
+});
+
+const quadrantDataset = ref([
+  {
+    name: "category 1",
+    shape: "star",
+    series: [
+      {
+        name: "cat1 item1",
+        x: 50,
+        y: 50
+      },
+      {
+        name: "cat1 item2",
+        x: -25,
+        y: -25
+      },
+      {
+        name: "cat1 item3",
+        x: -25,
+        y: 25
+      },
+      {
+        name: "cat1 item4",
+        x: 25,
+        y: -25
+      },
+    ]
+  },
+  {
+    name: "category 2",
+    shape: "circle",
+    series: [
+      {
+        name: "cat2 item1",
+        x: -50,
+        y: -50
+      },
+      {
+        name: "cat2 item2",
+        x: 12,
+        y: -24
+      },
+      {
+        name: "cat2 item3",
+        x: -16,
+        y: 32
+      },
+      {
+        name: "cat2 item4",
+        x: 15,
+        y: 6
+      }
+    ]
+  },
+]);
+
 
 const showLocalTest = ref(false);
 
@@ -932,13 +1137,31 @@ function selectRadarLegend(r) {
   console.log("getData", data);
 }
 
+function selectPlot(plot) {
+  console.log({plot});
+}
+
+const quadranttest = ref(null)
+
+function selectSide(side) {
+  console.log({side});
+  const data = quadranttest.value.getData();
+  console.log('getData', data);
+}
+
+function selectQuadrantLegend(data) {
+  console.log(data)
+}
+
 </script>
 
 <template>
   <div>
-    <!-- <div style="max-width:1000px; margin:0 auto">
-      <DonutTest v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig"/>
-    </div> -->
+
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiQuadrant ref="quadranttest" v-if="!showLocalTest" :dataset="quadrantDataset" :config="quadrantConfig" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
+      <QuadrantTest ref="quadranttest" v-if="showLocalTest" :dataset="quadrantDataset" :config="quadrantConfig" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiRadar ref="radartest" v-if="!showLocalTest" :dataset="radarDataset" :config="radarConfig" @selectLegend="selectRadarLegend"/>
       <RadarTest ref="radartest" v-if="showLocalTest" :dataset="radarDataset" :config="radarConfig" @selectLegend="selectRadarLegend"/>

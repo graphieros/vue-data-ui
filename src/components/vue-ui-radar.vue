@@ -420,6 +420,12 @@ function generateXls() {
     });
 }
 
+function closeDetails(){
+    if(details.value) {
+        details.value.removeAttribute("open")
+    }
+}
+
 </script>
 
 <template>
