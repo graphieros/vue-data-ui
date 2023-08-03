@@ -6,6 +6,7 @@ import XyTest from "./components/vue-ui-xy.vue"
 import WaffleTest from "./components/vue-ui-waffle.vue";
 import RadarTest from "./components/vue-ui-radar.vue";
 import QuadrantTest from "./components/vue-ui-quadrant.vue";
+import GaugeTest from "./components/vue-ui-gauge.vue";
 
 const dataset = ref([
         {
@@ -1095,11 +1096,108 @@ const quadrantDataset = ref([
 ]);
 
 
+const gaugeDataset = ref({
+  base: 0,
+  value: 4.2,
+  series: [
+    {
+      from: 0,
+      to: 3,
+    },
+    {
+      from: 3,
+      to: 4,
+    },
+    {
+      from: 4,
+      to: 5,
+    },
+  ]
+});
+
+const gaugeConfig = ref({
+  style: {
+        fontFamily: "inherit",
+        chart: {
+            backgroundColor: "#1A1A1A",
+            color: "#CCCCCC",
+            animation: {
+                use: true,
+                speed: 1,
+                acceleration: 1,
+            },
+            layout: {
+                useDiv: false,
+                track: {
+                    size: 1,
+                    useGradient: true,
+                    gradientIntensity: 40,
+                },
+                markers: {
+                    size: 1,
+                    color: "#CCCCCC",
+                    strokeWidth: 1,
+                    stroke: "#CCCCCC",
+                    backgroundColor: "#1A1A1A",
+                    bold: true,
+                    fontSizeRatio: 1,
+                    offsetY: 0,
+                    roundingValue: 0,
+                },
+                pointer: {
+                    size: 1,
+                    stroke: "#CCCCCC",
+                    strokeWidth: 12,
+                    useRatingColor: true,
+                    color: "#1A1A1A",
+                    circle: {
+                        radius: 10,
+                        stroke: "#CCCCCC",
+                        strokeWidth: 2,
+                        color: "#1A1A1A"
+                    }
+                }
+            },
+            legend: {
+                fontSize: 48,
+                prefix: "",
+                suffix: "",
+                roundingValue: 1,
+                showPlusSymbol: true,
+                useRatingColor: true,
+                color: "#CCCCCC"
+            },
+            title: {
+                text: "Title",
+                color: "#E1E5E8",
+                fontSize: 20,
+                bold: true,
+                subtitle: {
+                    color: "#A1A1A1",
+                    text: "Subtitle",
+                    fontSize: 16,
+                    bold: false
+                }
+            },
+        }
+    },
+    userOptions: {
+        show: true,
+        title: "options",
+        labels: {
+            useDiv: "Title inside",
+            showTable: "Show table"
+        }
+    },
+    translations: {
+        base: "Base"
+    }
+})
+
 const showLocalTest = ref(false);
 
 // IDEAS:
 // . treeselector (with sums & avgs & so on)
-// . radar chart
 
 const xytest = ref(null)
 
@@ -1157,7 +1255,10 @@ function selectQuadrantLegend(data) {
 
 <template>
   <div>
-
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiGauge ref="gaugetest" v-if="!showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>
+      <GaugeTest ref="gaugetest" v-if="showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiQuadrant ref="quadranttest" v-if="!showLocalTest" :dataset="quadrantDataset" :config="quadrantConfig" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
       <QuadrantTest ref="quadranttest" v-if="showLocalTest" :dataset="quadrantDataset" :config="quadrantConfig" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>

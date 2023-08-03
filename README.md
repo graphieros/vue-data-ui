@@ -19,5 +19,6 @@ For the moment, it includes:
 ## VueUiWaffle
 ## VueUiRadar
 ## VueUiQuadrant
+## VueUiGauge
 
 [Ineractive documentation](https://vue-data-ui.graphieros.com/)
