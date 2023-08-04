@@ -44,7 +44,7 @@ const defaultConfig = ref({
                     strokeWidth: 5,
                     useGradient: true,
                     gradientIntensity: 20,
-                    unerlayerColor: "#FFFFFF",
+                    underlayerColor: "#FFFFFF",
                     labels: {
                         show: true,
                         fontSize: 16,
@@ -799,7 +799,7 @@ function closeDetails(e){
                     stroke-width="2"
                     shape-rendering="cirspEdges"
                     :style="`opacity:${isFocused(branch) ? 1 : 0}`"
-                    @click="restTree"
+                    @click="resetTree"
                 />
             </g>
 
@@ -809,7 +809,7 @@ function closeDetails(e){
                 :cx="root.x" 
                 :cy="root.y" 
                 :r="root.r" 
-                :fill="chestnutConfig.style.chart.layout.roots.unerlayerColor"
+                :fill="chestnutConfig.style.chart.layout.roots.underlayerColor"
                 stroke="none"
                 :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
             />
@@ -833,8 +833,6 @@ function closeDetails(e){
                     :font-size="chestnutConfig.style.chart.layout.roots.labels.fontSize"
                     :fill="chestnutConfig.style.chart.layout.roots.labels.adaptColorToBackground ? adaptColorToBackground(root.color) : chestnutConfig.style.chart.layout.roots.labels.color"
                     font-weight="bold"
-                    stroke="black"
-                    stroke-width="0.3"
                     :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
                     @click="pickRoot(root)"
                 >
@@ -895,8 +893,6 @@ function closeDetails(e){
                         :fill="adaptColorToBackground(branch.color)"
                         :font-size="chestnutConfig.style.chart.layout.branches.labels.dataLabels.fontSize"
                         font-weight="bold"
-                        stroke="black"
-                        stroke-width="0.3"
                         :style="`cursor:pointer; opacity:${isFocused(branch) ? 1 : 0.05}`"
                         @click="pickBranch(branch)"
                     >
@@ -951,6 +947,7 @@ function closeDetails(e){
                     :y="branch.y1 + svg.branchSize / 2 + 5"
                     :font-size="chestnutConfig.style.chart.layout.branches.labels.fontSize"
                     :font-weight="chestnutConfig.style.chart.layout.branches.labels.bold ? 'bold' : 'normal'"
+                    :fill="chestnutConfig.style.chart.layout.branches.labels.color"
                     text-anchor="start"
                     :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
                 >

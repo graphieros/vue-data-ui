@@ -1476,7 +1476,7 @@ const chestnutConfig = ref({
                     strokeWidth: 5,
                     useGradient: true,
                     gradientIntensity: 20,
-                    unerlayerColor: "#FFFFFF",
+                    underlayerColor: "#FFFFFF",
                     labels: {
                         show: true,
                         fontSize: 16,
