@@ -7,6 +7,7 @@ import WaffleTest from "./components/vue-ui-waffle.vue";
 import RadarTest from "./components/vue-ui-radar.vue";
 import QuadrantTest from "./components/vue-ui-quadrant.vue";
 import GaugeTest from "./components/vue-ui-gauge.vue";
+import ChestnutTest from "./components/vue-ui-chestnut.vue";
 
 const dataset = ref([
         {
@@ -1192,6 +1193,439 @@ const gaugeConfig = ref({
     translations: {
         base: "Base"
     }
+});
+
+const chestnutDataset = ref([
+  {
+    name: "Root1",
+    branches: [
+      {
+        name: "branch 1.1",
+        value: 200,
+        breakdown: [
+          {
+            name: "break 1.1.1",
+            value: 50,
+          },
+          {
+            name: "break 1.1.2",
+            value: 25,
+          },
+          {
+            name: "break 1.1.3",
+            value: 25,
+          },
+        ]
+      },
+      {
+        name: "branch 1.2",
+        value: 100,
+        breakdown: [
+          {
+            name: "break 1.2.1",
+            value: 10,
+          },
+          {
+            name: "break 1.2.2",
+            value: 20,
+          },
+          {
+            name: "break 1.2.3",
+            value: 70,
+          },
+        ]
+      },
+
+    ]
+  },
+  {
+    name: "Root2",
+    branches: [
+      {
+        name: "branch 2.1",
+        value: 200,
+        breakdown: [
+          {
+            name: "break 2.1.1",
+            value: 150,
+          },
+          {
+            name: "break 2.1.2",
+            value: 25,
+          },
+          {
+            name: "break 2.1.3",
+            value: 25,
+          },
+        ]
+      },
+      {
+        name: "branch 2.2",
+        value: 300,
+        breakdown: [
+          {
+            name: "break 2.2.1",
+            value: 100,
+          },
+          {
+            name: "break 2.2.2",
+            value: 10,
+          },
+          {
+            name: "break 2.2.3",
+            value: 150,
+          },
+        ]
+      }
+    ]
+  },
+  {
+    name: "Root3",
+    branches: [
+      {
+        name: "branch 3.1",
+        value: 120,
+        breakdown: [
+          {
+            name: "break 3.1.1",
+            value: 100,
+          },
+          {
+            name: "break 3.1.2",
+            value: 10,
+          },
+          {
+            name: "break 3.1.3",
+            value: 10,
+          },
+        ]
+      },
+      {
+        name: "branch 3.2",
+        value: 90,
+        breakdown: [
+          {
+            name: "break 3.2.1",
+            value: 30,
+          },
+          {
+            name: "break 3.2.2",
+            value: 30,
+          },
+          {
+            name: "break 3.2.3",
+            value: 40,
+          },
+        ]
+      }
+    ]
+  },
+  {
+    name: "Root4",
+    branches: [
+      {
+        name: "branch 4.1",
+        value: 120,
+        breakdown: [
+          {
+            name: "break 4.1.1",
+            value: 100,
+          },
+          {
+            name: "break 4.1.2",
+            value: 10,
+          },
+          {
+            name: "break 4.1.3",
+            value: 10,
+          },
+        ]
+      },
+      {
+        name: "branch 4.2",
+        value: 90,
+        breakdown: [
+          {
+            name: "break 4.2.1",
+            value: 30,
+          },
+          {
+            name: "break 4.2.2",
+            value: 30,
+          },
+          {
+            name: "break 4.2.3",
+            value: 40,
+          },
+        ]
+      },
+      {
+        name: "branch 4.3",
+        value: 90,
+        breakdown: [
+          {
+            name: "break 4.3.1",
+            value: 30,
+          },
+          {
+            name: "break 4.3.2",
+            value: 30,
+          },
+          {
+            name: "break 4.3.3",
+            value: 40,
+          },
+        ]
+      },
+      {
+        name: "branch 4.4",
+        value: 90,
+        breakdown: [
+          {
+            name: "break 4.4.1",
+            value: 30,
+          },
+          {
+            name: "break 4.4.2",
+            value: 30,
+          },
+          {
+            name: "break 4.4.3",
+            value: 40,
+          },
+        ]
+      },
+      {
+        name: "branch 4.5",
+        value: 90,
+        breakdown: [
+          {
+            name: "break 4.5.1",
+            value: 30,
+          },
+          {
+            name: "break 4.5.2",
+            value: 30,
+          },
+          {
+            name: "break 4.5.3",
+            value: 40,
+          },
+        ]
+      },
+      {
+        name: "branch 4.6",
+        value: 90,
+        breakdown: [
+          {
+            name: "break 4.6.1",
+            value: 30,
+          },
+          {
+            name: "break 4.6.2",
+            value: 30,
+          },
+          {
+            name: "break 4.6.3",
+            value: 40,
+          },
+        ]
+      },
+      {
+        name: "branch 4.7",
+        value: 10,
+        breakdown: [
+          {
+            name: "break 4.7.1",
+            value: 3,
+          },
+          {
+            name: "break 4.7.2",
+            value: 3,
+          },
+          {
+            name: "break 4.7.3",
+            value: 4,
+          },
+        ]
+      },
+    ]
+  },
+]);
+
+const chestnutConfig = ref({
+  style: {
+        fontFamily: "inherit",
+        chart: {
+            backgroundColor: "#1A1A1A",
+            color: "#CCCCCC",
+            layout: {
+                grandTotal: {
+                    show: true,
+                    fontSize: 20,
+                    bold: true,
+                    suffix: "",
+                    prefix: "",
+                    roundingValue: 0,
+                    color: "#CCCCCC",
+                    text: "Grand total",
+                    offsetY: 0,
+                },
+                roots: {
+                    stroke: "#1A1A1A",
+                    strokeWidth: 5,
+                    useGradient: true,
+                    gradientIntensity: 20,
+                    unerlayerColor: "#FFFFFF",
+                    labels: {
+                        show: true,
+                        fontSize: 16,
+                        adaptColorToBackground: true,
+                        color: "#1A1A1A",
+                        bold: true,
+                        roundingValue: 0,
+                        prefix: "",
+                        suffix: "",
+                        name: {
+                            color: "#CCCCCC",
+                            fontSize: 16,
+                            bold: true,
+                        }
+                    }
+                },
+                verticalSeparator: {
+                    stroke: "#1A1A1A",
+                    strokeWidth: 5,
+                },
+                links: {
+                    opacity: 20,
+                },
+                branches: {
+                    stroke: "#1A1A1A",
+                    strokeWidth: 0,
+                    borderRadius: 6,
+                    useGradient: true,
+                    gradientIntensity: 20,
+                    underlayerColor: "#1A1A1A",
+                    widthRatio: 1.5,
+                    labels: {
+                        show: true,
+                        fontSize: 14,
+                        color: "#CCCCCC",
+                        bold: true,
+                        dataLabels: {
+                            show: true,
+                            hideUnderValue: 5,
+                            fontSize: 14,
+                            roundingValue: 0,
+                            roundingPercentage: 0,
+                            prefix: "",
+                            suffix: "",
+                        }
+                    }
+                },
+                nuts: {
+                    offsetX: 20,
+                    useGradient: true,
+                    gradientIntensity: 30,
+                    selected: {
+                        useMotion: true,
+                        useGradient: true,
+                        gradientIntensity: 40,
+                        roundingValue: 0,
+                        roundingPercentage: 0,
+                        labels: {
+                            dataLabels: {
+                                hideUnderValue: 5,
+                                color: "#CCCCCC",
+                                fontSize: 12,
+                                bold: true,
+                                prefix: "",
+                                suffix: ""
+                            },
+                            core: {
+                                total: {
+                                    color: "#CCCCCC",
+                                    fontSize: 24,
+                                    bold: false,
+                                },
+                                value: {
+                                    color: "#FAFAFA",
+                                    fontSize: 24,
+                                    bold: true,
+                                    prefix: "",
+                                    suffix: ""
+                                }
+                            }
+                        }
+                    }
+                },
+                legend: {
+                    fontSize: 16,
+                    color: "#CCCCCC",
+                    roundingValue: 0,
+                    roundingPercentage: 0,
+                    prefix: "",
+                    suffix: ""
+                },
+                title: {
+                    color: "#FAFAFA",
+                    fontSize: 20,
+                    text: "Title",
+                    bold: true,
+                    offsetY:0,
+                    subtitle: {
+                        text: "Subtitle",
+                        color: "#CCCCCC",
+                        bold: false,
+                        fontSize: 16,
+                        offsetY: 0,
+                    }
+                }
+            }
+        }
+    },
+    table: {
+        show: false,
+        th: {
+            backgroundColor: "#1A1A1A",
+            color: "#CCCCCC",
+            outline: "1px solid #e1e5e8",
+            translations: {
+                rootName: "root name",
+                rootValue: "root value",
+                rootToTotal: "%/total",
+                branchName: "branch name",
+                branchValue: "branch value",
+                branchToRoot: "%/root",
+                branchToTotal: "%/total",
+                nutName: "nut name",
+                nutValue: "nut value",
+                nutToBranch: "%/branch",
+                nutToRoot: "%/root",
+                nutToTotal: "%/total"
+            }
+        },
+        td: {
+            backgroundColor: "#1A1A1A",
+            color: "#CCCCCC",
+            outline: "1px solid #e1e5e8",
+            roundingValue: 0,
+            roundingPercentage: 0
+        }
+    },
+    userOptions: {
+        show: true,
+        title: "options",
+        labels: {
+            showTable: "Show table"
+        }
+    },
+    translations: {
+        total: "Total",
+        proportionToTree: "of grand total",
+        of: "of"
+    }
 })
 
 const showLocalTest = ref(false);
@@ -1256,6 +1690,10 @@ function selectQuadrantLegend(data) {
 <template>
   <div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig"/>
+      <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig"/>
+    </div>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiGauge ref="gaugetest" v-if="!showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>
       <GaugeTest ref="gaugetest" v-if="showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>
     </div>
@@ -1271,10 +1709,10 @@ function selectQuadrantLegend(data) {
       <VueUiWaffle ref="waffletest" v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
       <WaffleTest ref="waffletest" v-if="showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
     </div> 
-    <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
+    <!-- <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
       <VueUiDonut ref="donuttest" v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
       <DonutTest ref="donuttest" v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
-    </div> 
+    </div>  -->
     <div style="max-width:1000px; margin:0 auto">
       <VueUiXy ref="xytest" :config="config" :dataset="dataset" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
       <XyTest ref="xytest" :config="config" :dataset="dataset" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>

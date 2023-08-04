@@ -20,5 +20,6 @@ For the moment, it includes:
 ## VueUiRadar
 ## VueUiQuadrant
 ## VueUiGauge
+## VueUiChestnut
 
 [Ineractive documentation](https://vue-data-ui.graphieros.com/)
