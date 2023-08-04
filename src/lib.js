@@ -30,6 +30,8 @@ export function makeDonut(item, cx, cy, rx, ry) {
                     110
                 );
                 ratios.push({
+                    cx,
+                    cy,
                     ...series[i],
                     proportion,
                     ratio: ratio,
@@ -448,6 +450,29 @@ export function degreesToRadians(degrees) {
     return (degrees * Math.PI) / 180;
 }
 
+export function adaptColorToBackground(bgColor) {
+    if (bgColor) {
+        let color = bgColor;
+        if(color.charAt(0) !== "#"){
+            color = this.rgbToHex(bgColor);
+        }
+        color = color.substring(1, 7);
+        let r = parseInt(color.substring(0, 2), 16);
+        let g = parseInt(color.substring(2, 4), 16);
+        let b = parseInt(color.substring(4, 6), 16);
+        let uiColors = [r / 255, g / 255, b / 255];
+        let c = uiColors.map((col) => {
+          if (col <= 0.03928) {
+            return col / 12.92;
+          }
+          return Math.pow((col + 0.055) / 1.055, 2.4);
+        });
+        let L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+        return L > 0.3 ? "#000000" : "#FFFFFF";
+      }
+      return "#000000";
+}
+
 const lib = {
     addVector,
     checkNaN,
@@ -465,5 +490,6 @@ const lib = {
     rotateMatrix,
     shiftHue,
     treeShake,
+    adaptColorToBackground
 };
 export default lib;
