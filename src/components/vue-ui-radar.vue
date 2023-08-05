@@ -324,7 +324,7 @@ function plot({ centerX, centerY, apexX, apexY, proportion }) {
 function makePath(plots) {
     let path = "";
     plots.forEach(plot => {
-        path += `${plot.x} ${plot.y },`
+        path += `${plot.x},${plot.y } `
     })
     return `M${path}Z`;
 }

@@ -318,19 +318,19 @@
                 </foreignObject>
             </g>
 
-
+            
             <!-- TIME LABELS -->
             <g v-if="chartConfig.chart.grid.labels.xAxisLabels.show">
-                <g v-for="(label, i) in maxSeries" :key="`time_label_${i}`">
+                <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                     <text
-                        v-if="!chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast || (chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === maxSeries-1))"
+                        v-if="(label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1))"
                         text-anchor="middle"
                         :y="drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3"
                         :x="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
                         :font-size="chartConfig.chart.grid.labels.xAxisLabels.fontSize"
                         :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
                     >
-                        {{ chartConfig.chart.grid.labels.xAxisLabels.values[i] || "" }}
+                        {{ label || "" }}
                     </text>
                 </g>
             </g>
@@ -351,6 +351,22 @@
                 </g>
             </g>
         </svg>
+        
+        <!-- SLICER -->
+        <div v-if="chartConfig.chart.zoom.show" class="vue-ui-xy-range-slider" data-html2canvas-ignore>
+            <div class="vue-ui-xy-slider--left">
+                <label :for="`start_${uniqueId}`">
+                    {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.start] }}
+                </label>
+                <input :id="`start_${uniqueId}`" type="range" :style="`accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="Math.floor(maxX/2)" v-model="slicer.start">
+            </div>
+            <div class="vue-ui-xy-slider--right">
+                <label :for="`end_${uniqueId}`">
+                    {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.end-1] }}
+                </label>
+                <input :id="`end_${uniqueId}`" type="range" :style="`accent-color:${chartConfig.chart.zoom.color}`" :min="Math.ceil(maxX/2)" :max="maxX" v-model="slicer.end">
+            </div>
+        </div>
 
         <!-- LEGEND AS OUTSIDE DIV -->
         <div v-if="chartConfig.chart.legend.show && (!mutableConfig.legendInside || isPrinting)" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
@@ -405,7 +421,7 @@
 <script>
 import pdf from '../pdf';
 import * as XLSX from 'xlsx';
-import { treeShake, isSafeValue, checkNaN, palette, shiftHue, opacity } from '../lib';
+import { treeShake, isSafeValue, checkNaN, palette, shiftHue, opacity, convertColorToHex, convertConfigColors } from '../lib';
 
 // TOD0:
 // . add emit on click (emit all data at given index, maybe choose which to emit if multiseries; so it could dynamically feed another chart)
@@ -428,6 +444,11 @@ export default {
     },
     data(){
         const uniqueId = `vue-data-ui-xy_${Math.random()}_${Math.random()}`;
+        const maxX = Math.max(...this.dataset.map(datapoint => datapoint.series.length));
+        const slicer = {
+            start: 0,
+            end: maxX,
+        }
         return {
             opacity,
             useSafeValues: true,
@@ -441,6 +462,10 @@ export default {
                     color: "#2D353C",
                     height: 300,
                     width: 500,
+                    zoom: {
+                        show: true,
+                        color: "#2D353C"
+                    },
                     padding: {
                         top: 36,
                         right: 12,
@@ -583,7 +608,9 @@ export default {
             selectedSerieIndex: null,
             selectedRowIndex: null,
             segregatedSeries: [],
-            uniqueId
+            uniqueId,
+            slicer,
+            maxX
         }
     },
     computed: {
@@ -591,11 +618,13 @@ export default {
             if(!Object.keys(this.config || {}).length) {
                 return this.defaultConfig
             }
-
-            return this.treeShake({
+            
+            const reconcilied = this.treeShake({
                 defaultConfig: this.defaultConfig,
                 userConfig: this.config
             });
+
+            return this.convertConfigColors(reconcilied);
         },
         relativeZero() {
             if(this.min >= 0) return 0;
@@ -611,7 +640,7 @@ export default {
                     ...datapoint,
                     series: datapoint.series.map(d => {
                         return this.isSafeValue(d) ? d : null
-                    }),
+                    }).slice(this.slicer.start, this.slicer.end),
                     id: `uniqueId_${i}`
                 }
             });
@@ -697,7 +726,10 @@ export default {
             return min;
         },
         maxSeries(){
-            return Math.max(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => datapoint.series.length));
+            return this.slicer.end - this.slicer.start;
+        },
+        timeLabels() {
+            return this.chartConfig.chart.grid.labels.xAxisLabels.values.slice(this.slicer.start, this.slicer.end);
         },
         slot() {
             return {
@@ -722,7 +754,7 @@ export default {
 
             const body = [];
 
-            this.chartConfig.chart.grid.labels.xAxisLabels.values.forEach((t, i) => {
+            this.timeLabels.forEach((t, i) => {
                 const row = [t];
                 if(this.plotSet.length) {
                     this.plotSet.forEach(s => {
@@ -758,7 +790,7 @@ export default {
 
             let sum = selectedSeries.map(s => s.value).filter(s => this.isSafeValue(s) && s !== null).reduce((a,b) => Math.abs(a) + Math.abs(b), 0);
 
-            const time = this.chartConfig.chart.grid.labels.xAxisLabels.values[this.selectedSerieIndex];
+            const time = this.timeLabels[this.selectedSerieIndex];
             if(time) {
                 html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid #e1e5e8; width:100%">${time}</div>`;
             }
@@ -870,8 +902,9 @@ export default {
         treeShake,
         shiftHue,
         pdf,
+        convertColorToHex,
+        convertConfigColors,
 
-        // specific
         calcRectHeight(plot) {
             if(plot.value >= 0) {
                 return this.zero - plot.y;
@@ -912,63 +945,6 @@ export default {
             }
 
             return roundedValue;
-        },
-        convertColorToHex(color) {
-            const hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
-            const rgbRegex = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/i;
-            const hslRegex = /^hsla?\((\d+),\s*([\d.]+)%,\s*([\d.]+)%(?:,\s*[\d.]+)?\)$/i;
-
-            let match;
-
-            if ((match = color.match(hexRegex))) {
-                const [, r, g, b] = match;
-                return `#${r}${g}${b}`;
-            } else if ((match = color.match(rgbRegex))) {
-                const [, r, g, b] = match;
-                return `#${this.decimalToHex(r)}${this.decimalToHex(g)}${this.decimalToHex(b)}`;
-            } else if ((match = color.match(hslRegex))) {
-                const [, h, s, l] = match;
-                const rgb = this.hslToRgb(Number(h), Number(s), Number(l));
-                return `#${this.decimalToHex(rgb[0])}${this.decimalToHex(rgb[1])}${this.decimalToHex(rgb[2])}`;
-            }
-
-            return null;
-        },
-        decimalToHex(decimal) {
-            const hex = Number(decimal).toString(16);
-            return hex.length === 1 ? "0" + hex : hex;
-        },
-        hslToRgb(h, s, l) {
-            h /= 360;
-            s /= 100;
-            l /= 100;
-
-            let r, g, b;
-
-            if (s === 0) {
-                r = g = b = l;
-            } else {
-                const hueToRgb = (p, q, t) => {
-                if (t < 0) t += 1;
-                if (t > 1) t -= 1;
-                if (t < 1 / 6) return p + (q - p) * 6 * t;
-                if (t < 1 / 2) return q;
-                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                return p;
-                };
-
-                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                const p = 2 * l - q;
-                r = hueToRgb(p, q, h + 1 / 3);
-                g = hueToRgb(p, q, h);
-                b = hueToRgb(p, q, h - 1 / 3);
-            }
-
-            return [
-                Math.round(r * 255),
-                Math.round(g * 255),
-                Math.round(b * 255),
-            ];
         },
         ratioToMax(value) {
             return value / this.absoluteMax;
@@ -1115,6 +1091,7 @@ export default {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 5px;
+    cursor: pointer;
 }
 .vue-ui-xy-legend-item-segregated {
     opacity: 0.5;
@@ -1193,5 +1170,31 @@ export default {
     to {
         transform: rotate(360deg);
     }
+}
+.vue-ui-xy-range-slider {
+    width: 100%;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: row;
+
+}
+.vue-ui-xy-slider--left, 
+.vue-ui-xy-slider--right {
+    width: 100%;
+    padding: 0 12px;
+    display: flex;
+    flex-direction: column;
+}
+.vue-ui-xy-slider--left input,
+.vue-ui-xy-slider--right input {
+    width: 100%;
+}
+.vue-ui-xy-slider--right {
+    align-items: flex-end;
+    margin-left: -10px;
+}
+.vue-ui-xy-slider--left {
+    align-items: flex-start;
+    margin-right: -10px;
 }
 </style>

@@ -12,7 +12,7 @@ import ChestnutTest from "./components/vue-ui-chestnut.vue";
 const dataset = ref([
         {
           name: "Series 1",
-          series: [200, 100, 125, 230, 120],
+          series: [200, 100, 125, 230, 120, 100, 90, 50, 12, 25, 100, 154, 155],
           type: "line",
         },
       ]);
@@ -41,15 +41,15 @@ const dataset2 = ref([
 
       const config = ref({
         chart: {
-          color: "red",
-          background: "white",
+          color: "#000000",
+          background: "#FFFFFF",
           highlighter: {
             color: "#FF0000"
           },
           tooltip: {
             roundingPercentage: 0,
-            backgroundColor: "red",
-            color: "white",
+            backgroundColor: "#FFFFFF",
+            color: "#000000",
             showPercentage: true,
           },
           userOptions: {
@@ -1702,8 +1702,8 @@ function selectNut(n) {
       <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
     </div>
     <div style="max-width:1000px; margin:0 auto">
-      <VueUiXy ref="xytest" :config="config" :dataset="dataset" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
-      <XyTest ref="xytest" :config="config" :dataset="dataset" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
+      <VueUiXy ref="xytest" :config="config" :dataset="dataset2" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
+      <XyTest ref="xytest" :config="config" :dataset="dataset2" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiGauge ref="gaugetest" v-if="!showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>
