@@ -1,25 +1,25 @@
 <p align="center">
-    <img src="public/logo.png">
+    <a href="https://vue-data-ui.graphieros.com/"><img src="https://vue-data-ui.graphieros.com/vue-data-ui.png"></a>
+    <br>
+    <br>
+    <br>
+    <a href="https://vue-data-ui.graphieros.com/"><img src="https://vue-data-ui.graphieros.com/vue-data-ui-showcase.png"></a>
 </p>
 
-```
-npm i vue-data-ui
-```
-
 # vue-data-ui
+[Interactive documentation](https://vue-data-ui.graphieros.com/)
 
 A user-empowering data visualization Vue components library.
 Currently in early stages, feel free to give some feedback!
 
 For the moment, it includes:
 
-## VueUiTable
-## VueUiXy
-## VueUiDonut
-## VueUiWaffle
-## VueUiRadar
-## VueUiQuadrant
-## VueUiGauge
-## VueUiChestnut
+- [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
+- [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
+- [VueUiDonut](https://vue-data-ui.graphieros.com/docs#vue-ui-donut)
+- [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
+- [VueUiRadar](https://vue-data-ui.graphieros.com/docs#vue-ui-radar)
+- [VueUiQuadrant](https://vue-data-ui.graphieros.com/docs#vue-ui-quadrant)
+- [VueUiGauge](https://vue-data-ui.graphieros.com/docs#vue-ui-gauge)
+- [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
 
-[Ineractive documentation](https://vue-data-ui.graphieros.com/)
