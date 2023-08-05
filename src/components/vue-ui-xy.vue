@@ -321,17 +321,18 @@
 
             <!-- TIME LABELS -->
             <g v-if="chartConfig.chart.grid.labels.xAxisLabels.show">
-                <text 
-                    v-for="(label, i) in maxSeries" 
-                    :key="`time_label_${i}`"
-                    text-anchor="middle"
-                    :y="drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3"
-                    :x="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
-                    :font-size="chartConfig.chart.grid.labels.xAxisLabels.fontSize"
-                    :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
-                >
-                    {{ chartConfig.chart.grid.labels.xAxisLabels.values[i] || "" }}
-                </text>
+                <g v-for="(label, i) in maxSeries" :key="`time_label_${i}`">
+                    <text
+                        v-if="!chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast || (chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === maxSeries-1))"
+                        text-anchor="middle"
+                        :y="drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3"
+                        :x="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
+                        :font-size="chartConfig.chart.grid.labels.xAxisLabels.fontSize"
+                        :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
+                    >
+                        {{ chartConfig.chart.grid.labels.xAxisLabels.values[i] || "" }}
+                    </text>
+                </g>
             </g>
 
             <!-- TOOLTIP TRAPS -->
@@ -462,6 +463,7 @@ export default {
                                 show: true,
                                 values: [],
                                 fontSize: 6,
+                                showOnlyFirstAndLast: false,
                             }
                         }
                     },
@@ -685,7 +687,9 @@ export default {
             return Math.max(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => Math.max(...datapoint.series)));
         },
         min() {
-            return Math.min(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => Math.min(...datapoint.series)));
+            const min = Math.min(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => Math.min(...datapoint.series)));
+            if(min > 0) return 0;
+            return min;
         },
         maxSeries(){
             return Math.max(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => datapoint.series.length));

@@ -12,23 +12,8 @@ import ChestnutTest from "./components/vue-ui-chestnut.vue";
 const dataset = ref([
         {
           name: "Series 1",
-          series: [ -55.454, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
-          type: "bar",
-        },
-        {
-          name: "Series 2",
-          series: [-55, -34, -21, -13, -18, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
-          type: "bar"
-        },
-        {
-          name: "Series 3",
-          series: [-55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
-          type: "line"
-        },
-        {
-          name: "Series 4",
-          series: [0, 1, 2, 3, 5, null, 13, 21, 34, 55,],
-          type: "line"
+          series: [200, 100, 125, 230, 120],
+          type: "line",
         },
       ]);
 const dataset2 = ref([
@@ -80,6 +65,7 @@ const dataset2 = ref([
                 fontSize: 20,
               },
               xAxisLabels: {
+                showOnlyFirstAndLast: true,
                 values: [
                 "JAN",
                 "FEB",
@@ -1689,6 +1675,10 @@ function selectQuadrantLegend(data) {
 
 <template>
   <div>
+    <div style="max-width:1000px; margin:0 auto">
+      <VueUiXy ref="xytest" :config="config" :dataset="dataset" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
+      <XyTest ref="xytest" :config="config" :dataset="dataset" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig"/>
       <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig"/>
@@ -1713,10 +1703,7 @@ function selectQuadrantLegend(data) {
       <VueUiDonut ref="donuttest" v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
       <DonutTest ref="donuttest" v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
     </div>  -->
-    <div style="max-width:1000px; margin:0 auto">
-      <VueUiXy ref="xytest" :config="config" :dataset="dataset" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
-      <XyTest ref="xytest" :config="config" :dataset="dataset" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
-    </div>
+
     <VueUiTable :dataset="tableTestDataset" :config="tableConfig" v-if="!showLocalTest"/>
     <TableTest :dataset="tableTestDataset" :config="darkConfig" v-if="showLocalTest"/>
   </div>
