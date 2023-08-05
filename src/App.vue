@@ -531,7 +531,7 @@ const donutConfig = {
         chart: {
             useGradient: true,
             gradientIntensity: 40,
-            backgroundColor: "#000000",
+            backgroundColor: "rgb(10, 20, 30)",
             color: "#FAFAFA",
             layout: {
                 useDiv: false,
@@ -736,7 +736,7 @@ const waffleConfig = ref({
 const radarDataset = ref({
   categories: [
     {
-      name: "category 1"
+      name: "category 1",
     },
     {
       name: "category 2"
@@ -1721,12 +1721,12 @@ function selectNut(n) {
       <VueUiWaffle ref="waffletest" v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
       <WaffleTest ref="waffletest" v-if="showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
     </div> 
-    <!-- <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
+    <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
       <VueUiDonut ref="donuttest" v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
       <DonutTest ref="donuttest" v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
-    </div>  -->
+    </div> 
 
-    <VueUiTable :dataset="tableTestDataset" :config="tableConfig" v-if="!showLocalTest"/>
+    <VueUiTable :dataset="tableTestDataset" :config="darkConfig" v-if="!showLocalTest"/>
     <TableTest :dataset="tableTestDataset" :config="darkConfig" v-if="showLocalTest"/>
   </div>
 </template>

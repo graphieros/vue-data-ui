@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { treeShake, palette, createPolygonPath, shiftHue } from "../lib";
+import { treeShake, palette, createPolygonPath, shiftHue, opacity, convertColorToHex, convertConfigColors } from "../lib";
 import pdf from "../pdf";
 import * as XLSX from "xlsx";
 
@@ -128,10 +128,6 @@ const clientPosition = ref({
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 
-const opacity = ref([
-    "00","03","05","08","0A","0D","0F","12","14","17","1A","1C","1F","21","24","26","29","2B","2E","30","33","36","38","3B","3D","40","42","45","47","4A","4D","4F","52","54","57","59","5C","5E","61","63","66","69","6B","6E","70","73","75","78","7A","7D","80","82","85","87","8A","8C","8F","91","94","96","99","9C","9E","A1","A3","A6","A8","AB","AD","B0","B3","B5","B8","BA","BD","BF","C2","C4","C7","C9","CC","CF","D1","D4","D6","D9","DB","DE","E0","E3","E6","E8","EB","ED","F0","F2","F5","F7","FA","FC","FF"
-]);
-
 onMounted(() => {
     document.addEventListener("mousemove", setClientPosition)
 });
@@ -174,10 +170,11 @@ const radarConfig = computed(() => {
     if(!Object.keys(props.config || {}).length) {
         return defaultConfig.value;
     }
-    return treeShake({
+    const reconcilied =  treeShake({
         defaultConfig: defaultConfig.value,
         userConfig: props.config
     });
+    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({
@@ -234,25 +231,23 @@ const datasetCopy = computed(() => {
         return {
             name: c.name,
             categoryId: `radar_category_${uid.value}_${i}`,
-            color: c.color || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(c.color) || palette[i] || palette[i % palette.length],
         }
     });
 });
 
 const seriesCopy = computed(() => {
     return props.dataset.series
-        // TODO: add segregation filtering here
         .map((s, i) => {
             return {
                 ...s,
-                color: s.color || palette[i] || palette[i % palette.length],
+                color: convertColorToHex(s.color) || palette[i] || palette[i % palette.length],
                 serieId: `radar_serie_${uid.value}_${i}`
             }
         });
 });
 
 const max = computed(() => Math.max(...seriesCopy.value
-        // TODO: add segregation filtering here
         .flatMap(s => s.values)));
 
 const apexes = computed(() => {

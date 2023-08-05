@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { treeShake, palette, opacity, shiftHue, adaptColorToBackground, makeDonut } from "../lib";
+import { treeShake, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, convertConfigColors } from "../lib";
 import pdf from "../pdf.js";
 import * as XLSX from "xlsx";
 
@@ -249,10 +249,13 @@ const chestnutConfig = computed(() => {
     if(!Object.keys(props.config || {}).length) {
         return defaultConfig.value;
     }
-    return treeShake({
+
+    const reconcilied = treeShake({
         defaultConfig: defaultConfig.value,
         userConfig: props.config
     });
+
+    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({
@@ -294,7 +297,7 @@ const mutableDataset = computed(() => {
         const rootTotal = root.branches.map(branch => branch.value).reduce((a, b) => a + b);
         return {
             ...root,
-            color: root.color || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(root.color) || palette[i] || palette[i % palette.length],
             id: root.id || `root_${i}_${uid.value}`,
             type: "root",
             total: rootTotal,
@@ -304,7 +307,7 @@ const mutableDataset = computed(() => {
                     ...branch,
                     rootName: root.name,
                     rootIndex: i,
-                    color: root.color || palette[i] || palette[i % palette.length],
+                    color: convertColorToHex(root.color) || palette[i] || palette[i % palette.length],
                     value: branch.value >= 0 ? branch.value : 0,
                     id: branch.id || `branch_${i}_${j}_${uid.value}`,
                     proportionToRoot: branch.value / rootTotal,
@@ -335,7 +338,7 @@ const mutableDataset = computed(() => {
                             proportionToTree: nut.value / treeTotal.value,
                             rootIndex: i,
                             id: nut.id || `nut_${i}_${j}_${k}_${uid.value}`,
-                            color: nut.color || palette[k] || palette[k % palette.length],
+                            color: convertColorToHex(nut.color) || palette[k] || palette[k % palette.length],
                             value: nut.value >= 0 ? nut.value : 0
                         }
                     }),

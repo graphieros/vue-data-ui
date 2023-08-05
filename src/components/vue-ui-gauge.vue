@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { treeShake, palette, rotateMatrix, addVector, matrixTimes, opacity } from "../lib.js";
+import { treeShake, palette, rotateMatrix, addVector, matrixTimes, opacity, convertColorToHex, convertConfigColors } from "../lib.js";
 import pdf from "../pdf";
 
 const props = defineProps({
@@ -106,10 +106,13 @@ const gaugeConfig = computed(() => {
     if(!Object.keys(props.config || {}).length) {
         return defaultConfig.value;
     }
-    return treeShake({
+
+    const reconcilied = treeShake({
         defaultConfig: defaultConfig.value,
         userConfig: props.config
     });
+
+    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({
@@ -128,7 +131,7 @@ const mutableDataset = computed(() => {
         series: props.dataset.series.map((serie, i) => {
             return {
                 ...serie,
-                color: serie.color || palette[i],
+                color: convertColorToHex(serie.color) || palette[i],
                 value: ((serie.to - serie.from) / max) * 100,
             }
         })

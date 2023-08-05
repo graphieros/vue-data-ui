@@ -872,13 +872,7 @@
 
 <script>
 import * as XLSX from 'xlsx';
-import { makeDonut, treeShake, palette } from "../lib";
-
-// TODO:
-// . add callbax to all components
-// . table select whole col: avoid trigger selectTd loop
-// . emits:
-// .. onCellSelect, onPageChange, onReset, onError (ex: calc percentage on NaN)
+import { makeDonut, treeShake, palette, convertColorToHex, convertConfigColors } from "../lib";
 
 export default {
     name: "vue-ui-table",
@@ -1335,10 +1329,12 @@ export default {
                 return this.defaultConfig
             }
 
-            return this.treeShake({
+            const reconcilied =  this.treeShake({
                 defaultConfig: this.defaultConfig,
                 userConfig: this.config
             });
+
+            return this.convertConfigColors(reconcilied);
         },
         visibleRows() {
             return this.pages[this.currentPage];
@@ -1348,6 +1344,8 @@ export default {
         // lib
         treeShake,
         makeDonut,
+        convertColorToHex,
+        convertConfigColors,
 
         // specific
         applyDonutOption() {

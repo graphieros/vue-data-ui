@@ -195,6 +195,14 @@ export function convertColorToHex(color) {
     const rgbRegex = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/i;
     const hslRegex = /^hsla?\((\d+),\s*([\d.]+)%,\s*([\d.]+)%(?:,\s*[\d.]+)?\)$/i;
 
+    if([undefined, null, NaN].includes(color)) {
+        return null;
+    }
+
+    if(color === 'transparent') {
+        return "#FFFFFF00";
+    }
+
     let match;
 
     if ((match = color.match(hexRegex))) {
@@ -473,6 +481,23 @@ export function adaptColorToBackground(bgColor) {
       return "#000000";
 }
 
+export function convertConfigColors(config) {
+    for (const key in config) {
+      if (typeof config[key] === 'object' && !Array.isArray(config[key]) && config[key] !== null) {
+        convertConfigColors(config[key]);
+      } else if (key === 'color' || key === 'backgroundColor' || key === 'stroke') {
+        if(config[key] === '') {
+            config[key] = '#000000';
+        } else if (config[key] === 'transparent') {
+            config[key] = '#FFFFFF00'
+        } else {
+            config[key] = convertColorToHex(config[key]);
+        }
+      }
+    }
+    return config;
+  }
+
 const lib = {
     addVector,
     checkNaN,
@@ -490,6 +515,7 @@ const lib = {
     rotateMatrix,
     shiftHue,
     treeShake,
-    adaptColorToBackground
+    adaptColorToBackground,
+    convertConfigColors,
 };
 export default lib;

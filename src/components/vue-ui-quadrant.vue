@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { treeShake, palette, createPolygonPath, createStar, giftWrap, shiftHue } from "../lib";
+import { treeShake, palette, createPolygonPath, createStar, giftWrap, shiftHue, opacity, convertColorToHex, convertConfigColors } from "../lib";
 import pdf from "../pdf.js";
 import * as XLSX from "xlsx";
 
@@ -183,10 +183,6 @@ const clientPosition = ref({
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 
-const opacity = ref([
-    "00","03","05","08","0A","0D","0F","12","14","17","1A","1C","1F","21","24","26","29","2B","2E","30","33","36","38","3B","3D","40","42","45","47","4A","4D","4F","52","54","57","59","5C","5E","61","63","66","69","6B","6E","70","73","75","78","7A","7D","80","82","85","87","8A","8C","8F","91","94","96","99","9C","9E","A1","A3","A6","A8","AB","AD","B0","B3","B5","B8","BA","BD","BF","C2","C4","C7","C9","CC","CF","D1","D4","D6","D9","DB","DE","E0","E3","E6","E8","EB","ED","F0","F2","F5","F7","FA","FC","FF"
-]);
-
 onMounted(() => {
     document.addEventListener("mousemove", setClientPosition);
 
@@ -260,10 +256,12 @@ const quadrantConfig = computed(() => {
     if(!Object.keys(props.config || {}).length) {
         return defaultConfig.value;
     }
-    return treeShake({
+
+    const reconcilied = treeShake({
         defaultConfig: defaultConfig.value,
         userConfig: props.config
     });
+    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({
@@ -305,7 +303,7 @@ const graduations = computed(() => {
             y: stepY + (svg.value.usableHeight * (i / grads / 2)),
             height: svg.value.usableHeight * (1 - (i / (grads))),
             width: svg.value.usableWidth * (1 - (i / grads)),
-            opacity: opacity.value[Math.round((i+1) / grads * 20)]
+            opacity: opacity[Math.round((i+1) / grads * 20)]
         })
     }
 
@@ -353,7 +351,7 @@ const immutableDataset = computed(() => props.dataset.map((category, i) => {
     return {
         ...category,
         id: `cat_${i}_${uid.value}`,
-        color: category.color || palette[i],
+        color: convertColorToHex(category.color) || palette[i],
     }
 }));
 
@@ -387,7 +385,6 @@ const datasetReference = computed(() => {
 
 const drawableDataset = computed(() => {
     return mutableDataset.value.map((category, i) => {
-        // TODO add segregation
         return {
             ...category,
             shape: category.shape || "circle",
