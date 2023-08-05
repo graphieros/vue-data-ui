@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import TableTest from "./components/vue-ui-table.vue";
 import DonutTest from "./components/vue-ui-donut.vue";
 import XyTest from "./components/vue-ui-xy.vue"
@@ -43,6 +43,9 @@ const dataset2 = ref([
         chart: {
           color: "red",
           background: "white",
+          highlighter: {
+            color: "#FF0000"
+          },
           tooltip: {
             roundingPercentage: 0,
             backgroundColor: "red",
@@ -1671,17 +1674,36 @@ function selectQuadrantLegend(data) {
   console.log(data)
 }
 
+const chestnuttest = ref(null)
+
+onMounted(() => {
+  console.log(chestnuttest.value.getData())
+})
+
+function selectRoot(r) {
+  console.log(r)
+}
+
+function selectBranch(b) {
+  console.log(b)
+}
+
+function selectNut(n) {
+  console.log(n)
+}
+
 </script>
 
 <template>
   <div>
+
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
+      <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto">
       <VueUiXy ref="xytest" :config="config" :dataset="dataset" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
       <XyTest ref="xytest" :config="config" :dataset="dataset" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig"/>
-      <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiGauge ref="gaugetest" v-if="!showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>

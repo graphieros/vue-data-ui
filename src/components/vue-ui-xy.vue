@@ -343,7 +343,7 @@
                         :y="drawingArea.top"
                         :height="drawingArea.height"
                         :width="drawingArea.width / maxSeries"
-                        :fill="selectedSerieIndex === i || selectedRowIndex === i ? 'rgba(0,0,0,0.03)' : 'transparent'"
+                        :fill="selectedSerieIndex === i || selectedRowIndex === i ? `${chartConfig.chart.highlighter.color}${opacity[chartConfig.chart.highlighter.opacity]}` : 'transparent'"
                         @mouseenter="toggleTooltip(true, i)"
                         @mouseleave="toggleTooltip(false)"
                         @click="selectX(i)"
@@ -405,7 +405,7 @@
 <script>
 import pdf from '../pdf';
 import * as XLSX from 'xlsx';
-import { treeShake, isSafeValue, checkNaN, palette, shiftHue } from '../lib';
+import { treeShake, isSafeValue, checkNaN, palette, shiftHue, opacity } from '../lib';
 
 // TOD0:
 // . add emit on click (emit all data at given index, maybe choose which to emit if multiseries; so it could dynamically feed another chart)
@@ -429,6 +429,7 @@ export default {
     data(){
         const uniqueId = `vue-data-ui-xy_${Math.random()}_${Math.random()}`;
         return {
+            opacity,
             useSafeValues: true,
             palette,
             defaultConfig: {
@@ -445,6 +446,10 @@ export default {
                         right: 12,
                         bottom: 12,
                         left: 48
+                    },
+                    highlighter: {
+                        color: "#2D353C",
+                        opacity: 5,
                     },
                     grid: {
                         stroke: "#e1e5e8",

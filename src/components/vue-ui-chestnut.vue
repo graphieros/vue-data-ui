@@ -345,6 +345,16 @@ const mutableDataset = computed(() => {
     });
 });
 
+function getData() {
+    return mutableDataset.value;
+}
+
+defineExpose({
+    getData
+});
+
+const emit = defineEmits(['selectRoot', 'selectBranch', 'selectNut']);
+
 const totalBranches = computed(() => {
     return mutableDataset.value.flatMap(root => root.branches).length;
 });
@@ -458,30 +468,36 @@ function pickNut(branch) {
             80,
             80
         );
+        emit('selectNut', branch.breakdown)
     })
 }
 
 function leaveNut() {
     selectedNut.value = null;
     openNut.value = null;
+    emit('selectNut', null);
 }
 
 function pickBranch(branch) {
     if (selectedBranch.value && selectedBranch.value.id === branch.id) {
         selectedBranch.value = null;
         resetTree();
+        emit('selectBranch', null)
     } else {
         resetTree();
         selectedBranch.value = branch;
+        emit('selectBranch', branch)
     }
 }
 
 function pickRoot(root) {
     if (selectedRoot.value && selectedRoot.value.id === root.id) {
         resetTree();
+        emit('selectRoot', null);
     } else {
         resetTree();
         selectedRoot.value = root;
+        emit('selectRoot', root);
     }
 }
 
