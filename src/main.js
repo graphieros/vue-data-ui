@@ -9,7 +9,8 @@ import {
     VueUiRadar, 
     VueUiQuadrant, 
     VueUiGauge,
-    VueUiChestnut
+    VueUiChestnut,
+    VueUiOnion
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -22,5 +23,6 @@ app.component("VueUiRadar", VueUiRadar);
 app.component("VueUiQuadrant", VueUiQuadrant);
 app.component("VueUiGauge", VueUiGauge);
 app.component("VueUiChestnut", VueUiChestnut);
+app.component("VueUiOnion", VueUiOnion);
 app.mount('#app');
 

@@ -8,6 +8,7 @@ import RadarTest from "./components/vue-ui-radar.vue";
 import QuadrantTest from "./components/vue-ui-quadrant.vue";
 import GaugeTest from "./components/vue-ui-gauge.vue";
 import ChestnutTest from "./components/vue-ui-chestnut.vue";
+import OnionTest from "./components/vue-ui-onion.vue";
 
 const dataset = ref([
         {
@@ -1617,6 +1618,124 @@ const chestnutConfig = ref({
     }
 })
 
+const onionDataset = ref([
+  {
+    name: "Serie 1",
+    percentage: 90,
+    value: 1200,
+    prefix: "",
+    suffix: "",
+  },
+  {
+    name: "Serie 2",
+    percentage: 50,
+    value: 1000,
+    prefix: "",
+    suffix: "",
+  },
+  {
+    name: "Serie 3",
+    percentage: 75,
+    value: 500,
+    prefix: "",
+    suffix: "",
+  },
+  {
+    name: "Serie 4",
+    percentage: 90,
+    value: 200,
+    prefix: "",
+    suffix: "",
+  },
+]);
+
+const onionConfig = ref({
+  style: {
+        fontFamily: "inherit",
+        chart: {
+            backgroundColor: "#1A1A1A",
+            color: "#CCCCCC",
+            useGradient: false,
+            gradientIntensity: 20,
+            layout: {
+                useDiv: false,
+                gutter: {
+                    color: "#3A3A3A",
+                    width: 0.62,
+                },
+                track: {
+                    width: 0.62,
+                },
+                labels: {
+                    show: true,
+                    fontSize: 14,
+                    color: "#CCCCCC",
+                    roundingValue: 0,
+                    roundingPercentage: 0,
+                    bold: true,
+                    offsetY: 0,
+                    offsetX: 0,
+                    value: {
+                        show: true,
+                    },
+                    percentage: {
+                        show: true,
+                    }
+                }
+            },
+            title: {
+                text: "Title",
+                color: "#FAFAFA",
+                fontSize: 20,
+                bold: true,
+                subtitle: {
+                    color: "#A1A1A1",
+                    text: "Subtitle",
+                    fontSize: 16,
+                    bold: false
+                }
+            },
+            legend: {
+                show: true,
+                bold: true,
+                backgroundColor: "#1A1A1A",
+                color: "#CCCCCC",
+                fontSize: 14,
+                roundingValue: 0,
+                roundingPercentage: 0,
+            }
+        }
+    },
+    userOptions: {
+        show: true,
+        title: "options",
+        labels: {
+            useDiv: "Title & legend inside",
+            showTable: "Show table"
+        }
+    },
+    table: {
+        show: false,
+        th: {
+            backgroundColor: "#1A1A1A",
+            color: "#CCCCCC",
+            outline: "1px solid #e1e5e8"
+        },
+        td: {
+            backgroundColor: "#1A1A1A",
+            color: "#CCCCCC",
+            outline: "1px solid #e1e5e8",
+            roundingValue: 0,
+            roundingPercentage: 0
+        },
+        translations: {
+            value: "Value",
+            percentage: "Percentage",
+            serie: "Serie"
+        }
+    }
+})
+
 const showLocalTest = ref(false);
 
 // IDEAS:
@@ -1674,10 +1793,10 @@ function selectQuadrantLegend(data) {
   console.log(data)
 }
 
-const chestnuttest = ref(null)
+const oniontest = ref(null)
 
 onMounted(() => {
-  console.log(chestnuttest.value.getData())
+  console.log(oniontest.value.getData())
 })
 
 function selectRoot(r) {
@@ -1692,11 +1811,19 @@ function selectNut(n) {
   console.log(n)
 }
 
+function selectOnionLegend(o) {
+  console.log(o)
+}
+
 </script>
 
 <template>
   <div>
 
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiOnion ref="oniontest" v-if="!showLocalTest" :dataset="onionDataset" :config="onionConfig" @selectLegend="selectOnionLegend"/>
+      <OnionTest ref="oniontest" v-if="showLocalTest" :dataset="onionDataset" :config="onionConfig" @selectLegend="selectOnionLegend"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
       <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
