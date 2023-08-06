@@ -22,4 +22,5 @@ For the moment, it includes:
 - [VueUiQuadrant](https://vue-data-ui.graphieros.com/docs#vue-ui-quadrant)
 - [VueUiGauge](https://vue-data-ui.graphieros.com/docs#vue-ui-gauge)
 - [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
+- [VueUiOnion](https://vue-data-ui.graphieros.com/docs#vue-ui-onion)
 

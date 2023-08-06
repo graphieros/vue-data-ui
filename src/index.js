@@ -6,6 +6,7 @@ import VueUiRadar from "./components/vue-ui-radar.vue";
 import VueUiQuadrant from "./components/vue-ui-quadrant.vue";
 import VueUiGauge from "./components/vue-ui-gauge.vue";
 import VueUiChestnut from "./components/vue-ui-chestnut.vue";
+import VueUiOnion from "./components/vue-ui-onion.vue";
 
 export { 
     VueUiXy, 
@@ -15,5 +16,6 @@ export {
     VueUiRadar,
     VueUiQuadrant,
     VueUiGauge,
-    VueUiChestnut
+    VueUiChestnut,
+    VueUiOnion
 };
