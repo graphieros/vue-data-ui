@@ -402,7 +402,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>
                         </th>
                         <th align="right" v-for="(_, i) in table.head" :key="`th_sum_${i}`" :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color};padding-right:6px`">
-                            {{ relativeDataset[i].absoluteValues.reduce((a,b) => a + b, 0).toFixed(chartConfig.table.rounding) }}
+                            {{ dataset[i].series.slice(slicer.start,slicer.end).reduce((a,b) => a + b, 0).toFixed(chartConfig.table.rounding) }}
                         </th>
                     </tr>
                 </thead>
@@ -744,7 +744,7 @@ export default {
         table() {
             if(this.safeDataset.length === 0) return { head: [], body: []};
 
-            const head = [...this.plotSet, ...this.barSet, ...this.lineSet].map(s => {
+            const head = this.relativeDataset.map(s => {
                 return {
                     label: s.name,
                     color: s.color,
@@ -756,21 +756,9 @@ export default {
 
             this.timeLabels.forEach((t, i) => {
                 const row = [t];
-                if(this.plotSet.length) {
-                    this.plotSet.forEach(s => {
-                        row.push(this.canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(this.chartConfig.table.rounding)) : '')
-                    });
-                }
-                if(this.barSet.length) {
-                    this.barSet.forEach(s => {
-                        row.push(this.canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(this.chartConfig.table.rounding)) : '')
-                    });
-                }
-                if(this.lineSet.length) {
-                    this.lineSet.forEach(s => {
-                        row.push(this.canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(this.chartConfig.table.rounding)) : '')
-                    });
-                }
+                this.relativeDataset.forEach(s => {
+                    row.push(this.canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(this.chartConfig.table.rounding)) : '')
+                });
                 body.push(row);
             })
 
