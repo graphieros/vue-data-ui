@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue";
-import { treeShake, palette, shiftHue, opacity, convertConfigColors, convertColorToHex } from "../lib";
+import { treeShake, palette, shiftHue, opacity, convertConfigColors, convertColorToHex, makeXls } from "../lib";
 import pdf from "../pdf";
-import * as XLSX from 'xlsx';
+import mainConfig from "../default_configs.json";
 
 // TODO: accept color formats
 
@@ -22,85 +22,7 @@ const props = defineProps({
 });
 
 const uid = ref(`vue-ui-waffle-${Math.random()}`);
-const defaultConfig = ref({
-    style: {
-        fontFamily: "inherit",
-        chart: {
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            layout: {
-                grid: {
-                    size: 20,
-                    spaceBetween: 2,
-                    vertical: false,
-                },
-                rect: {
-                    rounded: true,
-                    rounding: 2,
-                    stroke: "#2D353C",
-                    strokeWidth: 1,
-                    useGradient: true,
-                    gradientIntensity: 40,
-                },
-                useDiv: true,
-            },
-            title: {
-                text: "",
-                color: "#2D353C",
-                fontSize: 20,
-                bold: true,
-                subtitle: {
-                    color: "#A1A1A1",
-                    text: "",
-                    fontSize: 16,
-                    bold: false
-                }
-            },
-            tooltip: {
-                show: true,
-                backgroundColor: "#FFFFFF",
-                color: "#2D353C",
-                fontSize: 14,
-                showValue: true,
-                showPercentage: true,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
-            legend: {
-                show: true,
-                bold: true,
-                backgroundColor: "#FFFFFF",
-                color: "#2D353C",
-                fontSize: 14,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            }
-        }
-    },
-    userOptions: {
-        show: true,
-        title: "options",
-        labels: {
-            useDiv: "Title & legend inside",
-            showTable: "Show table"
-        }
-    },
-    table: {
-        show: false,
-        th: {
-            backgroundColor: "#FAFAFA",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8"
-        },
-        td: {
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8",
-            roundingValue: 0,
-            roundingPercentage: 0
-        }
-    }
-});
+const defaultConfig = ref(mainConfig.vue_ui_waffle);
 
 const isPrinting = ref(false);
 const waffleChart = ref(null);
@@ -413,26 +335,8 @@ function generateXls() {
             ],[table.value.body[i]], [isNaN(table.value.body[i] / total.value) ? '-' : table.value.body[i] / total.value * 100]]
         });
         const tableXls = [[waffleConfig.value.style.chart.title.text],[waffleConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
-    
-        function s2ab(s) {
-            let buf = new ArrayBuffer(s.length);
-            let view = new Uint8Array(buf);
-            for (let i = 0; i < s.length; i++) {
-                view[i] = s.charCodeAt(i) & 0xff;
-            }
-            return buf;
-        }
-    
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.aoa_to_sheet(tableXls);
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-        const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-        const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = `${waffleConfig.value.style.chart.title.text.replaceAll(" ", "_") || 'vue-ui-waffle'}.xlsx`;
-        link.click();
-        window.URL.revokeObjectURL(link.href);
+
+        makeXls(tableXls, waffleConfig.value.style.chart.title.text || "vue-ui-waffle");
     });
 }
 </script>

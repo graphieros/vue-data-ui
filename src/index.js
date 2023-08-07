@@ -7,6 +7,7 @@ import VueUiQuadrant from "./components/vue-ui-quadrant.vue";
 import VueUiGauge from "./components/vue-ui-gauge.vue";
 import VueUiChestnut from "./components/vue-ui-chestnut.vue";
 import VueUiOnion from "./components/vue-ui-onion.vue";
+import VueUiVerticalBar from "./components/vue-ui-vertical-bar.vue";
 
 export { 
     VueUiXy, 
@@ -17,5 +18,6 @@ export {
     VueUiQuadrant,
     VueUiGauge,
     VueUiChestnut,
-    VueUiOnion
+    VueUiOnion,
+    VueUiVerticalBar
 };

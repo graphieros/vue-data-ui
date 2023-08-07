@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { treeShake, convertConfigColors, convertColorToHex, palette, opacity } from "../lib.js";
+import { treeShake, convertConfigColors, convertColorToHex, palette, opacity, makeXls } from "../lib.js";
 import pdf from "../pdf";
-import * as XLSX from "xlsx";
+import mainConfig from "../default_configs.json";
 
 const props = defineProps({
     config: {
@@ -21,92 +21,7 @@ const props = defineProps({
 
 const uid = ref(`vue-ui-onion-${Math.random()}`);
 
-const defaultConfig = ref({
-    style: {
-        fontFamily: "inherit",
-        chart: {
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            useGradient: false,
-            gradientIntensity: 20,
-            layout: {
-                useDiv: true,
-                gutter: {
-                    color: "#e1e5e8",
-                    width: 0.62,
-                },
-                track: {
-                    width: 0.62,
-                },
-                labels: {
-                    show: true,
-                    fontSize: 14,
-                    color: "#2D353C",
-                    roundingValue: 0,
-                    roundingPercentage: 0,
-                    bold: true,
-                    offsetY: 0,
-                    offsetX: 0,
-                    value: {
-                        show: true,
-                    },
-                    percentage: {
-                        show: true,
-                    }
-                }
-            },
-            title: {
-                text: "",
-                color: "#2D353C",
-                fontSize: 20,
-                bold: true,
-                subtitle: {
-                    color: "#A1A1A1",
-                    text: "",
-                    fontSize: 16,
-                    bold: false
-                }
-            },
-            legend: {
-                show: true,
-                bold: true,
-                backgroundColor: "#FFFFFF",
-                color: "#2D353C",
-                fontSize: 14,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            }
-        }
-    },
-    userOptions: {
-        show: true,
-        title: "options",
-        labels: {
-            useDiv: "Title & legend inside",
-            showTable: "Show table"
-        }
-    },
-    table: {
-        show: false,
-        th: {
-            backgroundColor: "#FAFAFA",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8"
-        },
-        td: {
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8",
-            roundingValue: 0,
-            roundingPercentage: 0
-        },
-        translations: {
-            value: "Value",
-            percentage: "Percentage",
-            serie: "Serie"
-        }
-    }
-});
+const defaultConfig = ref(mainConfig.vue_ui_onion);
 
 const isPrinting = ref(false);
 const onionChart = ref(null);
@@ -259,28 +174,8 @@ function generateXls() {
         const title = [[onionConfig.value.style.chart.title.text], [onionConfig.value.style.chart.title.subtitle.text], [""]];
         const head = table.value.head;
         const body = table.value.body;
-
         const tableXls = title.concat([head]).concat(body);
-    
-        function s2ab(s) {
-            let buf = new ArrayBuffer(s.length);
-            let view = new Uint8Array(buf);
-            for (let i = 0; i < s.length; i++) {
-                view[i] = s.charCodeAt(i) & 0xff;
-            }
-            return buf;
-        }
-    
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.aoa_to_sheet(tableXls);
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-        const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-        const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = `${onionConfig.value.style.chart.title.text.replaceAll(" ", "_") || 'vue-ui-onion'}.xlsx`;
-        link.click();
-        window.URL.revokeObjectURL(link.href);
+        makeXls(tableXls, onionConfig.value.style.chart.title.text || 'vue-ui-onion');
     });
 }
 

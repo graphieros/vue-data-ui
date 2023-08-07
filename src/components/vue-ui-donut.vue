@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { treeShake, makeDonut, palette, convertColorToHex, opacity, convertConfigColors } from '../lib';
+import { treeShake, makeDonut, palette, convertColorToHex, opacity, convertConfigColors, makeXls } from '../lib';
 import pdf from "../pdf";
-import * as XLSX from 'xlsx';
+import mainConfig from "../default_configs.json";
 
 const props = defineProps({
     config: {
@@ -21,134 +21,7 @@ const props = defineProps({
 
 const uid = ref(`vue-ui-donut-${Math.random()}`);
 
-const defaultConfig = ref({
-    style: {
-        fontFamily: "inherit",
-        chart: {
-            useGradient: true,
-            gradientIntensity: 40,
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            layout: {
-                useDiv: false,
-                labels: {
-                    dataLabels: {
-                        show: true,
-                        hideUnderValue: 3,
-                    },
-                    percentage: {
-                        color: "#2D353C",
-                        bold: true,
-                        fontSize: 18
-                    },
-                    name: {
-                        color: "#2D353C",
-                        bold: false,
-                        fontSize: 14,
-                    },
-                    hollow: {
-                        total: {
-                            show: true,
-                            bold: false,
-                            fontSize: 18,
-                            color: "#AAAAAA",
-                            text:  "Total",
-                            offsetY: 0,
-                            value: {
-                                color: "#2D353C",
-                                fontSize: 18,
-                                bold: true,
-                                suffix: "",
-                                prefix: "",
-                                offsetY: 0,
-                                rounding: 0,
-                            }
-                        },
-                        average: {
-                            show: true,
-                            bold: false,
-                            fontSize: 18,
-                            color: "#AAAAAA",
-                            text:  "Average",
-                            offsetY: 0,
-                            value: {
-                                color: "#2D353C",
-                                fontSize: 18,
-                                bold: true,
-                                suffix: "",
-                                prefix: "",
-                                offsetY: 0,
-                                rounding: 0,
-                            }
-                        }
-                    }
-                },
-                donut: {
-                    strokeWidth: 64
-                },
-            },
-            legend: {
-                    backgroundColor: "#FFFFFF",
-                    color: "#2D353C",
-                    show: true,
-                    fontSize: 16,
-                    bold: false,
-                    roundingValue: 0,
-                    roundingPercentage: 0,
-                },
-            title: {
-                text: "",
-                color: "#2D353C",
-                fontSize: 20,
-                bold: true,
-                subtitle: {
-                    color: "#A1A1A1",
-                    text: "",
-                    fontSize: 16,
-                    bold: false
-                }
-            },
-            tooltip: {
-                show: true,
-                color: "#2D353C",
-                backgroundColor: "#FFFFFF",
-                fontSize: 14,
-                showValue: true,
-                showPercentage: true,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            }
-        }
-    },
-    userOptions: {
-        show: true,
-        title: "options",
-        labels: {
-            dataLabels: "Show datalabels",
-            useDiv: "Title & legend inside",
-            showTable: "Show table"
-        }
-    },
-    translations: {
-        total: "Total",
-        average: "Average",
-    },
-    table: {
-        show: false,
-        th: {
-            backgroundColor: "#FAFAFA",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8"
-        },
-        td: {
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8",
-            roundingValue: 0,
-            roundingPercentage: 0
-        }
-    }
-});
+const defaultConfig = ref(mainConfig.vue_ui_donut);
 
 const isPrinting = ref(false);
 const donutChart = ref(null);
@@ -390,26 +263,8 @@ function generateXls() {
             ],[table.value.body[i]], [isNaN(table.value.body[i] / total.value) ? '-' : table.value.body[i] / total.value * 100]]
         });
         const tableXls = [[donutConfig.value.style.chart.title.text],[donutConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
-    
-        function s2ab(s) {
-            let buf = new ArrayBuffer(s.length);
-            let view = new Uint8Array(buf);
-            for (let i = 0; i < s.length; i++) {
-                view[i] = s.charCodeAt(i) & 0xff;
-            }
-            return buf;
-        }
-    
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.aoa_to_sheet(tableXls);
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-        const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-        const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = `${donutConfig.value.style.chart.title.text.replaceAll(" ", "_") || 'vue-ui-donut'}.xlsx`;
-        link.click();
-        window.URL.revokeObjectURL(link.href);
+
+        makeXls(tableXls, donutConfig.value.style.chart.title.text || "vue-ui-donut");
     });
 }
 

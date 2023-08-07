@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "0.3.4",
+  "version": "0.3.8",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
   "keywords": [
@@ -15,7 +15,9 @@
     "accelerometer",
     "quadrant",
     "line",
-    "table"
+    "table",
+    "radial bar",
+    "vertical bar"
   ],
   "author": "Alec Lloyd Probert",
   "repository": {
@@ -43,11 +45,6 @@
     "test": "vitest"
   },
   "dependencies": {
-    "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
-    "vue": "^3.3.4",
-    "xlsx": "^0.18.5",
-    "vue-data-ui": "file:../vue-data-ui"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",

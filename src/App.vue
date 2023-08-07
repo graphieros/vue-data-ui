@@ -9,6 +9,7 @@ import QuadrantTest from "./components/vue-ui-quadrant.vue";
 import GaugeTest from "./components/vue-ui-gauge.vue";
 import ChestnutTest from "./components/vue-ui-chestnut.vue";
 import OnionTest from "./components/vue-ui-onion.vue";
+import VerticalTest from "./components/vue-ui-vertical-bar.vue";
 
 const dataset = ref([
         {
@@ -340,7 +341,6 @@ const dataset2 = ref([
 
     const darkConfig = ref({
     fontFamily: "inherit",
-    maxHeight: 700,
     rowsPerPage: 25,
     style: {
         th: {
@@ -1004,13 +1004,13 @@ const quadrantConfig = ref({
     table: {
         show: false,
         th: {
-            backgroundColor: "#FAFAFA",
-            color: "#2D353C",
+            backgroundColor: "#1A1A1A",
+            color: "#CCCCCC",
             outline: "1px solid #e1e5e8"
         },
         td: {
             backgroundColor: "#1A1A1A",
-            color: "#2D353C",
+            color: "#CCCCCC",
             outline: "1px solid #e1e5e8",
             roundingValue: 0
         }
@@ -1734,7 +1734,185 @@ const onionConfig = ref({
             serie: "Serie"
         }
     }
-})
+});
+
+const verticalDataset = ref([
+  {
+    name: "Serie 1",
+    value: 100,
+    children: [
+      {
+        name: "serie 1 child 1",
+        value: 80
+      },
+      {
+        name: "serie 1 child 2",
+        value: 20
+      },
+    ]
+  },
+  {
+    name: "Serie 2",
+    value: 345,
+  },
+  {
+    name: "Serie 3",
+    value: 210,
+  },
+  {
+    name: "Serie 4",
+    value: 188,
+  },
+  {
+    name: "Serie 5",
+    value: 120,
+    children: [
+      {
+        name: "Serie 5 child 1",
+        value: 60,
+      },
+      {
+        name: "Serie 5 child 2",
+        value: 20,
+      },
+      {
+        name: "Serie 5 child 3",
+        value: 40,
+      },
+    ]
+  }
+]);
+const verticalConfig = ref({
+  "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "layout": {
+                    "useDiv": true,
+                    "bars": {
+                        "useStroke": false,
+                        "strokeWidth": 2,
+                        "height": 32,
+                        "gap": 6,
+                        "borderRadius": 4,
+                        "offsetX": 64,
+                        "paddingRight": 0,
+                        "useGradient": true,
+                        "gradientIntensity": 20,
+                        "fillOpacity": 10,
+                        "underlayerColor": "#FFFFFF",
+                        "dataLabels": {
+                            "color":"#CCCCCC",
+                            "bold":true,
+                            "fontSize":12,
+                            "value": {
+                                "show": true,
+                                "roundingValue":0,
+                                "prefix": "",
+                                "suffix": ""
+                            },
+                            "percentage": {
+                                "show": true,
+                                "roundingPercentage": 0
+                            },
+                            "offsetX": 0
+                        },
+                        "nameLabels": {
+                            "show": true,
+                            "color":"#CCCCCC",
+                            "bold": false,
+                            "fontSize":10,
+                            "offsetX": 0
+                        },
+                        "parentLabels": {
+                            "show": true,
+                            "color":"#CCCCCC",
+                            "bold": false,
+                            "fontSize":10,
+                            "offsetX": 0
+                        }
+                    },
+                    "highlighter": {
+                        "color": "#FFFFFF",
+                        "opacity": 5
+                    },
+                    "separators": {
+                        "show": true,
+                        "stroke":"rgb(52,52,52)",
+                        "strokeWidth":1
+                    }
+                },
+                "title": {
+                    "text": "Title",
+                    "color": "#FAFAFA",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "Subtitle",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "legend": {
+                    "show": true,
+                    "fontSize": 14,
+                    "color":"#CCCCCC",
+                    "bold": true,
+                    "roundingValue": 0,
+                    "backgroundColor": "#1A1A1A",
+                    "roundingPercentage": 0,
+                    "prefix": "",
+                    "suffix": ""
+                },
+                "tooltip": {
+                    "show": true,
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0,
+                    "prefix":"",
+                    "suffix":""
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table"
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0,
+                "prefix": "",
+                "suffix": ""
+            }
+        },
+        "translations": {
+            "parentName": "Serie",
+            "childName": "Child",
+            "value": "value",
+            "percentageToTotal": "%/total",
+            "percentageToSerie": "%/serie"
+        }
+});
 
 const showLocalTest = ref(false);
 
@@ -1793,10 +1971,10 @@ function selectQuadrantLegend(data) {
   console.log(data)
 }
 
-const oniontest = ref(null)
+const verticaltest = ref(null)
 
 onMounted(() => {
-  console.log(oniontest.value.getData())
+  console.log(verticaltest.value.getData())
 })
 
 function selectRoot(r) {
@@ -1815,18 +1993,27 @@ function selectOnionLegend(o) {
   console.log(o)
 }
 
+function selectVerticalLegend(v) {
+  console.log(v)
+}
+
+
 </script>
 
 <template>
   <div>
 
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiOnion ref="oniontest" v-if="!showLocalTest" :dataset="onionDataset" :config="onionConfig" @selectLegend="selectOnionLegend"/>
-      <OnionTest ref="oniontest" v-if="showLocalTest" :dataset="onionDataset" :config="onionConfig" @selectLegend="selectOnionLegend"/>
+      <VueUiVerticalBar ref="verticaltest" v-if="!showLocalTest" :config="verticalConfig" :dataset="verticalDataset" @selectLegend="selectVerticalLegend"/>
+      <VerticalTest ref="verticaltest" v-if="showLocalTest" :config="verticalConfig" :dataset="verticalDataset"/>
+    </div>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiOnion ref="oniontest" v-if="!showLocalTest" :dataset="onionDataset" @selectLegend="selectOnionLegend"/>
+      <OnionTest ref="oniontest" v-if="showLocalTest" :dataset="onionDataset"  @selectLegend="selectOnionLegend"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
-      <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
+      <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
     </div>
     <div style="max-width:1000px; margin:0 auto">
       <VueUiXy ref="xytest" :config="config" :dataset="dataset2" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
@@ -1834,26 +2021,26 @@ function selectOnionLegend(o) {
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiGauge ref="gaugetest" v-if="!showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>
-      <GaugeTest ref="gaugetest" v-if="showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>
+      <GaugeTest ref="gaugetest" v-if="showLocalTest" :dataset="gaugeDataset"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiQuadrant ref="quadranttest" v-if="!showLocalTest" :dataset="quadrantDataset" :config="quadrantConfig" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
-      <QuadrantTest ref="quadranttest" v-if="showLocalTest" :dataset="quadrantDataset" :config="quadrantConfig" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
+      <QuadrantTest ref="quadranttest" v-if="showLocalTest" :dataset="quadrantDataset" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiRadar ref="radartest" v-if="!showLocalTest" :dataset="radarDataset" :config="radarConfig" @selectLegend="selectRadarLegend"/>
-      <RadarTest ref="radartest" v-if="showLocalTest" :dataset="radarDataset" :config="radarConfig" @selectLegend="selectRadarLegend"/>
+      <RadarTest ref="radartest" v-if="showLocalTest" :dataset="radarDataset"  @selectLegend="selectRadarLegend"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiWaffle ref="waffletest" v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
-      <WaffleTest ref="waffletest" v-if="showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
+      <WaffleTest ref="waffletest" v-if="showLocalTest" :dataset="donutDataset" @selectLegend="selectLegendWaffle"/>
     </div> 
     <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
       <VueUiDonut ref="donuttest" v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
-      <DonutTest ref="donuttest" v-if="showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
+      <DonutTest ref="donuttest" v-if="showLocalTest" :dataset="donutDataset" @selectLegend="selectLegendDonut"/>
     </div> 
 
     <VueUiTable :dataset="tableTestDataset" :config="darkConfig" v-if="!showLocalTest"/>
-    <TableTest :dataset="tableTestDataset" :config="darkConfig" v-if="showLocalTest"/>
+    <TableTest :dataset="tableTestDataset" v-if="showLocalTest"/>
   </div>
 </template>
