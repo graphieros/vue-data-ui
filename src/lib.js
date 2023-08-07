@@ -131,7 +131,7 @@ export function treeShake({ defaultConfig, userConfig }) {
 }
 
 export function checkArray({ userConfig, key }) {
-    return Object.hasOwn(userConfig, key) && Array.isArray(userConfig[key]) && userConfig[key].length;
+    return Object.hasOwn(userConfig, key) && Array.isArray(userConfig[key]) && userConfig[key].length >= 0;
 }
 
 export function checkObj({ userConfig, key}) {
@@ -517,5 +517,8 @@ const lib = {
     treeShake,
     adaptColorToBackground,
     convertConfigColors,
+    degreesToRadians,
+    checkObj,
+    checkArray
 };
 export default lib;

@@ -4,7 +4,19 @@
   "version": "0.3.4",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
-  "keywords": ["Vue", "data visualization", "chart", "donut", "waffle", "radar", "gauge", "accelerometer", "quadrant", "line", "table"],
+  "keywords": [
+    "Vue",
+    "data visualization",
+    "chart",
+    "donut",
+    "waffle",
+    "radar",
+    "gauge",
+    "accelerometer",
+    "quadrant",
+    "line",
+    "table"
+  ],
   "author": "Alec Lloyd Probert",
   "repository": {
     "type": "git",
@@ -12,30 +24,34 @@
   },
   "homepage": "https://vue-data-ui.graphieros.com/",
   "license": "MIT",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/vue-data-ui.umd.cjs",
   "module": "./dist/vue-data-ui.js",
   "exports": {
     ".": {
-      "import" : "./dist/vue-data-ui.js",
+      "import": "./dist/vue-data-ui.js",
       "export": "./dist/vue-data-ui.umd.cjs"
     },
-    "./style.css" : "./dist/style.css"
+    "./style.css": "./dist/style.css"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "dependencies": {
-    "vue": "^3.3.4",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
+    "vue": "^3.3.4",
     "xlsx": "^0.18.5",
     "vue-data-ui": "file:../vue-data-ui"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
-    "vite": "^4.4.5"
+    "vite": "^4.4.5",
+    "vitest": "^0.34.1"
   }
 }
