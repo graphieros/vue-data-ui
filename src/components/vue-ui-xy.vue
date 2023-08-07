@@ -420,8 +420,18 @@
 
 <script>
 import pdf from '../pdf';
-import * as XLSX from 'xlsx';
-import { treeShake, isSafeValue, checkNaN, palette, shiftHue, opacity, convertColorToHex, convertConfigColors } from '../lib';
+import { 
+    treeShake, 
+    isSafeValue, 
+    checkNaN, 
+    palette, 
+    shiftHue, 
+    opacity, 
+    convertColorToHex, 
+    convertConfigColors, 
+    makeXls 
+} from '../lib';
+import mainConfig from "../default_configs.json";
 
 // TOD0:
 // . add emit on click (emit all data at given index, maybe choose which to emit if multiseries; so it could dynamically feed another chart)
@@ -453,139 +463,7 @@ export default {
             opacity,
             useSafeValues: true,
             palette,
-            defaultConfig: {
-                showWarnings: true,
-                showTable: true,
-                chart: {
-                    fontFamily: "inherit",
-                    backgroundColor: "#FFFFFF",
-                    color: "#2D353C",
-                    height: 300,
-                    width: 500,
-                    zoom: {
-                        show: true,
-                        color: "#2D353C"
-                    },
-                    padding: {
-                        top: 36,
-                        right: 12,
-                        bottom: 12,
-                        left: 48
-                    },
-                    highlighter: {
-                        color: "#2D353C",
-                        opacity: 5,
-                    },
-                    grid: {
-                        stroke: "#e1e5e8",
-                        showVerticalLines: false,
-                        labels: {
-                            color: "#2D353C",
-                            show: true,
-                            fontSize: 10,
-                            axis: {
-                                yLabel: "",
-                                xLabel: "",
-                                fontSize: 12,
-                            },
-                            xAxisLabels: {
-                                color: "#2D353C",
-                                show: true,
-                                values: [],
-                                fontSize: 6,
-                                showOnlyFirstAndLast: false,
-                            }
-                        }
-                    },
-                    labels: {
-                        fontSize: 10,
-                    },
-                    legend: {
-                        color: "#2D353C",
-                        show: true,
-                        useDiv: true,
-                        fontSize: 16,
-                    },
-                    title: {
-                        show: true,
-                        useDiv: true,
-                        color: "#2D353C",
-                        text: "",
-                        fontSize: 20,
-                        bold: true,
-                        offsetX: 0,
-                        offsetY: 0,
-                        subtitle: {
-                            fontSize: 16,
-                            color: "grey",
-                            text: ""
-                        }
-                    },
-                    tooltip: {
-                        color: "#2D353C",
-                        backgroundColor: "white",
-                        show: true,
-                        showValue: true,
-                        showPercentage: false,
-                        roundingValue: 0,
-                        roundingPercentage: 0,
-                    },
-                    userOptions: {
-                        show: true,
-                        title: "options",
-                        labels: {
-                            dataLabels: "Show datalabels",
-                            titleInside: "Title inside",
-                            legendInside: "Legend inside",
-                            showTable: "Show table"
-                        }
-                    }
-                },
-                bar: {
-                    useGradient: true,
-                    labels: {
-                        show: false,
-                        offsetY: -6,
-                        rounding: 0,
-                        color: "#2D353C"
-                    }
-                },
-                line: {
-                    radius: 3,
-                    useGradient: true,
-                    strokeWidth: 2,
-                    labels: {
-                        show: false,
-                        offsetY: -6,
-                        rounding: 0,
-                        color: "#2D353C"
-                    }
-
-                },
-                plot: {
-                    radius: 3,
-                    useGradient: true,
-                    labels: {
-                        show: false,
-                        offsetY: -6,
-                        rounding: 0,
-                        color: "#2D353C"
-                    }
-                },
-                table: {
-                    rounding: 0,
-                    th: {
-                        backgroundColor: "#FAFAFA",
-                        color: "#2D353C",
-                        outline: "1px solid #e1e5e8"
-                    },
-                    td: {
-                        backgroundColor: "#FFFFFF",
-                        color: "#2D353C",
-                        outline: "1px solid #e1e5e8",
-                    }
-                }
-            },
+            defaultConfig: mainConfig.vue_ui_xy,
             clientPosition: {
                 x:0,
                 y:0,
@@ -892,6 +770,7 @@ export default {
         pdf,
         convertColorToHex,
         convertConfigColors,
+        makeXls,
 
         calcRectHeight(plot) {
             if(plot.value >= 0) {
@@ -1001,26 +880,7 @@ export default {
             const head = ["",...this.table.head.map(h => h.label)]
             const body = this.table.body
             const table = title.concat([head]).concat(body);
-
-            function s2ab(s) {
-                let buf = new ArrayBuffer(s.length);
-                let view = new Uint8Array(buf);
-                for (let i = 0; i < s.length; i++) {
-                    view[i] = s.charCodeAt(i) & 0xff;
-                }
-                return buf;
-            }
-
-            const workbook = XLSX.utils.book_new();
-            const worksheet = XLSX.utils.aoa_to_sheet(table);
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-            const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-            const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = `${this.chartConfig.chart.title.text.replaceAll(" ", "_") || 'vue-ui-xy'}.xlsx`;
-            link.click();
-            window.URL.revokeObjectURL(link.href);
+            this.makeXls(table, this.chartConfig.chart.title.text || 'vue-ui-xy');
         },
     }
 }

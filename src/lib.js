@@ -1,3 +1,5 @@
+import * as XLSX from "xlsx";
+
 export function makeDonut(item, cx, cy, rx, ry) {
     let { series } = item;
             if (!series || item.base === 0)
@@ -498,6 +500,29 @@ export function convertConfigColors(config) {
     return config;
   }
 
+export function makeXls(table, fileName) {
+
+    function s2ab(s) {
+        let buf = new ArrayBuffer(s.length);
+        let view = new Uint8Array(buf);
+        for (let i = 0; i < s.length; i++) {
+            view[i] = s.charCodeAt(i) & 0xff;
+        }
+        return buf;
+    }
+
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet(table);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+    const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `${fileName.replaceAll(" ", "_")}.xlsx`;
+    link.click();
+    window.URL.revokeObjectURL(link.href);
+}
+
 const lib = {
     addVector,
     checkNaN,
@@ -519,6 +544,7 @@ const lib = {
     convertConfigColors,
     degreesToRadians,
     checkObj,
-    checkArray
+    checkArray,
+    makeXls,
 };
 export default lib;

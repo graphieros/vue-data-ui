@@ -1,0 +1,1216 @@
+{
+    "vue_ui_table": {
+        "fontFamily": "inherit",
+        "maxHeight": 500,
+        "rowsPerPage": 25,
+        "style": {
+            "th": {
+                "backgroundColor": "#E1E5E8",
+                "color":"#2D353C",
+                "outline": "1px solid #FFFFFF",
+                "selected": {
+                    "backgroundColor": "#6376DD",
+                    "color": "#FFFFFF"
+                }
+            },
+            "rows": {
+                "even": {
+                    "backgroundColor": "#f3f5f7",
+                    "color": "#2D353C",
+                    "selectedCell": {
+                        "backgroundColor": "#6375dd5b",
+                        "color": "#2D353C"
+                    },
+                    "selectedNeighbors": {
+                        "backgroundColor": "#63dd821e",
+                        "color": "#2D353C"
+                    }
+                },
+                "odd": {
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "selectedCell": {
+                        "backgroundColor": "#6375dd5b",
+                        "color": "#2D353C"
+                    },
+                    "selectedNeighbors": {
+                        "backgroundColor": "#63dd821e",
+                        "color": "#2D353C"
+                    }
+                }
+            },
+            "inputs": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "border": "1px solid #CCCCCC",
+                "accentColor": "#6376DD"
+            },
+            "dropdowns": {
+                "backgroundColor": "#E1E5E8",
+                "color": "#2D353C",
+                "icons": {
+                    "selected": {
+                        "color": "#008000",
+                        "unicode": "✔"
+                    },
+                    "unselected": {
+                        "color": "#ff0000",
+                        "unicode": "✖"
+                    }
+                }
+            },
+            "infoBar": {
+                "backgroundColor": "#E1E5E8",
+                "color": "#2D353C"
+            },
+            "pagination": {
+                "buttons": {
+                    "backgroundColor": "#E1E5E8",
+                    "color": "#2D353C",
+                    "opacityDisabled": 0.5
+                },
+                "navigationIndicator": {
+                    "backgroundColor": "#6376DD"
+                }
+            },
+            "exportMenu": {
+                "backgroundColor": "#E1E5E8",
+                "color": "#2D353C",
+                "buttons": {
+                    "backgroundColor": "#FAFAFA",
+                    "color": "#2D353C"
+                }
+            },
+            "closeButtons": {
+                "backgroundColor": "transparent",
+                "color": "#2D353C",
+                "borderRadius": "50%"
+            },
+            "chart": {
+                "modal": {
+                    "backgroundColor": "#E1E5E8",
+                    "color": "#2D353C",
+                    "buttons": {
+                        "selected": {
+                            "backgroundColor": "#6376DD",
+                            "color": "#FFFFFF"
+                        },
+                        "unselected": {
+                            "backgroundColor": "#FFFFFF",
+                            "color": "#2D353C"
+                        }
+                    }
+                },
+                "layout": {
+                    "backgroundColor": "#FFFFFF",
+                    "axis": {
+                        "stroke": "#ccd1d4",
+                        "strokeWidth": 2
+                    },
+                    "bar": {
+                        "fill": "",
+                        "stroke": "#FFFFFF"
+                    },
+                    "line": {
+                        "stroke": "#6376DD75",
+                        "strokeWidth": 4,
+                        "plot": {
+                            "fill": "#22348f",
+                            "stroke": "#FFFFFF",
+                            "strokeWidth": 1,
+                            "radius": {
+                                "selected": 6,
+                                "unselected": 4
+                            }
+                        },
+                        "selector": {
+                            "stroke": "#ccc",
+                            "strokeWidth": 1,
+                            "strokeDasharray": 5
+                        }
+                    },
+                    "labels": {
+                        "color": "#2D353C"
+                    },
+                    "progression": {
+                        "stroke": "#2D353C",
+                        "strokeWidth": 2,
+                        "strokeDasharray": 4,
+                        "arrowSize": 7
+                    }
+                }
+            }
+        },
+        "translations": {
+            "average": "Average",
+            "by": "by",
+            "chooseCategoryColumn": "Choose category column",
+            "exportAllButton": "XLSX all",
+            "exportAllLabel": "Export all rows of your current filtered dataset",
+            "exportPageButton": "XLSX page",
+            "exportPageLabel": "Export rows of the current page",
+            "from": "From",
+            "inputPlaceholder": "Search...",
+            "makeDonut": "Generate",
+            "nb": "Nb",
+            "page": "Page",
+            "paginatorLabel": "Rows per page",
+            "sizeWarning": "Displaying too many rows at a time can lead to slower performance",
+            "sum": "Somme",
+            "to": "To",
+            "total": "Total",
+            "totalRows": "Total rows"
+        },
+        "useChart": true
+    },
+    "vue_ui_xy": {
+        "chart": {
+            "fontFamily" : "inherit",
+            "backgroundColor" : "#FFFFFF",
+            "color": "#2D353C",
+            "height": 300,
+            "width": 500,
+            "zoom": {
+                "show": true,
+                "color": "#2D353C"
+            },
+            "padding": {
+                "top": 36,
+                "right": 12,
+                "bottom": 12,
+                "left": 48
+            },
+            "highlighter": {
+                "color": "#2D353C",
+                "opacity": 5
+            },
+            "grid": {
+                "stroke": "#e1e5e8",
+                "showVerticalLines": false,
+                "labels": {
+                    "color": "#2D353C",
+                    "show": true,
+                    "fontSize": 10,
+                    "axis": {
+                        "yLabel": "",
+                        "xLabel": "",
+                        "fontSize": 12
+                    },
+                    "xAxisLabels": {
+                        "color": "#2D353C",
+                        "show": true,
+                        "values": [],
+                        "fontSize": 6,
+                        "showOnlyFirstAndLast": false
+                    }
+                }
+            },
+            "labels": {
+                "fontSize": 10
+            },
+            "legend": {
+                "color": "#2D353C",
+                "show": true,
+                "useDiv": true,
+                "fontSize": 16
+            },
+            "title": {
+                "show": true,
+                "useDiv": true,
+                "color": "#2D353C",
+                "text": "",
+                "fontSize": 20,
+                "bold": true,
+                "offsetX": 0,
+                "offsetY": 0,
+                "subtitle": {
+                    "fontSize": 16,
+                    "color": "grey",
+                    "text": ""
+                }
+            },
+            "tooltip": {
+                "color": "#2D353C",
+                "backgroundColor": "white",
+                "show": true,
+                "showValue": true,
+                "showPercentage": false,
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            },
+            "userOptions": {
+                "show": true,
+                "title": "options",
+                "labels": {
+                    "dataLabels": "Show datalabels",
+                    "titleInside": "Title inside",
+                    "legendInside": "Legend inside",
+                    "showTable": "Show table"
+                }
+            }
+        },
+        "bar": {
+            "useGradient": true,
+            "labels": {
+                "show": false,
+                "offsetY": -6,
+                "rounding": 0,
+                "color": "#2D353C"
+            }
+        },
+        "line": {
+            "radius": 3,
+            "useGradient": true,
+            "strokeWidth": 2,
+            "labels": {
+                "show": false,
+                "offsetY": -6,
+                "rounding": 0,
+                "color": "#2D353C"
+            }
+
+        },
+        "plot": {
+            "radius": 3,
+            "useGradient": true,
+            "labels": {
+                "show": false,
+                "offsetY": -6,
+                "rounding": 0,
+                "color": "#2D353C"
+            }
+        },
+        "table": {
+            "rounding": 0,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            }
+        }
+    },
+    "vue_ui_donut": {
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "useGradient": true,
+                "gradientIntensity": 40,
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "layout": {
+                    "useDiv": false,
+                    "labels": {
+                        "dataLabels": {
+                            "show": true,
+                            "hideUnderValue": 3
+                        },
+                        "percentage": {
+                            "color": "#2D353C",
+                            "bold": true,
+                            "fontSize": 18
+                        },
+                        "name": {
+                            "color": "#2D353C",
+                            "bold": false,
+                            "fontSize": 14
+                        },
+                        "hollow": {
+                            "total": {
+                                "show": true,
+                                "bold": false,
+                                "fontSize": 18,
+                                "color": "#AAAAAA",
+                                "text":  "Total",
+                                "offsetY": 0,
+                                "value": {
+                                    "color": "#2D353C",
+                                    "fontSize": 18,
+                                    "bold": true,
+                                    "suffix": "",
+                                    "prefix": "",
+                                    "offsetY": 0,
+                                    "rounding": 0
+                                }
+                            },
+                            "average": {
+                                "show": true,
+                                "bold": false,
+                                "fontSize": 18,
+                                "color": "#AAAAAA",
+                                "text":  "Average",
+                                "offsetY": 0,
+                                "value": {
+                                    "color": "#2D353C",
+                                    "fontSize": 18,
+                                    "bold": true,
+                                    "suffix": "",
+                                    "prefix": "",
+                                    "offsetY": 0,
+                                    "rounding": 0
+                                }
+                            }
+                        }
+                    },
+                    "donut": {
+                        "strokeWidth": 64
+                    }
+                },
+                "legend": {
+                        "backgroundColor": "#FFFFFF",
+                        "color": "#2D353C",
+                        "show": true,
+                        "fontSize": 16,
+                        "bold": false,
+                        "roundingValue": 0,
+                        "roundingPercentage": 0
+                    },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "tooltip": {
+                    "show": true,
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "dataLabels": "Show datalabels",
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table"
+            }
+        },
+        "translations": {
+            "total": "Total",
+            "average": "Average"
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
+        }
+    },
+    "vue_ui_waffle": {
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "layout": {
+                    "grid": {
+                        "size": 20,
+                        "spaceBetween": 2,
+                        "vertical": false
+                    },
+                    "rect": {
+                        "rounded": true,
+                        "rounding": 2,
+                        "stroke": "#2D353C",
+                        "strokeWidth": 1,
+                        "useGradient": true,
+                        "gradientIntensity": 40
+                    },
+                    "useDiv": true
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "tooltip": {
+                    "show": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                },
+                "legend": {
+                    "show": true,
+                    "bold": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table"
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
+        }
+    },
+    "vue_ui_radar": {
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "layout": {
+                    "useDiv": true,
+                    "plots": {
+                        "show": true,
+                        "radius": 2
+                    },
+                    "outerPolygon": {
+                        "stroke": "#CCCCCC",
+                        "strokeWidth": 1
+                    },
+                    "dataPolygon": {
+                        "strokeWidth": 1,
+                        "transparent": false,
+                        "opacity": 20,
+                        "useGradient": true
+                    },
+                    "grid": {
+                        "show": true,
+                        "stroke": "#e1e5e8",
+                        "strokeWidth": 0.5,
+                        "graduations": 5
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "show": true,
+                            "fontSize": 12,
+                            "color": "#2D353C"
+                        }
+                    }
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "tooltip": {
+                    "show": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                },
+                "legend": {
+                    "show": true,
+                    "bold": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14,
+                    "roundingPercentage": 0
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table"
+            }
+        },
+        "translations": {
+            "target": "Target"
+        }
+    },
+    "vue_ui_quadrant": {
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "height": 512,
+                "width": 512,
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "layout": {
+                    "useDiv": true,
+                    "labels": {
+                        "quadrantLabels": {
+                            "show": true,
+                            "tl": {
+                                "text": "",
+                                "color": "#2D353C",
+                                "fontSize": 16,
+                                "bold": true
+                            },
+                            "tr": {
+                                "text": "",
+                                "color": "#2D353C",
+                                "fontSize": 16,
+                                "bold": true
+                            },
+                            "br": {
+                                "text": "",
+                                "color": "#2D353C",
+                                "fontSize": 16,
+                                "bold": true
+                            },
+                            "bl": {
+                                "text": "",
+                                "color": "#2D353C",
+                                "fontSize": 16,
+                                "bold": true
+                            }
+                        },
+                        "plotLabels": {
+                            "show": true,
+                            "fontSize": 10,
+                            "color": "#2D353C",
+                            "offsetY": 8
+                        },
+                        "axisLabels": {
+                            "show": true,
+                            "fontSize": 14,
+                            "color": {
+                                "positive": "#2D353C",
+                                "negative": "#2D353C"
+                            }
+                        }
+                    },
+                    "grid": {
+                        "stroke": "#e1e5e8",
+                        "strokeWidth": 1.5,
+                        "showArrows": true,
+                        "graduations": {
+                            "stroke": "#e1e5e8",
+                            "strokeWidth": 0.5,
+                            "show": true,
+                            "steps": 5,
+                            "fill": true,
+                            "color": "#E1E5E8",
+                            "roundingForce": 10
+                        },
+                        "xAxis": {
+                            "min": -100,
+                            "max": 100,
+                            "auto": true,
+                            "name": ""
+                        },
+                        "yAxis": {
+                            "min": -100,
+                            "max": 100,
+                            "auto": true,
+                            "name": ""
+                        }
+                    },
+                    "plots": {
+                        "radius": 6,
+                        "outline": true,
+                        "outlineColor": "#FFFFFF",
+                        "outlineWidth": 1
+                    },
+                    "areas": {
+                        "show": true,
+                        "opacity": 40,
+                        "useGradient": true
+                    }
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "tooltip": {
+                    "show": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14,
+                    "roundingValue": 0
+                },
+                "legend": {
+                    "show": true,
+                    "bold": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table",
+                "showPlotLabels": "Show plot labels"
+            }
+        },
+        "translations": {
+            "category": "Category",
+            "item": "Item",
+            "side": "Side"
+        }
+    },
+    "vue_ui_gauge": {
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "animation": {
+                    "use": true,
+                    "speed": 1,
+                    "acceleration": 1
+                },
+                "layout": {
+                    "useDiv": false,
+                    "track": {
+                        "size": 1,
+                        "useGradient": true,
+                        "gradientIntensity": 40
+                    },
+                    "markers": {
+                        "size": 1,
+                        "color": "#2D353C",
+                        "strokeWidth": 1,
+                        "stroke": "#2D353C",
+                        "backgroundColor": "#FFFFFF",
+                        "bold": true,
+                        "fontSizeRatio": 1,
+                        "offsetY": 0,
+                        "roundingValue": 0
+                    },
+                    "pointer": {
+                        "size": 1,
+                        "stroke": "#2D353C",
+                        "strokeWidth": 12,
+                        "useRatingColor": true,
+                        "color": "#CCCCCC",
+                        "circle": {
+                            "radius": 10,
+                            "stroke": "#2D353C",
+                            "strokeWidth": 2,
+                            "color": "#FFFFFF"
+                        }
+                    }
+                },
+                "legend": {
+                    "fontSize": 48,
+                    "prefix": "",
+                    "suffix": "",
+                    "roundingValue": 1,
+                    "showPlusSymbol": true,
+                    "useRatingColor": true,
+                    "color": "#2D353C"
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title inside",
+                "showTable": "Show table"
+            }
+        },
+        "translations": {
+            "base": "Base"
+        }
+    },
+    "vue_ui_chestnut": {
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "layout": {
+                    "grandTotal": {
+                        "show": true,
+                        "fontSize": 20,
+                        "bold": true,
+                        "suffix": "",
+                        "prefix": "",
+                        "roundingValue": 0,
+                        "color": "#2D353C",
+                        "text": "Grand total",
+                        "offsetY": 0
+                    },
+                    "roots": {
+                        "stroke": "#FFFFFF",
+                        "strokeWidth": 5,
+                        "useGradient": true,
+                        "gradientIntensity": 20,
+                        "underlayerColor": "#FFFFFF",
+                        "labels": {
+                            "show": true,
+                            "fontSize": 16,
+                            "adaptColorToBackground": true,
+                            "color": "#FFFFFF",
+                            "bold": true,
+                            "roundingValue": 0,
+                            "prefix": "",
+                            "suffix": "",
+                            "name": {
+                                "color": "#2D353C",
+                                "fontSize": 16,
+                                "bold": true
+                            }
+                        }
+                    },
+                    "verticalSeparator": {
+                        "stroke": "#FFFFFF",
+                        "strokeWidth": 5
+                    },
+                    "links": {
+                        "opacity": 10
+                    },
+                    "branches": {
+                        "stroke": "#FFFFFF",
+                        "strokeWidth": 0,
+                        "borderRadius": 6,
+                        "useGradient": true,
+                        "gradientIntensity": 20,
+                        "underlayerColor": "#FFFFFF",
+                        "widthRatio": 1.5,
+                        "labels": {
+                            "show": true,
+                            "fontSize": 14,
+                            "color": "#2D353C",
+                            "bold": true,
+                            "dataLabels": {
+                                "show": true,
+                                "hideUnderValue": 5,
+                                "fontSize": 14,
+                                "roundingValue": 0,
+                                "roundingPercentage": 0,
+                                "prefix": "",
+                                "suffix": ""
+                            }
+                        }
+                    },
+                    "nuts": {
+                        "offsetX": 20,
+                        "useGradient": true,
+                        "gradientIntensity": 30,
+                        "selected": {
+                           "useMotion": true,
+                            "useGradient": true,
+                            "gradientIntensity": 40,
+                            "roundingValue": 0,
+                            "roundingPercentage": 0,
+                            "labels": {
+                                "dataLabels": {
+                                    "hideUnderValue": 5,
+                                    "color": "#2D353C",
+                                    "fontSize": 12,
+                                    "bold": true,
+                                    "prefix": "",
+                                    "suffix": ""
+                                },
+                                "core": {
+                                    "total": {
+                                        "color": "#2D353C",
+                                        "fontSize": 24,
+                                        "bold": false
+                                    },
+                                    "value": {
+                                        "color": "#2D353C",
+                                        "fontSize": 24,
+                                        "bold": true,
+                                        "prefix": "",
+                                        "suffix": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "legend": {
+                        "fontSize": 16,
+                        "color": "#2D353C",
+                        "roundingValue": 0,
+                        "roundingPercentage": 0,
+                        "prefix": "",
+                        "suffix": ""
+                    },
+                    "title": {
+                        "color": "#2D353C",
+                        "fontSize": 20,
+                        "text": "",
+                        "bold": true,
+                        "offsetY":0,
+                        "subtitle": {
+                            "text": "",
+                            "color": "#CCCCCC",
+                            "bold": false,
+                            "fontSize": 16,
+                            "offsetY": 0
+                        }
+                    }
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "translations": {
+                    "rootName": "root name",
+                    "rootValue": "root value",
+                    "rootToTotal": "%/total",
+                    "branchName": "branch name",
+                    "branchValue": "branch value",
+                    "branchToRoot": "%/root",
+                    "branchToTotal": "%/total",
+                    "nutName": "nut name",
+                    "nutValue": "nut value",
+                    "nutToBranch": "%/branch",
+                    "nutToRoot": "%/root",
+                    "nutToTotal": "%/total"
+                }
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "showTable": "Show table"
+            }
+        },
+        "translations": {
+            "total": "Total",
+            "proportionToTree": "of grand total",
+            "of": "of"
+        }
+    },
+    "vue_ui_onion": {
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "useGradient": false,
+                "gradientIntensity": 20,
+                "layout": {
+                    "useDiv": true,
+                    "gutter": {
+                        "color": "#e1e5e8",
+                        "width": 0.62
+                    },
+                    "track": {
+                        "width": 0.62
+                    },
+                    "labels": {
+                        "show": true,
+                        "fontSize": 14,
+                        "color": "#2D353C",
+                        "roundingValue": 0,
+                        "roundingPercentage": 0,
+                        "bold": true,
+                        "offsetY": 0,
+                        "offsetX": 0,
+                        "value": {
+                            "show": true
+                        },
+                        "percentage": {
+                            "show": true
+                        }
+                    }
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "legend": {
+                    "show": true,
+                    "bold": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table"
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            },
+            "translations": {
+                "value": "Value",
+                "percentage": "Percentage",
+                "serie": "Serie"
+            }
+        }
+    },
+    "vue_ui_vertical_bar": {
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "layout": {
+                    "useDiv": true,
+                    "bars": {
+                        "useStroke": false,
+                        "strokeWidth": 2,
+                        "height": 32,
+                        "gap": 6,
+                        "borderRadius": 4,
+                        "offsetX": 64,
+                        "paddingRight": 0,
+                        "useGradient": true,
+                        "gradientIntensity": 20,
+                        "fillOpacity": 10,
+                        "underlayerColor": "#FFFFFF",
+                        "dataLabels": {
+                            "color":"#2D353C",
+                            "bold":true,
+                            "fontSize":12,
+                            "value": {
+                                "show": true,
+                                "roundingValue":0,
+                                "prefix": "",
+                                "suffix": ""
+                            },
+                            "percentage": {
+                                "show": true,
+                                "roundingPercentage": 0
+                            },
+                            "offsetX": 0
+                        },
+                        "nameLabels": {
+                            "show": true,
+                            "color":"#2D353C",
+                            "bold": false,
+                            "fontSize":10,
+                            "offsetX": 0
+                        },
+                        "parentLabels": {
+                            "show": true,
+                            "color":"#2D353C",
+                            "bold": false,
+                            "fontSize":10,
+                            "offsetX": 0
+                        }
+                    },
+                    "highlighter": {
+                        "color": "#2D353C",
+                        "opacity": 5
+                    },
+                    "separators": {
+                        "show": true,
+                        "stroke":"#e1e5e8",
+                        "strokeWidth":1
+                    }
+                },
+                "title": {
+                    "text": "Title",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "Subtitle",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "legend": {
+                    "show": true,
+                    "fontSize": 14,
+                    "color":"#2D353C",
+                    "backgroundColor":"#FFFFFF",
+                    "bold": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0,
+                    "prefix": "",
+                    "suffix": ""
+                },
+                "tooltip": {
+                    "show": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0,
+                    "prefix":"",
+                    "suffix":""
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table"
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0,
+                "prefix": "",
+                "suffix": ""
+            }
+        },
+        "translations": {
+            "parentName": "Serie",
+            "childName": "Child",
+            "value": "value",
+            "percentageToTotal": "%/total",
+            "percentageToSerie": "%/serie"
+        }
+    }
+}

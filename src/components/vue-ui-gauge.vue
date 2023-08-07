@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { treeShake, palette, rotateMatrix, addVector, matrixTimes, opacity, convertColorToHex, convertConfigColors } from "../lib.js";
 import pdf from "../pdf";
+import mainConfig from "../default_configs.json";
 
 const props = defineProps({
     config:{
@@ -19,84 +20,7 @@ const props = defineProps({
 });
 const uid = ref(`vue-ui-gauge-${Math.random()}`);
 
-const defaultConfig = ref({
-    style: {
-        fontFamily: "inherit",
-        chart: {
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            animation: {
-                use: true,
-                speed: 1,
-                acceleration: 1,
-            },
-            layout: {
-                useDiv: false,
-                track: {
-                    size: 1,
-                    useGradient: true,
-                    gradientIntensity: 40,
-                },
-                markers: {
-                    size: 1,
-                    color: "#2D353C",
-                    strokeWidth: 1,
-                    stroke: "#2D353C",
-                    backgroundColor: "#FFFFFF",
-                    bold: true,
-                    fontSizeRatio: 1,
-                    offsetY: 0,
-                    roundingValue: 0,
-                },
-                pointer: {
-                    size: 1,
-                    stroke: "#2D353C",
-                    strokeWidth: 12,
-                    useRatingColor: true,
-                    color: "#CCCCCC",
-                    circle: {
-                        radius: 10,
-                        stroke: "#2D353C",
-                        strokeWidth: 2,
-                        color: "#FFFFFF"
-                    }
-                }
-            },
-            legend: {
-                fontSize: 48,
-                prefix: "",
-                suffix: "",
-                roundingValue: 1,
-                showPlusSymbol: true,
-                useRatingColor: true,
-                color: "#2D353C"
-            },
-            title: {
-                text: "",
-                color: "#2D353C",
-                fontSize: 20,
-                bold: true,
-                subtitle: {
-                    color: "#A1A1A1",
-                    text: "",
-                    fontSize: 16,
-                    bold: false
-                }
-            },
-        }
-    },
-    userOptions: {
-        show: true,
-        title: "options",
-        labels: {
-            useDiv: "Title inside",
-            showTable: "Show table"
-        }
-    },
-    translations: {
-        base: "Base"
-    }
-});
+const defaultConfig = ref(mainConfig.vue_ui_gauge);
 
 const isPrinting = ref(false);
 const gaugeChart = ref(null);

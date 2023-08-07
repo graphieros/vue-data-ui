@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { treeShake, palette, createPolygonPath, createStar, giftWrap, shiftHue, opacity, convertColorToHex, convertConfigColors } from "../lib";
+import { treeShake, palette, createPolygonPath, createStar, giftWrap, shiftHue, opacity, convertColorToHex, convertConfigColors, makeXls } from "../lib";
 import pdf from "../pdf.js";
-import * as XLSX from "xlsx";
+import mainConfig from "../default_configs.json";
 
 const props = defineProps({
     config: {
@@ -23,154 +23,7 @@ const uid = ref(`vue-ui-quadrant-${Math.random()}`);
 
 const emit = defineEmits(['selectPlot', 'selectSide', 'selectLegend']);
 
-const defaultConfig = ref({
-    style: {
-        fontFamily: "inherit",
-        chart: {
-            height: 512,
-            width: 512,
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            layout: {
-                useDiv: true,
-                labels: {
-                    quadrantLabels: {
-                        show: true,
-                        tl: {
-                            text: "",
-                            color: "#2D353C",
-                            fontSize: 16,
-                            bold: true,
-                        },
-                        tr: {
-                            text: "",
-                            color: "#2D353C",
-                            fontSize: 16,
-                            bold: true,
-                        },
-                        br: {
-                            text: "",
-                            color: "#2D353C",
-                            fontSize: 16,
-                            bold: true,
-                        },
-                        bl: {
-                            text: "",
-                            color: "#2D353C",
-                            fontSize: 16,
-                            bold: true,
-                        },
-                    },
-                    plotLabels: {
-                        show: true,
-                        fontSize: 10,
-                        color: "#2D353C",
-                        offsetY: 8,
-                    },
-                    axisLabels: {
-                        show: true,
-                        fontSize: 14,
-                        color: {
-                            positive: "#2D353C",
-                            negative: "#2D353C"
-                        }
-                    }
-                },
-                grid: {
-                    stroke: "#e1e5e8",
-                    strokeWidth: 1.5,
-                    showArrows: true,
-                    graduations: {
-                        stroke: "#e1e5e8",
-                        strokeWidth: 0.5,
-                        show: true,
-                        steps: 5,
-                        fill: true,
-                        color: "#E1E5E8",
-                        roundingForce: 10,
-                    },
-                    xAxis: {
-                        min: -100,
-                        max: 100,
-                        auto: true,
-                        name: ""
-                    },
-                    yAxis: {
-                        min: -100,
-                        max: 100,
-                        auto: true,
-                        name: ""
-                    }
-                },
-                plots: {
-                    radius: 6,
-                    outline: true,
-                    outlineColor: "#FFFFFF",
-                    outlineWidth: 1,
-                },
-                areas: {
-                    show: true,
-                    opacity: 40,
-                    useGradient: true,
-                }
-            },
-            title: {
-                text: "",
-                color: "#2D353C",
-                fontSize: 20,
-                bold: true,
-                subtitle: {
-                    color: "#A1A1A1",
-                    text: "",
-                    fontSize: 16,
-                    bold: false
-                }
-            },
-            tooltip: {
-                show: true,
-                backgroundColor: "#FFFFFF",
-                color: "#2D353C",
-                fontSize: 14,
-                roundingValue: 0,
-            },
-            legend: {
-                show: true,
-                bold: true,
-                backgroundColor: "#FFFFFF",
-                color: "#2D353C",
-                fontSize: 14,
-            }
-        }
-    },
-    table: {
-        show: false,
-        th: {
-            backgroundColor: "#FAFAFA",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8"
-        },
-        td: {
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8",
-            roundingValue: 0
-        }
-    },
-    userOptions: {
-        show: true,
-        title: "options",
-        labels: {
-            useDiv: "Title & legend inside",
-            showTable: "Show table",
-            showPlotLabels: "Show plot labels"
-        }
-    },
-    translations: {
-        category: "Category",
-        item: "Item",
-        side: "Side"
-    }
-});
+const defaultConfig = ref(mainConfig.vue_ui_quadrant);
 
 const isPrinting = ref(false);
 const quadrantChart = ref(null);
@@ -608,28 +461,8 @@ function generateXls() {
         const title = [[quadrantConfig.value.style.chart.title.text], [quadrantConfig.value.style.chart.title.subtitle.text], [""]];
         const head = table.value.head;
         const body = table.value.body
-
         const tableXls = title.concat([head]).concat(body);
-    
-        function s2ab(s) {
-            let buf = new ArrayBuffer(s.length);
-            let view = new Uint8Array(buf);
-            for (let i = 0; i < s.length; i++) {
-                view[i] = s.charCodeAt(i) & 0xff;
-            }
-            return buf;
-        }
-    
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.aoa_to_sheet(tableXls);
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-        const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-        const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = `${quadrantConfig.value.style.chart.title.text.replaceAll(" ", "_") || 'vue-ui-radar'}.xlsx`;
-        link.click();
-        window.URL.revokeObjectURL(link.href);
+        makeXls(tableXls, quadrantConfig.value.style.chart.title.text || 'vue-ui-quadrant');
     });
 }
 

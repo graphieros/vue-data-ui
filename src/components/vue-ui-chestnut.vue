@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { treeShake, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, convertConfigColors } from "../lib";
+import { treeShake, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, convertConfigColors, makeXls } from "../lib";
 import pdf from "../pdf.js";
-import * as XLSX from "xlsx";
+import mainConfig from "../default_configs.json";
 
 const props = defineProps({
     config: {
@@ -21,180 +21,7 @@ const props = defineProps({
 
 const uid = ref(`vue-ui-chestnut-${Math.random()}`);
 
-const defaultConfig = ref({
-    style: {
-        fontFamily: "inherit",
-        chart: {
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            layout: {
-                grandTotal: {
-                    show: true,
-                    fontSize: 20,
-                    bold: true,
-                    suffix: "",
-                    prefix: "",
-                    roundingValue: 0,
-                    color: "#2D353C",
-                    text: "Grand total",
-                    offsetY: 0,
-                },
-                roots: {
-                    stroke: "#FFFFFF",
-                    strokeWidth: 5,
-                    useGradient: true,
-                    gradientIntensity: 20,
-                    underlayerColor: "#FFFFFF",
-                    labels: {
-                        show: true,
-                        fontSize: 16,
-                        adaptColorToBackground: true,
-                        color: "#FFFFFF",
-                        bold: true,
-                        roundingValue: 0,
-                        prefix: "",
-                        suffix: "",
-                        name: {
-                            color: "#2D353C",
-                            fontSize: 16,
-                            bold: true,
-                        }
-                    }
-                },
-                verticalSeparator: {
-                    stroke: "#FFFFFF",
-                    strokeWidth: 5,
-                },
-                links: {
-                    opacity: 10,
-                },
-                branches: {
-                    stroke: "#FFFFFF",
-                    strokeWidth: 0,
-                    borderRadius: 6,
-                    useGradient: true,
-                    gradientIntensity: 20,
-                    underlayerColor: "#FFFFFF",
-                    widthRatio: 1.5,
-                    labels: {
-                        show: true,
-                        fontSize: 14,
-                        color: "#2D353C",
-                        bold: true,
-                        dataLabels: {
-                            show: true,
-                            hideUnderValue: 5,
-                            fontSize: 14,
-                            roundingValue: 0,
-                            roundingPercentage: 0,
-                            prefix: "",
-                            suffix: "",
-                        }
-                    }
-                },
-                nuts: {
-                    offsetX: 20,
-                    useGradient: true,
-                    gradientIntensity: 30,
-                    selected: {
-                        useMotion: true,
-                        useGradient: true,
-                        gradientIntensity: 40,
-                        roundingValue: 0,
-                        roundingPercentage: 0,
-                        labels: {
-                            dataLabels: {
-                                hideUnderValue: 5,
-                                color: "#2D353C",
-                                fontSize: 12,
-                                bold: true,
-                                prefix: "",
-                                suffix: ""
-                            },
-                            core: {
-                                total: {
-                                    color: "#2D353C",
-                                    fontSize: 24,
-                                    bold: false,
-                                },
-                                value: {
-                                    color: "#2D353C",
-                                    fontSize: 24,
-                                    bold: true,
-                                    prefix: "",
-                                    suffix: ""
-                                }
-                            }
-                        }
-                    }
-                },
-                legend: {
-                    fontSize: 16,
-                    color: "#2D353C",
-                    roundingValue: 0,
-                    roundingPercentage: 0,
-                    prefix: "",
-                    suffix: ""
-                },
-                title: {
-                    color: "#2D353C",
-                    fontSize: 20,
-                    text: "",
-                    bold: true,
-                    offsetY:0,
-                    subtitle: {
-                        text: "",
-                        color: "#CCCCCC",
-                        bold: false,
-                        fontSize: 16,
-                        offsetY: 0,
-                    }
-                }
-            }
-        }
-    },
-    table: {
-        show: false,
-        th: {
-            backgroundColor: "#FAFAFA",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8",
-            translations: {
-                rootName: "root name",
-                rootValue: "root value",
-                rootToTotal: "%/total",
-                branchName: "branch name",
-                branchValue: "branch value",
-                branchToRoot: "%/root",
-                branchToTotal: "%/total",
-                nutName: "nut name",
-                nutValue: "nut value",
-                nutToBranch: "%/branch",
-                nutToRoot: "%/root",
-                nutToTotal: "%/total"
-            }
-        },
-        td: {
-            backgroundColor: "#FFFFFF",
-            color: "#2D353C",
-            outline: "1px solid #e1e5e8",
-            roundingValue: 0,
-            roundingPercentage: 0
-        }
-    },
-    userOptions: {
-        show: true,
-        title: "options",
-        labels: {
-            showTable: "Show table"
-        }
-    },
-    translations: {
-        total: "Total",
-        proportionToTree: "of grand total",
-        of: "of"
-    }
-});
+const defaultConfig = ref(mainConfig.vue_ui_chestnut);
 
 const isPrinting = ref(false);
 const chestnutChart = ref(null);
@@ -630,31 +457,10 @@ function generateXls() {
                 tr.nutToTotal
             ]
         });
-
         const tableXls = title.concat([head]).concat(body);
-    
-        function s2ab(s) {
-            let buf = new ArrayBuffer(s.length);
-            let view = new Uint8Array(buf);
-            for (let i = 0; i < s.length; i++) {
-                view[i] = s.charCodeAt(i) & 0xff;
-            }
-            return buf;
-        }
-    
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.aoa_to_sheet(tableXls);
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-        const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-        const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = `${chestnutConfig.value.style.chart.layout.title.text.replaceAll(" ", "_") || 'vue-ui-chestnut'}.xlsx`;
-        link.click();
-        window.URL.revokeObjectURL(link.href);
+        makeXls(tableXls, chestnutConfig.value.style.chart.layout.title.text || 'vue-ui-chestnut');
     });
 }
-
 
 function closeDetails(e){
     if(e.target && e.target.tagName === 'svg') {
@@ -664,7 +470,6 @@ function closeDetails(e){
         details.value.removeAttribute("open")
     }
 }
-
 </script>
 
 <template>

@@ -871,8 +871,8 @@
 </template>
 
 <script>
-import * as XLSX from 'xlsx';
-import { makeDonut, treeShake, palette, convertColorToHex, convertConfigColors } from "../lib";
+import { makeDonut, treeShake, palette, convertColorToHex, convertConfigColors, makeXls } from "../lib";
+import mainConfig from "../default_configs.json";
 
 export default {
     name: "vue-ui-table",
@@ -889,226 +889,12 @@ export default {
                 return {}
             }
         }
-        // header: {
-        //     /** Defines the shape of table columns
-        //      *  Datastructure is an array of objects with one object for each column:
-        //      * 
-        //      *  [
-        //      *      {
-        //      *          name: string; (displayed name)
-        //      *          type: string; "text" | "numeric" | "date"
-        //      *          average: boolean;
-        //      *          decimals: number | undefined;
-        //      *          sum: boolean; (if true, will display the sum in the table head)
-        //      *          isSort: boolean; (if true, will show a sort button in the table head)
-        //      *          isSearch: boolean; (if true, will show a search input in the table head)
-        //      *          isMultiselect: boolean; (if true, will build a dropdown based on categories provided in the body at this column index)
-        //      *          isPercentage: boolean; (if true, will push to the row a percentage based on the targeted column)
-        //      *          percentageTo: string; (must be the exact name of another column). If isPercentage = false; will show quantites with percentage / target column in the same cell
-        //      *          suffix: string; (append any string to all values related to this column, like €, $ etc)
-        //      *          prefix: string; (prepend any string to all values related to this column, like €, $ etc)
-        //      *          rangeFilter: boolean; (show min max inputs to filter numeric columns)
-        //      *      },
-        //      *      {...}
-        //      *  ]
-        //      * 
-        //      * 
-        //      */
-        //     type: Array,
-        //     default() {
-        //         return []
-        //     }
-        // },
-        // body: {
-        //     /** Defines the rows of the table
-        //      *  Datastructure is an array of objects, containing an optional meta attribute to manage icon insertions:
-        //      * 
-        //      *  [
-        //      *      {
-        //      *          meta: {
-        //      *              color: string;
-        //      *              markerIndices: number[]; (lists all column indices where an icon will be prepended)
-        //      *              unicodeIcon: string; (for example: '★')
-        //      *          },
-        //      *          td: array; (Must contain all data corresponding to each column designed in the header. IMPORTANT: if a column has isPercentage: true; set this index to an empty string, as data will be calculated and pushed to this index on mounted)
-        //      *      }
-        //      *  ]
-        //      */
-        //     type: Array,
-        //     default() {
-        //         return []
-        //     }
-        // },
     },
     data() {
         const uid = `vue-ui-table-${Math.random()}`;
         return {
             uid,
-            defaultConfig: {
-                //locale:"fr-fr",
-                fontFamily: "inherit",
-                maxHeight: 500,
-                rowsPerPage: 25,
-                style: {
-                    th: {
-                        backgroundColor: "#E1E5E8",
-                        color:"#2D353C",
-                        outline: "1px solid #FFFFFF",
-                        selected: {
-                            backgroundColor: "#6376DD",
-                            color: "#FFFFFF"
-                        }
-                    },
-                    rows: {
-                        even: {
-                            backgroundColor: "#f3f5f7",
-                            color: "#2D353C",
-                            selectedCell: {
-                                backgroundColor: '#6375dd5b',
-                                color: "#2D353C"
-                            },
-                            selectedNeighbors: {
-                                backgroundColor: "#63dd821e",
-                                color: "#2D353C"
-                            }
-                        },
-                        odd: {
-                            backgroundColor: "#FFFFFF",
-                            color: "#2D353C",
-                            selectedCell: {
-                                backgroundColor: '#6375dd5b',
-                                color: "#2D353C"
-                            },
-                            selectedNeighbors: {
-                                backgroundColor: "#63dd821e",
-                                color: "#2D353C"
-                            }
-                        },
-                    },
-                    inputs: {
-                        backgroundColor: "#FFFFFF",
-                        color: "#2D353C",
-                        border: "1px solid #CCCCCC",
-                        accentColor: "#6376DD"
-                    },
-                    dropdowns: {
-                        backgroundColor: "#E1E5E8",
-                        color: "#2D353C",
-                        icons: {
-                            selected: {
-                                color: "#008000",
-                                unicode: "✔"
-                            },
-                            unselected: {
-                                color: "#ff0000",
-                                unicode: "✖"
-                            }
-                        }
-                    },
-                    infoBar: {
-                        backgroundColor: "#E1E5E8",
-                        color: "#2D353C"
-                    },
-                    pagination: {
-                        buttons: {
-                            backgroundColor: "#E1E5E8",
-                            color: "#2D353C",
-                            opacityDisabled: 0.5
-                        },
-                        navigationIndicator: {
-                            backgroundColor: "#6376DD"
-                        }
-                    },
-                    exportMenu: {
-                        backgroundColor: "#E1E5E8",
-                        color: "#2D353C",
-                        buttons: {
-                            backgroundColor: "#FAFAFA",
-                            color: "#2D353C"
-                        }
-                    },
-                    closeButtons: {
-                        backgroundColor: "transparent",
-                        color: "#2D353C",
-                        borderRadius: "50%"
-                    },
-                    chart: {
-                        modal: {
-                            backgroundColor: "#E1E5E8",
-                            color: "#2D353C",
-                            buttons: {
-                                selected: {
-                                    backgroundColor: "#6376DD",
-                                    color: "#FFFFFF"
-                                },
-                                unselected: {
-                                    backgroundColor: "#FFFFFF",
-                                    color: "#2D353C"
-                                }
-                            }
-                        },
-                        layout: {
-                            backgroundColor: "#FFFFFF",
-                            axis: {
-                                stroke: "#ccd1d4",
-                                strokeWidth: 2,
-                            },
-                            bar: {
-                                fill: "",
-                                stroke: "#FFFFFF"
-                            },
-                            line: {
-                                stroke: "#6376DD75",
-                                strokeWidth: 4,
-                                plot: {
-                                    fill: "#22348f",
-                                    stroke: "#FFFFFF",
-                                    strokeWidth: 1,
-                                    radius: {
-                                        selected: 6,
-                                        unselected: 4,
-                                    }
-                                },
-                                selector: {
-                                    stroke: "#ccc",
-                                    strokeWidth: 1,
-                                    strokeDasharray: 5
-                                },
-                            },
-                            labels: {
-                                color: "#2D353C"
-                            },
-                            progression: {
-                                stroke: "#2D353C",
-                                strokeWidth: 2,
-                                strokeDasharray: 4,
-                                arrowSize: 7,
-                            }
-                        },
-                    }
-                },
-                translations: {
-                    average: "Average",
-                    by: "by",
-                    chooseCategoryColumn: "Choose category column",
-                    exportAllButton: "XLSX all",
-                    exportAllLabel: "Export all rows of your current filtered dataset",
-                    exportPageButton: "XLSX page",
-                    exportPageLabel: "Export rows of the current page",
-                    from: "From",
-                    inputPlaceholder: "Search...",
-                    makeDonut: "Generate",
-                    nb: "Nb",
-                    page: "Page",
-                    paginatorLabel: "Rows per page",
-                    sizeWarning: "Displaying too many rows at a time can lead to slower performance",
-                    sum: "Somme",
-                    to: "To",
-                    total: 'Total',
-                    totalRows: "Total rows",
-                },
-                useChart: true
-            },
+            defaultConfig: mainConfig.vue_ui_table,
             bodyCopy: JSON.parse(JSON.stringify(this.dataset.body)).map((el, i) => {
                 return {
                     ...el,
@@ -1346,6 +1132,7 @@ export default {
         makeDonut,
         convertColorToHex,
         convertConfigColors,
+        makeXls,
 
         // specific
         applyDonutOption() {
@@ -1381,27 +1168,7 @@ export default {
             const head = this.dataset.header.map(h => h.name);
             const body = selection === 'all' ? this.bodyCopy.map(b => b.td) : this.visibleRows.map(r => r.td);
             const table = [head].concat(body);
-
-            function s2ab(s) {
-                let buf = new ArrayBuffer(s.length);
-                let view = new Uint8Array(buf);
-                for (let i = 0; i < s.length; i++) {
-                    view[i] = s.charCodeAt(i) & 0xff;
-                }
-                return buf;
-            }
-
-            const workbook = XLSX.utils.book_new();
-            const worksheet = XLSX.utils.aoa_to_sheet(table);
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-            const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-            const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = 'data.xlsx';
-            link.click();
-            window.URL.revokeObjectURL(link.href);
-            this.isExportRequest = false;
+            this.makeXls(table, 'vue-ui-table');
         },
         calcChartProgression(plots) {
             let x1,y1,x2,y2;
