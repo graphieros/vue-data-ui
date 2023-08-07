@@ -186,9 +186,11 @@ const mutableDataset = computed(() => {
     return immutableDataset.value
         .filter(onion => !segregated.value.includes(onion.id))
         .map((onion, i) => {
-            const radius = (((drawableArea.value.maxRadius - onionSkin.value.track) / mutableCount.value) / 2) * (1+i)
+            const radius = (((drawableArea.value.maxRadius - onionSkin.value.track) / mutableCount.value) / 2) * (1+i);
+            const labelY = (drawableArea.value.centerY) - ((drawableArea.value.centerY - drawableArea.value.top - onionConfig.value.style.chart.layout.labels.fontSize) / mutableCount.value * (i + 1));
             return {
                 ...onion,
+                labelY,
                 radius,
                 path: peelOnion(radius, onion.percentage)
             }
@@ -421,17 +423,19 @@ function closeDetails(){
 
             <!-- LABELS -->
             <g v-if="onionConfig.style.chart.layout.labels.show">
-                <text
-                    v-for="onion in mutableDataset"
-                    :x="svg.width / 2 - onionSkin.gutter * 0.8 + onionConfig.style.chart.layout.labels.offsetX"
-                    :y="onion.radius + drawableArea.top - onionSkin.gutter + onionConfig.style.chart.layout.labels.fontSize / 2 + onionConfig.style.chart.layout.labels.offsetY"
-                    text-anchor="end"
-                    :font-size="onionConfig.style.chart.layout.labels.fontSize"
-                    :fill="onionConfig.style.chart.layout.labels.color"
-                    :font-weight="onionConfig.style.chart.layout.labels.bold ? 'bold' : 'normal'"
-                >
-                    {{ onion.name }} {{ onionConfig.style.chart.layout.labels.percentage.show ? ` : ${onion.percentage.toFixed(onionConfig.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !onionConfig.style.chart.layout.labels.percentage.show && onionConfig.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix}` : '' }` : `${onionConfig.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix})` : '' : ''}` }}
-                </text>
+                <g v-for="onion in mutableDataset">                
+                    <text
+                        v-if="!segregated.includes(onion.id)"
+                        :x="svg.width / 2 - onionSkin.gutter * 0.8 + onionConfig.style.chart.layout.labels.offsetX"
+                        :y="onion.labelY"
+                        text-anchor="end"
+                        :font-size="onionConfig.style.chart.layout.labels.fontSize"
+                        :fill="onionConfig.style.chart.layout.labels.color"
+                        :font-weight="onionConfig.style.chart.layout.labels.bold ? 'bold' : 'normal'"
+                    >
+                        {{ onion.name }} {{ onionConfig.style.chart.layout.labels.percentage.show ? ` : ${onion.percentage.toFixed(onionConfig.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !onionConfig.style.chart.layout.labels.percentage.show && onionConfig.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix}` : '' }` : `${onionConfig.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix})` : '' : ''}` }}
+                    </text>
+                </g>
             </g>
 
             <!-- LEGEND AS G -->

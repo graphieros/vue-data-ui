@@ -1642,7 +1642,7 @@ const onionDataset = ref([
   },
   {
     name: "Serie 4",
-    percentage: 90,
+    percentage: 10,
     value: 200,
     prefix: "",
     suffix: "",
