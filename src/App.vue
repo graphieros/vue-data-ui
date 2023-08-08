@@ -129,7 +129,7 @@ const dataset2 = ref([
           th: {
             backgroundColor: "#FF0000"
           }
-        }
+        },
       });
 
   const head = ref([

@@ -386,7 +386,7 @@
         />
 
         <!-- DATA TABLE -->
-        <div :class="{'vue-ui-xy-table-wrapper': true, 'vue-ui-xy-table-wrapper-printing': isPrinting}" v-if="chartConfig.showTable && mutableConfig.showTable" @click="closeDetails">
+        <div :class="{'vue-ui-xy-table-wrapper': true, 'vue-ui-xy-table-wrapper-printing': isPrinting}" v-if="mutableConfig.showTable" @click="closeDetails">
             <table class="vue-ui-xy-table">
                 <thead>
                     <tr>
@@ -755,7 +755,8 @@ export default {
                 show: true,
             },
             titleInside: !this.chartConfig.chart.title.useDiv,
-            legendInside: !this.chartConfig.chart.legend.useDiv
+            legendInside: !this.chartConfig.chart.legend.useDiv,
+            showTable: this.chartConfig.showTable === true
         }
 
 

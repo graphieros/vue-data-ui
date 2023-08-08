@@ -292,7 +292,8 @@
                 "color": "#2D353C",
                 "outline": "1px solid #e1e5e8"
             }
-        }
+        },
+        "showTable": false
     },
     "vue_ui_donut": {
         "style": {
