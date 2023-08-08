@@ -168,6 +168,9 @@
                         :y2="serie.plots[j+1].y"
                         :stroke="serie.color"
                         :stroke-width="chartConfig.line.strokeWidth"
+                        :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0"
+                        stroke-linejoin="round"
+                        stroke-linecap="round"
                     />
                 </g>
                 <g  v-for="(plot, j) in serie.plots" 
