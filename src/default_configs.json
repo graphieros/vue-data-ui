@@ -1100,7 +1100,7 @@
                         "paddingRight": 0,
                         "useGradient": true,
                         "gradientIntensity": 20,
-                        "fillOpacity": 10,
+                        "fillOpacity": 90,
                         "underlayerColor": "#FFFFFF",
                         "dataLabels": {
                             "color":"#2D353C",
@@ -1139,18 +1139,18 @@
                     },
                     "separators": {
                         "show": true,
-                        "stroke":"#e1e5e8",
+                        "color":"#e1e5e8",
                         "strokeWidth":1
                     }
                 },
                 "title": {
-                    "text": "Title",
+                    "text": "",
                     "color": "#2D353C",
                     "fontSize": 20,
                     "bold": true,
                     "subtitle": {
                         "color": "#A1A1A1",
-                        "text": "Subtitle",
+                        "text": "",
                         "fontSize": 16,
                         "bold": false
                     }

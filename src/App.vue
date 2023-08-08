@@ -1839,7 +1839,7 @@ const verticalConfig = ref({
                     },
                     "separators": {
                         "show": true,
-                        "stroke":"rgb(52,52,52)",
+                        "color":"rgb(52,52,52)",
                         "strokeWidth":1
                     }
                 },

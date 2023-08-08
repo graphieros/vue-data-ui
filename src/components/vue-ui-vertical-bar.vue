@@ -266,11 +266,17 @@ function useTooltip(bar) {
             ${childName ? `<div>${childName}</div>` : ''}
         </div>`;
     
-    html += `<div>${verticalBarConfig.value.translations.value} : <b>${verticalBarConfig.value.style.chart.tooltip.prefix}${[undefined, NaN, null].includes(bar.value) ? '-' : bar.value.toFixed(verticalBarConfig.value.style.chart.tooltip.roundingValue)}${verticalBarConfig.value.style.chart.tooltip.suffix}</b></div>`;
-    html += `<div>${verticalBarConfig.value.translations.percentageToTotal} : <b>${isNaN(bar.value / total.value) ? '-' : `${(bar.value / total.value * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
-    if(bar.isChild) {
-        html += `<div>${verticalBarConfig.value.translations.percentageToSerie} : <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+    if (verticalBarConfig.value.style.chart.tooltip.showValue) {
+        html += `<div>${verticalBarConfig.value.translations.value} : <b>${verticalBarConfig.value.style.chart.tooltip.prefix}${[undefined, NaN, null].includes(bar.value) ? '-' : bar.value.toFixed(verticalBarConfig.value.style.chart.tooltip.roundingValue)}${verticalBarConfig.value.style.chart.tooltip.suffix}</b></div>`;
+    }    
+
+    if(verticalBarConfig.value.style.chart.tooltip.showPercentage) {
+        html += `<div>${verticalBarConfig.value.translations.percentageToTotal} : <b>${isNaN(bar.value / total.value) ? '-' : `${(bar.value / total.value * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+        if(bar.isChild) {
+            html += `<div>${verticalBarConfig.value.translations.percentageToSerie} : <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+        }
     }
+    
     tooltipContent.value = `<div style="text-align:left">${html}</div>`;
 }
 
@@ -480,7 +486,7 @@ function closeDetails(){
                     :x2="drawableArea.left"
                     :y1="verticalBarConfig.style.chart.layout.bars.height + (verticalBarConfig.style.chart.layout.bars.gap / 2) + drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i)"
                     :y2="verticalBarConfig.style.chart.layout.bars.height + (verticalBarConfig.style.chart.layout.bars.gap / 2) + drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i)"
-                    :stroke="verticalBarConfig.style.chart.layout.separators.stroke"
+                    :stroke="verticalBarConfig.style.chart.layout.separators.color"
                     :stroke-width="verticalBarConfig.style.chart.layout.separators.strokeWidth"
                     stroke-linecap="round"
                 />
@@ -494,12 +500,12 @@ function closeDetails(){
                     :fill="verticalBarConfig.style.chart.layout.bars.dataLabels.color"
                     :font-weight="verticalBarConfig.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                 >
-                    {{ isNaN(serie.value) || !verticalBarConfig.style.chart.layout.bars.dataLabels.value.show ? '' : verticalBarConfig.style.chart.layout.bars.dataLabels.value.prefix  }} {{ isNaN(serie.value) ? '' : serie.value.toFixed(verticalBarConfig.style.chart.layout.bars.dataLabels.value.roundingValue) }} {{ isNaN(serie.value) || !verticalBarConfig.style.chart.layout.bars.dataLabels.value.show ? '' : verticalBarConfig.style.chart.layout.bars.dataLabels.value.suffix  }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.show ? `(${calcProportionToTotal(serie.value, true, verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)})` : '' }}
+                    {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.prefix }} {{ isNaN(serie.value) || !verticalBarConfig.style.chart.layout.bars.dataLabels.value.show ? '' : serie.value.toFixed(verticalBarConfig.style.chart.layout.bars.dataLabels.value.roundingValue) }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.suffix  }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.show ? `(${calcProportionToTotal(serie.value, true, verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)})` : '' }}
                 </text>
 
                 <!-- CHILDREN | LONELY PARENTS NAMES -->
                 <text 
-                    v-if="serie.isChild || !serie.hasChildren"
+                    v-if="(serie.isChild || !serie.hasChildren) && verticalBarConfig.style.chart.layout.bars.nameLabels.show"
                     text-anchor="end"
                     :x="drawableArea.left - 3 + verticalBarConfig.style.chart.layout.bars.nameLabels.offsetX"
                     :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i) + (verticalBarConfig.style.chart.layout.bars.height / 2) + verticalBarConfig.style.chart.layout.bars.nameLabels.fontSize / 2"
@@ -512,7 +518,7 @@ function closeDetails(){
 
                 <!-- PARENT NAMES -->
                 <text 
-                    v-if="serie.isChild && serie.childIndex === 0"
+                    v-if="serie.isChild && serie.childIndex === 0 && verticalBarConfig.style.chart.layout.bars.parentLabels.show"
                     :x="3 + verticalBarConfig.style.chart.layout.bars.parentLabels.offsetX"
                     :y="getParentData(serie, i).y"
                     :font-size="verticalBarConfig.style.chart.layout.bars.parentLabels.fontSize"
@@ -523,7 +529,7 @@ function closeDetails(){
                     {{ getParentData(serie, i).name }}
                 </text>
                 <text 
-                    v-if="serie.isChild && serie.childIndex === 0"
+                    v-if="serie.isChild && serie.childIndex === 0 && verticalBarConfig.style.chart.layout.bars.parentLabels.show"
                     :x="3 + verticalBarConfig.style.chart.layout.bars.parentLabels.offsetX"
                     :y="getParentData(serie, i).y + verticalBarConfig.style.chart.layout.bars.parentLabels.fontSize + 6"
                     :font-size="verticalBarConfig.style.chart.layout.bars.parentLabels.fontSize"
@@ -531,7 +537,7 @@ function closeDetails(){
                     :font-weight="verticalBarConfig.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                     text-anchor="start"
                 >
-                    {{ getParentData(serie, i).value }} ({{ getParentData(serie, i).percentageToTotal }})
+                    {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.show ? getParentData(serie, i).value : '' }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.show ? `(${getParentData(serie, i).percentageToTotal})` : '' }}
                 </text>
 
                 <!-- TOOLTIP TRAPS -->
