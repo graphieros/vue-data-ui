@@ -871,7 +871,7 @@
 </template>
 
 <script>
-import { makeDonut, treeShake, palette, convertColorToHex, convertConfigColors, makeXls } from "../lib";
+import { makeDonut, treeShake, palette, convertColorToHex, convertConfigColors, makeXls, calcLinearProgression } from "../lib";
 import mainConfig from "../default_configs.json";
 
 export default {
@@ -1057,7 +1057,7 @@ export default {
             
             const zero = height - (height * (relativeZero / absoluteMax));
 
-            return {isAllNegative, zero, plots, slot, progression: plots.length >= 2 ? this.calcChartProgression(plots) : false };
+            return {isAllNegative, zero, plots, slot, progression: plots.length >= 2 ? this.calcLinearProgression(plots) : false };
         },
         donutHollowLabels() {
             return {
@@ -1170,28 +1170,7 @@ export default {
             const table = [head].concat(body);
             this.makeXls(table, 'vue-ui-table');
         },
-        calcChartProgression(plots) {
-            let x1,y1,x2,y2;
-            const len = plots.length;
-            let sumX = 0;
-            let sumY = 0;
-            let sumXY = 0;
-            let sumXX = 0;
-            for(const { x, y } of plots) {
-                sumX += x;
-                sumY += y;
-                sumXY += x * y;
-                sumXX += x * x;
-            }
-            const slope = (len * sumXY - sumX * sumY) / (len * sumXX - sumX * sumX);
-            const intercept = (sumY - slope * sumX) / len;
-            x1 = plots[0].x;
-            x2 = plots[len - 1].x;
-            y1 = slope * x1 + intercept;
-            y2 = slope * x2 + intercept;
-
-            return { x1, y1, x2, y2, slope };
-        },
+        calcLinearProgression,
         closeAllDropdowns() {
             const dropdowns = document.getElementsByClassName("th-dropdown");
             if(!dropdowns.length) return;

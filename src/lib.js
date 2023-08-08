@@ -523,6 +523,28 @@ export function makeXls(table, fileName) {
     window.URL.revokeObjectURL(link.href);
 }
 
+export function calcLinearProgression(plots) {
+    let x1,y1,x2,y2;
+    const len = plots.length;
+    let sumX = 0;
+    let sumY = 0;
+    let sumXY = 0;
+    let sumXX = 0;
+    for(const { x, y } of plots) {
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumXX += x * x;
+    }
+    const slope = (len * sumXY - sumX * sumY) / (len * sumXX - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / len;
+    x1 = plots[0].x;
+    x2 = plots[len - 1].x;
+    y1 = slope * x1 + intercept;
+    y2 = slope * x2 + intercept;
+    return { x1, y1, x2, y2, slope };
+}
+
 const lib = {
     addVector,
     checkNaN,
@@ -546,5 +568,6 @@ const lib = {
     checkObj,
     checkArray,
     makeXls,
+    calcLinearProgression
 };
 export default lib;

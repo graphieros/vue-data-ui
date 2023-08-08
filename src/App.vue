@@ -23,23 +23,39 @@ const dataset2 = ref([
           name: "Series 1",
           series: [ -55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
           type: "bar",
+          dataLabels: false,
         },
         {
           name: "Series 2",
           series: [-55, -34, -21, -13, -18, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
-          type: "bar"
+          type: "bar",
+          dataLabels: false,
+          useProgression: true,
         },
         {
           name: "Series 3",
           series: [-55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
           type: "line",
           dashed: true,
+          dataLabels: false,
+          useProgression: true,
         },
         {
           name: "Series 4",
           series: [0, 1, 2, 3, 5, null, 13, 21, 34, 55,],
+          type: "plot",
+          dashed: true,
+          dataLabels: false,
+          useProgression: true,
+        },
+        {
+          name: "Target",
+          series: [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
           type: "line",
           dashed: true,
+          color: "rgb(100,100,100)",
+          dataLabels: false,
+          useTag: "end",
         },
       ]);
 
@@ -114,7 +130,7 @@ const dataset2 = ref([
         bar: {
           useGradient: true,
           labels: {
-            show: false,
+            show: true,
           }
         },
         line: {
@@ -124,7 +140,9 @@ const dataset2 = ref([
           }
         },
         plot: {
-         
+         labels: {
+          show: true,
+         }
         },
         table: {
           rounding: 1,

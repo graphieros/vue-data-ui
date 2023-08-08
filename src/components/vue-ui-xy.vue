@@ -137,6 +137,36 @@
                         :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                     />
                 </g>
+                <g v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).slope)">
+                    <defs>
+                            <marker :id="`bar_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
+                            refX="0" :refY="7/2" orient="auto">
+                                <polygon 
+                                    :points="`0 0, ${7} ${7/2}, 0 ${7}`" 
+                                    :fill="serie.color"
+                                />
+                            </marker>
+                        </defs>
+                        <line
+                        :x1="calcLinearProgression(serie.plots).x1"
+                        :x2="calcLinearProgression(serie.plots).x2"
+                        :y1="calcLinearProgression(serie.plots).y1"
+                        :y2="calcLinearProgression(serie.plots).y2"
+                        :stroke-width="1"
+                        :stroke="serie.color"
+                        :stroke-dasharray="2"
+                        :marker-end="`url(#bar_arrow_${i})`"
+                    />
+                    <text
+                        text-anchor="middle"
+                        :x="calcLinearProgression(serie.plots).x2"
+                        :y="calcLinearProgression(serie.plots).y2 - 6"
+                        :font-size="chartConfig.chart.labels.fontSize"
+                        :fill="serie.color"
+                    >
+                        {{ calcLinearProgression(serie.plots).slope < 0 ? `+${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` : `-${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` }}
+                    </text>
+                </g>
             </g>
 
             <!-- PLOTS -->
@@ -154,6 +184,36 @@
                         :stroke="chartConfig.chart.backgroundColor"
                         stroke-width="0.5"
                     />
+                </g>
+                <g v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).slope)">
+                    <defs>
+                        <marker :id="`plot_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
+                        refX="0" :refY="7/2" orient="auto">
+                            <polygon 
+                                :points="`0 0, ${7} ${7/2}, 0 ${7}`" 
+                                :fill="serie.color"
+                            />
+                        </marker>
+                    </defs>
+                    <line
+                        :x1="calcLinearProgression(serie.plots).x1"
+                        :x2="calcLinearProgression(serie.plots).x2"
+                        :y1="calcLinearProgression(serie.plots).y1"
+                        :y2="calcLinearProgression(serie.plots).y2"
+                        :stroke-width="1"
+                        :stroke="serie.color"
+                        :stroke-dasharray="2"
+                        :marker-end="`url(#plot_arrow_${i})`"
+                    />
+                    <text
+                        text-anchor="middle"
+                        :x="calcLinearProgression(serie.plots).x2"
+                        :y="calcLinearProgression(serie.plots).y2 - 6"
+                        :font-size="chartConfig.chart.labels.fontSize"
+                        :fill="serie.color"
+                    >
+                        {{ calcLinearProgression(serie.plots).slope < 0 ? `+${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` : `-${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` }}
+                    </text>
                 </g>
             </g>
 
@@ -173,7 +233,7 @@
                         stroke-linecap="round"
                     />
                 </g>
-                <g  v-for="(plot, j) in serie.plots" 
+                <g v-for="(plot, j) in serie.plots" 
                     :key="`circle_line_${i}_${j}`">
                     <circle 
                         v-if="canShowValue(plot.value)"
@@ -185,7 +245,36 @@
                         stroke-width="0.5"
                     />
                 </g > 
-                
+                <g v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).slope)">
+                    <defs>
+                            <marker :id="`line_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
+                            refX="0" :refY="7/2" orient="auto">
+                                <polygon 
+                                    :points="`0 0, ${7} ${7/2}, 0 ${7}`" 
+                                    :fill="serie.color"
+                                />
+                            </marker>
+                        </defs>
+                        <line
+                        :x1="calcLinearProgression(serie.plots).x1"
+                        :x2="calcLinearProgression(serie.plots).x2"
+                        :y1="calcLinearProgression(serie.plots).y1"
+                        :y2="calcLinearProgression(serie.plots).y2"
+                        :stroke-width="1"
+                        :stroke="serie.color"
+                        :stroke-dasharray="2"
+                        :marker-end="`url(#line_arrow_${i})`"
+                    />
+                    <text
+                        text-anchor="middle"
+                        :x="calcLinearProgression(serie.plots).x2"
+                        :y="calcLinearProgression(serie.plots).y2 - 6"
+                        :font-size="chartConfig.chart.labels.fontSize"
+                        :fill="serie.color"
+                    >
+                        {{ calcLinearProgression(serie.plots).slope < 0 ? `+${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` : `-${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` }}
+                    </text>
+                </g>
             </g>
 
             <!-- X LABELS BAR -->
@@ -193,6 +282,7 @@
                 <g v-for="(serie, i) in barSet" :key="`xLabel_bar_${i}`" :class="`xLabel_bar_${i}`">
                     <g v-for="(plot, j) in serie.plots" :key="`xLabel_bar_${i}_${j}`">
                         <text
+                            v-if="!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
                             :x="plot.x + calcRectWidth()"
                             :y="plot.y + chartConfig.bar.labels.offsetY"
                             text-anchor="middle"
@@ -210,6 +300,7 @@
                 <g v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`">
                     <g v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                         <text
+                            v-if="!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
                             :x="plot.x"
                             :y="plot.y + chartConfig.plot.labels.offsetY"
                             text-anchor="middle"
@@ -218,6 +309,30 @@
                         >
                             {{ canShowValue(plot.value) ? plot.value.toFixed(chartConfig.plot.labels.rounding) : '' }}
                         </text>
+                        <foreignObject 
+                            v-if="j === 0 && serie.useTag && serie.useTag === 'start'"
+                            :x="plot.x"
+                            :y="plot.y - 20"
+                            :height="24"
+                            width="150"
+                            style="overflow: visible"
+                        >
+                            <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${chartConfig.chart.labels.fontSize}px;border-radius: 2px;`">
+                                {{ serie.name }}
+                            </div>
+                        </foreignObject>
+                        <foreignObject 
+                            v-if="j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
+                            :x="plot.x - serie.name.length * (chartConfig.chart.labels.fontSize / 2)"
+                            :y="plot.y - 20"
+                            :height="24"
+                            width="150"
+                            style="overflow: visible"
+                        >
+                            <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${chartConfig.chart.labels.fontSize}px;border-radius: 2px;`">
+                                {{ serie.name }}
+                            </div>
+                        </foreignObject>
                     </g>
                 </g>
             </g>
@@ -227,6 +342,7 @@
                 <g v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`">
                     <g v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                         <text
+                            v-if="!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
                             :x="plot.x"
                             :y="plot.y + chartConfig.line.labels.offsetY"
                             text-anchor="middle"
@@ -235,6 +351,30 @@
                         >
                             {{ canShowValue(plot.value) ? plot.value.toFixed(chartConfig.line.labels.rounding) : '' }}
                         </text>
+                        <foreignObject 
+                            v-if="j === 0 && serie.useTag && serie.useTag === 'start'"
+                            :x="plot.x"
+                            :y="plot.y - 20"
+                            :height="24"
+                            width="150"
+                            style="overflow: visible"
+                        >
+                            <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${chartConfig.chart.labels.fontSize}px;border-radius: 2px;`">
+                                {{ serie.name }}
+                            </div>
+                        </foreignObject>
+                        <foreignObject 
+                            v-if="j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
+                            :x="plot.x - serie.name.length * (chartConfig.chart.labels.fontSize / 2)"
+                            :y="plot.y - 20"
+                            :height="24"
+                            width="150"
+                            style="overflow: visible"
+                        >
+                            <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${chartConfig.chart.labels.fontSize}px;border-radius: 2px;`">
+                                {{ serie.name }}
+                            </div>
+                        </foreignObject>
                     </g>
                 </g>
             </g>
@@ -432,7 +572,9 @@ import {
     opacity, 
     convertColorToHex, 
     convertConfigColors, 
-    makeXls 
+    makeXls,
+    adaptColorToBackground,
+    calcLinearProgression
 } from '../lib';
 import mainConfig from "../default_configs.json";
 
@@ -775,6 +917,8 @@ export default {
         convertColorToHex,
         convertConfigColors,
         makeXls,
+        adaptColorToBackground,
+        calcLinearProgression,
 
         calcRectHeight(plot) {
             if(plot.value >= 0) {
