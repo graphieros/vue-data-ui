@@ -106,39 +106,47 @@ const verticalBarConfig = computed(() => {
 
 const mutableConfig = ref({
     inside: !verticalBarConfig.value.style.chart.layout.useDiv,
-    showTable: verticalBarConfig.value.table.show
+    showTable: verticalBarConfig.value.table.show,
+    sortDesc: verticalBarConfig.value.style.chart.layout.bars.sort === "desc"
 });
 
+const isSortDown = computed(() => {
+    return mutableConfig.value.sortDesc;
+})
+
 const immutableDataset = computed(() => {
-    return props.dataset.map((serie, i) => {
+    return props.dataset
+        .sort((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
+        .map((serie, i) => {
         return {
             ...serie,
             id: `vertical_parent_${i}_${uid.value}`,
             hasChildren: !!serie.children && serie.children.length > 0,
             isChild: false,
             color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
-            children: !serie.children || !serie.children.length ? [] : serie.children.map((c, j) => {
-                return {
-                    ...c,
-                    isChild: true,
-                    parentId: `vertical_parent_${i}_${uid.value}`,
-                    parentName: serie.name,
-                    parentValue: serie.value,
-                    id: `vertical_child_${i}_${j}_${uid.value}`,
-                    childIndex: j,
-                    color: convertColorToHex(c.color) || convertColorToHex(serie.color) || palette[i] || palette[i % palette.length]
-                }
-            })
-            .sort((a, b) => b.value - a.value)
-            .map((c,j) => {
-                return {
-                    ...c,
-                    isFirstChild: j === 0,
-                    isLastChild: j === serie.children.length - 1,
-                }
-            })
+            children: !serie.children || !serie.children.length ? [] : serie.children
+                .sort((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
+                .map((c, j) => {
+                    return {
+                        ...c,
+                        isChild: true,
+                        parentId: `vertical_parent_${i}_${uid.value}`,
+                        parentName: serie.name,
+                        parentValue: serie.value,
+                        id: `vertical_child_${i}_${j}_${uid.value}`,
+                        childIndex: j,
+                        color: convertColorToHex(c.color) || convertColorToHex(serie.color) || palette[i] || palette[i % palette.length]
+                    }
+                })
+                .map((c,j) => {
+                    return {
+                        ...c,
+                        isFirstChild: j === 0,
+                        isLastChild: j === serie.children.length - 1,
+                    }
+                })
         }
-    }).sort((a, b) => b.value - a.value)
+    })
 });
 
 const svg = computed(() => {
@@ -233,7 +241,7 @@ function calcDataLabelX(val) {
 
 function getParentData(serie, index) {
     const parent = mutableDataset.value.find(el => el.id === serie.parentId);
-    const start = drawableArea.value.top + ((verticalBarConfig.value.style.chart.layout.bars.gap + verticalBarConfig.value.style.chart.layout.bars.height) * index);
+    const start = drawableArea.value.top + ((verticalBarConfig.value.style.chart.layout.bars.gap + verticalBarConfig.value.style.chart.layout.bars.height) * (index));
     const height = parent.children.length * (verticalBarConfig.value.style.chart.layout.bars.gap + verticalBarConfig.value.style.chart.layout.bars.height);
     return {
         y: start + (height / 2),
@@ -276,7 +284,7 @@ function useTooltip(bar) {
             html += `<div>${verticalBarConfig.value.translations.percentageToSerie} : <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
         }
     }
-    
+
     tooltipContent.value = `<div style="text-align:left">${html}</div>`;
 }
 
@@ -398,6 +406,11 @@ function closeDetails(){
                     <input type="checkbox" :id="`vue-ui-vertical-bar-option-table_${uid}`" :name="`vue-ui-vertical-bar-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-vertical-bar-option-table_${uid}`">{{ verticalBarConfig.userOptions.labels.showTable }}</label>
+                </div>
+                <div class="vue-ui-vertical-bar-user-option-item">
+                    <input type="checkbox" :id="`vue-ui-vertical-bar-option-sort_${uid}`" :name="`vue-ui-vertical-bar-option-sort_${uid}`"
+                    v-model="mutableConfig.sortDesc" @change="recalculateHeight">
+                    <label :for="`vue-ui-vertical-bar-option-sort_${uid}`">{{ verticalBarConfig.userOptions.labels.sort }}</label>
                 </div>
                 <button class="vue-ui-vertical-bar-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${verticalBarConfig.style.chart.color}`">
                     <svg class="vue-ui-vertical-bar-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="verticalBarConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">

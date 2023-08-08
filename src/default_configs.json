@@ -1091,6 +1091,7 @@
                 "layout": {
                     "useDiv": true,
                     "bars": {
+                        "sort": "desc",
                         "useStroke": false,
                         "strokeWidth": 2,
                         "height": 32,
@@ -1185,7 +1186,8 @@
             "title": "options",
             "labels": {
                 "useDiv": "Title & legend inside",
-                "showTable": "Show table"
+                "showTable": "Show table",
+                "sort":"Sort desc"
             }
         },
         "table": {

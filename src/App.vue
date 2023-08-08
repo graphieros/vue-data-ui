@@ -1740,6 +1740,7 @@ const verticalDataset = ref([
   {
     name: "Serie 1",
     value: 100,
+    color: "#FF0000",
     children: [
       {
         name: "serie 1 child 1",
@@ -1754,18 +1755,22 @@ const verticalDataset = ref([
   {
     name: "Serie 2",
     value: 345,
+    color: "#0FF000",
   },
   {
     name: "Serie 3",
     value: 210,
+    color: "#00FFA2",
   },
   {
     name: "Serie 4",
     value: 188,
+    color: "#500FF0"
   },
   {
     name: "Serie 5",
     value: 120,
+    color: "#0000FF",
     children: [
       {
         name: "Serie 5 child 1",
@@ -1791,6 +1796,7 @@ const verticalConfig = ref({
                 "layout": {
                     "useDiv": true,
                     "bars": {
+                        "sort": "asc",
                         "useStroke": false,
                         "strokeWidth": 2,
                         "height": 32,
@@ -1885,7 +1891,8 @@ const verticalConfig = ref({
             "title": "options",
             "labels": {
                 "useDiv": "Title & legend inside",
-                "showTable": "Show table"
+                "showTable": "Show table",
+                "sort": "Sort desc"
             }
         },
         "table": {
