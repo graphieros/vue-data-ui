@@ -12,7 +12,7 @@
 A user-empowering data visualization Vue components library.
 Currently in early stages, feel free to give some feedback!
 
-For the moment, it includes:
+Available components:
 
 - [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
 - [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
@@ -24,4 +24,4 @@ For the moment, it includes:
 - [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
 - [VueUiOnion](https://vue-data-ui.graphieros.com/docs#vue-ui-onion)
 - [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
-
+- [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)

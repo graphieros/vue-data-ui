@@ -1215,5 +1215,61 @@
             "percentageToTotal": "%/total",
             "percentageToSerie": "%/serie"
         }
+    },
+    "vue_ui_screenshot": {
+        "mode": "download",
+        "quality": 1,
+        "style": {
+            "info": {
+                "background": "#FFFFFF",
+                "bold": true,
+                "border": "none",
+                "borderRadius": 4,
+                "boxShadow": "0 6px 12px -6px rgba(0,0,0,0.2)",
+                "color":"#2D353C",
+                "fontFamily": "inherit",
+                "fontSize": 14,
+                "minWidth": 300,
+                "padding": 12,
+                "top": -100
+            },
+            "captureButton": {
+                "background": "#E1E5E8",
+                "bold": true,
+                "border":"none",
+                "borderRadius": 4,
+                "boxShadow": "0 6px 12px -6px rgba(0,0,0,0.2)",
+                "color":"#2D353C",
+                "fontFamily": "inherit",
+                "fontSize": 14,
+                "minHeight": 40,
+                "padding": "8px 12px"
+            },
+            "cancelButton": {
+                "background": "#F17171",
+                "border": "none",
+                "borderRadius": 10,
+                "color": "#FFFFFF",
+                "right": -14,
+                "size": 28,
+                "top": -14
+            },
+            "captureArea": {
+                "background": "radial-gradient(transparent, rgba(0,0,0,0.15))",
+                "border": "dashed 4px #2D353C",
+                "initialHeight": 200,
+                "initialWidth": 200
+            },
+            "handles": {
+                "background": "#FFFFFF",
+                "border": "4px solid #2D353C",
+                "borderRadius": 4,
+                "size": 40
+            }
+        },
+        "translations": {
+            "captureButton": "capture",
+            "info" : "Resize or move and click to capture"
+        }
     }
 }
