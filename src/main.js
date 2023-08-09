@@ -11,7 +11,8 @@ import {
     VueUiGauge,
     VueUiChestnut,
     VueUiOnion,
-    VueUiVerticalBar
+    VueUiVerticalBar,
+    VueUiScreenshot
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -26,5 +27,5 @@ app.component("VueUiGauge", VueUiGauge);
 app.component("VueUiChestnut", VueUiChestnut);
 app.component("VueUiOnion", VueUiOnion);
 app.component("VueUiVerticalBar", VueUiVerticalBar);
+app.component("VueUiScreenshot", VueUiScreenshot);
 app.mount('#app');
-

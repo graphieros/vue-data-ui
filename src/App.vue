@@ -10,6 +10,7 @@ import GaugeTest from "./components/vue-ui-gauge.vue";
 import ChestnutTest from "./components/vue-ui-chestnut.vue";
 import OnionTest from "./components/vue-ui-onion.vue";
 import VerticalTest from "./components/vue-ui-vertical-bar.vue";
+import ScreenshotTest from "./components/vue-ui-screenshot.vue";
 
 const dataset = ref([
         {
@@ -1941,6 +1942,63 @@ const verticalConfig = ref({
         }
 });
 
+const screenshotConfig = ref(
+  {
+    mode: "download",
+    quality: 1,
+    style: {
+      info: {
+        background: "#1A1A1A",
+        color: "#CCCCCC",
+        fontSize: 14,
+        bold: true,
+        minWidth: 300,
+        padding: 12,
+        borderRadius: 4,
+        boxShadow: "0 6px 12px -6px rgba(0,0,0,0.2)",
+        fontFamily: "inherit",
+        border: "none",
+        top: -100,
+      },
+      captureButton: {
+        background: "#1A1A1A",
+        color: "#CCCCCC",
+        fontSize: 14,
+        borderRadius: 4,
+        border: "1px solid #CCCCC",
+        minHeight: 40,
+        padding: "8px 12px",
+        boxShadow: "0 6px 12px -6px rgba(0,0,0,0.2)",
+        bold: true,
+      },
+      cancelButton: {
+        background: "#F17171",
+        color: "#FFFFFF",
+        size: 28,
+        borderRadius: 14,
+        top: -14,
+        right: -14,
+        border: "none"
+      },
+      captureArea: {
+        initialHeight: 200,
+        initialWidth: 200,
+        border: "dashed 2px #CCCCCC"
+      },
+      handles: {
+        size: 40,
+        background: "#1A1A1A",
+        border: "4px solid #CCCCCC",
+        borderRadius: 4
+      }
+    },
+    translations: {
+      info: "Resize or move and click to capture",
+      captureButton: "Capture"
+    }
+  }
+);
+
 const showLocalTest = ref(false);
 
 // IDEAS:
@@ -2025,11 +2083,25 @@ function selectVerticalLegend(v) {
 }
 
 
+const screenshottest = ref(null);
+
+function sstest() {
+  screenshottest.value.shoot();
+}
+
+const pic = ref("")
+
+function postImage(i) {
+  console.log(i);
+  pic.value = i.image
+}
+
 </script>
 
 <template>
   <div>
-
+    <button @click="sstest">SCREENSHOT</button>
+    <img v-if="pic" :src="pic">
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiVerticalBar ref="verticaltest" v-if="!showLocalTest" :config="verticalConfig" :dataset="verticalDataset" @selectLegend="selectVerticalLegend"/>
       <VerticalTest ref="verticaltest" v-if="showLocalTest" :config="verticalConfig" :dataset="verticalDataset"/>
@@ -2070,4 +2142,6 @@ function selectVerticalLegend(v) {
     <VueUiTable :dataset="tableTestDataset" :config="darkConfig" v-if="!showLocalTest"/>
     <TableTest :dataset="tableTestDataset" v-if="showLocalTest"/>
   </div>
+  <VueUiScreenshot v-if="!showLocalTest" ref="screenshottest" :config="screenshotConfig" @postImage="postImage"/>
+  <ScreenshotTest v-if="showLocalTest" ref="screenshottest" :config="screenshotConfig" @postImage="postImage"/>
 </template>
