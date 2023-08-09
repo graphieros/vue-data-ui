@@ -25,3 +25,4 @@ Available components:
 - [VueUiOnion](https://vue-data-ui.graphieros.com/docs#vue-ui-onion)
 - [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
 - [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)
+- [VueUiRating](https://vue-data-ui.graphieros.com/docs#vue-ui-rating)

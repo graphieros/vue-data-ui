@@ -11,6 +11,7 @@ import ChestnutTest from "./components/vue-ui-chestnut.vue";
 import OnionTest from "./components/vue-ui-onion.vue";
 import VerticalTest from "./components/vue-ui-vertical-bar.vue";
 import ScreenshotTest from "./components/vue-ui-screenshot.vue";
+import RatingTest from "./components/vue-ui-rating.vue";
 
 const dataset = ref([
         {
@@ -1999,6 +2000,78 @@ const screenshotConfig = ref(
   }
 );
 
+const ratingDataset = ref({
+  // rating: 4
+  rating: {
+    "1": 1,
+    "2": 1,
+    "3": 1,
+    "4": 1,
+    "5": 3
+  }
+});
+
+const ratingConfig = ref({
+  type: "star",
+  readonly: false,
+  from: 1,
+  to: 5,
+  style: {
+    fontFamily: "inherit",
+    animated: true,
+    itemSize: 32,
+    backgroundColor: "#FFFFFF",
+    star: {
+      activeColor: "#FFD055",
+      borderColor: "#FFD055",
+      borderWidth: 3,
+      apexes: 5,
+      inactiveColor: "#e1e5e8",
+      useGradient: true
+    },
+    image: {
+      src: "",
+      inactiveOpacity: 0.3,
+      alt: "rating image"
+    },
+    title: {
+      textAlign: "center",
+      fontSize: 20,
+      color: "#2D353C",
+      bold: true,
+      text: "Title",
+      offsetY: 6,
+      subtitle: {
+        fontSize: 14,
+        color: "#CCCCCC",
+        bold: false,
+        text: "Subtitle",
+        offsetY: 12
+      }
+    },
+    rating: {
+      show: true,
+      fontSize: 28,
+      bold: true,
+      roundingValue: 1,
+      position: "bottom",
+      offsetY: 0,
+      offsetX: 0
+    },
+    tooltip: {
+      show: true,
+      fontSize: 14,
+      offsetY: 0,
+      color: "#2D353C",
+      bold: true,
+      backgroundColor: "#FFFFFF",
+      borderColor: "#e1e5e8",
+      borderRadius: 4,
+      boxShadow: "0 6px 12px -6px rgba(0,0,0,0.2)"
+    }
+  }
+});
+
 const showLocalTest = ref(false);
 
 // IDEAS:
@@ -2096,12 +2169,25 @@ function postImage(i) {
   pic.value = i.image
 }
 
+const ratingtest = ref(null);
+
+const isRead = ref(false);
+function toggleRead() {
+  isRead.value = !isRead.value;
+  ratingtest.value.toggleReadonly(isRead.value);
+}
+
 </script>
 
 <template>
   <div>
     <button @click="sstest">SCREENSHOT</button>
+    <button @click="toggleRead">TOGGLE RATING READONLY</button>
     <img v-if="pic" :src="pic">
+    <div style="max-width:200px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiRating ref="ratingtest" v-if="!showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>
+      <RatingTest ref="ratingtest" v-if="showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiVerticalBar ref="verticaltest" v-if="!showLocalTest" :config="verticalConfig" :dataset="verticalDataset" @selectLegend="selectVerticalLegend"/>
       <VerticalTest ref="verticaltest" v-if="showLocalTest" :config="verticalConfig" :dataset="verticalDataset"/>
