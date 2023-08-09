@@ -9,6 +9,7 @@ import VueUiChestnut from "./components/vue-ui-chestnut.vue";
 import VueUiOnion from "./components/vue-ui-onion.vue";
 import VueUiVerticalBar from "./components/vue-ui-vertical-bar.vue";
 import VueUiScreenshot from "./components/vue-ui-screenshot.vue";
+import VueUiRating from "./components/vue-ui-rating.vue";
 
 export { 
     VueUiXy, 
@@ -21,5 +22,6 @@ export {
     VueUiChestnut,
     VueUiOnion,
     VueUiVerticalBar,
-    VueUiScreenshot
+    VueUiScreenshot,
+    VueUiRating
 };

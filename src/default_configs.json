@@ -1271,5 +1271,65 @@
             "captureButton": "capture",
             "info" : "Resize or move and click to capture"
         }
+    },
+    "vue_ui_rating": {
+        "type": "star",
+        "readonly": false,
+        "from": 1,
+        "to": 5,
+        "style": {
+            "fontFamily": "inherit",
+            "animated": true,
+            "itemSize": 32,
+            "backgroundColor": "#FFFFFF",
+            "star": {
+                "activeColor": "#FFD055",
+                "borderColor": "#FFD055",
+                "borderWidth": 3,
+                "apexes": 5,
+                "inactiveColor": "#e1e5e8",
+                "useGradient": true
+            },
+            "image": {
+                "src": "",
+                "inactiveOpacity": 0.3,
+                "alt": "rating image"
+            },
+            "title": {
+                "textAlign": "center",
+                "fontSize": 20,
+                "color": "#2D353C",
+                "bold": true,
+                "text": "",
+                "offsetY": 6,
+                "subtitle": {
+                    "fontSize": 14,
+                    "color": "#CCCCCC",
+                    "bold": false,
+                    "text": "",
+                    "offsetY": 12
+                }
+            },
+            "rating": {
+                "show": true,
+                "fontSize": 28,
+                "bold": true,
+                "roundingValue": 1,
+                "position": "bottom",
+                "offsetY": 0,
+                "offsetX":0
+            },
+            "tooltip": {
+                "show": true,
+                "fontSize": 14,
+                "offsetY": 0,
+                "color":"#2D353C",
+                "bold": true,
+                "backgroundColor":"#FFFFFF",
+                "borderColor": "#e1e5e8",
+                "borderRadius": 4,
+                "boxShadow":"0 6px 12px -6px rgba(0,0,0,0.2)"
+            }
+        }
     }
 }

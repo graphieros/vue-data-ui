@@ -394,11 +394,12 @@ export function calcStarPoints({
 
 export function createStar({
     plot,
-    radius
+    radius,
+    apexes = 5
 }) {
     const centerX = plot.x;
     const centerY = plot.y;
-    const innerCirclePoints = 5;
+    const innerCirclePoints = apexes;
     const innerRadius = (radius * 3.5) / innerCirclePoints;
     const innerOuterRadiusRatio = 2;
     const outerRadius = innerRadius * innerOuterRadiusRatio;

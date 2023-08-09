@@ -12,7 +12,8 @@ import {
     VueUiChestnut,
     VueUiOnion,
     VueUiVerticalBar,
-    VueUiScreenshot
+    VueUiScreenshot,
+    VueUiRating,
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -28,4 +29,5 @@ app.component("VueUiChestnut", VueUiChestnut);
 app.component("VueUiOnion", VueUiOnion);
 app.component("VueUiVerticalBar", VueUiVerticalBar);
 app.component("VueUiScreenshot", VueUiScreenshot);
+app.component("VueUiRating", VueUiRating);
 app.mount('#app');
