@@ -12,6 +12,7 @@ import OnionTest from "./components/vue-ui-onion.vue";
 import VerticalTest from "./components/vue-ui-vertical-bar.vue";
 import ScreenshotTest from "./components/vue-ui-screenshot.vue";
 import RatingTest from "./components/vue-ui-rating.vue";
+import SkeletonTest from "./components/vue-ui-skeleton.vue";
 
 const dataset = ref([
         {
@@ -2072,6 +2073,94 @@ const ratingConfig = ref({
   }
 });
 
+const skeletonConfig = ref({
+  type: "verticalBar",
+  style: {
+    backgroundColor: "#1A1A1A",
+    color: "#CCCCCC",
+    maxHeight: 500,
+    animated: true,
+    line: {
+      axis: {
+        show: true,
+        color: "#e1e5e8",
+        strokeWidth: 0.5
+      },
+      path: {
+        color: "#e1e5e8",
+        strokeWidth: 1,
+        showPlots: true
+      }
+    },
+    bar: {
+      axis: {
+        show: true,
+        color: "#e1e5e8",
+        strokeWidth: 0.5
+      },
+      borderRadius: 0.5,
+      color: "#e1e5e8",
+      barWidth: 9
+    },
+    donut: {
+      color: "#e1e5e8",
+      strokeWidth: 64
+    },
+    onion: {
+      color: "#E1E5E8"
+    },
+    gauge: {
+      color: "#E1E5E8"
+    },
+    quadrant: {
+      grid: {
+        color: "#e1e5e8",
+        strokeWidth: 0.5
+      },
+      plots: {
+        radius: 1.5,
+        color: "#E1E5E8"
+      }
+    },
+    radar: {
+      grid: {
+        color: "#E1E5E8",
+        strokeWidth: 0.5
+      },
+      shapes: {
+        color: "#E1E5E8"
+      }
+    },
+    waffle: {
+      color: "#e1e5e8"
+    },
+    table: {
+      th: {
+        color: "#E1E5E8"
+      },
+      td: {
+        color: "#e1e5e8",
+        strokeWidth: 0.5
+      }
+    },
+    rating: {
+      color: "#E1E5E8",
+      filled: true,
+      strokeWidth: 1,
+      maxWidth: 200
+    },
+    verticalBar: {
+      axis: {
+        show: true,
+        color: "#e1e5e8",
+        strokeWidth: 0.5
+      },
+      borderRadius: 0.5,
+      color: "#e1e5e8"
+    }
+  }
+});
+
 const showLocalTest = ref(false);
 
 // IDEAS:
@@ -2183,6 +2272,10 @@ function toggleRead() {
   <div>
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
+    <div style="max-width:500px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
+      <SkeletonTest v-if="showLocalTest" :config="skeletonConfig" />
+    </div>
     <img v-if="pic" :src="pic">
     <div style="max-width:200px; margin:0 auto; margin-bottom: 48px;">
       <VueUiRating ref="ratingtest" v-if="!showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>

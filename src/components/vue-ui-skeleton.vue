@@ -1,0 +1,271 @@
+<script setup>
+import { ref, computed, onMounted } from "vue";
+import { treeShake, convertConfigColors, opacity, createPolygonPath, createStar } from "../lib.js";
+import mainConfig from "../default_configs.json";
+
+const props = defineProps({
+    config: {
+        type: Object,
+        default() {
+            return {}
+        }
+    }
+});
+
+const uid = ref(`vue-ui-skeleton-${Math.random()}`);
+
+const defaultConfig = ref(mainConfig.vue_ui_skeleton);
+
+const skeletonConfig = computed(() => {
+    if(!Object.keys(props.config || {}).length) {
+        return defaultConfig.value;
+    }
+    const reconcilied = treeShake({
+        defaultConfig: defaultConfig.value,
+        userConfig: props.config
+    });
+    return convertConfigColors(reconcilied);
+});
+
+const isAnimated = computed(() => {
+    return skeletonConfig.value.style.animated;
+});
+
+const type = computed(() => {
+    return skeletonConfig.value.type;
+});
+
+const bars = ref([60, 50, 55, 36, 40, 25, 26, 12]);
+
+const radar = computed(() => {
+    return createPolygonPath({
+        plot: {x: 50, y: 50},
+        radius: 40,
+        sides: 6
+    }).path
+});
+
+const radarInside1 = computed(() => {
+    return createPolygonPath({
+        plot: {x: 50, y: 50},
+        radius: 30,
+        sides: 6
+    }).path
+});
+
+const radarInside2 = computed(() => {
+    return createPolygonPath({
+        plot: {x: 50, y: 50},
+        radius: 20,
+        sides: 6
+    }).path
+});
+
+const radarInside3 = computed(() => {
+    return createPolygonPath({
+        plot: {x: 50, y: 50},
+        radius: 10,
+        sides: 6
+    }).path
+});
+
+
+</script>
+
+<template>
+    <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};width:100%;height:100%;max-height:${skeletonConfig.style.maxHeight}px;display:flex;align-items:center;justify-content:center;`">
+        
+        <!-- TYPE LINE -->
+        <template v-if="type === 'line'">
+            <svg width="100%" viewBox="0 0 100 70" :style="`background:${skeletonConfig.style.backgroundColor}`">
+
+                <g v-if="skeletonConfig.style.line.axis.show">
+                    <line x1="3" x2="3" y1="3" y2="67" :stroke="skeletonConfig.style.line.axis.color" :stroke-width="skeletonConfig.style.line.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="3" x2="97" y1="67" y2="67" :stroke="skeletonConfig.style.line.axis.color" :stroke-width="skeletonConfig.style.line.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+                <path d="M 9,60 22,50 35,55 48,36 61,40 74,25 87,26 90,12" fill="none" stroke-linecap="round" stroke-linejoin="round" :stroke="skeletonConfig.style.line.path.color" :stroke-width="skeletonConfig.style.line.path.strokeWidth" />
+                <g v-if="skeletonConfig.style.line.path.showPlots">
+                    <circle cx="9" cy="60" :r="skeletonConfig.style.line.path.strokeWidth" :fill="skeletonConfig.style.line.path.color"/>
+                    <circle cx="90" cy="12" :r="skeletonConfig.style.line.path.strokeWidth" :fill="skeletonConfig.style.line.path.color"/>
+                </g>
+            </svg>
+        </template>
+
+        <template v-if="type === 'bar'">
+            <svg width="100%" viewBox="0 0 100 70" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g v-if="skeletonConfig.style.bar.axis.show">
+                    <line x1="3" x2="3" y1="3" y2="67" :stroke="skeletonConfig.style.bar.axis.color" :stroke-width="skeletonConfig.style.bar.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="3" x2="97" y1="67" y2="67" :stroke="skeletonConfig.style.bar.axis.color" :stroke-width="skeletonConfig.style.bar.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+                <rect v-for="(bar,i) in bars"
+                    :fill="skeletonConfig.style.bar.color"
+                    :rx="skeletonConfig.style.bar.borderRadius"
+                    :x="6 + (11.2 * i)"
+                    :y="bar"
+                    :width="skeletonConfig.style.bar.barWidth"
+                    :height="67 - bar"
+                />
+            </svg>
+        </template>
+
+        <template v-if="type === 'donut'">
+            <svg width="100%" viewBox="0 0 400 400" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path d=" M 300 200 A 100 100 0 0 1 113 250" fill="none" :stroke-width="skeletonConfig.style.donut.strokeWidth" :stroke="skeletonConfig.style.donut.color" />
+                <path d=" M 113 250 A 100 100 0 0 1 250 113" fill="none" :stroke-width="skeletonConfig.style.donut.strokeWidth" :stroke="`${skeletonConfig.style.donut.color}${opacity[60]}`" />
+                <path d=" M 250 113 A 100 100 0 0 1 300 200" fill="none" :stroke-width="skeletonConfig.style.donut.strokeWidth" :stroke="`${skeletonConfig.style.donut.color}${opacity[30]}`" />
+            </svg>
+        </template>
+        
+        <template v-if="type === 'onion'">
+            <svg width="100%" viewBox="0 0 400 400" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path d=" M 200 60 A 140 140 0 1 1 60 200"   :stroke="skeletonConfig.style.onion.color" stroke-linecap="round" stroke-width="20" fill="none" />
+                <path d=" M 200 100 A 100 100 0 1 1 100 200" :stroke="`${skeletonConfig.style.onion.color}${opacity[60]}`" stroke-linecap="round" stroke-width="20" fill="none" />
+                <path d=" M 200 140 A 60 60 0 1 1 140 200" fill="none" :stroke="`${skeletonConfig.style.onion.color}${opacity[40]}`" stroke-linecap="round" stroke-width="20" />
+            </svg>
+        </template>
+
+        <template v-if="type === 'gauge'">
+            <svg width="100%" viewBox="0 0 400 400" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path d=" M 82 255 A 120 120 0 1 1 318 255" fill="none" :stroke="skeletonConfig.style.gauge.color" stroke-linecap="round" stroke-width="20" />
+                <circle cx="200" cy="256" r="12" :fill="skeletonConfig.style.gauge.color"/>
+                <line x1="200" y1="256" x2="250" y2="160" stroke-width="8" :stroke="skeletonConfig.style.gauge.color" stroke-linecap="round"/>
+            </svg>
+        </template>
+
+        <template v-if="type === 'quadrant'">
+            <svg viewBox="0 0 100 100" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <line x1="50" x2="50" y1="3" y2="97" :stroke="skeletonConfig.style.quadrant.grid.color" :stroke-width="skeletonConfig.style.quadrant.grid.strokeWidth"/>
+                <line x1="3" x2="97" y1="50" y2="50" :stroke="skeletonConfig.style.quadrant.grid.color" :stroke-width="skeletonConfig.style.quadrant.grid.strokeWidth"/>
+                <circle :fill="skeletonConfig.style.quadrant.plots.color" :r="skeletonConfig.style.quadrant.plots.radius" cx="20" cy="20"/>
+                <circle :fill="skeletonConfig.style.quadrant.plots.color" :r="skeletonConfig.style.quadrant.plots.radius" cx="80" cy="60"/>
+                <circle :fill="skeletonConfig.style.quadrant.plots.color" :r="skeletonConfig.style.quadrant.plots.radius" cx="65" cy="55"/>
+                <circle :fill="skeletonConfig.style.quadrant.plots.color" :r="skeletonConfig.style.quadrant.plots.radius" cx="36" cy="67"/>
+                <circle :fill="skeletonConfig.style.quadrant.plots.color" :r="skeletonConfig.style.quadrant.plots.radius" cx="15" cy="75"/>
+                <circle :fill="skeletonConfig.style.quadrant.plots.color" :r="skeletonConfig.style.quadrant.plots.radius" cx="40" cy="55" />
+                <circle :fill="skeletonConfig.style.quadrant.plots.color" :r="skeletonConfig.style.quadrant.plots.radius" cx="76" cy="32"/>
+                <circle :fill="skeletonConfig.style.quadrant.plots.color" :r="skeletonConfig.style.quadrant.plots.radius" cx="85" cy="26"/>
+                <circle :fill="skeletonConfig.style.quadrant.plots.color" :r="skeletonConfig.style.quadrant.plots.radius" cx="55" cy="46"/>
+            </svg>
+        </template>
+
+        <template v-if="type === 'radar'">
+            <svg viewBox="0 0 100 100" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path :d="radar" fill="none" :stroke="skeletonConfig.style.radar.grid.color" :stroke-width="skeletonConfig.style.radar.grid.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
+
+                <path :d="radarInside1" fill="none" :stroke="`${skeletonConfig.style.radar.grid.color}${opacity[70]}`" :stroke-width="skeletonConfig.style.radar.grid.strokeWidth / 2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path :d="radarInside2" fill="none" :stroke="`${skeletonConfig.style.radar.grid.color}${opacity[70]}`" :stroke-width="skeletonConfig.style.radar.grid.strokeWidth / 2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path :d="radarInside3" fill="none" :stroke="`${skeletonConfig.style.radar.grid.color}${opacity[70]}`" :stroke-width="skeletonConfig.style.radar.grid.strokeWidth / 2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+                <path d="M 9,50 91,50" :stroke="`${skeletonConfig.style.radar.grid.color}${opacity[50]}`" :stroke-width="skeletonConfig.style.radar.grid.strokeWidth / 2" />
+                <path d="M 29.5,14.5 70.5 85.5" :stroke="`${skeletonConfig.style.radar.grid.color}${opacity[50]}`" :stroke-width="skeletonConfig.style.radar.grid.strokeWidth / 2" />
+                <path d="M 29.5,85.5 70.5 14.5" :stroke="`${skeletonConfig.style.radar.grid.color}${opacity[50]}`" :stroke-width="skeletonConfig.style.radar.grid.strokeWidth / 2" />
+
+                <path d="M 34,23 68.5,18, 70,50 61.5,70 35,75.5 10,50  Z" stroke="none" stroke-linejoin="round" :fill="`${skeletonConfig.style.radar.shapes.color}${opacity[30]}`" />
+                <path d="M 43.5,40 64.5,25, 84,50 55.5,60 29.5,85.5 25,50  Z" stroke="none" stroke-linejoin="round" :fill="`${skeletonConfig.style.radar.shapes.color}${opacity[50]}`" />
+            </svg>
+        </template>
+
+        <template v-if="type === 'waffle'">
+            <svg viewBox="0 0 100 100" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g v-for="(_,i) in 10">
+                    <g v-for="(__,j) in 10">
+                        <rect
+                            :x="3 + (j * 9.6)"
+                            :y="3 + (i * 9.6)"
+                            :height="9"
+                            :width="9"
+                            :fill="`${skeletonConfig.style.waffle.color}${opacity[20]}`"
+                            rx="1"
+                        />
+                    </g>
+                </g>
+                <g v-for="(_,i) in 10">
+                    <g v-for="(__,j) in 10">
+                        <rect
+                            v-if="i > 2"
+                            :x="3 + (j * 9.6)"
+                            :y="3 + (i * 9.6)"
+                            :height="9"
+                            :width="9"
+                            :fill="`${skeletonConfig.style.waffle.color}${opacity[30]}`"
+                            rx="1"
+                        />
+                    </g>
+                </g>
+                <g v-for="(_,i) in 10">
+                    <g v-for="(__,j) in 10">
+                        <rect
+                            v-if="i > 6"
+                            :x="3 + (j * 9.6)"
+                            :y="3 + (i * 9.6)"
+                            :height="9"
+                            :width="9"
+                            :fill="`${skeletonConfig.style.waffle.color}${opacity[50]}`"
+                            rx="1"
+                        />
+                    </g>
+                </g>
+            </svg>
+        </template>
+
+        <template v-if="type === 'table'">
+            <svg width="100%" viewBox="0 0 100 70" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <rect :fill="`${skeletonConfig.style.table.th.color}${opacity[50]}`" :x="3.5" :y="3" height="10" width="93.5"/>
+                <rect :fill="`${skeletonConfig.style.table.th.color}${opacity[50]}`" :x="3.5" :y="13" height="50" width="23.25"/>
+                <line v-for="(_,i) in 7" x1="4" x2="96" :y1="3 + (i * 10)" :y2="3 + (i * 10)" :stroke="skeletonConfig.style.table.td.color" :stroke-width="skeletonConfig.style.table.td.strokeWidth" stroke-linecap="round" />
+                <line v-for="(_,i) in 5" :x1="3.5 + (i * 23.25)" :x2="3.5 + (i * 23.25)" y1="3" y2="63" :stroke="skeletonConfig.style.table.td.color" :stroke-width="skeletonConfig.style.table.td.strokeWidth" stroke-linecap="round" />
+            </svg>
+        </template>
+
+        <template v-if="type === 'rating'">
+            <svg width="100%" viewBox="0 0 100 30" :style="`background:${skeletonConfig.style.backgroundColor};max-width:${skeletonConfig.style.rating.maxWidth}px`">
+                <polygon 
+                    v-for="(_,i) in 5"
+                    :points="createStar({
+                        plot: { x: 10 + (i * 20), y: 15 },
+                        radius: 6
+                    })"
+                    :fill="skeletonConfig.style.rating.filled ? skeletonConfig.style.rating.color : 'none'"
+                    :stroke="skeletonConfig.style.rating.color"
+                    :stroke-width="skeletonConfig.style.rating.strokeWidth"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
+            </svg>
+        </template>
+
+        <template v-if="type === 'verticalBar'">
+            <svg width="100%" viewBox="0 0 100 100" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g v-if="skeletonConfig.style.verticalBar.axis.show">
+                    <line :x1="3" :x2="3" :y1="3" :y2="97" :stroke="skeletonConfig.style.verticalBar.axis.color" :stroke-width="skeletonConfig.style.verticalBar.axis.strokeWidth"/>
+                </g>
+                <rect 
+                    v-for="(_,i) in 6"
+                    :x="3"
+                    :y="5 + (i * 15.6)"
+                    height="12"
+                    :width="94 - (94 * i /6)"
+                    :fill="skeletonConfig.style.verticalBar.color"
+                    :rx="skeletonConfig.style.verticalBar.borderRadius"
+                />
+            </svg>
+        </template>
+    </div>
+</template>
+
+<style scoped>
+.vue-ui-skeleton-animated {
+    animation: skeleton-animate 1.62s infinite linear;
+}
+@keyframes skeleton-animate {
+    0% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.3;
+    }
+}
+</style>

@@ -14,6 +14,7 @@ import {
     VueUiVerticalBar,
     VueUiScreenshot,
     VueUiRating,
+    VueUiSkeleton
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -30,4 +31,5 @@ app.component("VueUiOnion", VueUiOnion);
 app.component("VueUiVerticalBar", VueUiVerticalBar);
 app.component("VueUiScreenshot", VueUiScreenshot);
 app.component("VueUiRating", VueUiRating);
+app.component("VueUiSkeleton", VueUiSkeleton);
 app.mount('#app');
