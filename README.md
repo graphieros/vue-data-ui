@@ -14,7 +14,7 @@ Currently in early stages, feel free to give some feedback!
 
 Available components:
 
-- [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
+## Charts
 - [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
 - [VueUiDonut](https://vue-data-ui.graphieros.com/docs#vue-ui-donut)
 - [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
@@ -24,5 +24,13 @@ Available components:
 - [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
 - [VueUiOnion](https://vue-data-ui.graphieros.com/docs#vue-ui-onion)
 - [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
-- [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)
+
+## Tables
+- [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
+
+## Rating
 - [VueUiRating](https://vue-data-ui.graphieros.com/docs#vue-ui-rating)
+
+## Utilities
+- [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)
+- [VueUiSkeleton](https://vue-data-ui.graphieros.com/docs#vue-ui-skeleton)

@@ -1331,5 +1331,92 @@
                 "boxShadow":"0 6px 12px -6px rgba(0,0,0,0.2)"
             }
         }
+    },
+    "vue_ui_skeleton": {
+        "type": "line",
+        "style": {
+            "backgroundColor":"#FFFFFF",
+            "color":"#2D353C",
+            "maxHeight":500,
+            "animated": true,
+            "line": {
+                "axis": {
+                    "show": true,
+                    "color": "#e1e5e8",
+                    "strokeWidth": 0.5
+                },
+                "path": {
+                    "color":"#e1e5e8",
+                    "strokeWidth": 1,
+                    "showPlots": true
+                }
+            },
+            "bar": {
+                "axis": {
+                    "show": true,
+                    "color": "#e1e5e8",
+                    "strokeWidth": 0.5
+                },
+                "borderRadius": 0.5,
+                "color": "#e1e5e8",
+                "barWidth": 9
+            },
+            "donut": {
+                "color":"#e1e5e8",
+                "strokeWidth": 64
+            },
+            "onion": {
+                "color":"#E1E5E8"
+            },
+            "gauge": {
+                "color":"#E1E5E8"
+            },
+            "quadrant": {
+                "grid": {
+                    "color": "#e1e5e8",
+                    "strokeWidth": 0.5
+                },
+                "plots": {
+                    "radius": 1.5,
+                    "color": "#E1E5E8"
+                }
+            },
+            "radar": {
+                "grid": {
+                    "color":"#E1E5E8",
+                    "strokeWidth": 0.5
+                },
+                "shapes": {
+                    "color": "#E1E5E8"
+                }
+            },
+            "waffle": {
+                "color":"#e1e5e8"
+            },
+            "table": {
+                "th": {
+                    "color":"#E1E5E8"
+                },
+                "td": {
+                    "color":"#e1e5e8",
+                    "strokeWidth": 0.5
+                }
+            },
+            "rating": {
+                "color": "#E1E5E8",
+                "filled": true,
+                "strokeWidth": 1,
+                "maxWidth": 200
+            },
+            "verticalBar": {
+                "axis": {
+                    "show": true,
+                    "color": "#e1e5e8",
+                    "strokeWidth": 0.5
+                },
+                "borderRadius": 0.5,
+                "color": "#e1e5e8"
+            }
+        }
     }
 }
