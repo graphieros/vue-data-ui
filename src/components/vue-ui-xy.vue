@@ -283,7 +283,7 @@
                     <g v-for="(plot, j) in serie.plots" :key="`xLabel_bar_${i}_${j}`">
                         <text
                             v-if="!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
-                            :x="plot.x + calcRectWidth()"
+                            :x="plot.x + calcRectWidth() * 1.1"
                             :y="plot.y + chartConfig.bar.labels.offsetY"
                             text-anchor="middle"
                             :font-size="chartConfig.chart.labels.fontSize"

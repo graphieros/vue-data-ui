@@ -2163,6 +2163,16 @@ const skeletonConfig = ref({
 
 const showLocalTest = ref(false);
 
+const barset = ref([
+  {
+    name:"test",
+    series: [10,20,30, 40, 50, 60, 70, 80, 90, 100, 200],
+    type: "bar",
+    color: "rgb(10,20,30)",
+    dataLabels: true,
+  }
+])
+
 // IDEAS:
 // . treeselector (with sums & avgs & so on)
 
@@ -2272,6 +2282,10 @@ function toggleRead() {
   <div>
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
+    <div style="max-width: 1000px; margin:0 auto; margin-bottom:48px">
+      <XyTest ref="xytest" :config="config" :dataset="barset" v-if="showLocalTest"/>
+      <VueUiXy ref="xytest" :config="config" :dataset="barset" v-if="!showLocalTest"/>
+    </div>
     <div style="max-width:500px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
       <SkeletonTest v-if="showLocalTest" :config="skeletonConfig" />
