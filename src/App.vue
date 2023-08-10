@@ -1945,7 +1945,7 @@ const verticalConfig = ref({
 
 const screenshotConfig = ref(
   {
-    mode: "download",
+    mode: "post",
     quality: 1,
     style: {
       info: {

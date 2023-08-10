@@ -291,6 +291,9 @@ function saveScreenshot() {
         })
         .then(canvas => {
             const image = canvas.toDataURL('image/png', 1);
+            const base64data = image.split(',')[1];
+            const bytes = atob(base64data);
+            const fileSize = bytes.length / 1024;
             if(screenshotConfig.value.mode === 'download') {
                 const link = document.createElement("a");
                 link.download = 'screenshot.png';
@@ -299,6 +302,8 @@ function saveScreenshot() {
             }
             if(screenshotConfig.value.mode === 'post') {
                 emit('postImage', {
+                    createdAt: Date.now(),
+                    fileSize: `${fileSize.toFixed(2)} KB`,
                     image,
                     x: overlayRect.left + window.scrollX,
                     y: overlayRect.top + window.scrollY,
