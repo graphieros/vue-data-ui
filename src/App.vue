@@ -2074,7 +2074,7 @@ const ratingConfig = ref({
 });
 
 const skeletonConfig = ref({
-  type: "verticalBar",
+  type: "table",
   style: {
     backgroundColor: "#1A1A1A",
     color: "#CCCCCC",
@@ -2286,7 +2286,7 @@ function toggleRead() {
       <XyTest ref="xytest" :config="config" :dataset="barset" v-if="showLocalTest"/>
       <VueUiXy ref="xytest" :config="config" :dataset="barset" v-if="!showLocalTest"/>
     </div>
-    <div style="max-width:500px; margin:0 auto; margin-bottom: 48px;">
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
       <SkeletonTest v-if="showLocalTest" :config="skeletonConfig" />
     </div>

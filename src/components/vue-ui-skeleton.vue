@@ -73,7 +73,7 @@ const radarInside3 = computed(() => {
 </script>
 
 <template>
-    <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};width:100%;height:100%;max-height:${skeletonConfig.style.maxHeight}px;display:flex;align-items:center;justify-content:center;`">
+    <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
         
         <!-- TYPE LINE -->
         <template v-if="type === 'line'">
@@ -170,8 +170,8 @@ const radarInside3 = computed(() => {
                 <g v-for="(_,i) in 10">
                     <g v-for="(__,j) in 10">
                         <rect
-                            :x="3 + (j * 9.6)"
-                            :y="3 + (i * 9.6)"
+                            :x="3 + (j * 9.5)"
+                            :y="3 + (i * 9.5)"
                             :height="9"
                             :width="9"
                             :fill="`${skeletonConfig.style.waffle.color}${opacity[20]}`"
@@ -183,8 +183,8 @@ const radarInside3 = computed(() => {
                     <g v-for="(__,j) in 10">
                         <rect
                             v-if="i > 2"
-                            :x="3 + (j * 9.6)"
-                            :y="3 + (i * 9.6)"
+                            :x="3 + (j * 9.5)"
+                            :y="3 + (i * 9.5)"
                             :height="9"
                             :width="9"
                             :fill="`${skeletonConfig.style.waffle.color}${opacity[30]}`"
@@ -196,8 +196,8 @@ const radarInside3 = computed(() => {
                     <g v-for="(__,j) in 10">
                         <rect
                             v-if="i > 6"
-                            :x="3 + (j * 9.6)"
-                            :y="3 + (i * 9.6)"
+                            :x="3 + (j * 9.5)"
+                            :y="3 + (i * 9.5)"
                             :height="9"
                             :width="9"
                             :fill="`${skeletonConfig.style.waffle.color}${opacity[50]}`"
@@ -210,10 +210,10 @@ const radarInside3 = computed(() => {
 
         <template v-if="type === 'table'">
             <svg width="100%" viewBox="0 0 100 70" :style="`background:${skeletonConfig.style.backgroundColor}`">
-                <rect :fill="`${skeletonConfig.style.table.th.color}${opacity[50]}`" :x="3.5" :y="3" height="10" width="93.5"/>
-                <rect :fill="`${skeletonConfig.style.table.th.color}${opacity[50]}`" :x="3.5" :y="13" height="50" width="23.25"/>
-                <line v-for="(_,i) in 7" x1="4" x2="96" :y1="3 + (i * 10)" :y2="3 + (i * 10)" :stroke="skeletonConfig.style.table.td.color" :stroke-width="skeletonConfig.style.table.td.strokeWidth" stroke-linecap="round" />
-                <line v-for="(_,i) in 5" :x1="3.5 + (i * 23.25)" :x2="3.5 + (i * 23.25)" y1="3" y2="63" :stroke="skeletonConfig.style.table.td.color" :stroke-width="skeletonConfig.style.table.td.strokeWidth" stroke-linecap="round" />
+                <rect :fill="`${skeletonConfig.style.table.th.color}${opacity[50]}`" :x="3.5" :y="5" height="10" width="93"/>
+                <rect :fill="`${skeletonConfig.style.table.th.color}${opacity[50]}`" :x="3.5" :y="15" height="50" width="23.25"/>
+                <line v-for="(_,i) in 7" x1="3.7" x2="96.3" :y1="5 + (i * 10)" :y2="5 + (i * 10)" :stroke="skeletonConfig.style.table.td.color" :stroke-width="skeletonConfig.style.table.td.strokeWidth" stroke-linecap="round" />
+                <line v-for="(_,i) in 5" :x1="3.5 + (i * 23.25)" :x2="3.5 + (i * 23.25)" y1="5" y2="65" :stroke="skeletonConfig.style.table.td.color" :stroke-width="skeletonConfig.style.table.td.strokeWidth" stroke-linecap="round" />
             </svg>
         </template>
 
