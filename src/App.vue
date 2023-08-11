@@ -13,6 +13,7 @@ import VerticalTest from "./components/vue-ui-vertical-bar.vue";
 import ScreenshotTest from "./components/vue-ui-screenshot.vue";
 import RatingTest from "./components/vue-ui-rating.vue";
 import SkeletonTest from "./components/vue-ui-skeleton.vue";
+import SparklineTest from "./components/vue-ui-sparkline.vue";
 
 const dataset = ref([
         {
@@ -2161,6 +2162,123 @@ const skeletonConfig = ref({
   }
 });
 
+const sparklineConfig = ref({
+  style: {
+    backgroundColor: "#1A1A1A",
+    line: {
+      color: "#3366cc",
+      strokeWidth: 3
+    },
+    zeroLine: {
+      color: "#505050",
+      strokeWidth: 1
+    },
+    plot: {
+      show: true,
+      radius: 4,
+      stroke: "#FFFFFF",
+      strokeWidth: 1
+    },
+    verticalIndicator: {
+      show: true,
+      strokeWidth: 1.5
+    },
+    dataLabel: {
+      position: "left",
+      fontSize: 20,
+      bold: true,
+      color: "#CCCCCC",
+      roundingValue: 0,
+      valueType: "latest"
+    },
+    title: {
+      show: true,
+      textAlign: "left",
+      color: "#FAFAFA",
+      fontSize: 16,
+      bold: true,
+      text: "Title"
+    },
+    area: {
+      show: true,
+      useGradient: true,
+      opacity: 30,
+      color: "#3366cc"
+    }
+  }
+});
+
+const sparklineDataset = ref([
+  {
+    period: "period1",
+    value: -21.66
+  },
+  {
+    period: "period2",
+    value: -13
+  },
+  {
+    period: "period3",
+    value: -8
+  },
+  {
+    period: "period4",
+    value: -5
+  },
+  {
+    period: "period5",
+    value: -3
+  },
+  {
+    period: "period6",
+    value: -2
+  },
+  {
+    period: "period6",
+    value: -1
+  },
+  {
+    period: "period8",
+    value: -1
+  },
+  {
+    period: "period9",
+    value: 0
+  },
+  {
+    period: "period10",
+    value: 1
+  },
+  {
+    period: "period11",
+    value: 1
+  },
+  {
+    period: "period12",
+    value: 2
+  },
+  {
+    period: "period13",
+    value: 3
+  },
+  {
+    period: "period14",
+    value: 5
+  },
+  {
+    period: "period15",
+    value: 8
+  },
+  {
+    period: "period16",
+    value: 13
+  },
+  {
+    period: "period17",
+    value: 21
+  },
+])
+
 const showLocalTest = ref(false);
 
 const barset = ref([
@@ -2282,14 +2400,18 @@ function toggleRead() {
   <div>
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiSparkline v-if="!showLocalTest" :config="sparklineConfig" :dataset="sparklineDataset"/>
+      <SparklineTest v-if="showLocalTest" :config="sparklineConfig" :dataset="sparklineDataset"/>
+    </div>
     <div style="max-width: 1000px; margin:0 auto; margin-bottom:48px">
       <XyTest ref="xytest" :config="config" :dataset="barset" v-if="showLocalTest"/>
       <VueUiXy ref="xytest" :config="config" :dataset="barset" v-if="!showLocalTest"/>
     </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+    <!-- <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
       <SkeletonTest v-if="showLocalTest" :config="skeletonConfig" />
-    </div>
+    </div> -->
     <img v-if="pic" :src="pic">
     <div style="max-width:200px; margin:0 auto; margin-bottom: 48px;">
       <VueUiRating ref="ratingtest" v-if="!showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>

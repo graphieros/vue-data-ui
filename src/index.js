@@ -11,6 +11,7 @@ import VueUiVerticalBar from "./components/vue-ui-vertical-bar.vue";
 import VueUiScreenshot from "./components/vue-ui-screenshot.vue";
 import VueUiRating from "./components/vue-ui-rating.vue";
 import VueUiSkeleton from "./components/vue-ui-skeleton.vue";
+import VueUiSparkline from "./components/vue-ui-sparkline.vue";
 
 export { 
     VueUiXy, 
@@ -25,5 +26,6 @@ export {
     VueUiVerticalBar,
     VueUiScreenshot,
     VueUiRating,
-    VueUiSkeleton
+    VueUiSkeleton,
+    VueUiSparkline
 };
