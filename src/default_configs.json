@@ -1418,5 +1418,51 @@
                 "color": "#e1e5e8"
             }
         }
+    },
+    "vue_ui_sparkline": {
+        "style": {
+            "backgroundColor":"#FFFFFF",
+            "fontFamily": "inherit",
+            "line": {
+                "color":"#3366cc",
+                "strokeWidth": 3
+            },
+            "zeroLine": {
+                "color": "#2D353C",
+                "strokeWidth": 1
+            },
+            "plot": {
+                "show": true,
+                "radius": 4,
+                "stroke": "#FFFFFF",
+                "strokeWidth": 1
+            },
+            "verticalIndicator": {
+                "show": true,
+                "strokeWidth": 1.5
+            },
+            "dataLabel": {
+                "position": "left",
+                "fontSize": 20,
+                "bold": true,
+                "color": "#2D353C",
+                "roundingValue": 0,
+                "valueType": "latest"
+            },
+            "title": {
+                "show": true,
+                "textAlign": "left",
+                "color": "#2D353C",
+                "fontSize": 16,
+                "bold": true,
+                "text": ""
+            },
+            "area": {
+                "show": true,
+                "useGradient" : true,
+                "opacity": 30,
+                "color":"#3366cc"
+            }
+        }
     }
 }
