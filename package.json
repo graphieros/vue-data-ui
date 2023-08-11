@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "0.5.7",
+  "version": "0.5.8",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
   "keywords": [
@@ -42,7 +42,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build --mode production",
+    "build": "vite build --mode production && node copy-types.cjs",
     "preview": "vite preview",
     "test": "vitest"
   },

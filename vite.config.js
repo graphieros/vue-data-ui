@@ -25,5 +25,12 @@ export default defineConfig({
         },
       },
     },
+    types: [
+      {
+        declarationDir: "dist/types",
+        root: resolve(__dirname, "types"),
+        entry: "vue-data-ui.d.ts",
+      },
+    ],
   },
 });
