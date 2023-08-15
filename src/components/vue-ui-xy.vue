@@ -137,7 +137,7 @@
                         :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                     />
                 </g>
-                <g v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).slope)">
+                <g v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                     <defs>
                             <marker :id="`bar_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
                             refX="0" :refY="7/2" orient="auto">
@@ -164,7 +164,7 @@
                         :font-size="chartConfig.chart.labels.fontSize"
                         :fill="serie.color"
                     >
-                        {{ calcLinearProgression(serie.plots).slope < 0 ? `+${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` : `-${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` }}
+                        {{ `${(Math.abs(calcLinearProgression(serie.plots).trend) * 100).toFixed(2)}%` }}
                     </text>
                 </g>
             </g>
@@ -185,7 +185,7 @@
                         stroke-width="0.5"
                     />
                 </g>
-                <g v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).slope)">
+                <g v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                     <defs>
                         <marker :id="`plot_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
                         refX="0" :refY="7/2" orient="auto">
@@ -212,7 +212,7 @@
                         :font-size="chartConfig.chart.labels.fontSize"
                         :fill="serie.color"
                     >
-                        {{ calcLinearProgression(serie.plots).slope < 0 ? `+${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` : `-${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` }}
+                        {{ `${(Math.abs(calcLinearProgression(serie.plots).trend) * 100).toFixed(2)}%` }}
                     </text>
                 </g>
             </g>
@@ -245,7 +245,7 @@
                         stroke-width="0.5"
                     />
                 </g > 
-                <g v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).slope)">
+                <g v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                     <defs>
                             <marker :id="`line_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
                             refX="0" :refY="7/2" orient="auto">
@@ -272,7 +272,7 @@
                         :font-size="chartConfig.chart.labels.fontSize"
                         :fill="serie.color"
                     >
-                        {{ calcLinearProgression(serie.plots).slope < 0 ? `+${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` : `-${(Math.abs(calcLinearProgression(serie.plots).slope) * 100).toFixed(2)}%` }}
+                        {{ `${(Math.abs(calcLinearProgression(serie.plots).trend) * 100).toFixed(2)}%` }}
                     </text>
                 </g>
             </g>

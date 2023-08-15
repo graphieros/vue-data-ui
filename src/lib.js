@@ -525,13 +525,13 @@ export function makeXls(table, fileName) {
 }
 
 export function calcLinearProgression(plots) {
-    let x1,y1,x2,y2;
+    let x1, y1, x2, y2;
     const len = plots.length;
     let sumX = 0;
     let sumY = 0;
     let sumXY = 0;
     let sumXX = 0;
-    for(const { x, y } of plots) {
+    for (const { x, y } of plots) {
         sumX += x;
         sumY += y;
         sumXY += x * y;
@@ -543,7 +543,26 @@ export function calcLinearProgression(plots) {
     x2 = plots[len - 1].x;
     y1 = slope * x1 + intercept;
     y2 = slope * x2 + intercept;
-    return { x1, y1, x2, y2, slope };
+
+    const trend = calcPercentageTrend(plots.map(p => p.value));
+
+    return { x1, y1, x2, y2, slope, trend };
+}
+
+export function calcPercentageTrend(arr) {
+    const initialNumber = arr[0];
+    const lastNumber = arr[arr.length - 1];
+    const overallChange = lastNumber - initialNumber;
+
+    let totalMagnitude = 0;
+
+    for (let i = 1; i < arr.length; i++) {
+        const difference = Math.abs(arr[i] - arr[i - 1]);
+        totalMagnitude += difference;
+    }
+
+    const percentageTrend = (overallChange / totalMagnitude);
+    return percentageTrend;
 }
 
 const lib = {
