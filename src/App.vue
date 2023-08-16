@@ -2075,12 +2075,15 @@ const ratingConfig = ref({
 });
 
 const skeletonConfig = ref({
-  type: "table",
+  type: "chestnut",
   style: {
     backgroundColor: "#1A1A1A",
     color: "#CCCCCC",
     maxHeight: 500,
-    animated: true,
+    animated: false,
+    chestnut: {
+      color: "e1e5e8",
+    },
     line: {
       axis: {
         show: true,
@@ -2408,10 +2411,10 @@ function toggleRead() {
       <XyTest ref="xytest" :config="config" :dataset="barset" v-if="showLocalTest"/>
       <VueUiXy ref="xytest" :config="config" :dataset="barset" v-if="!showLocalTest"/>
     </div>
-    <!-- <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
-      <SkeletonTest v-if="showLocalTest" :config="skeletonConfig" />
-    </div> -->
+      <SkeletonTest v-if="showLocalTest" :config="{type: 'chestnut'}" />
+    </div>
     <img v-if="pic" :src="pic">
     <div style="max-width:200px; margin:0 auto; margin-bottom: 48px;">
       <VueUiRating ref="ratingtest" v-if="!showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>

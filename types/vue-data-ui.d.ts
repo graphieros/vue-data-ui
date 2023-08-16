@@ -130,7 +130,7 @@ declare module 'vue-data-ui' {
                 outline: string;
             };
         };
-        showTable: boolea;
+        showTable: boolean;
     };
 
     export type VueUiXyDatasetItem = {
@@ -1599,7 +1599,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type: "bar" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle";
+        type: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle";
         style: {
             backgroundColor: string;
             color: string;
@@ -1625,6 +1625,9 @@ declare module 'vue-data-ui' {
                 borderRadius: number;
                 color: string;
                 barWidth: number;
+            };
+            chestnut: {
+                color: string;
             };
             donut: {
                 color: string;
@@ -1688,4 +1691,4 @@ declare module 'vue-data-ui' {
     export const VueUiSkeleton: DefineComponent<{
         config: VueUiSkeletonConfig
     }>;
-};
+}

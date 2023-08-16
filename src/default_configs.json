@@ -1339,6 +1339,9 @@
             "color":"#2D353C",
             "maxHeight":500,
             "animated": true,
+            "chestnut": {
+                "color": "#E1E5E8"
+            },
             "line": {
                 "axis": {
                     "show": true,

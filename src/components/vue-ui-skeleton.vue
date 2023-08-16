@@ -70,10 +70,128 @@ const radarInside3 = computed(() => {
 });
 
 
+const chestnut = ref([
+    {
+        root: {
+            x: 70,
+            y:77,
+            r: 44,
+            opacity: 100
+        },
+        bars: [
+            {
+                x: 200,
+                y: 37,
+                opacity: 100,
+                width: 240
+            },
+            {
+                x: 200,
+                y: 118,
+                opacity: 100,
+                width: 180
+            },
+            {
+                x: 200,
+                y: 253,
+                opacity: 100,
+                width: 80
+            },
+        ],
+    },
+    {
+        root: {
+            x: 70,
+            y:177,
+            r: 32,
+            opacity: 70
+        },
+        bars: [
+            {
+                x: 200,
+                y: 145,
+                opacity: 70,
+                width: 160
+            },
+            {
+                x: 200,
+                y: 172,
+                opacity: 70,
+                width: 140
+            },
+            {
+                x: 200,
+                y: 199,
+                opacity: 70,
+                width: 120
+            },
+        ]
+    },
+    {
+        root: {
+            x: 70,
+            y:257,
+            r: 24,
+            opacity: 40
+        },
+        bars: [
+            {
+                x: 200,
+                y: 64,
+                opacity: 40,
+                width: 220
+            },
+            {
+                x: 200,
+                y: 91,
+                opacity: 40,
+                width: 200
+            },
+            {
+                x: 200,
+                y: 226,
+                opacity: 40,
+                width: 100
+            },
+        ]
+    },
+])
+
 </script>
 
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
+
+        <!-- TYPE CHESTNUT -->
+        <template v-if="type === 'chestnut'">
+            <svg width="100%" viewBox="0 0 512 316" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g v-for="item in chestnut">
+                    <g v-for="bar in item.bars">
+                        <path 
+                            v-for="(p, i) in 22"
+                            :d="`M
+                            ${bar.x},${bar.y + i}
+                            C${bar.x - 20},${bar.y + i} 
+                            ${bar.x - 80},${bar.y + i} 
+                            ${item.root.x + item.root.r / 2}, ${item.root.y}
+                        `"
+                            :stroke="`${skeletonConfig.style.chestnut.color}${opacity[bar.opacity * 0.2]}`"
+                            fill="none"
+                            stroke-width="2"
+                            shape-rendering="cirspEdges"
+                        />
+                    </g>
+                </g>
+                <circle v-for="item in chestnut" :cx="item.root.x" :cy="item.root.y" :r="item.root.r" :fill="`${skeletonConfig.style.backgroundColor}`" :stroke="skeletonConfig.backgroundColor" :stroke-width="3"/>
+                <circle v-for="item in chestnut" :cx="item.root.x" :cy="item.root.y" :r="item.root.r" :fill="`${skeletonConfig.style.chestnut.color}${opacity[item.root.opacity]}`" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="3"/>
+                <g v-for="item in chestnut">
+                    <rect v-for="bar in item.bars" rx="2" :x="bar.x" :y="bar.y" :width="bar.width" :height="22" :fill="`${skeletonConfig.style.chestnut.color}${opacity[bar.opacity]}`"/>
+                    <circle v-for="bar in item.bars" :cx="bar.x + bar.width + 32" :cy="bar.y + 11" :r="11" :fill="`${skeletonConfig.style.chestnut.color}${opacity[bar.opacity]}`"/>
+                    <circle v-for="bar in item.bars" :cx="bar.x + bar.width + 32" :cy="bar.y + 11" :r="5" :fill="`${skeletonConfig.style.backgroundColor}`"/>
+                </g>
+                <line :x1="200" :x2="200" :y1="10" :y2="300" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="3"/>
+            </svg>
+        </template>
         
         <!-- TYPE LINE -->
         <template v-if="type === 'line'">
