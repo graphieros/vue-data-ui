@@ -527,6 +527,18 @@ export function makeXls(table, fileName) {
 export function calcLinearProgression(plots) {
     let x1, y1, x2, y2;
     const len = plots.length;
+
+    if (!plots || plots.length === 0) {
+        return {
+            x1:0,
+            y1:0,
+            x2:0,
+            y2:0,
+            slope: 0,
+            trend: 0
+        }
+    }
+    
     let sumX = 0;
     let sumY = 0;
     let sumXY = 0;

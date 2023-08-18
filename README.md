@@ -10,8 +10,7 @@
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
 A user-empowering data visualization Vue components library.
-
-Featuring a wide spectrum of classic graphs and exclusive visual treats like [Chestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut), [Waffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle), and [Quadrant](https://vue-data-ui.graphieros.com/docs#vue-ui-quadrant) charts, Vue Data UI transforms data into compelling narratives. Seamless integration and utilities ensure that your dashboard maintains coherence, providing both style and substance.
+Feel free to give some feedback !
 
 Available components:
 
