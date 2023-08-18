@@ -31,7 +31,7 @@ const dataset2 = ref([
         },
         {
           name: "Series 2",
-          series: [-55, -34, -21, -13, -18, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+          series: [-55, -34, -21, -13, -18, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55].reverse(),
           type: "bar",
           dataLabels: false,
           useProgression: true,
@@ -2282,7 +2282,7 @@ const sparklineDataset = ref([
   },
 ])
 
-const showLocalTest = ref(false);
+const showLocalTest = ref(true);
 
 const barset = ref([
   {
