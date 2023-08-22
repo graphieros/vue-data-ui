@@ -10,7 +10,6 @@
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
 A user-empowering data visualization Vue components library.
-Feel free to give some feedback !
 
 Available components:
 

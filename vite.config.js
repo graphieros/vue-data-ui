@@ -12,6 +12,7 @@ export default defineConfig({
       name: "VueDataUi",
       // the name of the output files when the build is run
       fileName: "vue-data-ui",
+      formats: ['es']
     },
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
