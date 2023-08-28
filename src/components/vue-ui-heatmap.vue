@@ -219,19 +219,12 @@ function generateXls() {
         for (let i = 0; i < dataLabels.value.xLabels.length; i += 1) {
             const row = [dataLabels.value.xLabels[i]];
             for (let j = 0; j < props.dataset.length; j += 1) {
-                row.push(props.dataset[j].values[i])
+                row.push([props.dataset[j].values[i]])
             }
             values.push(row)
         }
-        console.log(values);
 
-        // const values = props.dataset.map((ds, i) => {
-        //     return dataLabels.value.xLabels.map((d,j) => {
-        //         return [ds.values[j]]
-        //     })
-        // });
-
-        const tableXls = [[heatmapConfig.value.style.title.text],[heatmapConfig.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat([values]);
+        const tableXls = [[heatmapConfig.value.style.title.text],[heatmapConfig.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values);
 
         makeXls(tableXls, heatmapConfig.value.style.title.text || "vue-ui-heatmap");
     });
