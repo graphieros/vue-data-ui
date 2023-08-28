@@ -137,7 +137,7 @@ const datasetCopy = computed(() => {
 const proportions = computed(() => {
     const numbers = datasetCopy.value
         .filter((serie,i) => !segregated.value.includes(serie.uid))
-        .map((serie, i) => serie.values.reduce((a,b) => a + b));
+        .map((serie, i) => serie.values.reduce((a,b) => a + b, 0));
     return calculateProportions(numbers);
 });
 

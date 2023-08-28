@@ -14,6 +14,7 @@ import ScreenshotTest from "./components/vue-ui-screenshot.vue";
 import RatingTest from "./components/vue-ui-rating.vue";
 import SkeletonTest from "./components/vue-ui-skeleton.vue";
 import SparklineTest from "./components/vue-ui-sparkline.vue";
+import HeatmapTest from "./components/vue-ui-heatmap.vue";
 
 const dataset = ref([
         {
@@ -2280,7 +2281,56 @@ const sparklineDataset = ref([
     period: "period17",
     value: 21
   },
-])
+]);
+
+const heatmapDataset = computed(() => {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  const arr = [];
+  const dsLen = 52;
+  const serieLen = days.length;
+  for (let i = 0; i < serieLen; i += 1) {
+    const values = [];
+    for (let j = 0; j < dsLen; j += 1) {
+      values.push(Math.random()*100)
+    }
+    arr.push({
+      name: `${days[i]}`,
+      values
+    })
+  }
+  return arr
+});
+
+const weeks = computed(() => {
+  const arr = [];
+  for(let i = 0; i < 52; i += 1) {
+    arr.push(i + 1);
+  }
+  return arr;
+})
+
+const heatmapConfig = ref({
+  style: {
+    layout: {
+      useDiv: true,
+      dataLabels: {
+        yAxis: {
+          fontSize: 24,
+        },
+        xAxis: {
+          fontSize: 24,
+          values: weeks.value
+        }
+      }
+    },
+    title: {
+      text: "Title",
+      subtitle: {
+        text: "Subtitle"
+      }
+    }
+  }
+});
 
 const showLocalTest = ref(true);
 
@@ -2403,6 +2453,9 @@ function toggleRead() {
   <div>
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <HeatmapTest v-if="showLocalTest" :config="heatmapConfig" :dataset="heatmapDataset"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSparkline v-if="!showLocalTest" :config="sparklineConfig" :dataset="sparklineDataset"/>
       <SparklineTest v-if="showLocalTest" :config="sparklineConfig" :dataset="sparklineDataset"/>

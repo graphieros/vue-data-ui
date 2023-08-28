@@ -1467,5 +1467,93 @@
                 "color":"#3366cc"
             }
         }
+    },
+    "vue_ui_heatmap": {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "color":"#2D353C",
+            "fontFamily":"inherit",
+            "layout": {
+                "useDiv": true,
+                "padding": {
+                    "top": 36,
+                    "right": 12,
+                    "bottom": 12,
+                    "left": 48
+                },
+                "cells": {
+                    "height": 36,
+                    "colors": {
+                        "hot": "#dc3912",
+                        "cold": "#3366cc",
+                        "underlayer":"#FFFFFF"
+                    },
+                    "spacing": 2,
+                    "selected": {
+                        "border": 2,
+                        "color": "#2D353C"
+                    }
+                },
+                "dataLabels": {
+                    "xAxis": {
+                        "show": true,
+                        "values": [],
+                        "fontSize": 8,
+                        "color":"#2D353C",
+                        "bold":false,
+                        "offsetX": 0,
+                        "offsetY": 0
+                    },
+                    "yAxis": {
+                        "show": true,
+                        "values": [],
+                        "fontSize": 8,
+                        "color":"#2D353C",
+                        "bold":false,
+                        "offsetY": 0,
+                        "offsetX": 0
+                    }
+                }
+            },
+            "title": {
+                "text": "",
+                "color": "#2D353C",
+                "fontSize": 20,
+                "bold": true,
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "",
+                    "fontSize": 16,
+                    "bold": false
+                }
+            },
+            "legend": {
+                "show": true,
+                "backgroundColor":"#FFFFFF",
+                "color": "#2D353C",
+                "fontSize" : 12,
+                "bold": true,
+                "roundingValue": 0
+            },
+            "tooltip": {
+                "show": true,
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "fontSize": 14,
+                "roundingValue": 0
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table",
+                "showPlotLabels": "Show plot labels"
+            }
+        },
+        "table": {
+            "show": false
+        }
     }
 }

@@ -12,6 +12,7 @@ import VueUiScreenshot from "./components/vue-ui-screenshot.vue";
 import VueUiRating from "./components/vue-ui-rating.vue";
 import VueUiSkeleton from "./components/vue-ui-skeleton.vue";
 import VueUiSparkline from "./components/vue-ui-sparkline.vue";
+import VueUiHeatmap from "./components/vue-ui-heatmap.vue";
 
 export { 
     VueUiXy, 
@@ -27,5 +28,6 @@ export {
     VueUiScreenshot,
     VueUiRating,
     VueUiSkeleton,
-    VueUiSparkline
+    VueUiSparkline,
+    VueUiHeatmap
 };
