@@ -2076,7 +2076,7 @@ const ratingConfig = ref({
 });
 
 const skeletonConfig = ref({
-  type: "chestnut",
+  type: "heatmap",
   style: {
     backgroundColor: "#1A1A1A",
     color: "#CCCCCC",
@@ -2472,7 +2472,7 @@ function toggleRead() {
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
-      <SkeletonTest v-if="showLocalTest" :config="{type: 'chestnut'}" />
+      <SkeletonTest v-if="showLocalTest" :config="{type: 'heatmap'}" />
     </div>
     <img v-if="pic" :src="pic">
     <div style="max-width:200px; margin:0 auto; margin-bottom: 48px;">

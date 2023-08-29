@@ -1419,6 +1419,11 @@
                 },
                 "borderRadius": 0.5,
                 "color": "#e1e5e8"
+            },
+            "heatmap": {
+                "cellsX": 26,
+                "cellsY": 7,
+                "color": "#E1E5E8"
             }
         }
     },

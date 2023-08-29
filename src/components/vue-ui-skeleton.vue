@@ -162,6 +162,25 @@ const chestnut = ref([
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
 
+        <!-- TYPE HEATMAP -->
+        <template v-if="type === 'heatmap'">
+            <svg width="100%" :viewBox="`0 0 ${10 * skeletonConfig.style.heatmap.cellsX} ${10 * skeletonConfig.style.heatmap.cellsY}`" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g v-for="(_, i) in skeletonConfig.style.heatmap.cellsY">
+                    <g v-for="(__, j) in skeletonConfig.style.heatmap.cellsX">
+                        <rect
+                            :x="j * 10"
+                            :y="i * 10"
+                            :height="10"
+                            :width="10"
+                            :stroke="skeletonConfig.style.backgroundColor"
+                            :stroke-width="1"
+                            :fill="`${skeletonConfig.style.heatmap.color}${opacity[Math.round(Math.random()*100)]}`"
+                        />
+                    </g>
+                </g>
+            </svg>
+        </template>
+
         <!-- TYPE CHESTNUT -->
         <template v-if="type === 'chestnut'">
             <svg width="100%" viewBox="0 0 512 316" :style="`background:${skeletonConfig.style.backgroundColor}`">

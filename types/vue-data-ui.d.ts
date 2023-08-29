@@ -1716,7 +1716,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle";
+        type: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap";
         style: {
             backgroundColor: string;
             color: string;
@@ -1800,6 +1800,11 @@ declare module 'vue-data-ui' {
                     strokeWidth: number;
                 },
                 borderRadius: number;
+                color: string;
+            };
+            heatmap: {
+                cellsX: number;
+                cellsY: number;
                 color: string;
             };
         };
