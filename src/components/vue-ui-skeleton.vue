@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import { treeShake, convertConfigColors, opacity, createPolygonPath, createStar } from "../lib.js";
 import mainConfig from "../default_configs.json";
 
