@@ -1483,6 +1483,13 @@
                 },
                 "cells": {
                     "height": 36,
+                    "value": {
+                        "show": false,
+                        "fontSize": 18,
+                        "bold": false,
+                        "roundingValue": 0,
+                        "color":"#2D353C"
+                    },
                     "colors": {
                         "hot": "#dc3912",
                         "cold": "#3366cc",
@@ -1553,7 +1560,18 @@
             }
         },
         "table": {
-            "show": false
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0
+            }
         }
     }
 }

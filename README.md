@@ -23,6 +23,7 @@ Available components:
 - [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
 - [VueUiOnion](https://vue-data-ui.graphieros.com/docs#vue-ui-onion)
 - [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
+- [VueUiHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-heatmap)
 - [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
 
 ## Tables

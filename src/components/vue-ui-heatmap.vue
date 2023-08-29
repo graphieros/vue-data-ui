@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { treeShake, convertConfigColors, opacity, makeXls } from "../lib";
+import { treeShake, convertConfigColors, opacity, makeXls, adaptColorToBackground } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 
@@ -190,12 +190,14 @@ function useTooltip(datapoint) {
 
 function generatePdf(){
     isPrinting.value = true;
-    pdf({
-        domElement: document.getElementById(`heatmap__${uid.value}`),
-        fileName: heatmapConfig.value.style.title.text || 'vue-ui-heatmap'
-    }).finally(() => {
-        isPrinting.value = false;
-    });
+    nextTick(() => {
+        pdf({
+            domElement: document.getElementById(`heatmap__${uid.value}`),
+            fileName: heatmapConfig.value.style.title.text || 'vue-ui-heatmap'
+        }).finally(() => {
+            isPrinting.value = false;
+        });
+    })
 }
 
 const table = computed(() => {
@@ -253,6 +255,7 @@ function closeDetails(){
          <!-- OPTIONS -->
          <details class="vue-ui-heatmap-user-options" :style="`background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" data-html2canvas-ignore v-if="heatmapConfig.userOptions.show" ref="details">
             <summary :style="`background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`">{{ heatmapConfig.userOptions.title }}</summary>
+
             <div class="vue-ui-heatmap-user-options-items" :style="`background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`">
                 <div class="vue-ui-heatmap-user-option-item">
                     <input type="checkbox" :id="`vue-ui-heatmap-option-title_${uid}`" :name="`vue-ui-heatmap-option-title_${uid}`"
@@ -328,6 +331,17 @@ function closeDetails(){
                         :stroke="hoveredCell && hoveredCell === cell.id ? heatmapConfig.style.layout.cells.selected.color : heatmapConfig.style.backgroundColor"
                         :stroke-width="heatmapConfig.style.layout.cells.spacing"
                     />
+                    <text 
+                        v-if="heatmapConfig.style.layout.cells.value.show"
+                        text-anchor="middle"
+                        :font-size="heatmapConfig.style.layout.cells.value.fontSize"
+                        :font-weight="heatmapConfig.style.layout.cells.value.bold ? 'bold': 'normal'"
+                        :fill="heatmapConfig.style.layout.cells.value.color"
+                        :x="(drawingArea.left + cellSize.width * j) + (cellSize.width / 2)"
+                        :y="(drawingArea.top + cellSize.width * i) + (cellSize.width / 2) + heatmapConfig.style.layout.cells.value.fontSize / 3"
+                    >
+                        {{ Number(cell.value.toFixed(heatmapConfig.style.layout.cells.value.roundingValue)).toLocaleString() }}
+                    </text>
                 </g>
                 <g v-for="(cell, j) in serie.temperatures">
                     <!-- TOOLTIP TRAPS -->
@@ -404,15 +418,15 @@ function closeDetails(){
         <!-- LEGEND AS DIV -->
         <div v-if="heatmapConfig.style.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-heatmap-legend" :style="`background:${heatmapConfig.style.legend.backgroundColor};color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" @click="closeDetails">
             <span style="text-align:right">{{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
-            <svg viewBox="0 0 120 12" style="width: 300px">
-                <rect v-for="(_,i) in 12"
+            <svg viewBox="0 0 132 12" style="width: 300px">
+                <rect v-for="(_,i) in 13"
                     :x="i * 12"
                     :y="0"
                     :height="12"
                     :width="12"
                     :fill="heatmapConfig.style.layout.cells.colors.underlayer"
                 />
-                <rect v-for="(_,i) in 12"
+                <rect v-for="(_,i) in 13"
                     :x="i * 12"
                     :y="0"
                     :height="12"
@@ -432,6 +446,36 @@ function closeDetails(){
             v-html="tooltipContent"
         />
         <!-- DATA TABLE -->
+        <div @click="closeDetails" :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+            <table>
+                <thead>
+                    <tr v-if="heatmapConfig.style.title.text">
+                        <th :colspan="dataset.length +1" :style="`background:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline}`">
+                            <span>{{ heatmapConfig.style.title.text }}</span>
+                            <span v-if="heatmapConfig.style.title.subtitle.text">
+                                : {{ heatmapConfig.style.title.subtitle.text }}
+                            </span>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th :style="`background:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline};padding-right:6px`"></th>
+                        <th align="right" :style="`background:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline};padding-right:6px`" v-for="(th,i) in dataset">
+                           {{ th.name }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(tr, i) in dataLabels.xLabels">
+                        <td :style="`background:${heatmapConfig.table.td.backgroundColor};color:${heatmapConfig.table.td.color};outline:${heatmapConfig.table.td.outline}`">
+                            {{ tr }}
+                        </td>
+                        <td v-for="(trData, j) in dataset" :style="`background:${heatmapConfig.table.td.backgroundColor};color:${heatmapConfig.table.td.color};outline:${heatmapConfig.table.td.outline}`">
+                            {{ isNaN(trData.values[i]) ? '-' : Number(trData.values[i].toFixed(heatmapConfig.table.td.roundingValue)).toLocaleString() }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
      </div> 
 </template>
 
@@ -539,6 +583,8 @@ function closeDetails(){
 .vue-ui-heatmap table {
     width: 100%;
     border-collapse:collapse;
+    overflow: auto;
+    max-height: 400px;
 }
 .vue-ui-heatmap table td {
     text-align:right;

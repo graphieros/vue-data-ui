@@ -2313,6 +2313,11 @@ const heatmapConfig = ref({
   style: {
     layout: {
       useDiv: true,
+      cells: {
+        value: {
+          show: true
+        }
+      },
       dataLabels: {
         yAxis: {
           fontSize: 24,
@@ -2332,7 +2337,7 @@ const heatmapConfig = ref({
   }
 });
 
-const showLocalTest = ref(true);
+const showLocalTest = ref(false);
 
 const barset = ref([
   {
@@ -2454,6 +2459,7 @@ function toggleRead() {
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiHeatmap v-if="!showLocalTest" :config="heatmapConfig" :dataset="heatmapDataset"/>
       <HeatmapTest v-if="showLocalTest" :config="heatmapConfig" :dataset="heatmapDataset"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">

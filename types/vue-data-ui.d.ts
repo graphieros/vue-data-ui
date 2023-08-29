@@ -1,6 +1,123 @@
 declare module 'vue-data-ui' {
     import { DefineComponent } from "vue";
 
+    export type VueUiHeatmapConfig = {
+        style: {
+            backgroundColor: string;
+            color: string;
+            fontFamily: string;
+            layout: {
+                useDiv: boolean;
+                padding: {
+                    top: number;
+                    right: number;
+                    bottom: number;
+                    left: number;
+                };
+                cells: {
+                    height: number;
+                    value: {
+                        show: boolean;
+                        fontSize: number;
+                        bold: boolean;
+                        roundingValue: number;
+                        color: string;
+                    };
+                    colors: {
+                        hot: string;
+                        cold: string;
+                        underlayer: string;
+                    };
+                    spacing: number;
+                    selected: {
+                        border: number;
+                        color: string;
+                    };
+                };
+                dataLabels: {
+                    xAxis: {
+                        show: boolean;
+                        values: Array<string | number>;
+                        fontSize: number;
+                        color: string;
+                        bold: false;
+                        offsetX: number;
+                        offsetY: number;
+                    };
+                    yAxis: {
+                        show: boolean;
+                        values: Array<string | number>
+                        fontSize: number;
+                        color: string;
+                        bold: boolean;
+                        offsetY: number;
+                        offsetX: number;
+                    };
+                };
+            };
+            title: {
+                text: string;
+                color: string;
+                fontSize: number;
+                bold: boolean;
+                subtitle: {
+                    color: string;
+                    text: string;
+                    fontSize: number;
+                    bold: boolean;
+                };
+            };
+            legend: {
+                show: boolean;
+                backgroundColor: string;
+                color: string;
+                fontSize: number;
+                bold: boolean;
+                roundingValue: number;
+            };
+            tooltip: {
+                show: boolean;
+                backgroundColor: string;
+                color: string;
+                fontSize: number;
+                roundingValue: number;
+            };
+        };
+        userOptions: {
+            show: boolean;
+            title: string;
+            labels: {
+                useDiv: string;
+                showTable: string;
+                showPlotLabels: string;
+            };
+        };
+        table: {
+            show: boolean;
+            th: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+            };
+            td: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+                roundingValue: number;
+            };
+        };
+    };
+
+    export type VueUiHeatmapDatasetItem = {
+        name: string;
+        values: number[];
+    }
+
+    export const VueUiHeatmap: DefineComponent<{
+        config: VueUiHeatmapConfig,
+        dataset: VueUiHeatmapDatasetItem[]
+    }>;
+
     export type VueUiXyConfig = {
         chart: {
             fontFamily: string;
