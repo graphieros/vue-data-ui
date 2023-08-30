@@ -1,6 +1,153 @@
 declare module 'vue-data-ui' {
     import { DefineComponent } from "vue";
 
+    export type VueUiScatterDatasetValueItem = {
+        name: string;
+        x: number;
+        y: number;
+    }
+
+    export type VueUiScatterDatasetItem = {
+        name: string;
+        values: VueUiScatterDatasetValueItem[];
+        color: string;
+    }
+
+    export type VueUiScatterConfig = {
+        style: {
+            backgroundColor: string;
+            color: string;
+            fontFamily: string;
+            layout: {
+                useDiv: boolean;
+                height: number;
+                width: number;
+                padding: {
+                    top: number;
+                    right: number;
+                    bottom: number;
+                    left: number;
+                };
+                axis: {
+                    show: boolean;
+                    stroke: string;
+                    strokeWidth: number;
+                };
+                plots: {
+                    radius: number;
+                    stroke: string;
+                    strokeWidth: number;
+                    opacity: number;
+                    significance: {
+                        show: boolean;
+                        deviationThreshold: number;
+                        opacity: number;
+                    };
+                    deviation: {
+                        translation: string;
+                        roundingValue: number;
+                    };
+                };
+                correlation: {
+                    show: boolean;
+                    strokeDasharray: number;
+                    strokeWidth: number;
+                    label: {
+                        show: boolean;
+                        fontSize: number;
+                        color: string;
+                        bold: boolean;
+                        roundingValue: number;
+                        useSerieColor: number;
+                    };
+                };
+                dataLabels: {
+                    xAxis: {
+                        name: string;
+                        show: boolean;
+                        fontSize: number;
+                        color: string;
+                        bold: boolean;
+                        offsetX: number;
+                        offsetY: number;
+                        roundingValue: number;
+                    };
+                    yAxis: {
+                        name: string;
+                        show: boolean;
+                        fontSize: number;
+                        color: string;
+                        bold: boolean;
+                        offsetY: number;
+                        offsetX: number;
+                        roundingValue: number;
+                    };
+                };
+            };
+            title: {
+                text: string;
+                color: string;
+                fontSize: number;
+                bold: boolean;
+                subtitle: {
+                    color: string;
+                    text: string;
+                    fontSize: number;
+                    bold: boolean;
+                };
+            };
+            legend: {
+                show: boolean;
+                backgroundColor: string;
+                color: string;
+                fontSize: string;
+                bold: boolean;
+                roundingValue: number;
+            };
+            tooltip: {
+                show: boolean;
+                backgroundColor: string;
+                color: string;
+                fontSize: number;
+                roundingValue: number;
+            };
+        };
+        userOptions: {
+            show: boolean;
+            title: string;
+            labels: {
+                useDiv: string;
+                showTable: string;
+                showPlotLabels: string;
+            };
+        };
+        table: {
+            show: boolean;
+            th: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+            };
+            td: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+                roundingValue: number;
+                roundingAverage: number;
+            };
+            translations: {
+                correlationCoefficient: string;
+                nbrPlots: string;
+                average: string;
+            };
+        };
+    };
+
+    export const VueUiScatter: DefineComponent<{
+        config: VueUiScatterConfig;
+        dataset: VueUiScatterDatasetItem[]
+    }>;
+
     export type VueUiHeatmapConfig = {
         style: {
             backgroundColor: string;
@@ -40,7 +187,7 @@ declare module 'vue-data-ui' {
                         values: Array<string | number>;
                         fontSize: number;
                         color: string;
-                        bold: false;
+                        bold: boolean;
                         offsetX: number;
                         offsetY: number;
                     };

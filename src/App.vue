@@ -15,6 +15,7 @@ import RatingTest from "./components/vue-ui-rating.vue";
 import SkeletonTest from "./components/vue-ui-skeleton.vue";
 import SparklineTest from "./components/vue-ui-sparkline.vue";
 import HeatmapTest from "./components/vue-ui-heatmap.vue";
+import ScatterTest from "./components/vue-ui-scatter.vue";
 
 const dataset = ref([
         {
@@ -2320,7 +2321,7 @@ const heatmapConfig = ref({
       },
       dataLabels: {
         yAxis: {
-          fontSize: 24,
+          fontSize: 24
         },
         xAxis: {
           fontSize: 24,
@@ -2336,6 +2337,64 @@ const heatmapConfig = ref({
     }
   }
 });
+
+const scatterConfig = ref({
+  style: {
+    layout: {
+      useDiv: true,
+      dataLabels: {
+        xAxis: {
+          name: "xAxis"
+        },
+        yAxis: {
+          name: "yAxis"
+        }
+      }
+    },
+    title: {
+      text:"Title",
+      subtitle: {
+        text: "Subtitle"
+      }
+    }
+  }
+});
+
+const scat1 = computed(() => {
+  const arr = [];
+  for(let i = -500; i < 500; i += 1) {
+    arr.push({
+      x: Math.random()*i + 12, 
+      y: Math.random()*i/20,
+      name: `plot_${i}_cluster_1`
+    });
+  }
+  return arr;
+})
+const scat2 = computed(() => {
+  const arr = [];
+  for(let i = -500; i < 500; i += 1) {
+    arr.push({
+      x: Math.random()*i/10,
+      y: Math.random()*i/10,
+      name: `plot_${i}_cluster_2`
+    });
+  }
+  return arr;
+})
+
+const scatterDataset = computed(() => {
+  
+  return [
+  {
+    name: "Cluster 1",
+    values: scat1.value
+  },
+  {
+    name: "Cluster 2",
+    values: scat2.value
+  }
+]});
 
 const showLocalTest = ref(false);
 
@@ -2458,6 +2517,10 @@ function toggleRead() {
   <div>
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiScatter v-if="!showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
+      <ScatterTest v-if="showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiHeatmap v-if="!showLocalTest" :config="heatmapConfig" :dataset="heatmapDataset"/>
       <HeatmapTest v-if="showLocalTest" :config="heatmapConfig" :dataset="heatmapDataset"/>

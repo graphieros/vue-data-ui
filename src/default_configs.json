@@ -1578,5 +1578,134 @@
                 "roundingValue": 0
             }
         }
+    },
+    "vue_ui_scatter": {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "color":"#2D353C",
+            "fontFamily":"inherit",
+            "layout": {
+                "useDiv": true,
+                "height": 316,
+                "width": 512,
+                "padding": {
+                    "top": 36,
+                    "right": 48,
+                    "bottom": 36,
+                    "left": 48
+                },
+                "axis":  {
+                    "show": true,
+                    "stroke":"#e1e5e8",
+                    "strokeWidth":1
+                },
+                "plots": {
+                    "radius": 2,
+                    "stroke": "#FFFFFF",
+                    "strokeWidth": 0.3,
+                    "opacity": 0.6,
+                    "significance": {
+                        "show": true,
+                        "deviationThreshold": 10,
+                        "opacity": 0.3
+                    },
+                    "deviation": {
+                        "translation": "deviation",
+                        "roundingValue": 1
+                    }
+                },
+                "correlation": {
+                    "show": true,
+                    "strokeDasharray":2,
+                    "strokeWidth":1,
+                    "label": {
+                        "show": true,
+                        "fontSize": 12,
+                        "color":"#2D353C",
+                        "bold": true,
+                        "roundingValue": 2,
+                        "useSerieColor": true
+                    }
+                },
+                "dataLabels": {
+                    "xAxis": {
+                        "name": "xAxis",
+                        "show": true,
+                        "fontSize": 8,
+                        "color":"#2D353C",
+                        "bold":false,
+                        "offsetX": 0,
+                        "offsetY": 0,
+                        "roundingValue": 0
+                    },
+                    "yAxis": {
+                        "name":"yAxis",
+                        "show": true,
+                        "fontSize": 8,
+                        "color":"#2D353C",
+                        "bold":false,
+                        "offsetY": 0,
+                        "offsetX": 0,
+                        "roundingValue": 0
+                    }
+                }
+            },
+            "title": {
+                "text": "",
+                "color": "#2D353C",
+                "fontSize": 20,
+                "bold": true,
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "",
+                    "fontSize": 16,
+                    "bold": false
+                }
+            },
+            "legend": {
+                "show": true,
+                "backgroundColor":"#FFFFFF",
+                "color": "#2D353C",
+                "fontSize" : 12,
+                "bold": true,
+                "roundingValue": 0
+            },
+            "tooltip": {
+                "show": true,
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "fontSize": 14,
+                "roundingValue": 0
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table",
+                "showPlotLabels": "Show plot labels"
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 2,
+                "roundingAverage": 1
+            },
+            "translations": {
+                "correlationCoefficient": "Correlation Coef.",
+                "nbrPlots": "Nbr plots",
+                "average": "Average"
+            }
+        }
     }
 }
