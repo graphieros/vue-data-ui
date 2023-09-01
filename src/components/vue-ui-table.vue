@@ -793,7 +793,7 @@
                         />
                     </svg>
                     <div v-if="chartData.plots.length >=2" class="chart-trend" :style="`color:${tableConfig.style.chart.modal.color}`">
-                        <span>---</span> Trend: {{ ((Math.abs(chartData.progression.trend)) * 100).toFixed(1) }} %
+                        <span>---</span> Trend: {{ ((chartData.progression.trend) * 100).toFixed(1) }} %
                     </div>
                 </template>
 
