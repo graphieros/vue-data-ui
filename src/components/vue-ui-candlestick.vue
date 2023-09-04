@@ -31,7 +31,6 @@ const clientPosition = ref({
 });
 const isTooltip = ref(false);
 const tooltipContent = ref("");
-const hoveredCell = ref(undefined);
 const candlestickChart = ref(null);
 const hoveredIndex = ref(undefined);
 
@@ -43,29 +42,32 @@ onMounted(() => {
     let minGap = 0;
     const sliderTrack = document.getElementById(`vue-ui-slider-track_${uid.value}`);
 
-    sliderOne.addEventListener("input", slideOne);
-    sliderTwo.addEventListener("input", slideTwo);
-
-    function slideOne(){
-        if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-            sliderOne.value = parseInt(sliderTwo.value) - minGap;
+    if(sliderOne && sliderTwo && sliderTrack) {
+        sliderOne.addEventListener("input", slideOne);
+        sliderTwo.addEventListener("input", slideTwo);
+    
+        function slideOne(){
+            if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+                sliderOne.value = parseInt(sliderTwo.value) - minGap;
+            }
+            fillColor();
         }
-        fillColor();
-    }
-    function slideTwo(){
-        if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-            sliderTwo.value = parseInt(sliderOne.value) + minGap;
+        function slideTwo(){
+            if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+                sliderTwo.value = parseInt(sliderOne.value) + minGap;
+            }
+            fillColor();
         }
-        fillColor();
-    }
-    function fillColor(){
-        let percent1 = (sliderOne.value / props.dataset.length) * 100;
-        let percent2 = (sliderTwo.value / props.dataset.length) * 100;
-        sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
+        function fillColor(){
+            let percent1 = (sliderOne.value / props.dataset.length) * 100;
+            let percent2 = (sliderTwo.value / props.dataset.length) * 100;
+            sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
+        }
+    
+        slideOne();
+        slideTwo();
     }
 
-    slideOne();
-    slideTwo();
 });
 
 onBeforeUnmount(() => {
@@ -448,7 +450,7 @@ function closeDetails(){
                 <g v-for="(xLabel, i) in xLabels">
                     <text
                         :x="drawingArea.left + (slot * i) + (slot / 2)"
-                        :y="drawingArea.bottom + candlestickConfig.style.layout.grid.xAxis.dataLabels.fontSize * 2"
+                        :y="drawingArea.bottom + candlestickConfig.style.layout.grid.xAxis.dataLabels.fontSize * 2 + candlestickConfig.style.layout.grid.xAxis.dataLabels.offsetY"
                         text-anchor="middle"
                         :font-size="candlestickConfig.style.layout.grid.xAxis.dataLabels.fontSize"
                         :fill="candlestickConfig.style.layout.grid.xAxis.dataLabels.color"
