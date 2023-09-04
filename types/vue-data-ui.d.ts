@@ -1,6 +1,143 @@
 declare module 'vue-data-ui' {
     import { DefineComponent } from "vue";
 
+    export type VueUiCandlestickConfig = {
+        style: {
+            backgroundColor: string;
+            color: string;
+            fontFamily: string;
+            height: number;
+            width: number;
+            layout: {
+                useDiv: boolean;
+                padding: {
+                    top: number;
+                    right: number;
+                    bottom: nuùber;
+                    left: number;
+                };
+                selector: {
+                    color: string;
+                    opacity: number;
+                };
+                grid: {
+                    show: boolean;
+                    stroke: string;
+                    strokeWidth: number;
+                    xAxis: {
+                        dataLabels: {
+                            show: boolean;
+                            fontSize: number;
+                            color: string;
+                            offsetY: number;
+                            bold: boolean;
+                        };
+                    };
+                    yAxis: {
+                        dataLabels: {
+                            show: boolean;
+                            fontSize: number;
+                            color: string;
+                            roundingValue: number;
+                            offsetX: number;
+                            bold: boolean;
+                            steps: number;
+                            prefix: string;
+                            suffix: string;
+                        };
+                    };
+                };
+                wick: {
+                    stroke: string;
+                    strokeWidth: number;
+                    extremity: {
+                        shape: string;
+                        size: string | number;
+                        color: string;
+                    };
+                };
+                candle: {
+                    borderRadius: number;
+                    stroke: string;
+                    strokeWidth: number;
+                    colors: {
+                        bearish: string;
+                        bullish: string;
+                    };
+                    gradient: {
+                        show: boolean;
+                        intensity: number;
+                        underlayer: string;
+                    };
+                    widthRatio: number;
+                };
+            };
+            zoom: {
+                show: boolean;
+                color: string;
+            };
+            title: {
+                text: string;
+                color: string;
+                fontSize: number;
+                bold: boolean;
+                subtitle: {
+                    color: string;
+                    text: string;
+                    fontSize: number;
+                    bold: boolean;
+                };
+            };
+            tooltip: {
+                show: boolean;
+                backgroundColor: string;
+                color: string;
+                fontSize: number;
+                roundingValue: number;
+                prefix: string;
+                suffix: string;
+            };
+        };
+        translations: {
+            period: string;
+            open: string;
+            high: string;
+            low: string;
+            last: string;
+            volume: string;
+        };
+        userOptions: {
+            show: boolean;
+            title: string;
+            labels: {
+                useDiv: string;
+                showTable: string;
+                showPlotLabels: string;
+            };
+        };
+        table: {
+            show: boolean;
+            th: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+            };
+            td: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+                roundingValue: number;
+                prefix: string;
+                suffix: string;
+            };
+        };
+    };
+
+    export const VueUiCandlestick: DefineComponent<{
+        config: VueUiCandlestickConfig,
+        dataset: Array<Array<string | number>>
+    }>;
+
     export type VueUiScatterDatasetValueItem = {
         name: string;
         x: number;
@@ -144,7 +281,7 @@ declare module 'vue-data-ui' {
     };
 
     export const VueUiScatter: DefineComponent<{
-        config: VueUiScatterConfig;
+        config: VueUiScatterConfig,
         dataset: VueUiScatterDatasetItem[]
     }>;
 

@@ -25,6 +25,7 @@ Available components:
 - [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
 - [VueUiHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-heatmap)
 - [VueUiScatter](https://vue-data-ui.graphieros.com/docs#vue-ui-scatter)
+- [VueUiCandlestick](https://vue-data-ui.graphieros.com/docs#vue-ui-candlestick)
 - [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
 
 ## Tables

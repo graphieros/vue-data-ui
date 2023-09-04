@@ -14,6 +14,7 @@ import VueUiSkeleton from "./components/vue-ui-skeleton.vue";
 import VueUiSparkline from "./components/vue-ui-sparkline.vue";
 import VueUiHeatmap from "./components/vue-ui-heatmap.vue";
 import VueUiScatter from "./components/vue-ui-scatter.vue";
+import VueUiCandlestick from "./components/vue-ui-candlestick.vue";
 
 export { 
     VueUiXy, 
@@ -31,5 +32,6 @@ export {
     VueUiSkeleton,
     VueUiSparkline,
     VueUiHeatmap,
-    VueUiScatter
+    VueUiScatter,
+    VueUiCandlestick
 };

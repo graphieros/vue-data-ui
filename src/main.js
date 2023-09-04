@@ -17,7 +17,8 @@ import {
     VueUiSkeleton,
     VueUiSparkline,
     VueUiHeatmap,
-    VueUiScatter
+    VueUiScatter,
+    VueUiCandlestick
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -38,4 +39,5 @@ app.component("VueUiSkeleton", VueUiSkeleton);
 app.component("VueUiSparkline", VueUiSparkline);
 app.component("VueUiHeatmap", VueUiHeatmap);
 app.component("VueUiScatter", VueUiScatter);
+app.component("VueUiCandlestick", VueUiCandlestick);
 app.mount('#app');

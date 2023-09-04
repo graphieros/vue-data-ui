@@ -16,6 +16,7 @@ import SkeletonTest from "./components/vue-ui-skeleton.vue";
 import SparklineTest from "./components/vue-ui-sparkline.vue";
 import HeatmapTest from "./components/vue-ui-heatmap.vue";
 import ScatterTest from "./components/vue-ui-scatter.vue";
+import CandlestickTest from "./components/vue-ui-candlestick.vue";
 
 const dataset = ref([
         {
@@ -2396,6 +2397,39 @@ const scatterDataset = computed(() => {
   }
 ]});
 
+const candlestickConfig = ref({
+  style: {
+    layout: {
+      useDiv: true,
+    },
+    title: {
+      text: "Title",
+      subtitle: {
+        text: "Subtitle"
+      }
+    }
+  }
+});
+
+// date | open | high | low | last | volume
+const candlestickDataset = ref([
+  ["2024-01-01", 56, 120, 40, 110, 1250],
+    ["2024-02-01", 110, 150, 80, 98, 2200],
+    ["2024-03-01", 98, 155, 75, 103, 3500],
+    ["2024-04-01", 103, 115, 102, 102, 999],
+    ["2024-05-01", 102, 135, 72, 85, 3216],
+    ["2024-06-01", 85, 162, 65, 107, 4315],
+    ["2024-07-01", 107, 134, 99, 112, 2561],
+    ["2024-08-01", 112, 125, 112, 120, 669],
+    ["2024-09-01", 120, 113, 76, 89, 2591],
+    ["2024-10-01", 89, 150, 85, 125, 2881],
+    ["2024-11-01", 125, 130, 45, 92, 1972],
+    ["2024-12-01", 92, 120, 35, 75, 3599],
+    ["2024-13-01", 75, 80, 26, 45, 5881],
+    ["2024-14-01", 45, 60, 20, 30, 2881],
+    ["2024-15-01", 30, 120, 10, 105, 2881]
+]);
+
 const showLocalTest = ref(false);
 
 const barset = ref([
@@ -2517,6 +2551,10 @@ function toggleRead() {
   <div>
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiCandlestick v-if="!showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>
+      <CandlestickTest v-if="showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiScatter v-if="!showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
       <ScatterTest v-if="showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
