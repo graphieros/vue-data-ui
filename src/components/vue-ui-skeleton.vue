@@ -155,12 +155,128 @@ const chestnut = ref([
             },
         ]
     },
+]);
+
+const candlesticks = ref([
+    {
+        y: 200,
+        height: 100,
+        bar: 50
+    },
+    {
+        y: 180,
+        height: 100,
+        bar: 40
+    },
+    {
+        y: 150,
+        height: 100,
+        bar: 30
+    },
+    {
+        y: 120,
+        height: 80,
+        bar: 50
+    },
+    {
+        y: 110,
+        height: 60,
+        bar: 30
+    },
+    {
+        y: 80,
+        height: 80,
+        bar: 10
+    },
+    {
+        y: 50,
+        height: 80,
+        bar: 40
+    },
+    {
+        y: 24,
+        height: 40,
+        bar: 24
+    },
+    {
+        y: 44,
+        height: 20,
+        bar: 13
+    },
+    {
+        y: 32,
+        height: 45,
+        bar: 19
+    },
 ])
 
 </script>
 
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
+
+        <!-- TYPE CANDLESTICK -->
+        <template v-if="type === 'candlesticks'">
+            <svg width="100%" viewBox="0 0 512 316" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g v-if="skeletonConfig.style.candlesticks.axis.show">
+                    <line
+                        :x1="2"
+                        :x2="2"
+                        :y1="2"
+                        :y2="314"
+                        :stroke="skeletonConfig.style.candlesticks.axis.color"
+                        :stroke-width="skeletonConfig.style.candlesticks.axis.strokeWidth"
+                        stroke-linecap="round"
+                    />
+                    <line
+                        :x1="2"
+                        :x2="510"
+                        :y1="314"
+                        :y2="314"
+                        :stroke="skeletonConfig.style.candlesticks.axis.color"
+                        :stroke-width="skeletonConfig.style.candlesticks.axis.strokeWidth"
+                        stroke-linecap="round"
+                    />
+                </g>
+                <g v-for="(candle, i) in candlesticks">
+                    <line 
+                        :x1="24 + (464 * i / (candlesticks.length - 1)) - (464 / (candlesticks.length - 1) / 8)"
+                        :x2="24 + (464 * i / (candlesticks.length - 1)) + (464 / (candlesticks.length - 1) / 8)"
+                        :y1="candle.y"
+                        :y2="candle.y"
+                        :stroke="skeletonConfig.style.candlesticks.candle.color"
+                        :stroke-width="skeletonConfig.style.candlesticks.candle.strokeWidth"
+                        stroke-linecap="round"
+                    />
+                    <line 
+                        :x1="24 + (464 * i / (candlesticks.length - 1)) - (464 / (candlesticks.length - 1) / 8)"
+                        :x2="24 + (464 * i / (candlesticks.length - 1)) + (464 / (candlesticks.length - 1) / 8)"
+                        :y1="candle.y + candle.height"
+                        :y2="candle.y + candle.height"
+                        :stroke="skeletonConfig.style.candlesticks.candle.color"
+                        :stroke-width="skeletonConfig.style.candlesticks.candle.strokeWidth"
+                        stroke-linecap="round"
+                    />
+                    <line
+                        :x1="24 + (464 * i / (candlesticks.length - 1))"
+                        :x2="24 + (464 * i / (candlesticks.length - 1))"
+                        :y1="candle.y"
+                        :y2="candle.y + candle.height"
+                        :stroke="skeletonConfig.style.candlesticks.candle.color"
+                        :stroke-width="skeletonConfig.style.candlesticks.candle.strokeWidth"
+                        stroke-linecap="round"
+                    />
+                    <rect
+                        :x="24 + (464 * i / (candlesticks.length - 1)) - (464 / (candlesticks.length - 1) / 8)"
+                        :y="candle.y + (candle.height - candle.bar * 1.5)"
+                        :height="candle.bar"
+                        :width="(464 / (candlesticks.length - 1) / 4)"
+                        :fill="skeletonConfig.style.candlesticks.candle.color"
+                        rx="1"
+                    />
+                </g>
+            </svg>
+        </template>
 
         <!-- TYPE HEATMAP -->
         <template v-if="type === 'heatmap'">

@@ -2000,7 +2000,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap";
+        type: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick";
         style: {
             backgroundColor: string;
             color: string;
@@ -2090,6 +2090,17 @@ declare module 'vue-data-ui' {
                 cellsX: number;
                 cellsY: number;
                 color: string;
+            };
+            candlesticks: {
+                axis: {
+                    show: boolean;
+                    color: string;
+                    strokeWidth: number;
+                };
+                candle: {
+                    color: string;
+                    strokeWidth: number;
+                };
             };
         };
     };

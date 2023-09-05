@@ -2078,7 +2078,7 @@ const ratingConfig = ref({
 });
 
 const skeletonConfig = ref({
-  type: "heatmap",
+  type: "candlesticks",
   style: {
     backgroundColor: "#1A1A1A",
     color: "#CCCCCC",
@@ -2164,6 +2164,15 @@ const skeletonConfig = ref({
       },
       borderRadius: 0.5,
       color: "#e1e5e8"
+    },
+    candlesticks: {
+      axis: {
+        show: true,
+        color: "#CCCCCC"
+      },
+      candle: {
+        color: "#CCCCCC"
+      }
     }
   }
 });
@@ -2552,6 +2561,10 @@ function toggleRead() {
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
+      <SkeletonTest v-if="showLocalTest" :config="{type: 'candlesticks'}" />
+    </div>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiCandlestick v-if="!showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>
       <CandlestickTest v-if="showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>
     </div>
@@ -2570,10 +2583,6 @@ function toggleRead() {
     <div style="max-width: 1000px; margin:0 auto; margin-bottom:48px">
       <XyTest ref="xytest" :config="config" :dataset="barset" v-if="showLocalTest"/>
       <VueUiXy ref="xytest" :config="config" :dataset="barset" v-if="!showLocalTest"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
-      <SkeletonTest v-if="showLocalTest" :config="{type: 'heatmap'}" />
     </div>
     <img v-if="pic" :src="pic">
     <div style="max-width:200px; margin:0 auto; margin-bottom: 48px;">

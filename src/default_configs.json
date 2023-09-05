@@ -1424,6 +1424,17 @@
                 "cellsX": 26,
                 "cellsY": 7,
                 "color": "#E1E5E8"
+            },
+            "candlesticks": {
+                "axis": {
+                    "show": true,
+                    "color":"#e1e5e8",
+                    "strokeWidth": 0.5
+                },
+                "candle": {
+                    "color":"#e1e5e8",
+                    "strokeWidth": 1
+                }
             }
         }
     },

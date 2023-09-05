@@ -770,7 +770,7 @@ function closeDetails(){
 }
 .vue-ui-candlestick-range-slider-label-right,
 .vue-ui-candlestick-range-slider-label-left {
-    width: 100px;
+    width: 130px;
 }
 
 .vue-ui-candlestick-range-slider-label-right {
