@@ -25,52 +25,7 @@ const defaultConfig = ref(mainConfig.vue_ui_chestnut);
 
 const isPrinting = ref(false);
 const chestnutChart = ref(null);
-const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref({
-    x: 0,
-    y: 0
-});
-const isTooltip = ref(false);
-const tooltipContent = ref("");
-
-onMounted(() => {
-    document.addEventListener("mousemove", setClientPosition)
-});
-
-onBeforeUnmount(() => {
-    document.removeEventListener("mousemove", setClientPosition)
-});
-
-function setClientPosition(e) {
-    clientPosition.value.x = e.clientX;
-    clientPosition.value.y = e.clientY;
-}
-
-const tooltipPosition = computed(() => {
-    let offsetX = 0;
-    let offsetY = 48;
-    if(tooltip.value && radarChart.value) {
-        const { width, height } = tooltip.value.getBoundingClientRect();
-        const chartBox = radarChart.value.getBoundingClientRect();
-
-        if(clientPosition.value.x + width / 2 > chartBox.right) {
-            offsetX = -width;
-        } else if(clientPosition.value.x - width / 2 < chartBox.left) {
-            offsetX = 0;
-        } else {
-            offsetX = -width / 2;
-        }
-
-        if(clientPosition.value.y + height > chartBox.bottom) {
-            offsetY = -height - 48
-        }
-    }
-    return {
-        top: clientPosition.value.y + offsetY,
-        left: clientPosition.value.x + offsetX,
-    }
-});
 
 const chestnutConfig = computed(() => {
     if(!Object.keys(props.config || {}).length) {

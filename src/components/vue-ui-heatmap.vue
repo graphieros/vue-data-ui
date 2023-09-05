@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { treeShake, convertConfigColors, opacity, makeXls, adaptColorToBackground } from "../lib";
+import { ref, computed, nextTick } from "vue";
+import { treeShake, convertConfigColors, opacity, makeXls } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
+import { useMouse } from "../useMouse";
+import { calcTooltipPosition } from "../calcTooltipPosition";
 
 const props = defineProps({
     config: {
@@ -24,52 +26,20 @@ const uid = ref(`vue-ui-heatmap-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_heatmap);
 
 const isPrinting = ref(false);
+const heatmapChart = ref(null);
 const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref({
-    x: 0,
-    y: 0
-});
+const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const hoveredCell = ref(undefined);
 
-onMounted(() => {
-    document.addEventListener("mousemove", setClientPosition)
-});
-
-onBeforeUnmount(() => {
-    document.removeEventListener("mousemove", setClientPosition)
-});
-
-function setClientPosition(e) {
-    clientPosition.value.x = e.clientX;
-    clientPosition.value.y = e.clientY;
-}
-
 const tooltipPosition = computed(() => {
-    let offsetX = 0;
-    let offsetY = 48;
-    if(tooltip.value && heatmapChart.value) {
-        const { width, height } = tooltip.value.getBoundingClientRect();
-        const chartBox = heatmapChart.value.getBoundingClientRect();
-
-        if(clientPosition.value.x + width / 2 > chartBox.right) {
-            offsetX = -width;
-        } else if(clientPosition.value.x - width / 2 < chartBox.left) {
-            offsetX = 0;
-        } else {
-            offsetX = -width / 2;
-        }
-
-        if(clientPosition.value.y + height > chartBox.bottom) {
-            offsetY = -height - 48
-        }
-    }
-    return {
-        top: clientPosition.value.y + offsetY,
-        left: clientPosition.value.x + offsetX,
-    }
+    return calcTooltipPosition({
+        tooltip: tooltip.value,
+        chart: heatmapChart.value,
+        clientPosition: clientPosition.value
+    });
 });
    
 const heatmapConfig = computed(() => {
@@ -87,8 +57,6 @@ const mutableConfig = ref({
     inside: !heatmapConfig.value.style.layout.useDiv,
     showTable: heatmapConfig.value.table.show
 })
-
-const heatmapChart = ref(null);
 
 const maxX = computed(() => {
     return Math.max(...props.dataset.flatMap(el => el.values.length));
@@ -241,7 +209,7 @@ function closeDetails(){
 </script>
 
 <template>
-     <div :ref="`heatmapChart`" class="vue-ui-heatmap" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center`" :id="`heatmap__${uid}`">
+     <div ref="heatmapChart" class="vue-ui-heatmap" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center`" :id="`heatmap__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && heatmapConfig.style.title.text" :style="`width:100%;background:${heatmapConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <div :style="`width:100%;text-align:center;color:${heatmapConfig.style.title.color};font-size:${heatmapConfig.style.title.fontSize}px;font-weight:${heatmapConfig.style.title.bold ? 'bold': ''}`">

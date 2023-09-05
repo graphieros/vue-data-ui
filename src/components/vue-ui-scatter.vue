@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { treeShake, makeDonut, palette, convertColorToHex, opacity, convertConfigColors, makeXls } from '../lib';
+import { ref, computed, nextTick, onMounted } from "vue";
+import { treeShake, palette, opacity, convertConfigColors, makeXls } from '../lib';
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
+import { useMouse } from "../useMouse";
+import { calcTooltipPosition } from "../calcTooltipPosition";
 
 const props = defineProps({
     config: {
@@ -27,16 +29,11 @@ const isPrinting = ref(false);
 const scatterChart = ref(null);
 const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref({
-    x: 0,
-    y: 0
-});
+const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 
 onMounted(() => {
-    document.addEventListener("mousemove", setClientPosition);
-
     const xLabel = document.getElementById(`vue-ui-scatter-xAxis-label-${uid.value}`);
         if(xLabel) {
             const bboxY = xLabel.getBBox();
@@ -48,38 +45,12 @@ onMounted(() => {
         }
 });
 
-onBeforeUnmount(() => {
-    document.removeEventListener("mousemove", setClientPosition)
-});
-
-function setClientPosition(e) {
-    clientPosition.value.x = e.clientX;
-    clientPosition.value.y = e.clientY;
-}
-
 const tooltipPosition = computed(() => {
-    let offsetX = 0;
-    let offsetY = 48;
-    if(tooltip.value && scatterChart.value) {
-        const { width, height } = tooltip.value.getBoundingClientRect();
-        const chartBox = scatterChart.value.getBoundingClientRect();
-
-        if(clientPosition.value.x + width / 2 > chartBox.right) {
-            offsetX = -width;
-        } else if(clientPosition.value.x - width / 2 < chartBox.left) {
-            offsetX = 0;
-        } else {
-            offsetX = -width / 2;
-        }
-
-        if(clientPosition.value.y + height > chartBox.bottom) {
-            offsetY = -height - 48
-        }
-    }
-    return {
-        top: clientPosition.value.y + offsetY,
-        left: clientPosition.value.x + offsetX,
-    }
+    return calcTooltipPosition({
+        tooltip: tooltip.value,
+        chart: scatterChart.value,
+        clientPosition: clientPosition.value
+    });
 })
 
 const scatterConfig = computed(() => {

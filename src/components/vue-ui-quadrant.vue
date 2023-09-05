@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { treeShake, palette, createPolygonPath, createStar, giftWrap, shiftHue, opacity, convertColorToHex, convertConfigColors, makeXls } from "../lib";
 import pdf from "../pdf.js";
 import mainConfig from "../default_configs.json";
+import { useMouse } from "../useMouse";
+import { calcTooltipPosition } from "../calcTooltipPosition";
 
 const props = defineProps({
     config: {
@@ -29,16 +31,11 @@ const isPrinting = ref(false);
 const quadrantChart = ref(null);
 const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref({
-    x: 0,
-    y: 0
-});
+const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 
 onMounted(() => {
-    document.addEventListener("mousemove", setClientPosition);
-
     const xLabelMin = document.getElementById("xLabelMin");
     if(xLabelMin) {
         const bboxXMin = xLabelMin.getBBox();
@@ -71,38 +68,12 @@ onMounted(() => {
 
 });
 
-onBeforeUnmount(() => {
-    document.removeEventListener("mousemove", setClientPosition)
-});
-
-function setClientPosition(e) {
-    clientPosition.value.x = e.clientX;
-    clientPosition.value.y = e.clientY;
-}
-
 const tooltipPosition = computed(() => {
-    let offsetX = 0;
-    let offsetY = 48;
-    if(tooltip.value && quadrantChart.value) {
-        const { width, height } = tooltip.value.getBoundingClientRect();
-        const chartBox = quadrantChart.value.getBoundingClientRect();
-
-        if(clientPosition.value.x + width / 2 > chartBox.right) {
-            offsetX = -width;
-        } else if(clientPosition.value.x - width / 2 < chartBox.left) {
-            offsetX = 0;
-        } else {
-            offsetX = -width / 2;
-        }
-
-        if(clientPosition.value.y + height > chartBox.bottom) {
-            offsetY = -height - 48
-        }
-    }
-    return {
-        top: clientPosition.value.y + offsetY,
-        left: clientPosition.value.x + offsetX,
-    }
+    return calcTooltipPosition({
+        tooltip: tooltip.value,
+        chart: quadrantChart.value,
+        clientPosition: clientPosition.value
+    });
 });
 
 const quadrantConfig = computed(() => {

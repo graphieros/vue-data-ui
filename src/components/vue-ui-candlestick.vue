@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { treeShake, convertConfigColors, shiftHue, opacity, makeXls } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
+import { useMouse } from "../useMouse";
+import { calcTooltipPosition } from "../calcTooltipPosition";
 
 const props = defineProps({
     config: {
@@ -25,18 +27,13 @@ const defaultConfig = ref(mainConfig.vue_ui_candlestick);
 const isPrinting = ref(false);
 const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref({
-    x: 0,
-    y: 0
-});
+const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const candlestickChart = ref(null);
 const hoveredIndex = ref(undefined);
 
 onMounted(() => {
-    document.addEventListener("mousemove", setClientPosition);
-
     const sliderOne = document.getElementById(`start_${uid.value}`);
     const sliderTwo = document.getElementById(`end_${uid.value}`);
     let minGap = 0;
@@ -45,7 +42,6 @@ onMounted(() => {
     if(sliderOne && sliderTwo && sliderTrack) {
         sliderOne.addEventListener("input", slideOne);
         sliderTwo.addEventListener("input", slideTwo);
-    
         function slideOne(){
             if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
                 sliderOne.value = parseInt(sliderTwo.value) - minGap;
@@ -63,45 +59,17 @@ onMounted(() => {
             let percent2 = (sliderTwo.value / props.dataset.length) * 100;
             sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
         }
-    
         slideOne();
         slideTwo();
     }
-
 });
-
-onBeforeUnmount(() => {
-    document.removeEventListener("mousemove", setClientPosition)
-});
-
-function setClientPosition(e) {
-    clientPosition.value.x = e.clientX;
-    clientPosition.value.y = e.clientY;
-}
 
 const tooltipPosition = computed(() => {
-    let offsetX = 0;
-    let offsetY = 48;
-    if(tooltip.value && candlestickChart.value) {
-        const { width, height } = tooltip.value.getBoundingClientRect();
-        const chartBox = candlestickChart.value.getBoundingClientRect();
-
-        if(clientPosition.value.x + width / 2 > chartBox.right) {
-            offsetX = -width;
-        } else if(clientPosition.value.x - width / 2 < chartBox.left) {
-            offsetX = 0;
-        } else {
-            offsetX = -width / 2;
-        }
-
-        if(clientPosition.value.y + height > chartBox.bottom) {
-            offsetY = -height - 48
-        }
-    }
-    return {
-        top: clientPosition.value.y + offsetY,
-        left: clientPosition.value.x + offsetX,
-    }
+    return calcTooltipPosition({
+        tooltip: tooltip.value,
+        chart: candlestickChart.value,
+        clientPosition: clientPosition.value
+    });
 });
 
 const candlestickConfig = computed(() => {
@@ -310,7 +278,7 @@ function closeDetails(){
 </script>
 
 <template>
-    <div :ref="`candlestickChart`" class="vue-ui-candlestick" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center`" :id="`vue-ui-candlestick_${uid}`">
+    <div ref="candlestickChart" class="vue-ui-candlestick" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center`" :id="`vue-ui-candlestick_${uid}`">
 
         <div v-if="(!mutableConfig.inside || isPrinting) && candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->

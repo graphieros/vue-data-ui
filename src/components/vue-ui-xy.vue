@@ -565,6 +565,7 @@
 
 <script>
 import pdf from '../pdf';
+import { useMouse } from '../useMouse';
 import { 
     treeShake, 
     isSafeValue, 
@@ -950,6 +951,7 @@ export default {
         makeXls,
         adaptColorToBackground,
         calcLinearProgression,
+        useMouse,
 
         calcRectHeight(plot) {
             if(plot.value >= 0) {
