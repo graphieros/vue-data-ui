@@ -95,7 +95,7 @@ const yLabels =  computed(() => {
         } else {
             return ds[0];
         }
-    }).reverse();
+    });
 });
 
 const xLabels = computed(() => {
@@ -161,7 +161,7 @@ const mutableDataset = computed(() => {
 });
 
 const drawableDataset = computed(() => {
-    return mutableDataset.value.reverse().map((ds, i) => {
+    return mutableDataset.value.map((ds, i) => {
         const y = drawingArea.value.top + (drawingArea.value.height / len.value) * i;
         const height = (drawingArea.value.height / len.value) - agePyramidConfig.value.style.layout.bars.gap;
         return {
@@ -197,8 +197,8 @@ function hoverIndex(index) {
     html += `<div>${agePyramidConfig.value.translations.age} : ${selectedSet.age}</div>`
     html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
     html += `<div style="display:flex; flex-direction:row;gap:12px">`;
-    html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : agePyramidConfig.value.style.layout.bars.left.color}"/></svg><div>${agePyramidConfig.value.translations.female}</div><div><b>${selectedSet.left.value.toLocaleString()}</b></div></div>`;
-    html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : agePyramidConfig.value.style.layout.bars.right.color}"/></svg><div>${agePyramidConfig.value.translations.male}</div><div><b>${selectedSet.right.value.toLocaleString()}</b></div></div>`;
+    html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : agePyramidConfig.value.style.layout.bars.left.color}"/></svg><div>${agePyramidConfig.value.translations.female}</div><div><b>${selectedSet.left.value.toLocaleString()}</b></div></div>`;
+    html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : agePyramidConfig.value.style.layout.bars.right.color}"/></svg><div>${agePyramidConfig.value.translations.male}</div><div><b>${selectedSet.right.value.toLocaleString()}</b></div></div>`;
     html += `</div>`;
     html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8"><div>${agePyramidConfig.value.translations.total}</div><div><b>${(selectedSet.left.value + selectedSet.right.value).toLocaleString()}</b></div></div>`
     html += `</div>`;
@@ -390,7 +390,7 @@ function closeDetails(){
                     <text
                         :x="drawingArea.left"
                         :y="drawingArea.top"
-                        :fill="agePyramidConfig.style.layout.dataLabels.sideTitles.useSideColor ? agePyramidConfig.style.layout.bars.left.color : agePyramidConfig.style.layout.dataLabels.color"
+                        :fill="agePyramidConfig.style.layout.dataLabels.sideTitles.useSideColor ? agePyramidConfig.style.layout.bars.left.color : agePyramidConfig.style.layout.dataLabels.sideTitles.color"
                         :font-size="agePyramidConfig.style.layout.dataLabels.sideTitles.fontSize"
                         text-anchor="start"
                         :font-weight="agePyramidConfig.style.layout.dataLabels.sideTitles.bold ? 'bold' : 'normal'"
@@ -400,7 +400,7 @@ function closeDetails(){
                     <text
                         :x="drawingArea.right"
                         :y="drawingArea.top"
-                        :fill="agePyramidConfig.style.layout.dataLabels.sideTitles.useSideColor ? agePyramidConfig.style.layout.bars.right.color : agePyramidConfig.style.layout.dataLabels.color"
+                        :fill="agePyramidConfig.style.layout.dataLabels.sideTitles.useSideColor ? agePyramidConfig.style.layout.bars.right.color : agePyramidConfig.style.layout.dataLabels.sideTitles.color"
                         :font-size="agePyramidConfig.style.layout.dataLabels.sideTitles.fontSize"
                         text-anchor="end"
                         :font-weight="agePyramidConfig.style.layout.dataLabels.sideTitles.bold ? 'bold' : 'normal'"
@@ -417,6 +417,8 @@ function closeDetails(){
                             :y="drawingArea.top + (drawingArea.height / len) * i + (agePyramidConfig.style.layout.dataLabels.yAxis.fontSize / 3)"
                             text-anchor="middle"
                             :font-size="agePyramidConfig.style.layout.dataLabels.yAxis.fontSize"
+                            :fill="agePyramidConfig.style.layout.dataLabels.yAxis.color"
+                            :font-weight="agePyramidConfig.style.layout.dataLabels.yAxis.bold ? 'bold': 'normal'"
                         >
                             {{ label }}
                         </text>
@@ -460,6 +462,7 @@ function closeDetails(){
                             :font-size="agePyramidConfig.style.layout.dataLabels.xAxis.fontSize"
                             :fill="agePyramidConfig.style.layout.dataLabels.xAxis.color"
                             text-anchor="middle"
+                            :font-weight="agePyramidConfig.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
                         >
                             {{ Number((rightLabel.value / agePyramidConfig.style.layout.dataLabels.xAxis.scale).toFixed(0)).toLocaleString() }}
                         </text>
@@ -480,6 +483,7 @@ function closeDetails(){
                             :font-size="agePyramidConfig.style.layout.dataLabels.xAxis.fontSize"
                             :fill="agePyramidConfig.style.layout.dataLabels.xAxis.color"
                             text-anchor="middle"
+                            :font-weight="agePyramidConfig.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
                         >
                             {{ Number((leftLabel.value / agePyramidConfig.style.layout.dataLabels.xAxis.scale).toFixed(0)).toLocaleString() }}
                         </text>
@@ -488,7 +492,9 @@ function closeDetails(){
                         :x="drawingArea.right"
                         :y="svg.height"
                         text-anchor="end"
-                        :font-size="agePyramidConfig.style.layout.dataLabels.yAxis.fontSize"
+                        :font-size="agePyramidConfig.style.layout.dataLabels.xAxis.fontSize"
+                        :fill="agePyramidConfig.style.layout.dataLabels.xAxis.color"
+                        :font-weight="agePyramidConfig.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
                     >
                         {{ agePyramidConfig.style.layout.dataLabels.xAxis.translation }}
                     </text>
@@ -607,6 +613,7 @@ function closeDetails(){
     position: fixed;
     padding:12px;
     z-index:1;
+    font-variant-numeric: tabular-nums;
 }
 .vue-ui-age-pyramid-user-options {
     border-radius: 4px;
