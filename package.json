@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "1.4.3",
+  "version": "1.4.4",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
   "keywords": [
@@ -23,7 +23,8 @@
     "skeleton",
     "scatter",
     "heatmap",
-    "candlestick"
+    "candlestick",
+    "age pyramid"
   ],
   "author": "Alec Lloyd Probert",
   "repository": {

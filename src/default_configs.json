@@ -1849,5 +1849,123 @@
                 "suffix": ""
             }
         }
+    },
+    "vue_ui_age_pyramid": {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "color":"#2D353C",
+            "fontFamily":"inherit",
+            "height": 500,
+            "width": 500,
+            "layout": {
+                "useDiv": true,
+                "padding": {
+                    "top": 36,
+                    "right": 12,
+                    "bottom": 48,
+                    "left": 12
+                },
+                "grid": {
+                    "show": true,
+                    "stroke": "#e1e5e8",
+                    "strokeWidth": 1
+                },
+                "dataLabels": {
+                    "sideTitles": {
+                        "show": true,
+                        "fontSize": 18,
+                        "color": "#2D353C",
+                        "useSideColor": true,
+                        "bold": false
+                    },
+                    "xAxis": {
+                        "show": true,
+                        "fontSize": 12,
+                        "color":"#2D353C",
+                        "bold":false,
+                        "scale": 1000,
+                        "translation": "in thousands"
+                    },
+                    "yAxis": {
+                        "show": true,
+                        "display": "age",
+                        "fontSize": 12,
+                        "color":"#2D353C",
+                        "bold": false,
+                        "showEvery": 5
+                    }
+                },
+                "centerSlit": {
+                    "width": 20
+                },
+                "bars": {
+                    "gap": 2,
+                    "borderRadius": 2,
+                    "left": {
+                        "color": "#dc3912"
+                    },
+                    "right": {
+                        "color": "#3366cc"
+                    },
+                    "gradient": {
+                        "show": true,
+                        "underlayer": "#FFFFFF",
+                        "intensity": 60,
+                        "shiftHue": 0.05
+                    }
+                }
+            },
+            "highlighter": {
+                "color": "#2D353C",
+                "opacity": 5
+            },
+            "title": {
+                "text": "",
+                "color": "#2D353C",
+                "fontSize": 20,
+                "bold": true,
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "",
+                    "fontSize": 16,
+                    "bold": false
+                }
+            },
+            "tooltip": {
+                "show": true,
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "fontSize": 14,
+                "roundingValue": 0
+            }
+        },
+        "translations": {
+            "age": "age",
+            "male": "male",
+            "female": "female",
+            "total": "total",
+            "year": "year"
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title inside",
+                "showTable": "Show table"
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            }
+        }
     }
 }

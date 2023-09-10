@@ -1,6 +1,132 @@
 declare module 'vue-data-ui' {
     import { DefineComponent } from "vue";
 
+    export type VueUiAgePyramidDataset = Array<Array<string | number>>;
+
+    export type VueUiAgePyramidConfig = {
+        style: {
+            backgroundColor: string;
+            color: string;
+            fontFamily: string;
+            height: number;
+            width: number;
+            layout: {
+                useDiv: boolean;
+                padding: {
+                    top: number;
+                    right: number;
+                    bottom: number;
+                    left: number;
+                };
+                grid: {
+                    show: boolean;
+                    stroke: string;
+                    strokeWidth: number;
+                };
+                dataLabels: {
+                    sideTitles: {
+                        show: boolean;
+                        fontSize: number;
+                        color: string;
+                        useSideColor: boolean;
+                        bold: boolean;
+                    };
+                    xAxis: {
+                        show: boolean;
+                        fontSize: number;
+                        color: string;
+                        bold: boolean;
+                        scale: number;
+                        translation: string;
+                    };
+                    yAxis: {
+                        show: boolean;
+                        display: string;
+                        fontSize: number;
+                        color: string;
+                        bold: boolean;
+                        showEvery: number;
+                    };
+                };
+                centerSlit: {
+                    width: number;
+                };
+                bars: {
+                    gap: number;
+                    borderRadius: number;
+                    left: {
+                        color: string;
+                    };
+                    right: {
+                        color: string;
+                    };
+                    gradient: {
+                        show: boolean;
+                        underlayer: string;
+                        intensity: number;
+                        shiftHue: number;
+                    };
+                };
+            };
+            highlighter: {
+                color: string;
+                opacity: number;
+            };
+            title: {
+                text: string;
+                color: string;
+                fontSize: number;
+                bold: boolean;
+                subtitle: {
+                    color: string;
+                    text: string;
+                    fontSize: number;
+                    bold: boolean;
+                };
+            };
+            tooltip: {
+                show: boolean;
+                backgroundColor: string;
+                color: string;
+                fontSize: number;
+                roundingValue: number;
+            };
+        };
+        translations: {
+            age: string;
+            male: string;
+            female: string;
+            total: string;
+            year: string;
+        };
+        userOptions: {
+            show: boolean;
+            title: string;
+            labels: {
+                useDiv: string;
+                showTable: string;
+            };
+        };
+        table: {
+            show: boolean;
+            th: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+            };
+            td: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+            };
+        };
+    };
+
+    export const VueUiAgePyramid: DefineComponent<{
+        config: VueUiAgePyramidConfig,
+        dataset: VueUiAgePyramidDataset
+    }>;
+
     export type VueUiCandlestickConfig = {
         style: {
             backgroundColor: string;
@@ -13,7 +139,7 @@ declare module 'vue-data-ui' {
                 padding: {
                     top: number;
                     right: number;
-                    bottom: nuùber;
+                    bottom: number;
                     left: number;
                 };
                 selector: {
