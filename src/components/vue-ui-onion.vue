@@ -344,7 +344,7 @@ function closeDetails(){
             >
                 <div class="vue-ui-onion-legend" :style="`color:${onionConfig.style.chart.legend.color};font-size:${onionConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${onionConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
                     <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-onion-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                        <span :style="`color:${legendItem.color};font-size:${onionConfig.style.chart.legend.fontSize}px`">⬤</span>
+                        <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color"/></svg>
                         <span>{{ legendItem.name }} : </span>
                         <span>{{ legendItem.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}% </span>
                     </div>
@@ -356,7 +356,7 @@ function closeDetails(){
         <!-- LEGEND AS DIV -->
         <div v-if="onionConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-onion-legend" :style="`background:${onionConfig.style.chart.legend.backgroundColor};color:${onionConfig.style.chart.legend.color};font-size:${onionConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${onionConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
             <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-onion-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                <span :style="`color:${legendItem.color};font-size:${onionConfig.style.chart.legend.fontSize}px`">⬤</span>
+                <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color"/></svg>
                 <span>{{ legendItem.name }} : </span>
                 <span>{{ legendItem.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}% </span>
             </div>

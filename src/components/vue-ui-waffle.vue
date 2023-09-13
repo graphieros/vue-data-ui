@@ -241,7 +241,7 @@ function useTooltip(index) {
     let html = "";
 
     html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
-    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><span style="color:${selected.color};font-size:${waffleConfig.value.style.chart.tooltip.fontSize * 1.6}px;">◼</span>`;
+    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" height="12" width="12" stroke="none" rx="1" fill="${selected.color}" /></svg>`;
     if(waffleConfig.value.style.chart.tooltip.showValue) {
         html += `<b>${selected.value.toFixed(waffleConfig.value.style.chart.tooltip.roundingValue)}</b>`;
     }
@@ -431,7 +431,7 @@ function generateXls() {
             >
                 <div class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
                     <div v-for="(legendItem, i) in legendSet" class="vue-ui-waffle-legend-item" @click="segregate(legendItem.uid)" :style="`opacity:${segregated.includes(legendItem.uid) ? 0.5 : 1}`">
-                        <span :style="`color:${legendItem.color};font-size:${waffleConfig.style.chart.legend.fontSize * 1.6}px`">◼</span>
+                        <svg viewBox="0 0 12 12" height="14" width="14"><rect height="14" width="14" x="0" y="0" stroke="none" :fill="legendItem.color" /></svg>
                         <span>{{ legendItem.name }} : </span>
                         <span>{{ legendItem.value.toFixed(waffleConfig.style.chart.legend.roundingValue) }}</span>
                         <span v-if="!segregated.includes(legendItem.uid)">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)</span>
@@ -444,7 +444,7 @@ function generateXls() {
         <!-- LEGEND AS DIV -->
         <div v-if="waffleConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
             <div v-for="(legendItem, i) in legendSet" class="vue-ui-waffle-legend-item" @click="segregate(legendItem.uid)" :style="`opacity:${segregated.includes(legendItem.uid) ? 0.5 : 1}`">
-                <span :style="`color:${legendItem.color};font-size:${waffleConfig.style.chart.legend.fontSize * 1.6}px`">◼</span>
+                <svg viewBox="0 0 12 12" height="14" width="14"><rect height="14" width="14" x="0" y="0" stroke="none" :fill="legendItem.color" /></svg>
                 <span>{{ legendItem.name }} : </span>
                 <span>{{ legendItem.value.toFixed(waffleConfig.style.chart.legend.roundingValue) }}</span>
                 <span v-if="!segregated.includes(legendItem.uid)">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)</span>

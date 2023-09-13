@@ -453,9 +453,11 @@
                     >
                         <div class="vue-ui-xy-legend">
                             <div v-for="(legendItem, i) in absoluteDataset" :key="`div_legend_item_${i}`" @click="segregate(legendItem)" :class="{'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated' : segregatedSeries.includes(legendItem.id)}">
-                                <span :style="`color:${legendItem.color}`" v-if="['plot'].includes(legendItem.type)">●</span>
-                                <span :style="`color:${legendItem.color}`" v-if="['line'].includes(legendItem.type)">▬</span>
-                                <span :style="`color:${legendItem.color}`" v-if="['bar'].includes(legendItem.type)">◼</span>
+                                <svg viewBox="0 0 12 12" height="14" width="14">
+                                    <rect v-if="icons[legendItem.type] === 'line'" x="0" y="6" stroke="none" height="4" width="12" :fill="legendItem.color" />
+                                    <rect v-else-if="icons[legendItem.type] === 'bar'" x="0" y="0" height="12" width="12" stroke="none" :fill="legendItem.color" />
+                                    <circle v-else cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" />
+                                </svg>
                                 <span :style="`color:${chartConfig.chart.legend.color}`">{{legendItem.name}}</span>
                             </div>
                         </div>
@@ -516,7 +518,11 @@
         <!-- LEGEND AS OUTSIDE DIV -->
         <div v-if="chartConfig.chart.legend.show && (!mutableConfig.legendInside || isPrinting)" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
             <div v-for="(legendItem, i) in absoluteDataset" :key="`div_legend_item_${i}`" @click="segregate(legendItem)" :class="{'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated' : segregatedSeries.includes(legendItem.id)}">
-                <span :style="`color:${legendItem.color}`" v-html="icons[legendItem.type]"/>
+                <svg viewBox="0 0 12 12" height="14" width="14">
+                    <rect v-if="icons[legendItem.type] === 'line'" x="0" y="6" stroke="none" height="4" width="12" :fill="legendItem.color" />
+                    <rect v-else-if="icons[legendItem.type] === 'bar'" x="0" y="0" height="12" width="12" stroke="none" :fill="legendItem.color" />
+                    <circle v-else cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" />
+                </svg>
                 <span :style="`color:${chartConfig.chart.legend.color}`">{{legendItem.name}}</span>
             </div>
         </div>
@@ -538,7 +544,7 @@
                         <th :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color}`"></th>
                         <th v-for="(th, i) in table.head" :key="`th_${i}`" :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color}`">
                             <div style="max-width: 200px; margin:0 auto;text-align:center">   
-                                <span :style="`color:${th.color}; margin-right:3px`">{{ icons[th.type] }}</span>{{ th.label }}
+                                {{ th.label }}
                             </div>
                         </th>
                     </tr>
@@ -617,9 +623,9 @@ export default {
                 y:0,
             },
             icons: {
-                line: "▬",
-                bar: "◼",
-                plot: "●"
+                line: "line",
+                bar: "bar",
+                plot: "plot"
             },
             isPrinting: false,
             isTooltip: false,
@@ -810,7 +816,22 @@ export default {
             }
             selectedSeries.forEach(s => {
                 if(this.isSafeValue(s.value) && s.value !== null) {
-                    html += `<div><span style="color:${s.color}; margin-right: 3px">${this.icons[s.type]}</span>${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? s.value.toFixed(this.chartConfig.chart.tooltip.roundingValue) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                    let shape = '';
+                    switch (this.icons[s.type]) {
+                        case 'bar':
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" stroke="none" height="12" width="12" fill="${s.color}" /></svg>`;
+                            break;
+                        
+                        case 'line':
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="6" stroke="none" height="4" width="12" fill="${s.color}" /></svg>`;
+                            break;
+
+                        case 'plot':
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" fill="${s.color}" /></svg>`;
+                        default:
+                            break;
+                    }
+                    html += `<div><span style="color:${s.color}; margin-right: 3px">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? s.value.toFixed(this.chartConfig.chart.tooltip.roundingValue) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
                 }
             });
             return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;

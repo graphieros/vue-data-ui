@@ -189,7 +189,7 @@ function useTooltip(arc, i, showTooltip = true) {
     let html = "";
 
     html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${arc.name}</div>`;
-    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><span style="color:${arc.color};font-size:${donutConfig.value.style.chart.tooltip.fontSize * 1.6}px;">●</span>`;
+    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" fill="${arc.color}"/></svg>`;
     if(donutConfig.value.style.chart.tooltip.showValue) {
         html += `<b>${arc.value.toFixed(donutConfig.value.style.chart.tooltip.roundingValue)}</b>`;
     }
@@ -446,7 +446,7 @@ function generateXls() {
             >
                 <div class="vue-ui-donut-legend" :style="`background:transparent;color:${donutConfig.style.chart.legend.color};font-size:${donutConfig.style.chart.legend.fontSize}px;font-weight:${donutConfig.style.chart.legend.bold ? 'bold' : ''}`">
                     <div v-for="(legendItem, i) in legendSet" class="vue-ui-donut-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
-                        <span :style="`color:${legendItem.color};font-size:${donutConfig.style.chart.legend.fontSize * 1.6}px`">●</span>
+                        <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
                         <span>{{ legendItem.name }} : </span>
                         <span>{{ legendItem.value}}</span>
                         <span>({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>
@@ -458,7 +458,7 @@ function generateXls() {
         <!-- LEGEND AS DIV -->
         <div v-if="donutConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-donut-legend" :style="`background:${donutConfig.style.chart.legend.backgroundColor};color:${donutConfig.style.chart.legend.color};font-size:${donutConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${donutConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
             <div v-for="(legendItem, i) in legendSet" class="vue-ui-donut-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
-                <span :style="`color:${legendItem.color};font-size:${donutConfig.style.chart.legend.fontSize * 1.6}px`">●</span>
+                <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
                 <span>{{ legendItem.name }} : </span>
                 <span>{{ legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue) }}</span>
                 <span v-if="!segregated.includes(i)">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>

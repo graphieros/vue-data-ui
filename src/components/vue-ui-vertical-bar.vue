@@ -242,7 +242,7 @@ function useTooltip(bar) {
     const childName = bar.isChild ? bar.name : "";
 
     html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;text-align:left;">
-            <div><span style="color:${bar.color};margin-right:3px">⬤</span>${ serieName }</div>
+            <div><svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" fill="${bar.color}"/></svg> ${ serieName }</div>
             ${childName ? `<div>${childName}</div>` : ''}
         </div>`;
     
@@ -548,7 +548,7 @@ function closeDetails(){
             >
                 <div class="vue-ui-vertical-bar-legend" :style="`color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
                     <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                        <span :style="`color:${legendItem.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px`">⬤</span>
+                        <svg viewBox="0 0 12 12" height="12" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color"/></svg>
                         <span>{{ legendItem.name }} : </span>
                         <span>{{verticalBarConfig.style.chart.legend.prefix}}{{ legendItem.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}</span>
                     </div>
@@ -560,7 +560,7 @@ function closeDetails(){
          <!-- LEGEND AS DIV -->
          <div v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-vertical-bar-legend" :style="`background:${verticalBarConfig.style.chart.legend.backgroundColor};color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
             <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                <span :style="`color:${legendItem.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px`">⬤</span>
+                <svg viewBox="0 0 12 12" height="12" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color"/></svg>
                 <span>{{ legendItem.name }} : </span>
                 <span>{{verticalBarConfig.style.chart.legend.prefix}}{{ legendItem.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}</span>
             </div>

@@ -238,7 +238,7 @@ function useTooltip(apex, i) {
     html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
     for(let k = 0; k < apex.values.length; k += 1) {
         if(!segregated.value.includes(k)) {
-            html += `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><span style="color:${datasetCopy.value[k].color}">●</span><span>${datasetCopy.value[k].name}</span> : ${radarConfig.value.style.chart.tooltip.showValue ? `<span>${apex.values[k].toFixed(radarConfig.value.style.chart.tooltip.roundingValue)}</span>` : ''} ${!radarConfig.value.style.chart.tooltip.showValue && radarConfig.value.style.chart.tooltip.showPercentage ? `<span>${(apex.values[k] / apex.target * 100).toFixed(radarConfig.value.style.chart.tooltip.roundingPercentage)}%</span>` : radarConfig.value.style.chart.tooltip.showPercentage ? `<span>(${(apex.values[k] / apex.target * 100).toFixed(radarConfig.value.style.chart.tooltip.roundingPercentage)}%)</span>` : ''}</div>`
+            html += `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" fill="${datasetCopy.value[k].color}" /></svg><span>${datasetCopy.value[k].name}</span> : ${radarConfig.value.style.chart.tooltip.showValue ? `<span>${apex.values[k].toFixed(radarConfig.value.style.chart.tooltip.roundingValue)}</span>` : ''} ${!radarConfig.value.style.chart.tooltip.showValue && radarConfig.value.style.chart.tooltip.showPercentage ? `<span>${(apex.values[k] / apex.target * 100).toFixed(radarConfig.value.style.chart.tooltip.roundingPercentage)}%</span>` : radarConfig.value.style.chart.tooltip.showPercentage ? `<span>(${(apex.values[k] / apex.target * 100).toFixed(radarConfig.value.style.chart.tooltip.roundingPercentage)}%)</span>` : ''}</div>`
         }
     }
     tooltipContent.value = html;
@@ -449,7 +449,7 @@ function closeDetails(){
             >
                 <div class="vue-ui-radar-legend" :style="`font-weight:${radarConfig.style.chart.legend.bold ? 'bold' : ''};color:${radarConfig.style.chart.legend.color};font-size:${radarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${radarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
                     <div v-for="(legendItem, i) in legend" class="vue-ui-radar-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
-                        <span :style="`color:${legendItem.color};font-size:${radarConfig.style.chart.legend.fontSize * 1.6}px`">●</span>
+                        <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
                         <span>{{ legendItem.name }} : </span>
                         <span>{{ (legendItem.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%</span>
                     </div>
@@ -461,7 +461,7 @@ function closeDetails(){
         <!-- LEGEND AS DIV -->
         <div v-if="radarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-radar-legend" :style="`font-weight:${radarConfig.style.chart.legend.bold ? 'bold' : ''};background:${radarConfig.style.chart.legend.backgroundColor};color:${radarConfig.style.chart.legend.color};font-size:${radarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${radarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
             <div v-for="(legendItem, i) in legend" class="vue-ui-radar-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
-                <span :style="`color:${legendItem.color};font-size:${radarConfig.style.chart.legend.fontSize * 1.6}px`">●</span>
+                <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
                 <span>{{ legendItem.name }} : </span>
                 <span>{{ (legendItem.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%</span>
             </div>
