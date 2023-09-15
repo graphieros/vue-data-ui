@@ -6,6 +6,10 @@
     <a href="https://vue-data-ui.graphieros.com/"><img src="https://vue-data-ui.graphieros.com/vue-data-ui-showcase.png"></a>
 </p>
 
+<p align="center">
+[![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
+</p>
+
 # vue-data-ui
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
