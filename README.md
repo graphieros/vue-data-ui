@@ -6,11 +6,12 @@
     <a href="https://vue-data-ui.graphieros.com/"><img src="https://vue-data-ui.graphieros.com/vue-data-ui-showcase.png"></a>
 </p>
 
-<p align="center">
-[![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
-</p>
+
 
 # vue-data-ui
+[![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
+[![Socket Badge](https://socket.dev/api/badge/npm/package/vue-data-ui)](https://socket.dev/npm/package/vue-data-ui)
+
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
 A user-empowering data visualization Vue components library.
