@@ -208,12 +208,43 @@ const candlesticks = ref([
         height: 45,
         bar: 19
     },
+]);
+
+const pyramid = ref([
+    [3, 2.5],
+    [4, 3.1],
+    [8, 6],
+    [9.5, 6.5],
+    [12, 11],
+    [16, 15],
+    [18, 18.2],
+    [25, 24],
+    [24, 26],
+    [32, 32],
+    [33, 32],
+    [32, 31],
+    [38, 37],
+    [37, 38],
+    [42, 41],
+    [40, 41],
+    [44, 45],
+    [38, 35],
+    [31, 32]
 ])
 
 </script>
 
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
+        <!-- TYPE PYRAMID -->
+        <template v-if="type === 'pyramid'">
+            <svg width="100%" viewBox="0 0 105 80" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g v-for="(rect, i) in pyramid">
+                    <rect :x="50 - rect[0]" :y="i * (80 / pyramid.length)" :width="rect[0]" :height="(80 / pyramid.length) * 0.95" :fill="skeletonConfig.style.pyramid.color"/>
+                    <rect :x="55" :y="i * (80 / pyramid.length)" :width="rect[1]" :height="(80 / pyramid.length) * 0.95" :fill="skeletonConfig.style.pyramid.color"/>
+                </g>
+            </svg>
+        </template>
 
         <!-- TYPE CANDLESTICK -->
         <template v-if="type === 'candlesticks'">

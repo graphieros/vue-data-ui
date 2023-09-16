@@ -2079,7 +2079,7 @@ const ratingConfig = ref({
 });
 
 const skeletonConfig = ref({
-  type: "candlesticks",
+  type: "pyramid",
   style: {
     backgroundColor: "#1A1A1A",
     color: "#CCCCCC",
@@ -2680,13 +2680,14 @@ function toggleRead() {
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
+      <SkeletonTest v-if="showLocalTest" :config="{type: 'pyramid'}" />
+    </div>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiAgePyramid v-if="!showLocalTest" :dataset="pyramidDataset" :config="pyramidConfig" />
       <PyramidTest v-if="showLocalTest" :dataset="pyramidDataset" :config="pyramidConfig" />
     </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
-      <SkeletonTest v-if="showLocalTest" :config="{type: 'candlesticks'}" />
-    </div>
+
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiCandlestick v-if="!showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>
       <CandlestickTest v-if="showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>

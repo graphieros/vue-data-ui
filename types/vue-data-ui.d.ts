@@ -2126,7 +2126,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick";
+        type: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid";
         style: {
             backgroundColor: string;
             color: string;

@@ -1435,6 +1435,9 @@
                     "color":"#e1e5e8",
                     "strokeWidth": 1
                 }
+            },
+            "pyramid": {
+                "color": "#e1e5e8"
             }
         }
     },
