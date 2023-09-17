@@ -231,7 +231,7 @@
             },
             "tooltip": {
                 "color": "#2D353C",
-                "backgroundColor": "white",
+                "backgroundColor": "#FFFFFF",
                 "show": true,
                 "showValue": true,
                 "showPercentage": false,

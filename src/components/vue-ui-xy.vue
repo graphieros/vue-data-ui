@@ -929,36 +929,38 @@ export default {
             showTable: this.chartConfig.showTable === true
         }
 
-        const sliderOne = document.getElementById(`start_${this.uniqueId}`);
-        const sliderTwo = document.getElementById(`end_${this.uniqueId}`);
-        let minGap = 0;
-        const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.uniqueId}`);
-
-        sliderOne.addEventListener("input", slideOne);
-        sliderTwo.addEventListener("input", slideTwo);
-
-        function slideOne(){
-            if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-                sliderOne.value = parseInt(sliderTwo.value) - minGap;
+        if (this.chartConfig.chart.zoom.show) {
+            const sliderOne = document.getElementById(`start_${this.uniqueId}`);
+            const sliderTwo = document.getElementById(`end_${this.uniqueId}`);
+    
+            let minGap = 0;
+            const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.uniqueId}`);
+    
+            sliderOne.addEventListener("input", slideOne);
+            sliderTwo.addEventListener("input", slideTwo);
+    
+            function slideOne(){
+                if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+                    sliderOne.value = parseInt(sliderTwo.value) - minGap;
+                }
+                fillColor();
             }
-            fillColor();
-        }
-        function slideTwo(){
-            if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-                sliderTwo.value = parseInt(sliderOne.value) + minGap;
+            function slideTwo(){
+                if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+                    sliderTwo.value = parseInt(sliderOne.value) + minGap;
+                }
+                fillColor();
             }
-            fillColor();
+            const dataset = this.dataset;
+            function fillColor(){
+                let percent1 = (sliderOne.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
+                let percent2 = (sliderTwo.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
+                sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
+            }
+    
+            slideOne();
+            slideTwo();
         }
-        const dataset = this.dataset;
-        function fillColor(){
-            let percent1 = (sliderOne.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
-            let percent2 = (sliderTwo.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
-            sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
-        }
-
-        slideOne();
-        slideTwo();
-
     },
     methods: {
         // lib
