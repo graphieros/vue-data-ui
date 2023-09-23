@@ -831,7 +831,7 @@ export default {
                         default:
                             break;
                     }
-                    html += `<div><span style="color:${s.color}; margin-right: 3px">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? s.value.toFixed(this.chartConfig.chart.tooltip.roundingValue) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                    html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? s.value.toFixed(this.chartConfig.chart.tooltip.roundingValue) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
                 }
             });
             return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
@@ -1162,6 +1162,7 @@ export default {
     border: 1px solid #e1e5e8;
     border-radius: 4px;
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
+    width: fit-content;
     max-width: 300px;
     position: fixed;
     z-index:1;

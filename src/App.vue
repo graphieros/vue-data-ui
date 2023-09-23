@@ -2442,7 +2442,7 @@ const candlestickDataset = ref([
 
 const barset = ref([
   {
-    name:"test",
+    name:"test of a long name",
     series: [10,20,30, 40, 50, 60, 70, 80, 90, 100, 200],
     type: "bar",
     color: "rgb(10,20,30)",
@@ -2571,7 +2571,7 @@ const pyramidDataset = ref([
 // IDEAS:
 // . treeselector (with sums & avgs & so on)
 
-const showLocalTest = ref(false);
+const showLocalTest = ref(true);
 
 const xytest = ref(null)
 
