@@ -2571,7 +2571,7 @@ const pyramidDataset = ref([
 // IDEAS:
 // . treeselector (with sums & avgs & so on)
 
-const showLocalTest = ref(true);
+const showLocalTest = ref(false);
 
 const xytest = ref(null)
 
@@ -2719,7 +2719,7 @@ function toggleRead() {
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiOnion ref="oniontest" v-if="!showLocalTest" :dataset="onionDataset" @selectLegend="selectOnionLegend"/>
-      <OnionTest ref="oniontest" v-if="showLocalTest" :dataset="onionDataset"  @selectLegend="selectOnionLegend"/>
+      <OnionTest ref="oniontest" v-if="showLocalTest" :dataset="onionDataset" :config="onionConfig"  @selectLegend="selectOnionLegend"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
