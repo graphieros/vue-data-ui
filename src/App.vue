@@ -1890,6 +1890,7 @@ const verticalConfig = ref({
                     }
                 },
                 "legend": {
+                  "position": "top",
                     "show": true,
                     "fontSize": 14,
                     "color":"#CCCCCC",

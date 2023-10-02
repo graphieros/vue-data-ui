@@ -1674,6 +1674,7 @@ declare module 'vue-data-ui' {
                     };
                 };
                 legend: {
+                    position: "top" | "bottom";
                     show: boolean;
                     fontSize: number;
                     color: string;

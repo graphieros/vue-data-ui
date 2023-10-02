@@ -401,6 +401,15 @@ function closeDetails(){
             </div>
         </details>
 
+         <!-- LEGEND AS DIV : TOP -->
+         <div v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'top'" class="vue-ui-vertical-bar-legend" :style="`background:${verticalBarConfig.style.chart.legend.backgroundColor};color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+            <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
+                <svg viewBox="0 0 12 12" height="12" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" :fill="legendItem.color"/></svg>
+                <span>{{ legendItem.name }} : </span>
+                <span>{{verticalBarConfig.style.chart.legend.prefix}}{{ legendItem.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}</span>
+            </div>
+        </div>
+
         <!-- CHART -->
         <svg :viewBox="`0 0 ${svg.width} ${drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" @click="closeDetails">
 
@@ -557,8 +566,8 @@ function closeDetails(){
 
         </svg>
 
-         <!-- LEGEND AS DIV -->
-         <div v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-vertical-bar-legend" :style="`background:${verticalBarConfig.style.chart.legend.backgroundColor};color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+         <!-- LEGEND AS DIV : BOTTOM -->
+         <div v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'bottom'" class="vue-ui-vertical-bar-legend" :style="`background:${verticalBarConfig.style.chart.legend.backgroundColor};color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
             <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" height="12" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" :fill="legendItem.color"/></svg>
                 <span>{{ legendItem.name }} : </span>

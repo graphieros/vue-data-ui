@@ -1158,6 +1158,7 @@
                     }
                 },
                 "legend": {
+                    "position" : "top",
                     "show": true,
                     "fontSize": 14,
                     "color":"#2D353C",
