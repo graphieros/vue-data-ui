@@ -183,7 +183,15 @@ const drawableDataset = computed(() => {
                 }
             })
         }
-    })// TODO: add segregation filter
+    })
+});
+
+function getData() {
+    return drawableDataset.value;
+}
+
+defineExpose({
+    getData
 });
 
 const selectedPlotId = ref(undefined);

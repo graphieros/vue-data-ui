@@ -2626,10 +2626,10 @@ function selectQuadrantLegend(data) {
   console.log(data)
 }
 
-const verticaltest = ref(null)
+const scatter = ref(null)
 
 onMounted(() => {
-  console.log(verticaltest.value.getData())
+  console.log(scatter.value.getData())
 })
 
 function selectRoot(r) {
@@ -2694,8 +2694,8 @@ function toggleRead() {
       <CandlestickTest v-if="showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiScatter v-if="!showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
-      <ScatterTest v-if="showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
+      <VueUiScatter ref="scatter" v-if="!showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
+      <ScatterTest ref="scatter" v-if="showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiHeatmap v-if="!showLocalTest" :config="heatmapConfig" :dataset="heatmapDataset"/>
