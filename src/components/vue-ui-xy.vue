@@ -308,7 +308,7 @@
                                 :font-size="chartConfig.chart.labels.fontSize"
                                 :fill="chartConfig.plot.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? plot.value.toFixed(chartConfig.plot.labels.rounding) : '' }}
+                                {{ canShowValue(plot.value) ? Number(plot.value.toFixed(chartConfig.plot.labels.rounding)).toLocaleString() : '' }}
                             </text>
                             <foreignObject 
                                 v-if="j === 0 && serie.useTag && serie.useTag === 'start'"
@@ -350,7 +350,7 @@
                                 :font-size="chartConfig.chart.labels.fontSize"
                                 :fill="chartConfig.line.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? plot.value.toFixed(chartConfig.line.labels.rounding) : '' }}
+                                {{ canShowValue(plot.value) ? Number(plot.value.toFixed(chartConfig.line.labels.rounding)).toLocaleString() : '' }}
                             </text>
                             <foreignObject 
                                 v-if="j === 0 && serie.useTag && serie.useTag === 'start'"
@@ -400,7 +400,7 @@
                             text-anchor="end"
                             :fill="chartConfig.chart.grid.labels.color"
                         >
-                            {{ canShowValue(yLabel.value) ? yLabel.value.toFixed(0) : '' }}
+                            {{ canShowValue(yLabel.value) ? Number(yLabel.value.toFixed(0)).toLocaleString() : '' }}
                         </text>
                     </g>
                 </g>
@@ -831,7 +831,7 @@ export default {
                         default:
                             break;
                     }
-                    html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? s.value.toFixed(this.chartConfig.chart.tooltip.roundingValue) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                    html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? Number(s.value.toFixed(this.chartConfig.chart.tooltip.roundingValue)).toLocaleString() : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
                 }
             });
             return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
