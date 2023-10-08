@@ -380,7 +380,7 @@ function generateXls() {
                 :font-size="donutConfig.style.chart.layout.labels.hollow.total.value.fontSize"
                 :style="`font-weight:${donutConfig.style.chart.layout.labels.hollow.total.value.bold ? 'bold': ''}`"
             >
-                {{ donutConfig.style.chart.layout.labels.hollow.total.value.prefix }} {{ total.toFixed(donutConfig.style.chart.layout.labels.hollow.total.value.rounding) }} {{ donutConfig.style.chart.layout.labels.hollow.total.value.suffix }}
+                {{ donutConfig.style.chart.layout.labels.hollow.total.value.prefix }} {{ Number(total.toFixed(donutConfig.style.chart.layout.labels.hollow.total.value.rounding)).toLocaleString() }} {{ donutConfig.style.chart.layout.labels.hollow.total.value.suffix }}
             </text>
 
             <text 
@@ -403,7 +403,7 @@ function generateXls() {
                 :font-size="donutConfig.style.chart.layout.labels.hollow.average.value.fontSize"
                 :style="`font-weight:${donutConfig.style.chart.layout.labels.hollow.average.value.bold ? 'bold': ''}`"
             >
-                {{ donutConfig.style.chart.layout.labels.hollow.average.value.prefix }} {{ isNaN(average.toFixed(donutConfig.style.chart.layout.labels.hollow.average.value.rounding)) ? "-" : average.toFixed(donutConfig.style.chart.layout.labels.hollow.average.value.rounding) }} {{ donutConfig.style.chart.layout.labels.hollow.average.value.suffix }}
+                {{ donutConfig.style.chart.layout.labels.hollow.average.value.prefix }} {{ isNaN(average.toFixed(donutConfig.style.chart.layout.labels.hollow.average.value.rounding)) ? "-" : Number(average.toFixed(donutConfig.style.chart.layout.labels.hollow.average.value.rounding)).toLocaleString() }} {{ donutConfig.style.chart.layout.labels.hollow.average.value.suffix }}
             </text>
 
 
@@ -448,7 +448,7 @@ function generateXls() {
                     <div v-for="(legendItem, i) in legendSet" class="vue-ui-donut-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
                         <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
                         <span>{{ legendItem.name }} : </span>
-                        <span>{{ legendItem.value}}</span>
+                        <span>{{ Number(legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}</span>
                         <span>({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>
                     </div>
                 </div>
@@ -460,7 +460,7 @@ function generateXls() {
             <div v-for="(legendItem, i) in legendSet" class="vue-ui-donut-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
                 <span>{{ legendItem.name }} : </span>
-                <span>{{ legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue) }}</span>
+                <span>{{ Number(legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}</span>
                 <span v-if="!segregated.includes(i)">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>
             </div>
         </div>
@@ -491,7 +491,7 @@ function generateXls() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>
                         </th>
                         <th :style="`background:${donutConfig.table.th.backgroundColor};color:${donutConfig.table.th.color};outline:${donutConfig.table.th.outline};text-align:right;padding-right:6px`">
-                            {{ total.toFixed(donutConfig.table.td.roundingValue) }}
+                            {{ Number(total.toFixed(donutConfig.table.td.roundingValue)).toLocaleString() }}
                         </th>
                         <th :style="`background:${donutConfig.table.th.backgroundColor};color:${donutConfig.table.th.color};outline:${donutConfig.table.th.outline};text-align:right;padding-right:6px`">
                             100%

@@ -16,6 +16,7 @@ import VueUiHeatmap from "./components/vue-ui-heatmap.vue";
 import VueUiScatter from "./components/vue-ui-scatter.vue";
 import VueUiCandlestick from "./components/vue-ui-candlestick.vue";
 import VueUiAgePyramid from "./components/vue-ui-age-pyramid.vue";
+import VueUiSparkbar from "./components/vue-ui-sparkbar.vue";
 
 export { 
     VueUiXy, 
@@ -35,5 +36,6 @@ export {
     VueUiHeatmap,
     VueUiScatter,
     VueUiCandlestick,
-    VueUiAgePyramid
+    VueUiAgePyramid,
+    VueUiSparkbar
 };

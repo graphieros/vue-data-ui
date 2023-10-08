@@ -1,6 +1,50 @@
 declare module 'vue-data-ui' {
     import { DefineComponent } from "vue";
 
+    export type VueUiSparkbarDatasetItem = {
+        name: string;
+        value: number;
+        suffix: string;
+        rounding: string;
+        color?: string;
+    }
+
+    export type VueUiSparkbarConfig = {
+        style: {
+            backgroundColor: string;
+            fontFamily: string;
+            layout: {
+                independant: boolean;
+                percentage: boolean;
+                target: number;
+            };
+            gutter: {
+                backgroundColor: string;
+            };
+            bar: {
+                gradient: {
+                    show: boolean;
+                    intensity: number;
+                    underlayerColor: string;
+                };
+            };
+            labels: {
+                fontSize: number;
+                name: {
+                    position: "top" | "left" | "right";
+                    width: string;
+                    color: string;
+                    bold: boolean;
+                };
+                value: {
+                    show: boolean;
+                    bold: boolean;
+                }
+            },
+            gap: number;
+        }
+    };
+
     export type VueUiAgePyramidDataset = Array<Array<string | number>>;
 
     export type VueUiAgePyramidConfig = {

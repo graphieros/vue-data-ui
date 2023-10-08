@@ -18,6 +18,7 @@ import HeatmapTest from "./components/vue-ui-heatmap.vue";
 import ScatterTest from "./components/vue-ui-scatter.vue";
 import CandlestickTest from "./components/vue-ui-candlestick.vue";
 import PyramidTest from "./components/vue-ui-age-pyramid.vue";
+import SparkbarTest from "./components/vue-ui-sparkbar.vue";
 
 const dataset = ref([
         {
@@ -2572,6 +2573,22 @@ const pyramidDataset = ref([
 // IDEAS:
 // . treeselector (with sums & avgs & so on)
 
+const sparkbarConfig = ref({});
+const sparkbarDataset = ref([
+  {
+    name: "Some random kpi",
+    value: 80.8798798787,
+    suffix: "%",
+    rounding: 1,
+  },
+  {
+    name: "Some other kpi",
+    value: 95.26576576565,
+    suffix: "%",
+    rounding: 2,
+  },
+]);
+
 const showLocalTest = ref(false);
 
 const xytest = ref(null)
@@ -2680,6 +2697,10 @@ function toggleRead() {
   <div>
     <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiSparkbar v-if="!showLocalTest" :config="sparkbarConfig" :dataset="sparkbarDataset" />
+      <SparkbarTest v-if="showLocalTest" :config="sparkbarConfig" :dataset="sparkbarDataset" />
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
       <SkeletonTest v-if="showLocalTest" :config="{type: 'pyramid'}" />

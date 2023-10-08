@@ -1971,5 +1971,40 @@
                 "outline": "1px solid #e1e5e8"
             }
         }
+    },
+    "vue_ui_sparkbar": {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "fontFamily": "inherit",
+            "layout": {
+                "independant": true,
+                "percentage": true,
+                "target": 0
+            },
+            "gutter": {
+                "backgroundColor": "#e1e5e8"
+            },
+            "bar": {
+                "gradient": {
+                    "show": true,
+                    "intensity": 40,
+                    "underlayerColor": "#FFFFFF"
+                }
+            },
+            "labels": {
+                "fontSize": 16,
+                "name": {
+                    "position": "top",
+                    "width": "100%",
+                    "color": "#2D353C",
+                    "bold": false
+                },
+                "value": {
+                    "show": true,
+                    "bold": true
+                }
+            },
+            "gap": 4
+        }
     }
 }
