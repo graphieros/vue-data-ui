@@ -1343,6 +1343,10 @@
             "chestnut": {
                 "color": "#E1E5E8"
             },
+            "sparkline": {
+                "color": "#e1e5e8",
+                "strokeWidth": 0.7
+            },
             "line": {
                 "axis": {
                     "show": true,

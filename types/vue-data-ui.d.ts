@@ -1792,6 +1792,10 @@ declare module 'vue-data-ui' {
         style: {
             backgroundColor: string;
             fontFamily: string;
+            sparkline: {
+                color: string;
+                strokeWidth: number;
+            };
             line: {
                 color: string;
                 strokeWidth: number;

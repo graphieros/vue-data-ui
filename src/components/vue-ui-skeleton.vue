@@ -230,7 +230,36 @@ const pyramid = ref([
     [44, 45],
     [38, 35],
     [31, 32]
-])
+]);
+
+// 32 * 150
+const sparkline = ref(
+    [
+        { x: 40, y: 30 },
+        { x: 45, y: 28 },
+        { x: 50, y: 25 },
+        { x: 55, y: 20 },
+        { x: 60, y: 27 },
+        { x: 65, y: 14 },
+        { x: 70, y: 23 },
+        { x: 75, y: 16 },
+        { x: 80, y: 25 },
+        { x: 85, y: 10 },
+        { x: 90, y: 18 },
+        { x: 95, y: 7 },
+        { x: 100, y: 12 },
+        { x: 105, y: 10 },
+        { x: 110, y: 20 },
+        { x: 115, y: 7 },
+        { x: 120, y: 14 },
+        { x: 125, y: 10 },
+        { x: 130, y: 19 },
+        { x: 135, y: 3 },
+        { x: 140, y: 10 },
+        { x: 145, y: 2 },
+        { x: 150, y: 1 },
+    ]
+)
 
 </script>
 
@@ -242,6 +271,28 @@ const pyramid = ref([
                 <g v-for="(rect, i) in pyramid">
                     <rect :x="50 - rect[0]" :y="i * (80 / pyramid.length)" :width="rect[0]" :height="(80 / pyramid.length) * 0.95" :fill="skeletonConfig.style.pyramid.color"/>
                     <rect :x="55" :y="i * (80 / pyramid.length)" :width="rect[1]" :height="(80 / pyramid.length) * 0.95" :fill="skeletonConfig.style.pyramid.color"/>
+                </g>
+            </svg>
+        </template>
+        <!-- TYPE SPARKLINE -->
+        <template v-if="type === 'sparkline'">
+            <svg width="100%" viewBox="0 0 150 32" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g>
+                    <rect x="2" y="2" height="6" width="24" :fill="skeletonConfig.style.sparkline.color" rx="3"/>
+                    <rect x="2" y="12" height="16" width="16" :fill="skeletonConfig.style.sparkline.color" rx="3"/>
+                </g>
+                <g v-for="(line, i) in sparkline">
+                    <line 
+                        v-if="i < sparkline.length - 1"
+                        :x1="line.x"
+                        :y1="line.y"
+                        :x2="sparkline[i + 1].x"
+                        :y2="sparkline[i + 1].y"
+                        :stroke-width="skeletonConfig.style.sparkline.strokeWidth"
+                        :stroke="skeletonConfig.style.sparkline.color"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
                 </g>
             </svg>
         </template>

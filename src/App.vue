@@ -2183,6 +2183,10 @@ const skeletonConfig = ref({
 const sparklineConfig = ref({
   style: {
     backgroundColor: "#1A1A1A",
+    sparkline: {
+      color: "#6376DD",
+      strokeWidth: 0.5
+    },
     line: {
       color: "#3366cc",
       strokeWidth: 3
@@ -2702,8 +2706,8 @@ function toggleRead() {
       <SparkbarTest v-if="showLocalTest" :config="sparkbarConfig" :dataset="sparkbarDataset" />
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiSkeleton v-if="!showLocalTest" :config="skeletonConfig" />
-      <SkeletonTest v-if="showLocalTest" :config="{type: 'pyramid'}" />
+      <VueUiSkeleton v-if="!showLocalTest" :config="{ type: 'sparkline' }" />
+      <SkeletonTest v-if="showLocalTest" :config="{type: 'sparkline'}" />
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiAgePyramid v-if="!showLocalTest" :dataset="pyramidDataset" :config="pyramidConfig" />
