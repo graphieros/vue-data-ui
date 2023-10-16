@@ -19,6 +19,7 @@ import ScatterTest from "./components/vue-ui-scatter.vue";
 import CandlestickTest from "./components/vue-ui-candlestick.vue";
 import PyramidTest from "./components/vue-ui-age-pyramid.vue";
 import SparkbarTest from "./components/vue-ui-sparkbar.vue";
+import DashboardTest from "./components/vue-ui-dashboard.vue";
 
 const dataset = ref([
         {
@@ -2695,12 +2696,67 @@ function toggleRead() {
   ratingtest.value.toggleReadonly(isRead.value);
 }
 
+const dashboardConfig = ref({
+  style: {
+    board: {
+      backgroundColor: "#FFFFFF",
+      border: "1px solid #e1e5e8",
+      height: "600px"
+    },
+    item: {
+      backgroundColor: "#FFFFFF",
+      borderColor: "#e1e5e8"
+    },
+    resizeHandles: {
+      backgroundColor: "#2D353C",
+      unselectedOpacity: 0.1,
+      border: "none"
+    }
+  },
+  allowPrint: true
+});
+
+const comps = ref([
+  { id: 1, width: 40, height: 20, left: 2, top: 4, component: 'VueUiSparkbar', props: { config: sparkbarConfig, dataset: sparkbarDataset} },
+  { id: 2, width: 20, height: 20, left: 44, top: 4, component: 'VueUiGauge', props: { config: gaugeConfig, dataset: gaugeDataset} },
+])
+
+function testchange(el) {
+  console.log(el);
+}
+
+const dash = ref(null);
+
+function getDashPositions() {
+  console.log(dash.value.getItemsPositions())
+}
+
+function makeDashPdf(){
+  dash.value.generatePdf();
+}
+
 </script>
 
 <template>
   <div>
     <button @click="sstest">SCREENSHOT</button>
-    <button @click="toggleRead">TOGGLE RATING READONLY</button>
+  <button @click="toggleRead">TOGGLE RATING READONLY</button>
+  <button @click="getDashPositions">DASH POSITIONS</button>
+  <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
+    <DashboardTest v-if="showLocalTest" ref="dash" :elements="comps" @change="testchange" :config="dashboardConfig">
+      <template v-slot:content="{ item }">
+        <div style="padding: 12px">
+          <component :is="item.component" v-bind="item.props"></component>
+        </div>
+      </template>
+    </DashboardTest>
+    <VueUiDashboard v-if="!showLocalTest" ref="dash" :elements="comps" @change="testchange" :config="dashboardConfig">
+      <template v-slot:content="{ item }">
+        <div style="padding: 12px">
+          <component :is="item.component" v-bind="item.props"></component>
+        </div>
+      </template>
+    </VueUiDashboard>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSparkbar v-if="!showLocalTest" :config="sparkbarConfig" :dataset="sparkbarDataset" />
       <SparkbarTest v-if="showLocalTest" :config="sparkbarConfig" :dataset="sparkbarDataset" />

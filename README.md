@@ -33,7 +33,10 @@ Available components:
 - [VueUiCandlestick](https://vue-data-ui.graphieros.com/docs#vue-ui-candlestick)
 - [VueUiAgePyramid](https://vue-data-ui.graphieros.com/docs#vue-ui-age-pyramid)
 - [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
+- [VueUiSparkbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkbar)
 
+## Dashboard (drag & resize)
+- [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
 ## Tables
 - [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
 

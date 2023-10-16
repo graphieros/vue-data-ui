@@ -1,6 +1,49 @@
 declare module 'vue-data-ui' {
     import { DefineComponent } from "vue";
 
+    export type VueUiUnknownObj = {
+        [key: string]: unknown;
+    }
+
+    export type VueUiDashboardConfig = {
+        style: {
+            board: {
+                backgroundColor: string;
+                color: string;
+                border: string;
+                height: string;
+            };
+            item: {
+                backgroundColor: string;
+                borderColor: string;
+            };
+            resizeHandles: {
+                backgroundColor: string;
+                border: string;
+            };
+        };
+        allowPrint: boolean;
+    }
+
+    export type VueUiDashboardElement = {
+        id: number | string;
+        width: number;
+        height: number;
+        height: number;
+        left: number;
+        top: number;
+        component: string;
+        props: {
+            config: VueUiUnknownObj;
+            dataset: VueUiUnknownObj;
+        }
+    }
+
+    export const VueUiDashboard: DefineComponent<{
+        config: VueUiDashboardConfig;
+        elements: VueUiDashboardElement[];
+    }>;
+
     export type VueUiSparkbarDatasetItem = {
         name: string;
         value: number;
@@ -44,6 +87,11 @@ declare module 'vue-data-ui' {
             gap: number;
         }
     };
+
+    export const VueUiSparkbar: DefineComponent<{
+        config: VueUiSparkbarConfig;
+        dataset: VueUiSparkbarDatasetItem[];
+    }>;
 
     export type VueUiAgePyramidDataset = Array<Array<string | number>>;
 
