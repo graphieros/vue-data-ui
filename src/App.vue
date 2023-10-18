@@ -2594,7 +2594,7 @@ const sparkbarDataset = ref([
   },
 ]);
 
-const showLocalTest = ref(false);
+const showLocalTest = ref(true);
 
 const xytest = ref(null)
 
@@ -2701,7 +2701,6 @@ const dashboardConfig = ref({
     board: {
       backgroundColor: "#FFFFFF",
       border: "1px solid #e1e5e8",
-      height: "600px"
     },
     item: {
       backgroundColor: "#FFFFFF",
@@ -2717,8 +2716,9 @@ const dashboardConfig = ref({
 });
 
 const comps = ref([
-  { id: 1, width: 40, height: 20, left: 2, top: 4, component: 'VueUiSparkbar', props: { config: sparkbarConfig, dataset: sparkbarDataset} },
-  { id: 2, width: 20, height: 20, left: 44, top: 4, component: 'VueUiGauge', props: { config: gaugeConfig, dataset: gaugeDataset} },
+  { id: 1, width: 40, height: 30, left: 2, top: 4, component: 'VueUiCandlestick', props: { config: candlestickConfig, dataset: candlestickDataset} },
+  { id: 2, width: 20, height: 50, left: 44, top: 4, component: 'VueUiGauge', props: { config:{userOptions:{show:false}}, dataset: gaugeDataset} },
+  { id: 2, width: 20, height: 60, left: 44, top: 50, component: 'VueUiOnion', props: { config:{userOptions:{show:false}}, dataset: onionDataset} },
 ])
 
 function testchange(el) {

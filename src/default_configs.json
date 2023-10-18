@@ -2016,8 +2016,8 @@
             "board": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "border": "1px solid #e1e5e8",
-                "height": "600px"
+                "aspectRatio": "1/1.4141",
+                "border": "1px solid #e1e5e8"
             },
             "item": {
                 "backgroundColor": "#FFFFFF",

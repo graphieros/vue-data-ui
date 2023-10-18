@@ -10,8 +10,8 @@ declare module 'vue-data-ui' {
             board: {
                 backgroundColor: string;
                 color: string;
+                aspectRatio: string;
                 border: string;
-                height: string;
             };
             item: {
                 backgroundColor: string;
@@ -28,7 +28,6 @@ declare module 'vue-data-ui' {
     export type VueUiDashboardElement = {
         id: number | string;
         width: number;
-        height: number;
         height: number;
         left: number;
         top: number;

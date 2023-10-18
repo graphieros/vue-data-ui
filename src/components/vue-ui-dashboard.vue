@@ -4,6 +4,9 @@ import mainConfig from "../default_configs.json";
 import { convertConfigColors, treeShake } from '../lib';
 import pdf from '../pdf';
 
+// TODO: prevent default on all chart interactions involving mouse movements
+// TODO: find a way to make height of each item fit the content
+
 const props = defineProps({
     elements: Array,
     config: Object
@@ -242,15 +245,21 @@ function onTouchEnd() {
     });
 };
 
-const containerHeight = computed(() => {
-    return dashboardConfig.value.style.board.height;
-});
 const itemBorder = computed(() => {
     return dashboardConfig.value.style.item.borderColor;
 });
 const handleColor = computed(() => {
     return dashboardConfig.value.style.resizeHandles.backgroundColor;
 });
+const aspectRatio = computed(() => {
+    return dashboardConfig.value.style.board.aspectRatio;
+});
+const boardColor = computed(() => {
+    return dashboardConfig.value.style.board.backgroundColor;
+})
+const borderBoard = computed(() => {
+    return dashboardConfig.value.style.board.border;
+})
 
 function getItemsPositions() {
     return items.value;
@@ -277,7 +286,7 @@ defineExpose({
             <span v-else>PDF</span>
         </button>
     </div>
-    <div class="vue-ui-dashboard-container" ref="dashboardContainer" :id="`vue-ui-dashboard_${uid}`">
+    <div class="vue-ui-dashboard-container" ref="dashboardContainer" :id="`vue-ui-dashboard_${uid}`" :style="`border:${borderBoard}; sbackground:${boardColor}; aspect-ratio:${aspectRatio}`">
         <div 
             class="vue-ui-dashboard-grid-container" 
             ref="container" 
@@ -285,10 +294,6 @@ defineExpose({
             @mouseup="stopDragResize"
             @touchmove="onTouchMove"
             @touchend="onTouchEnd"
-            :style="{
-                backgroundColor: dashboardConfig.style.board.backgroundColor,
-                border: dashboardConfig.style.board.border
-            }"
         >
             <div class="vue-ui-dashboard-grid"></div>
             <div
@@ -348,7 +353,6 @@ defineExpose({
     height: fit-content;
     position: relative;
     overflow: hidden;
-    height: v-bind(containerHeight);
 }
 
 .vue-ui-dashboard-grid-container {
