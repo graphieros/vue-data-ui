@@ -192,7 +192,7 @@ function closeDetails(){
         class="vue-ui-onion" 
         ref="onionChart" 
         :id="`vue-ui-onion_${uid}`"
-        :style="`font-family:${onionConfig.style.fontFamily};width:100%; text-align:center`"
+        :style="`font-family:${onionConfig.style.fontFamily};width:100%; text-align:center;${onionConfig.userOptions.show ? 'padding-top:36px' : ''}`"
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
@@ -409,7 +409,6 @@ function closeDetails(){
 .vue-ui-onion {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-onion .vue-ui-onion-label {
     align-items: center;

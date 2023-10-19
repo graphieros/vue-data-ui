@@ -278,7 +278,7 @@ function closeDetails(){
 </script>
 
 <template>
-    <div ref="candlestickChart" class="vue-ui-candlestick" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center`" :id="`vue-ui-candlestick_${uid}`">
+    <div ref="candlestickChart" class="vue-ui-candlestick" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center;${candlestickConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`vue-ui-candlestick_${uid}`">
 
         <div v-if="(!mutableConfig.inside || isPrinting) && candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
@@ -630,7 +630,6 @@ function closeDetails(){
 .vue-ui-candlestick {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-candlestick .vue-ui-candlestick-label {
     align-items: center;

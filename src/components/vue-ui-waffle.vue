@@ -315,7 +315,7 @@ function generateXls() {
         class="vue-ui-waffle" 
         ref="waffleChart" 
         :id="`vue-ui-waffle_${uid}`"
-        :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center`"
+        :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center;${waffleConfig.userOptions.show ? 'padding-top:36px' : ''}`"
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -512,7 +512,6 @@ function generateXls() {
 .vue-ui-waffle {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-waffle .vue-ui-waffle-label {
     align-items: center;

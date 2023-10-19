@@ -248,7 +248,7 @@ function closeDetails(){
 </script>
 
 <template>
-    <div class="vue-ui-age-pyramid" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center`">
+    <div class="vue-ui-age-pyramid" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center;${agePyramidConfig.userOptions.show ? 'padding-top:36px' : ''}`">
     
         <div v-if="(!mutableConfig.inside || isPrinting) && agePyramidConfig.style.title.text" :style="`width:100%;background:${agePyramidConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
@@ -576,7 +576,6 @@ function closeDetails(){
 .vue-ui-age-pyramid {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-age-pyramid .vue-ui-age-pyramid-label {
     align-items: center;

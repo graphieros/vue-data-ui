@@ -277,7 +277,7 @@ function closeDetails(){
 </script>
 
 <template>
-    <div class="vue-ui-scatter" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center`">
+    <div class="vue-ui-scatter" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center;${scatterConfig.userOptions.show ? 'padding-top:36px' : ''}`">
         
         <div v-if="(!mutableConfig.inside || isPrinting) && scatterConfig.style.title.text" :style="`width:100%;background:${scatterConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
@@ -580,7 +580,6 @@ function closeDetails(){
 .vue-ui-scatter {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-scatter .vue-ui-scatter-label {
     align-items: center;

@@ -285,7 +285,7 @@ function closeDetails(){
         class="vue-ui-radar"
         ref="radarChart"
         :id="`vue-ui-radar_${uid}`"
-        :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center`"
+        :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${radarConfig.userOptions.show ? 'padding-top:36px' : ''}`"
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -516,7 +516,6 @@ function closeDetails(){
 .vue-ui-radar {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-radar .vue-ui-radar-label {
     align-items: center;

@@ -8,7 +8,7 @@ import pdf from '../pdf';
 // TODO: find a way to make height of each item fit the content
 
 const props = defineProps({
-    elements: Array,
+    dataset: Array,
     config: Object
 });
 
@@ -28,7 +28,7 @@ const dashboardConfig = computed(() => {
 const uid = ref(`vue-ui-dashboard-${Math.random()}`);
 
 const gridSize = 20;
-const items = ref(props.elements);
+const items = ref(props.dataset);
 const dragging = ref(null);
 const resizing = ref(null);
 const dragStart = ref({ x: 0, y: 0 });

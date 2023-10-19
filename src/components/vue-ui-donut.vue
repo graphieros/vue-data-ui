@@ -240,7 +240,7 @@ function generateXls() {
 </script>
 
 <template>
-    <div :ref="`donutChart`" class="vue-ui-donut" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center`" :id="`donut__${uid}`">
+    <div :ref="`donutChart`" class="vue-ui-donut" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${donutConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`donut__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor}`">
 
             <!-- TITLE AS DIV -->
@@ -526,7 +526,6 @@ function generateXls() {
 .vue-ui-donut {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-donut .vue-ui-donut-label {
     align-items: center;

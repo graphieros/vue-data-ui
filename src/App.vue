@@ -2594,7 +2594,7 @@ const sparkbarDataset = ref([
   },
 ]);
 
-const showLocalTest = ref(true);
+const showLocalTest = ref(false);
 
 const xytest = ref(null)
 
@@ -2743,14 +2743,14 @@ function makeDashPdf(){
   <button @click="toggleRead">TOGGLE RATING READONLY</button>
   <button @click="getDashPositions">DASH POSITIONS</button>
   <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
-    <DashboardTest v-if="showLocalTest" ref="dash" :elements="comps" @change="testchange" :config="dashboardConfig">
+    <DashboardTest v-if="showLocalTest" ref="dash" :dataset="comps" @change="testchange" :config="dashboardConfig">
       <template v-slot:content="{ item }">
         <div style="padding: 12px">
           <component :is="item.component" v-bind="item.props"></component>
         </div>
       </template>
     </DashboardTest>
-    <VueUiDashboard v-if="!showLocalTest" ref="dash" :elements="comps" @change="testchange" :config="dashboardConfig">
+    <VueUiDashboard v-if="!showLocalTest" ref="dash" :dataset="comps" @change="testchange" :config="dashboardConfig">
       <template v-slot:content="{ item }">
         <div style="padding: 12px">
           <component :is="item.component" v-bind="item.props"></component>

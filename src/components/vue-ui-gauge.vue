@@ -260,7 +260,7 @@ function closeDetails(){
         :style="`font-family:${gaugeConfig.style.fontFamily};width:100%; text-align:center`"
     >
         <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && gaugeConfig.style.chart.title.text" :style="`width:100%;background:${gaugeConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div v-if="(!mutableConfig.inside || isPrinting) && gaugeConfig.style.chart.title.text" :style="`width:100%;background:${gaugeConfig.style.chart.backgroundColor};padding-bottom:12px;${gaugeConfig.userOptions.show ? 'padding-top:36px' : ''}`">
             <div :style="`width:100%;text-align:center;color:${gaugeConfig.style.chart.title.color};font-size:${gaugeConfig.style.chart.title.fontSize}px;font-weight:${gaugeConfig.style.chart.title.bold ? 'bold': ''}`">
                 {{ gaugeConfig.style.chart.title.text }}
             </div>
@@ -453,7 +453,6 @@ function closeDetails(){
 .vue-ui-gauge {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-gauge .vue-ui-gauge-label {
     align-items: center;

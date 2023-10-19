@@ -432,7 +432,7 @@ function closeDetails(e){
         class="vue-ui-chestnut"
         ref="chestnutChart"
         :id="`vue-ui-chestnut_${uid}`"
-        :style="`font-family:${chestnutConfig.style.fontFamily};width:100%; text-align:center`"
+        :style="`font-family:${chestnutConfig.style.fontFamily};width:100%; text-align:center;${chestnutConfig.userOptions.show ? 'padding-top:36px' : ''}`"
     >
         <!-- OPTIONS -->
         <details class="vue-ui-chestnut-user-options" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" data-html2canvas-ignore v-if="chestnutConfig.userOptions.show" ref="details">
@@ -1073,7 +1073,6 @@ function closeDetails(e){
 .vue-ui-chestnut {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-chestnut .vue-ui-chestnut-label {
     align-items: center;

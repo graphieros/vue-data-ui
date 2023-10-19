@@ -353,7 +353,7 @@ function closeDetails(){
 </script>
 
 <template>
-    <div class="vue-ui-vertical-bar" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center`">
+    <div class="vue-ui-vertical-bar" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center;${verticalBarConfig.userOptions.show ? 'padding-top:36px' : ''}`">
         
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.title.text" :style="`width:100%;background:${verticalBarConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -650,7 +650,6 @@ function closeDetails(){
 .vue-ui-vertical-bar {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-vertical-bar .vue-ui-vertical-bar-label {
     align-items: center;
