@@ -294,6 +294,7 @@ defineExpose({
             @mouseup="stopDragResize"
             @touchmove="onTouchMove"
             @touchend="onTouchEnd"
+            :style="`background:${dashboardConfig.style.board.backgroundColor}`"
         >
             <div class="vue-ui-dashboard-grid"></div>
             <div
