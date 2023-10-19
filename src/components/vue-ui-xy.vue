@@ -1,6 +1,6 @@
 
 <template>
-    <div :id="`vue-ui-xy_${uniqueId}`" class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%`">
+    <div :id="`vue-ui-xy_${uniqueId}`" class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${chartConfig.chart.userOptions.show ? 'padding-top:36px' : ''}`">
         <!-- TITLE AS OUTSIDE DIV -->
         <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show && (!mutableConfig.titleInside || isPrinting)" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <div class="vue-ui-xy-title-main" :style="`font-size:${chartConfig.chart.title.fontSize}px; color:${chartConfig.chart.title.color}; font-weight:${chartConfig.chart.title.bold ? 'bold': '400'}`">
@@ -1096,7 +1096,6 @@ export default {
 }
 .vue-ui-xy {
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-xy-user-options {
     border-radius: 4px;

@@ -209,7 +209,7 @@ function closeDetails(){
 </script>
 
 <template>
-     <div ref="heatmapChart" class="vue-ui-heatmap" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center`" :id="`heatmap__${uid}`">
+     <div ref="heatmapChart" class="vue-ui-heatmap" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center;${heatmapConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`heatmap__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && heatmapConfig.style.title.text" :style="`width:100%;background:${heatmapConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <div :style="`width:100%;text-align:center;color:${heatmapConfig.style.title.color};font-size:${heatmapConfig.style.title.fontSize}px;font-weight:${heatmapConfig.style.title.bold ? 'bold': ''}`">
@@ -454,7 +454,6 @@ function closeDetails(){
 .vue-ui-heatmap {
     user-select: none;
     position: relative;
-    padding-top: 36px;
 }
 .vue-ui-heatmap .vue-ui-heatmap-label {
     align-items: center;
