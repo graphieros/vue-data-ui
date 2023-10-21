@@ -273,7 +273,7 @@ defineExpose({
 </script>
 
 <template>
-    <div style="width: 100%; display:flex; justify-content: end;" v-if="dashboardConfig.allowPrint">
+    <div data-html2canvas-ignore style="width: 100%; display:flex; justify-content: end;" v-if="dashboardConfig.allowPrint">
         <button class="vue-ui-dashboard-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${dashboardConfig.style.board.color}`">
             <svg class="vue-ui-dashboard-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="dashboardConfig.style.board.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>

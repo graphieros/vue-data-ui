@@ -18,6 +18,7 @@ import VueUiCandlestick from "./components/vue-ui-candlestick.vue";
 import VueUiAgePyramid from "./components/vue-ui-age-pyramid.vue";
 import VueUiSparkbar from "./components/vue-ui-sparkbar.vue";
 import VueUiDashboard from "./components/vue-ui-dashboard.vue";
+import VueUiAnnotator from "./components/vue-ui-annotator.vue";
 
 export { 
     VueUiXy, 
@@ -39,5 +40,6 @@ export {
     VueUiCandlestick,
     VueUiAgePyramid,
     VueUiSparkbar,
-    VueUiDashboard
+    VueUiDashboard,
+    VueUiAnnotator
 };

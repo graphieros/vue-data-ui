@@ -35,8 +35,6 @@ Available components:
 - [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
 - [VueUiSparkbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkbar)
 
-## Dashboard (drag & resize)
-- [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
 ## Tables
 - [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
 
@@ -46,3 +44,5 @@ Available components:
 ## Utilities
 - [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)
 - [VueUiSkeleton](https://vue-data-ui.graphieros.com/docs#vue-ui-skeleton)
+- [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
+- [VueUiAnnotator](https://vue-data-ui.graphieros.com/docs#vue-ui-annotator)

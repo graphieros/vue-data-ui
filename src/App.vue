@@ -20,6 +20,7 @@ import CandlestickTest from "./components/vue-ui-candlestick.vue";
 import PyramidTest from "./components/vue-ui-age-pyramid.vue";
 import SparkbarTest from "./components/vue-ui-sparkbar.vue";
 import DashboardTest from "./components/vue-ui-dashboard.vue";
+import AnnotatorTest from "./components/vue-ui-annotator.vue";
 
 const dataset = ref([
         {
@@ -2594,8 +2595,6 @@ const sparkbarDataset = ref([
   },
 ]);
 
-const showLocalTest = ref(false);
-
 const xytest = ref(null)
 
 function selectLegendXY(ds) {
@@ -2735,6 +2734,77 @@ function makeDashPdf(){
   dash.value.generatePdf();
 }
 
+function saveAnnotations({ shapes, lastSelectedShape }) {
+  console.log({shapes, lastSelectedShape})
+}
+
+
+const shapes = ref([
+  {
+    alpha: "",
+    id: "rect_4786.525081496351_1697870578915",
+    color: "#000000",
+    isFilled: false,
+    rectStrokeWidth: 2,
+    rectHeight: 71.01970280219712,
+    rectWidth: 71.01943098308863,
+    type: "rect",
+    x: 226.68835358228716,
+    y: 208.03757503871424,
+    strokeWidth: 1,
+    isDash: false
+  },
+  {
+    alpha: "",
+    id: "rect_9773.345538613725_1697870579459",
+    color: "#000000",
+    isFilled: false,
+    rectStrokeWidth: 2,
+    rectHeight: 109.75774241468878,
+    rectWidth: 80.34523889795713,
+    type: "rect",
+    x: 413.9214312422939,
+    y: 229.55870207553664,
+    strokeWidth: 1,
+    isDash: false
+  },
+  {
+    alpha: "",
+    id: "rect_2695.1441197115723_1697870579941",
+    color: "#000000",
+    isFilled: false,
+    rectStrokeWidth: 2,
+    rectHeight: 146.34370216213188,
+    rectWidth: 119.08315761082781,
+    type: "rect",
+    x: 621.2408117854341,
+    y: 263.27511254080264,
+    strokeWidth: 1,
+    isDash: false
+  }
+]);
+
+const lastSelectedShape = ref({
+  alpha: "",
+  id: "rect_2695.1441197115723_1697870579941",
+  color: "#000000",
+  isFilled: false,
+  rectStrokeWidth: 2,
+  rectHeight: 146.34370216213188,
+  rectWidth: 119.08315761082781,
+  type: "rect",
+  x: 621.2408117854341,
+  y: 263.27511254080264,
+  strokeWidth: 1,
+  isDash: false
+});
+
+function toggleOpenState(isOpen) {
+  console.log(isOpen);
+}
+
+const showLocalTest = ref(true);
+
 </script>
 
 <template>
@@ -2743,6 +2813,18 @@ function makeDashPdf(){
   <button @click="toggleRead">TOGGLE RATING READONLY</button>
   <button @click="getDashPositions">DASH POSITIONS</button>
   <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
+    <VueUiAnnotator @saveAnnotations="saveAnnotations" :dataset="{
+      shapes, lastSelectedShape
+    }" @toggleOpenState="toggleOpenState">
+      
+        <DashboardTest v-if="showLocalTest" ref="dash" :dataset="comps" @change="testchange" :config="dashboardConfig">
+        <template v-slot:content="{ item }">
+          <div style="padding: 12px">
+            <component :is="item.component" v-bind="item.props"></component>
+          </div>
+        </template>
+      </DashboardTest>
+    </VueUiAnnotator>
     <DashboardTest v-if="showLocalTest" ref="dash" :dataset="comps" @change="testchange" :config="dashboardConfig">
       <template v-slot:content="{ item }">
         <div style="padding: 12px">

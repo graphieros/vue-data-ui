@@ -5,6 +5,87 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiAnnotatorConfig = {
+        style: {
+            backgroundColor: string;
+            color: string;
+            fixedTools: false,
+            fontFamily: string;
+            hideWhenFolded: boolean;
+            showPrint: boolean;
+            showSave: boolean;
+            showTooltips: boolean;
+            buttons: {
+                borderRadius: number;
+                controls: {
+                    backgroundColor: string;
+                    color: string;
+                    border: string;
+                    selected: {
+                        backgroundColor: string;
+                        color: string;
+                        border: string;
+                    };
+                };
+                shapes: {
+                    backgroundColor: string;
+                    color: string;
+                    border: string;
+                    selected: {
+                        backgroundColor: string;
+                        color: string;
+                        border: string;
+                    };
+                };
+            };
+            tooltips: {
+                backgroundColor: string;
+                color: string;
+                border: string;
+                borderRadius: number;
+                boxShadow: string;
+            };
+        };
+        translations: {
+            colorAlpha: string;
+            dashedLines: string;
+            filled: string;
+            fontSize: string;
+            thickness: string;
+            title: string;
+            tooltipGroup: string;
+            tooltipDelete: string;
+            tooltipMove: string;
+            tooltipResize: string;
+            tooltipBringToFront: string;
+            tooltipBringToBack: string;
+            tooltipDuplicate: string;
+            tooltipUndo: string;
+            tooltipPdf: string;
+            tooltipSave: string;
+            tooltipShapeCircle: string;
+            tooltipShapeRect: string;
+            tooltipShapeArrow: string;
+            tooltipShapeFreehand: string;
+            tooltipShapeText: string;
+            tooltipShapeTextLeft: string;
+            tooltipShapeTextCenter: string;
+            tooltipShapeTextRight: string;
+            tooltipShapeTextBullet: string;
+            tooltipShapeTextBold: string;
+            tooltipShapeTextItalic: string;
+            tooltipShapeTextUnderline: string;
+            tooltipShapeColor: string;
+        }
+    }
+
+    export type VueUiAnnotatorDataset = VueUiUnknownObj;
+
+    export const VueUiAnnotator: DefineComponent<{
+        config: VueUiAnnotatorConfig;
+        dataset: VueUiAnnotatorDataset;
+    }>
+
     export type VueUiDashboardConfig = {
         style: {
             board: {
@@ -40,7 +121,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiDashboard: DefineComponent<{
         config: VueUiDashboardConfig;
-        elements: VueUiDashboardElement[];
+        dataset: VueUiDashboardElement[];
     }>;
 
     export type VueUiSparkbarDatasetItem = {

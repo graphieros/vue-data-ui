@@ -2029,5 +2029,78 @@
             }
         },
         "allowPrint": true
+    },
+    "vue_ui_annotator" : {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "color": "#2D353C",
+            "fixedTools": false,
+            "fontFamily" : "inherit",
+            "hideWhenFolded": false,
+            "showPrint": true,
+            "showSave": true,
+            "showTooltips": true,
+            "buttons": {
+                "borderRadius": 6,
+                "controls": {
+                    "backgroundColor":"#FFFFFF",
+                    "color": "#2D353C",
+                    "border": "1px solid #262626",
+                    "selected": {
+                        "backgroundColor":"#2D353C",
+                        "color": "#fafafa",
+                        "border": "1px solid #CCCCCC"
+                    }
+                },
+                "shapes": {
+                    "backgroundColor":"#FFFFFF",
+                    "color": "#2D353C",
+                    "border": "1px solid #262626",
+                    "selected": {
+                        "backgroundColor":"#2D353C",
+                        "color": "#fafafa",
+                        "border": "1px solid #CCCCCC"
+                    }
+                }
+            },
+            "tooltips": {
+                "backgroundColor": "#fafafa",
+                "color":"#2D353C",
+                "border": "1px solid #CCCCCC",
+                "borderRadius": 6,
+                "boxShadow": "0 6px 12px -6px rgba(0,0,0,0.2)"
+            }
+        },
+        "translations": {
+            "colorAlpha": "Color alpha",
+            "dashedLines": "Dashed lines",
+            "filled": "Filled",
+            "fontSize": "Font size",
+            "thickness": "Thickness",
+            "title": "Annotations",
+            "tooltipGroup": "Select & group",
+            "tooltipDelete":  "Delete",
+            "tooltipMove": "Move",
+            "tooltipResize": "Resize",
+            "tooltipBringToFront": "Bring to front",
+            "tooltipBringToBack": "Bring to back",
+            "tooltipDuplicate": "Duplicate",
+            "tooltipUndo": "Undo last shape",
+            "tooltipPdf": "Save pdf",
+            "tooltipSave": "Save annotations",
+            "tooltipShapeCircle": "Draw circle",
+            "tooltipShapeRect": "Draw rect",
+            "tooltipShapeArrow": "Draw arrow",
+            "tooltipShapeFreehand": "Freehand line",
+            "tooltipShapeText": "Text mode",
+            "tooltipShapeTextLeft": "Align left",
+            "tooltipShapeTextCenter": "Align center",
+            "tooltipShapeTextRight": "Align right",
+            "tooltipShapeTextBullet": "Bullet points",
+            "tooltipShapeTextBold": "Bold",
+            "tooltipShapeTextItalic": "Italic",
+            "tooltipShapeTextUnderline": "Underlined",
+            "tooltipShapeColor": "Color"
+        }
     }
 }
