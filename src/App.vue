@@ -2803,7 +2803,7 @@ function toggleOpenState(isOpen) {
   console.log(isOpen);
 }
 
-const showLocalTest = ref(true);
+const showLocalTest = ref(false);
 
 </script>
 
@@ -2813,11 +2813,24 @@ const showLocalTest = ref(true);
   <button @click="toggleRead">TOGGLE RATING READONLY</button>
   <button @click="getDashPositions">DASH POSITIONS</button>
   <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
-    <VueUiAnnotator @saveAnnotations="saveAnnotations" :dataset="{
+    <AnnotatorTest v-if="showLocalTest" @saveAnnotations="saveAnnotations" :dataset="{
       shapes, lastSelectedShape
     }" @toggleOpenState="toggleOpenState">
       
-        <DashboardTest v-if="showLocalTest" ref="dash" :dataset="comps" @change="testchange" :config="dashboardConfig">
+        <DashboardTest ref="dash" :dataset="comps" @change="testchange" :config="dashboardConfig">
+        <template v-slot:content="{ item }">
+          <div style="padding: 12px">
+            <component :is="item.component" v-bind="item.props"></component>
+          </div>
+        </template>
+      </DashboardTest>
+    </AnnotatorTest>
+    
+    <VueUiAnnotator v-else @saveAnnotations="saveAnnotations" :dataset="{
+      shapes, lastSelectedShape
+    }" @toggleOpenState="toggleOpenState">
+      
+        <DashboardTest ref="dash" :dataset="comps" @change="testchange" :config="dashboardConfig">
         <template v-slot:content="{ item }">
           <div style="padding: 12px">
             <component :is="item.component" v-bind="item.props"></component>

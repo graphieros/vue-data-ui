@@ -1102,41 +1102,6 @@
       ref="drawSvgContainer"
       style="position: relative"
     >
-      <svg
-        id="annotatorSvg"
-        v-if="!isSummaryOpen && !annotatorConfig.style.hideWhenFolded"
-        :key="step"
-        ref="mainSvg"
-        :class="{ draw: true, 'draw--free': activeShape === 'line' }"
-        :style="`cursor:${cursorClass}; font-family: Helvetica;`"
-        :viewBox="`0 0 ${svgWidth} ${svgHeight}`"
-        :width="sourceWidth"
-        :height="sourceHeight"
-        @pointerdown="chooseAction($event)"
-        @pointerup="resetDraw"
-        @pointermove="
-          setPointer($event);
-          chooseMove($event);
-        "
-        @pointerout="
-          preventEdit = true;
-          hoveredShapeId = undefined;
-        "
-        @pointerover="allowEditAndHoverShapes($event)"
-        @click="clickSvg($event)"
-        style="position: absolute; top: 0; left: 0"
-      >
-        <g
-          v-for="(shape, i) in userShapes"
-          :key="`shape_${i}`"
-          :id="shape.id"
-          v-html="shape"
-          @click="
-            clickShape($event);
-            isMoveMode = false;
-          "
-        ></g>
-      </svg>
       <slot></slot>
       <svg
         id="annotatorSvg"
@@ -1150,6 +1115,8 @@
         :height="sourceHeight"
         @pointerdown="chooseAction($event)"
         @pointerup="resetDraw"
+        @touchend="resetDraw"
+        @touchstart="setPointer($event); clickSvg($event); "
         @pointermove="
           setPointer($event);
           chooseMove($event);
@@ -1898,6 +1865,7 @@ export default {
       }
     },
     allowEditAndHoverShapes(e) {
+      e.preventDefault();
       this.preventEdit = false;
       if (e.target && e.target.id) {
         this.hoveredShapeId = e.target.id;
@@ -2365,6 +2333,7 @@ export default {
       });
     },
     chooseAction(e) {
+      e.preventDefault();
       this.isMouseDown = true;
       switch (true) {
         case this.isDrawMode:
@@ -2376,6 +2345,7 @@ export default {
       }
     },
     chooseMove(e) {
+      e.preventDefault();
       if (e.target.localName !== "svg") {
         this.currentTarget = e.target;
       }
@@ -3005,10 +2975,23 @@ export default {
       this.lastSelectedShape.isBulletTextMode = this.copy(this.isBulletTextMode);
     },
     setPointer(e) {
+      e.preventDefault();
       const mainSvg = this.$refs.mainSvg;
       const rect = mainSvg.getBoundingClientRect();
-      this.pointerPosition.x = ((e.clientX - rect.left) / rect.width) * this.svgWidth;
-      this.pointerPosition.y = ((e.clientY - rect.top) / rect.height) * this.svgHeight;
+      let clientX, clientY;
+
+      if (e.touches && e.touches.length > 0) {
+        // Use the first touch if available
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        // Fall back to mouse event properties
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      this.pointerPosition.x = ((clientX - rect.left) / rect.width) * this.svgWidth;
+      this.pointerPosition.y = ((clientY - rect.top) / rect.height) * this.svgHeight;
     },
     setShapeTo(shape) {
       this.showCaret = false;
