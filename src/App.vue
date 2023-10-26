@@ -2803,7 +2803,7 @@ function toggleOpenState(isOpen) {
   console.log(isOpen);
 }
 
-const showLocalTest = ref(false);
+const showLocalTest = ref(true);
 
 </script>
 
@@ -2813,6 +2813,50 @@ const showLocalTest = ref(false);
   <button @click="toggleRead">TOGGLE RATING READONLY</button>
   <button @click="getDashPositions">DASH POSITIONS</button>
   <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
+      <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
+      <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
+    </div>
+  <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiAgePyramid v-if="!showLocalTest" :dataset="pyramidDataset" :config="pyramidConfig" />
+      <PyramidTest v-if="showLocalTest" :dataset="pyramidDataset" />
+    </div>
+  <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiCandlestick v-if="!showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>
+      <CandlestickTest v-if="showLocalTest" :dataset="candlestickDataset"/>
+    </div>
+  <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiScatter ref="scatter" v-if="!showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
+      <ScatterTest ref="scatter" v-if="showLocalTest" :dataset="scatterDataset"/>
+    </div>
+  <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiVerticalBar ref="verticaltest" v-if="!showLocalTest" :config="verticalConfig" :dataset="verticalDataset" @selectLegend="selectVerticalLegend"/>
+      <VerticalTest ref="verticaltest" v-if="showLocalTest" :dataset="verticalDataset"/>
+    </div>
+  <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiQuadrant ref="quadranttest" v-if="!showLocalTest" :dataset="quadrantDataset" :config="quadrantConfig" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
+      <QuadrantTest ref="quadranttest" v-if="showLocalTest" :dataset="quadrantDataset" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
+    </div>
+  <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiRadar ref="radartest" v-if="!showLocalTest" :dataset="radarDataset" :config="radarConfig" @selectLegend="selectRadarLegend"/>
+      <RadarTest ref="radartest" v-if="showLocalTest" :dataset="radarDataset"  @selectLegend="selectRadarLegend"/>
+    </div>
+  <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiOnion ref="oniontest" v-if="!showLocalTest" :dataset="onionDataset" @selectLegend="selectOnionLegend"/>
+      <OnionTest ref="oniontest" v-if="showLocalTest" :dataset="onionDataset"  @selectLegend="selectOnionLegend"/>
+    </div>
+  <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiWaffle ref="waffletest" v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
+      <WaffleTest ref="waffletest" v-if="showLocalTest" :dataset="donutDataset" @selectLegend="selectLegendWaffle"/>
+    </div> 
+  <div style="max-width:1000px; margin:0 auto">
+      <VueUiXy ref="xytest" :config="config" :dataset="dataset2" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
+      <XyTest ref="xytest" :config="config" :dataset="dataset2" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
+    </div>
+  <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
+      <VueUiDonut ref="donuttest" v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
+      <DonutTest ref="donuttest" v-if="showLocalTest" :dataset="donutDataset" @selectLegend="selectLegendDonut"/>
+    </div> 
     <AnnotatorTest v-if="showLocalTest" @saveAnnotations="saveAnnotations" :dataset="{
       shapes, lastSelectedShape
     }" @toggleOpenState="toggleOpenState">
@@ -2861,19 +2905,6 @@ const showLocalTest = ref(false);
       <SkeletonTest v-if="showLocalTest" :config="{type: 'sparkline'}" />
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiAgePyramid v-if="!showLocalTest" :dataset="pyramidDataset" :config="pyramidConfig" />
-      <PyramidTest v-if="showLocalTest" :dataset="pyramidDataset" :config="pyramidConfig" />
-    </div>
-
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiCandlestick v-if="!showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>
-      <CandlestickTest v-if="showLocalTest" :config="candlestickConfig" :dataset="candlestickDataset"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiScatter ref="scatter" v-if="!showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
-      <ScatterTest ref="scatter" v-if="showLocalTest" :config="scatterConfig" :dataset="scatterDataset"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiHeatmap v-if="!showLocalTest" :config="heatmapConfig" :dataset="heatmapDataset"/>
       <HeatmapTest v-if="showLocalTest" :config="heatmapConfig" :dataset="heatmapDataset"/>
     </div>
@@ -2891,42 +2922,9 @@ const showLocalTest = ref(false);
       <RatingTest ref="ratingtest" v-if="showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiVerticalBar ref="verticaltest" v-if="!showLocalTest" :config="verticalConfig" :dataset="verticalDataset" @selectLegend="selectVerticalLegend"/>
-      <VerticalTest ref="verticaltest" v-if="showLocalTest" :config="verticalConfig" :dataset="verticalDataset"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiOnion ref="oniontest" v-if="!showLocalTest" :dataset="onionDataset" @selectLegend="selectOnionLegend"/>
-      <OnionTest ref="oniontest" v-if="showLocalTest" :dataset="onionDataset" :config="onionConfig"  @selectLegend="selectOnionLegend"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
-      <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto">
-      <VueUiXy ref="xytest" :config="config" :dataset="dataset2" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
-      <XyTest ref="xytest" :config="config" :dataset="dataset2" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiGauge ref="gaugetest" v-if="!showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>
       <GaugeTest ref="gaugetest" v-if="showLocalTest" :dataset="gaugeDataset"/>
     </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiQuadrant ref="quadranttest" v-if="!showLocalTest" :dataset="quadrantDataset" :config="quadrantConfig" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
-      <QuadrantTest ref="quadranttest" v-if="showLocalTest" :dataset="quadrantDataset" @selectPlot="selectPlot" @selectSide="selectSide" @selectLegend="selectQuadrantLegend"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiRadar ref="radartest" v-if="!showLocalTest" :dataset="radarDataset" :config="radarConfig" @selectLegend="selectRadarLegend"/>
-      <RadarTest ref="radartest" v-if="showLocalTest" :dataset="radarDataset"  @selectLegend="selectRadarLegend"/>
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiWaffle ref="waffletest" v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
-      <WaffleTest ref="waffletest" v-if="showLocalTest" :dataset="donutDataset" @selectLegend="selectLegendWaffle"/>
-    </div> 
-    <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
-      <VueUiDonut ref="donuttest" v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
-      <DonutTest ref="donuttest" v-if="showLocalTest" :dataset="donutDataset" @selectLegend="selectLegendDonut"/>
-    </div> 
-
     <VueUiTable :dataset="tableTestDataset" :config="darkConfig" v-if="!showLocalTest"/>
     <TableTest :dataset="tableTestDataset" v-if="showLocalTest"/>
   </div>

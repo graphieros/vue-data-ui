@@ -527,6 +527,25 @@ function generateXls() {
     user-select: none;
     position: relative;
 }
+
+path {
+    animation: meh 0.5s ease-in-out;
+    transform-origin: center;
+}
+@keyframes meh {
+    0% {
+        transform: scale(0.9,0.9);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.02,1.02);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1,1);
+        opacity: 1;
+    }
+}
 .vue-ui-donut .vue-ui-donut-label {
     align-items: center;
     display: flex;

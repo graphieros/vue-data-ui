@@ -513,6 +513,25 @@ function closeDetails(){
 .vue-ui-radar *{
     transition: unset;
 }
+
+path, line, rect, circle {
+    animation: xyAnimation 0.5s ease-in-out;
+    transform-origin: center;
+}
+@keyframes xyAnimation {
+    0% {
+        transform: scale(0.9,0.9);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.02,1.02);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1,1);
+        opacity: 1;
+    }
+}
 .vue-ui-radar {
     user-select: none;
     position: relative;

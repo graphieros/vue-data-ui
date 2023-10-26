@@ -647,6 +647,25 @@ function closeDetails(){
 .vue-ui-vertical-bar *{
     transition: unset;
 }
+
+path, line, rect, circle, polygon {
+    animation: verticalBarAnimation 0.5s ease-in-out;
+    transform-origin: center;
+}
+@keyframes verticalBarAnimation {
+    0% {
+        transform: scale(0.9,0.9);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.02,1.02);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1,1);
+        opacity: 1;
+    }
+}
 .vue-ui-vertical-bar {
     user-select: none;
     position: relative;

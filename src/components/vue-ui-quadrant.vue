@@ -909,6 +909,25 @@ function generateXls() {
     user-select: none;
     position: relative;
 }
+
+path, line, rect, circle, polygon {
+    animation: quadrantAnimation 0.5s ease-in-out;
+    transform-origin: center;
+}
+@keyframes quadrantAnimation {
+    0% {
+        transform: scale(0.9,0.9);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.02,1.02);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1,1);
+        opacity: 1;
+    }
+}
 .vue-ui-quadrant .vue-ui-quadrant-label {
     align-items: center;
     display: flex;

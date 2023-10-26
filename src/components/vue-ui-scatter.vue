@@ -581,6 +581,25 @@ function closeDetails(){
     user-select: none;
     position: relative;
 }
+
+path, line, circle {
+    animation: verticalBarAnimation 0.5s ease-in-out !important;
+    transform-origin: center !important;
+}
+@keyframes verticalBarAnimation {
+    0% {
+        transform: scale(0.9,0.9);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.02,1.02);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1,1);
+        opacity: 1;
+    }
+}
 .vue-ui-scatter .vue-ui-scatter-label {
     align-items: center;
     display: flex;
