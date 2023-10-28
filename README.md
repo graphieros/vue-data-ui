@@ -40,6 +40,7 @@ Available components:
 
 ## Rating
 - [VueUiRating](https://vue-data-ui.graphieros.com/docs#vue-ui-rating)
+- [VueUiSmiley](https://vue-data-ui.graphieros.com/docs#vue-ui-smiley)
 
 ## Utilities
 - [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)

@@ -2102,5 +2102,57 @@
             "tooltipShapeTextUnderline": "Underlined",
             "tooltipShapeColor": "Color"
         }
+    },
+    "vue_ui_smiley": {
+        "readonly": false,
+        "style": {
+            "fontFamily": "inherit",
+            "itemSize": 32,
+            "backgroundColor": "#FFFFFF",
+            "colors": {
+                "activeReadonly": ["#e20001", "#ff9f03", "#ffd004", "#61c900", "#059f00"],
+                "active": ["#e20001", "#ff9f03", "#ffd004", "#61c900", "#059f00"],
+                "inactive": ["#e1e5e8","#e1e5e8","#e1e5e8","#e1e5e8","#e1e5e8"]
+            },
+            "icons": {
+                "filled": false,
+                "useGradient": true
+            },
+            "title": {
+                "textAlign": "center",
+                "fontSize": 20,
+                "color": "#2D353C",
+                "bold": true,
+                "text": "",
+                "offsetY": 6,
+                "subtitle": {
+                    "fontSize": 14,
+                    "color": "#CCCCCC",
+                    "bold": false,
+                    "text": "",
+                    "offsetY": 12
+                }
+            },
+            "rating": {
+                "show": true,
+                "fontSize": 28,
+                "bold": true,
+                "roundingValue": 1,
+                "position": "bottom",
+                "offsetY": 0,
+                "offsetX":0
+            },
+            "tooltip": {
+                "show": true,
+                "fontSize": 14,
+                "offsetY": 0,
+                "color":"#2D353C",
+                "bold": true,
+                "backgroundColor":"#FFFFFF",
+                "borderColor": "#e1e5e8",
+                "borderRadius": 4,
+                "boxShadow":"0 6px 12px -6px rgba(0,0,0,0.2)"
+            }
+        }
     }
 }

@@ -22,7 +22,8 @@ import {
     VueUiAgePyramid,
     VueUiSparkbar,
     VueUiDashboard,
-    VueUiAnnotator
+    VueUiAnnotator,
+    VueUiSmiley
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -48,4 +49,5 @@ app.component("VueUiAgePyramid", VueUiAgePyramid);
 app.component("VueUiSparkbar", VueUiSparkbar);
 app.component("VueUiDashboard", VueUiDashboard);
 app.component("VueUiAnnotator", VueUiAnnotator);
+app.component("VueUiSmiley", VueUiSmiley);
 app.mount('#app');

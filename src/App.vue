@@ -21,6 +21,7 @@ import PyramidTest from "./components/vue-ui-age-pyramid.vue";
 import SparkbarTest from "./components/vue-ui-sparkbar.vue";
 import DashboardTest from "./components/vue-ui-dashboard.vue";
 import AnnotatorTest from "./components/vue-ui-annotator.vue";
+import SmileyTest from "./components/vue-ui-smiley.vue";
 
 const dataset = ref([
         {
@@ -2017,7 +2018,7 @@ const ratingDataset = ref({
     "2": 1,
     "3": 1,
     "4": 1,
-    "5": 3
+    "5": 30
   }
 });
 
@@ -2803,16 +2804,97 @@ function toggleOpenState(isOpen) {
   console.log(isOpen);
 }
 
-const showLocalTest = ref(true);
+const smileyConfig = ref({
+  readonly: false,
+  style: {
+    fontFamily: "inherit",
+    itemSize: 32,
+    backgroundColor: "#FFFFFF",
+    colors: {
+      activeReadonly: [
+        "#e20001",
+        "#ff9f03",
+        "#ffd004",
+        "#61c900",
+        "#059f00"
+      ],
+      active: [
+        "#e20001",
+        "#ff9f03",
+        "#ffd004",
+        "#61c900",
+        "#059f00"
+      ],
+      inactive: [
+        "#e1e5e8",
+        "#e1e5e8",
+        "#e1e5e8",
+        "#e1e5e8",
+        "#e1e5e8"
+      ]
+    },
+    icons: {
+      filled: false,
+      useGradient: true
+    },
+    title: {
+      textAlign: "center",
+      fontSize: 20,
+      color: "#2D353C",
+      bold: true,
+      text: "Title",
+      offsetY: 6,
+      subtitle: {
+        fontSize: 14,
+        color: "#CCCCCC",
+        bold: false,
+        text: "Subtitle",
+        offsetY: 12
+      }
+    },
+    rating: {
+      show: true,
+      fontSize: 28,
+      bold: true,
+      roundingValue: 1,
+      position: "bottom",
+      offsetY: 0,
+      offsetX: 0
+    },
+    tooltip: {
+      show: true,
+      fontSize: 14,
+      offsetY: 0,
+      color: "#2D353C",
+      bold: true,
+      backgroundColor: "#FFFFFF",
+      borderColor: "#e1e5e8",
+      borderRadius: 4,
+      boxShadow: "0 6px 12px -6px rgba(0,0,0,0.2)"
+    }
+  }
+})
+
+const showLocalTest = ref(false);
 
 </script>
 
 <template>
   <div>
     <button @click="sstest">SCREENSHOT</button>
-  <button @click="toggleRead">TOGGLE RATING READONLY</button>
-  <button @click="getDashPositions">DASH POSITIONS</button>
-  <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
+    <button @click="toggleRead">TOGGLE RATING READONLY</button>
+    <button @click="getDashPositions">DASH POSITIONS</button>
+    <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
+    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px; margin-top: 48px">
+        <SmileyTest v-if="showLocalTest" :dataset="ratingDataset" :config="smileyConfig"/>
+        <VueUiSmiley v-if="!showLocalTest" :dataset="ratingDataset" :config="smileyConfig"/>
+    </div>
+
+    <div style="max-width:200px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiRating ref="ratingtest" v-if="!showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>
+      <RatingTest ref="ratingtest" v-if="showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>
+    </div>
+
       <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiChestnut ref="chestnuttest" v-if="!showLocalTest" :dataset="chestnutDataset" :config="chestnutConfig" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
       <ChestnutTest ref="chestnuttest" v-if="showLocalTest" :dataset="chestnutDataset" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut"/>
@@ -2917,10 +2999,6 @@ const showLocalTest = ref(true);
       <VueUiXy ref="xytest" :config="config" :dataset="barset" v-if="!showLocalTest"/>
     </div>
     <img v-if="pic" :src="pic">
-    <div style="max-width:200px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiRating ref="ratingtest" v-if="!showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>
-      <RatingTest ref="ratingtest" v-if="showLocalTest" :config="ratingConfig" :dataset="ratingDataset"/>
-    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiGauge ref="gaugetest" v-if="!showLocalTest" :dataset="gaugeDataset" :config="gaugeConfig"/>
       <GaugeTest ref="gaugetest" v-if="showLocalTest" :dataset="gaugeDataset"/>

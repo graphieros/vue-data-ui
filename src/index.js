@@ -19,6 +19,7 @@ import VueUiAgePyramid from "./components/vue-ui-age-pyramid.vue";
 import VueUiSparkbar from "./components/vue-ui-sparkbar.vue";
 import VueUiDashboard from "./components/vue-ui-dashboard.vue";
 import VueUiAnnotator from "./components/vue-ui-annotator.vue";
+import VueUiSmiley from "./components/vue-ui-smiley.vue";
 
 export { 
     VueUiXy, 
@@ -41,5 +42,6 @@ export {
     VueUiAgePyramid,
     VueUiSparkbar,
     VueUiDashboard,
-    VueUiAnnotator
+    VueUiAnnotator,
+    VueUiSmiley
 };

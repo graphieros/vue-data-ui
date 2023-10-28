@@ -2241,6 +2241,64 @@ declare module 'vue-data-ui' {
         dataset: VueUiRatingDataset
     }>;
 
+    export type VueUiSmileyConfig = {
+        readonly: boolean;
+        style: {
+            fontFamily: string;
+            itemSize: number;
+            backgroundColor: string;
+            colors: {
+                activeReadonly: [string, string, string, string, string];
+                active: [string, string, string, string, string];
+                inactive: [string, string, string, string, string];
+            };
+            icons: {
+                filled: boolean;
+                useGradient: boolean;
+            };
+            title: {
+                textAlign: string;
+                fontSize: number;
+                color: string;
+                bold: boolean;
+                text: string;
+                offsetY: number;
+                subtitle: {
+                    fontSize: number;
+                    color: string;
+                    bold: boolean;
+                    text: string;
+                    offsetY: number;
+                };
+            };
+            rating: {
+                show: boolean;
+                fontSize: number;
+                bold: boolean;
+                roundingValue: number;
+                position: string;
+                offsetY: number;
+                offsetX: number;
+            };
+            tooltip: {
+                show: boolean;
+                fontSize: number;
+                offsetY: number;
+                color: string;
+                bold: boolean;
+                backgroundColor: string;
+                borderColor: string;
+                borderRadius: number;
+                boxShadow: string;
+            };
+        };
+    };
+
+    export const VueUiSmiley: DefineComponent<{
+        config: VueUiSmileyConfig,
+        dataset: VueUiRatingDataset
+    }>;
+
     export type VueUiScreenshotConfig = {
         mode: "download" | "post";
         quality: number;
