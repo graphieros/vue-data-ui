@@ -529,10 +529,10 @@ function generateXls() {
 }
 
 path {
-    animation: meh 0.5s ease-in-out;
+    animation: donut 0.5s ease-in-out;
     transform-origin: center;
 }
-@keyframes meh {
+@keyframes donut {
     0% {
         transform: scale(0.9,0.9);
         opacity: 0;

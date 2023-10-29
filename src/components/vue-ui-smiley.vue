@@ -152,8 +152,8 @@ function getActiveColor(index) {
             </div>
 
             <!--0-->
-            <div :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 1 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;
-            position:relative`" @mouseenter="hoveredValue = 0" @mouseleave="hoveredValue = undefined" @click="rate(1)">
+            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 1 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;
+            position:relative`" @mouseenter="hoveredValue = 0" @mouseleave="hoveredValue = undefined" @click="rate(1)" @keyup.enter="rate(1)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
                     <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 0 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
@@ -191,7 +191,7 @@ function getActiveColor(index) {
             </div>
 
             <!--1-->
-            <div :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 2 }"  :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 1" @mouseleave="hoveredValue = undefined" @click="rate(2)">
+            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 2 }"  :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 1" @mouseleave="hoveredValue = undefined" @click="rate(2)" @keyup.enter="rate(2)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
                     <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 1 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
@@ -229,7 +229,7 @@ function getActiveColor(index) {
             </div>
 
             <!--2-->
-            <div :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 3 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 2" @mouseleave="hoveredValue = undefined" @click="rate(3)">
+            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 3 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 2" @mouseleave="hoveredValue = undefined" @click="rate(3)" @keyup.enter="rate(3)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
                     <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 2 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
@@ -267,7 +267,7 @@ function getActiveColor(index) {
             </div>
 
             <!--3-->
-            <div :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 4 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 3" @mouseleave="hoveredValue = undefined" @click="rate(4)">
+            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 4 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 3" @mouseleave="hoveredValue = undefined" @click="rate(4)" @keyup.enter="rate(4)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
                     <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 3 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
@@ -305,7 +305,7 @@ function getActiveColor(index) {
             </div>
 
             <!--4-->
-            <div :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 5 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 4" @mouseleave="hoveredValue = undefined" @click="rate(5)">
+            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 5 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 4" @mouseleave="hoveredValue = undefined" @click="rate(5)" @keyup.enter="rate(5)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
                     <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 4 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
