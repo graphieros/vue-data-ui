@@ -553,7 +553,54 @@ const sparkline = ref(
         </template>
 
         <template v-if="type === 'rating'">
-            <svg width="100%" viewBox="0 0 100 30" :style="`background:${skeletonConfig.style.backgroundColor};max-width:${skeletonConfig.style.rating.maxWidth}px`">
+            <div v-if="skeletonConfig.style.rating.useSmiley" :style="`display:flex;flex-direction:row;align-items:center;justify-content:center;width:${skeletonConfig.style.rating.maxWidth}px`">
+                <!-- 0 -->
+                <svg v-if="skeletonConfig.style.rating.filled" :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 9.86a4.5 4.5 0 0 0 -3.214 1.35a1 1 0 1 0 1.428 1.4a2.5 2.5 0 0 1 3.572 0a1 1 0 0 0 1.428 -1.4a4.5 4.5 0 0 0 -3.214 -1.35zm-2.99 -4.2l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" stroke-width="0" :fill="skeletonConfig.style.rating.color" />
+                </svg>
+                
+                <svg v-else :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
+                </svg>
+
+                <!-- 1 -->
+                <svg v-if="skeletonConfig.style.rating.filled" :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 10.66h-6l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h6l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm-5.99 -5l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" stroke-width="0" :fill="skeletonConfig.style.rating.color" />
+                </svg>
+
+                <svg v-else :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9 15l6 0" />
+                </svg>
+
+                <!-- 2 -->
+                <svg v-if="skeletonConfig.style.rating.filled" :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-7.99 5.66l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" stroke-width="0" :fill="skeletonConfig.style.rating.color" />
+                </svg>
+
+                <svg v-else :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" />
+                </svg>
+
+                <!-- 3 -->
+                <svg v-if="skeletonConfig.style.rating.filled" :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.8 10.946a1 1 0 0 0 -1.414 .014a2.5 2.5 0 0 1 -3.572 0a1 1 0 0 0 -1.428 1.4a4.5 4.5 0 0 0 6.428 0a1 1 0 0 0 -.014 -1.414zm-6.19 -5.286l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z" stroke-width="0" :fill="skeletonConfig.style.rating.color" />
+                </svg>
+
+                <svg v-else :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15a3.5 3.5 0 0 0 5 0" />
+                </svg>
+
+                <!-- 4 -->
+                <svg v-if="skeletonConfig.style.rating.filled" :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 9.66h-6a1 1 0 0 0 -1 1v.05a3.975 3.975 0 0 0 3.777 3.97l.227 .005a4.026 4.026 0 0 0 3.99 -3.79l.006 -.206a1 1 0 0 0 -1 -1.029zm-5.99 -5l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z" stroke-width="0" :fill="skeletonConfig.style.rating.color" />
+                </svg>
+
+                <svg v-else :style="`width:${skeletonConfig.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="skeletonConfig.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 9l.01 0" /><path d="M15 9l.01 0" /><path d="M8 13a4 4 0 1 0 8 0h-8" />
+                </svg>
+            </div>
+
+            <svg v-else width="100%" viewBox="0 0 100 30" :style="`background:${skeletonConfig.style.backgroundColor};max-width:${skeletonConfig.style.rating.maxWidth}px`">
                 <polygon 
                     v-for="(_,i) in 5"
                     :points="createStar({

@@ -1411,6 +1411,7 @@
                 }
             },
             "rating": {
+                "useSmiley": false,
                 "color": "#E1E5E8",
                 "filled": true,
                 "strokeWidth": 1,

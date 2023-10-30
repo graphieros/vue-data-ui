@@ -2885,6 +2885,10 @@ const showLocalTest = ref(false);
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
     <button @click="getDashPositions">DASH POSITIONS</button>
     <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
+    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
+      <VueUiSkeleton v-if="!showLocalTest" :config="{ type: 'rating', style:{ rating: {  useSmiley: true, filled: true}} }" />
+      <SkeletonTest v-if="showLocalTest" :config="{type: 'rating', style:{ rating: {  useSmiley: true, filled: true}}}" />
+    </div>
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px; margin-top: 48px">
         <SmileyTest v-if="showLocalTest" :dataset="ratingDataset" :config="smileyConfig"/>
         <VueUiSmiley v-if="!showLocalTest" :dataset="ratingDataset" :config="smileyConfig"/>
@@ -2981,10 +2985,6 @@ const showLocalTest = ref(false);
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSparkbar v-if="!showLocalTest" :config="sparkbarConfig" :dataset="sparkbarDataset" />
       <SparkbarTest v-if="showLocalTest" :config="sparkbarConfig" :dataset="sparkbarDataset" />
-    </div>
-    <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
-      <VueUiSkeleton v-if="!showLocalTest" :config="{ type: 'sparkline' }" />
-      <SkeletonTest v-if="showLocalTest" :config="{type: 'sparkline'}" />
     </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiHeatmap v-if="!showLocalTest" :config="heatmapConfig" :dataset="heatmapDataset"/>

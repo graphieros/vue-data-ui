@@ -2433,6 +2433,7 @@ declare module 'vue-data-ui' {
                 };
             };
             rating?: {
+                useSmiley?: boolean;
                 color?: string;
                 filled?: boolean;
                 strokeWidth?: number;
