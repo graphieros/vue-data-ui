@@ -48,9 +48,10 @@ const dataset2 = ref([
           name: "Series 3",
           series: [-55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
           type: "line",
-          dashed: true,
-          dataLabels: false,
+          dashed: false,
+          dataLabels: true,
           useProgression: true,
+          useTag: "start"
         },
         {
           name: "Series 4",
@@ -74,7 +75,7 @@ const dataset2 = ref([
       const config = ref({
         chart: {
           color: "#000000",
-          background: "#FFFFFF",
+          backgroundColor: "#FFFFFF",
           highlighter: {
             color: "#FF0000"
           },
@@ -88,16 +89,16 @@ const dataset2 = ref([
             show: true,
           },
           padding: {
-            bottom: 48,
-            top: 48
+            bottom: 24,
+            right: 24
           },
           grid: {
+            "showVerticalLines": true,
             labels: {
               color: "red",
               axis: {
                 xLabel: "x label",
-                yLabel: "yLabel",
-                fontSize: 20,
+                yLabel: "y Label",
               },
               xAxisLabels: {
                 showOnlyFirstAndLast: true,
@@ -140,13 +141,14 @@ const dataset2 = ref([
           }
         },
         bar: {
+          borderRadius: 4,
           useGradient: true,
           labels: {
             show: true,
           }
         },
         line: {
-          radius: 2.5,
+          radius: 4,
            labels: {
             show: true
           }
@@ -2885,6 +2887,10 @@ const showLocalTest = ref(false);
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
     <button @click="getDashPositions">DASH POSITIONS</button>
     <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
+    <div style="max-width:1000px; margin:0 auto">
+      <VueUiXy ref="xytest" :config="{...config, useCanvas: true}" :dataset="dataset2" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
+      <XyTest ref="xytest" :config="{...config, useCanvas: true}" :dataset="dataset2" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
+    </div>
     <div style="max-width:1000px; margin:0 auto; margin-bottom: 48px;">
       <VueUiSkeleton v-if="!showLocalTest" :config="{ type: 'rating', style:{ rating: {  useSmiley: true, filled: true}} }" />
       <SkeletonTest v-if="showLocalTest" :config="{type: 'rating', style:{ rating: {  useSmiley: true, filled: true}}}" />
@@ -2935,10 +2941,6 @@ const showLocalTest = ref(false);
       <VueUiWaffle ref="waffletest" v-if="!showLocalTest" :dataset="donutDataset" :config="waffleConfig" @selectLegend="selectLegendWaffle"/>
       <WaffleTest ref="waffletest" v-if="showLocalTest" :dataset="donutDataset" @selectLegend="selectLegendWaffle"/>
     </div> 
-  <div style="max-width:1000px; margin:0 auto">
-      <VueUiXy ref="xytest" :config="config" :dataset="dataset2" v-if="!showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
-      <XyTest ref="xytest" :config="config" :dataset="dataset2" v-if="showLocalTest" @selectLegend="selectLegendXY" @selectX="selectX"/>
-    </div>
   <div style="display:flex; flex-direction:row; gap:12px;align-items:center">
       <VueUiDonut ref="donuttest" v-if="!showLocalTest" :dataset="donutDataset" :config="donutConfig" @selectLegend="selectLegendDonut"/>
       <DonutTest ref="donuttest" v-if="showLocalTest" :dataset="donutDataset" @selectLegend="selectLegendDonut"/>

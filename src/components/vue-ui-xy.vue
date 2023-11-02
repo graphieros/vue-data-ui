@@ -1,6 +1,6 @@
 
 <template>
-    <div :id="`vue-ui-xy_${uniqueId}`" class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${chartConfig.chart.userOptions.show ? 'padding-top:36px' : ''}`">
+    <div :id="`vue-ui-xy_${uniqueId}`" class="vue-ui-xy" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${chartConfig.chart.userOptions.show ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily}`">
         <!-- TITLE AS OUTSIDE DIV -->
         <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show && (!mutableConfig.titleInside || isPrinting)" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <div class="vue-ui-xy-title-main" :style="`font-size:${chartConfig.chart.title.fontSize}px; color:${chartConfig.chart.title.color}; font-weight:${chartConfig.chart.title.bold ? 'bold': '400'}`">
@@ -19,12 +19,12 @@
                     v-model="mutableConfig.dataLabels.show">
                     <label :for="`vue-ui-xy-option-datalabels_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.dataLabels }}</label>
                 </div>
-                <div class="vue-ui-xy-user-option-item">
+                <div class="vue-ui-xy-user-option-item" v-if="!chartConfig.useCanvas">
                     <input type="checkbox" :id="`vue-ui-xy-option-title_${uniqueId}`" :name="`vue-ui-xy-option-title_${uniqueId}`"
                     v-model="mutableConfig.titleInside">
                     <label :for="`vue-ui-xy-option-title_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.titleInside }}</label>
                 </div>
-                <div class="vue-ui-xy-user-option-item">
+                <div class="vue-ui-xy-user-option-item" v-if="!chartConfig.useCanvas">
                     <input type="checkbox" :id="`vue-ui-xy-option-legend_${uniqueId}`" :name="`vue-ui-xy-option-legend_${uniqueId}`"
                     v-model="mutableConfig.legendInside">
                     <label :for="`vue-ui-xy-option-legend_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.legendInside }}</label>
@@ -51,8 +51,10 @@
             </div>
         </details>
 
+        <canvas ref="vueUiXyCanvas" v-if="chartConfig.useCanvas" :height="chartConfig.chart.height" :width="chartConfig.chart.width" @mouseover="isInsideCanvas = true" @mouseleave="resetCanvas">
+        </canvas>
 
-        <svg width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`" @click="closeDetails">
+        <svg v-else width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`" @click="closeDetails">
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
@@ -135,6 +137,7 @@
                             :y="calcRectY(plot)"
                             :height="calcRectHeight(plot)"
                             :width="calcRectWidth()"
+                            :rx="chartConfig.bar.borderRadius"
                             :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                         />
                     </g>
@@ -394,7 +397,7 @@
                         />
                         <text 
                             v-if="yLabel.value >= min && yLabel.value <= max" 
-                            :x="drawingArea.left - 5" 
+                            :x="drawingArea.left - 7" 
                             :y="yLabel.y + chartConfig.chart.labels.fontSize / 3" 
                             :font-size="chartConfig.chart.grid.labels.fontSize" 
                             text-anchor="end"
@@ -614,6 +617,8 @@ export default {
             end: maxX,
         }
         return {
+            CTX: null,
+            CANVAS: null,
             opacity,
             useSafeValues: true,
             palette,
@@ -622,11 +627,16 @@ export default {
                 x:0,
                 y:0,
             },
+            canvasClientPosition: {
+                x: 0,
+                y: 0,
+            },
             icons: {
                 line: "line",
                 bar: "bar",
                 plot: "plot"
             },
+            isInsideCanvas: false,
             isPrinting: false,
             isTooltip: false,
             mutableConfig: {
@@ -646,18 +656,38 @@ export default {
         }
     },
     computed: {
-        chartConfig() {
-            if(!Object.keys(this.config || {}).length) {
+        chartFont() {
+            const wrapper = document.getElementById(`vue-ui-xy_${this.uniqueId}`);
+            return window.getComputedStyle(wrapper, null).getPropertyValue("font-family");
+        },
+        chartConfig: {
+            get: function() {
+                if(!Object.keys(this.config || {}).length) {
                 return this.defaultConfig
             }
-            
-            const reconcilied = this.treeShake({
-                defaultConfig: this.defaultConfig,
-                userConfig: this.config
-            });
+                const reconcilied = this.treeShake({
+                    defaultConfig: this.defaultConfig,
+                    userConfig: this.config
+                });
 
-            return this.convertConfigColors(reconcilied);
+                return this.convertConfigColors(reconcilied);
+            },
+            set: function (val) {
+                return val;
+            }
         },
+        // chartConfig() {
+        //     if(!Object.keys(this.config || {}).length) {
+        //         return this.defaultConfig
+        //     }
+            
+        //     const reconcilied = this.treeShake({
+        //         defaultConfig: this.defaultConfig,
+        //         userConfig: this.config
+        //     });
+
+        //     return this.convertConfigColors(reconcilied);
+        // },
         relativeZero() {
             if(this.min >= 0) return 0;
             return Math.abs(this.min);
@@ -890,6 +920,30 @@ export default {
             return this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(this.relativeZero));
         }
     },
+    watch: {
+        mutableConfig: {
+            handler() {
+                if (this.chartConfig.useCanvas) {
+                    this.drawCanvas();
+                }
+            },
+            deep: true
+        },
+        config: {
+            handler() {
+                if (this.chartConfig.useCanvas) {
+                    this.drawCanvas();
+                }
+            }
+        },
+        dataset: {
+            handler() {
+                if (this.chartConfig.useCanvas) {
+                    this.drawCanvas();
+                }
+            }
+        }
+    },
     mounted() {
         const that = this;
         const yLabel = document.getElementById("yAxisLabel");
@@ -924,12 +978,13 @@ export default {
             dataLabels: {
                 show: true,
             },
-            titleInside: !this.chartConfig.chart.title.useDiv,
-            legendInside: !this.chartConfig.chart.legend.useDiv,
+            titleInside: this.chartConfig.useCanvas ? false : !this.chartConfig.chart.title.useDiv,
+            legendInside: this.chartConfig.useCanvas ? false : !this.chartConfig.chart.legend.useDiv,
             showTable: this.chartConfig.showTable === true
         }
 
         if (this.chartConfig.chart.zoom.show) {
+            const vm = this;
             const sliderOne = document.getElementById(`start_${this.uniqueId}`);
             const sliderTwo = document.getElementById(`end_${this.uniqueId}`);
     
@@ -944,12 +999,19 @@ export default {
                     sliderOne.value = parseInt(sliderTwo.value) - minGap;
                 }
                 fillColor();
+                if (vm.chartConfig.useCanvas) {
+                    vm.drawCanvas();
+                }
             }
             function slideTwo(){
                 if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
                     sliderTwo.value = parseInt(sliderOne.value) + minGap;
                 }
                 fillColor();
+                fillColor();
+                if (vm.chartConfig.useCanvas) {
+                    vm.drawCanvas();
+                }
             }
             const dataset = this.dataset;
             function fillColor(){
@@ -961,9 +1023,30 @@ export default {
             slideOne();
             slideTwo();
         }
+
+        if (this.chartConfig.useCanvas) {
+            const canvas = this.$refs.vueUiXyCanvas;
+            this.drawCanvas();
+            if (canvas) {
+                function getMousePositionCanvas(can, e) {
+                    const rect = can.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    return {
+                        x: (e.clientX - rect.left) * scaleX,
+                        y: (e.clientY - rect.top) * scaleY
+                    }
+                }
+                canvas.addEventListener('mousemove', (e) => {
+                    const { x, y } = getMousePositionCanvas(canvas, e);
+                    this.canvasClientPosition.x = x;
+                    this.canvasClientPosition.y = y;
+                    this.drawCanvas();
+                });
+            }
+        }
     },
     methods: {
-        // lib
         checkNaN,
         isSafeValue,
         treeShake,
@@ -975,7 +1058,437 @@ export default {
         adaptColorToBackground,
         calcLinearProgression,
         useMouse,
+        /////////////////////////////// CANVAS /////////////////////////////////
+        drawCanvas() {
+            this.CANVAS = this.$refs.vueUiXyCanvas;
+            this.CTX = this.CANVAS.getContext("2d");
+            this.CTX.clearRect(0, 0, this.chartConfig.chart.width, this.chartConfig.chart.height);
+            this.CTX.save();
+            this.CTX.fillStyle = this.chartConfig.chart.backgroundColor;
+            this.CTX.fillRect(0, 0, this.chartConfig.chart.width, this.chartConfig.chart.height);
+            this.CTX.restore();
 
+
+            if (!this.CANVAS || !this.CTX) {
+                console.error("Vue Data UI Exception: an error occurred while painting the canvas");
+            }
+
+            if (this.maxSeries > 0) {
+                this.drawCanvasGrid();
+            }
+
+            if (this.barSet.length) {
+                this.drawCanvasBars();
+            }
+
+            if (this.lineSet.length) {
+                this.drawCanvasLines();
+            }
+
+            if (this.plotSet.length) {
+                this.drawCanvasPlots();
+            }
+
+            if (this.chartConfig.chart.title.show && this.mutableConfig.titleInside) {
+                this.drawCanvasTitle();
+                if (this.chartConfig.chart.title.subtitle.text) {
+                    this.drawCanvasSubtitle();
+                }
+            }
+            
+            if (this.isInsideCanvas) {
+                this.drawCanvasTooltip();
+                this.drawCanvasSelector();
+            }
+        },
+        drawCanvasSelector() {
+            this.CTX.save();
+            const zoneWidth = this.maxSlot;
+            const zones = [];
+            for(let i = 0; i < this.maxSeries; i += 1) {
+                zones.push(zoneWidth * i + this.drawingArea.left);
+            }
+            const hoverIndex = zones.indexOf(this.findClosestValue(this.canvasClientPosition.x, zones));
+            this.CTX.rect(zones[hoverIndex], this.drawingArea.top, zoneWidth, this.drawingArea.height);
+            this.CTX.fillStyle = `${this.chartConfig.chart.highlighter.color}${opacity[this.chartConfig.chart.highlighter.opacity]}`;
+            this.CTX.fill();
+            this.CTX.restore();
+        },
+        drawCanvasTooltip() {
+            const zoneWidth = this.maxSlot;
+            const zones = [];
+            for (let i = 0; i < this.maxSeries; i += 1) {
+                zones.push((zoneWidth * i + this.drawingArea.left));
+            }
+            const hoverIndex = zones.indexOf(this.findClosestValue(this.canvasClientPosition.x, zones));
+            this.toggleTooltip(true, hoverIndex);
+        },
+        drawCanvasSubtitle() {
+            this.CTX.save();
+            this.CTX.font = `${this.chartConfig.chart.title.subtitle.bold ? 'bold ' : ''}${this.chartConfig.chart.title.subtitle.fontSize}px ${this.chartFont}`;
+            this.CTX.fillStyle = this.chartConfig.chart.title.subtitle.color;
+            this.CTX.textAlign = "center";
+            this.CTX.fillText(
+                this.chartConfig.chart.title.subtitle.text,
+                this.drawingArea.width / 2 + this.drawingArea.left,
+                this.chartConfig.chart.title.fontSize * 2 + this.chartConfig.chart.title.subtitle.fontSize
+            )
+            this.CTX.restore();
+        },
+        drawCanvasTitle() {
+            this.CTX.save();
+            this.CTX.font = `${this.chartConfig.chart.title.bold ? 'bold ' : ''}${this.chartConfig.chart.title.fontSize}px ${this.chartFont}`;
+            this.CTX.fillStyle = this.chartConfig.chart.title.color;
+            this.CTX.textAlign = "center";
+            this.CTX.fillText(
+                this.chartConfig.chart.title.text,
+                this.drawingArea.width / 2 + this.drawingArea.left,
+                this.chartConfig.chart.title.fontSize
+            )
+            this.CTX.restore();
+        },
+        drawBarXLabels({ x, y, value }) {
+            this.CTX.save();
+            this.CTX.font = `${this.chartConfig.chart.labels.fontSize}px ${this.chartFont}`;
+            this.CTX.textAlign = "center";
+            this.CTX.fillStyle = this.chartConfig.bar.labels.color;
+            this.CTX.fillText(this.canShowValue(value) ? value.toFixed(this.chartConfig.bar.labels.rounding) : '', x + this.calcRectWidth() * 1.1, y + (value > 0 ? this.chartConfig.bar.labels.offsetY : - this.chartConfig.bar.labels.offsetY * 3));
+            this.CTX.restore();
+        },
+        drawLineXLabels({x, y, value }) {
+            this.CTX.save();
+            this.CTX.font = `${this.chartConfig.chart.labels.fontSize}px ${this.chartFont}`;
+            this.CTX.textAlign = "center";
+            this.CTX.fillStyle = this.chartConfig.line.labels.color;
+            this.CTX.fillText(this.canShowValue(value) ? value.toFixed(this.chartConfig.line.labels.rounding) : '', x, y + (value > 0 ? this.chartConfig.line.labels.offsetY : - this.chartConfig.line.labels.offsetY * 3));
+            this.CTX.restore();
+        },
+        drawPlotXLabels({x, y, value }) {
+            this.CTX.save();
+            this.CTX.font = `${this.chartConfig.chart.labels.fontSize}px ${this.chartFont}`;
+            this.CTX.textAlign = "center";
+            this.CTX.fillStyle = this.chartConfig.plot.labels.color;
+            this.CTX.fillText(this.canShowValue(value) ? value.toFixed(this.chartConfig.plot.labels.rounding) : '', x, y + (value > 0 ? this.chartConfig.plot.labels.offsetY : - this.chartConfig.plot.labels.offsetY * 3));
+            this.CTX.restore();
+        },
+        drawCanvasPlots() {
+            this.CTX.save();
+            for (let i = 0; i < this.plotSet.length; i += 1) {
+                const serie = this.plotSet[i];
+                for (let k = 0; k < serie.plots.length; k += 1) {
+                    const plot = serie.plots[k];
+                    if (this.canShowValue(plot.value)) {
+                        this.CTX.beginPath();
+                        this.CTX.arc(plot.x, plot.y, this.chartConfig.plot.radius, 0, 2 * Math.PI, false);
+                        this.CTX.fillStyle = serie.color;
+                        this.CTX.fill();
+                        this.CTX.closePath();
+                    }
+                    if (this.chartConfig.plot.labels.show && this.mutableConfig.dataLabels.show && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true)) {
+                        this.drawPlotXLabels(plot);
+                    }
+                }
+                if (Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(this.calcLinearProgression(serie.plots).trend)) {
+                    const { x1, y1, x2, y2, trend } = this.calcLinearProgression(serie.plots);
+                    this.drawArrow(this.CTX, x1, y1, x2, y2, 0.01, true, serie.color);
+                    this.CTX.font = `${this.chartConfig.chart.labels.fontSize * 0.7}px ${this.chartFont}`;
+                    this.CTX.strokeStyle = "white";
+                    this.CTX.fillStyle = this.chartConfig.chart.color;
+                    this.CTX.fillText(
+                        `${(trend * 100).toFixed(1)}%`,
+                        x2,
+                        y2
+                    )
+                }
+            }
+            this.CTX.restore();
+        },
+        drawLineTag(plot, serie) {
+            if(!plot) return;
+            this.CTX.save();
+            const charLen = serie.name.length * this.chartConfig.chart.labels.fontSize / 1.8;
+            this.CTX.beginPath();
+            this.CTX.fillStyle = `${serie.color}${this.opacity[80]}`;
+            this.CTX.roundRect(serie.useTag === 'start' ? plot.x : plot.x - charLen, plot.y - this.chartConfig.chart.labels.fontSize * 1.5, charLen, this.chartConfig.chart.labels.fontSize * 1.5, [2]);
+            this.CTX.fill();
+            this.CTX.textAlign = serie.useTag === 'start' ? 'left' : 'right';
+            this.CTX.fillStyle = this.adaptColorToBackground(serie.color);
+            this.CTX.font = `${this.chartConfig.chart.labels.fontSize}px ${this.chartFont}`;
+            this.CTX.fillText(
+                serie.name,
+                serie.useTag === 'start' ? plot.x + this.chartConfig.chart.labels.fontSize / 2 : plot.x - this.chartConfig.chart.labels.fontSize / 2,
+                plot.y - this.chartConfig.chart.labels.fontSize / 2
+            )
+            this.CTX.closePath();
+            this.CTX.restore();
+        },
+        drawCanvasLines() {
+            this.CTX.save();
+            for (let i = 0; i < this.lineSet.length; i += 1) {
+                const serie = this.lineSet[i];
+                for (let k = 0; k < serie.plots.length; k += 1) {
+                    const plot = serie.plots[k];
+                    if (k < serie.plots.length - 1 && this.canShowValue(plot.value) && this.canShowValue(serie.plots[k + 1].value)) {
+                        this.CTX.beginPath();
+                        if (serie.dashed) {
+                            this.CTX.setLineDash([5, 5]);
+                        } else {
+                            this.CTX.setLineDash([0,0]);
+                        }
+                        this.CTX.moveTo(plot.x, plot.y);
+                        this.CTX.lineTo(serie.plots[k + 1].x, serie.plots[k + 1].y);
+                        this.CTX.strokeStyle = serie.color;
+                        this.CTX.lineWidth = this.chartConfig.line.strokeWidth;
+                        this.CTX.lineCap = "round";
+                        this.CTX.stroke();
+                        this.CTX.closePath();
+                    }
+                    if (this.canShowValue(plot.value)) {
+                        this.CTX.setLineDash([0,0]);
+                        this.CTX.beginPath();
+                        this.CTX.arc(plot.x, plot.y, this.chartConfig.line.radius, 0, 2 * Math.PI, false);
+                        this.CTX.fillStyle = serie.color;
+                        this.CTX.fill();
+                        this.CTX.closePath();
+                        if (this.chartConfig.line.labels.show && this.mutableConfig.dataLabels.show && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true)) {       
+                            this.drawLineXLabels(plot);
+                        }
+                    }
+                }
+                if (this.chartConfig.line.labels.show && this.mutableConfig.dataLabels.show && serie.useTag) {
+                    if (serie.useTag === 'start') {
+                        this.drawLineTag(serie.plots[0], serie);
+                    } else {
+                        this.drawLineTag(serie.plots.at(-1), serie);
+                    }
+                }
+                if (Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(this.calcLinearProgression(serie.plots).trend)) {
+                    const { x1, y1, x2, y2, trend } = this.calcLinearProgression(serie.plots);
+                    this.drawArrow(this.CTX, x1, y1, x2, y2, 0.01, true, serie.color);
+                    this.CTX.font = `${this.chartConfig.chart.labels.fontSize * 0.7}px ${this.chartFont}`;
+                    this.CTX.strokeStyle = "white";
+                    this.CTX.fillStyle = this.chartConfig.chart.color;
+                    this.CTX.fillText(
+                        `${(trend * 100).toFixed(1)}%`,
+                        x2,
+                        y2
+                    )
+                }
+            }
+            this.CTX.restore();
+        },
+        drawCanvasBars() {
+            const borderRadius = this.chartConfig.bar.borderRadius;
+            for (let i = 0; i < this.barSet.length; i += 1) {
+                const serie = this.barSet[i];
+                for (let k = 0; k < serie.plots.length; k += 1) {
+                    const plot = serie.plots[k];
+                    if (this.canShowValue(plot.value)) {
+                        if (this.chartConfig.bar.useGradient) {
+                            const gradient = this.CTX.createLinearGradient(
+                                0,
+                                this.calcRectY(plot),
+                                0,
+                                this.calcRectY(plot) + this.calcRectHeight(plot)
+                            );
+                            if (plot.value > 0) {
+                                gradient.addColorStop(0, serie.color);
+                                gradient.addColorStop(1, `${this.shiftHue(serie.color, 0.05)}66`);
+                            } else {
+                                gradient.addColorStop(0, `${this.shiftHue(serie.color, 0.05)}66`);
+                                gradient.addColorStop(1, serie.color);
+                            }
+                            this.CTX.fillStyle = gradient;
+                        } else {
+                            this.CTX.fillStyle = serie.color;
+                        }
+                        this.CTX.beginPath();
+                        if (plot.value > 0) {
+                            this.CTX.roundRect(this.calcRectX(plot), this.calcRectY(plot), this.calcRectWidth(), this.calcRectHeight(plot), [borderRadius,borderRadius,0,0]);
+                        } else {
+                            this.CTX.roundRect(this.calcRectX(plot), this.calcRectY(plot), this.calcRectWidth(), this.calcRectHeight(plot), [0,0,borderRadius,borderRadius]);
+                        }
+                        this.CTX.fill();
+                        if (this.chartConfig.bar.labels.show && this.mutableConfig.dataLabels.show && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true)) {
+                            this.drawBarXLabels(plot);
+                        }
+                    }
+                }
+                if (Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(this.calcLinearProgression(serie.plots).trend)) {
+                    const { x1, y1, x2, y2, trend } = this.calcLinearProgression(serie.plots);
+                    this.drawArrow(this.CTX, x1, y1, x2, y2, 0.01, true, serie.color);
+                    this.CTX.font = `${this.chartConfig.chart.labels.fontSize * 0.7}px ${this.chartFont}`;
+                    this.CTX.strokeStyle = "white";
+                    this.CTX.fillStyle = this.chartConfig.chart.color;
+                    this.CTX.fillText(
+                        `${(trend * 100).toFixed(1)}%`,
+                        x2,
+                        y2
+                    )
+                }
+            }
+        },
+        drawLine(context, x1, y1, x2, y2, color) {
+            context.save();
+            context.beginPath();
+            context.setLineDash([5, 5]);
+            context.moveTo(x1, y1);
+            context.lineTo(x2, y2);
+            context.strokeStyle = color;
+            context.stroke();
+            context.restore();
+        },
+        drawArrow(context, x1, y1, x2, y2, arrow, filled, color) {
+            context.save();
+            if (arrow == null) {
+                arrow = 0.1;
+            }
+            const t = 1.0 - arrow;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const middleX = dx * t + x1;
+            const middleY = dy * t + y1;
+            this.drawLine(context, x1, y1, middleX, middleY, color);
+            this.drawHead(context, middleX, middleY, x2, y2, filled, color);
+            context.restore();
+        },
+        drawHead(context, x1, y1, x2, y2, filled, color) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            context.beginPath();
+            context.moveTo(x1 + 0.5 * dy, y1 - 0.5 * dx); 
+            context.lineTo(x1 - 0.5 * dy, y1 + 0.5 * dx);
+            context.lineTo(x2, y2);
+            context.closePath();
+            context.strokeStyle = color;
+            context.fillStyle = color;
+            filled ? context.fill() : context.stroke();
+        },
+        drawCanvasYLabels() {
+            this.CTX.save();
+            for (let i = 0; i < this.yLabels.length; i += 1) {
+                const yLabel = this.yLabels[i];
+                this.CTX.font = `${this.chartConfig.chart.grid.labels.fontSize}px ${this.chartFont}`;
+                this.CTX.fillStyle = this.chartConfig.chart.grid.labels.color;
+                this.CTX.textAlign = "right";
+                this.CTX.fillText(
+                    `${this.canShowValue(yLabel.value) ? Number(yLabel.value.toFixed(0)).toLocaleString() : ''}`,
+                    this.drawingArea.left - 7,
+                    yLabel.y + this.chartConfig.chart.labels.fontSize / 3
+                );
+                this.CTX.beginPath();
+                this.CTX.moveTo(this.drawingArea.left, yLabel.y);
+                this.CTX.lineTo(this.drawingArea.left - 5, yLabel.y);
+                this.CTX.stroke();
+                this.CTX.closePath();
+            }
+            this.CTX.restore();
+        },
+        drawCanvasTimeLabels() {
+            this.CTX.save();
+            for (let i = 0; i < this.timeLabels.length; i += 1) {
+                const label = this.timeLabels[i];
+                if ((label && !this.chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast) || (label && this.chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === this.timeLabels.length -1))) {
+                    this.CTX.font = `${this.chartConfig.chart.grid.labels.xAxisLabels.fontSize}px ${this.chartFont}`;
+                    this.CTX.fillStyle = this.chartConfig.chart.grid.labels.xAxisLabels.color;
+                    this.CTX.textAlign = "center";
+                    this.CTX.fillText(
+                        label,
+                        this.drawingArea.left + (this.drawingArea.width / this.maxSeries) * i + (this.drawingArea.width / this.maxSeries / 2),
+                        this.drawingArea.bottom + this.chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3
+                    )
+                }
+            }
+            this.CTX.restore();
+        },
+        drawCanvasAxisLabels() {
+            if (this.chartConfig.chart.grid.labels.axis.yLabel) {
+                const x = 0;
+                const y = this.drawingArea.height / 2;
+                this.CTX.save();
+                this.CTX.translate(x,y);
+                this.CTX.font = `${this.chartConfig.chart.grid.labels.axis.fontSize}px ${this.chartFont}`;
+                this.CTX.fillStyle = this.chartConfig.chart.grid.labels.color;
+                this.CTX.textAlign = "center";
+                this.CTX.rotate(-Math.PI / 2);
+                this.CTX.fillText(
+                    this.chartConfig.chart.grid.labels.axis.yLabel,
+                    -this.chartConfig.chart.grid.labels.axis.yLabel.length * this.chartConfig.chart.grid.labels.axis.fontSize / 3,
+                    15
+                )
+                this.CTX.restore();
+            }
+            if (this.chartConfig.chart.grid.labels.axis.xLabel) {
+                this.CTX.save();
+                this.CTX.font = `${this.chartConfig.chart.grid.labels.axis.fontSize}px ${this.chartFont}`;
+                this.CTX.fillStyle = this.chartConfig.chart.grid.labels.color;
+                this.CTX.textAlign = "center";
+                this.CTX.fillText(
+                    this.chartConfig.chart.grid.labels.axis.xLabel,
+                    this.chartConfig.chart.width / 2,
+                    this.drawingArea.bottom + this.chartConfig.chart.grid.labels.axis.fontSize + this.chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3
+                )
+                this.CTX.restore();
+            }
+        },
+        drawCanvasGrid() {
+            this.CTX.save();
+            this.CTX.setLineDash([0,0]);
+            this.CTX.beginPath();
+            this.CTX.moveTo(this.drawingArea.left, this.drawingArea.top);
+            this.CTX.lineTo(this.drawingArea.left, this.drawingArea.bottom);
+            this.CTX.strokeStyle = this.chartConfig.chart.grid.stroke;
+            this.CTX.lineWidth = 1;
+            this.CTX.lineCap = "round";
+            this.CTX.stroke();
+            this.CTX.closePath();
+
+            this.CTX.beginPath();
+            this.CTX.moveTo(this.drawingArea.left, this.zero);
+            this.CTX.lineTo(this.drawingArea.right, this.zero);
+            this.CTX.strokeStyle = this.chartConfig.chart.grid.stroke;
+            this.CTX.lineWidth = 1;
+            this.CTX.lineCap = "round";
+            this.CTX.stroke();
+            this.CTX.closePath();
+
+            if (this.chartConfig.chart.grid.showVerticalLines) {
+                for (let i = 0; i < this.maxSeries + 1; i += 1) {
+                    this.CTX.beginPath();
+                    this.CTX.moveTo((this.drawingArea.width / this.maxSeries) * i + this.drawingArea.left, this.drawingArea.top)
+                    this.CTX.lineTo((this.drawingArea.width / this.maxSeries) * i + this.drawingArea.left, this.drawingArea.bottom);
+                    this.CTX.strokeStyle = this.chartConfig.chart.grid.stroke;
+                    this.CTX.lineWidth = 0.5;
+                    this.CTX.lineCap = "round";
+                    this.CTX.stroke();
+                    this.CTX.closePath();
+                }
+            }
+
+            if (this.chartConfig.chart.grid.labels.show) {
+                this.drawCanvasYLabels()
+            }
+
+            if (this.chartConfig.chart.grid.labels.xAxisLabels.show) {
+                this.drawCanvasTimeLabels();
+            }
+
+            if (this.chartConfig.chart.grid.labels.axis.yLabel || this.chartConfig.chart.grid.labels.axis.xLabel) {
+                this.drawCanvasAxisLabels();
+            }
+
+            this.CTX.restore();
+        },
+        resetCanvas() {
+            this.isTooltip = false;
+            this.isInsideCanvas = false;
+            this.canvasClientPosition = {
+                x: 0,
+                y: 0
+            }
+            this.drawCanvas();
+        },
+        ////////////////////////////////////////////////////////////////////////
         calcRectHeight(plot) {
             if(plot.value >= 0) {
                 return this.zero - plot.y;
@@ -1016,6 +1529,18 @@ export default {
             }
 
             return roundedValue;
+        },
+        findClosestValue(val, arr) {
+            let closest = arr[0];
+            let minDifference = Math.abs(val - arr[0]);
+            for (let i = 1; i < arr.length; i += 1) {
+                const difference = Math.abs(val - arr[i]);
+                if (difference < minDifference && arr[i] < val) {
+                    closest = arr[i];
+                    minDifference = difference;
+                }
+            }
+            return closest;
         },
         ratioToMax(value) {
             return value / this.absoluteMax;
@@ -1061,6 +1586,9 @@ export default {
                     type: s.type
                 }
             }));
+            if(this.chartConfig.useCanvas) {
+                this.drawCanvas();
+            }
         },
         toggleTooltip(show, selectedIndex = null) {
             this.isTooltip = show;
@@ -1335,5 +1863,9 @@ input[type="range"]::-ms-thumb{
 input[type="range"]:active::-webkit-slider-thumb{
     background-color: #CCCCCC;
     border: 3px solid #858585;
+}
+canvas {
+    width: 100%;
+    object-fit: contain;
 }
 </style>

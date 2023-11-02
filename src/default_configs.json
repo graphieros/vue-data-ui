@@ -164,20 +164,21 @@
         "useChart": true
     },
     "vue_ui_xy": {
+        "useCanvas": false,
         "chart": {
             "fontFamily" : "inherit",
             "backgroundColor" : "#FFFFFF",
             "color": "#2D353C",
-            "height": 300,
-            "width": 500,
+            "height": 600,
+            "width": 1000,
             "zoom": {
                 "show": true,
                 "color": "#2D353C"
             },
             "padding": {
                 "top": 36,
-                "right": 12,
-                "bottom": 12,
+                "right": 24,
+                "bottom": 24,
                 "left": 48
             },
             "highlighter": {
@@ -250,6 +251,7 @@
             }
         },
         "bar": {
+            "borderRadius": 2,
             "useGradient": true,
             "labels": {
                 "show": false,

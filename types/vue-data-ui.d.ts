@@ -701,6 +701,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiXyConfig = {
+        useCanvas?: boolean;
         chart?: {
             fontFamily?: string;
             backgroundColor?: string;
@@ -787,6 +788,7 @@ declare module 'vue-data-ui' {
             };
         };
         bar?: {
+            borderRadius?: number;
             useGradient?: boolean;
             labels?: {
                 show?: boolean;
