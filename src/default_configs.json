@@ -2157,5 +2157,48 @@
                 "boxShadow":"0 6px 12px -6px rgba(0,0,0,0.2)"
             }
         }
+    },
+    "vue_ui_relation_circle": {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "fontFamily":"inherit",
+            "size": 400,
+            "limit": 50,
+            "animation": {
+                "show": true,
+                "speedMs": 300
+            },
+            "labels": {
+                "color":"#2D353C",
+                "fontSize": 10
+            },
+            "links": {
+                "curved": true,
+                "maxWidth": 3
+            },
+            "circle": {
+                "radiusProportion": 0.2,
+                "stroke": "#CCCCCC",
+                "strokeWidth": 1,
+                "offsetY": 0
+            },
+            "plot": {
+                "radius": 2,
+                "color":"#2D353C"
+            },
+            "title": {
+                "useDiv": true,
+                "text": "",
+                "color": "#2D353C",
+                "fontSize": 20,
+                "bold": true,
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "",
+                    "fontSize": 16,
+                    "bold": false
+                }
+            }
+        }
     }
 }

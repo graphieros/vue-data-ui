@@ -20,6 +20,7 @@ import VueUiSparkbar from "./components/vue-ui-sparkbar.vue";
 import VueUiDashboard from "./components/vue-ui-dashboard.vue";
 import VueUiAnnotator from "./components/vue-ui-annotator.vue";
 import VueUiSmiley from "./components/vue-ui-smiley.vue";
+import VueUiRelationCircle from "./components/vue-ui-relation-circle.vue";
 
 export { 
     VueUiXy, 
@@ -43,5 +44,6 @@ export {
     VueUiSparkbar,
     VueUiDashboard,
     VueUiAnnotator,
-    VueUiSmiley
+    VueUiSmiley,
+    VueUiRelationCircle
 };

@@ -5,6 +5,63 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiRelationCircleConfig = {
+        style?: {
+            backgroundColor?: string;
+            fontFamily?: string;
+            size?: number;
+            limit?: number;
+            animation?: {
+                show?: boolean;
+                speedMs?: number;
+            };
+            labels?: {
+                color?: string;
+                fontSize?: number;
+            };
+            links?: {
+                curved?: boolean;
+                maxWidth?: number;
+            };
+            circle?: {
+                radiusProportion?: number;
+                stroke?: string;
+                strokeWidth?: number;
+                offsetY?: number;
+            };
+            plot?: {
+                radius?: number;
+                color?: string;
+            };
+            title?: {
+                useDiv?: boolean;
+                text?: string;
+                color?: string;
+                fontSize?: number;
+                bold?: boolean;
+                subtitle?: {
+                    color?: string;
+                    text?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                };
+            };
+        };
+    };
+
+    export type VueUiRelationCircleDatasetItem = {
+        id: string | number;
+        label: string;
+        relations: Array<string | number>;
+        weights?: number[];
+        color?: string;
+    }
+
+    export const VueUiRelationCircle: DefineComponent<{
+        config?: VueUiRelationCircleConfig,
+        dataset: VueUiRelationCircleDatasetItem[]
+    }>;
+
     export type VueUiAnnotatorConfig = {
         style?: {
             backgroundColor?: string;
