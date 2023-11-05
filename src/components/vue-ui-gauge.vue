@@ -250,6 +250,10 @@ function closeDetails(){
     }
 }
 
+defineExpose({
+    generatePdf
+});
+
 </script>
 
 <template>

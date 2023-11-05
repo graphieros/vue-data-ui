@@ -111,11 +111,6 @@ function getData() {
     });
 }
 
-defineExpose({
-    getData
-});
-
-
 const donutSet = computed(() => {
     return props.dataset
         .map((serie, i) => {
@@ -236,6 +231,12 @@ function generateXls() {
         makeXls(tableXls, donutConfig.value.style.chart.title.text || "vue-ui-donut");
     });
 }
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateXls
+});
 
 </script>
 

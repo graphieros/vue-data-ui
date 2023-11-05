@@ -203,6 +203,10 @@ function generatePdf(){
     });
 }
 
+defineExpose({
+    generatePdf
+})
+
 </script>
 
 <template>

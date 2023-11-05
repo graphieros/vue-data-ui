@@ -227,11 +227,6 @@ function getData() {
     return mutableDataset.value;
 }
 
-defineExpose({
-    getData,
-    recalculateHeight
-});
-
 const selectedBarId = ref(null);
 
 function useTooltip(bar) {
@@ -349,6 +344,13 @@ function closeDetails(){
         details.value.removeAttribute("open")
     }
 }
+
+defineExpose({
+    getData,
+    recalculateHeight,
+    generatePdf,
+    generateXls
+});
 
 </script>
 

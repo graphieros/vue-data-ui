@@ -134,10 +134,6 @@ function getData() {
     return mutableDataset.value;
 }
 
-defineExpose({
-    getData
-});
-
 const emit = defineEmits(['selectRoot', 'selectBranch', 'selectNut']);
 
 const totalBranches = computed(() => {
@@ -425,6 +421,13 @@ function closeDetails(e){
         details.value.removeAttribute("open")
     }
 }
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateXls
+});
+
 </script>
 
 <template>

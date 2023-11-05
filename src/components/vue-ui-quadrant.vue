@@ -405,10 +405,6 @@ function getData() {
     });
 }
 
-defineExpose({
-    getData
-});
-
 function closeDetails(){
     if(details.value) {
         details.value.removeAttribute("open")
@@ -436,6 +432,12 @@ function generateXls() {
         makeXls(tableXls, quadrantConfig.value.style.chart.title.text || 'vue-ui-quadrant');
     });
 }
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateXls
+});
 
 </script>
 

@@ -140,10 +140,6 @@ function getData() {
     return mutableDataset.value;
 }
 
-defineExpose({
-    getData
-});
-
 const table = computed(() => {
     const head = [onionConfig.value.table.translations.serie, onionConfig.value.table.translations.percentage, onionConfig.value.table.translations.value];
 
@@ -184,6 +180,12 @@ function closeDetails(){
         details.value.removeAttribute("open")
     }
 }
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateXls
+});
 
 </script>
 

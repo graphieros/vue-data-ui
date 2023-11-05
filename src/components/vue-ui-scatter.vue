@@ -190,10 +190,6 @@ function getData() {
     return drawableDataset.value;
 }
 
-defineExpose({
-    getData
-});
-
 const selectedPlotId = ref(undefined);
 
 function hoverPlot(plot) {
@@ -273,6 +269,12 @@ function closeDetails(){
         details.value.removeAttribute("open")
     }
 }
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateXls
+});
 
 </script>
 

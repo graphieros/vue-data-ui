@@ -158,10 +158,6 @@ function getData() {
     });
 }
 
-defineExpose({
-    getData
-});
-
 const cumulatedSet = computed(() => {
     return waffleSet.value.map((serie, i) => {
         const start = i > 0 ? waffleSet.value.filter((_,j) => j < i).map(el => el.proportion).reduce((a,b) => a + b) + serie.proportion - waffleSet.value[i - 1].proportion: serie.proportion - serie.proportion;
@@ -308,6 +304,13 @@ function generateXls() {
         makeXls(tableXls, waffleConfig.value.style.chart.title.text || "vue-ui-waffle");
     });
 }
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateXls
+});
+
 </script>
 
 <template>

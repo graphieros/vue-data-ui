@@ -3168,28 +3168,158 @@ const thermoConfig = ref({
       useDiv: "Title inside"
     }
   }
-})
+});
+
+function printXy() {
+  xytest.value.generatePdf();
+}
+function xlsXy() {
+  xytest.value.generateXls();
+}
+function printDonut(){
+  donuttest.value.generatePdf();
+}
+function xlsDonut() {
+  donuttest.value.generateXls();
+}
+function printWaffle(){
+  waffletest.value.generatePdf();
+}
+function xlsWaffle() {
+  waffletest.value.generateXls();
+}
+function printRadar(){
+  radartest.value.generatePdf();
+}
+function xlsRadar() {
+  radartest.value.generateXls();
+}
+function printQuadrant(){
+  quadranttest.value.generatePdf();
+}
+function xlsQuadrant() {
+  quadranttest.value.generateXls();
+}
+const gaugetest = ref(null);
+function printGauge(){
+  gaugetest.value.generatePdf();
+}
+
+const chestnuttest = ref(null);
+function printChestnut(){
+  chestnuttest.value.generatePdf();
+}
+function xlsChestnut() {
+  chestnuttest.value.generateXls();
+}
+
+const oniontest = ref(null);
+function printOnion(){
+  oniontest.value.generatePdf();
+}
+function xlsOnion() {
+  oniontest.value.generateXls();
+}
+
+const verticaltest = ref(null);
+function printVB(){
+  verticaltest.value.generatePdf();
+}
+function xlsVB() {
+  verticaltest.value.generateXls();
+}
+
+const heatmaptest = ref(null);
+function printHeatmap(){
+  heatmaptest.value.generatePdf();
+}
+function xlsHeatmap() {
+  heatmaptest.value.generateXls();
+}
+
+function printScatter(){
+  scatter.value.generatePdf();
+}
+function xlsScatter() {
+  scatter.value.generateXls();
+}
+
+const candlestick = ref(null);
+function printCandle(){
+  candlestick.value.generatePdf();
+}
+function xlsCandle() {
+  candlestick.value.generateXls();
+}
+
+const pyramid = ref(null);
+function printPyramid(){
+  pyramid.value.generatePdf();
+}
+function xlsPyramid() {
+  pyramid.value.generateXls();
+}
+
+const relation = ref(null);
+function printRelation(){
+  relation.value.generatePdf();
+}
+
+const thermo = ref(null);
+function printThermo(){
+  thermo.value.generatePdf();
+}
 
 const showLocalTest = ref(false);
 </script>
 
 <template>
   <div>
-    <button @click="sstest">SCREENSHOT</button>
+    <!-- <button @click="sstest">SCREENSHOT</button>
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
     <button @click="getDashPositions">DASH POSITIONS</button>
-    <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
+    <button @click="makeDashPdf">PDF FROM OUTSIDE</button> -->
+    <button @click="printXy">PRINT XY</button>
+    <button @click="xlsXy">XLS XY</button>
+    <button @click="printDonut">PRINT DONUT</button>
+    <button @click="xlsDonut">XLS DONUT</button>
+    <button @click="printWaffle">PRINT WAFFLE</button>
+    <button @click="xlsWaffle">XLS WAFFLE</button>
+    <button @click="printRadar">PRINT RADAR</button>
+    <button @click="xlsRadar">XLS RADAR</button>
+    <button @click="printQuadrant">PRINT QUADRANT</button>
+    <button @click="xlsQuadrant">XLS QUADRANT</button>
+    <button @click="printGauge">PRINT GAUGE</button>
+    <button @click="printChestnut">PRINT CHESTNUT</button>
+    <button @click="xlsChestnut">XLS CHESTNUT</button>
+    <button @click="printOnion">PRINT ONION</button>
+    <button @click="xlsOnion">XLS ONION</button>
+    <button @click="printVB">PRINT VERTICAL BAR</button>
+    <button @click="xlsVB">XLS VERTICAL BAR</button>
+    <button @click="printHeatmap">PRINT HEATMAP</button>
+    <button @click="xlsHeatmap">XLS HEATMAP</button>
+    <button @click="printScatter">PRINT SCATTER</button>
+    <button @click="xlsScatter">XLS SCATTER</button>
+    <button @click="printCandle">PRINT CANDLE</button>
+    <button @click="xlsCandle">XLS CANDLE</button>
+    <button @click="printPyramid">PRINT PYRAMID</button>
+    <button @click="xlsPyramid">XLS PYRAMID</button>
+    <button @click="printRelation">PRINT RELATION CIRCLE</button>
+    <button @click="printThermo">PRINT THERMO</button>
+
+
     <div style="max-width:1000px; margin: 0 auto">
-      <ThermoTest v-if="showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
-      <VueUiThermometer v-if="!showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
+      <ThermoTest ref="thermo" v-if="showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
+      <VueUiThermometer ref="thermo" v-if="!showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
     </div>
     <div style="max-width: 1000px; margin: 0 auto">
       <RelationTest
+        ref="relation"
         :dataset="relationDataset"
         :config="relationConfig"
         v-if="showLocalTest"
       />
-      <VueUiRelationCircle v-if="!showLocalTest" :dataset="relationDataset" :config="relationConfig"/>
+      <VueUiRelationCircle ref="relation" v-if="!showLocalTest" :dataset="relationDataset" :config="relationConfig"/>
     </div>
     <div style="max-width: 1000px; margin: 0 auto">
       <VueUiXy
@@ -3264,19 +3394,21 @@ const showLocalTest = ref(false);
     </div>
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <VueUiAgePyramid
+        ref="pyramid"
         v-if="!showLocalTest"
         :dataset="pyramidDataset"
         :config="pyramidConfig"
       />
-      <PyramidTest v-if="showLocalTest" :dataset="pyramidDataset" />
+      <PyramidTest ref="pyramid" v-if="showLocalTest" :dataset="pyramidDataset" />
     </div>
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <VueUiCandlestick
+        ref="candlestick"
         v-if="!showLocalTest"
         :config="candlestickConfig"
         :dataset="candlestickDataset"
       />
-      <CandlestickTest v-if="showLocalTest" :dataset="candlestickDataset" />
+      <CandlestickTest ref="candlestick" v-if="showLocalTest" :dataset="candlestickDataset" />
     </div>
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <VueUiScatter
@@ -3460,11 +3592,13 @@ const showLocalTest = ref(false);
     </div>
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <VueUiHeatmap
+        ref="heatmaptest"
         v-if="!showLocalTest"
         :config="heatmapConfig"
         :dataset="heatmapDataset"
       />
       <HeatmapTest
+        ref="heatmaptest"
         v-if="showLocalTest"
         :config="heatmapConfig"
         :dataset="heatmapDataset"

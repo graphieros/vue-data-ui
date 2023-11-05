@@ -97,10 +97,6 @@ function getData() {
     })
 }
 
-defineExpose({
-    getData
-});
-
 const datasetCopy = computed(() => {
     return props.dataset.categories.map((c, i) => {
         return {
@@ -277,6 +273,12 @@ function closeDetails(){
         details.value.removeAttribute("open")
     }
 }
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateXls
+});
 
 </script>
 

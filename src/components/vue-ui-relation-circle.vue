@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { convertConfigColors, treeShake, palette } from "../lib.js";
+import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 
 const props = defineProps({
@@ -20,6 +21,7 @@ const props = defineProps({
 
 const uid = ref(`vue-ui-relation-circle-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_relation_circle);
+const isPrinting = ref(false);
 
 const relationConfig = computed(() => {
     if(!Object.keys(props.config || {}).length) {
@@ -192,10 +194,26 @@ function calcLinkWidth(plot) {
     return plot.weight / maxWeight.value * relationConfig.value.style.links.maxWidth;
 }
 
+function generatePdf(){
+    isPrinting.value = true;
+    pdf({
+        domElement: document.getElementById(`relation_circle_${uid.value}`),
+        fileName: relationConfig.value.style.title.text || 'vue-ui-relation-circle'
+    }).finally(() => {
+        isPrinting.value = false;
+    });
+}
+
+defineExpose({
+    generatePdf
+})
+
+
+
 </script>
 
 <template>
-    <div class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor}`"> 
+    <div class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor}`" :id="`relation_circle_${uid}`"> 
      <!-- TITLE AS DIV -->
         <div v-if="relationConfig.style.title.useDiv && relationConfig.style.title.text" :style="`width:100%;background:${relationConfig.style.backgroundColor}`">
             <div :style="`width:100%;text-align:center;color:${relationConfig.style.title.color};font-size:${relationConfig.style.title.fontSize}px;font-weight:${relationConfig.style.title.bold ? 'bold': ''}`">
