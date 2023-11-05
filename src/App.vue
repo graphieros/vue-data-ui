@@ -23,6 +23,7 @@ import DashboardTest from "./components/vue-ui-dashboard.vue";
 import AnnotatorTest from "./components/vue-ui-annotator.vue";
 import SmileyTest from "./components/vue-ui-smiley.vue";
 import RelationTest from "./components/vue-ui-relation-circle.vue";
+import ThermoTest from "./components/vue-ui-thermometer.vue";
 
 const dataset = ref([
   {
@@ -3096,6 +3097,79 @@ const relationDataset = ref([
   },
 ]);
 
+const thermoDataset = ref({
+  value: 30.77,
+  from: -100,
+  to: 100,
+  steps: 20,
+  colors: {
+    from: "#dc3912",
+    to: "#3366cc",
+  }
+});
+
+const thermoConfig = ref({
+  style: {
+    fontFamily: "inherit",
+    chart: {
+      backgroundColor: "#1A1A1A",
+      color: "#CCCCCC",
+      height: 360,
+      thermometer: {
+        width: 48
+      },
+      padding: {
+        top: 12,
+        bottom: 12,
+        left: 64,
+        right: 64
+      },
+      graduations: {
+        show: true,
+        sides: "both",
+        height: 2,
+        stroke: "#e1e5e8",
+        strokeWidth: 1,
+        showIntermediate: true,
+        gradient: {
+          show: true,
+          intensity: 20
+        }
+      },
+      animation: {
+        use: true,
+        speedMs: 1000
+      },
+      label: {
+        fontSize: 14,
+        rounding: 1,
+        bold: true,
+        color: "#FAFAFA"
+      }
+    },
+    title: {
+      useDiv: true,
+      text: "Title",
+      color: "#FAFAFA",
+      fontSize: 20,
+      bold: true,
+      subtitle: {
+        color: "#A1A1A1",
+        text: "Subtitle",
+        fontSize: 16,
+        bold: false
+      }
+    }
+  },
+  userOptions: {
+    show: true,
+    title: "options",
+    labels: {
+      useDiv: "Title inside"
+    }
+  }
+})
+
 const showLocalTest = ref(false);
 </script>
 
@@ -3105,6 +3179,10 @@ const showLocalTest = ref(false);
     <button @click="toggleRead">TOGGLE RATING READONLY</button>
     <button @click="getDashPositions">DASH POSITIONS</button>
     <button @click="makeDashPdf">PDF FROM OUTSIDE</button>
+    <div style="max-width:1000px; margin: 0 auto">
+      <ThermoTest v-if="showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
+      <VueUiThermometer v-if="!showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
+    </div>
     <div style="max-width: 1000px; margin: 0 auto">
       <RelationTest
         :dataset="relationDataset"

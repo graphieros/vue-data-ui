@@ -2200,5 +2200,66 @@
                 }
             }
         }
+    },
+    "vue_ui_thermometer": {
+        "style": {
+            "fontFamily":"inherit",
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "height": 360,
+                "thermometer": {
+                    "width": 48
+                },
+                "padding": {
+                    "top": 12,
+                    "bottom": 12,
+                    "left": 64,
+                    "right": 64
+                },
+                "graduations": {
+                    "show": true,
+                    "sides": "both",
+                    "height": 2,
+                    "stroke":"#e1e5e8",
+                    "strokeWidth": 1,
+                    "showIntermediate": true,
+                    "gradient": {
+                        "show": true,
+                        "intensity": 20
+                    }
+                },
+                "animation": {
+                    "use": true,
+                    "speedMs": 1000
+                },
+                "label": {
+                    "fontSize": 20,
+                    "rounding": 1,
+                    "bold": true,
+                    "color": "#2D353C"
+                }
+            },
+            "title": {
+                "useDiv": true,
+                "text": "",
+                "color": "#2D353C",
+                "fontSize": 20,
+                "bold": true,
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "",
+                    "fontSize": 16,
+                    "bold": false
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title inside"
+            }
+        }
     }
 }

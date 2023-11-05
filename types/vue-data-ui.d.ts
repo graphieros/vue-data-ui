@@ -5,6 +5,83 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiThermometerConfig = {
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                height?: number;
+                thermometer?: {
+                    width?: number;
+                };
+                padding?: {
+                    top?: number;
+                    bottom?: number;
+                    left?: number;
+                    right?: number;
+                };
+                graduations?: {
+                    show?: boolean;
+                    sides?: "left" | "right" | "both" | "none";
+                    height?: number;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    showIntermediate?: boolean;
+                    gradient?: {
+                        show?: boolean;
+                        intensity?: number;
+                    };
+                };
+                animation?: {
+                    use?: boolean;
+                    speedMs?: number;
+                };
+                label?: {
+                    fontSize?: number;
+                    rounding?: number;
+                    bold?: boolean;
+                };
+            };
+            title?: {
+                useDiv?: boolean;
+                text?: string;
+                color?: string;
+                fontSize?: number;
+                bold?: boolean;
+                subtitle?: {
+                    color?: string;
+                    text?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                };
+            };
+        };
+        userOptions?: {
+            show?: boolean;
+            title?: string;
+            labels?: {
+                useDiv?: string;
+            };
+        };
+    };
+
+    export type VueUiThermometerDataset = {
+        value: number;
+        from: number;
+        to: number;
+        steps?: number;
+        colors?: {
+            from?: string;
+            to?: string;
+        }
+    }
+
+    export const VueUiThermometer: DefineComponent<{
+        config?: VueUiThermometerConfig,
+        dataset: VueUiThermometerDataset
+    }>;
+
     export type VueUiRelationCircleConfig = {
         style?: {
             backgroundColor?: string;
