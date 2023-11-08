@@ -19,6 +19,7 @@ declare module 'vue-data-ui' {
             legend?: {
                 textAlign?: "left" | "right" | "center";
                 show?: boolean;
+                margin?: string;
                 fontSize?: number;
                 name?: {
                     color?: string;

@@ -2277,6 +2277,7 @@
                 "textAlign": "left",
                 "show": true,
                 "fontSize": 12,
+                "margin": "6px 0 0 0",
                 "name": {
                     "color": "#2D353C",
                     "bold": false
