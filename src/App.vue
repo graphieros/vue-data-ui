@@ -24,6 +24,7 @@ import AnnotatorTest from "./components/vue-ui-annotator.vue";
 import SmileyTest from "./components/vue-ui-smiley.vue";
 import RelationTest from "./components/vue-ui-relation-circle.vue";
 import ThermoTest from "./components/vue-ui-thermometer.vue";
+import StackTest from "./components/vue-ui-sparkstackbar.vue";
 
 const dataset = ref([
   {
@@ -3270,6 +3271,74 @@ function printThermo(){
   thermo.value.generatePdf();
 }
 
+const stackConfig = ref({
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "fontFamily": "inherit",
+            "bar": {
+                "gradient": {
+                    "show": true,
+                    "intensity": 40,
+                    "underlayerColor": "#FFFFFF"
+                }
+            },
+            "legend": {
+                "textAlign": "left",
+                "show": true,
+                "fontSize": 12,
+                "name": {
+                    "color": "#FAFAFA",
+                    "bold": false
+                },
+                "value": {
+                    "show": true,
+                    "bold": false,
+                    "color": "#FAFAFA",
+                    "prefix": "",
+                    "suffix": "",
+                    "rounding": 0
+                },
+                "percentage": {
+                    "show": true,
+                    "color": "#FAFAFA",
+                    "bold": true,
+                    "rounding": 1
+                }
+            },
+            "title": {
+                "textAlign": "left",
+                "text": "Title",
+                "color": "#FAFAFA",
+                "fontSize": 16,
+                "bold": true,
+                "margin": "0 0 6px 0",
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "Some subtitle that serves as a long description of what is happening",
+                    "fontSize": 12,
+                    "bold": false
+                }
+            }
+        }
+    });
+const stackDataset = ref([
+  {
+    name: "Vue",
+    value: 258,
+    color: ""
+  },
+  {
+    name: "Javascript",
+    value: 36,
+    color: ""
+  },
+  {
+    name: "Other",
+    value: 16,
+    color: ""
+  },
+]);
+
 const showLocalTest = ref(false);
 </script>
 
@@ -3307,6 +3376,11 @@ const showLocalTest = ref(false);
     <button @click="printRelation">PRINT RELATION CIRCLE</button>
     <button @click="printThermo">PRINT THERMO</button>
 
+    <div style="maw-width:300px;margin: 0 auto; margin-top: 24px; margin-bottom: 24px;">
+      <StackTest v-if="showLocalTest" :config="stackConfig" :dataset="stackDataset"/>
+      <VueUiSparkStackbar v-if="!showLocalTest" :config="stackConfig" :dataset="stackDataset"/>
+
+    </div>
 
     <div style="max-width:1000px; margin: 0 auto">
       <ThermoTest ref="thermo" v-if="showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />

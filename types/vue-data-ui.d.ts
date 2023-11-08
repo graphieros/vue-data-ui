@@ -5,6 +5,68 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiSparkStackBarConfig = {
+        style?: {
+            backgroundColor?: string;
+            fontFamily?: string;
+            bar?: {
+                gradient?: {
+                    show?: boolean;
+                    intensity?: number;
+                    underlayerColor?: string;
+                };
+            };
+            legend?: {
+                textAlign?: "left" | "right" | "center";
+                show?: boolean;
+                fontSize?: number;
+                name?: {
+                    color?: string;
+                    bold?: boolean;
+                };
+                value?: {
+                    show?: boolean;
+                    color?: string;
+                    bold?: boolean;
+                    prefix?: string;
+                    suffix?: string;
+                    rounding?: number;
+                };
+                percentage?: {
+                    show?: boolean;
+                    color?: string;
+                    bold?: boolean;
+                    rounding?: number;
+                };
+            };
+            title?: {
+                textAlign?: "left" | "center" | "right";
+                text?: string;
+                color?: string;
+                fontSize?: number;
+                bold?: boolean;
+                margin?: string;
+                subtitle?: {
+                    color?: string;
+                    text?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                };
+            };
+        };
+    };
+
+    export type VueUiSparkStackBarDatasetItem = {
+        name: string;
+        value: number;
+        color?: string;
+    }
+
+    export const VueUiSparkstackbar: DefineComponent<{
+        config?: VueUiSparkStackBarConfig,
+        dataset: VueUiSparkStackBarDatasetItem[]
+    }>;
+
     export type VueUiThermometerConfig = {
         style?: {
             fontFamily?: string;

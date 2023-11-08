@@ -12,7 +12,7 @@
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 [![Socket Badge](https://socket.dev/api/badge/npm/package/vue-data-ui)](https://socket.dev/npm/package/vue-data-ui)
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-24-green)
+![Static Badge](https://img.shields.io/badge/components-25-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -34,10 +34,13 @@ Available components:
 - [VueUiScatter](https://vue-data-ui.graphieros.com/docs#vue-ui-scatter)
 - [VueUiCandlestick](https://vue-data-ui.graphieros.com/docs#vue-ui-candlestick)
 - [VueUiAgePyramid](https://vue-data-ui.graphieros.com/docs#vue-ui-age-pyramid)
-- [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
-- [VueUiSparkbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkbar)
 - [VueUiRelationCircle](https://vue-data-ui.graphieros.com/docs#vue-ui-relation-circle)
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
+
+## Mini charts
+- [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
+- [VueUiSparkbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkbar)
+- [VueUiSparkstackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
 
 ## Tables
 - [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
