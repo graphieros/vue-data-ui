@@ -1004,6 +1004,10 @@ declare module 'vue-data-ui' {
                 rounding?: number;
                 color?: string;
             };
+            area?: {
+                useGradient?: boolean;
+                opacity?: number;
+            }
         };
         plot?: {
             radius?: number;
@@ -1038,6 +1042,7 @@ declare module 'vue-data-ui' {
         color?: string;
         dashed?: boolean;
         useTag?: "start" | "end";
+        useArea?: boolean;
         dataLabels?: boolean;
         useProgression?: boolean;
     };

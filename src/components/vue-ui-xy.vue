@@ -123,6 +123,10 @@
                             <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.05)}`"/>
                             <stop offset="100%" :stop-color="serie.color" />
                         </radialGradient>
+                        <linearGradient :id="`areaGradient_${i}_${uniqueId}`" x1="0%" x2="100%" y1="0%" y2="0%">
+                            <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.03)}${opacity[chartConfig.line.area.opacity]}`"/>
+                            <stop offset="100%" :stop-color="`${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
+                        </linearGradient>
                     </defs>
                 </template>
 
@@ -222,7 +226,10 @@
                 </g>
 
                 <!-- LINES -->
-                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`">   
+                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`">
+                    <g v-if="serie.useArea">
+                        <path :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
+                    </g>
                     <g v-for="(plot, j) in serie.plots" :key="`line_${i}_${j}`">
                         <line 
                             v-if="j < serie.plots.length - 1 && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
@@ -743,15 +750,17 @@ export default {
         },
         lineSet() {
             return this.absoluteDataset.filter(s => s.type === 'line').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
-                return {
-                    ...datapoint,
-                    plots: datapoint.series.map((plot, j) => {
+                const plots = datapoint.series.map((plot, j) => {
                         return {
                             x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
                             y: this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(plot)),
                             value: datapoint.absoluteValues[j],
                         }
-                    })
+                    });
+                return {
+                    ...datapoint,
+                    plots,
+                    area: !datapoint.useArea ? '' : this.createArea(plots)
                 }
             })
         },
@@ -1058,7 +1067,29 @@ export default {
         adaptColorToBackground,
         calcLinearProgression,
         useMouse,
+        createArea(plots) {
+            const start = { x: plots[0].x, y: this.zero };
+            const end = { x: plots.at(-1).x, y: this.zero };
+            const path = [];
+            plots.forEach(plot => {
+                path.push(`${plot.x},${plot.y} `);
+            });
+            return [ start.x, start.y, ...path, end.x, end.y].toString();
+        },
         /////////////////////////////// CANVAS /////////////////////////////////
+        createCanvasArea(plots) {
+            const start = { x: plots[0].x, y: this.zero };
+            const end = { x: plots.at(-1).x, y: this.zero };
+            const path = [];
+            plots.forEach(plot => {
+                path.push({
+                    x: plot.x,
+                    y: plot.y,
+                    value: plot.value
+                })
+            });
+            return [ start, ...path, end];
+        },
         drawCanvas() {
             this.CANVAS = this.$refs.vueUiXyCanvas;
             this.CTX = this.CANVAS.getContext("2d");
@@ -1226,6 +1257,25 @@ export default {
             this.CTX.save();
             for (let i = 0; i < this.lineSet.length; i += 1) {
                 const serie = this.lineSet[i];
+                if (serie.useArea) {
+                    this.CTX.save();
+                    const area = this.createCanvasArea(serie.plots);
+                    if (area.length > 1) {
+                        const areaGradient = this.CTX.createLinearGradient(area[0].x, 0, area.at(-1).x, 0);
+                        areaGradient.addColorStop(0, `${this.shiftHue(serie.color, 0.03)}${this.opacity[this.chartConfig.line.area.opacity]}`);
+                        areaGradient.addColorStop(1, `${serie.color}${this.opacity[this.chartConfig.line.area.opacity]}`);
+                        this.CTX.beginPath();
+                        this.CTX.moveTo(area[0].x, area[0].y);
+                        for(let k = 1; k < area.length; k += 1) {
+                            this.CTX.lineTo(area[k].x, area[k].y);
+                        }
+                        this.CTX.fillStyle = this.chartConfig.line.area.useGradient ? areaGradient : `${serie.color}${this.opacity[this.chartConfig.line.area.opacity]}`;
+                        this.CTX.fill();
+                        this.CTX.closePath();
+                        this.CTX.restore();
+                    }
+                }
+
                 for (let k = 0; k < serie.plots.length; k += 1) {
                     const plot = serie.plots[k];
                     if (k < serie.plots.length - 1 && this.canShowValue(plot.value) && this.canShowValue(serie.plots[k + 1].value)) {

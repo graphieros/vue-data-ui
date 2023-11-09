@@ -116,6 +116,7 @@ const dataset2 = ref([
       34,
       55,
     ],
+    useArea: true,
     type: "line",
     dashed: false,
     dataLabels: true,
@@ -155,6 +156,7 @@ const dataset2 = ref([
       30,
       30,
     ],
+    useArea: false,
     type: "line",
     dashed: true,
     color: "rgb(100,100,100)",
@@ -3376,6 +3378,25 @@ const showLocalTest = ref(false);
     <button @click="printRelation">PRINT RELATION CIRCLE</button>
     <button @click="printThermo">PRINT THERMO</button>
 
+    <div style="max-width: 1000px; margin: 0 auto">
+      <VueUiXy
+        ref="xytest"
+        :config="{ ...config, useCanvas: false }"
+        :dataset="dataset2"
+        v-if="!showLocalTest"
+        @selectLegend="selectLegendXY"
+        @selectX="selectX"
+      />
+      <XyTest
+        ref="xytest"
+        :config="{ ...config, useCanvas: false }"
+        :dataset="dataset2"
+        v-if="showLocalTest"
+        @selectLegend="selectLegendXY"
+        @selectX="selectX"
+      />
+    </div>
+
     <div style="maw-width:300px;margin: 0 auto; margin-top: 24px; margin-bottom: 24px;">
       <StackTest v-if="showLocalTest" :config="stackConfig" :dataset="stackDataset"/>
       <VueUiSparkStackbar v-if="!showLocalTest" :config="stackConfig" :dataset="stackDataset"/>
@@ -3394,24 +3415,6 @@ const showLocalTest = ref(false);
         v-if="showLocalTest"
       />
       <VueUiRelationCircle ref="relation" v-if="!showLocalTest" :dataset="relationDataset" :config="relationConfig"/>
-    </div>
-    <div style="max-width: 1000px; margin: 0 auto">
-      <VueUiXy
-        ref="xytest"
-        :config="{ ...config, useCanvas: true }"
-        :dataset="dataset2"
-        v-if="!showLocalTest"
-        @selectLegend="selectLegendXY"
-        @selectX="selectX"
-      />
-      <XyTest
-        ref="xytest"
-        :config="{ ...config, useCanvas: true }"
-        :dataset="dataset2"
-        v-if="showLocalTest"
-        @selectLegend="selectLegendXY"
-        @selectX="selectX"
-      />
     </div>
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <VueUiSkeleton

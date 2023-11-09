@@ -269,8 +269,11 @@
                 "offsetY": -6,
                 "rounding": 0,
                 "color": "#2D353C"
+            },
+            "area": {
+                "useGradient": true,
+                "opacity": 30
             }
-
         },
         "plot": {
             "radius": 3,
