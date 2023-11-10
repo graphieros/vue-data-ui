@@ -191,7 +191,7 @@ defineExpose({
 
 <template>
     <div 
-        class="vue-ui-onion" 
+        :class="`vue-ui-onion ${onionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" 
         ref="onionChart" 
         :id="`vue-ui-onion_${uid}`"
         :style="`font-family:${onionConfig.style.fontFamily};width:100%; text-align:center;${onionConfig.userOptions.show ? 'padding-top:36px' : ''}`"
@@ -539,4 +539,7 @@ circle {
     user-select: none;
 }
 
+.vue-ui-dna * {
+    animation: none !important;
+}
 </style>

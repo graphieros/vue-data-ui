@@ -442,7 +442,7 @@ defineExpose({
 </script>
 
 <template>
-    <div class="vue-ui-quadrant" ref="quadrantChart" :id="`vue-ui-quadrant_${uid}`" :style="`font-family:${quadrantConfig.style.fontFamily};width:100%; text-align:center;${quadrantConfig.userOptions.show ? 'padding-top: 36px' : ''}`">
+    <div :class="`vue-ui-quadrant ${quadrantConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="quadrantChart" :id="`vue-ui-quadrant_${uid}`" :style="`font-family:${quadrantConfig.style.fontFamily};width:100%; text-align:center;${quadrantConfig.userOptions.show ? 'padding-top: 36px' : ''}`">
 
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && quadrantConfig.style.chart.title.text" :style="`width:100%;background:${quadrantConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -1037,5 +1037,9 @@ path, line, rect, circle, polygon {
     top:0;
     font-weight: 400;
     user-select: none;
+}
+
+.vue-ui-dna * {
+    animation: none !important;
 }
 </style>

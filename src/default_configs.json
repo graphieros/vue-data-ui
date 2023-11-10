@@ -165,6 +165,7 @@
     },
     "vue_ui_xy": {
         "useCanvas": false,
+        "useCssAnimation": true,
         "chart": {
             "fontFamily" : "inherit",
             "backgroundColor" : "#FFFFFF",
@@ -301,6 +302,7 @@
         "showTable": false
     },
     "vue_ui_donut": {
+        "useCssAnimation": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -508,6 +510,7 @@
         }
     },
     "vue_ui_radar": {
+        "useCssAnimation": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -603,6 +606,7 @@
         }
     },
     "vue_ui_quadrant": {
+        "useCssAnimation": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -1003,6 +1007,7 @@
         }
     },
     "vue_ui_onion": {
+        "useCssAnimation": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -1089,6 +1094,7 @@
         }
     },
     "vue_ui_vertical_bar": {
+        "useCssAnimation": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -1605,6 +1611,7 @@
         }
     },
     "vue_ui_scatter": {
+        "useCssAnimation": true,
         "style": {
             "backgroundColor": "#FFFFFF",
             "color":"#2D353C",
@@ -1734,6 +1741,7 @@
         }
     },
     "vue_ui_candlestick": {
+        "useCssAnimation": true,
         "style": {
             "backgroundColor": "#FFFFFF",
             "color":"#2D353C",

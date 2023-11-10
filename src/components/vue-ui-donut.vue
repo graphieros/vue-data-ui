@@ -241,7 +241,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :ref="`donutChart`" class="vue-ui-donut" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${donutConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`donut__${uid}`">
+    <div :ref="`donutChart`" :class="`vue-ui-donut ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${donutConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`donut__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor}`">
 
             <!-- TITLE AS DIV -->
@@ -653,5 +653,9 @@ path {
     top:0;
     font-weight: 400;
     user-select: none;
+}
+
+.vue-ui-dna * {
+    animation: none !important;
 }
 </style>

@@ -284,7 +284,7 @@ defineExpose({
 
 <template>
     <div 
-        class="vue-ui-radar"
+        :class="`vue-ui-radar ${radarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
         ref="radarChart"
         :id="`vue-ui-radar_${uid}`"
         :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${radarConfig.userOptions.show ? 'padding-top:36px' : ''}`"
@@ -645,5 +645,9 @@ path, line, rect, circle {
     top:0;
     font-weight: 400;
     user-select: none;
+}
+
+.vue-ui-dna * {
+    animation: none !important;
 }
 </style>

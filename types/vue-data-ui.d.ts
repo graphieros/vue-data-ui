@@ -497,6 +497,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiCandlestickConfig = {
+        useCssAnimation?: boolean;
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -646,6 +647,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiScatterConfig = {
+        useCssAnimation?: boolean;
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -899,6 +901,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiXyConfig = {
         useCanvas?: boolean;
+        useCssAnimation?: boolean;
         chart?: {
             fontFamily?: string;
             backgroundColor?: string;
@@ -1053,6 +1056,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiDonutConfig = {
+        useCssAnimation?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1284,6 +1288,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRadarConfig = {
+        useCssAnimation?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1415,6 +1420,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiQuadrantConfig = {
+        useCssAnimation?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1872,6 +1878,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiOnionConfig = {
+        useCssAnimation?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1976,6 +1983,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiVerticalBarConfig = {
+        useCssAnimation?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {

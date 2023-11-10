@@ -283,7 +283,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="candlestickChart" class="vue-ui-candlestick" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center;${candlestickConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`vue-ui-candlestick_${uid}`">
+    <div ref="candlestickChart" :class="`vue-ui-candlestick ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center;${candlestickConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`vue-ui-candlestick_${uid}`">
 
         <div v-if="(!mutableConfig.inside || isPrinting) && candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
@@ -840,5 +840,9 @@ input[type="range"]::-ms-thumb{
 input[type="range"]:active::-webkit-slider-thumb{
     background-color: #CCCCCC;
     border: 3px solid #858585;
+}
+
+.vue-ui-dna * {
+    animation: none !important;
 }
 </style>
