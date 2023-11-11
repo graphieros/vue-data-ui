@@ -25,6 +25,7 @@ import SmileyTest from "./components/vue-ui-smiley.vue";
 import RelationTest from "./components/vue-ui-relation-circle.vue";
 import ThermoTest from "./components/vue-ui-thermometer.vue";
 import StackTest from "./components/vue-ui-sparkstackbar.vue";
+import HistoTest from "./components/vue-ui-sparkhistogram.vue";
 
 const dataset = ref([
   {
@@ -3342,6 +3343,156 @@ const stackDataset = ref([
   },
 ]);
 
+const histoConfig = ref({
+        "style": {
+            "backgroundColor":"#FFFFFF",
+            "fontFamily":"inherit",
+            "layout": {
+                "height": 96,
+                "width": 640,
+                "padding": {
+                    "top": 24,
+                    "right": 0,
+                    "left": 0,
+                    "bottom": 36
+                }
+            },
+            "bars": {
+                "strokeWidth": 0,
+                "colors": {
+                    "positive": "#3366cc",
+                    "negative": "#dc3912",
+                    "gradient": {
+                        "show": true
+                    }
+                },
+                "borderRadius": 24,
+                "gap": 12
+            },
+            "labels": {
+                "value": {
+                    "fontSize": 14,
+                    "color":"#2D353C",
+                    "bold": true,
+                    "rounding": 1,
+                    "prefix":"",
+                    "suffix":""
+                },
+                "valueLabel": {
+                    "fontSize": 14,
+                    "color":"#2D353C",
+                    "bold": false,
+                    "rounding": 0
+                },
+                "timeLabel": {
+                    "fontSize": 12,
+                    "color":"#2D353C",
+                    "bold": false
+                }
+            },
+            "title": {
+                "textAlign": "left",
+                "text": "Title",
+                "color": "#2D353C",
+                "fontSize": 16,
+                "bold": true,
+                "margin": "0 0 6px 0",
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "Subitle",
+                    "fontSize": 12,
+                    "bold": false
+                }
+            }
+        }
+    });
+
+const histoDataset = ref([
+  {
+    value: 1.2,
+    valueLabel: "20%",
+    timeLabel: "09:00",
+    intensity: 0.2,
+  },
+  {
+    value: 1.3,
+    valueLabel: "50%",
+    timeLabel: "10:00",
+    intensity: 0.5,
+
+  },
+  {
+    value: 1.1,
+    valueLabel: "60%",
+    timeLabel: "11:00",
+    intensity: 0.6,
+
+  },
+  {
+    value: 0.8,
+    valueLabel: "70%",
+    timeLabel: "12:00",
+    intensity: 0.7,
+
+  },
+  {
+    value: 2,
+    valueLabel: "100%",
+    timeLabel: "13:00",
+    intensity: 1,
+
+  },
+  {
+    value: 2.1,
+    valueLabel: "100%",
+    timeLabel: "14:00",
+    intensity: 1,
+
+  },
+  {
+    value: 2.3,
+    valueLabel: "80%",
+    timeLabel: "15:00",
+    intensity: 0.8,
+
+  },
+  {
+    value: 2.1,
+    valueLabel: "70%",
+    timeLabel: "16:00",
+    intensity: 0.7,
+
+  },
+  {
+    value: 0.9,
+    valueLabel: "60%",
+    timeLabel: "17:00",
+    intensity: 0.6,
+
+  },
+  {
+    value: 0.7,
+    valueLabel: "50%",
+    timeLabel: "18:00",
+    intensity: 0.5,
+
+  },
+  {
+    value: 0.3,
+    valueLabel: "30%",
+    timeLabel: "19:00",
+    intensity: 0.3,
+
+  },
+  {
+    value: 0.2,
+    valueLabel: "20%",
+    timeLabel: "20:00",
+    intensity: 0.2,
+
+  },
+]);
+
 const showLocalTest = ref(false);
 </script>
 
@@ -3378,6 +3529,11 @@ const showLocalTest = ref(false);
     <button @click="xlsPyramid">XLS PYRAMID</button>
     <button @click="printRelation">PRINT RELATION CIRCLE</button>
     <button @click="printThermo">PRINT THERMO</button>
+
+    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
+      <VueUiSparkHistogram v-if="!showLocalTest" :dataset="histoDataset" :config="histoConfig"/>
+      <HistoTest v-if="showLocalTest" :dataset="histoDataset" :config="histoConfig"/>
+    </div>
 
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <VueUiCandlestick

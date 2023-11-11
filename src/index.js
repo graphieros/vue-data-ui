@@ -23,6 +23,7 @@ import VueUiSmiley from "./components/vue-ui-smiley.vue";
 import VueUiRelationCircle from "./components/vue-ui-relation-circle.vue";
 import VueUiThermometer from "./components/vue-ui-thermometer.vue";
 import VueUiSparkStackbar from "./components/vue-ui-sparkstackbar.vue";
+import VueUiSparkHistogram from "./components/vue-ui-sparkhistogram.vue";
 
 export { 
     VueUiXy, 
@@ -49,5 +50,6 @@ export {
     VueUiSmiley,
     VueUiRelationCircle,
     VueUiThermometer,
-    VueUiSparkStackbar
+    VueUiSparkStackbar,
+    VueUiSparkHistogram
 };

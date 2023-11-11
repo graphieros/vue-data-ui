@@ -5,6 +5,82 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiSparkHistogramConfig = {
+        style?: {
+            backgroundColor?: string;
+            fontFamily: string;
+            layout?: {
+                height?: number;
+                width?: number;
+                padding?: {
+                    top?: number;
+                    right?: number;
+                    left?: number;
+                    bottom?: number;
+                };
+            };
+            bars?: {
+                strokeWidth?: number;
+                colors?: {
+                    positive?: number;
+                    negative?: number;
+                    gradient?: {
+                        show?: boolean;
+                    };
+                };
+                borderRadius?: number;
+                gap?: number;
+            };
+            labels?: {
+                value?: {
+                    fontSize?: number;
+                    color?: string;
+                    bold?: boolean;
+                    rounding?: number;
+                    prefix?: string;
+                    suffix?: string;
+                };
+                valueLabel?: {
+                    fontSize?: number;
+                    color?: string;
+                    bold?: boolean;
+                    rounding?: number;
+                };
+                timeLabel?: {
+                    fontSize?: number;
+                    color?: string;
+                    bold?: boolean;
+                };
+            };
+            title?: {
+                textAlign?: "left" | "right" | "center";
+                text?: string;
+                color?: string;
+                fontSize?: number;
+                bold?: boolean;
+                margin?: string;
+                subtitle?: {
+                    color?: string;
+                    text?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                };
+            };
+        };
+    };
+
+    export type VueUiSparkHistogramDatasetItem = {
+        value: number;
+        valueLabel?: string;
+        timeLabel?: string;
+        intensity?: number & { 0: 0; 1: 1 };
+    }
+
+    export const VueUiSparkHistogram: DefineComponent<{
+        config?: VueUiSparkHistogramConfig,
+        dataset: VueUiSparkHistogramDatasetItem[]
+    }>;
+
     export type VueUiSparkStackBarConfig = {
         style?: {
             backgroundColor?: string;

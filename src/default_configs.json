@@ -2323,5 +2323,68 @@
                 }
             }
         }
+    },
+    "vue_ui_sparkhistogram": {
+        "style": {
+            "backgroundColor":"#FFFFFF",
+            "fontFamily":"inherit",
+            "layout": {
+                "height": 96,
+                "width": 640,
+                "padding": {
+                    "top": 24,
+                    "right": 0,
+                    "left": 0,
+                    "bottom": 36
+                }
+            },
+            "bars": {
+                "strokeWidth": 0,
+                "colors": {
+                    "positive": "#3366cc",
+                    "negative": "#dc3912",
+                    "gradient": {
+                        "show": true
+                    }
+                },
+                "borderRadius": 24,
+                "gap": 12
+            },
+            "labels": {
+                "value": {
+                    "fontSize": 14,
+                    "color":"#2D353C",
+                    "bold": true,
+                    "rounding": 1,
+                    "prefix":"",
+                    "suffix":""
+                },
+                "valueLabel": {
+                    "fontSize": 14,
+                    "color":"#2D353C",
+                    "bold": false,
+                    "rounding": 0
+                },
+                "timeLabel": {
+                    "fontSize": 12,
+                    "color":"#2D353C",
+                    "bold": false
+                }
+            },
+            "title": {
+                "textAlign": "left",
+                "text": "",
+                "color": "#2D353C",
+                "fontSize": 16,
+                "bold": true,
+                "margin": "0 0 6px 0",
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "",
+                    "fontSize": 12,
+                    "bold": false
+                }
+            }
+        }
     }
 }
