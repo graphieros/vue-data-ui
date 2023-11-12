@@ -228,21 +228,26 @@
                 <!-- LINES -->
                 <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`">
                     <g v-if="serie.useArea">
-                        <path :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
+                        <path v-if="serie.smooth" :d="`M ${serie.plots[0].x},${drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1).x},${drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
+
+                        <path v-else :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
                     </g>
-                    <g v-for="(plot, j) in serie.plots" :key="`line_${i}_${j}`">
-                        <line 
-                            v-if="j < serie.plots.length - 1 && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
-                            :x1="plot.x"
-                            :x2="serie.plots[j+1].x"
-                            :y1="plot.y"
-                            :y2="serie.plots[j+1].y"
-                            :stroke="serie.color"
-                            :stroke-width="chartConfig.line.strokeWidth"
-                            :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0"
-                            stroke-linejoin="round"
-                            stroke-linecap="round"
-                        />
+                    <path v-if="serie.smooth" :d="`M${serie.curve}`" :stroke="serie.color" :stroke-width="chartConfig.line.strokeWidth" :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" fill="none" />
+                    <g v-else>
+                        <g v-for="(plot, j) in serie.plots" :key="`line_${i}_${j}`">
+                            <line 
+                                v-if="j < serie.plots.length - 1 && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
+                                :x1="plot.x"
+                                :x2="serie.plots[j+1].x"
+                                :y1="plot.y"
+                                :y2="serie.plots[j+1].y"
+                                :stroke="serie.color"
+                                :stroke-width="chartConfig.line.strokeWidth"
+                                :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
+                        </g>
                     </g>
                     <g v-for="(plot, j) in serie.plots" 
                         :key="`circle_line_${i}_${j}`">
@@ -757,8 +762,10 @@ export default {
                             value: datapoint.absoluteValues[j],
                         }
                     });
+                const curve = this.createSmoothPath(plots);
                 return {
                     ...datapoint,
+                    curve,
                     plots,
                     area: !datapoint.useArea ? '' : this.createArea(plots)
                 }
@@ -1075,6 +1082,40 @@ export default {
                 path.push(`${plot.x},${plot.y} `);
             });
             return [ start.x, start.y, ...path, end.x, end.y].toString();
+        },
+        createSmoothPath(points) {
+            const smoothing = 0.2;
+            function line(pointA, pointB) {
+                const lengthX = pointB.x - pointA.x;
+                const lengthY = pointB.y - pointA.y;
+                return {
+                    length: Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2)),
+                    angle: Math.atan2(lengthY, lengthX)
+                };
+            }
+            function controlPoint(current, previous, next, reverse) {
+                const p = previous || current;
+                const n = next || current;
+                const o = line(p, n);
+
+                const angle = o.angle + (reverse ? Math.PI : 0);
+                const length = o.length * smoothing;
+
+                const x = current.x + Math.cos(angle) * length;
+                const y = current.y + Math.sin(angle) * length;
+                return { x, y };
+            }
+            function bezierCommand(point, i, a) {
+                const cps = controlPoint(a[i - 1], a[i - 2], point);
+                const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
+                return `C ${cps.x},${cps.y} ${cpe.x},${cpe.y} ${point.x},${point.y}`;
+            }
+            const d = points.reduce((acc, point, i, a) => i === 0
+            ? `${point.x},${point.y} `
+            : `${acc} ${bezierCommand(point, i, a)} `
+            , '');
+
+            return d;
         },
         /////////////////////////////// CANVAS /////////////////////////////////
         createCanvasArea(plots) {

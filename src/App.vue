@@ -96,15 +96,15 @@ const dataset2 = ref([
     name: "Series 3",
     series: [
       -55,
-      -34,
+      34,
       -21,
-      -13,
+      13,
       -8,
-      -5,
+      5,
       -3,
-      -2,
+      2,
       -1,
-      -1,
+      1,
       0,
       1,
       1,
@@ -118,6 +118,7 @@ const dataset2 = ref([
       55,
     ],
     useArea: true,
+    smooth: true,
     type: "line",
     dashed: false,
     dataLabels: true,
@@ -3530,6 +3531,25 @@ const showLocalTest = ref(false);
     <button @click="printRelation">PRINT RELATION CIRCLE</button>
     <button @click="printThermo">PRINT THERMO</button>
 
+    <div style="max-width: 1000px; margin: 0 auto">
+      <VueUiXy
+        ref="xytest"
+        :config="{ ...config, useCanvas: false, useCssAnimation: false }"
+        :dataset="dataset2"
+        v-if="!showLocalTest"
+        @selectLegend="selectLegendXY"
+        @selectX="selectX"
+      />
+      <XyTest
+        ref="xytest"
+        :config="{ ...config, useCanvas: false }"
+        :dataset="dataset2"
+        v-if="showLocalTest"
+        @selectLegend="selectLegendXY"
+        @selectX="selectX"
+      />
+    </div>
+
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <VueUiSparkHistogram v-if="!showLocalTest" :dataset="histoDataset" :config="histoConfig"/>
       <HistoTest v-if="showLocalTest" :dataset="histoDataset" :config="histoConfig"/>
@@ -3631,25 +3651,6 @@ const showLocalTest = ref(false);
         v-if="showLocalTest"
         :dataset="donutDataset"
         @selectLegend="selectLegendDonut"
-      />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto">
-      <VueUiXy
-        ref="xytest"
-        :config="{ ...config, useCanvas: false, useCssAnimation: false }"
-        :dataset="dataset2"
-        v-if="!showLocalTest"
-        @selectLegend="selectLegendXY"
-        @selectX="selectX"
-      />
-      <XyTest
-        ref="xytest"
-        :config="{ ...config, useCanvas: false }"
-        :dataset="dataset2"
-        v-if="showLocalTest"
-        @selectLegend="selectLegendXY"
-        @selectX="selectX"
       />
     </div>
 
