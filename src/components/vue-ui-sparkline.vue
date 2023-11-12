@@ -4,7 +4,8 @@ import {
     treeShake,
     shiftHue,
     opacity,
-    convertConfigColors
+    convertConfigColors,
+    createSmoothPath
 } from "../lib";
 import mainConfig from "../default_configs.json";
 
@@ -154,14 +155,22 @@ const dataLabel = computed(() => {
             <!-- AREA -->
             <g v-if="sparklineConfig.style.area.show">
                 <path 
+                    v-if="sparklineConfig.style.line.smooth"
+                    :d="`M ${mutableDataset[0].x},${drawingArea.bottom} ${createSmoothPath(mutableDataset)} L ${mutableDataset.at(-1).x},${drawingArea.bottom} Z`"
+                    :fill="sparklineConfig.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : `${sparklineConfig.style.area.color}${opacity[sparklineConfig.style.area.opacity]}`"
+                />
+                <path
+                    v-else
                     :d="`M${area}Z`" 
                     :fill="sparklineConfig.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : `${sparklineConfig.style.area.color}${opacity[sparklineConfig.style.area.opacity]}`"
                 />
             </g>
 
+            <path v-if="sparklineConfig.style.line.smooth" :d="`M ${createSmoothPath(mutableDataset)}`" :stroke="sparklineConfig.style.line.color" fill="none" :stroke-width="sparklineConfig.style.line.strokeWidth" stroke-linecap="round"/>
+            
             <g v-for="(plot, i) in mutableDataset">
                 <line 
-                    v-if="i < mutableDataset.length - 1"
+                    v-if="i < mutableDataset.length - 1 && !sparklineConfig.style.line.smooth"
                     :x1="plot.x"
                     :x2="mutableDataset[i + 1].x"
                     :y1="plot.y"

@@ -2287,6 +2287,7 @@ const sparklineConfig = ref({
     line: {
       color: "#3366cc",
       strokeWidth: 3,
+      smooth: true
     },
     zeroLine: {
       color: "#505050",
@@ -2330,71 +2331,71 @@ const sparklineConfig = ref({
 const sparklineDataset = ref([
   {
     period: "period1",
-    value: -21.66,
-  },
-  {
-    period: "period2",
-    value: -13,
-  },
-  {
-    period: "period3",
-    value: -8,
-  },
-  {
-    period: "period4",
-    value: -5,
-  },
-  {
-    period: "period5",
-    value: -3,
-  },
-  {
-    period: "period6",
-    value: -2,
-  },
-  {
-    period: "period6",
-    value: -1,
-  },
-  {
-    period: "period8",
-    value: -1,
-  },
-  {
-    period: "period9",
     value: 0,
   },
   {
-    period: "period10",
-    value: 1,
+    period: "period2",
+    value: -1,
   },
   {
-    period: "period11",
-    value: 1,
-  },
-  {
-    period: "period12",
+    period: "period3",
     value: 2,
   },
   {
-    period: "period13",
+    period: "period4",
     value: 3,
   },
   {
-    period: "period14",
+    period: "period5",
+    value: -4,
+  },
+  {
+    period: "period6",
     value: 5,
   },
   {
-    period: "period15",
-    value: 8,
+    period: "period6",
+    value: -6,
   },
   {
-    period: "period16",
+    period: "period8",
+    value: 7,
+  },
+  {
+    period: "period9",
+    value: -8,
+  },
+  {
+    period: "period10",
+    value: 9,
+  },
+  {
+    period: "period11",
+    value: -10,
+  },
+  {
+    period: "period12",
+    value: 11,
+  },
+  {
+    period: "period13",
+    value: -12,
+  },
+  {
+    period: "period14",
     value: 13,
   },
   {
+    period: "period15",
+    value: -14,
+  },
+  {
+    period: "period16",
+    value: 15,
+  },
+  {
     period: "period17",
-    value: 21,
+    value: -16,
   },
 ]);
 
@@ -3531,6 +3532,19 @@ const showLocalTest = ref(false);
     <button @click="printRelation">PRINT RELATION CIRCLE</button>
     <button @click="printThermo">PRINT THERMO</button>
 
+    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
+      <VueUiSparkline
+        v-if="!showLocalTest"
+        :config="sparklineConfig"
+        :dataset="sparklineDataset"
+      />
+      <SparklineTest
+        v-if="showLocalTest"
+        :config="sparklineConfig"
+        :dataset="sparklineDataset"
+      />
+    </div>
+
     <div style="max-width: 1000px; margin: 0 auto">
       <VueUiXy
         ref="xytest"
@@ -3852,18 +3866,7 @@ const showLocalTest = ref(false);
         :dataset="heatmapDataset"
       />
     </div>
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiSparkline
-        v-if="!showLocalTest"
-        :config="sparklineConfig"
-        :dataset="sparklineDataset"
-      />
-      <SparklineTest
-        v-if="showLocalTest"
-        :config="sparklineConfig"
-        :dataset="sparklineDataset"
-      />
-    </div>
+
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <XyTest ref="xytest" :config="config" :dataset="barset" v-if="showLocalTest" />
       <VueUiXy ref="xytest" :config="config" :dataset="barset" v-if="!showLocalTest" />

@@ -1464,7 +1464,8 @@
             "fontFamily": "inherit",
             "line": {
                 "color":"#3366cc",
-                "strokeWidth": 3
+                "strokeWidth": 3,
+                "smooth": false
             },
             "zeroLine": {
                 "color": "#2D353C",

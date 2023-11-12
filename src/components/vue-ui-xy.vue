@@ -300,7 +300,7 @@
                             <text
                                 v-if="!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
                                 :x="plot.x + calcRectWidth() * 1.1"
-                                :y="plot.y + chartConfig.bar.labels.offsetY"
+                                :y="plot.y + (plot.value > 0 ? chartConfig.bar.labels.offsetY : - chartConfig.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="chartConfig.chart.labels.fontSize"
                                 :fill="chartConfig.bar.labels.color"
@@ -360,7 +360,7 @@
                             <text
                                 v-if="!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
                                 :x="plot.x"
-                                :y="plot.y + chartConfig.line.labels.offsetY"
+                                :y="plot.y + (plot.value > 0 ? chartConfig.line.labels.offsetY : - chartConfig.line.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="chartConfig.chart.labels.fontSize"
                                 :fill="chartConfig.line.labels.color"
@@ -598,12 +598,10 @@ import {
     convertConfigColors, 
     makeXls,
     adaptColorToBackground,
-    calcLinearProgression
+    calcLinearProgression,
+    createSmoothPath
 } from '../lib';
 import mainConfig from "../default_configs.json";
-
-// TOD0:
-// . add emit on click (emit all data at given index, maybe choose which to emit if multiseries; so it could dynamically feed another chart)
 
 export default {
     name: "vue-ui-xy",
@@ -688,18 +686,6 @@ export default {
                 return val;
             }
         },
-        // chartConfig() {
-        //     if(!Object.keys(this.config || {}).length) {
-        //         return this.defaultConfig
-        //     }
-            
-        //     const reconcilied = this.treeShake({
-        //         defaultConfig: this.defaultConfig,
-        //         userConfig: this.config
-        //     });
-
-        //     return this.convertConfigColors(reconcilied);
-        // },
         relativeZero() {
             if(this.min >= 0) return 0;
             return Math.abs(this.min);
@@ -1064,6 +1050,7 @@ export default {
     },
     methods: {
         checkNaN,
+        createSmoothPath,
         isSafeValue,
         treeShake,
         shiftHue,
@@ -1082,40 +1069,6 @@ export default {
                 path.push(`${plot.x},${plot.y} `);
             });
             return [ start.x, start.y, ...path, end.x, end.y].toString();
-        },
-        createSmoothPath(points) {
-            const smoothing = 0.2;
-            function line(pointA, pointB) {
-                const lengthX = pointB.x - pointA.x;
-                const lengthY = pointB.y - pointA.y;
-                return {
-                    length: Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2)),
-                    angle: Math.atan2(lengthY, lengthX)
-                };
-            }
-            function controlPoint(current, previous, next, reverse) {
-                const p = previous || current;
-                const n = next || current;
-                const o = line(p, n);
-
-                const angle = o.angle + (reverse ? Math.PI : 0);
-                const length = o.length * smoothing;
-
-                const x = current.x + Math.cos(angle) * length;
-                const y = current.y + Math.sin(angle) * length;
-                return { x, y };
-            }
-            function bezierCommand(point, i, a) {
-                const cps = controlPoint(a[i - 1], a[i - 2], point);
-                const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
-                return `C ${cps.x},${cps.y} ${cpe.x},${cpe.y} ${point.x},${point.y}`;
-            }
-            const d = points.reduce((acc, point, i, a) => i === 0
-            ? `${point.x},${point.y} `
-            : `${acc} ${bezierCommand(point, i, a)} `
-            , '');
-
-            return d;
         },
         /////////////////////////////// CANVAS /////////////////////////////////
         createCanvasArea(plots) {

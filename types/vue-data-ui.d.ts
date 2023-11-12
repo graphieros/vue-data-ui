@@ -2215,6 +2215,7 @@ declare module 'vue-data-ui' {
             line?: {
                 color?: string;
                 strokeWidth?: number;
+                smooth?: boolean;
             };
             zeroLine?: {
                 color?: string;
