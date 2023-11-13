@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { convertConfigColors, treeShake, palette } from "../lib.js";
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
@@ -75,7 +75,24 @@ const radiusOffset = computed(() => {
 onMounted(() => {
     createPlots();
     createRelations();
+    const chart = document.getElementById(`relation_circle_${uid.value}`);
+    chart.addEventListener("click", clickOutside);
 });
+
+onBeforeUnmount(() => {
+    const chart = document.getElementById(`relation_circle_${uid.value}`);
+    chart.removeEventListener("click", clickOutside);
+})
+
+function clickOutside(e) {
+    const target = e.target;
+    if(target && Array.from(target.classList).includes("vue-ui-relation-circle-legend")) {
+        return;
+    } else {
+        selectedPlot.value = {};
+        selectedRelations.value = [];
+    }
+}
 
 function createPlots() {
     const angleGap = 6.28319 / limitedDataset.value.length;

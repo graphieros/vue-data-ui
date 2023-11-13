@@ -3532,6 +3532,16 @@ const showLocalTest = ref(false);
     <button @click="printRelation">PRINT RELATION CIRCLE</button>
     <button @click="printThermo">PRINT THERMO</button>
 
+    <div style="max-width: 1000px; margin: 0 auto">
+      <RelationTest
+        ref="relation"
+        :dataset="relationDataset"
+        :config="relationConfig"
+        v-if="showLocalTest"
+      />
+      <VueUiRelationCircle ref="relation" v-if="!showLocalTest" :dataset="relationDataset" :config="relationConfig"/>
+    </div>
+
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <VueUiSparkline
         v-if="!showLocalTest"
@@ -3678,15 +3688,7 @@ const showLocalTest = ref(false);
       <ThermoTest ref="thermo" v-if="showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
       <VueUiThermometer ref="thermo" v-if="!showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
     </div>
-    <div style="max-width: 1000px; margin: 0 auto">
-      <RelationTest
-        ref="relation"
-        :dataset="relationDataset"
-        :config="relationConfig"
-        v-if="showLocalTest"
-      />
-      <VueUiRelationCircle ref="relation" v-if="!showLocalTest" :dataset="relationDataset" :config="relationConfig"/>
-    </div>
+
     <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
       <VueUiSkeleton
         v-if="!showLocalTest"
