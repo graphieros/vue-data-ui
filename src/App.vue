@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import Box from "./Box.vue";
 import TableTest from "./components/vue-ui-table.vue";
 import DonutTest from "./components/vue-ui-donut.vue";
 import XyTest from "./components/vue-ui-xy.vue";
@@ -3532,370 +3533,497 @@ const showLocalTest = ref(false);
     <button @click="printRelation">PRINT RELATION CIRCLE</button>
     <button @click="printThermo">PRINT THERMO</button>
 
-    <div style="max-width: 1000px; margin: 0 auto">
-      <RelationTest
-        ref="relation"
-        :dataset="relationDataset"
-        :config="relationConfig"
-        v-if="showLocalTest"
-      />
-      <VueUiRelationCircle ref="relation" v-if="!showLocalTest" :dataset="relationDataset" :config="relationConfig"/>
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiSparkline
-        v-if="!showLocalTest"
-        :config="sparklineConfig"
-        :dataset="sparklineDataset"
-      />
-      <SparklineTest
-        v-if="showLocalTest"
-        :config="sparklineConfig"
-        :dataset="sparklineDataset"
-      />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto">
-      <VueUiXy
-        ref="xytest"
-        :config="{ ...config, useCanvas: false, useCssAnimation: false }"
-        :dataset="dataset2"
-        v-if="!showLocalTest"
-        @selectLegend="selectLegendXY"
-        @selectX="selectX"
-      />
-      <XyTest
-        ref="xytest"
-        :config="{ ...config, useCanvas: false }"
-        :dataset="dataset2"
-        v-if="showLocalTest"
-        @selectLegend="selectLegendXY"
-        @selectX="selectX"
-      />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiSparkHistogram v-if="!showLocalTest" :dataset="histoDataset" :config="histoConfig"/>
-      <HistoTest v-if="showLocalTest" :dataset="histoDataset" :config="histoConfig"/>
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiCandlestick
-        ref="candlestick"
-        v-if="!showLocalTest"
-        :config="{...candlestickConfig, useCssAnimation: false}"
-        :dataset="candlestickDataset"
-      />
-      <CandlestickTest ref="candlestick" v-if="showLocalTest" :dataset="candlestickDataset" />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiScatter
-        ref="scatter"
-        v-if="!showLocalTest"
-        :config="{...scatterConfig, useCssAnimation: false}"
-        :dataset="scatterDataset"
-      />
-      <ScatterTest ref="scatter" v-if="showLocalTest" :dataset="scatterDataset" />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiVerticalBar
-        ref="verticaltest"
-        v-if="!showLocalTest"
-        :config="{...verticalConfig, useCssAnimation: false}"
-        :dataset="verticalDataset"
-        @selectLegend="selectVerticalLegend"
-      />
-      <VerticalTest ref="verticaltest" v-if="showLocalTest" :dataset="verticalDataset" />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiOnion
-        ref="oniontest"
-        v-if="!showLocalTest"
-        :config="{ useCssAnimation: false }"
-        :dataset="onionDataset"
-        @selectLegend="selectOnionLegend"
-      />
-      <OnionTest
-        ref="oniontest"
-        v-if="showLocalTest"
-        :dataset="onionDataset"
-        @selectLegend="selectOnionLegend"
-      />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiQuadrant
-        ref="quadranttest"
-        v-if="!showLocalTest"
-        :dataset="quadrantDataset"
-        :config="{...quadrantConfig, useCssAnimation: false}"
-        @selectPlot="selectPlot"
-        @selectSide="selectSide"
-        @selectLegend="selectQuadrantLegend"
-      />
-      <QuadrantTest
-        ref="quadranttest"
-        v-if="showLocalTest"
-        :dataset="quadrantDataset"
-        @selectPlot="selectPlot"
-        @selectSide="selectSide"
-        @selectLegend="selectQuadrantLegend"
-      />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiRadar
-        ref="radartest"
-        v-if="!showLocalTest"
-        :dataset="radarDataset"
-        :config="{...radarConfig, useCssAnimation: false}"
-        @selectLegend="selectRadarLegend"
-      />
-      <RadarTest
-        ref="radartest"
-        v-if="showLocalTest"
-        :dataset="radarDataset"
-        @selectLegend="selectRadarLegend"
-      />
-    </div>
-
-    <div style="display: flex; flex-direction: row; gap: 12px; align-items: center">
-      <VueUiDonut
-        ref="donuttest"
-        v-if="!showLocalTest"
-        :dataset="donutDataset"
-        :config="donutConfig"
-        @selectLegend="selectLegendDonut"
-      />
-      <DonutTest
-        ref="donuttest"
-        v-if="showLocalTest"
-        :dataset="donutDataset"
-        @selectLegend="selectLegendDonut"
-      />
-    </div>
-
-    <div style="maw-width:300px;margin: 0 auto; margin-top: 24px; margin-bottom: 24px;">
-      <StackTest v-if="showLocalTest" :config="stackConfig" :dataset="stackDataset"/>
-      <VueUiSparkStackbar v-if="!showLocalTest" :config="stackConfig" :dataset="stackDataset"/>
-
-    </div>
-
-    <div style="max-width:1000px; margin: 0 auto">
-      <ThermoTest ref="thermo" v-if="showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
-      <VueUiThermometer ref="thermo" v-if="!showLocalTest" :dataset="thermoDataset" :config="thermoConfig" />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiSkeleton
-        v-if="!showLocalTest"
-        :config="{ type: 'rating', style: { rating: { useSmiley: true, filled: true } } }"
-      />
-      <SkeletonTest
-        v-if="showLocalTest"
-        :config="{ type: 'rating', style: { rating: { useSmiley: true, filled: true } } }"
-      />
-    </div>
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px; margin-top: 48px">
-      <SmileyTest v-if="showLocalTest" :dataset="ratingDataset" :config="smileyConfig" />
-      <VueUiSmiley
-        v-if="!showLocalTest"
-        :dataset="ratingDataset"
-        :config="smileyConfig"
-      />
-    </div>
-
-    <div style="max-width: 200px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiRating
-        ref="ratingtest"
-        v-if="!showLocalTest"
-        :config="ratingConfig"
-        :dataset="ratingDataset"
-      />
-      <RatingTest
-        ref="ratingtest"
-        v-if="showLocalTest"
-        :config="ratingConfig"
-        :dataset="ratingDataset"
-      />
-    </div>
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiChestnut
-        ref="chestnuttest"
-        v-if="!showLocalTest"
-        :dataset="chestnutDataset"
-        :config="chestnutConfig"
-        @selectRoot="selectRoot"
-        @selectBranch="selectBranch"
-        @selectNut="selectNut"
-      />
-      <ChestnutTest
-        ref="chestnuttest"
-        v-if="showLocalTest"
-        :dataset="chestnutDataset"
-        @selectRoot="selectRoot"
-        @selectBranch="selectBranch"
-        @selectNut="selectNut"
-      />
-    </div>
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiAgePyramid
-        ref="pyramid"
-        v-if="!showLocalTest"
-        :dataset="pyramidDataset"
-        :config="pyramidConfig"
-      />
-      <PyramidTest ref="pyramid" v-if="showLocalTest" :dataset="pyramidDataset" />
-    </div>
-
-
-
-
-
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiWaffle
-        ref="waffletest"
-        v-if="!showLocalTest"
-        :dataset="donutDataset"
-        :config="waffleConfig"
-        @selectLegend="selectLegendWaffle"
-      />
-      <WaffleTest
-        ref="waffletest"
-        v-if="showLocalTest"
-        :dataset="donutDataset"
-        @selectLegend="selectLegendWaffle"
-      />
-    </div>
-    <AnnotatorTest
-      v-if="showLocalTest"
-      @saveAnnotations="saveAnnotations"
-      :dataset="{
-        shapes,
-        lastSelectedShape,
-      }"
-      @toggleOpenState="toggleOpenState"
-    >
-      <DashboardTest
-        ref="dash"
-        :dataset="comps"
-        @change="testchange"
-        :config="dashboardConfig"
-      >
-        <template v-slot:content="{ item }">
-          <div style="padding: 12px">
-            <component :is="item.component" v-bind="item.props"></component>
-          </div>
+      <Box>
+        <template #title>VueUiRelationCircle</template>
+        <template #dev>
+            <VueUiRelationCircle 
+              ref="relation" 
+              :dataset="relationDataset" 
+              :config="relationConfig"
+            />
         </template>
-      </DashboardTest>
-    </AnnotatorTest>
-
-    <VueUiAnnotator
-      v-else
-      @saveAnnotations="saveAnnotations"
-      :dataset="{
-        shapes,
-        lastSelectedShape,
-      }"
-      @toggleOpenState="toggleOpenState"
-    >
-      <DashboardTest
-        ref="dash"
-        :dataset="comps"
-        @change="testchange"
-        :config="dashboardConfig"
-      >
-        <template v-slot:content="{ item }">
-          <div style="padding: 12px">
-            <component :is="item.component" v-bind="item.props"></component>
-          </div>
+        <template #prod>
+          <RelationTest
+            ref="relation"
+            :dataset="relationDataset"
+            :config="relationConfig"
+          />
         </template>
-      </DashboardTest>
-    </VueUiAnnotator>
-    <DashboardTest
-      v-if="showLocalTest"
-      ref="dash"
-      :dataset="comps"
-      @change="testchange"
-      :config="dashboardConfig"
-    >
-      <template v-slot:content="{ item }">
-        <div style="padding: 12px">
-          <component :is="item.component" v-bind="item.props"></component>
-        </div>
-      </template>
-    </DashboardTest>
-    <VueUiDashboard
-      v-if="!showLocalTest"
-      ref="dash"
-      :dataset="comps"
-      @change="testchange"
-      :config="dashboardConfig"
-    >
-      <template v-slot:content="{ item }">
-        <div style="padding: 12px">
-          <component :is="item.component" v-bind="item.props"></component>
-        </div>
-      </template>
-    </VueUiDashboard>
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiSparkbar
-        v-if="!showLocalTest"
-        :config="sparkbarConfig"
-        :dataset="sparkbarDataset"
-      />
-      <SparkbarTest
-        v-if="showLocalTest"
-        :config="sparkbarConfig"
-        :dataset="sparkbarDataset"
-      />
-    </div>
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiHeatmap
-        ref="heatmaptest"
-        v-if="!showLocalTest"
-        :config="heatmapConfig"
-        :dataset="heatmapDataset"
-      />
-      <HeatmapTest
-        ref="heatmaptest"
-        v-if="showLocalTest"
-        :config="heatmapConfig"
-        :dataset="heatmapDataset"
-      />
-    </div>
+      </Box>
 
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <XyTest ref="xytest" :config="config" :dataset="barset" v-if="showLocalTest" />
-      <VueUiXy ref="xytest" :config="config" :dataset="barset" v-if="!showLocalTest" />
-    </div>
+      <Box>
+        <template #title>VueUiSparkline</template>
+        <template #dev>
+          <SparklineTest
+            :config="sparklineConfig"
+            :dataset="sparklineDataset"
+          />
+        </template>
+        <template #prod>
+          <VueUiSparkline
+            :config="sparklineConfig"
+            :dataset="sparklineDataset"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiXy</template>
+        <template #dev>
+          <XyTest
+            ref="xytest"
+            :config="{ ...config, useCanvas: false }"
+            :dataset="dataset2"
+            @selectLegend="selectLegendXY"
+            @selectX="selectX"
+          />
+        </template>
+        <template #prod>
+          <VueUiXy
+            ref="xytest"
+            :config="{ ...config, useCanvas: false, useCssAnimation: false }"
+            :dataset="dataset2"
+            @selectLegend="selectLegendXY"
+            @selectX="selectX"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiSparkHistogram</template>
+        <template #dev>
+          <HistoTest 
+            :dataset="histoDataset" 
+            :config="histoConfig"
+          />
+        </template>
+        <template #prod>
+          <VueUiSparkHistogram
+             :dataset="histoDataset" 
+             :config="histoConfig"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiCandleStick</template>
+        <template #dev>
+          <CandlestickTest 
+            ref="candlestick"
+            :dataset="candlestickDataset" 
+            :config="{...candlestickConfig, useCssAnimation: false}"
+          />
+        </template>
+        <template #prod>
+          <VueUiCandlestick
+            ref="candlestick"
+            :dataset="candlestickDataset"
+            :config="{...candlestickConfig, useCssAnimation: false}"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiScatter</template>
+        <template #dev>
+          <ScatterTest 
+            ref="scatter" 
+            :dataset="scatterDataset" 
+            :config="{...scatterConfig, useCssAnimation: false}"
+          />
+        </template>
+        <template #prod>
+          <VueUiScatter
+            ref="scatter"
+            :config="{...scatterConfig, useCssAnimation: false}"
+            :dataset="scatterDataset"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiVerticalBar</template>
+        <template #dev>
+          <VerticalTest 
+            ref="verticaltest"
+            :dataset="verticalDataset"
+            :config="{useCssAnimation: false}"
+          />
+        </template>
+        <template #prod>
+          <VueUiVerticalBar
+            ref="verticaltest"
+            :config="{useCssAnimation: false}"
+            :dataset="verticalDataset"
+            @selectLegend="selectVerticalLegend"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiOnion</template>
+        <template #dev>
+          <OnionTest
+            :config="{ useCssAnimation: false }"
+            :dataset="onionDataset"
+            @selectLegend="selectOnionLegend"
+          />
+        </template>
+        <template #prod>
+          <VueUiOnion
+            ref="oniontest"
+            :config="{ useCssAnimation: false }"
+            :dataset="onionDataset"
+            @selectLegend="selectOnionLegend"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiQuadrant</template>
+        <template #dev>
+          <QuadrantTest
+            ref="quadranttest"
+            :dataset="quadrantDataset"
+            :config="{useCssAnimation: false}"
+            @selectPlot="selectPlot"
+            @selectSide="selectSide"
+            @selectLegend="selectQuadrantLegend"
+          />
+        </template>
+        <template #prod>
+          <VueUiQuadrant
+            ref="quadranttest"
+            :dataset="quadrantDataset"
+            :config="{useCssAnimation: false}"
+            @selectPlot="selectPlot"
+            @selectSide="selectSide"
+            @selectLegend="selectQuadrantLegend"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiRadar</template>
+        <template #dev>
+          <RadarTest
+            ref="radartest"
+            :dataset="radarDataset"
+            :config="{useCssAnimation: false}"
+            @selectLegend="selectRadarLegend"
+          />
+        </template>
+        <template #prod>
+          <VueUiRadar
+            ref="radartest"
+            :dataset="radarDataset"
+            :config="{useCssAnimation: false}"
+            @selectLegend="selectRadarLegend"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiDonut</template>
+        <template #dev>
+          <DonutTest
+            ref="donuttest"
+            :dataset="donutDataset"
+            @selectLegend="selectLegendDonut"
+          />
+        </template>
+        <template #prod>
+          <VueUiDonut
+            ref="donuttest"
+            :dataset="donutDataset"
+            @selectLegend="selectLegendDonut"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiSparkStackbar</template>
+        <template #dev>
+          <StackTest 
+            :dataset="stackDataset"
+          />
+        </template>
+        <template #prod>
+          <VueUiSparkStackbar  
+            :dataset="stackDataset"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiThermometer</template>
+        <template #dev>
+          <ThermoTest 
+            ref="thermo" 
+            :dataset="thermoDataset" 
+            :config="thermoConfig" 
+          />
+        </template>
+        <template #prod>
+          <VueUiThermometer 
+            ref="thermo" 
+            :dataset="thermoDataset" 
+            :config="thermoConfig" 
+          />
+        </template>
+      </Box>
+      
+      <Box>
+        <template #title>VueUiSkeleton</template>
+        <template #dev>
+          <SkeletonTest
+            :config="{ type: 'rating', style: { rating: { useSmiley: true, filled: true } } }"
+          />
+        </template>
+        <template #prod>
+          <VueUiSkeleton
+            :config="{ type: 'rating', style: { rating: { useSmiley: true, filled: true } } }"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiSmiley</template>
+        <template #dev>
+          <SmileyTest 
+            :dataset="ratingDataset" 
+            :config="smileyConfig" 
+          />
+        </template>
+        <template #prod>
+          <VueUiSmiley
+            :dataset="ratingDataset"
+            :config="smileyConfig"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiRating</template>
+        <template #dev>
+          <RatingTest
+            ref="ratingtest"
+            :config="ratingConfig"
+            :dataset="ratingDataset"
+          />
+        </template>
+        <template #prod>
+          <VueUiRating
+            ref="ratingtest"
+            :config="ratingConfig"
+            :dataset="ratingDataset"
+          />
+        </template>
+      </Box>
+      
+      <Box>
+        <template #title>VueUiChestnut</template>
+        <template #dev>
+          <ChestnutTest
+            ref="chestnuttest"
+            :dataset="chestnutDataset"
+            @selectRoot="selectRoot"
+            @selectBranch="selectBranch"
+            @selectNut="selectNut"
+          />
+        </template>
+        <template #prod>
+          <VueUiChestnut
+            ref="chestnuttest"
+            :dataset="chestnutDataset"
+            @selectRoot="selectRoot"
+            @selectBranch="selectBranch"
+            @selectNut="selectNut"
+          />
+        </template>
+      </Box>
+      
+      <Box>
+        <template #title>VueUiPyramid</template>
+        <template #dev>
+          <PyramidTest 
+            ref="pyramid" 
+            :dataset="pyramidDataset" 
+          />
+        </template>
+        <template #prod>
+          <VueUiAgePyramid
+            ref="pyramid"
+            :dataset="pyramidDataset"
+          />
+        </template>
+      </Box>
+      
+      <Box>
+        <template #title>VueUiWaffle</template>
+        <template #dev>
+          <WaffleTest
+            ref="waffletest"
+            :dataset="donutDataset"
+            @selectLegend="selectLegendWaffle"
+          />
+        </template>
+        <template #prod>
+          <VueUiWaffle
+            ref="waffletest"
+            :dataset="donutDataset"
+            @selectLegend="selectLegendWaffle"
+          />
+        </template>
+      </Box>
+      
+      <Box>
+        <template #title>VueUiAnnotator</template>
+        <template #dev>
+          <AnnotatorTest
+            @saveAnnotations="saveAnnotations"
+            :dataset="{
+              shapes,
+              lastSelectedShape,
+            }"
+            @toggleOpenState="toggleOpenState"
+          >
+            <DashboardTest
+              ref="dash"
+              :dataset="comps"
+              @change="testchange"
+              :config="dashboardConfig"
+            >
+              <template v-slot:content="{ item }">
+                <div style="padding: 12px">
+                  <component :is="item.component" v-bind="item.props"></component>
+                </div>
+              </template>
+            </DashboardTest>
+          </AnnotatorTest>
+        </template>
+        <template #prod>
+          <VueUiAnnotator
+            @saveAnnotations="saveAnnotations"
+            :dataset="{
+              shapes,
+              lastSelectedShape,
+            }"
+            @toggleOpenState="toggleOpenState"
+          >
+            <DashboardTest
+              ref="dash"
+              :dataset="comps"
+              @change="testchange"
+              :config="dashboardConfig"
+            >
+              <template v-slot:content="{ item }">
+                <div style="padding: 12px">
+                  <component :is="item.component" v-bind="item.props"></component>
+                </div>
+              </template>
+            </DashboardTest>
+          </VueUiAnnotator>
+        </template>
+      </Box>
+
+            
+      <Box>
+        <template #title>VueUiDashboard</template>
+        <template #dev>
+          <DashboardTest
+            ref="dash"
+            :dataset="comps"
+            @change="testchange"
+            :config="dashboardConfig"
+          >
+            <template v-slot:content="{ item }">
+              <div style="padding: 12px">
+                <component :is="item.component" v-bind="item.props"></component>
+              </div>
+            </template>
+          </DashboardTest>
+        </template>
+        <template #prod>
+          <VueUiDashboard
+            ref="dash"
+            :dataset="comps"
+            @change="testchange"
+            :config="dashboardConfig"
+          >
+            <template v-slot:content="{ item }">
+              <div style="padding: 12px">
+                <component :is="item.component" v-bind="item.props"></component>
+              </div>
+            </template>
+          </VueUiDashboard>
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiSparkbar</template>
+        <template #dev>
+          <SparkbarTest
+            :config="sparkbarConfig"
+            :dataset="sparkbarDataset"
+          />
+        </template>
+        <template #prod>
+          <VueUiSparkbar
+            :config="sparkbarConfig"
+            :dataset="sparkbarDataset"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiHeatmap</template>
+        <template #dev>
+          <HeatmapTest
+            ref="heatmaptest"
+            :config="heatmapConfig"
+            :dataset="heatmapDataset"
+          />
+        </template>
+        <template #prod>
+          <VueUiHeatmap
+            ref="heatmaptest"
+            :config="heatmapConfig"
+            :dataset="heatmapDataset"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiGauge</template>
+        <template #dev>
+          <GaugeTest 
+            ref="gaugetest" 
+            :dataset="gaugeDataset" 
+          />
+        </template>
+        <template #prod>
+          <VueUiGauge
+            ref="gaugetest"
+            :dataset="gaugeDataset"
+          />
+        </template>
+      </Box>
+
+      <Box>
+        <template #title>VueUiTable</template>
+        <template #dev>
+          <TableTest 
+            :dataset="tableTestDataset" 
+          />
+        </template>
+        <template #prod>
+          <VueUiTable 
+            :dataset="tableTestDataset" 
+          />
+        </template>
+      </Box>
+
     <img v-if="pic" :src="pic" />
-    <div style="max-width: 1000px; margin: 0 auto; margin-bottom: 48px">
-      <VueUiGauge
-        ref="gaugetest"
-        v-if="!showLocalTest"
-        :dataset="gaugeDataset"
-        :config="gaugeConfig"
-      />
-      <GaugeTest ref="gaugetest" v-if="showLocalTest" :dataset="gaugeDataset" />
-    </div>
-    <VueUiTable :dataset="tableTestDataset" :config="darkConfig" v-if="!showLocalTest" />
-    <TableTest :dataset="tableTestDataset" v-if="showLocalTest" />
   </div>
-  <VueUiScreenshot
-    v-if="!showLocalTest"
-    ref="screenshottest"
-    :config="screenshotConfig"
-    @postImage="postImage"
-  />
-  <ScreenshotTest
-    v-if="showLocalTest"
-    ref="screenshottest"
-    :config="screenshotConfig"
-    @postImage="postImage"
-  />
 </template>
