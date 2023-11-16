@@ -36,36 +36,60 @@ const isTooltip = ref(false);
 const tooltipContent = ref("");
 
 onMounted(() => {
-    const xLabelMin = document.getElementById("xLabelMin");
-    if(xLabelMin) {
-        const bboxXMin = xLabelMin.getBBox();
-        const xPosition = bboxXMin.height / 2 + svg.value.padding * 0.6;
-        const yPosition = svg.value.centerY;
-        xLabelMin.setAttributeNS(null, "transform", `rotate(-90, ${xPosition}, ${yPosition})`);
-        xLabelMin.setAttributeNS(null, "x", xPosition);
-        xLabelMin.setAttributeNS(null, "y", yPosition);
-    }
-    
-    const xLabelMax = document.getElementById("xLabelMax");
-    if(xLabelMax) {
-        const bboxXMax = xLabelMax.getBBox();
-        const xPosition = bboxXMax.height / 2 + svg.value.right;
-        const yPosition = svg.value.centerY;
-        xLabelMax.setAttributeNS(null, "transform", `rotate(90, ${xPosition}, ${yPosition})`);
-        xLabelMax.setAttributeNS(null, "x", xPosition);
-        xLabelMax.setAttributeNS(null, "y", yPosition);
-    }
 
-    const xLabelMaxName = document.getElementById("xLabelMaxName");
-    if(xLabelMaxName) {
-        const bboxXMaxName = xLabelMaxName.getBBox();
-        const xPosition = bboxXMaxName.height / 2 + svg.value.right + svg.value.padding * 0.3;
-        const yPosition = svg.value.centerY;
-        xLabelMaxName.setAttributeNS(null, "transform", `rotate(90, ${xPosition}, ${yPosition})`);
-        xLabelMaxName.setAttributeNS(null, "x", xPosition);
-        xLabelMaxName.setAttributeNS(null, "y", yPosition);
-    }
+    if (quadrantConfig.value.style.chart.layout.labels.axisLabels.show) {
+        const xmlns = "http://www.w3.org/2000/svg";
+        const chart = document.getElementById(`svg_${uid.value}`);
 
+        const xLabelMinVisible = document.createElementNS(xmlns, 'text');
+        const xLabelMaxVisible = document.createElementNS(xmlns, 'text');
+        const xLabelMaxNameVisible = document.createElementNS(xmlns, "text");
+        const xLabelMin = document.getElementById("xLabelMin");
+        const xLabelMax = document.getElementById("xLabelMax");
+        const xLabelMaxName = document.getElementById("xLabelMaxName");
+
+        if(xLabelMin) {
+            const bboxXMin = xLabelMin.getBBox();
+            const xPosition = bboxXMin.height / 2 + svg.value.padding * 0.6;
+            const yPosition = svg.value.centerY;
+            xLabelMinVisible.setAttributeNS(null, "transform", `rotate(-90, ${xPosition}, ${yPosition})`);
+            xLabelMinVisible.setAttributeNS(null, "x", xPosition);
+            xLabelMinVisible.setAttributeNS(null, "y", yPosition);
+            xLabelMinVisible.innerHTML = axisValues.value.x.min;
+            xLabelMinVisible.setAttribute("text-anchor", "middle");
+            xLabelMinVisible.setAttribute("fontSize", quadrantConfig.value.style.chart.layout.labels.axisLabels.fontSize)
+            xLabelMinVisible.setAttributeNS(null, "fill", quadrantConfig.value.style.chart.layout.labels.axisLabels.color.negative)
+            chart.appendChild(xLabelMinVisible);
+        }
+
+        if(xLabelMax) {
+            const bboxXMax = xLabelMax.getBBox();
+            const xPosition = bboxXMax.height / 2 + svg.value.right;
+            const yPosition = svg.value.centerY;
+            xLabelMaxVisible.setAttributeNS(null, "transform", `rotate(90, ${xPosition}, ${yPosition})`);
+            xLabelMaxVisible.setAttributeNS(null, "x", xPosition);
+            xLabelMaxVisible.setAttributeNS(null, "y", yPosition);
+            xLabelMaxVisible.innerHTML = axisValues.value.x.max;
+            xLabelMaxVisible.setAttribute("text-anchor", "middle");
+            xLabelMaxVisible.setAttribute("fontSize", quadrantConfig.value.style.chart.layout.labels.axisLabels.fontSize)
+            xLabelMaxVisible.setAttributeNS(null, "fill", quadrantConfig.value.style.chart.layout.labels.axisLabels.color.positive)
+            chart.appendChild(xLabelMaxVisible);
+        }
+
+        if(xLabelMaxName && quadrantConfig.value.style.chart.layout.grid.xAxis.name) {
+            const bboxXMaxName = xLabelMaxName.getBBox();
+            const xPosition = bboxXMaxName.height / 2 + svg.value.right + svg.value.padding * 0.3;
+            const yPosition = svg.value.centerY;
+            xLabelMaxNameVisible.setAttributeNS(null, "transform", `rotate(90, ${xPosition}, ${yPosition})`);
+            xLabelMaxNameVisible.setAttributeNS(null, "x", xPosition);
+            xLabelMaxNameVisible.setAttributeNS(null, "y", yPosition);
+            xLabelMaxNameVisible.innerHTML = quadrantConfig.value.style.chart.layout.grid.xAxis.name;
+            xLabelMaxNameVisible.setAttribute("text-anchor", "middle");
+            xLabelMaxNameVisible.setAttribute("fontSize", quadrantConfig.value.style.chart.layout.labels.axisLabels.fontSize)
+            xLabelMaxNameVisible.setAttributeNS(null, "fill", quadrantConfig.value.style.chart.layout.labels.axisLabels.color.positive)
+            chart.appendChild(xLabelMaxNameVisible);
+        }
+    }
 });
 
 const tooltipPosition = computed(() => {
@@ -491,7 +515,7 @@ defineExpose({
         </details>
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`" @click="closeDetails">
+        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`" @click="closeDetails" :id="`svg_${uid}`">
             
             <!-- DEFS -->
             <defs>
@@ -667,7 +691,7 @@ defineExpose({
                     id="xLabelMin"
                     text-anchor="middle"
                     :font-size="quadrantConfig.style.chart.layout.labels.axisLabels.fontSize"
-                    :fill="quadrantConfig.style.chart.layout.labels.axisLabels.color.negative"
+                    fill="transparent"
                 >
                     {{ axisValues.x.min }}
                 </text>
@@ -677,7 +701,7 @@ defineExpose({
                     id="xLabelMax"
                     text-anchor="middle"
                     :font-size="quadrantConfig.style.chart.layout.labels.axisLabels.fontSize"
-                    :fill="quadrantConfig.style.chart.layout.labels.axisLabels.color.positive"
+                    fill="transparent"
                 >
                     {{ axisValues.x.max }}
                 </text>       
@@ -685,7 +709,7 @@ defineExpose({
                     id="xLabelMaxName"
                     text-anchor="middle"
                     :font-size="quadrantConfig.style.chart.layout.labels.axisLabels.fontSize"
-                    :fill="quadrantConfig.style.chart.layout.labels.axisLabels.color.positive"
+                    fill="transparent"
                 >
                     {{ quadrantConfig.style.chart.layout.grid.xAxis.name }}
                 </text>       
