@@ -58,16 +58,17 @@
     "test": "vitest"
   },
   "dependencies": {
+    "cypress": "^13.5.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "vue": "^3.3.4",
-    "xlsx": "^0.18.5",
-    "vue-data-ui": "file:../vue-data-ui"
+    "vue-data-ui": "file:../vue-data-ui",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
+    "sass": "^1.57.1",
     "vite": "^4.4.5",
-    "vitest": "^0.34.1",
-    "sass": "^1.57.1"
+    "vitest": "^0.34.1"
   }
 }
