@@ -53,22 +53,24 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build --mode production && node copy-types.cjs",
+    "clean": "node cleanup.cjs",
+    "build": "npm run clean && vite build --mode production && node copy-types.cjs && npm i",
     "preview": "vite preview",
     "test": "vitest"
   },
   "dependencies": {
-    "cypress": "^13.5.1",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
-    "vue": "^3.3.4",
-    "vue-data-ui": "file:../vue-data-ui",
-    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
+    "cypress": "^13.5.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1",
+    "remove-attr": "^0.0.13",
     "sass": "^1.57.1",
     "vite": "^4.4.5",
-    "vitest": "^0.34.1"
+    "vitest": "^0.34.1",
+    "vue": "^3.3.4",
+    "vue-data-ui": "file:../vue-data-ui",
+    "xlsx": "^0.18.5"
   }
 }

@@ -1,10 +1,19 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
 import vue from "@vitejs/plugin-vue";
+import removeAttr from 'remove-attr';
+
+const prod = process.env.NODE_ENV === 'production';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    removeAttr({
+      extensions: [ 'vue' ],
+      attributes: prod ?  [ 'data-cy' ] : [],  
+  })
+  ],
   build: {
     lib: {
       // src/indext.ts is where we have exported the component(s)
