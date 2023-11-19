@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, nextTick } from "vue";
 import { treeShake, makeDonut, palette, convertColorToHex, opacity, convertConfigColors, makeXls } from '../lib';
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
@@ -183,10 +183,10 @@ function useTooltip(arc, i, showTooltip = true) {
     selectedSerie.value = i;
     let html = "";
 
-    html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${arc.name}</div>`;
-    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" fill="${arc.color}"/></svg>`;
+    html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${arc.name}</div>`;
+    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${arc.color}"/></svg>`;
     if(donutConfig.value.style.chart.tooltip.showValue) {
-        html += `<b>${arc.value.toFixed(donutConfig.value.style.chart.tooltip.roundingValue)}</b>`;
+        html += `<b data-cy="donut-tooltip-value">${arc.value.toFixed(donutConfig.value.style.chart.tooltip.roundingValue)}</b>`;
     }
     if(donutConfig.value.style.chart.tooltip.showPercentage) {
         if(!donutConfig.value.style.chart.tooltip.showValue) {
@@ -243,12 +243,11 @@ defineExpose({
 <template>
     <div :ref="`donutChart`" :class="`vue-ui-donut ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${donutConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`donut__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor}`">
-
             <!-- TITLE AS DIV -->
-            <div :style="`width:100%;text-align:center;color:${donutConfig.style.chart.title.color};font-size:${donutConfig.style.chart.title.fontSize}px;font-weight:${donutConfig.style.chart.title.bold ? 'bold': ''}`">
+            <div data-cy="donut-div-title" :style="`width:100%;text-align:center;color:${donutConfig.style.chart.title.color};font-size:${donutConfig.style.chart.title.fontSize}px;font-weight:${donutConfig.style.chart.title.bold ? 'bold': ''}`">
                 {{ donutConfig.style.chart.title.text }}
             </div>
-            <div v-if="donutConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${donutConfig.style.chart.title.subtitle.color};font-size:${donutConfig.style.chart.title.subtitle.fontSize}px;font-weight:${donutConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
+            <div data-cy="donut-div-subtitle" v-if="donutConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${donutConfig.style.chart.title.subtitle.color};font-size:${donutConfig.style.chart.title.subtitle.fontSize}px;font-weight:${donutConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
                 {{ donutConfig.style.chart.title.subtitle.text }}
             </div>
         </div>
@@ -256,20 +255,20 @@ defineExpose({
 
         <!-- OPTIONS -->
         <details class="vue-ui-donut-user-options" :style="`background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`" data-html2canvas-ignore v-if="donutConfig.userOptions.show" ref="details">
-            <summary :style="`background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">{{ donutConfig.userOptions.title }}</summary>
+            <summary data-cy="donut-summary" :style="`background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">{{ donutConfig.userOptions.title }}</summary>
             <div class="vue-ui-donut-user-options-items" :style="`background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
                 <div class="vue-ui-donut-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-donut-option-datalabels_${uid}`" :name="`vue-ui-donut-option-datalabels_${uid}`"
+                    <input data-cy="donut-checkbox-datalabels" type="checkbox" :id="`vue-ui-donut-option-datalabels_${uid}`" :name="`vue-ui-donut-option-datalabels_${uid}`"
                     v-model="mutableConfig.dataLabels.show">
                     <label :for="`vue-ui-donut-option-datalabels_${uid}`">{{ donutConfig.userOptions.labels.dataLabels }}</label>
                 </div>
                 <div class="vue-ui-donut-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-donut-option-title_${uid}`" :name="`vue-ui-donut-option-title_${uid}`"
+                    <input data-cy="donut-checkbox-title" type="checkbox" :id="`vue-ui-donut-option-title_${uid}`" :name="`vue-ui-donut-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-donut-option-title_${uid}`">{{ donutConfig.userOptions.labels.useDiv }}</label>
                 </div>
                 <div class="vue-ui-donut-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-donut-option-table_${uid}`" :name="`vue-ui-donut-option-table_${uid}`"
+                    <input data-cy="donut-checkbox-table" type="checkbox" :id="`vue-ui-donut-option-table_${uid}`" :name="`vue-ui-donut-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-donut-option-table_${uid}`">{{ donutConfig.userOptions.labels.showTable }}</label>
                 </div>
@@ -290,7 +289,7 @@ defineExpose({
             </div>
         </details>
 
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`" @click="closeDetails">
+        <svg data-cy="donut-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`" @click="closeDetails">
             
             <!-- DEFS -->
             <defs>
@@ -304,6 +303,7 @@ defineExpose({
             <!-- TITLE AS G -->
             <g v-if="donutConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
                 <text
+                    data-cy="donut-text-title"
                     :font-size="donutConfig.style.chart.title.fontSize"
                     :fill="donutConfig.style.chart.title.color"
                     :x="svg.width / 2"
@@ -314,6 +314,7 @@ defineExpose({
                     {{ donutConfig.style.chart.title.text }}
                 </text>
                 <text
+                    data-cy="donut-text-subtitle"
                     v-if="donutConfig.style.chart.title.subtitle.text"
                     :font-size="donutConfig.style.chart.title.subtitle.fontSize"
                     :fill="donutConfig.style.chart.title.subtitle.color"
@@ -326,7 +327,9 @@ defineExpose({
                 </text>
             </g>
             <path 
-                v-for="(arc, i) in currentDonut" 
+                v-for="(arc, i) in currentDonut"
+                class="vue-ui-donut-arc-path"
+                :data-cy="`donut-arc-${i}`"
                 :d="arc.path" 
                 :stroke="`${arc.color}CC`" 
                 :stroke-width="defaultConfig.style.chart.layout.donut.strokeWidth" 
@@ -335,6 +338,7 @@ defineExpose({
 
             <!-- HOLLOW -->
             <circle
+                data-cy="donut-gradient-hollow"
                 v-if="donutConfig.style.chart.useGradient"
                 :cx="svg.width / 2"
                 :cy="svg.height / 2"
@@ -344,7 +348,8 @@ defineExpose({
 
               <!-- TOOLTIP TRAPS -->
               <path 
-                v-for="(arc, i) in currentDonut" 
+                v-for="(arc, i) in currentDonut"
+                :data-cy="`donut-trap-${i}`"
                 :d="arc.path" 
                 :stroke="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
                 :stroke-width="defaultConfig.style.chart.layout.donut.strokeWidth" 
@@ -411,6 +416,7 @@ defineExpose({
             <!-- DATALABELS -->
             <g v-for="(arc, i) in currentDonut">
                 <text
+                    :data-cy="`donut-datalabel-value-${i}`"
                     v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                     text-anchor="middle"
                     :x="calcDonutMarkerLabelPositionX(arc)"
@@ -422,6 +428,7 @@ defineExpose({
                     {{ displayArcPercentage(arc, currentDonut)  }}
                 </text>
                 <text
+                    :data-cy="`donut-datalabel-name-${i}`"
                     v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                     text-anchor="middle"
                     :x="calcDonutMarkerLabelPositionX(arc)"
@@ -445,29 +452,30 @@ defineExpose({
                 height="100"
                 style="overflow:visible"
             >
-                <div class="vue-ui-donut-legend" :style="`background:transparent;color:${donutConfig.style.chart.legend.color};font-size:${donutConfig.style.chart.legend.fontSize}px;font-weight:${donutConfig.style.chart.legend.bold ? 'bold' : ''}`">
-                    <div v-for="(legendItem, i) in legendSet" class="vue-ui-donut-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
-                        <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
-                        <span>{{ legendItem.name }} : </span>
-                        <span>{{ Number(legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}</span>
-                        <span>({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>
+                <div data-cy="donut-foreignObject-legend" class="vue-ui-donut-legend" :style="`background:transparent;color:${donutConfig.style.chart.legend.color};font-size:${donutConfig.style.chart.legend.fontSize}px;font-weight:${donutConfig.style.chart.legend.bold ? 'bold' : ''}`">
+                    <div v-for="(legendItem, i) in legendSet" :data-cy="`donut-foreignObject-legend-item-${i}`" class="vue-ui-donut-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
+                        <svg viewBox="0 0 12 12" height="14" width="14"><circle :data-cy="`donut-foreignObject-legend-marker-${i}`" cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
+                        <span :data-cy="`donut-foreignObject-legend-name-${i}`">{{ legendItem.name }} : </span>
+                        <span :data-cy="`donut-foreignObject-legend-value-${i}`">{{ Number(legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}</span>
+                        <span :data-cy="`donut-foreignObject-legend-percentage-${i}`">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>
                     </div>
                 </div>
             </foreignObject>
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="donutConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-donut-legend" :style="`background:${donutConfig.style.chart.legend.backgroundColor};color:${donutConfig.style.chart.legend.color};font-size:${donutConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${donutConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+        <div data-cy="donut-div-legend" v-if="donutConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-donut-legend" :style="`background:${donutConfig.style.chart.legend.backgroundColor};color:${donutConfig.style.chart.legend.color};font-size:${donutConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${donutConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
             <div v-for="(legendItem, i) in legendSet" class="vue-ui-donut-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
-                <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
-                <span>{{ legendItem.name }} : </span>
-                <span>{{ Number(legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}</span>
-                <span v-if="!segregated.includes(i)">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>
+                <svg viewBox="0 0 12 12" height="14" width="14"><circle :data-cy="`donut-div-legend-marker-${i}`" cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
+                <span :data-cy="`donut-div-legend-name-${i}`">{{ legendItem.name }} : </span>
+                <span :data-cy="`donut-div-legend-value-${i}`">{{ Number(legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}</span>
+                <span :data-cy="`donut-div-legend-percentage-${i}`" v-if="!segregated.includes(i)">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>
             </div>
         </div>
 
         <!-- TOOLTIP -->
         <div 
+            data-cy="donut-tooltip"
             class="vue-ui-donut-tooltip"
             ref="tooltip"
             v-if="donutConfig.style.chart.tooltip.show && isTooltip"
@@ -476,10 +484,10 @@ defineExpose({
         />
 
         <!-- DATA TABLE -->
-        <div @click="closeDetails" class="vue-ui-donut-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div data-cy="donut-table" @click="closeDetails" class="vue-ui-donut-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
                 <thead>
-                    <tr v-if="donutConfig.style.chart.title.text">
+                    <tr v-if="donutConfig.style.chart.title.text" data-cy="donut-table-title">
                         <th colspan="3" :style="`background:${donutConfig.table.th.backgroundColor};color:${donutConfig.table.th.color};outline:${donutConfig.table.th.outline}`">
                             <span>{{ donutConfig.style.chart.title.text }}</span>
                             <span v-if="donutConfig.style.chart.title.subtitle.text">
@@ -500,7 +508,7 @@ defineExpose({
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(th, i) in table.head">
+                    <tr v-for="(th, i) in table.head" :data-cy="`donut-table-tr-${i}`">
                         <td :style="`background:${donutConfig.table.td.backgroundColor};color:${donutConfig.table.td.color};outline:${donutConfig.table.td.outline}`">
                             <div style="max-width: 200px margin:0 auto">
                                 <span :style="`color:${th.color};margin-right:6px;`">●</span>
