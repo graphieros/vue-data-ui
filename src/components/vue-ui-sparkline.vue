@@ -135,12 +135,12 @@ const dataLabel = computed(() => {
     <div class="vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${sparklineConfig.style.fontFamily}`">
         <!-- TITLE -->
         <div v-if="sparklineConfig.style.title.show" class="vue-ui-sparkline-title" :style="`display:flex;align-items:center;width:100%;color:${sparklineConfig.style.title.color};background:${sparklineConfig.style.backgroundColor};justify-content:${sparklineConfig.style.title.textAlign === 'left' ? 'flex-start' : sparklineConfig.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${sparklineConfig.style.title.fontSize * 2}px;font-size:${sparklineConfig.style.title.fontSize}px;font-weight:${sparklineConfig.style.title.bold ? 'bold' : 'normal'};`">
-            <span :style="`padding:${sparklineConfig.style.title.textAlign === 'left' ? '0 0 0 12px' : sparklineConfig.style.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`">
+            <span data-cy="sparkline-period-label" :style="`padding:${sparklineConfig.style.title.textAlign === 'left' ? '0 0 0 12px' : sparklineConfig.style.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`">
                 {{ selectedPlot ? selectedPlot.period : sparklineConfig.style.title.text }}
             </span>
         </div>
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${sparklineConfig.style.backgroundColor};overflow:visible`">
+        <svg data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${sparklineConfig.style.backgroundColor};overflow:visible`">
             <!-- DEFS -->
             <defs>
                 <linearGradient
@@ -154,23 +154,26 @@ const dataLabel = computed(() => {
 
             <!-- AREA -->
             <g v-if="sparklineConfig.style.area.show">
-                <path 
+                <path
+                    data-cy="sparkline-smooth-area"
                     v-if="sparklineConfig.style.line.smooth"
                     :d="`M ${mutableDataset[0].x},${drawingArea.bottom} ${createSmoothPath(mutableDataset)} L ${mutableDataset.at(-1).x},${drawingArea.bottom} Z`"
                     :fill="sparklineConfig.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : `${sparklineConfig.style.area.color}${opacity[sparklineConfig.style.area.opacity]}`"
                 />
                 <path
+                    data-cy="sparkline-angle-area"
                     v-else
                     :d="`M${area}Z`" 
                     :fill="sparklineConfig.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : `${sparklineConfig.style.area.color}${opacity[sparklineConfig.style.area.opacity]}`"
                 />
             </g>
 
-            <path v-if="sparklineConfig.style.line.smooth" :d="`M ${createSmoothPath(mutableDataset)}`" :stroke="sparklineConfig.style.line.color" fill="none" :stroke-width="sparklineConfig.style.line.strokeWidth" stroke-linecap="round"/>
+            <path data-cy="sparkline-smooth-path" v-if="sparklineConfig.style.line.smooth" :d="`M ${createSmoothPath(mutableDataset)}`" :stroke="sparklineConfig.style.line.color" fill="none" :stroke-width="sparklineConfig.style.line.strokeWidth" stroke-linecap="round"/>
             
             <g v-for="(plot, i) in mutableDataset">
                 <line 
                     v-if="i < mutableDataset.length - 1 && !sparklineConfig.style.line.smooth"
+                    :data-cy="`sparkline-segment-${i}`"
                     :x1="plot.x"
                     :x2="mutableDataset[i + 1].x"
                     :y1="plot.y"
@@ -183,6 +186,7 @@ const dataLabel = computed(() => {
                 />
                 <!-- VERTICAL INDICATORS -->
                 <line
+                    :data-cy="`sparkline-vertical-indicator-${i}`"
                     v-if="sparklineConfig.style.verticalIndicator.show && selectedPlot && plot.id === selectedPlot.id"
                     :x1="plot.x"
                     :x2="plot.x"
@@ -196,6 +200,7 @@ const dataLabel = computed(() => {
 
             <!-- ZERO BASE -->
             <line
+                data-cy="sparkline-zero-axis"
                 v-if="min < 0"
                 :x1="drawingArea.start"
                 :x2="drawingArea.start + drawingArea.width - 16"
@@ -209,7 +214,8 @@ const dataLabel = computed(() => {
             
             <!-- PLOTS -->
             <g v-if="sparklineConfig.style.plot.show" v-for="(plot, i) in mutableDataset">
-                <circle 
+                <circle
+                    :data-cy="`sparkline-plot-${i}`"
                     v-if="selectedPlot && plot.id === selectedPlot.id" 
                     :cx="plot.x" 
                     :cy="plot.y" 
@@ -222,6 +228,7 @@ const dataLabel = computed(() => {
 
             <!-- DATALABEL -->
             <text
+                data-cy="sparkline-datalabel"
                 :x="sparklineConfig.style.dataLabel.position === 'left' ? 12 : drawingArea.width + 12"
                 :y="svg.height / 2 + sparklineConfig.style.dataLabel.fontSize / 2.5"
                 :font-size="sparklineConfig.style.dataLabel.fontSize"
@@ -234,6 +241,7 @@ const dataLabel = computed(() => {
             <!-- MOUSE TRAP -->
             <rect
                 v-for="(plot, i) in mutableDataset"
+                :data-cy="`sparkline-mouse-trap-${i}`"
                 :x="plot.x - (drawingArea.width / len / 2)"
                 :y="drawingArea.top - 6"
                 :height="drawingArea.height + 6"
