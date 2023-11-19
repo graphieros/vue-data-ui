@@ -109,8 +109,7 @@ const computedDataset = computed(() => {
             </div>    
         </div>
 
-        <svg :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`">
-
+        <svg data-cy="sparkhistogram-svg" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`">
             <defs>
                 <radialGradient v-for="(posGrad, i) in computedDataset" :id="`gradient_positive_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
                     <stop offset="0%" :stop-color="`${shiftHue(histoConfig.style.bars.colors.positive, 0.05)}${opacity[posGrad.intensity]}`"/>
@@ -124,7 +123,8 @@ const computedDataset = computed(() => {
             </defs>
 
 
-            <rect v-for="rect in computedDataset"
+            <rect v-for="(rect, i) in computedDataset"
+                :data-cy="`sparkhistogram-rect-${i}`"
                 :x="rect.x"
                 :y="rect.y"
                 :height="rect.height"
@@ -135,7 +135,8 @@ const computedDataset = computed(() => {
                 :rx="`${histoConfig.style.bars.borderRadius * rect.proportion / 12}%`"
             />
 
-            <text v-for="val in computedDataset"
+            <text v-for="(val, i) in computedDataset"
+                :data-cy="`sparkhistogram-value-label-${i}`"
                 text-anchor="middle"
                 :x="val.textAnchor"
                 :y="val.y - histoConfig.style.labels.value.fontSize / 3"
@@ -146,8 +147,9 @@ const computedDataset = computed(() => {
                 {{ histoConfig.style.labels.value.prefix }}{{ isNaN(val.value) ? '' : Number(val.value.toFixed(histoConfig.style.labels.value.rounding)).toLocaleString() }}{{ histoConfig.style.labels.value.suffix }}
             </text>
 
-            <g v-for="label in computedDataset">
+            <g v-for="(label, i) in computedDataset">
                 <text 
+                    :data-cy="`sparkhistogram-label-${i}`"
                     v-if="label.valueLabel"
                     :x="label.textAnchor"
                     :y="label.y + label.height + histoConfig.style.labels.valueLabel.fontSize"
@@ -159,8 +161,9 @@ const computedDataset = computed(() => {
                 </text>
             </g>
 
-            <g v-for="time in computedDataset">
-                <text 
+            <g v-for="(time, i) in computedDataset">
+                <text
+                    :data-cy="`sparkhistogram-time-label-${i}`"
                     v-if="time.timeLabel"
                     :x="time.textAnchor"
                     :y="drawingArea.height - histoConfig.style.labels.timeLabel.fontSize / 2"
