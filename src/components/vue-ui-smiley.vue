@@ -132,31 +132,31 @@ function getActiveColor(index) {
     <div :style="`background:${ratingConfig.style.backgroundColor};font-family:${ratingConfig.style.fontFamily};width:100%;`" @mouseover="isTooltip = true" @mouseleave="isTooltip = false; hoveredValue = undefined">
         <!-- TITLE -->
         <div class="vue-ui-rating-title" v-if="ratingConfig.style.title.text" style="width:100%">
-            <div :style="`color:${ratingConfig.style.title.color};font-weight:${ratingConfig.style.title.bold ? 'bold' : 'normal'};text-align:${ratingConfig.style.title.textAlign};margin-bottom:${ratingConfig.style.title.offsetY}px;font-size:${ratingConfig.style.title.fontSize}px`">
+            <div data-cy="smiley-title" :style="`color:${ratingConfig.style.title.color};font-weight:${ratingConfig.style.title.bold ? 'bold' : 'normal'};text-align:${ratingConfig.style.title.textAlign};margin-bottom:${ratingConfig.style.title.offsetY}px;font-size:${ratingConfig.style.title.fontSize}px`">
                 {{ ratingConfig.style.title.text }}
             </div>
-            <div v-if="ratingConfig.style.title.subtitle.text" :style="`color:${ratingConfig.style.title.subtitle.color};font-size:${ratingConfig.style.title.subtitle.fontSize}px;text-align:${ratingConfig.style.title.textAlign};margin-bottom:${ratingConfig.style.title.subtitle.offsetY}px;font-weight:${ratingConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
+            <div data-cy="smiley-subtitle" v-if="ratingConfig.style.title.subtitle.text" :style="`color:${ratingConfig.style.title.subtitle.color};font-size:${ratingConfig.style.title.subtitle.fontSize}px;text-align:${ratingConfig.style.title.textAlign};margin-bottom:${ratingConfig.style.title.subtitle.offsetY}px;font-weight:${ratingConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
                 {{ ratingConfig.style.title.subtitle.text }}
             </div>
         </div>
 
         <!-- RATING POSITION TOP -->
-        <div  v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'top'" :style="`width:100%;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};margin-left:${ratingConfig.style.rating.offsetX}px`">
+        <div data-cy="smiley-position-top" v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'top'" :style="`width:100%;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};margin-left:${ratingConfig.style.rating.offsetX}px`">
             {{ isNaN(currentRating) ? '' : currentRating.toFixed(ratingConfig.style.rating.roundingValue) }}
         </div>
 
         <div class="vue-ui-smiley-wrapper" :style="`overflow:visible;height:${ratingConfig.style.itemSize}px;width:fit-content;margin:0 auto;display:flex;align-items:center;justify-content:center;`">
             <!-- RATING POSITION LEFT -->
-            <div v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'left'" :style="`width:fit-content;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};padding-right:${ratingConfig.style.rating.offsetX}px`">
+            <div data-cy="smiley-position-left" v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'left'" :style="`width:fit-content;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};padding-right:${ratingConfig.style.rating.offsetX}px`">
                 {{ isNaN(currentRating) ? '' : currentRating.toFixed(ratingConfig.style.rating.roundingValue) }}
             </div>
 
             <!--0-->
-            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 1 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;
+            <div data-cy="smiley-item-0" tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 1 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;
             position:relative`" @mouseenter="hoveredValue = 0" @mouseleave="hoveredValue = undefined" @click="rate(1)" @keyup.enter="rate(1)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
-                    <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 0 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
+                    <div data-cy="smiley-tooltip-0" class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 0 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
                         <div :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${ratingConfig.style.tooltip.color}`">
                             <span :style="`font-size:${ratingConfig.style.tooltip.fontSize}px`">1</span> : <span :style="`font-weight:${ratingConfig.style.tooltip.bold ? 'bold' : 'normal'};font-size:${ratingConfig.style.tooltip.fontSize}px`">{{ props.dataset.rating['1'] }}</span>
                             <div :style="`font-family:Arial !important;position:absolute;top:calc(100% - 4px);left:50%;transform:translateX(-50%);color:${ratingConfig.style.tooltip.borderColor}`">
@@ -191,10 +191,10 @@ function getActiveColor(index) {
             </div>
 
             <!--1-->
-            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 2 }"  :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 1" @mouseleave="hoveredValue = undefined" @click="rate(2)" @keyup.enter="rate(2)">
+            <div data-cy="smiley-item-1" tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 2 }"  :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 1" @mouseleave="hoveredValue = undefined" @click="rate(2)" @keyup.enter="rate(2)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
-                    <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 1 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
+                    <div data-cy="smiley-tooltip-1" class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 1 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
                         <div :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${ratingConfig.style.tooltip.color}`">
                             <span :style="`font-size:${ratingConfig.style.tooltip.fontSize}px`">2</span> : <span :style="`font-weight:${ratingConfig.style.tooltip.bold ? 'bold' : 'normal'};font-size:${ratingConfig.style.tooltip.fontSize}px`">{{ props.dataset.rating['2'] }}</span>
                             <div :style="`font-family:Arial !important;position:absolute;top:calc(100% - 4px);left:50%;transform:translateX(-50%);color:${ratingConfig.style.tooltip.borderColor}`">
@@ -229,10 +229,10 @@ function getActiveColor(index) {
             </div>
 
             <!--2-->
-            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 3 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 2" @mouseleave="hoveredValue = undefined" @click="rate(3)" @keyup.enter="rate(3)">
+            <div data-cy="smiley-item-2" tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 3 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 2" @mouseleave="hoveredValue = undefined" @click="rate(3)" @keyup.enter="rate(3)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
-                    <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 2 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
+                    <div data-cy="smiley-tooltip-2" class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 2 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
                         <div :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${ratingConfig.style.tooltip.color}`">
                             <span :style="`font-size:${ratingConfig.style.tooltip.fontSize}px`">3</span> : <span :style="`font-weight:${ratingConfig.style.tooltip.bold ? 'bold' : 'normal'};font-size:${ratingConfig.style.tooltip.fontSize}px`">{{ props.dataset.rating['3'] }}</span>
                             <div :style="`font-family:Arial !important;position:absolute;top:calc(100% - 4px);left:50%;transform:translateX(-50%);color:${ratingConfig.style.tooltip.borderColor}`">
@@ -267,10 +267,10 @@ function getActiveColor(index) {
             </div>
 
             <!--3-->
-            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 4 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 3" @mouseleave="hoveredValue = undefined" @click="rate(4)" @keyup.enter="rate(4)">
+            <div data-cy="smiley-item-3" tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 4 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 3" @mouseleave="hoveredValue = undefined" @click="rate(4)" @keyup.enter="rate(4)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
-                    <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 3 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
+                    <div data-cy="smiley-tooltip-3" class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 3 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
                         <div :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${ratingConfig.style.tooltip.color}`">
                             <span :style="`font-size:${ratingConfig.style.tooltip.fontSize}px`">4</span> : <span :style="`font-weight:${ratingConfig.style.tooltip.bold ? 'bold' : 'normal'};font-size:${ratingConfig.style.tooltip.fontSize}px`">{{ props.dataset.rating['4'] }}</span>
                             <div :style="`font-family:Arial !important;position:absolute;top:calc(100% - 4px);left:50%;transform:translateX(-50%);color:${ratingConfig.style.tooltip.borderColor}`">
@@ -305,10 +305,10 @@ function getActiveColor(index) {
             </div>
 
             <!--4-->
-            <div tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 5 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 4" @mouseleave="hoveredValue = undefined" @click="rate(5)" @keyup.enter="rate(5)">
+            <div data-cy="smiley-item-4" tabindex="0" :class="{ 'vue-ui-smiley-rated' : !ratingConfig.readonly && currentRating === 5 }" :style="`cursor:${ratingConfig.readonly ? 'default' : 'pointer'};height:${ratingConfig.style.itemSize}px;aspect-ratio:1/1;position:relative`" @mouseenter="hoveredValue = 4" @mouseleave="hoveredValue = undefined" @click="rate(5)" @keyup.enter="rate(5)">
 
                 <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
-                    <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 4 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
+                    <div data-cy="smiley-tooltip-4" class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === 4 ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
                         <div :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${ratingConfig.style.tooltip.color}`">
                             <span :style="`font-size:${ratingConfig.style.tooltip.fontSize}px`">5</span> : <span :style="`font-weight:${ratingConfig.style.tooltip.bold ? 'bold' : 'normal'};font-size:${ratingConfig.style.tooltip.fontSize}px`">{{ props.dataset.rating['5'] }}</span>
                             <div :style="`font-family:Arial !important;position:absolute;top:calc(100% - 4px);left:50%;transform:translateX(-50%);color:${ratingConfig.style.tooltip.borderColor}`">
@@ -344,13 +344,13 @@ function getActiveColor(index) {
 
             
             <!-- RATING POSITION RIGHT -->
-            <div v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'right'" :style="`width:fit-content;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};padding-left:${ratingConfig.style.rating.offsetX}px`">
+            <div data-cy="smiley-position-right" v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'right'" :style="`width:fit-content;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};padding-left:${ratingConfig.style.rating.offsetX}px`">
                 {{ isNaN(currentRating) ? '' : currentRating.toFixed(ratingConfig.style.rating.roundingValue) }}
             </div>
         </div>
 
         <!-- RATING POSITION BOTTOM -->
-        <div  v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'bottom'" :style="`width:100%;text-align:center;margin-top:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};margin-left:${ratingConfig.style.rating.offsetX}px`">
+        <div data-cy="smiley-position-bottom" v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'bottom'" :style="`width:100%;text-align:center;margin-top:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};margin-left:${ratingConfig.style.rating.offsetX}px`">
             {{ isNaN(currentRating) ? '' : currentRating.toFixed(ratingConfig.style.rating.roundingValue) }}
         </div>
     </div>
