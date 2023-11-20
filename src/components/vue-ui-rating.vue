@@ -21,17 +21,7 @@ const props = defineProps({
 const uid = ref(`vue-ui-rating-${Math.random()}`);
 
 const defaultConfig = ref(mainConfig.vue_ui_rating);
-
-const isPrinting = ref(false);
-const ratingChart = ref(null);
-const tooltip = ref(null);
-const details = ref(null);
-const clientPosition = ref({
-    x: 0,
-    y: 0
-});
 const isTooltip = ref(false);
-const tooltipContent = ref("");
 
 const hoveredValue = ref(undefined);
 const units = ref([]);
@@ -138,16 +128,16 @@ defineExpose({
     <div :style="`background:${ratingConfig.style.backgroundColor};font-family:${ratingConfig.style.fontFamily};width:100%`" class="vue-ui-rating" @mouseover="isTooltip = true" @mouseleave="isTooltip = false; hoveredValue = undefined">
         <!-- TITLE -->
         <div class="vue-ui-rating-title" v-if="ratingConfig.style.title.text" style="width:100%">
-            <div :style="`color:${ratingConfig.style.title.color};font-weight:${ratingConfig.style.title.bold ? 'bold' : 'normal'};text-align:${ratingConfig.style.title.textAlign};margin-bottom:${ratingConfig.style.title.offsetY}px;font-size:${ratingConfig.style.title.fontSize}px`">
+            <div data-cy="rating-title" :style="`color:${ratingConfig.style.title.color};font-weight:${ratingConfig.style.title.bold ? 'bold' : 'normal'};text-align:${ratingConfig.style.title.textAlign};margin-bottom:${ratingConfig.style.title.offsetY}px;font-size:${ratingConfig.style.title.fontSize}px`">
                 {{ ratingConfig.style.title.text }}
             </div>
-            <div v-if="ratingConfig.style.title.subtitle.text" :style="`color:${ratingConfig.style.title.subtitle.color};font-size:${ratingConfig.style.title.subtitle.fontSize}px;text-align:${ratingConfig.style.title.textAlign};margin-bottom:${ratingConfig.style.title.subtitle.offsetY}px;font-weight:${ratingConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
+            <div data-cy="rating-subtitle" v-if="ratingConfig.style.title.subtitle.text" :style="`color:${ratingConfig.style.title.subtitle.color};font-size:${ratingConfig.style.title.subtitle.fontSize}px;text-align:${ratingConfig.style.title.textAlign};margin-bottom:${ratingConfig.style.title.subtitle.offsetY}px;font-weight:${ratingConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
                 {{ ratingConfig.style.title.subtitle.text }}
             </div>
         </div>
 
         <!-- RATING POSITION TOP -->
-        <div  v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'top'" :style="`width:100%;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};margin-left:${ratingConfig.style.rating.offsetX}px`">
+        <div data-cy="rating-position-top" v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'top'" :style="`width:100%;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};margin-left:${ratingConfig.style.rating.offsetX}px`">
             {{ isNaN(currentRating) ? '' : currentRating.toFixed(ratingConfig.style.rating.roundingValue) }}
         </div>
 
@@ -158,7 +148,7 @@ defineExpose({
         >
 
             <!-- RATING POSITION LEFT -->
-            <div  v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'left'" :style="`width:fit-content;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};padding-right:${ratingConfig.style.rating.offsetX}px`">
+            <div data-cy="rating-position-left" v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'left'" :style="`width:fit-content;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};padding-right:${ratingConfig.style.rating.offsetX}px`">
             {{ isNaN(currentRating) ? '' : currentRating.toFixed(ratingConfig.style.rating.roundingValue) }}
             </div>
 
@@ -169,7 +159,8 @@ defineExpose({
                     :style="`position:relative;height:${ratingConfig.style.itemSize}px;width:${ratingConfig.style.itemSize}px`"
                 >
                     <!-- IMAGE FIRST LAYER -->
-                    <img 
+                    <img
+                        :data-cy="`rating-image-${i}`"
                         v-if="isImage"
                         :src="ratingConfig.style.image.src"
                         :height="ratingConfig.style.itemSize"
@@ -196,6 +187,7 @@ defineExpose({
                             </radialGradient>
                         </defs>
                         <polygon
+                            :data-cy="`rating-shape-${i}`"
                             :points="createStar({
                                 plot: { x: 50, y: 50 },
                                 radius: 30,
@@ -220,7 +212,8 @@ defineExpose({
                     </svg>
 
                     <!-- IMAGE SECOND LAYER -->
-                    <img 
+                    <img
+                        :data-cy="`rating-image-overlay-${i}`"
                         v-if="isImage"
                         :src="ratingConfig.style.image.src"
                         :alt="`${ratingConfig.style.image.alt} ${value}`"
@@ -233,6 +226,7 @@ defineExpose({
 
                     <!-- STAR SECOND LAYER -->
                     <svg
+                        :data-cy="`rating-shape-overlay-${i}`"
                         v-else
                         :viewBox="`0 0 ${calcShapeFill(i)} 100`"
                         :height="ratingConfig.style.itemSize"
@@ -269,6 +263,7 @@ defineExpose({
                         :style="`position:absolute;top:0;left:0;${isReadonly ? '' : 'cursor:pointer'}`"
                     >
                         <rect
+                            :data-cy="`rating-active-trap-${i}`"
                             class="vue-ui-rating-mouse-trap"
                             v-if="!isReadonly"
                             :x="0"
@@ -283,6 +278,7 @@ defineExpose({
                             @keyup.enter="rate(value)"
                         />
                         <rect
+                            :data-cy="`rating-readonly-trap-${i}`"
                             class="vue-ui-rating-mouse-trap"
                             v-if="isReadonly"
                             :x="0"
@@ -296,7 +292,7 @@ defineExpose({
                     </svg>
                     <template v-if="ratingConfig.style.tooltip.show && hasBreakdown && isReadonly">
                         <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${ratingConfig.style.tooltip.borderColor};position:absolute;top:${-48 + ratingConfig.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${ratingConfig.style.tooltip.backgroundColor};display:${hoveredValue === value ? 'block' : 'none'};padding:2px 12px;border-radius:${ratingConfig.style.tooltip.borderRadius}px;box-shadow:${ratingConfig.style.tooltip.boxShadow}`">
-                            <div :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${ratingConfig.style.tooltip.color}`">
+                            <div :data-cy="`rating-tooltip-${i}`" :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${ratingConfig.style.tooltip.color}`">
                                 <span :style="`font-size:${ratingConfig.style.tooltip.fontSize}px`">{{ value }}</span> : <span :style="`font-weight:${ratingConfig.style.tooltip.bold ? 'bold' : 'normal'};font-size:${ratingConfig.style.tooltip.fontSize}px`">{{ props.dataset.rating[value] }}</span>
                                 <div :style="`font-family:Arial !important;position:absolute;top:calc(100% - 4px);left:50%;transform:translateX(-50%);color:${ratingConfig.style.tooltip.borderColor}`">
                                     ▼
@@ -309,14 +305,14 @@ defineExpose({
 
 
             <!-- RATING POSITION RIGHT -->
-            <div  v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'right'" :style="`width:fit-content;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};padding-left:${ratingConfig.style.rating.offsetX}px`">
+            <div data-cy="rating-position-right" v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'right'" :style="`width:fit-content;text-align:center;margin-bottom:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};padding-left:${ratingConfig.style.rating.offsetX}px`">
             {{ isNaN(currentRating) ? '' : currentRating.toFixed(ratingConfig.style.rating.roundingValue) }}
         </div>
         
         </div>
 
         <!-- RATING POSITION BOTTOM -->
-        <div  v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'bottom'" :style="`width:100%;text-align:center;margin-top:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};margin-left:${ratingConfig.style.rating.offsetX}px`">
+        <div data-cy="rating-position-bottom" v-if="ratingConfig.style.rating.show && ratingConfig.style.rating.position === 'bottom'" :style="`width:100%;text-align:center;margin-top:${ratingConfig.style.rating.offsetY}px;font-size:${ratingConfig.style.rating.fontSize}px;font-weight:${ratingConfig.style.rating.bold ? 'bold' : 'normal'};margin-left:${ratingConfig.style.rating.offsetX}px`">
             {{ isNaN(currentRating) ? '' : currentRating.toFixed(ratingConfig.style.rating.roundingValue) }}
         </div>
 
