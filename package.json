@@ -58,8 +58,6 @@
     "preview": "vite preview",
     "test": "vitest"
   },
-  "dependencies": {
-  },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
     "cypress": "^13.5.1",

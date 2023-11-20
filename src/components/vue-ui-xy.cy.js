@@ -174,6 +174,19 @@ describe('<VueUiXy />', () => {
       cy.get(`[data-cy="xy-tooltip"]`).should('not.exist');
       cy.get(`[data-cy="xy-tooltip-trap-6"]`).trigger("mouseenter");
       cy.get(`[data-cy="xy-tooltip"]`).should('exist');
+      cy.get(`[data-cy="xy-tooltip-trap-6"]`).trigger("mouseleave");
+
+      cy.get(`[data-cy="xy-summary"]`).click({force:true});
+
+      cy.get(`[data-cy="xy-pdf"]`).click();
+      cy.wait(5000);
+      cy.readFile('cypress\\Downloads\\Title.pdf');
+
+      cy.get(`[data-cy="xy-xls"]`).click();
+      cy.wait(3000);
+      cy.readFile('cypress\\Downloads\\Title.xlsx');
+
+      cy.clearDownloads();
 
     });
   });

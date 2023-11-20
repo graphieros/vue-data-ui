@@ -272,7 +272,7 @@ defineExpose({
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-donut-option-table_${uid}`">{{ donutConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button class="vue-ui-donut-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+                <button data-cy="donut-pdf" class="vue-ui-donut-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
                     <svg class="vue-ui-donut-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="donutConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -283,7 +283,7 @@ defineExpose({
                     </svg>
                     <span v-else>PDF</span>
                 </button>
-                <button class="vue-ui-donut-button" @click="generateXls" :style="`background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+                <button data-cy="donut-xls" class="vue-ui-donut-button" @click="generateXls" :style="`background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
                     XLSX
                 </button>
             </div>
