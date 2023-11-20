@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { treeShake, palette, rotateMatrix, addVector, matrixTimes, opacity, convertColorToHex, convertConfigColors } from "../lib.js";
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
@@ -265,27 +265,27 @@ defineExpose({
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && gaugeConfig.style.chart.title.text" :style="`width:100%;background:${gaugeConfig.style.chart.backgroundColor};padding-bottom:12px;${gaugeConfig.userOptions.show ? 'padding-top:36px' : ''}`">
-            <div :style="`width:100%;text-align:center;color:${gaugeConfig.style.chart.title.color};font-size:${gaugeConfig.style.chart.title.fontSize}px;font-weight:${gaugeConfig.style.chart.title.bold ? 'bold': ''}`">
+            <div data-cy="gauge-div-title" :style="`width:100%;text-align:center;color:${gaugeConfig.style.chart.title.color};font-size:${gaugeConfig.style.chart.title.fontSize}px;font-weight:${gaugeConfig.style.chart.title.bold ? 'bold': ''}`">
                 {{ gaugeConfig.style.chart.title.text }}
             </div>
-            <div v-if="gaugeConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${gaugeConfig.style.chart.title.subtitle.color};font-size:${gaugeConfig.style.chart.title.subtitle.fontSize}px;font-weight:${gaugeConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
+            <div data-cy="gauge-div-subtitle" v-if="gaugeConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${gaugeConfig.style.chart.title.subtitle.color};font-size:${gaugeConfig.style.chart.title.subtitle.fontSize}px;font-weight:${gaugeConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
                 {{ gaugeConfig.style.chart.title.subtitle.text }}
             </div>
-            <div v-if="!isNaN(dataset.base)" :style="`width:100%;text-align:center;color:${gaugeConfig.style.chart.title.subtitle.color};font-size:${gaugeConfig.style.chart.title.subtitle.fontSize}px;font-weight:${gaugeConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
+            <div data-cy="gauge-div-base" v-if="!isNaN(dataset.base)" :style="`width:100%;text-align:center;color:${gaugeConfig.style.chart.title.subtitle.color};font-size:${gaugeConfig.style.chart.title.subtitle.fontSize}px;font-weight:${gaugeConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
                 {{ gaugeConfig.translations.base }} : {{ dataset.base }}
             </div>
         </div>
 
         <!-- OPTIONS -->
         <details class="vue-ui-gauge-user-options" :style="`background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`" data-html2canvas-ignore v-if="gaugeConfig.userOptions.show" ref="details">
-            <summary :style="`background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">{{ gaugeConfig.userOptions.title }}</summary>
+            <summary data-cy="gauge-summary" :style="`background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">{{ gaugeConfig.userOptions.title }}</summary>
             <div class="vue-ui-gauge-user-options-items" :style="`background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">
                 <div class="vue-ui-gauge-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-gauge-option-title_${uid}`" :name="`vue-ui-gauge-option-title_${uid}`"
+                    <input data-cy="gauge-checkbox-title" type="checkbox" :id="`vue-ui-gauge-option-title_${uid}`" :name="`vue-ui-gauge-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-gauge-option-title_${uid}`">{{ gaugeConfig.userOptions.labels.useDiv }}</label>
                 </div>
-                <button class="vue-ui-gauge-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${gaugeConfig.style.chart.color}`">
+                <button data-cy="gauge-pdf" class="vue-ui-gauge-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${gaugeConfig.style.chart.color}`">
                     <svg class="vue-ui-gauge-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="gaugeConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -313,6 +313,7 @@ defineExpose({
             <!-- TITLE AS G -->
             <g v-if="gaugeConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
                 <text
+                    data-cy="gauge-text-title"
                     :font-size="(gaugeConfig.style.chart.title.fontSize * 1.5)"
                     :fill="gaugeConfig.style.chart.title.color"
                     :x="svg.width / 2"
@@ -323,6 +324,7 @@ defineExpose({
                     {{ gaugeConfig.style.chart.title.text }}
                 </text>
                 <text
+                    data-cy="gauge-text-subtitle"
                     v-if="gaugeConfig.style.chart.title.subtitle.text"
                     :font-size="(gaugeConfig.style.chart.title.subtitle.fontSize * 1.5)"
                     :fill="gaugeConfig.style.chart.title.subtitle.color"
@@ -334,6 +336,7 @@ defineExpose({
                     {{ gaugeConfig.style.chart.title.subtitle.text }}
                 </text>
                 <text
+                    data-cy="gauge-text-base"
                     v-if="!isNaN(dataset.base)"
                     :font-size="(gaugeConfig.style.chart.title.subtitle.fontSize * 1.5)"
                     :fill="gaugeConfig.style.chart.title.subtitle.color"
@@ -349,6 +352,7 @@ defineExpose({
             <!-- ARC STEPS -->
             <path 
                 v-for="(arc, i) in makeDonut(mutableDataset, svg.width / 2, svg.height * 0.7, svg.width / 2.5, svg.width / 2.5)" 
+                :data-cy="`gauge-arc-${i}`"
                 :key="`arc_${i}`"
                 :d="arc.path"
                 fill="none"
@@ -367,6 +371,7 @@ defineExpose({
             <!-- STEP MARKERS -->
             <circle 
                 v-for="(arc, i) in makeDonut(mutableDataset, svg.width / 2, svg.height * 0.7, svg.width / 2.5, svg.width / 2.5)"
+                :data-cy="`gauge-step-marker-${i}`"
                 :cx="arc.center.startX"
                 :cy="i === 0 ? arc.center.startY + 5 : arc.center.startY"
                 :r="(svg.width / 31) * gaugeConfig.style.chart.layout.track.size * gaugeConfig.style.chart.layout.markers.size"
@@ -375,6 +380,7 @@ defineExpose({
                 :stroke-width="gaugeConfig.style.chart.layout.markers.strokeWidth"
             />
             <circle
+                data-cy="gauge-step-marker-last"
                 :cx="svg.width * 0.9"
                 :cy="svg.height * 0.69"
                 :r="(svg.width / 31) * gaugeConfig.style.chart.layout.track.size * gaugeConfig.style.chart.layout.markers.size"
@@ -384,6 +390,7 @@ defineExpose({
             />
             <text
                 v-for="(arc, i) in makeDonut(mutableDataset, svg.width / 2, svg.height * 0.7, svg.width / 2.5, svg.width / 2.5)"
+                :data-cy="`gauge-step-marker-label-${i}`"
                 :x="arc.center.startX"
                 :y="calcMarkerPositionY(i, arc.center.startY, arc.from) + gaugeConfig.style.chart.layout.markers.offsetY"
                 text-anchor="middle"
@@ -394,6 +401,7 @@ defineExpose({
                 {{ arc.from.toFixed(gaugeConfig.style.chart.layout.markers.roundingValue) }}
             </text>
             <text
+                data-cy="gauge-step-marker-label-last"
                 :x="svg.width * 0.9"
                 :y="calcMarkerPositionY(1, svg.height * 0.69, max) + gaugeConfig.style.chart.layout.markers.offsetY"
                 text-anchor="middle"
@@ -406,6 +414,7 @@ defineExpose({
 
             <!-- GAUGE POINTER -->
             <line
+                data-cy="gauge-pointer-border"
                 v-if="!isNaN(pointer.x2)"
                 :x1="pointer.x1"
                 :y1="pointer.y1"
@@ -416,6 +425,7 @@ defineExpose({
                 stroke-linecap="round"
             />
             <line
+                data-cy="gauge-pointer"
                 v-if="!isNaN(pointer.x2)"
                 :x1="pointer.x1"
                 :y1="pointer.y1"
@@ -426,6 +436,7 @@ defineExpose({
                 :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth * 0.7"
             />
             <circle
+                data-cy="gauge-pointer-circle"
                 :cx="svg.width / 2"
                 :cy="(svg.height) * 0.69"
                 :fill="gaugeConfig.style.chart.layout.pointer.circle.color"
@@ -436,6 +447,7 @@ defineExpose({
 
             <!-- GAUGE RATING --> 
             <text
+                data-cy="gauge-score"
                 :x="svg.width / 2"
                 :y="(svg.height) * 0.9"
                 text-anchor="middle"

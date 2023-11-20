@@ -1,0 +1,101 @@
+{
+    "dataset": {
+        "base": 100,
+        "value": 4.2,
+        "series": [
+            {
+                "from": 0,
+                "to": 3,
+                "color": "#3366cc"
+            },
+            {
+                "from": 3,
+                "to": 4,
+                "color": "#dc3912"
+            },
+            {
+                "from": 4,
+                "to": 5,
+                "color": "#ff9900"
+            }
+        ]
+    },
+    "config": {
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "animation": {
+                    "use": true,
+                    "speed": 1,
+                    "acceleration": 1
+                },
+                "layout": {
+                    "useDiv": false,
+                    "track": {
+                        "size": 1,
+                        "useGradient": true,
+                        "gradientIntensity": 40
+                    },
+                    "markers": {
+                        "size": 1,
+                        "color": "#2D353C",
+                        "strokeWidth": 1,
+                        "stroke": "#2D353C",
+                        "backgroundColor": "#FFFFFF",
+                        "bold": true,
+                        "fontSizeRatio": 1,
+                        "offsetY": 0,
+                        "roundingValue": 0
+                    },
+                    "pointer": {
+                        "size": 1,
+                        "stroke": "#2D353C",
+                        "strokeWidth": 12,
+                        "useRatingColor": true,
+                        "color": "#CCCCCC",
+                        "circle": {
+                            "radius": 10,
+                            "stroke": "#2D353C",
+                            "strokeWidth": 2,
+                            "color": "#FFFFFF"
+                        }
+                    }
+                },
+                "legend": {
+                    "fontSize": 48,
+                    "prefix": "",
+                    "suffix": "",
+                    "roundingValue": 1,
+                    "showPlusSymbol": true,
+                    "useRatingColor": true,
+                    "color": "#2D353C"
+                },
+                "title": {
+                    "text": "Title",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "Subtitle",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title inside",
+                "showTable": "Show table"
+            }
+        },
+        "translations": {
+            "base": "Base"
+        }
+    }
+}
