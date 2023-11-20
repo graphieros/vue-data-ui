@@ -301,14 +301,11 @@ describe('<VueUiDonut />', () => {
 
       cy.get(`[data-cy="donut-pdf"]`).click();
       cy.wait(5000);
-      cy.readFile('cypress\\Downloads\\Title.pdf');
-
+      cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
       cy.get(`[data-cy="donut-xls"]`).click();
       cy.wait(3000);
-      cy.readFile('cypress\\Downloads\\Title.xlsx');
-
+      cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
       cy.clearDownloads();
-
     });
   });
 })
