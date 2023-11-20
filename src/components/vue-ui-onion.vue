@@ -198,29 +198,29 @@ defineExpose({
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
-            <div :style="`width:100%;text-align:center;color:${onionConfig.style.chart.title.color};font-size:${onionConfig.style.chart.title.fontSize}px;font-weight:${onionConfig.style.chart.title.bold ? 'bold': ''}`">
+            <div data-cy="onion-div-title" :style="`width:100%;text-align:center;color:${onionConfig.style.chart.title.color};font-size:${onionConfig.style.chart.title.fontSize}px;font-weight:${onionConfig.style.chart.title.bold ? 'bold': ''}`">
                 {{ onionConfig.style.chart.title.text }}
             </div>
-            <div v-if="onionConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${onionConfig.style.chart.title.subtitle.color};font-size:${onionConfig.style.chart.title.subtitle.fontSize}px;font-weight:${onionConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
+            <div data-cy="onion-div-subtitle" v-if="onionConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${onionConfig.style.chart.title.subtitle.color};font-size:${onionConfig.style.chart.title.subtitle.fontSize}px;font-weight:${onionConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
                 {{ onionConfig.style.chart.title.subtitle.text }}
             </div>
         </div>
         
         <!-- OPTIONS -->
         <details class="vue-ui-onion-user-options" :style="`background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" data-html2canvas-ignore v-if="onionConfig.userOptions.show" ref="details">
-            <summary :style="`background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`">{{ onionConfig.userOptions.title }}</summary>
+            <summary data-cy="onion-summary" :style="`background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`">{{ onionConfig.userOptions.title }}</summary>
             <div class="vue-ui-onion-user-options-items" :style="`background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`">
                 <div class="vue-ui-onion-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-onion-option-title_${uid}`" :name="`vue-ui-onion-option-title_${uid}`"
+                    <input data-cy="onion-checkbox-title" type="checkbox" :id="`vue-ui-onion-option-title_${uid}`" :name="`vue-ui-onion-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-onion-option-title_${uid}`">{{ onionConfig.userOptions.labels.useDiv }}</label>
                 </div>
                 <div class="vue-ui-onion-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-onion-option-table_${uid}`" :name="`vue-ui-onion-option-table_${uid}`"
+                    <input data-cy="onion-checkbox-table" type="checkbox" :id="`vue-ui-onion-option-table_${uid}`" :name="`vue-ui-onion-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-onion-option-table_${uid}`">{{ onionConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button class="vue-ui-onion-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`">
+                <button data-cy="onion-pdf" class="vue-ui-onion-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`">
                     <svg class="vue-ui-onion-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="onionConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -231,7 +231,7 @@ defineExpose({
                     </svg>
                     <span v-else>PDF</span>
                 </button>
-                <button class="vue-ui-onion-button" @click="generateXls" :style="`background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`">
+                <button data-cy="onion-xls" class="vue-ui-onion-button" @click="generateXls" :style="`background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`">
                     XLSX
                 </button>
             </div>
@@ -251,6 +251,7 @@ defineExpose({
             <!-- TITLE AS G -->
             <g v-if="onionConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
                 <text
+                    data-cy="onion-text-title"
                     :font-size="onionConfig.style.chart.title.fontSize"
                     :fill="onionConfig.style.chart.title.color"
                     :x="svg.width / 2"
@@ -261,6 +262,7 @@ defineExpose({
                     {{ onionConfig.style.chart.title.text }}
                 </text>
                 <text
+                    data-cy="onion-text-subtitle"
                     v-if="onionConfig.style.chart.title.subtitle.text"
                     :font-size="onionConfig.style.chart.title.subtitle.fontSize"
                     :fill="onionConfig.style.chart.title.subtitle.color"
@@ -276,6 +278,7 @@ defineExpose({
             <!-- GUTTERS -->
             <circle 
                 v-for="onion in mutableDataset" 
+                :data-cy="`onion-track-${i}`"
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
                 :r="onion.radius" 
@@ -345,7 +348,7 @@ defineExpose({
                 style="overflow:visible"
             >
                 <div class="vue-ui-onion-legend" :style="`color:${onionConfig.style.chart.legend.color};font-size:${onionConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${onionConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-                    <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-onion-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
+                    <div v-for="(legendItem, i) in immutableDataset" :data-cy="`onion-foreignObject-legend-item-${i}`" class="vue-ui-onion-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                         <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color"/></svg>
                         <span>{{ legendItem.name }} : </span>
                         <span>{{ legendItem.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}% </span>
@@ -357,7 +360,7 @@ defineExpose({
 
         <!-- LEGEND AS DIV -->
         <div v-if="onionConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-onion-legend" :style="`background:${onionConfig.style.chart.legend.backgroundColor};color:${onionConfig.style.chart.legend.color};font-size:${onionConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${onionConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-            <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-onion-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
+            <div v-for="(legendItem, i) in immutableDataset" :data-cy="`onion-div-legend-item-${i}`" class="vue-ui-onion-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color"/></svg>
                 <span>{{ legendItem.name }} : </span>
                 <span>{{ legendItem.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}% </span>
@@ -368,9 +371,9 @@ defineExpose({
         <!-- DATA TABLE -->
         <div @click="closeDetails" class="vue-ui-onion-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
-                <thead>
+                <thead >
                     <tr v-if="onionConfig.style.chart.title.text">
-                        <th colspan="3" :style="`background:${onionConfig.table.th.backgroundColor};color:${onionConfig.table.th.color};outline:${onionConfig.table.th.outline}`">
+                        <th data-cy="onion-table-title" colspan="3" :style="`background:${onionConfig.table.th.backgroundColor};color:${onionConfig.table.th.color};outline:${onionConfig.table.th.outline}`">
                             <span>{{ onionConfig.style.chart.title.text }}</span>
                             <span v-if="onionConfig.style.chart.title.subtitle.text">
                                 : {{ onionConfig.style.chart.title.subtitle.text }}
@@ -378,13 +381,13 @@ defineExpose({
                         </th>
                     </tr>
                     <tr>
-                        <th v-for="th in table.head" :colspan="th.color ? 2 : 1" :style="`background:${onionConfig.table.th.backgroundColor};color:${onionConfig.table.th.color};outline:${onionConfig.table.th.outline}`">
+                        <th v-for="(th, i) in table.head" :data-cy="`onion-table-head-col-title-${i}`" :colspan="th.color ? 2 : 1" :style="`background:${onionConfig.table.th.backgroundColor};color:${onionConfig.table.th.color};outline:${onionConfig.table.th.outline}`">
                             {{ th }}
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="onion in mutableDataset">
+                    <tr v-for="(onion, i) in mutableDataset" :data-cy="`onion-table-tr-${i}`">
                         <td :style="`background:${onionConfig.table.td.backgroundColor};color:${onionConfig.table.td.color};outline:${onionConfig.table.td.outline}`">
                                 <span :style="`color:${onion.color}`">
                                     ⬤

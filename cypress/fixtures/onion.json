@@ -1,0 +1,123 @@
+{
+    "dataset": [
+        {
+            "name": "Serie 1",
+            "percentage": 90,
+            "value": 1200,
+            "prefix": "v.",
+            "suffix": "€",
+            "color": "#3366cc"
+        },
+        {
+            "name": "Serie 2",
+            "percentage": 50,
+            "value": 1000,
+            "prefix": "v.",
+            "suffix": "€",
+            "color": "#dc3912"
+        },
+        {
+            "name": "Serie 3",
+            "percentage": 75,
+            "value": 500,
+            "prefix": "v.",
+            "suffix": "€",
+            "color": "#ff9900"
+        },
+        {
+            "name": "Serie 4",
+            "percentage": 10,
+            "value": 200,
+            "prefix": "v.",
+            "suffix": "€",
+            "color": "#109618"
+        }
+    ],
+    "config": {
+        "useCssAnimation": true,
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "useGradient": false,
+                "gradientIntensity": 20,
+                "layout": {
+                    "useDiv": true,
+                    "gutter": {
+                        "color": "#e1e5e8",
+                        "width": 0.62
+                    },
+                    "track": {
+                        "width": 0.62
+                    },
+                    "labels": {
+                        "show": true,
+                        "fontSize": 14,
+                        "color": "#2D353C",
+                        "roundingValue": 0,
+                        "roundingPercentage": 0,
+                        "bold": true,
+                        "offsetY": 0,
+                        "offsetX": 0,
+                        "value": {
+                            "show": true
+                        },
+                        "percentage": {
+                            "show": true
+                        }
+                    }
+                },
+                "title": {
+                    "text": "Title",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "Subtitle",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "legend": {
+                    "show": true,
+                    "bold": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table"
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            },
+            "translations": {
+                "serie": "Serie",
+                "percentage": "Percentage",
+                "value": "Value"
+            }
+        }
+    }
+}
