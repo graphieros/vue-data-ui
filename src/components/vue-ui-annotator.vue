@@ -10,11 +10,12 @@
             : ''
         }`"
       >
-        <summary>{{ annotatorConfig.translations.title }}</summary>
+        <summary data-cy="annotator-summary">{{ annotatorConfig.translations.title }}</summary>
 
         <div class="tool-selection" style="margin-top:24px">
           <!-- MOVE -->
           <button
+            data-cy="annotator-button-move"
             :disabled="shapes.length === 0"
             :style="{
                 background: isMoveMode ? annotatorConfig.style.buttons.controls.selected.backgroundColor :annotatorConfig.style.buttons.controls.backgroundColor,
@@ -315,6 +316,7 @@
 
           <!-- UNDO LAST SHAPE -->
           <button
+            data-cy="annotator-button-undo"
             :disabled="shapes.length === 0"
             :style="{
                 background: annotatorConfig.style.buttons.controls.backgroundColor,
@@ -415,6 +417,7 @@
         <div class="tool-selection" style="margin-top:6px">
         <!-- SET SHAPE TO CIRCLE -->
           <button
+            data-cy="annotator-button-circle"
             :class="{
               'button-tool': true,
               'button-tool--selected': activeShape === 'circle',
@@ -468,6 +471,7 @@
 
           <!-- SET SHAPE TO RECT -->
           <button
+            data-cy="annotator-button-rect"
             :class="{
               'button-tool': true,
               'button-tool--selected': activeShape === 'rect',
@@ -524,6 +528,7 @@
 
           <!-- SET SHAPE TO ARRROW -->
           <button
+            data-cy="annotator-button-arrow"
             :class="{
               'button-tool': true,
               'button-tool--selected': activeShape === 'arrow',
@@ -569,6 +574,7 @@
 
           <!-- SET SHAPE TO FREEHAND LINE -->
           <button
+            data-cy="annotator-button-freehand"
             :class="{
               'button-tool': true,
               'button-tool--selected': activeShape === 'line',
@@ -670,6 +676,7 @@
 
           <!-- SET SHAPE TO TEXT -->
           <button
+            data-cy="annotator-button-text"
             :class="{
               'button-tool': true,
               'button-tool--selected': isTextMode,
@@ -1102,7 +1109,7 @@
       ref="drawSvgContainer"
       style="position: relative"
     >
-      <slot></slot>
+      <slot data-cy="annotator-slot"></slot>
       <svg
         id="annotatorSvg"
         v-if="isSummaryOpen"
