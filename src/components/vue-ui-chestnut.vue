@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { treeShake, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, convertConfigColors, makeXls } from "../lib";
 import pdf from "../pdf.js";
 import mainConfig from "../default_configs.json";
@@ -208,13 +208,6 @@ function resetTree() {
     selectedRoot.value = null;
 }
 
-const selectedRootIndex = computed(() => {
-    if(selectedNut.value) {
-        return selectedNut.value.rootIndex;
-    }
-    return null;
-});
-
 function isFocused(part) {
     if(!selectedRoot.value) {
         if(selectedNut.value === null && selectedBranch.value === null) return true;
@@ -336,14 +329,9 @@ function isArcBigEnough(arc) {
     return arc.proportion * 100 > chestnutConfig.value.style.chart.layout.nuts.selected.labels.dataLabels.hideUnderValue;
 }
 
-function displayArcPercentage(arc, stepBreakdown) {
-    return isNaN(arc.value / sumValues(stepBreakdown)) ? 0 : ((arc.value / sumValues(stepBreakdown)) * 100).toFixed(0) + "%";
-}
-
 function sumValues(source) {
     return [...source].map(s => s.value).reduce((a, b) => a + b, 0);
 }
-
 
 onMounted(() => {
     const height = totalBranches.value * (svg.value.branchSize + svg.value.gap) + svg.value.padding.top + svg.value.padding.bottom;
@@ -439,14 +427,14 @@ defineExpose({
     >
         <!-- OPTIONS -->
         <details class="vue-ui-chestnut-user-options" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" data-html2canvas-ignore v-if="chestnutConfig.userOptions.show" ref="details">
-            <summary :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`">{{ chestnutConfig.userOptions.title }}</summary>
+            <summary data-cy="chestnut-summary" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`">{{ chestnutConfig.userOptions.title }}</summary>
             <div class="vue-ui-chestnut-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-chestnut-option-table_${uid}`" :name="`vue-ui-chestnut-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-chestnut-option-table_${uid}`">{{ chestnutConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <input data-cy="chestnut-checkbox-table" type="checkbox" :id="`vue-ui-chestnut-option-table_${uid}`" :name="`vue-ui-chestnut-option-table_${uid}`"
+                v-model="mutableConfig.showTable">
+                <label :for="`vue-ui-chestnut-option-table_${uid}`">{{ chestnutConfig.userOptions.labels.showTable }}</label>
+            </div>
             <div class="vue-ui-chestnut-user-options-items" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`">
-                <button class="vue-ui-chestnut-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${chestnutConfig.style.chart.color}`">
+                <button data-cy="chestnut-pdf" class="vue-ui-chestnut-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${chestnutConfig.style.chart.color}`">
                     <svg class="vue-ui-chestnut-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="chestnutConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -457,7 +445,7 @@ defineExpose({
                     </svg>
                     <span v-else>PDF</span>
                 </button>
-                <button class="vue-ui-chestnut-button" @click="generateXls" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`">
+                <button data-cy="chestnut-xls" class="vue-ui-chestnut-button" @click="generateXls" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`">
                     XLSX
                 </button>
             </div>
@@ -468,6 +456,7 @@ defineExpose({
             <!-- TITLE AS G -->
             <g v-if="!selectedNut">
                 <text
+                    data-cy="chestnut-title"
                     v-if="chestnutConfig.style.chart.layout.title.text"
                     text-anchor="middle"
                     :fill="chestnutConfig.style.chart.layout.title.color"
@@ -480,6 +469,7 @@ defineExpose({
                     {{ chestnutConfig.style.chart.layout.title.text }}
                 </text>
                 <text
+                    data-cy="chestnut-subtitle"
                     v-if="chestnutConfig.style.chart.layout.title.subtitle.text"
                     text-anchor="middle"
                     :fill="chestnutConfig.style.chart.layout.title.subtitle.color"
@@ -596,7 +586,8 @@ defineExpose({
                 :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
             />
             <circle 
-                v-for="root in roots" 
+                v-for="(root, i) in roots" 
+                :data-cy="`chestnut-root-${i}`"
                 :cx="root.x" 
                 :cy="root.y" 
                 :r="root.r" 
@@ -608,7 +599,8 @@ defineExpose({
             />
             <g v-if="chestnutConfig.style.chart.layout.roots.labels.show">
                 <!-- ROOT TOTAL -->
-                <text v-for="root in roots"
+                <text v-for="(root, i) in roots"
+                    :data-cy="`chestnut-root-label-${i}`"
                     :x="root.x"
                     :y="root.y + chestnutConfig.style.chart.layout.roots.labels.fontSize / 2.6"
                     text-anchor="middle"
@@ -652,7 +644,8 @@ defineExpose({
                 @click="pickBranch(branch)"
             />
             <rect 
-                v-for="branch in branches"
+                v-for="(branch, i) in branches"
+                :data-cy="`chestnut-branch-${i}`"
                 :x="branch.x1"
                 :y="branch.y1"
                 :height="svg.branchSize"
@@ -686,7 +679,7 @@ defineExpose({
 
             <!-- NUTS -->
 
-            <g v-for="branch in branches">
+            <g v-for="(branch, b) in branches">
                 <path 
                     v-for="(arc, i) in makeDonut(
                         { series: branch.breakdown, base:1 },
@@ -694,7 +687,8 @@ defineExpose({
                         branch.y1 + svg.branchSize / 2,
                         svg.branchSize / 3,
                         svg.branchSize / 3
-                    )" 
+                    )"
+                    :data-cy="`chestnut-nut-${b}`"
                     :d="arc.path" 
                     :stroke="arc.color" 
                     :stroke-width="10" 
@@ -713,6 +707,7 @@ defineExpose({
                 />
                 <!-- tooltip trap -->
                 <circle
+                    :data-cy="`chestnut-trap-${b}`"
                     :fill="chestnutConfig.style.chart.layout.nuts.useGradient ? `url(#nut_${uid})` : 'transparent'"
                     :cx="branch.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
                     :cy="branch.y1 + svg.branchSize / 2"
@@ -774,6 +769,7 @@ defineExpose({
             <g v-if="selectedNut && openNut">
                 <!-- NUT PICK LEGEND -->
                 <foreignObject
+                    data-cy="chestnut-legend"
                     :x="0"
                     :y="placeLegendTopOrBottom()"
                     :height="svg.height - drawableArea.bottom"
@@ -980,7 +976,7 @@ defineExpose({
         </svg>
         <!-- DATA TABLE -->
         <div @click="closeDetails" class="vue-ui-chestnut-table" :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable">
-            <table>
+            <table data-cy="chestnut-table">
                 <thead>
                     <tr v-if="chestnutConfig.style.chart.layout.title.text">
                         <th colspan="12" :style="`background:${chestnutConfig.table.th.backgroundColor};color:${chestnutConfig.table.th.color};outline:${chestnutConfig.table.th.outline}`">
