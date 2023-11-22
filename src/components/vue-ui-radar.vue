@@ -291,29 +291,29 @@ defineExpose({
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">
-            <div :style="`width:100%;text-align:center;color:${radarConfig.style.chart.title.color};font-size:${radarConfig.style.chart.title.fontSize}px;font-weight:${radarConfig.style.chart.title.bold ? 'bold': ''}`">
+            <div data-cy="radar-div-title" :style="`width:100%;text-align:center;color:${radarConfig.style.chart.title.color};font-size:${radarConfig.style.chart.title.fontSize}px;font-weight:${radarConfig.style.chart.title.bold ? 'bold': ''}`">
                 {{ radarConfig.style.chart.title.text }}
             </div>
-            <div v-if="radarConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${radarConfig.style.chart.title.subtitle.color};font-size:${radarConfig.style.chart.title.subtitle.fontSize}px;font-weight:${radarConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
+            <div data-cy="radar-div-subtitle" v-if="radarConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${radarConfig.style.chart.title.subtitle.color};font-size:${radarConfig.style.chart.title.subtitle.fontSize}px;font-weight:${radarConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
                 {{ radarConfig.style.chart.title.subtitle.text }}
             </div>
         </div>
 
         <!-- OPTIONS -->
         <details class="vue-ui-radar-user-options" :style="`background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`" data-html2canvas-ignore v-if="radarConfig.userOptions.show" ref="details">
-            <summary :style="`background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`">{{ radarConfig.userOptions.title }}</summary>
+            <summary data-cy="radar-summary" :style="`background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`">{{ radarConfig.userOptions.title }}</summary>
             <div class="vue-ui-radar-user-options-items" :style="`background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`">
                 <div class="vue-ui-radar-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-radar-option-title_${uid}`" :name="`vue-ui-radar-option-title_${uid}`"
+                    <input data-cy="radar-checkbox-title" type="checkbox" :id="`vue-ui-radar-option-title_${uid}`" :name="`vue-ui-radar-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-radar-option-title_${uid}`">{{ radarConfig.userOptions.labels.useDiv }}</label>
                 </div>
                 <div class="vue-ui-radar-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-radar-option-table_${uid}`" :name="`vue-ui-radar-option-table_${uid}`"
+                    <input data-cy="radar-checkbox-table" type="checkbox" :id="`vue-ui-radar-option-table_${uid}`" :name="`vue-ui-radar-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-radar-option-table_${uid}`">{{ radarConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button class="vue-ui-radar-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${radarConfig.style.chart.color}`">
+                <button data-cy="radar-pdf" class="vue-ui-radar-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${radarConfig.style.chart.color}`">
                     <svg class="vue-ui-radar-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="radarConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -324,7 +324,7 @@ defineExpose({
                     </svg>
                     <span v-else>PDF</span>
                 </button>
-                <button class="vue-ui-radar-button" @click="generateXls" :style="`color:${radarConfig.style.chart.color}`">
+                <button data-cy="radar-xls" class="vue-ui-radar-button" @click="generateXls" :style="`color:${radarConfig.style.chart.color}`">
                     XLSX
                 </button>
             </div>
@@ -348,6 +348,7 @@ defineExpose({
             <!-- TITLE AS G -->
             <g v-if="radarConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
                 <text
+                    data-cy="radar-text-title"
                     :font-size="radarConfig.style.chart.title.fontSize"
                     :fill="radarConfig.style.chart.title.color"
                     :x="svg.width / 2"
@@ -358,6 +359,7 @@ defineExpose({
                     {{ radarConfig.style.chart.title.text }}
                 </text>
                 <text
+                    data-cy="radar-text-subtitle"
                     v-if="radarConfig.style.chart.title.subtitle.text"
                     :font-size="radarConfig.style.chart.title.subtitle.fontSize"
                     :fill="radarConfig.style.chart.title.subtitle.color"
@@ -404,6 +406,7 @@ defineExpose({
             <!-- APEX LABELS -->
             <g v-if="radarConfig.style.chart.layout.labels.dataLabels.show">
             <text v-for="(label, i) in radar"
+                :data-cy="`radar-apex-label-${i}`"
                 :x="offset(label).x"
                 :y="offset(label).y"
                 :text-anchor="offset(label).anchor"
@@ -450,7 +453,7 @@ defineExpose({
                 style="overflow: visible;"
             >
                 <div class="vue-ui-radar-legend" :style="`font-weight:${radarConfig.style.chart.legend.bold ? 'bold' : ''};color:${radarConfig.style.chart.legend.color};font-size:${radarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${radarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-                    <div v-for="(legendItem, i) in legend" class="vue-ui-radar-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
+                    <div v-for="(legendItem, i) in legend" :data-cy="`radar-foreignObject-legend-item-${i}`" class="vue-ui-radar-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
                         <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
                         <span>{{ legendItem.name }} : </span>
                         <span>{{ (legendItem.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%</span>
@@ -462,7 +465,7 @@ defineExpose({
 
         <!-- LEGEND AS DIV -->
         <div v-if="radarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-radar-legend" :style="`font-weight:${radarConfig.style.chart.legend.bold ? 'bold' : ''};background:${radarConfig.style.chart.legend.backgroundColor};color:${radarConfig.style.chart.legend.color};font-size:${radarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${radarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-            <div v-for="(legendItem, i) in legend" class="vue-ui-radar-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
+            <div v-for="(legendItem, i) in legend" :data-cy="`radar-div-legend-item-${i}`" class="vue-ui-radar-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
                 <span>{{ legendItem.name }} : </span>
                 <span>{{ (legendItem.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%</span>
@@ -470,7 +473,8 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <div 
+        <div
+            data-cy="radar-tooltip"
             class="vue-ui-radar-tooltip"
             ref="tooltip"
             v-if="radarConfig.style.chart.tooltip.show && isTooltip"
@@ -481,7 +485,7 @@ defineExpose({
         <!-- DATA TABLE -->
         <div @click="closeDetails" class="vue-ui-radar-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
-                <thead>
+                <thead data-cy="radar-thead">
                     <tr v-if="radarConfig.style.chart.title.text">
                         <th :colspan="(legend.length + 2) + 3" :style="`background:${radarConfig.table.th.backgroundColor};color:${radarConfig.table.th.color};outline:${radarConfig.table.th.outline}`">
                             <span>{{ radarConfig.style.chart.title.text }}</span>
