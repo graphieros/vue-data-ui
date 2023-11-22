@@ -215,7 +215,7 @@ function useTooltip(index) {
         const { period, open, high, low, last, volume, isBullish } = drawableDataset.value[index];
         const { period:tr_period, open:tr_open, high:tr_high, low:tr_low, last:tr_last, volume:tr_volume } = candlestickConfig.value.translations;
 
-        html += `<div><svg style="margin-right:6px" viewBox="0 0 12 12" height="12" width="12"><rect x="0" y="0" height="12" width="12" rx="${candlestickConfig.value.style.layout.candle.borderRadius*3}" stroke="${candlestickConfig.value.style.layout.candle.stroke}" stroke-width="${candlestickConfig.value.style.layout.candle.strokeWidth}" 
+        html += `<div data-cy="candlestick-tooltip-period"><svg style="margin-right:6px" viewBox="0 0 12 12" height="12" width="12"><rect x="0" y="0" height="12" width="12" rx="${candlestickConfig.value.style.layout.candle.borderRadius*3}" stroke="${candlestickConfig.value.style.layout.candle.stroke}" stroke-width="${candlestickConfig.value.style.layout.candle.strokeWidth}" 
             fill="${candlestickConfig.value.style.layout.candle.gradient.show 
                 ? isBullish 
                     ? `url(#bullish_gradient_${uid.value})` 
@@ -223,7 +223,7 @@ function useTooltip(index) {
                 : isBullish 
                     ? candlestickConfig.value.style.layout.candle.colors.bullish 
                     : candlestickConfig.value.style.layout.candle.colors.bearish}"/></svg>${period}</div>`;
-        html += `${tr_volume} : <b>${ isNaN(volume) ? '-' : Number(volume.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()}</b>`;
+        html += `${tr_volume} : <b data-cy="candlestick-tooltip-volume">${ isNaN(volume) ? '-' : Number(volume.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()}</b>`;
         html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
         html += `<div>${tr_open} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(open.value) ? '-' : Number(open.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
         html += `<div>${tr_high} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(high.value) ? '-' : Number(high.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
@@ -287,30 +287,30 @@ defineExpose({
 
         <div v-if="(!mutableConfig.inside || isPrinting) && candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
-            <div :style="`width:100%;text-align:center;color:${candlestickConfig.style.title.color};font-size:${candlestickConfig.style.title.fontSize}px;font-weight:${candlestickConfig.style.title.bold ? 'bold': ''}`">
+            <div data-cy="candlestick-div-title" :style="`width:100%;text-align:center;color:${candlestickConfig.style.title.color};font-size:${candlestickConfig.style.title.fontSize}px;font-weight:${candlestickConfig.style.title.bold ? 'bold': ''}`">
                 {{ candlestickConfig.style.title.text }}
             </div>
-            <div v-if="candlestickConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${candlestickConfig.style.title.subtitle.color};font-size:${candlestickConfig.style.title.subtitle.fontSize}px;font-weight:${candlestickConfig.style.title.subtitle.bold ? 'bold': ''}`">
+            <div data-cy="candlestick-div-subtitle" v-if="candlestickConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${candlestickConfig.style.title.subtitle.color};font-size:${candlestickConfig.style.title.subtitle.fontSize}px;font-weight:${candlestickConfig.style.title.subtitle.bold ? 'bold': ''}`">
                 {{ candlestickConfig.style.title.subtitle.text }}
             </div>
         </div>
 
          <!-- OPTIONS -->
          <details class="vue-ui-candlestick-user-options" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`" data-html2canvas-ignore v-if="candlestickConfig.userOptions.show" ref="details">
-            <summary :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">{{ candlestickConfig.userOptions.title }}</summary>
+            <summary data-cy="candlestick-summary" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">{{ candlestickConfig.userOptions.title }}</summary>
 
             <div class="vue-ui-candlestick-user-options-items" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
                 <div class="vue-ui-candlestick-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-candlestick-option-title_${uid}`" :name="`vue-ui-candlestick-option-title_${uid}`"
+                    <input data-cy="candlestick-checkbox-title" type="checkbox" :id="`vue-ui-candlestick-option-title_${uid}`" :name="`vue-ui-candlestick-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-candlestick-option-title_${uid}`">{{ candlestickConfig.userOptions.labels.useDiv }}</label>
                 </div>
                 <div class="vue-ui-candlestick-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-candlestick-option-table_${uid}`" :name="`vue-ui-candlestick-option-table_${uid}`"
+                    <input data-cy="candlestick-checkbox-table" type="checkbox" :id="`vue-ui-candlestick-option-table_${uid}`" :name="`vue-ui-candlestick-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-candlestick-option-table_${uid}`">{{ candlestickConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button class="vue-ui-candlestick-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
+                <button data-cy="candlestick-svg" class="vue-ui-candlestick-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
                     <svg class="vue-ui-candlestick-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="candlestickConfig.style.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -321,7 +321,7 @@ defineExpose({
                     </svg>
                     <span v-else>PDF</span>
                 </button>
-                <button class="vue-ui-candlestick-button" @click="generateXls" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
+                <button data-cy="candlestick-xls" class="vue-ui-candlestick-button" @click="generateXls" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
                     XLSX
                 </button>
             </div>
@@ -350,6 +350,7 @@ defineExpose({
             <!-- TITLE AS G -->
             <g v-if="candlestickConfig.style.title.text && mutableConfig.inside && !isPrinting">
                 <text
+                    data-cy="candlestick-text-title"
                     :font-size="candlestickConfig.style.title.fontSize"
                     :fill="candlestickConfig.style.title.color"
                     :x="svg.width / 2"
@@ -360,6 +361,7 @@ defineExpose({
                     {{ candlestickConfig.style.title.text }}
                 </text>
                 <text
+                    data-cy="candlestick-text-subtitle"
                     v-if="candlestickConfig.style.title.subtitle.text"
                     :font-size="candlestickConfig.style.title.subtitle.fontSize"
                     :fill="candlestickConfig.style.title.subtitle.color"
@@ -375,6 +377,7 @@ defineExpose({
             <!-- AXIS -->
             <g v-if="candlestickConfig.style.layout.grid.show">
                 <line
+                    data-cy="candlestick-grid-y-axis"
                     :x1="drawingArea.left"
                     :x2="drawingArea.left"
                     :y1="drawingArea.top"
@@ -383,6 +386,7 @@ defineExpose({
                     :stroke-width="candlestickConfig.style.layout.grid.strokeWidth"
                 />
                 <line
+                    data-cy="candlestick-grid-x-axis"
                     :x1="drawingArea.left"
                     :x2="drawingArea.right"
                     :y1="drawingArea.bottom"
@@ -422,6 +426,7 @@ defineExpose({
             <g v-if="candlestickConfig.style.layout.grid.xAxis.dataLabels.show">
                 <g v-for="(xLabel, i) in xLabels">
                     <text
+                        :data-cy="`candlestick-time-label-${i}`"
                         :x="drawingArea.left + (slot * i) + (slot / 2)"
                         :y="drawingArea.bottom + candlestickConfig.style.layout.grid.xAxis.dataLabels.fontSize * 2 + candlestickConfig.style.layout.grid.xAxis.dataLabels.offsetY"
                         text-anchor="middle"
@@ -436,8 +441,9 @@ defineExpose({
             
             <!-- CANDLE WICK -->
             <g>
-                <g v-for="wick in drawableDataset">
-                    <line 
+                <g v-for="(wick, i) in drawableDataset">
+                    <line
+                        :data-cy="`candlestick-wick-vertical-${i}`" 
                         :x1="wick.open.x"
                         :x2="wick.open.x"
                         :y1="wick.high.y"
@@ -461,7 +467,8 @@ defineExpose({
                         />
                     </g>
                     <g v-if="candlestickConfig.style.layout.wick.extremity.shape === 'line'">
-                        <line 
+                        <line
+                            :data-cy="`candlestick-wick-high-${i}`" 
                             :x1="wick.high.x - (candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot * candlestickConfig.style.layout.candle.widthRatio : candlestickConfig.style.layout.wick.extremity.size) / 2"
                             :x2="wick.high.x + (candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot * candlestickConfig.style.layout.candle.widthRatio : candlestickConfig.style.layout.wick.extremity.size) / 2"
                             :y1="wick.high.y"
@@ -470,7 +477,8 @@ defineExpose({
                             :stroke-width="candlestickConfig.style.layout.wick.strokeWidth"
                             stroke-linecap="round"
                         />
-                        <line 
+                        <line
+                            :data-cy="`candlestick-wick-low-${i}`"
                             :x1="wick.low.x - (candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot * candlestickConfig.style.layout.candle.widthRatio : candlestickConfig.style.layout.wick.extremity.size) / 2"
                             :x2="wick.low.x + (candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot * candlestickConfig.style.layout.candle.widthRatio : candlestickConfig.style.layout.wick.extremity.size) / 2"
                             :y1="wick.low.y"
@@ -485,7 +493,8 @@ defineExpose({
             <!-- CANDLE BODY -->
             <g>
                 <rect
-                    v-for="candle in drawableDataset"
+                    v-for="(candle, i) in drawableDataset"
+                    :data-cy="`candlestick-rect-underlayer-${i}`"
                     :x="candle.open.x - slot / 2 + (slot * (1 - candlestickConfig.style.layout.candle.widthRatio) / 2)"
                     :y="candle.isBullish ? candle.last.y : candle.open.y"
                     :height="Math.abs(candle.last.y - candle.open.y)"
@@ -495,7 +504,8 @@ defineExpose({
                     stroke="none"
                 />
                 <rect
-                    v-for="candle in drawableDataset"
+                    v-for="(candle, i) in drawableDataset"
+                    :data-cy="`candlestick-rect-${i}`"
                     :x="candle.open.x - slot / 2 + (slot * (1 - candlestickConfig.style.layout.candle.widthRatio) / 2)"
                     :y="candle.isBullish ? candle.last.y : candle.open.y"
                     :height="Math.abs(candle.last.y - candle.open.y)"
@@ -513,6 +523,7 @@ defineExpose({
             <g>
                 <rect 
                     v-for="(_, i) in drawableDataset"
+                    :data-cy="`candlestick-trap-${i}`"
                     :x="drawingArea.left + i * slot"
                     :y="drawingArea.top"
                     :height="drawingArea.height"
@@ -542,7 +553,8 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <div 
+        <div
+            data-cy="candlestick-tooltip"
             class="vue-ui-candlestick-tooltip"
             ref="tooltip"
             v-if="candlestickConfig.style.tooltip.show && isTooltip"
@@ -553,7 +565,7 @@ defineExpose({
         <!-- DATA TABLE -->
         <div @click="closeDetails" :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
             <table>
-                <thead>
+                <thead data-cy="candlestick-thead">
                     <tr v-if="candlestickConfig.style.title.text">
                         <th :colspan="6" :style="`background:${candlestickConfig.table.th.backgroundColor};color:${candlestickConfig.table.th.color};outline:${candlestickConfig.table.th.outline}`">
                             <span>{{ candlestickConfig.style.title.text }}</span>
@@ -584,7 +596,7 @@ defineExpose({
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(tr, i) in drawableDataset">
+                    <tr v-for="(tr, i) in drawableDataset" :data-cy="`candlestick-tr-${i}`">
                         <td :style="`background:${candlestickConfig.table.td.backgroundColor};color:${candlestickConfig.table.td.color};outline:${candlestickConfig.table.td.outline}`">
                             <div style="display:flex;flex-direction:row;gap:3px;align-items:center">
                                 <svg viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px">
