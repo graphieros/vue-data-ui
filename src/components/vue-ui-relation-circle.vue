@@ -56,10 +56,6 @@ const isCurved = computed(() => {
     return relationConfig.value.style.links.curved;
 });
 
-const isAnimated = computed(() => {
-    return relationConfig.value.style.animation.show;
-});
-
 const animationSpeed = computed(() => {
     return `${relationConfig.value.style.animation.speedMs}ms`;
 });
@@ -233,10 +229,10 @@ defineExpose({
     <div class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor}`" :id="`relation_circle_${uid}`"> 
      <!-- TITLE AS DIV -->
         <div v-if="relationConfig.style.title.useDiv && relationConfig.style.title.text" :style="`width:100%;background:${relationConfig.style.backgroundColor}`">
-            <div :style="`width:100%;text-align:center;color:${relationConfig.style.title.color};font-size:${relationConfig.style.title.fontSize}px;font-weight:${relationConfig.style.title.bold ? 'bold': ''}`">
+            <div data-cy="relation-div-title" :style="`width:100%;text-align:center;color:${relationConfig.style.title.color};font-size:${relationConfig.style.title.fontSize}px;font-weight:${relationConfig.style.title.bold ? 'bold': ''}`">
                 {{ relationConfig.style.title.text }}
             </div>
-            <div v-if="relationConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${relationConfig.style.title.subtitle.color};font-size:${relationConfig.style.title.subtitle.fontSize}px;font-weight:${relationConfig.style.title.subtitle.bold ? 'bold': ''}`">
+            <div data-cy="relation-div-subtitle" v-if="relationConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${relationConfig.style.title.subtitle.color};font-size:${relationConfig.style.title.subtitle.fontSize}px;font-weight:${relationConfig.style.title.subtitle.bold ? 'bold': ''}`">
                 {{ relationConfig.style.title.subtitle.text }}
             </div>
         </div>  
@@ -271,7 +267,8 @@ defineExpose({
                 </text>
             </g>
 
-            <circle 
+            <circle
+                data-cy="relation-circle" 
                 :cx="size/2" 
                 :cy="size/2 + relationConfig.style.circle.offsetY" 
                 :r="radius" 
@@ -282,7 +279,7 @@ defineExpose({
             />
 
             <g v-if="isCurved">
-                <path v-for="(relation,i) in relations" 
+                <path v-for="(relation,i) in relations"
                     :key="`relation_${i}`" 
                     :style="getLineOpacityAndWidth(relation)"
                     :stroke="getLineColor(relation)" 
@@ -308,7 +305,8 @@ defineExpose({
                 />
             </g>
 
-            <text v-for="(plot,i) in circles" 
+            <text v-for="(plot,i) in circles"
+                :data-cy="`relation-text-${i}`"
                 :key="`plot_text_${i}`" 
                 :text-anchor="getTextAnchor(plot)"
                 :transform="getTextRotation(plot)"
@@ -325,7 +323,8 @@ defineExpose({
                 {{plot.label}}
             </text>
 
-            <circle v-for="(plot,i) in circles" 
+            <circle v-for="(plot,i) in circles"
+                :data-cy="`relation-plot-${i}`"
                 :cx="plot.x" 
                 :cy="plot.y" 
                 :key="`plot_${i}`" 

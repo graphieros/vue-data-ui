@@ -1,0 +1,241 @@
+{
+    "dataset": [
+        {
+            "id": "01",
+            "label": "Lorem",
+            "relations": [
+                "02",
+                "03",
+                "04",
+                "05",
+                "06",
+                "07",
+                "08",
+                "09",
+                "10",
+                "11",
+                "12"
+            ],
+            "weights": [
+                5,
+                3,
+                10,
+                2,
+                9,
+                3,
+                1,
+                2,
+                3,
+                7,
+                1
+            ],
+            "color": "#eb4034"
+        },
+        {
+            "id": "02",
+            "label": "Ipsum",
+            "relations": [
+                "01",
+                "03",
+                "07",
+                "06",
+                "07"
+            ],
+            "weights": [
+                3,
+                2,
+                9,
+                7,
+                1
+            ],
+            "color": "#e0992d"
+        },
+        {
+            "id": "03",
+            "label": "Dolor",
+            "relations": [
+                "01",
+                "02"
+            ],
+            "weights": [
+                2,
+                5
+            ],
+            "color": "#decc2c"
+        },
+        {
+            "id": "04",
+            "label": "Consectetur",
+            "relations": [
+                "01",
+                "05",
+                "10"
+            ],
+            "weights": [
+                2,
+                1,
+                4
+            ],
+            "color": "#a8de2a"
+        },
+        {
+            "id": "05",
+            "label": "Amet",
+            "relations": [
+                "01",
+                "04",
+                "07",
+                "10"
+            ],
+            "weights": [
+                2,
+                3,
+                4,
+                5
+            ],
+            "color": "#5ed622"
+        },
+        {
+            "id": "06",
+            "label": "Rherum",
+            "relations": [
+                "01",
+                "02"
+            ],
+            "weights": [
+                4,
+                1
+            ],
+            "color": "#21d92d"
+        },
+        {
+            "id": "07",
+            "label": "Delecta",
+            "relations": [
+                "01",
+                "02",
+                "08",
+                "12"
+            ],
+            "weights": [
+                4,
+                8,
+                2,
+                1
+            ],
+            "color": "#23d97b"
+        },
+        {
+            "id": "08",
+            "label": "Nitimur",
+            "relations": [
+                "01",
+                "07",
+                "12",
+                "01"
+            ],
+            "weights": [
+                7,
+                3,
+                2,
+                3
+            ],
+            "color": "#29d6c2"
+        },
+        {
+            "id": "09",
+            "label": "Vetitum",
+            "relations": [
+                "01"
+            ],
+            "weights": [
+                1
+            ],
+            "color": "#2aacdb"
+        },
+        {
+            "id": "10",
+            "label": "Monumentum",
+            "relations": [
+                "01",
+                "04",
+                "05"
+            ],
+            "weights": [
+                4,
+                1,
+                4
+            ],
+            "color": "#295bd9"
+        },
+        {
+            "id": "11",
+            "label": "Aere",
+            "relations": [
+                "01"
+            ],
+            "weights": [
+                3
+            ],
+            "color": "#523ed6"
+        },
+        {
+            "id": "12",
+            "label": "Perennius",
+            "relations": [
+                "01",
+                "07",
+                "08"
+            ],
+            "weights": [
+                8,
+                1,
+                1
+            ],
+            "color": "#8235db"
+        }
+    ],
+    "config": {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "fontFamily": "inherit",
+            "size": 400,
+            "limit": 50,
+            "animation": {
+                "show": true,
+                "speedMs": 300
+            },
+            "labels": {
+                "color": "#2D353C",
+                "fontSize": 10
+            },
+            "links": {
+                "curved": true,
+                "maxWidth": 3
+            },
+            "circle": {
+                "radiusProportion": 0.2,
+                "stroke": "#CCCCCC",
+                "strokeWidth": 1,
+                "offsetY": 0
+            },
+            "plot": {
+                "radius": 2,
+                "color": "#2D353C"
+            },
+            "title": {
+                "useDiv": true,
+                "text": "Title",
+                "color": "#2D353C",
+                "fontSize": 20,
+                "bold": true,
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "Subtitle",
+                    "fontSize": 16,
+                    "bold": false
+                }
+            }
+        }
+    }
+}
