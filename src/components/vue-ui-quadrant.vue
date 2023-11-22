@@ -470,17 +470,17 @@ defineExpose({
 
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && quadrantConfig.style.chart.title.text" :style="`width:100%;background:${quadrantConfig.style.chart.backgroundColor};padding-bottom:12px`">
-            <div :style="`width:100%;text-align:center;color:${quadrantConfig.style.chart.title.color};font-size:${quadrantConfig.style.chart.title.fontSize}px;font-weight:${quadrantConfig.style.chart.title.bold ? 'bold': ''}`">
+            <div data-cy="quadrant-title" :style="`width:100%;text-align:center;color:${quadrantConfig.style.chart.title.color};font-size:${quadrantConfig.style.chart.title.fontSize}px;font-weight:${quadrantConfig.style.chart.title.bold ? 'bold': ''}`">
                 {{ quadrantConfig.style.chart.title.text }}
             </div>
-            <div v-if="quadrantConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${quadrantConfig.style.chart.title.subtitle.color};font-size:${quadrantConfig.style.chart.title.subtitle.fontSize}px;font-weight:${quadrantConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
+            <div data-cy="quadrant-subtitle" v-if="quadrantConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${quadrantConfig.style.chart.title.subtitle.color};font-size:${quadrantConfig.style.chart.title.subtitle.fontSize}px;font-weight:${quadrantConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
                 {{ quadrantConfig.style.chart.title.subtitle.text }}
             </div>
         </div>
 
         <!-- OPTIONS -->
         <details class="vue-ui-quadrant-user-options" :style="`background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`" data-html2canvas-ignore v-if="quadrantConfig.userOptions.show" ref="details">
-            <summary :style="`background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`">{{ quadrantConfig.userOptions.title }}</summary>
+            <summary data-cy="quadrant-summary" :style="`background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`">{{ quadrantConfig.userOptions.title }}</summary>
             <div class="vue-ui-quadrant-user-options-items" :style="`background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`">
                 <div class="vue-ui-quadrant-user-option-item">
                     <input type="checkbox" :id="`vue-ui-quadrant-option-plotLabels_${uid}`" :name="`vue-ui-quadrant-option-plotLabels_${uid}`"
@@ -488,16 +488,16 @@ defineExpose({
                     <label :for="`vue-ui-quadrant-option-plotLabels_${uid}`">{{ quadrantConfig.userOptions.labels.showPlotLabels }}</label>
                 </div>
                 <div class="vue-ui-quadrant-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-quadrant-option-title_${uid}`" :name="`vue-ui-quadrant-option-title_${uid}`"
+                    <input data-cy="quadrant-checkbox-title" type="checkbox" :id="`vue-ui-quadrant-option-title_${uid}`" :name="`vue-ui-quadrant-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-quadrant-option-title_${uid}`">{{ quadrantConfig.userOptions.labels.useDiv }}</label>
                 </div>
                 <div class="vue-ui-quadrant-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-quadrant-option-table_${uid}`" :name="`vue-ui-quadrant-option-table_${uid}`"
+                    <input data-cy="quadrant-checkbox-table" type="checkbox" :id="`vue-ui-quadrant-option-table_${uid}`" :name="`vue-ui-quadrant-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-quadrant-option-table_${uid}`">{{ quadrantConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button class="vue-ui-quadrant-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${quadrantConfig.style.chart.color}`">
+                <button data-cy="quadrant-pdf" class="vue-ui-quadrant-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${quadrantConfig.style.chart.color}`">
                     <svg class="vue-ui-quadrant-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="quadrantConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -508,7 +508,7 @@ defineExpose({
                     </svg>
                     <span v-else>PDF</span>
                 </button>
-                <button class="vue-ui-quadrant-button" @click="generateXls" :style="`color:${quadrantConfig.style.chart.color}`">
+                <button data-cy="quadrant-xls" class="vue-ui-quadrant-button" @click="generateXls" :style="`color:${quadrantConfig.style.chart.color}`">
                     XLSX
                 </button>
             </div>
@@ -532,6 +532,7 @@ defineExpose({
             <!-- TITLE AS G -->
             <g v-if="quadrantConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
                 <text
+                    data-cy="quadrant-text-title"
                     :font-size="quadrantConfig.style.chart.title.fontSize"
                     :fill="quadrantConfig.style.chart.title.color"
                     :x="svg.width / 2"
@@ -542,6 +543,7 @@ defineExpose({
                     {{ quadrantConfig.style.chart.title.text }}
                 </text>
                 <text
+                    data-cy="quadrant-text-subtitle"
                     v-if="quadrantConfig.style.chart.title.subtitle.text"
                     :font-size="quadrantConfig.style.chart.title.subtitle.fontSize"
                     :fill="quadrantConfig.style.chart.title.subtitle.color"
@@ -598,6 +600,7 @@ defineExpose({
             <g v-if="quadrantConfig.style.chart.layout.labels.quadrantLabels.show">            
                 <!-- TL -->
                 <text
+                    data-cy="quadrant-label-tl"
                     v-if="quadrantConfig.style.chart.layout.labels.quadrantLabels.tl.text"
                     :x="0"
                     :y="svg.top - svg.padding / 2"
@@ -612,6 +615,7 @@ defineExpose({
 
                 <!-- TR -->
                 <text
+                data-cy="quadrant-label-tr"
                     v-if="quadrantConfig.style.chart.layout.labels.quadrantLabels.tr.text"
                     :x="svg.width"
                     :y="svg.top - svg.padding / 2"
@@ -626,6 +630,7 @@ defineExpose({
 
                 <!-- BR -->
                 <text
+                data-cy="quadrant-label-br"
                     v-if="quadrantConfig.style.chart.layout.labels.quadrantLabels.br.text"
                     :x="svg.width"
                     :y="svg.bottom + svg.padding *0.7"
@@ -640,6 +645,7 @@ defineExpose({
 
                 <!-- BL -->
                 <text
+                    data-cy="quadrant-label-bl"
                     v-if="quadrantConfig.style.chart.layout.labels.quadrantLabels.bl.text"
                     :x="0"
                     :y="svg.bottom + svg.padding * 0.7"
@@ -869,7 +875,7 @@ defineExpose({
                 style="overflow: visible;"
             >
                 <div class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-                    <div v-for="(legendItem, i) in legend" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
+                    <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-foreignObject-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                         <div v-html="legendItem.shapePath" style="display:flex;align-items:center;justify-content:center"/>
                         <span>{{ legendItem.name }}</span>
                     </div>
@@ -880,7 +886,7 @@ defineExpose({
 
         <!-- LEGEND AS DIV -->
         <div v-if="quadrantConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};background:${quadrantConfig.style.chart.legend.backgroundColor};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-            <div v-for="(legendItem, i) in legend" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
+            <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-div-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                 <div v-html="legendItem.shapePath" style="display:flex;align-items:center;justify-content:center"/>
                 <span>{{ legendItem.name }}</span>
             </div>
@@ -898,7 +904,7 @@ defineExpose({
         <!-- DATA TABLE -->
         <div @click="closeDetails" class="vue-ui-quadrant-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
-                <thead>
+                <thead data-cy="quadrant-thead">
                     <tr v-if="quadrantConfig.style.chart.title.text">
                         <th :colspan="5" :style="`background:${quadrantConfig.table.th.backgroundColor};color:${quadrantConfig.table.th.color};outline:${quadrantConfig.table.th.outline}`">
                             <span>{{ quadrantConfig.style.chart.title.text }}</span>
