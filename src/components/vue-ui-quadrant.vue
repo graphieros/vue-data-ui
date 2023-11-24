@@ -5,6 +5,8 @@ import pdf from "../pdf.js";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 const props = defineProps({
     config: {
@@ -101,15 +103,10 @@ const tooltipPosition = computed(() => {
 });
 
 const quadrantConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({
@@ -470,12 +467,24 @@ defineExpose({
 
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && quadrantConfig.style.chart.title.text" :style="`width:100%;background:${quadrantConfig.style.chart.backgroundColor};padding-bottom:12px`">
-            <div data-cy="quadrant-title" :style="`width:100%;text-align:center;color:${quadrantConfig.style.chart.title.color};font-size:${quadrantConfig.style.chart.title.fontSize}px;font-weight:${quadrantConfig.style.chart.title.bold ? 'bold': ''}`">
-                {{ quadrantConfig.style.chart.title.text }}
-            </div>
-            <div data-cy="quadrant-subtitle" v-if="quadrantConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${quadrantConfig.style.chart.title.subtitle.color};font-size:${quadrantConfig.style.chart.title.subtitle.fontSize}px;font-weight:${quadrantConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
-                {{ quadrantConfig.style.chart.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'quadrant-title',
+                        text: quadrantConfig.style.chart.title.text,
+                        color: quadrantConfig.style.chart.title.color,
+                        fontSize: quadrantConfig.style.chart.title.fontSize,
+                        bold: quadrantConfig.style.chart.title.bold
+                    },
+                    subtitle: {
+                        cy: 'quadrant-subtitle',
+                        text: quadrantConfig.style.chart.title.subtitle.text,
+                        color: quadrantConfig.style.chart.title.subtitle.color,
+                        fontSize: quadrantConfig.style.chart.title.subtitle.fontSize,
+                        bold: quadrantConfig.style.chart.title.subtitle.bold
+                    },
+                }"
+            />
         </div>
 
         <!-- OPTIONS -->

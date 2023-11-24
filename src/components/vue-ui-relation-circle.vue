@@ -3,6 +3,8 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { convertConfigColors, treeShake, palette } from "../lib.js";
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
+import Title from "../atoms/Title.vue";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
     dataset: {
@@ -24,16 +26,10 @@ const defaultConfig = ref(mainConfig.vue_ui_relation_circle);
 const isPrinting = ref(false);
 
 const relationConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-
-    return convertConfigColors(reconcilied);
 });
 
 const circles = ref([]);
@@ -229,12 +225,24 @@ defineExpose({
     <div class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor}`" :id="`relation_circle_${uid}`"> 
      <!-- TITLE AS DIV -->
         <div v-if="relationConfig.style.title.useDiv && relationConfig.style.title.text" :style="`width:100%;background:${relationConfig.style.backgroundColor}`">
-            <div data-cy="relation-div-title" :style="`width:100%;text-align:center;color:${relationConfig.style.title.color};font-size:${relationConfig.style.title.fontSize}px;font-weight:${relationConfig.style.title.bold ? 'bold': ''}`">
-                {{ relationConfig.style.title.text }}
-            </div>
-            <div data-cy="relation-div-subtitle" v-if="relationConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${relationConfig.style.title.subtitle.color};font-size:${relationConfig.style.title.subtitle.fontSize}px;font-weight:${relationConfig.style.title.subtitle.bold ? 'bold': ''}`">
-                {{ relationConfig.style.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'relation-div-title',
+                        text: relationConfig.style.title.text,
+                        color: relationConfig.style.title.color ,
+                        fontSize: relationConfig.style.title.fontSize,
+                        bold: relationConfig.style.title.bold
+                    },
+                    subtitle: {
+                        cy: 'relation-div-subtitle',
+                        text: relationConfig.style.title.subtitle.text,
+                        color: relationConfig.style.title.subtitle.color ,
+                        fontSize: relationConfig.style.title.subtitle.fontSize,
+                        bold: relationConfig.style.title.subtitle.bold
+                    },
+                }"
+            />
         </div>  
         <svg 
             :viewBox="`0 0 ${size} ${size}`"

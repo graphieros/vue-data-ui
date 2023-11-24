@@ -37,63 +37,6 @@ const dataset = ref([
 ]);
 const dataset2 = ref([
   {
-    name: "Series 1",
-    series: [
-      -55,
-      -34,
-      -21,
-      -13,
-      -8,
-      -5,
-      -3,
-      -2,
-      -1,
-      -1,
-      0,
-      1,
-      1,
-      2,
-      3,
-      5,
-      8,
-      13,
-      21,
-      34,
-      55,
-    ],
-    type: "bar",
-    dataLabels: false,
-  },
-  {
-    name: "Series 2",
-    series: [
-      -55,
-      -34,
-      -21,
-      -13,
-      -18,
-      -5,
-      -3,
-      -2,
-      -1,
-      -1,
-      0,
-      1,
-      1,
-      2,
-      3,
-      5,
-      8,
-      13,
-      21,
-      34,
-      55,
-    ].reverse(),
-    type: "bar",
-    dataLabels: false,
-    useProgression: true,
-  },
-  {
     name: "Series 3",
     series: [
       -55,
@@ -118,53 +61,7 @@ const dataset2 = ref([
       34,
       55,
     ],
-    useArea: true,
-    smooth: true,
     type: "line",
-    dashed: false,
-    dataLabels: true,
-    useProgression: true,
-    useTag: "start",
-  },
-  {
-    name: "Series 4",
-    series: [0, 1, 2, 3, 5, null, 13, 21, 34, 55],
-    type: "plot",
-    dashed: true,
-    dataLabels: false,
-    useProgression: true,
-  },
-  {
-    name: "Target",
-    series: [
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-      30,
-    ],
-    useArea: false,
-    type: "line",
-    dashed: true,
-    color: "rgb(100,100,100)",
-    dataLabels: false,
-    useTag: "end",
   },
 ]);
 
@@ -3647,13 +3544,13 @@ const showLocalTest = ref(false);
           <VerticalTest 
             ref="verticaltest"
             :dataset="verticalDataset"
-            :config="{useCssAnimation: false}"
+            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
           />
         </template>
         <template #prod>
           <VueUiVerticalBar
             ref="verticaltest"
-            :config="{useCssAnimation: false}"
+            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
             :dataset="verticalDataset"
             @selectLegend="selectVerticalLegend"
           />
@@ -3664,7 +3561,7 @@ const showLocalTest = ref(false);
         <template #title>VueUiOnion</template>
         <template #dev>
           <OnionTest
-            :config="{ useCssAnimation: false }"
+            :config="{ useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}} }"
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
           />
@@ -3672,7 +3569,7 @@ const showLocalTest = ref(false);
         <template #prod>
           <VueUiOnion
             ref="oniontest"
-            :config="{ useCssAnimation: false }"
+            :config="{ useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}} }"
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
           />
@@ -3685,7 +3582,7 @@ const showLocalTest = ref(false);
           <QuadrantTest
             ref="quadranttest"
             :dataset="quadrantDataset"
-            :config="{useCssAnimation: false}"
+            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
             @selectPlot="selectPlot"
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
@@ -3695,7 +3592,7 @@ const showLocalTest = ref(false);
           <VueUiQuadrant
             ref="quadranttest"
             :dataset="quadrantDataset"
-            :config="{useCssAnimation: false}"
+            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
             @selectPlot="selectPlot"
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
@@ -3709,7 +3606,7 @@ const showLocalTest = ref(false);
           <RadarTest
             ref="radartest"
             :dataset="radarDataset"
-            :config="{useCssAnimation: false}"
+            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
             @selectLegend="selectRadarLegend"
           />
         </template>
@@ -3717,7 +3614,7 @@ const showLocalTest = ref(false);
           <VueUiRadar
             ref="radartest"
             :dataset="radarDataset"
-            :config="{useCssAnimation: false}"
+            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
             @selectLegend="selectRadarLegend"
           />
         </template>
@@ -3729,6 +3626,18 @@ const showLocalTest = ref(false);
           <DonutTest
             ref="donuttest"
             :dataset="donutDataset"
+            :config="{
+              style: {
+                chart: {
+                  title: {
+                    text: 'Title',
+                    subtitle: {
+                      text: 'Subtitle'
+                    }
+                  }
+                }
+              }
+            }"
             @selectLegend="selectLegendDonut"
           />
         </template>
@@ -3736,6 +3645,18 @@ const showLocalTest = ref(false);
           <VueUiDonut
             ref="donuttest"
             :dataset="donutDataset"
+            :config="{
+              style: {
+                chart: {
+                  title: {
+                    text: 'Title',
+                    subtitle: {
+                      text: 'Subtitle'
+                    }
+                  }
+                }
+              }
+            }"
             @selectLegend="selectLegendDonut"
           />
         </template>
@@ -3848,13 +3769,15 @@ const showLocalTest = ref(false);
         <template #dev>
           <PyramidTest 
             ref="pyramid" 
-            :dataset="pyramidDataset" 
+            :dataset="pyramidDataset"
+            :config="{style:{title:{text:'Title', subtitle:{text: 'Subtitle'}}}}"
           />
         </template>
         <template #prod>
           <VueUiAgePyramid
             ref="pyramid"
             :dataset="pyramidDataset"
+            :config="{style:{title:{text:'Title', subtitle:{text: 'Subtitle'}}}}"
           />
         </template>
       </Box>
@@ -3865,6 +3788,7 @@ const showLocalTest = ref(false);
           <WaffleTest
             ref="waffletest"
             :dataset="donutDataset"
+            :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
             @selectLegend="selectLegendWaffle"
           />
         </template>
@@ -3872,6 +3796,7 @@ const showLocalTest = ref(false);
           <VueUiWaffle
             ref="waffletest"
             :dataset="donutDataset"
+             :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
             @selectLegend="selectLegendWaffle"
           />
         </template>

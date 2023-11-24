@@ -5,6 +5,8 @@ import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 const props = defineProps({
     config: {
@@ -73,14 +75,10 @@ const tooltipPosition = computed(() => {
 });
 
 const candlestickConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconciled = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconciled);
 });
 
 const mutableConfig = ref({
@@ -284,15 +282,26 @@ defineExpose({
 
 <template>
     <div ref="candlestickChart" :class="`vue-ui-candlestick ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center;${candlestickConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`vue-ui-candlestick_${uid}`">
-
         <div v-if="(!mutableConfig.inside || isPrinting) && candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
-            <div data-cy="candlestick-div-title" :style="`width:100%;text-align:center;color:${candlestickConfig.style.title.color};font-size:${candlestickConfig.style.title.fontSize}px;font-weight:${candlestickConfig.style.title.bold ? 'bold': ''}`">
-                {{ candlestickConfig.style.title.text }}
-            </div>
-            <div data-cy="candlestick-div-subtitle" v-if="candlestickConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${candlestickConfig.style.title.subtitle.color};font-size:${candlestickConfig.style.title.subtitle.fontSize}px;font-weight:${candlestickConfig.style.title.subtitle.bold ? 'bold': ''}`">
-                {{ candlestickConfig.style.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'candlestick-div-title',
+                        text: candlestickConfig.style.title.text,
+                        color: candlestickConfig.style.title.color,
+                        fontSize: candlestickConfig.style.title.fontSize,
+                        bold: candlestickConfig.style.title.bold
+                    },
+                    subtitle: {
+                        cy: 'candlestick-div-subtitle',
+                        text: candlestickConfig.style.title.subtitle.text,
+                        color: candlestickConfig.style.title.subtitle.color,
+                        fontSize: candlestickConfig.style.title.subtitle.fontSize,
+                        bold: candlestickConfig.style.title.subtitle.bold
+                    }
+                }"
+            />
         </div>
 
          <!-- OPTIONS -->

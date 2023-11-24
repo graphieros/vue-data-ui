@@ -5,6 +5,8 @@ import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
+import Title from "../atoms/Title.vue";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
     config: {
@@ -43,14 +45,10 @@ const tooltipPosition = computed(() => {
 })
 
 const donutConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconciled = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconciled);
 });
 
 const mutableConfig = ref({
@@ -244,14 +242,25 @@ defineExpose({
     <div :ref="`donutChart`" :class="`vue-ui-donut ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${donutConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`donut__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor}`">
             <!-- TITLE AS DIV -->
-            <div data-cy="donut-div-title" :style="`width:100%;text-align:center;color:${donutConfig.style.chart.title.color};font-size:${donutConfig.style.chart.title.fontSize}px;font-weight:${donutConfig.style.chart.title.bold ? 'bold': ''}`">
-                {{ donutConfig.style.chart.title.text }}
-            </div>
-            <div data-cy="donut-div-subtitle" v-if="donutConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${donutConfig.style.chart.title.subtitle.color};font-size:${donutConfig.style.chart.title.subtitle.fontSize}px;font-weight:${donutConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
-                {{ donutConfig.style.chart.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'donut-div-title',
+                        text: donutConfig.style.chart.title.text,
+                        color: donutConfig.style.chart.title.color,
+                        fontSize: donutConfig.style.chart.title.fontSize,
+                        bold: donutConfig.style.chart.title.bold
+                    },
+                    subtitle: {
+                        cy: 'donut-div-subtitle',
+                        text: donutConfig.style.chart.title.subtitle.text,
+                        color: donutConfig.style.chart.title.subtitle.color,
+                        fontSize: donutConfig.style.chart.title.subtitle.fontSize,
+                        bold: donutConfig.style.chart.title.subtitle.bold
+                    }
+                }"
+            />
         </div>
-
 
         <!-- OPTIONS -->
         <details class="vue-ui-donut-user-options" :style="`background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`" data-html2canvas-ignore v-if="donutConfig.userOptions.show" ref="details">

@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { treeShake, shiftHue, opacity, convertConfigColors, palette, convertColorToHex } from "../lib";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
     config: {
@@ -10,16 +11,6 @@ const props = defineProps({
             return {}
         }
     },
-    /**
-     *  {
-     *      name: string;
-     *      value: number;
-     *      prefix: string;
-     *      suffix: string;
-     *      rounding: number;
-     *  }
-     * 
-     */
     dataset: {
         type: Array,
         default() {
@@ -32,14 +23,10 @@ const uid = ref(`vue-ui-sparkbar-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_sparkbar);
 
 const sparkbarConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconciled = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconciled);
 });
 
 const svg = ref({

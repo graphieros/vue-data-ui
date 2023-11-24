@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { treeShake, convertConfigColors, createStar, shiftHue } from "../lib.js";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
     config: {
@@ -29,14 +30,10 @@ const units = ref([]);
 const emit = defineEmits(['rate']);
 
 const ratingConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconcilied);
 });
 
 const propRating = computed(() => {

@@ -13,6 +13,8 @@ import pdf from "../pdf.js";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 const props = defineProps({
     config: {
@@ -65,15 +67,10 @@ const tooltipPosition = computed(() => {
 });
 
 const verticalBarConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({
@@ -359,12 +356,24 @@ defineExpose({
         
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.title.text" :style="`width:100%;background:${verticalBarConfig.style.chart.backgroundColor};padding-bottom:12px`">
-            <div :style="`width:100%;text-align:center;color:${verticalBarConfig.style.chart.title.color};font-size:${verticalBarConfig.style.chart.title.fontSize}px;font-weight:${verticalBarConfig.style.chart.title.bold ? 'bold': ''}`">
-                {{ verticalBarConfig.style.chart.title.text }}
-            </div>
-            <div v-if="verticalBarConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${verticalBarConfig.style.chart.title.subtitle.color};font-size:${verticalBarConfig.style.chart.title.subtitle.fontSize}px;font-weight:${verticalBarConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
-                {{ verticalBarConfig.style.chart.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'vertical-bar-div-title',
+                        text: verticalBarConfig.style.chart.title.text ,
+                        color: verticalBarConfig.style.chart.title.color,
+                        fontSize: verticalBarConfig.style.chart.title.fontSize,
+                        bold: verticalBarConfig.style.chart.title.bold
+                    },
+                    subtitle: {
+                        cy: 'vertical-bar-div-subtitle',
+                        text: verticalBarConfig.style.chart.title.subtitle.text ,
+                        color: verticalBarConfig.style.chart.title.subtitle.color,
+                        fontSize: verticalBarConfig.style.chart.title.subtitle.fontSize,
+                        bold: verticalBarConfig.style.chart.title.subtitle.bold
+                    }
+                }"
+            />
         </div>
 
         <!-- OPTIONS -->

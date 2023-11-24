@@ -5,6 +5,8 @@ import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 // TODO: accept color formats
 
@@ -44,14 +46,10 @@ const tooltipPosition = computed(() => {
 });
 
 const waffleConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({
@@ -322,12 +320,24 @@ defineExpose({
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor};padding-bottom:12px`">
-            <div data-cy="waffle-title" :style="`width:100%;text-align:center;color:${waffleConfig.style.chart.title.color};font-size:${waffleConfig.style.chart.title.fontSize}px;font-weight:${waffleConfig.style.chart.title.bold ? 'bold': ''}`">
-                {{ waffleConfig.style.chart.title.text }}
-            </div>
-            <div data-cy="waffle-subtitle" v-if="waffleConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${waffleConfig.style.chart.title.subtitle.color};font-size:${waffleConfig.style.chart.title.subtitle.fontSize}px;font-weight:${waffleConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
-                {{ waffleConfig.style.chart.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'waffle-title',
+                        text: waffleConfig.style.chart.title.text,
+                        color: waffleConfig.style.chart.title.color,
+                        fontSize: waffleConfig.style.chart.title.fontSize,
+                        bold: waffleConfig.style.chart.title.bold
+                    },
+                    subtitle: {
+                        cy: 'waffle-subtitle',
+                        text: waffleConfig.style.chart.title.subtitle.text,
+                        color: waffleConfig.style.chart.title.subtitle.color,
+                        fontSize: waffleConfig.style.chart.title.subtitle.fontSize,
+                        bold: waffleConfig.style.chart.title.subtitle.bold
+                    },
+                }"
+            />
         </div>
 
         <!-- OPTIONS -->

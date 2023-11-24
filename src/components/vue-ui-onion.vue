@@ -3,6 +3,8 @@ import { ref, computed, nextTick } from "vue";
 import { treeShake, convertConfigColors, convertColorToHex, palette, opacity, makeXls } from "../lib.js";
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 const props = defineProps({
     config: {
@@ -28,14 +30,10 @@ const onionChart = ref(null);
 const details = ref(null);
 
 const onionConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({
@@ -198,12 +196,24 @@ defineExpose({
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
-            <div data-cy="onion-div-title" :style="`width:100%;text-align:center;color:${onionConfig.style.chart.title.color};font-size:${onionConfig.style.chart.title.fontSize}px;font-weight:${onionConfig.style.chart.title.bold ? 'bold': ''}`">
-                {{ onionConfig.style.chart.title.text }}
-            </div>
-            <div data-cy="onion-div-subtitle" v-if="onionConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${onionConfig.style.chart.title.subtitle.color};font-size:${onionConfig.style.chart.title.subtitle.fontSize}px;font-weight:${onionConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
-                {{ onionConfig.style.chart.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'onion-div-title',
+                        text: onionConfig.style.chart.title.text,
+                        color: onionConfig.style.chart.title.color,
+                        fontSize: onionConfig.style.chart.title.fontSize,
+                        bold: onionConfig.style.chart.title.bold
+                    },
+                    subtitle: {
+                        cy: 'onion-div-subtitle',
+                        text: onionConfig.style.chart.title.subtitle.text,
+                        color: onionConfig.style.chart.title.subtitle.color,
+                        fontSize: onionConfig.style.chart.title.subtitle.fontSize,
+                        bold: onionConfig.style.chart.title.subtitle.bold
+                    },
+                }"
+            />
         </div>
         
         <!-- OPTIONS -->
@@ -277,7 +287,7 @@ defineExpose({
 
             <!-- GUTTERS -->
             <circle 
-                v-for="onion in mutableDataset" 
+                v-for="(onion, i) in mutableDataset" 
                 :data-cy="`onion-track-${i}`"
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 

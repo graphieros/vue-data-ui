@@ -5,6 +5,8 @@ import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 const props = defineProps({
     config: {
@@ -54,14 +56,10 @@ const tooltipPosition = computed(() => {
 })
 
 const scatterConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconciled = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconciled);
 });
 
 const mutableConfig = ref({
@@ -283,12 +281,24 @@ defineExpose({
         
         <div v-if="(!mutableConfig.inside || isPrinting) && scatterConfig.style.title.text" :style="`width:100%;background:${scatterConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
-            <div :style="`width:100%;text-align:center;color:${scatterConfig.style.title.color};font-size:${scatterConfig.style.title.fontSize}px;font-weight:${scatterConfig.style.title.bold ? 'bold': ''}`">
-                {{ scatterConfig.style.title.text }}
-            </div>
-            <div v-if="scatterConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${scatterConfig.style.title.subtitle.color};font-size:${scatterConfig.style.title.subtitle.fontSize}px;font-weight:${scatterConfig.style.title.subtitle.bold ? 'bold': ''}`">
-                {{ scatterConfig.style.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'scatter-div-title',
+                        text: scatterConfig.style.title.text,
+                        color: scatterConfig.style.title.color,
+                        fontSize: scatterConfig.style.title.fontSize,
+                        bold: scatterConfig.style.title.bold
+                    },
+                    subtitle: {
+                        cy: 'scatter-div-subtitle',
+                        text: scatterConfig.style.title.subtitle.text,
+                        color: scatterConfig.style.title.subtitle.color,
+                        fontSize: scatterConfig.style.title.subtitle.fontSize,
+                        bold: scatterConfig.style.title.subtitle.bold
+                    },
+                }"
+            />
         </div>
 
         <!-- OPTIONS -->

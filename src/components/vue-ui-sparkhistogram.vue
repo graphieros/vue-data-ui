@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { treeShake, shiftHue, opacity, convertConfigColors, palette, convertColorToHex } from "../lib";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
     config: {
@@ -22,14 +23,10 @@ const uid = ref(`vue-ui-sparkhistogram-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_sparkhistogram);
 
 const histoConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconciled = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconciled);
 });
 
 const drawingArea = computed(() => {
@@ -63,8 +60,6 @@ function toMax(val) {
     return Math.abs(val) / maxVal.value;
 }
 
-// value, valueLabel, timeLabel
-
 const computedDataset = computed(() => {
     return props.dataset.map((dp,i) => {
         const proportion = toMax(dp.value);
@@ -92,8 +87,8 @@ const computedDataset = computed(() => {
             x,
             y
         }
-    })
-})
+    });
+});
 
 </script>
 

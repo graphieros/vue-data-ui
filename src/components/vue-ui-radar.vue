@@ -5,6 +5,8 @@ import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 const props = defineProps({
     config: {
@@ -42,14 +44,10 @@ const tooltipPosition = computed(() => {
 });
 
 const radarConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconcilied =  treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({
@@ -291,12 +289,24 @@ defineExpose({
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">
-            <div data-cy="radar-div-title" :style="`width:100%;text-align:center;color:${radarConfig.style.chart.title.color};font-size:${radarConfig.style.chart.title.fontSize}px;font-weight:${radarConfig.style.chart.title.bold ? 'bold': ''}`">
-                {{ radarConfig.style.chart.title.text }}
-            </div>
-            <div data-cy="radar-div-subtitle" v-if="radarConfig.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${radarConfig.style.chart.title.subtitle.color};font-size:${radarConfig.style.chart.title.subtitle.fontSize}px;font-weight:${radarConfig.style.chart.title.subtitle.bold ? 'bold': ''}`">
-                {{ radarConfig.style.chart.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'radar-div-title',
+                        text: radarConfig.style.chart.title.text,
+                        color: radarConfig.style.chart.title.color,
+                        fontSize: radarConfig.style.chart.title.fontSize,
+                        bold: radarConfig.style.chart.title.bold
+                    },
+                    subtitle: {
+                        cy: 'radar-div-subtitle',
+                        text: radarConfig.style.chart.title.subtitle.text,
+                        color: radarConfig.style.chart.title.subtitle.color,
+                        fontSize: radarConfig.style.chart.title.subtitle.fontSize,
+                        bold: radarConfig.style.chart.title.subtitle.bold
+                    },
+                }"
+            />
         </div>
 
         <!-- OPTIONS -->

@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { treeShake, convertConfigColors, opacity, createPolygonPath, createStar } from "../lib.js";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
     config: {
@@ -17,14 +18,10 @@ const uid = ref(`vue-ui-skeleton-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_skeleton);
 
 const skeletonConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconcilied);
 });
 
 const isAnimated = computed(() => {

@@ -5,6 +5,8 @@ import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 const props = defineProps({
     config: {
@@ -43,14 +45,10 @@ const tooltipPosition = computed(() => {
 });
    
 const heatmapConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconciled = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconciled);
 });
 
 const mutableConfig = ref({
@@ -216,13 +214,24 @@ defineExpose({
 <template>
      <div ref="heatmapChart" class="vue-ui-heatmap" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center;${heatmapConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`heatmap__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && heatmapConfig.style.title.text" :style="`width:100%;background:${heatmapConfig.style.backgroundColor}`">
-            <!-- TITLE AS DIV -->
-            <div data-cy="heatmap-div-title" :style="`width:100%;text-align:center;color:${heatmapConfig.style.title.color};font-size:${heatmapConfig.style.title.fontSize}px;font-weight:${heatmapConfig.style.title.bold ? 'bold': ''}`">
-                {{ heatmapConfig.style.title.text }}
-            </div>
-            <div data-cy="heatmap-div-subtitle" v-if="heatmapConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${heatmapConfig.style.title.subtitle.color};font-size:${heatmapConfig.style.title.subtitle.fontSize}px;font-weight:${heatmapConfig.style.title.subtitle.bold ? 'bold': ''}`">
-                {{ heatmapConfig.style.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'heatmap-div-title',
+                        text: heatmapConfig.style.title.text,
+                        color: heatmapConfig.style.title.color,
+                        fontSize: heatmapConfig.style.title.fontSize,
+                        bold: heatmapConfig.style.title.bold
+                    },
+                    subtitle: {
+                        cy: 'heatmap-div-subtitle',
+                        text: heatmapConfig.style.title.subtitle.text,
+                        color: heatmapConfig.style.title.subtitle.color,
+                        fontSize: heatmapConfig.style.title.subtitle.fontSize,
+                        bold: heatmapConfig.style.title.subtitle.bold
+                    },
+                }"
+            />
         </div>
         
          <!-- OPTIONS -->

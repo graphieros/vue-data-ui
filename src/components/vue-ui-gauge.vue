@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { treeShake, palette, rotateMatrix, addVector, matrixTimes, opacity, convertColorToHex, convertConfigColors } from "../lib.js";
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
     config:{
@@ -27,16 +28,10 @@ const gaugeChart = ref(null);
 const details = ref(null);
 
 const gaugeConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-
-    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({

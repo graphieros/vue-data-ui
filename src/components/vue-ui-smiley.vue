@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { treeShake, convertConfigColors, shiftHue } from "../lib";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
   config: {
@@ -26,14 +27,10 @@ const hoveredValue = ref(undefined);
 const emit = defineEmits(["rate"]);
 
 const ratingConfig = computed(() => {
-  if (!Object.keys(props.config || {}).length) {
-    return defaultConfig.value;
-  }
-  const reconcilied = treeShake({
-    defaultConfig: defaultConfig.value,
-    userConfig: props.config,
-  });
-  return convertConfigColors(reconcilied);
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
+    });
 });
 
 const propRating = computed(() => {

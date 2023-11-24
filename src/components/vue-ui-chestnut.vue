@@ -3,6 +3,7 @@ import { ref, computed, onMounted, nextTick } from "vue";
 import { treeShake, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, convertConfigColors, makeXls } from "../lib";
 import pdf from "../pdf.js";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
     config: {
@@ -28,16 +29,10 @@ const chestnutChart = ref(null);
 const details = ref(null);
 
 const chestnutConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-
-    return convertConfigColors(reconcilied);
 });
 
 const mutableConfig = ref({

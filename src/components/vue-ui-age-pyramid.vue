@@ -5,6 +5,8 @@ import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 const props = defineProps({
     config: {
@@ -43,14 +45,10 @@ const tooltipPosition = computed(() => {
 })
 
 const agePyramidConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconciled = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconciled);
 });
 
 const mutableConfig = ref({
@@ -256,13 +254,24 @@ defineExpose({
     <div class="vue-ui-age-pyramid" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center;${agePyramidConfig.userOptions.show ? 'padding-top:36px' : ''}`">
     
         <div v-if="(!mutableConfig.inside || isPrinting) && agePyramidConfig.style.title.text" :style="`width:100%;background:${agePyramidConfig.style.backgroundColor}`">
-            <!-- TITLE AS DIV -->
-            <div :style="`width:100%;text-align:center;color:${agePyramidConfig.style.title.color};font-size:${agePyramidConfig.style.title.fontSize}px;font-weight:${agePyramidConfig.style.title.bold ? 'bold': ''}`">
-                {{ agePyramidConfig.style.title.text }}
-            </div>
-            <div v-if="agePyramidConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${agePyramidConfig.style.title.subtitle.color};font-size:${agePyramidConfig.style.title.subtitle.fontSize}px;font-weight:${agePyramidConfig.style.title.subtitle.bold ? 'bold': ''}`">
-                {{ agePyramidConfig.style.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'pyramid-div-title',
+                        text: agePyramidConfig.style.title.text,
+                        color: agePyramidConfig.style.title.color,
+                        fontSize: agePyramidConfig.style.title.fontSize,
+                        bold: agePyramidConfig.style.title.bold
+                    },
+                    subtitle: {
+                        cy: 'pyramid-div-subtitle',
+                        text: agePyramidConfig.style.title.subtitle.text,
+                        color: agePyramidConfig.style.title.subtitle.color,
+                        fontSize: agePyramidConfig.style.title.subtitle.fontSize,
+                        bold: agePyramidConfig.style.title.subtitle.bold
+                    },
+                }"
+            />
         </div>
 
         <!-- OPTIONS -->

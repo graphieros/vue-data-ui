@@ -8,6 +8,7 @@ import {
     createSmoothPath
 } from "../lib";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
 
 const props = defineProps({
     config: {
@@ -28,14 +29,10 @@ const uid = ref(`vue-ui-sparkline-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_sparkline);
 
 const sparklineConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconcilied);
 });
 
 const svg = ref({

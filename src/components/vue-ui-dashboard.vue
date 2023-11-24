@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue';
 import mainConfig from "../default_configs.json";
 import { convertConfigColors, treeShake } from '../lib';
 import pdf from '../pdf';
+import { useNestedProp } from "../useNestedProp";
 
 // TODO: prevent default on all chart interactions involving mouse movements
 // TODO: find a way to make height of each item fit the content
@@ -15,14 +16,10 @@ const props = defineProps({
 const defaultConfig = ref(mainConfig.vue_ui_dashboard);
 
 const dashboardConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-    return convertConfigColors(reconcilied)
 });
 
 const uid = ref(`vue-ui-dashboard-${Math.random()}`);

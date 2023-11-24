@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from "vue";
 import { convertConfigColors, treeShake, palette, convertColorToHex, opacity } from "../lib.js";
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
 
 const props = defineProps({
     dataset: {
@@ -25,16 +27,10 @@ const isPrinting = ref(false);
 const thermoChart = ref(null);
 
 const thermoConfig = computed(() => {
-    if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
-    }
-
-    const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
-        userConfig: props.config
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
     });
-
-    return convertConfigColors(reconcilied);
 });
 
 const baseWidth = computed(() => {
@@ -213,14 +209,24 @@ defineExpose({
     <div ref="thermoChart" class="vue-ui-thermometer" :style="`width:100%;background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color};font-family:${thermoConfig.style.fontFamily}`" :id="`thermometer__${uid}`">
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && thermoConfig.style.title.text" :style="`width:100%;background:${thermoConfig.style.chart.backgroundColor};padding-top:32px`">
-
-            <!-- TITLE AS DIV -->
-            <div :style="`width:100%;text-align:center;color:${thermoConfig.style.title.color};font-size:${thermoConfig.style.title.fontSize}px;font-weight:${thermoConfig.style.title.bold ? 'bold': ''}`">
-                {{ thermoConfig.style.title.text }}
-            </div>
-            <div v-if="thermoConfig.style.title.subtitle.text" :style="`width:100%;text-align:center;color:${thermoConfig.style.title.subtitle.color};font-size:${thermoConfig.style.title.subtitle.fontSize}px;font-weight:${thermoConfig.style.title.subtitle.bold ? 'bold': ''}`">
-                {{ thermoConfig.style.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'thermo-div-title',
+                        text: thermoConfig.style.title.text,
+                        color: thermoConfig.style.title.color,
+                        fontSize: thermoConfig.style.title.fontSize,
+                        bold: thermoConfig.style.title.bold
+                    },
+                    subtitle: {
+                        cy: 'thermo-div-subtitle',
+                        text: thermoConfig.style.title.subtitle.text,
+                        color: thermoConfig.style.title.subtitle.color,
+                        fontSize: thermoConfig.style.title.subtitle.fontSize,
+                        bold: thermoConfig.style.title.subtitle.bold
+                    }
+                }"
+            />
         </div>
 
         <!-- OPTIONS -->

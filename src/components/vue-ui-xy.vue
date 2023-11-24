@@ -3,12 +3,24 @@
     <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${chartConfig.chart.userOptions.show ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily}`">
         <!-- TITLE AS OUTSIDE DIV -->
         <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show && (!mutableConfig.titleInside || isPrinting)" :style="`font-family:${chartConfig.chart.fontFamily}`">
-            <div data-cy="xy-div-title" class="vue-ui-xy-title-main" :style="`font-size:${chartConfig.chart.title.fontSize}px; color:${chartConfig.chart.title.color}; font-weight:${chartConfig.chart.title.bold ? 'bold': '400'}`">
-                {{ chartConfig.chart.title.text }}
-            </div>
-            <div data-cy="xy-div-subtitle" class="vue-ui-xy-title-subtitle" v-if="chartConfig.chart.title.subtitle.text" :style="`font-size:${chartConfig.chart.title.subtitle.fontSize}px; color:${chartConfig.chart.title.subtitle.color}`">
-                {{ chartConfig.chart.title.subtitle.text }}
-            </div>
+            <Title
+                :config="{
+                    title: {
+                        cy: 'xy-div-title',
+                        text: chartConfig.chart.title.text,
+                        color: chartConfig.chart.title.color,
+                        fontSize: chartConfig.chart.title.fontSize,
+                        bold: chartConfig.chart.title.bold
+                    },
+                    subtitle: {
+                        cy: 'xy-div-subtitle',
+                        text: chartConfig.chart.title.subtitle.text,
+                        color: chartConfig.chart.title.subtitle.color,
+                        fontSize: chartConfig.chart.title.subtitle.fontSize,
+                        bold: chartConfig.chart.title.subtitle.bold
+                    },
+                }"
+            />
         </div>
 
         <details class="vue-ui-xy-user-options" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`" data-html2canvas-ignore v-if="chartConfig.chart.userOptions.show" ref="details">
@@ -624,6 +636,7 @@ import {
     createSmoothPath
 } from '../lib';
 import mainConfig from "../default_configs.json";
+import Title from '../atoms/Title.vue';
 
 export default {
     name: "vue-ui-xy",
@@ -640,6 +653,9 @@ export default {
                 return []
             }
         }
+    },
+    components: {
+        Title,
     },
     data(){
         const uniqueId = `vue-data-ui-xy_${Math.random()}_${Math.random()}`;
