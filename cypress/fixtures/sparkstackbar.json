@@ -1,0 +1,70 @@
+{
+    "dataset": [
+        {
+            "name": "Vue",
+            "value": 258,
+            "color": ""
+        },
+        {
+            "name": "Javascript",
+            "value": 36,
+            "color": ""
+        },
+        {
+            "name": "Other",
+            "value": 16,
+            "color": ""
+        }
+    ],
+    "config": {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "fontFamily": "inherit",
+            "bar": {
+                "gradient": {
+                    "show": true,
+                    "intensity": 40,
+                    "underlayerColor": "#FFFFFF"
+                }
+            },
+            "legend": {
+                "textAlign": "right",
+                "show": true,
+                "fontSize": 12,
+                "margin": "6px 0 0 0",
+                "name": {
+                    "color": "#2D353C",
+                    "bold": false
+                },
+                "value": {
+                    "show": true,
+                    "bold": false,
+                    "color": "#2D353C",
+                    "prefix": "",
+                    "suffix": "",
+                    "rounding": 0
+                },
+                "percentage": {
+                    "show": true,
+                    "bold": true,
+                    "color": "#2D353C",
+                    "rounding": 1
+                }
+            },
+            "title": {
+                "textAlign": "left",
+                "text": "Title",
+                "color": "#2D353C",
+                "fontSize": 16,
+                "bold": true,
+                "margin": "0 0 6px 0",
+                "subtitle": {
+                    "color": "#A1A1A1",
+                    "text": "Subtitle",
+                    "fontSize": 12,
+                    "bold": false
+                }
+            }
+        }
+    }
+}

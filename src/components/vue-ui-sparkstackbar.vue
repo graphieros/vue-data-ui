@@ -68,11 +68,11 @@ const drawableDataset = computed(() => {
 <template>
     <div :style="`width:100%; background:${stackConfig.style.backgroundColor}`">
         <!-- TITLE -->
-        <div v-if="stackConfig.style.title.text" :style="`width:calc(100% - 12px);background:${stackConfig.style.backgroundColor};margin:0 auto;margin:${stackConfig.style.title.margin};padding: 0 6px;text-align:${stackConfig.style.title.textAlign}`">
-            <div :style="`font-size:${stackConfig.style.title.fontSize}px;color:${stackConfig.style.title.color};font-weight:${stackConfig.style.title.bold ? 'bold' : 'normal'}`">
+        <div data-cy="sparkstackbar-title-wrapper" v-if="stackConfig.style.title.text" :style="`width:calc(100% - 12px);background:${stackConfig.style.backgroundColor};margin:0 auto;margin:${stackConfig.style.title.margin};padding: 0 6px;text-align:${stackConfig.style.title.textAlign}`">
+            <div data-cy="sparkstackbar-title" :style="`font-size:${stackConfig.style.title.fontSize}px;color:${stackConfig.style.title.color};font-weight:${stackConfig.style.title.bold ? 'bold' : 'normal'}`">
                 {{ stackConfig.style.title.text }}
             </div>
-            <div v-if="stackConfig.style.title.subtitle.text" :style="`font-size:${stackConfig.style.title.subtitle.fontSize}px;color:${stackConfig.style.title.subtitle.color};font-weight:${stackConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
+            <div data-cy="sparkstackbar-subtitle" v-if="stackConfig.style.title.subtitle.text" :style="`font-size:${stackConfig.style.title.subtitle.fontSize}px;color:${stackConfig.style.title.subtitle.color};font-weight:${stackConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
                 {{ stackConfig.style.title.subtitle.text }}
             </div>
             
@@ -111,7 +111,7 @@ const drawableDataset = computed(() => {
                 />
             </g>
         </svg>
-        <div v-if="stackConfig.style.legend.show" :style="`background:${stackConfig.style.backgroundColor};display:flex;flex-wrap:wrap;column-gap:12px;width:calc(100% - 12px);margin:0 auto;margin:${stackConfig.style.legend.margin}; padding: 0 6px;justify-content:${stackConfig.style.legend.textAlign === 'left' ? 'flex-start' : stackConfig.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`">
+        <div v-if="stackConfig.style.legend.show" data-cy="sparkstackbar-legend" :style="`background:${stackConfig.style.backgroundColor};display:flex;flex-wrap:wrap;column-gap:12px;width:calc(100% - 12px);margin:0 auto;margin:${stackConfig.style.legend.margin}; padding: 0 6px;justify-content:${stackConfig.style.legend.textAlign === 'left' ? 'flex-start' : stackConfig.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`">
             <div v-for=" (rect, i) in drawableDataset" :style="`font-size:${stackConfig.style.legend.fontSize}px`">
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px;justify-content:center">
                     <svg :height="`${stackConfig.style.legend.fontSize}px`" :width="`${stackConfig.style.legend.fontSize}px`" viewBox="0 0 10 10">
