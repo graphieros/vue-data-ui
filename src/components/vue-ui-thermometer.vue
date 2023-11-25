@@ -212,14 +212,14 @@ defineExpose({
             <Title
                 :config="{
                     title: {
-                        cy: 'thermo-div-title',
+                        cy: 'thermometer-div-title',
                         text: thermoConfig.style.title.text,
                         color: thermoConfig.style.title.color,
                         fontSize: thermoConfig.style.title.fontSize,
                         bold: thermoConfig.style.title.bold
                     },
                     subtitle: {
-                        cy: 'thermo-div-subtitle',
+                        cy: 'thermometer-div-subtitle',
                         text: thermoConfig.style.title.subtitle.text,
                         color: thermoConfig.style.title.subtitle.color,
                         fontSize: thermoConfig.style.title.subtitle.fontSize,
@@ -231,15 +231,15 @@ defineExpose({
 
         <!-- OPTIONS -->
         <details class="vue-ui-thermometer-user-options" :style="`background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color}`" data-html2canvas-ignore v-if="thermoConfig.userOptions.show" ref="details">
-            <summary :style="`background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color}`">{{ thermoConfig.userOptions.title }}</summary>
+            <summary data-cy="thermometer-summary" :style="`background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color}`">{{ thermoConfig.userOptions.title }}</summary>
             <div class="vue-ui-thermometer-user-options-items" :style="`background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color}`">
                 <div class="vue-ui-thermometer-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-thermometer-option-title_${uid}`" :name="`vue-ui-thermometer-option-title_${uid}`"
+                    <input data-cy="thermometer-checkbox-title" type="checkbox" :id="`vue-ui-thermometer-option-title_${uid}`" :name="`vue-ui-thermometer-option-title_${uid}`"
                     v-model="mutableConfig.inside" @change="setPaddingTop
                     ">
                     <label :for="`vue-ui-thermometer-option-title_${uid}`">{{ thermoConfig.userOptions.labels.useDiv }}</label>
                 </div>
-                <button class="vue-ui-thermometer-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color}`">
+                <button data-cy="thermometer-pdf" class="vue-ui-thermometer-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color}`">
                     <svg class="vue-ui-thermometer-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="thermoConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -279,6 +279,7 @@ defineExpose({
             <!-- TITLE AS G -->
             <g v-if="thermoConfig.style.title.text && mutableConfig.inside && !isPrinting">
                 <text
+                    data-cy="thermometer-text-title"
                     :font-size="thermoConfig.style.title.fontSize"
                     :fill="thermoConfig.style.title.color"
                     :x="drawingArea.width / 2"
@@ -289,6 +290,7 @@ defineExpose({
                     {{ thermoConfig.style.title.text }}
                 </text>
                 <text
+                    data-cy="thermometer-text-subtitle"
                     v-if="thermoConfig.style.title.subtitle.text"
                     :font-size="thermoConfig.style.title.subtitle.fontSize"
                     :fill="thermoConfig.style.title.subtitle.color"
@@ -417,6 +419,7 @@ defineExpose({
                 />
             </g>
             <text
+                data-cy="thermometer-datalabel"
                 :class="{'vue-ui-thermometer-temperature-value': thermoConfig.style.chart.animation.use }"
                 :y="temperature + drawingArea.top + (thermoConfig.style.chart.label.fontSize / 3)"
                 :x="drawingArea.left - 10"
