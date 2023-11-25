@@ -2375,7 +2375,7 @@ const scatterConfig = ref({
 
 const scat1 = computed(() => {
   const arr = [];
-  for (let i = -500; i < 500; i += 1) {
+  for (let i = -50; i < 50; i += 1) {
     arr.push({
       x: Math.random() * i + 12,
       y: (Math.random() * i) / 20,
@@ -2386,7 +2386,7 @@ const scat1 = computed(() => {
 });
 const scat2 = computed(() => {
   const arr = [];
-  for (let i = -500; i < 500; i += 1) {
+  for (let i = -50; i < 50; i += 1) {
     arr.push({
       x: (Math.random() * i) / 10,
       y: (Math.random() * i) / 10,

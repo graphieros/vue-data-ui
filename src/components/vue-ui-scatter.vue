@@ -303,20 +303,20 @@ defineExpose({
 
         <!-- OPTIONS -->
         <details class="vue-ui-scatter-user-options" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`" data-html2canvas-ignore v-if="scatterConfig.userOptions.show" ref="details">
-            <summary :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">{{ scatterConfig.userOptions.title }}</summary>
+            <summary data-cy="scatter-summary" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">{{ scatterConfig.userOptions.title }}</summary>
 
             <div class="vue-ui-scatter-user-options-items" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
                 <div class="vue-ui-scatter-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-scatter-option-title_${uid}`" :name="`vue-ui-scatter-option-title_${uid}`"
+                    <input data-cy="scatter-checkbox-title" type="checkbox" :id="`vue-ui-scatter-option-title_${uid}`" :name="`vue-ui-scatter-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-scatter-option-title_${uid}`">{{ scatterConfig.userOptions.labels.useDiv }}</label>
                 </div>
                 <div class="vue-ui-scatter-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-scatter-option-table_${uid}`" :name="`vue-ui-scatter-option-table_${uid}`"
+                    <input data-cy="scatter-checkbox-table" type="checkbox" :id="`vue-ui-scatter-option-table_${uid}`" :name="`vue-ui-scatter-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-scatter-option-table_${uid}`">{{ scatterConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button class="vue-ui-scatter-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
+                <button data-cy="scatter-pdf" class="vue-ui-scatter-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
                     <svg class="vue-ui-scatter-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="scatterConfig.style.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -327,7 +327,7 @@ defineExpose({
                     </svg>
                     <span v-else>PDF</span>
                 </button>
-                <button class="vue-ui-scatter-button" @click="generateXls" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
+                <button data-cy="scatter-xls" class="vue-ui-scatter-button" @click="generateXls" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
                     XLSX
                 </button>
             </div>
@@ -339,6 +339,7 @@ defineExpose({
             <!-- TITLE AS G -->
             <g v-if="scatterConfig.style.title.text && mutableConfig.inside && !isPrinting">
                 <text
+                    data-cy="scatter-text-title"
                     :font-size="scatterConfig.style.title.fontSize"
                     :fill="scatterConfig.style.title.color"
                     :x="svg.width / 2"
@@ -349,6 +350,7 @@ defineExpose({
                     {{ scatterConfig.style.title.text }}
                 </text>
                 <text
+                    data-cy="scatter-text-subtitle"
                     v-if="scatterConfig.style.title.subtitle.text"
                     :font-size="scatterConfig.style.title.subtitle.fontSize"
                     :fill="scatterConfig.style.title.subtitle.color"
@@ -364,6 +366,7 @@ defineExpose({
             <!-- AXIS -->
             <g v-if="scatterConfig.style.layout.axis.show">
                 <line
+                    data-cy="scatter-y-axis"
                     :x1="zero.x"
                     :x2="zero.x"
                     :y1="drawingArea.top"
@@ -373,6 +376,7 @@ defineExpose({
                     stroke-linecap="round"
                 />
                 <line
+                    data-cy="scatter-x-axis"
                     :x1="drawingArea.left"
                     :x2="drawingArea.right"
                     :y1="zero.y"
@@ -386,7 +390,8 @@ defineExpose({
             <!-- PLOTS -->
             <g v-for="(ds, i) in drawableDataset">
                 <circle 
-                    v-for="plot in ds.plots"
+                    v-for="(plot, j) in ds.plots"
+                    :data-cy="`scatter-plot-${i}-${j}`"
                     :cx="plot.x"
                     :cy="plot.y"
                     :r="selectedPlotId && selectedPlotId === plot.id ? scatterConfig.style.layout.plots.radius * 2 : scatterConfig.style.layout.plots.radius"
@@ -402,6 +407,7 @@ defineExpose({
             <!-- AXIS LABELS -->
             <g v-if="scatterConfig.style.layout.dataLabels.xAxis.show">
                 <text
+                    data-cy="scatter-x-min-axis-label"
                     :x="drawingArea.left - 5"
                     :y="zero.y + scatterConfig.style.layout.dataLabels.xAxis.fontSize / 3"
                     text-anchor="end"
@@ -411,6 +417,7 @@ defineExpose({
                     {{ Number(extremes.xMin.toFixed(scatterConfig.style.layout.dataLabels.xAxis.rounding)).toLocaleString() }}
                 </text>
                 <text
+                    data-cy="scatter-x-max-axis-label"
                     :x="drawingArea.right + 3"
                     :y="zero.y + scatterConfig.style.layout.dataLabels.xAxis.fontSize / 3"
                     text-anchor="start"
@@ -419,7 +426,8 @@ defineExpose({
                 >
                     {{ Number(extremes.xMax.toFixed(scatterConfig.style.layout.dataLabels.xAxis.rounding)).toLocaleString() }}
                 </text>
-                <text 
+                <text
+                    data-cy="scatter-x-label-name"
                     :id="`vue-ui-scatter-xAxis-label-${uid}`" 
                     text-anchor="middle"
                     :font-size="scatterConfig.style.layout.dataLabels.xAxis.fontSize"
@@ -432,6 +440,7 @@ defineExpose({
             </g>
             <g v-if="scatterConfig.style.layout.dataLabels.yAxis.show">
                 <text
+                    data-cy="scatter-y-min-axis-label"
                     :x="zero.x"
                     :y="drawingArea.bottom + scatterConfig.style.layout.dataLabels.yAxis.fontSize + 3"
                     text-anchor="middle"
@@ -441,6 +450,7 @@ defineExpose({
                     {{ Number(extremes.yMin.toFixed(scatterConfig.style.layout.dataLabels.yAxis.rounding)).toLocaleString() }}
                 </text>
                 <text
+                    data-cy="scatter-y-max-axis-label"
                     :x="zero.x"
                     :y="drawingArea.top - scatterConfig.style.layout.dataLabels.yAxis.fontSize / 2"
                     text-anchor="middle"
@@ -449,7 +459,8 @@ defineExpose({
                 >
                     {{ Number(extremes.yMax.toFixed(scatterConfig.style.layout.dataLabels.yAxis.rounding)).toLocaleString() }}
                 </text>
-                <text 
+                <text
+                    data-cy="scatter-y-label-name"
                     text-anchor="middle"
                     :font-size="scatterConfig.style.layout.dataLabels.yAxis.fontSize"
                     :font-weight="scatterConfig.style.layout.dataLabels.yAxis.bold ? 'bold' : 'normal'"
@@ -473,7 +484,8 @@ defineExpose({
             <!-- CORRELATION -->
             <g v-if="scatterConfig.style.layout.correlation.show">
                 <line 
-                    v-for="ds in drawableDataset"
+                    v-for="(ds, i) in drawableDataset"
+                    :data-cy="`scatter-correlation-line-${i}`"
                     :x1="ds.correlation.x1"
                     :x2="ds.correlation.x2"
                     :y1="ds.correlation.y1"
@@ -483,8 +495,9 @@ defineExpose({
                     :stroke-width="scatterConfig.style.layout.correlation.strokeWidth"
                     :clip-path="`url(#clip_path_${uid})`"
                 />
-                <g v-for="ds in drawableDataset">
-                    <text 
+                <g v-for="(ds, i) in drawableDataset">
+                    <text
+                        :data-cy="`scatter-correlation-label-${i}`"
                         v-if="scatterConfig.style.layout.correlation.label.show"
                         :x="ds.label.x"
                         :y="ds.label.y"
@@ -507,7 +520,7 @@ defineExpose({
                 style="overflow:visible"
             >
                 <div class="vue-ui-scatter-legend" :style="`color:${scatterConfig.style.legend.color};font-size:${scatterConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${scatterConfig.style.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-                    <div v-for="(legendItem, i) in datasetWithId" class="vue-ui-scatter-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
+                    <div v-for="(legendItem, i) in datasetWithId" :data-cy="`scatter-foreignObject-legend-item-${i}`" class="vue-ui-scatter-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                         <svg viewBox="0 0 12 12" :height="scatterConfig.style.legend.fontSize" :width="scatterConfig.style.legend.fontSize">
                             <circle cx="6" cy="6" r="6" :fill="legendItem.color"/>
                         </svg>
@@ -519,7 +532,7 @@ defineExpose({
 
         <!-- LEGEND AS DIV -->
         <div v-if="scatterConfig.style.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-scatter-legend" :style="`background:${scatterConfig.style.legend.backgroundColor};color:${scatterConfig.style.legend.color};font-size:${scatterConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${scatterConfig.style.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-            <div v-for="(legendItem, i) in datasetWithId" class="vue-ui-scatter-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
+            <div v-for="(legendItem, i) in datasetWithId" :data-cy="`scatter-div-legend-item-${i}`" class="vue-ui-scatter-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" :height="scatterConfig.style.legend.fontSize" :width="scatterConfig.style.legend.fontSize">
                     <circle cx="6" cy="6" r="6" :fill="legendItem.color"/>
                 </svg>
@@ -528,7 +541,8 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <div 
+        <div
+            data-cy="scatter-tooltip"
             class="vue-ui-scatter-tooltip"
             ref="tooltip"
             v-if="scatterConfig.style.tooltip.show && isTooltip"
@@ -539,7 +553,7 @@ defineExpose({
         <!-- DATA TABLE -->
         <div @click="closeDetails" :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
-                <thead>
+                <thead data-cy="scatter-thead">
                     <tr v-if="scatterConfig.style.title.text">
                         <th :colspan="5" :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline}`">
                             <span>{{ scatterConfig.style.title.text }}</span>
@@ -548,7 +562,7 @@ defineExpose({
                             </span>
                         </th>
                     </tr>
-                    <tr>
+                    <tr data-cy="scatter-thead-col">
                         <th :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline};padding-right:6px`"></th>
                         <th :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline};padding-right:6px`">{{ scatterConfig.table.translations.correlationCoefficient }}</th>
                         <th :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline};padding-right:6px`">{{ scatterConfig.table.translations.nbrPlots }}</th>
@@ -557,7 +571,7 @@ defineExpose({
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(tr, i) in drawableDataset">
+                    <tr v-for="(tr, i) in drawableDataset" :data-cy="`scatter-table-tr-${i}`">
                         <td :style="`background:${scatterConfig.table.td.backgroundColor};color:${scatterConfig.table.td.color};outline:${scatterConfig.table.td.outline}`">
                             <div style="display:flex;flex-direction:row;gap:3px;align-items:center">
                                 <svg viewBox="0 0 12 12" :height="scatterConfig.style.legend.fontSize" :width="scatterConfig.style.legend.fontSize">
