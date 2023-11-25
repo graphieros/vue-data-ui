@@ -1,0 +1,116 @@
+{
+    "config": {
+        "type": "line",
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "color": "#2D353C",
+            "maxHeight": 500,
+            "animated": true,
+            "chestnut": {
+                "color": "#6376DD"
+            },
+            "sparkline": {
+                "color": "#6376DD",
+                "strokeWidth": 0.7
+            },
+            "line": {
+                "axis": {
+                    "show": true,
+                    "color": "#6376DD",
+                    "strokeWidth": 0.5
+                },
+                "path": {
+                    "color": "#6376DD",
+                    "strokeWidth": 1,
+                    "showPlots": true
+                }
+            },
+            "bar": {
+                "axis": {
+                    "show": true,
+                    "color": "#6376DD",
+                    "strokeWidth": 0.5
+                },
+                "borderRadius": 0.5,
+                "color": "#6376DD",
+                "barWidth": 9
+            },
+            "donut": {
+                "color": "#6376DD",
+                "strokeWidth": 64
+            },
+            "onion": {
+                "color": "#6376DD"
+            },
+            "gauge": {
+                "color": "#6376DD"
+            },
+            "quadrant": {
+                "grid": {
+                    "color": "#6376DD",
+                    "strokeWidth": 0.5
+                },
+                "plots": {
+                    "radius": 1.5,
+                    "color": "#6376DD"
+                }
+            },
+            "radar": {
+                "grid": {
+                    "color": "#6376DD",
+                    "strokeWidth": 0.5
+                },
+                "shapes": {
+                    "color": "#6376DD"
+                }
+            },
+            "waffle": {
+                "color": "#6376DD"
+            },
+            "table": {
+                "th": {
+                    "color": "#6376DD"
+                },
+                "td": {
+                    "color": "#6376DD",
+                    "strokeWidth": 0.5
+                }
+            },
+            "rating": {
+                "useSmiley": false,
+                "color": "#6376DD",
+                "filled": true,
+                "strokeWidth": 1,
+                "maxWidth": 200
+            },
+            "verticalBar": {
+                "axis": {
+                    "show": true,
+                    "color": "#6376DD",
+                    "strokeWidth": 0.5
+                },
+                "borderRadius": 0.5,
+                "color": "#6376DD"
+            },
+            "heatmap": {
+                "cellsX": 26,
+                "cellsY": 7,
+                "color": "#6376DD"
+            },
+            "candlesticks": {
+                "axis": {
+                    "show": true,
+                    "color": "#6376DD",
+                    "strokeWidth": 0.5
+                },
+                "candle": {
+                    "color": "#6376DD",
+                    "strokeWidth": 1
+                }
+            },
+            "pyramid": {
+                "color": "#6376DD"
+            }
+        }
+    }
+}
