@@ -378,15 +378,15 @@ defineExpose({
 
         <!-- OPTIONS -->
         <details class="vue-ui-vertical-bar-user-options" :style="`background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" data-html2canvas-ignore v-if="verticalBarConfig.userOptions.show" ref="details">
-            <summary :style="`background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`">{{ verticalBarConfig.userOptions.title }}</summary>
+            <summary data-cy="vertical-bar-summary" :style="`background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`">{{ verticalBarConfig.userOptions.title }}</summary>
             <div class="vue-ui-vertical-bar-user-options-items" :style="`background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`">
                 <div class="vue-ui-vertical-bar-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-vertical-bar-option-title_${uid}`" :name="`vue-ui-vertical-bar-option-title_${uid}`"
+                    <input data-cy="vertical-bar-checkbox-title" type="checkbox" :id="`vue-ui-vertical-bar-option-title_${uid}`" :name="`vue-ui-vertical-bar-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-vertical-bar-option-title_${uid}`">{{ verticalBarConfig.userOptions.labels.useDiv }}</label>
                 </div>
                 <div class="vue-ui-vertical-bar-user-option-item">
-                    <input type="checkbox" :id="`vue-ui-vertical-bar-option-table_${uid}`" :name="`vue-ui-vertical-bar-option-table_${uid}`"
+                    <input data-cy="vertical-bar-checkbox-table" type="checkbox" :id="`vue-ui-vertical-bar-option-table_${uid}`" :name="`vue-ui-vertical-bar-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-vertical-bar-option-table_${uid}`">{{ verticalBarConfig.userOptions.labels.showTable }}</label>
                 </div>
@@ -395,7 +395,7 @@ defineExpose({
                     v-model="mutableConfig.sortDesc" @change="recalculateHeight">
                     <label :for="`vue-ui-vertical-bar-option-sort_${uid}`">{{ verticalBarConfig.userOptions.labels.sort }}</label>
                 </div>
-                <button class="vue-ui-vertical-bar-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${verticalBarConfig.style.chart.color}`">
+                <button data-cy="vertical-bar-pdf" class="vue-ui-vertical-bar-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${verticalBarConfig.style.chart.color}`">
                     <svg class="vue-ui-vertical-bar-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="verticalBarConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M18 16v.01" />
@@ -406,7 +406,7 @@ defineExpose({
                     </svg>
                     <span v-else>PDF</span>
                 </button>
-                <button class="vue-ui-vertical-bar-button" @click="generateXls" :style="`color:${verticalBarConfig.style.chart.color}`">
+                <button data-cy="vertical-bar-xls" class="vue-ui-vertical-bar-button" @click="generateXls" :style="`color:${verticalBarConfig.style.chart.color}`">
                     XLSX
                 </button>
             </div>
@@ -414,7 +414,7 @@ defineExpose({
 
          <!-- LEGEND AS DIV : TOP -->
          <div v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'top'" class="vue-ui-vertical-bar-legend" :style="`background:${verticalBarConfig.style.chart.legend.backgroundColor};color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-            <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
+            <div v-for="(legendItem, i) in immutableDataset" :data-cy="`vertical-bar-div-legend-item-${i}`" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" height="12" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" :fill="legendItem.color"/></svg>
                 <span>{{ legendItem.name }} : </span>
                 <span>{{verticalBarConfig.style.chart.legend.prefix}}{{ legendItem.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}</span>
@@ -437,6 +437,7 @@ defineExpose({
              <!-- TITLE AS G -->
             <g v-if="verticalBarConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
                 <text
+                    data-cy="vertical-bar-text-title"
                     :font-size="verticalBarConfig.style.chart.title.fontSize"
                     :fill="verticalBarConfig.style.chart.title.color"
                     :x="svg.width / 2"
@@ -447,6 +448,7 @@ defineExpose({
                     {{ verticalBarConfig.style.chart.title.text }}
                 </text>
                 <text
+                    data-cy="vertical-bar-text-subtitle"
                     v-if="verticalBarConfig.style.chart.title.subtitle.text"
                     :font-size="verticalBarConfig.style.chart.title.subtitle.fontSize"
                     :fill="verticalBarConfig.style.chart.title.subtitle.color"
@@ -462,7 +464,8 @@ defineExpose({
 
             <g v-for="(serie, i) in bars">
                 <!-- UNDERLAYER -->
-                <rect 
+                <rect
+                    :data-cy="`vertical-bar-rect-underlayer-${i}`"
                     :x="drawableArea.left"
                     :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i)"
                     :width="calcBarWidth(serie.value)"
@@ -498,6 +501,7 @@ defineExpose({
 
                 <!-- DATALABELS -->
                 <text
+                    :data-cy="`vertical-bar-datalabel-${i}`"
                     :x="calcDataLabelX(serie.value) + 3 + verticalBarConfig.style.chart.layout.bars.dataLabels.offsetX"
                     :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i) + (verticalBarConfig.style.chart.layout.bars.height / 2) + verticalBarConfig.style.chart.layout.bars.dataLabels.fontSize / 2"
                     text-anchor="start"
@@ -509,7 +513,7 @@ defineExpose({
                 </text>
 
                 <!-- CHILDREN | LONELY PARENTS NAMES -->
-                <text 
+                <text
                     v-if="(serie.isChild || !serie.hasChildren) && verticalBarConfig.style.chart.layout.bars.nameLabels.show"
                     text-anchor="end"
                     :x="drawableArea.left - 3 + verticalBarConfig.style.chart.layout.bars.nameLabels.offsetX"
@@ -522,7 +526,7 @@ defineExpose({
                 </text>
 
                 <!-- PARENT NAMES -->
-                <text 
+                <text
                     v-if="serie.isChild && serie.childIndex === 0 && verticalBarConfig.style.chart.layout.bars.parentLabels.show"
                     :x="3 + verticalBarConfig.style.chart.layout.bars.parentLabels.offsetX"
                     :y="getParentData(serie, i).y"
@@ -547,6 +551,7 @@ defineExpose({
 
                 <!-- TOOLTIP TRAPS -->
                 <rect 
+                    :data-cy="`vertical-bar-trap-${i}`"
                     :x="0"
                     :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i) - (verticalBarConfig.style.chart.layout.bars.gap/2)"
                     :width="svg.width"
@@ -567,7 +572,7 @@ defineExpose({
                 style="overflow: visible;"
             >
                 <div class="vue-ui-vertical-bar-legend" :style="`color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
-                    <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
+                    <div v-for="(legendItem, i) in immutableDataset" :data-cy="`vertical-bar-foreignObject-legend-item-${i}`" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                         <svg viewBox="0 0 12 12" height="12" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" :fill="legendItem.color"/></svg>
                         <span>{{ legendItem.name }} : </span>
                         <span>{{verticalBarConfig.style.chart.legend.prefix}}{{ legendItem.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}</span>
@@ -588,6 +593,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <div 
+            data-cy="vertical-bar-tooltip"
             class="vue-ui-vertical-bar-tooltip"
             ref="tooltip"
             v-if="verticalBarConfig.style.chart.tooltip.show && isTooltip && segregated.length < props.dataset.length"
@@ -598,7 +604,7 @@ defineExpose({
         <!-- DATA TABLE -->
         <div @click="closeDetails" class="vue-ui-vertical-bar-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
-                <thead>
+                <thead data-cy="vertical-bar-thead">
                     <tr v-if="verticalBarConfig.style.chart.title.text">
                         <th :colspan="7" :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`">
                             <span>{{ verticalBarConfig.style.chart.title.text }}</span>
@@ -607,7 +613,7 @@ defineExpose({
                             </span>
                         </th>
                     </tr>
-                    <tr>
+                    <tr data-cy="vertical-bar-thead-tr">
                         <th v-for="th in table.head" :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`">
                             <div style="width:100%">
                                 {{ th }}

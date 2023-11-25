@@ -1,0 +1,188 @@
+{
+    "dataset": [
+        {
+            "name": "Serie 1",
+            "value": 100,
+            "color": "#FF0000",
+            "children": [
+                {
+                    "name": "serie 1 child 1",
+                    "value": 80
+                },
+                {
+                    "name": "serie 1 child 2",
+                    "value": 20
+                }
+            ]
+        },
+        {
+            "name": "Serie 2",
+            "value": 345,
+            "color": "#0FF000"
+        },
+        {
+            "name": "Serie 3",
+            "value": 210,
+            "color": "#00FFA2"
+        },
+        {
+            "name": "Serie 4",
+            "value": 188,
+            "color": "#500FF0"
+        },
+        {
+            "name": "Serie 5",
+            "value": 120,
+            "color": "#0000FF",
+            "children": [
+                {
+                    "name": "Serie 5 child 1",
+                    "value": 60
+                },
+                {
+                    "name": "Serie 5 child 2",
+                    "value": 20
+                },
+                {
+                    "name": "Serie 5 child 3",
+                    "value": 40
+                }
+            ]
+        }
+    ],
+    "config": {
+        "useCssAnimation": true,
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "layout": {
+                    "useDiv": true,
+                    "bars": {
+                        "sort": "desc",
+                        "useStroke": false,
+                        "strokeWidth": 2,
+                        "height": 32,
+                        "gap": 6,
+                        "borderRadius": 4,
+                        "offsetX": 64,
+                        "paddingRight": 0,
+                        "useGradient": true,
+                        "gradientIntensity": 20,
+                        "fillOpacity": 90,
+                        "underlayerColor": "#FFFFFF",
+                        "dataLabels": {
+                            "color": "#2D353C",
+                            "bold": true,
+                            "fontSize": 12,
+                            "value": {
+                                "show": true,
+                                "roundingValue": 0,
+                                "prefix": "",
+                                "suffix": ""
+                            },
+                            "percentage": {
+                                "show": true,
+                                "roundingPercentage": 0
+                            },
+                            "offsetX": 0
+                        },
+                        "nameLabels": {
+                            "show": true,
+                            "color": "#2D353C",
+                            "bold": false,
+                            "fontSize": 10,
+                            "offsetX": 0
+                        },
+                        "parentLabels": {
+                            "show": true,
+                            "color": "#2D353C",
+                            "bold": false,
+                            "fontSize": 10,
+                            "offsetX": 0
+                        }
+                    },
+                    "highlighter": {
+                        "color": "#2D353C",
+                        "opacity": 5
+                    },
+                    "separators": {
+                        "show": true,
+                        "color": "#e1e5e8",
+                        "strokeWidth": 1
+                    }
+                },
+                "title": {
+                    "text": "Title",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "Subtitle",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "legend": {
+                    "position": "top",
+                    "show": true,
+                    "fontSize": 14,
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "bold": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0,
+                    "prefix": "",
+                    "suffix": ""
+                },
+                "tooltip": {
+                    "show": true,
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0,
+                    "prefix": "",
+                    "suffix": ""
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "useDiv": "Title & legend inside",
+                "showTable": "Show table",
+                "sort": "Sort desc"
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0,
+                "prefix": "",
+                "suffix": ""
+            }
+        },
+        "translations": {
+            "parentName": "Serie",
+            "childName": "Child",
+            "value": "value",
+            "percentageToTotal": "%/total",
+            "percentageToSerie": "%/serie"
+        }
+    }
+}
