@@ -1,4 +1,14 @@
 <script setup>
+/**
+ *  MANUAL TESTING PAGE
+ * 
+ *  npm run dev
+ * 
+ *  Left col : current components in dev mode
+ *  Right col: current components in production
+ *
+ * 
+ */
 import { ref, computed, onMounted } from "vue";
 import Box from "./Box.vue";
 import TableTest from "./components/vue-ui-table.vue";
