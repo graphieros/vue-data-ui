@@ -91,7 +91,8 @@ const mutableDataset = computed(() => {
             x: drawingArea.value.start + (i * (drawingArea.value.width / len.value)),
             y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteValue + bottomPadding.value + absoluteMin.value)),
             id: `plot_${uid}_${i}`,
-            color: sparklineConfig.value.style.area.useGradient ? shiftHue(sparklineConfig.value.style.line.color, 0.05 * ( 1 - (i / len.value))) : sparklineConfig.value.style.line.color
+            color: isBar.value ? sparklineConfig.value.style.bar.color : sparklineConfig.value.style.area.useGradient ? shiftHue(sparklineConfig.value.style.line.color, 0.05 * ( 1 - (i / len.value))) : sparklineConfig.value.style.line.color,
+            width: drawingArea.value.width / len.value
         }
     })
 });
@@ -126,6 +127,10 @@ const dataLabel = computed(() => {
     }
 });
 
+const isBar = computed(() => {
+    return sparklineConfig.value.type && sparklineConfig.value.type === 'bar';
+});
+
 </script>
 
 <template>
@@ -147,10 +152,18 @@ const dataLabel = computed(() => {
                     <stop offset="0%" :stop-color="`${shiftHue(sparklineConfig.style.area.color, 0.05)}${opacity[sparklineConfig.style.area.opacity]}`"/>
                     <stop offset="100%" :stop-color="sparklineConfig.style.area.color + opacity[sparklineConfig.style.area.opacity]" />
                 </linearGradient>
+                <linearGradient x2="0%" y2="100%" :id="`sparkline_bar_gradient_pos_${uid}`">
+                    <stop offset="0%" :stop-color="sparklineConfig.style.bar.color"/>
+                    <stop offset="100%" :stop-color="`${shiftHue(sparklineConfig.style.bar.color, 0.05)}`"/>
+                </linearGradient>
+                <linearGradient x2="0%" y2="100%" :id="`sparkline_bar_gradient_neg_${uid}`">
+                    <stop offset="0%" :stop-color="`${shiftHue(sparklineConfig.style.bar.color, 0.05)}`"/>
+                    <stop offset="100%" :stop-color="sparklineConfig.style.bar.color"/>
+                </linearGradient>
             </defs>
 
             <!-- AREA -->
-            <g v-if="sparklineConfig.style.area.show">
+            <g v-if="sparklineConfig.style.area.show && !isBar">
                 <path
                     data-cy="sparkline-smooth-area"
                     v-if="sparklineConfig.style.line.smooth"
@@ -165,11 +178,11 @@ const dataLabel = computed(() => {
                 />
             </g>
 
-            <path data-cy="sparkline-smooth-path" v-if="sparklineConfig.style.line.smooth" :d="`M ${createSmoothPath(mutableDataset)}`" :stroke="sparklineConfig.style.line.color" fill="none" :stroke-width="sparklineConfig.style.line.strokeWidth" stroke-linecap="round"/>
+            <path data-cy="sparkline-smooth-path" v-if="sparklineConfig.style.line.smooth && !isBar" :d="`M ${createSmoothPath(mutableDataset)}`" :stroke="sparklineConfig.style.line.color" fill="none" :stroke-width="sparklineConfig.style.line.strokeWidth" stroke-linecap="round"/>
             
             <g v-for="(plot, i) in mutableDataset">
                 <line 
-                    v-if="i < mutableDataset.length - 1 && !sparklineConfig.style.line.smooth"
+                    v-if="i < mutableDataset.length - 1 && !sparklineConfig.style.line.smooth && !isBar"
                     :data-cy="`sparkline-segment-${i}`"
                     :x1="plot.x"
                     :x2="mutableDataset[i + 1].x"
@@ -180,6 +193,15 @@ const dataLabel = computed(() => {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     shape-rendering="geometricPrecision"
+                />
+                <rect 
+                    v-if="isBar"
+                    :x="plot.x - plot.width / 2"
+                    :y="plot.absoluteValue > 0 ? plot.y : absoluteZero"
+                    :width="plot.width"
+                    :height="Math.abs(plot.y - absoluteZero)"
+                    :fill="plot.absoluteValue > 0 ? `url(#sparkline_bar_gradient_pos_${uid})` : `url(#sparkline_bar_gradient_neg_${uid})`"
+                    :rx="sparklineConfig.style.bar.borderRadius"
                 />
                 <!-- VERTICAL INDICATORS -->
                 <line

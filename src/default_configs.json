@@ -1459,6 +1459,7 @@
         }
     },
     "vue_ui_sparkline": {
+        "type": "line",
         "style": {
             "backgroundColor":"#FFFFFF",
             "fontFamily": "inherit",
@@ -1466,6 +1467,10 @@
                 "color":"#3366cc",
                 "strokeWidth": 3,
                 "smooth": false
+            },
+            "bar": {
+                "borderRadius": 3,
+                "color":"#3366cc"
             },
             "zeroLine": {
                 "color": "#2D353C",

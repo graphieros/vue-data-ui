@@ -2205,6 +2205,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSparklineConfig = {
+        type?: "line" | "bar";
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -2216,6 +2217,10 @@ declare module 'vue-data-ui' {
                 color?: string;
                 strokeWidth?: number;
                 smooth?: boolean;
+            };
+            bar?: {
+                borderRadius?: number;
+                color?: string;
             };
             zeroLine?: {
                 color?: string;

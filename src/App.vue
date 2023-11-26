@@ -2186,6 +2186,7 @@ const skeletonConfig = ref({
 });
 
 const sparklineConfig = ref({
+  type: 'bar',
   style: {
     backgroundColor: "#1A1A1A",
     sparkline: {
@@ -2243,7 +2244,7 @@ const sparklineDataset = ref([
   },
   {
     period: "period2",
-    value: -1,
+    value: 1,
   },
   {
     period: "period3",
@@ -2255,7 +2256,7 @@ const sparklineDataset = ref([
   },
   {
     period: "period5",
-    value: -4,
+    value: 4,
   },
   {
     period: "period6",
@@ -2263,7 +2264,7 @@ const sparklineDataset = ref([
   },
   {
     period: "period6",
-    value: -6,
+    value: 6,
   },
   {
     period: "period8",
@@ -2271,40 +2272,36 @@ const sparklineDataset = ref([
   },
   {
     period: "period9",
-    value: -8,
+    value: -7,
   },
   {
     period: "period10",
-    value: 9,
+    value: -6,
   },
   {
     period: "period11",
-    value: -10,
+    value: -5,
   },
   {
     period: "period12",
-    value: 11,
+    value: -4,
   },
   {
     period: "period13",
-    value: -12,
+    value: -3,
   },
   {
     period: "period14",
-    value: 13,
+    value: -2,
   },
   {
     period: "period15",
-    value: -14,
+    value: -1,
   },
   {
     period: "period16",
-    value: 15,
-  },
-  {
-    period: "period17",
-    value: -16,
-  },
+    value: 0,
+  }
 ]);
 
 const heatmapDataset = computed(() => {
