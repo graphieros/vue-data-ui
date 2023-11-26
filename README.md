@@ -57,3 +57,39 @@ Available components:
 - [VueUiSkeleton](https://vue-data-ui.graphieros.com/docs#vue-ui-skeleton)
 - [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
 - [VueUiAnnotator](https://vue-data-ui.graphieros.com/docs#vue-ui-annotator)
+
+# Installation
+```
+npm i vue-data-ui
+```
+
+You can declare components globally in your main.js:
+
+```
+import { createApp } from 'vue'
+import App from "./App.vue";
+// Include the css;
+import "vue-data-ui/style.css";
+
+// You can declare Vue Data UI components globally
+import { VueUiRadar } from "vue-data-ui";
+
+const app = createApp(App);
+
+app.component("VueUiRadar", VueUiRadar);
+app.mount('#app');
+```
+
+Or you can import just what you need in your files:
+
+```
+<script setup>
+  import { VueUiRadar, VueUiXy } from "vue-data-ui";
+</script>
+```
+
+## Typescript
+Types are available in the 'vue-data-ui.d.ts' file under the types directory of the package.
+
+## Nuxt
+[Check this repo for a boilerplate implementation in Nuxt](https://github.com/graphieros/vue-data-ui-nuxt)

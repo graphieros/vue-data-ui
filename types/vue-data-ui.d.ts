@@ -2235,6 +2235,8 @@ declare module 'vue-data-ui' {
             verticalIndicator?: {
                 show?: boolean;
                 strokeWidth?: number;
+                color?: string;
+                strokeDasharray?: number;
             };
             dataLabel?: {
                 position?: "left" | "right";

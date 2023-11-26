@@ -211,9 +211,10 @@ const isBar = computed(() => {
                     :x2="plot.x"
                     :y1="drawingArea.top - 6"
                     :y2="drawingArea.bottom"
-                    :stroke="plot.color"
+                    :stroke="sparklineConfig.style.verticalIndicator.color || plot.color"
                     :stroke-width="sparklineConfig.style.verticalIndicator.strokeWidth"
                     stroke-linecap="round"
+                    :stroke-dasharray="sparklineConfig.style.verticalIndicator.strokeDasharray || 0"
                 />
             </g>
 

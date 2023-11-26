@@ -1484,7 +1484,9 @@
             },
             "verticalIndicator": {
                 "show": true,
-                "strokeWidth": 1.5
+                "strokeWidth": 1.5,
+                "color": "#3366cc",
+                "strokeDasharray": 3
             },
             "dataLabel": {
                 "position": "left",
