@@ -303,6 +303,7 @@
     },
     "vue_ui_donut": {
         "useCssAnimation": true,
+        "useBlurOnHover": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -1008,6 +1009,7 @@
     },
     "vue_ui_onion": {
         "useCssAnimation": true,
+        "useBlurOnHover": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {

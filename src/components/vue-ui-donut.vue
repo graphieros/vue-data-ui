@@ -340,7 +340,8 @@ defineExpose({
                 class="vue-ui-donut-arc-path"
                 :data-cy="`donut-arc-${i}`"
                 :d="arc.path" 
-                :stroke="`${arc.color}CC`" 
+                :stroke="`${arc.color}CC`"
+                :class="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? '' : 'vue-ui-donut-blur'"
                 :stroke-width="defaultConfig.style.chart.layout.donut.strokeWidth" 
                 fill="none"
             />
@@ -675,4 +676,10 @@ path {
 .vue-ui-dna * {
     animation: none !important;
 }
+
+.vue-ui-donut-blur {
+    filter: blur(3px) opacity(50%) grayscale(100%);
+    transition: all 0.15s ease-in-out;
+}
+
 </style>

@@ -179,6 +179,8 @@ function closeDetails(){
     }
 }
 
+const selectedSerie = ref(undefined);
+
 defineExpose({
     getData,
     generatePdf,
@@ -298,13 +300,13 @@ defineExpose({
                 :stroke-dasharray="onion.path.bgDashArray"
                 :stroke-dashoffset="onion.path.fullOffset"
                 stroke-linecap="round"
-                class="vue-ui-onion-path"
+                :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': onionConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
                 style="transform:rotate(-90deg);transform-origin: 50% 50%"
             />
             
             <!-- TRACKS -->
             <circle 
-                v-for="onion in mutableDataset" 
+                v-for="(onion, i) in mutableDataset" 
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
                 :r="onion.radius" 
@@ -313,10 +315,30 @@ defineExpose({
                 fill="none"
                 :stroke-dasharray="onion.path.dashArray"
                 :stroke-dashoffset="onion.path.dashOffset"
-                class="vue-ui-onion-path"
+                :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': onionConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
                 stroke-linecap="round"
                 style="transform:rotate(-90deg);transform-origin: 50% 50%"
             />
+
+            <!-- TOOLTIP TRAPS -->
+            <circle 
+                v-for="(onion, i) in mutableDataset" 
+                :data-cy="`onion-track-${i}`"
+                :cx="drawableArea.centerX" 
+                :cy="drawableArea.centerY" 
+                :r="onion.radius" 
+                stroke="transparent" 
+                :stroke-width="Math.max(onionSkin.track, onionSkin.gutter)" 
+                fill="none"
+                :stroke-dasharray="onion.path.bgDashArray"
+                :stroke-dashoffset="onion.path.fullOffset"
+                stroke-linecap="round"
+                class="vue-ui-onion-path"
+                style="transform:rotate(-90deg);transform-origin: 50% 50%"
+                @mouseenter="selectedSerie = i"
+                @mouseleave="selectedSerie = undefined"
+            />
+
 
             <!-- GRADIENT -->
             <g v-if="onionConfig.style.chart.useGradient">            
@@ -554,5 +576,10 @@ circle {
 
 .vue-ui-dna * {
     animation: none !important;
+}
+
+.vue-ui-onion-blur {
+    filter: blur(3px) opacity(50%) grayscale(100%);
+    transition: all 0.15s ease-in-out;
 }
 </style>

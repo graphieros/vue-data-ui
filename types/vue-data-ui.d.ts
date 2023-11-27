@@ -1133,6 +1133,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiDonutConfig = {
         useCssAnimation?: boolean;
+        useBlurOnHover?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
