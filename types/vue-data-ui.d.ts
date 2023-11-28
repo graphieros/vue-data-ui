@@ -998,6 +998,22 @@ declare module 'vue-data-ui' {
                 color?: string;
                 opacity?: number;
             };
+            highlightArea?: {
+                show?: boolean;
+                from?: number;
+                to?: number;
+                color?: string;
+                opacity?: number;
+                caption?: {
+                    text?: string;
+                    fontSize?: number;
+                    color?:number;
+                    bold?:boolean;
+                    offsetY?: boolean;
+                    width?: "auto" | number;
+                    textAlign?: "left" | "center" | "right";
+                };
+            };
             grid?: {
                 stroke?: string;
                 showVerticalLines?: boolean;

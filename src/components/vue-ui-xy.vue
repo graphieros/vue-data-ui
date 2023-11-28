@@ -528,6 +528,29 @@
                     </g>
                 </g>
 
+                <!-- HIGHLITGHT AREA -->
+                <g v-if="hasHighlightArea">
+                    <rect
+                        data-cy="xy-highlight-area"
+                        :x="drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))"
+                        :y="drawingArea.top"
+                        :height="drawingArea.height"
+                        :width="(drawingArea.width / maxSeries) * highlightAreaSpan"
+                        :fill="`${chartConfig.chart.highlightArea.color}${opacity[chartConfig.chart.highlightArea.opacity]}`"
+                    />
+                    <foreignObject v-if="chartConfig.chart.highlightArea.caption.text"
+                        :x="(drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))) - (chartConfig.chart.highlightArea.caption.width === 'auto' ? 0 : chartConfig.chart.highlightArea.caption.width / 2 - (drawingArea.width / maxSeries) * highlightAreaSpan / 2)"
+                        :y="drawingArea.top + chartConfig.chart.highlightArea.caption.offsetY"
+                        style="overflow:visible"
+                        :width="chartConfig.chart.highlightArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * highlightAreaSpan : chartConfig.chart.highlightArea.caption.width"
+                        
+                    >
+                        <div :style="`padding:${chartConfig.chart.highlightArea.caption.padding}px;text-align:${chartConfig.chart.highlightArea.caption.textAlign};font-size:${chartConfig.chart.highlightArea.caption.fontSize}px;color:${chartConfig.chart.highlightArea.caption.color};font-weight:${chartConfig.chart.highlightArea.caption.bold ? 'bold' : 'normal'}`">
+                            {{ chartConfig.chart.highlightArea.caption.text }}
+                        </div>
+                    </foreignObject>
+                </g>
+
                 <!-- TOOLTIP TRAPS -->
                 <g v-if="chartConfig.chart.tooltip.show">
                     <g v-for="(trap, i) in maxSeries" :key="`tooltip_trap_${i}`">
@@ -723,6 +746,16 @@ export default {
             set: function (val) {
                 return val;
             }
+        },
+        hasHighlightArea() {
+            return this.chartConfig.chart.highlightArea && this.chartConfig.chart.highlightArea.show;
+        },
+        highlightAreaSpan() {
+            const { from, to } = this.chartConfig.chart.highlightArea;
+            console.log({ from, to})
+            if (from === to) return 1;
+            if (to < from) return 0;
+            return to - from + 1;
         },
         relativeZero() {
             if(this.min >= 0) return 0;

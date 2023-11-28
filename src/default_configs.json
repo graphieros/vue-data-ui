@@ -186,13 +186,30 @@
                 "color": "#2D353C",
                 "opacity": 5
             },
+            "highlightArea": {
+                "show": false,
+                "from": 0,
+                "to": 0,
+                "color": "#2D353C",
+                "opacity": 20,
+                "caption": {
+                    "text": "",
+                    "fontSize": 10,
+                    "color":"#2D353C",
+                    "bold": false,
+                    "offsetY": 0,
+                    "width": "auto",
+                    "padding": 3,
+                    "textAlign": "center"
+                }
+            },
             "grid": {
                 "stroke": "#e1e5e8",
                 "showVerticalLines": false,
                 "labels": {
                     "color": "#2D353C",
                     "show": true,
-                    "fontSize": 10,
+                    "fontSize": 12,
                     "axis": {
                         "yLabel": "",
                         "xLabel": "",

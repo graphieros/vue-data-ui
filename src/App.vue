@@ -82,6 +82,23 @@ const config = ref({
     highlighter: {
       color: "#FF0000",
     },
+    highlightArea: {
+      show: true,
+      from: 3,
+      to: 5,
+      color: "#2D353C",
+      opacity: 20,
+      caption: {
+        text: 'Lorem ipsum dolor sic amet and some more thoughts',
+        fontSize: 12,
+        color: "#2D353C",
+        bold: true,
+        offsetY: 0,
+        width: 'auto',
+        padding: 3,
+        textAlign: 'center'
+      }
+    },
     tooltip: {
       roundingPercentage: 0,
       backgroundColor: "#FFFFFF",
