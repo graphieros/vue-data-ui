@@ -423,6 +423,47 @@
                     </g>
                 </g>
 
+                <!-- HIGHLIGHT AREA -->
+                <g v-if="hasHighlightArea">
+                    <rect
+                        data-cy="xy-highlight-area"
+                        :x="drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))"
+                        :y="drawingArea.top"
+                        :height="drawingArea.height"
+                        :width="(drawingArea.width / maxSeries) * highlightAreaSpan"
+                        :fill="`${chartConfig.chart.highlightArea.color}${opacity[chartConfig.chart.highlightArea.opacity]}`"
+                    />
+                    <foreignObject v-if="chartConfig.chart.highlightArea.caption.text"
+                        :x="(drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))) - (chartConfig.chart.highlightArea.caption.width === 'auto' ? 0 : chartConfig.chart.highlightArea.caption.width / 2 - (drawingArea.width / maxSeries) * highlightAreaSpan / 2)"
+                        :y="drawingArea.top + chartConfig.chart.highlightArea.caption.offsetY"
+                        style="overflow:visible"
+                        :width="chartConfig.chart.highlightArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * highlightAreaSpan : chartConfig.chart.highlightArea.caption.width"
+                        
+                    >
+                        <div :style="`padding:${chartConfig.chart.highlightArea.caption.padding}px;text-align:${chartConfig.chart.highlightArea.caption.textAlign};font-size:${chartConfig.chart.highlightArea.caption.fontSize}px;color:${chartConfig.chart.highlightArea.caption.color};font-weight:${chartConfig.chart.highlightArea.caption.bold ? 'bold' : 'normal'}`">
+                            {{ chartConfig.chart.highlightArea.caption.text }}
+                        </div>
+                    </foreignObject>
+                </g>
+
+                <!-- LEFT & RIGHT PADDING COVERS -->
+                <g>
+                    <rect
+                        :x="0"
+                        :y="drawingArea.top"
+                        :width="drawingArea.left - 1"
+                        :height="drawingArea.height"
+                        :fill="chartConfig.chart.backgroundColor"
+                    />
+                    <rect
+                        :x="drawingArea.right + 1"
+                        :y="drawingArea.top"
+                        :width="chartConfig.chart.width - drawingArea.left - 1"
+                        :height="drawingArea.height"
+                        :fill="chartConfig.chart.backgroundColor"
+                    />
+                </g>
+
                 <!-- Y LABELS -->
                 <g v-if="chartConfig.chart.grid.labels.show">
                     <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
@@ -526,29 +567,6 @@
                             {{ label || "" }}
                         </text>
                     </g>
-                </g>
-
-                <!-- HIGHLITGHT AREA -->
-                <g v-if="hasHighlightArea">
-                    <rect
-                        data-cy="xy-highlight-area"
-                        :x="drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))"
-                        :y="drawingArea.top"
-                        :height="drawingArea.height"
-                        :width="(drawingArea.width / maxSeries) * highlightAreaSpan"
-                        :fill="`${chartConfig.chart.highlightArea.color}${opacity[chartConfig.chart.highlightArea.opacity]}`"
-                    />
-                    <foreignObject v-if="chartConfig.chart.highlightArea.caption.text"
-                        :x="(drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))) - (chartConfig.chart.highlightArea.caption.width === 'auto' ? 0 : chartConfig.chart.highlightArea.caption.width / 2 - (drawingArea.width / maxSeries) * highlightAreaSpan / 2)"
-                        :y="drawingArea.top + chartConfig.chart.highlightArea.caption.offsetY"
-                        style="overflow:visible"
-                        :width="chartConfig.chart.highlightArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * highlightAreaSpan : chartConfig.chart.highlightArea.caption.width"
-                        
-                    >
-                        <div :style="`padding:${chartConfig.chart.highlightArea.caption.padding}px;text-align:${chartConfig.chart.highlightArea.caption.textAlign};font-size:${chartConfig.chart.highlightArea.caption.fontSize}px;color:${chartConfig.chart.highlightArea.caption.color};font-weight:${chartConfig.chart.highlightArea.caption.bold ? 'bold' : 'normal'}`">
-                            {{ chartConfig.chart.highlightArea.caption.text }}
-                        </div>
-                    </foreignObject>
                 </g>
 
                 <!-- TOOLTIP TRAPS -->
