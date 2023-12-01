@@ -46,33 +46,45 @@ const dataset = ref([
   },
 ]);
 const dataset2 = ref([
-  {
-    name: "Series 3",
-    series: [
-      -55,
-      34,
-      -21,
-      13,
-      -8,
-      5,
-      -3,
-      2,
-      -1,
-      1,
-      0,
-      1,
-      1,
-      2,
-      3,
-      5,
-      8,
-      13,
-      21,
-      34,
-      55,
-    ],
-    type: "line",
-  },
+    {
+        name: "Series 1",
+        series: [ -55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+        type: "bar",
+        color: "rgb(95,139,238)"
+    },
+    {
+        name: "Series 2",
+        series: [ 55, 34, 21, 13, 8, 5, 3, 2, 1, 1, 0, -1, -1, -2, -3, -5, -8, -13, -21, -34, -55],
+        type: "line",
+        color: "rgb(66,211,146)",
+        useArea: true,
+        useProgression: true,
+        dataLabels: false,
+    },
+    {
+        name: "Series 3",
+        series: [ 64, 60, 52, 42, 30, 16, 0, -18, -38, -46, -50, -46, -38, -18, 0, 16, 30, 42, 52, 60, 64],
+        type: "plot",
+        color: "rgb(255,100,0)"
+    },
+    {
+        name: "Series 4",
+        series: [ 0, 1, -2, 3, -4, 5, -6, 7, -8, 9, -10, 11, -12, 13, -14, 15, -16, 17, -18, 19, -20],
+        type: "line",
+        smooth: true,
+        useArea: false,
+        dataLabels: false,
+        color: "rgb(200,200,50)"
+    },
+    {
+        name: "Target",
+        series: [ 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+        type: "line",
+        color: "#404040",
+        dashed: true,
+        useTag: "start",
+        dataLabels: false,
+    },
 ]);
 
 const config = ref({
@@ -3493,7 +3505,7 @@ const showLocalTest = ref(false);
         <template #dev>
           <XyTest
             ref="xytest"
-            :config="{ ...config, useCanvas: false }"
+            :config="{ ...config, useCanvas: true }"
             :dataset="dataset2"
             @selectLegend="selectLegendXY"
             @selectX="selectX"
@@ -3502,7 +3514,7 @@ const showLocalTest = ref(false);
         <template #prod>
           <VueUiXy
             ref="xytest"
-            :config="{ ...config, useCanvas: false, useCssAnimation: false }"
+            :config="{ ...config, useCanvas: true, useCssAnimation: false }"
             :dataset="dataset2"
             @selectLegend="selectLegendXY"
             @selectX="selectX"

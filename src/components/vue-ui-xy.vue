@@ -1203,17 +1203,99 @@ export default {
                 this.drawCanvasPlots();
             }
 
+            if (this.chartConfig.chart.highlightArea.show) {
+                this.drawHighlightArea();
+            }
+
             if (this.chartConfig.chart.title.show && this.mutableConfig.titleInside) {
                 this.drawCanvasTitle();
                 if (this.chartConfig.chart.title.subtitle.text) {
                     this.drawCanvasSubtitle();
                 }
             }
+
+            if (this.chartConfig.chart.highlightArea.show) {
+                this.CTX.save();
+                this.CTX.beginPath();
+                this.CTX.fillStyle = this.chartConfig.chart.backgroundColor;
+                this.CTX.rect(
+                    0,
+                    this.drawingArea.top,
+                    this.drawingArea.left - 1,
+                    this.drawingArea.height
+                );
+                this.CTX.fill();
+                this.CTX.rect(
+                    this.drawingArea.right + 1,
+                    this.drawingArea.top,
+                    this.chartConfig.chart.width - this.drawingArea.left - 1,
+                    this.drawingArea.height
+                );
+                this.CTX.fill();
+                this.CTX.closePath();
+                this.CTX.fillStyle = this.chartConfig.chart.grid.labels.color;
+                this.CTX.restore()
+                this.drawCanvasAxisYLabel();
+                this.drawCanvasYLabels();
+            }
             
             if (this.isInsideCanvas) {
                 this.drawCanvasTooltip();
                 this.drawCanvasSelector();
             }
+        },
+        wrapText(text, x, y, maxWidth, lineHeight) {
+            let words = text.split(' ');
+            let line = ''; 
+            let testLine = ''; 
+            let lineArray = []; 
+
+            for(let n = 0; n < words.length; n++) {
+                testLine += `${words[n]} `;
+                let metrics = this.CTX.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lineArray.push([line, x, y]);
+                    y += lineHeight
+                    line = `${words[n]} `;
+                    testLine = `${words[n]} `;
+                }
+                else {
+                    line += `${words[n]} `;
+                }
+                if(n === words.length - 1) {
+                    lineArray.push([line, x, y]);
+                }
+            }
+            return lineArray;
+        },
+        drawHighlightArea() {
+            this.CTX.fillStyle = `${this.chartConfig.chart.highlightArea.color}${opacity[this.chartConfig.chart.highlightArea.opacity]}`;
+            const x = this.drawingArea.left + (this.drawingArea.width / this.maxSeries) * (this.chartConfig.chart.highlightArea.from - (this.slicer.start));
+            const y = this.drawingArea.top;
+            const height = this.drawingArea.height;
+            const width = (this.drawingArea.width / this.maxSeries) * this.highlightAreaSpan;
+            this.CTX.rect(x, y, width, height);
+            this.CTX.fill();
+
+            this.CTX.font = `${this.chartConfig.chart.highlightArea.caption.bold ? 'bold' : ''} ${this.chartConfig.chart.highlightArea.caption.fontSize}px ${this.chartFont}`;
+            this.CTX.fillStyle = this.chartConfig.chart.highlightArea.caption.color;
+            this.CTX.textAlign = 'center';
+
+            const textWidth = this.chartConfig.chart.highlightArea.caption.width === 'auto' ? (this.drawingArea.width / this.maxSeries) * this.highlightAreaSpan : this.chartConfig.chart.highlightArea.caption.width;
+
+            const wrappedText = this.wrapText(
+                this.chartConfig.chart.highlightArea.caption.text,
+                x + width / 2,
+                this.drawingArea.top + this.chartConfig.chart.highlightArea.caption.offsetY + this.chartConfig.chart.highlightArea.caption.fontSize + this.chartConfig.chart.highlightArea.caption.padding,
+                textWidth - this.chartConfig.chart.highlightArea.caption.padding * 2,
+                this.chartConfig.chart.highlightArea.caption.fontSize * 1.3
+            );
+
+            
+            wrappedText.forEach(line => {
+                this.CTX.fillText(line[0], line[1], line[2]);
+            });
         },
         drawCanvasSelector() {
             this.CTX.save();
@@ -1534,9 +1616,8 @@ export default {
             }
             this.CTX.restore();
         },
-        drawCanvasAxisLabels() {
-            if (this.chartConfig.chart.grid.labels.axis.yLabel) {
-                const x = 0;
+        drawCanvasAxisYLabel() {
+            const x = 0;
                 const y = this.drawingArea.height / 2;
                 this.CTX.save();
                 this.CTX.translate(x,y);
@@ -1550,18 +1631,25 @@ export default {
                     15
                 )
                 this.CTX.restore();
+        },
+        drawCanvasAxisXLabel() {
+            this.CTX.save();
+            this.CTX.font = `${this.chartConfig.chart.grid.labels.axis.fontSize}px ${this.chartFont}`;
+            this.CTX.fillStyle = this.chartConfig.chart.grid.labels.color;
+            this.CTX.textAlign = "center";
+            this.CTX.fillText(
+                this.chartConfig.chart.grid.labels.axis.xLabel,
+                this.chartConfig.chart.width / 2,
+                this.drawingArea.bottom + this.chartConfig.chart.grid.labels.axis.fontSize + this.chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3
+            )
+            this.CTX.restore();
+        },
+        drawCanvasAxisLabels() {
+            if (this.chartConfig.chart.grid.labels.axis.yLabel) {
+                this.drawCanvasAxisYLabel();
             }
             if (this.chartConfig.chart.grid.labels.axis.xLabel) {
-                this.CTX.save();
-                this.CTX.font = `${this.chartConfig.chart.grid.labels.axis.fontSize}px ${this.chartFont}`;
-                this.CTX.fillStyle = this.chartConfig.chart.grid.labels.color;
-                this.CTX.textAlign = "center";
-                this.CTX.fillText(
-                    this.chartConfig.chart.grid.labels.axis.xLabel,
-                    this.chartConfig.chart.width / 2,
-                    this.drawingArea.bottom + this.chartConfig.chart.grid.labels.axis.fontSize + this.chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3
-                )
-                this.CTX.restore();
+                this.drawCanvasAxisXLabel();
             }
         },
         drawCanvasGrid() {

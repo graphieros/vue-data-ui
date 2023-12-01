@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "1.9.10",
+  "version": "1.9.11",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
   "keywords": [
@@ -55,6 +55,7 @@
     "dev": "vite",
     "clean": "node cleanup.cjs",
     "build": "npm run clean && vite build --mode production && node copy-types.cjs && npm i",
+    "build:dev": "npm run build && npm run dev",
     "preview": "vite preview",
     "test": "vitest",
     "test:e2e": "npx cypress open"
