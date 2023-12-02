@@ -1,8 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import {
-    treeShake,
-    convertConfigColors,
     convertColorToHex,
     palette,
     opacity,
@@ -15,6 +13,7 @@ import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
+import UserOptions from "../atoms/UserOptions.vue";
 
 const props = defineProps({
     config: {
@@ -85,7 +84,7 @@ const isSortDown = computed(() => {
 
 const immutableDataset = computed(() => {
     return props.dataset
-        .sort((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
+        .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
         .map((serie, i) => {
         return {
             ...serie,
@@ -94,7 +93,7 @@ const immutableDataset = computed(() => {
             isChild: false,
             color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
             children: !serie.children || !serie.children.length ? [] : serie.children
-                .sort((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
+                .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
                 .map((c, j) => {
                     return {
                         ...c,
@@ -336,12 +335,6 @@ function generateXls() {
     makeXls(tableXls, verticalBarConfig.value.style.chart.title.text || "vue-ui-vertical-bar");
 }
 
-function closeDetails(){
-    if(details.value) {
-        details.value.removeAttribute("open")
-    }
-}
-
 defineExpose({
     getData,
     recalculateHeight,
@@ -377,43 +370,38 @@ defineExpose({
         </div>
 
         <!-- OPTIONS -->
-        <details class="vue-ui-vertical-bar-user-options" :style="`background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" data-html2canvas-ignore v-if="verticalBarConfig.userOptions.show" ref="details">
-            <summary data-cy="vertical-bar-summary" :style="`background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`">{{ verticalBarConfig.userOptions.title }}</summary>
-            <div class="vue-ui-vertical-bar-user-options-items" :style="`background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`">
-                <div class="vue-ui-vertical-bar-user-option-item">
+        <UserOptions
+            ref="details"
+            v-if="verticalBarConfig.userOptions.show"
+            :backgroundColor="verticalBarConfig.style.chart.backgroundColor"
+            :color="verticalBarConfig.style.chart.color"
+            :isPrinting="isPrinting"
+            :title="verticalBarConfig.userOptions.title"
+            :uid="uid"
+            @generatePdf="generatePdf"
+            @generateXls="generateXls"
+        >
+            <template #checkboxes>
+                <div class="vue-ui-options-item">
                     <input data-cy="vertical-bar-checkbox-title" type="checkbox" :id="`vue-ui-vertical-bar-option-title_${uid}`" :name="`vue-ui-vertical-bar-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-vertical-bar-option-title_${uid}`">{{ verticalBarConfig.userOptions.labels.useDiv }}</label>
                 </div>
-                <div class="vue-ui-vertical-bar-user-option-item">
+                <div class="vue-ui-options-item">
                     <input data-cy="vertical-bar-checkbox-table" type="checkbox" :id="`vue-ui-vertical-bar-option-table_${uid}`" :name="`vue-ui-vertical-bar-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-vertical-bar-option-table_${uid}`">{{ verticalBarConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <div class="vue-ui-vertical-bar-user-option-item">
+                <div class="vue-ui-options-item">
                     <input type="checkbox" :id="`vue-ui-vertical-bar-option-sort_${uid}`" :name="`vue-ui-vertical-bar-option-sort_${uid}`"
                     v-model="mutableConfig.sortDesc" @change="recalculateHeight">
                     <label :for="`vue-ui-vertical-bar-option-sort_${uid}`">{{ verticalBarConfig.userOptions.labels.sort }}</label>
                 </div>
-                <button data-cy="vertical-bar-pdf" class="vue-ui-vertical-bar-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${verticalBarConfig.style.chart.color}`">
-                    <svg class="vue-ui-vertical-bar-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="verticalBarConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M18 16v.01" />
-                        <path d="M6 16v.01" />
-                        <path d="M12 5v.01" />
-                        <path d="M12 12v.01" />
-                        <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                    </svg>
-                    <span v-else>PDF</span>
-                </button>
-                <button data-cy="vertical-bar-xls" class="vue-ui-vertical-bar-button" @click="generateXls" :style="`color:${verticalBarConfig.style.chart.color}`">
-                    XLSX
-                </button>
-            </div>
-        </details>
+            </template>
+        </UserOptions>
 
          <!-- LEGEND AS DIV : TOP -->
-         <div v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'top'" class="vue-ui-vertical-bar-legend" :style="`background:${verticalBarConfig.style.chart.legend.backgroundColor};color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+         <div v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'top'" class="vue-ui-vertical-bar-legend" :style="`background:${verticalBarConfig.style.chart.legend.backgroundColor};color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" >
             <div v-for="(legendItem, i) in immutableDataset" :data-cy="`vertical-bar-div-legend-item-${i}`" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" height="12" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" :fill="legendItem.color"/></svg>
                 <span>{{ legendItem.name }} : </span>
@@ -422,7 +410,7 @@ defineExpose({
         </div>
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" @click="closeDetails">
+        <svg :viewBox="`0 0 ${svg.width} ${drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" >
 
             <!-- defs -->
             <linearGradient
@@ -571,7 +559,7 @@ defineExpose({
                 :height="drawableArea.fullHeight - drawableArea.bottom - 24"
                 style="overflow: visible;"
             >
-                <div class="vue-ui-vertical-bar-legend" :style="`color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+                <div class="vue-ui-vertical-bar-legend" :style="`color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" >
                     <div v-for="(legendItem, i) in immutableDataset" :data-cy="`vertical-bar-foreignObject-legend-item-${i}`" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                         <svg viewBox="0 0 12 12" height="12" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" :fill="legendItem.color"/></svg>
                         <span>{{ legendItem.name }} : </span>
@@ -583,7 +571,7 @@ defineExpose({
         </svg>
 
          <!-- LEGEND AS DIV : BOTTOM -->
-         <div v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'bottom'" class="vue-ui-vertical-bar-legend" :style="`background:${verticalBarConfig.style.chart.legend.backgroundColor};color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+         <div v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'bottom'" class="vue-ui-vertical-bar-legend" :style="`background:${verticalBarConfig.style.chart.legend.backgroundColor};color:${verticalBarConfig.style.chart.legend.color};font-size:${verticalBarConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${verticalBarConfig.style.chart.legend.bold ? 'bold' : ''}`" >
             <div v-for="(legendItem, i) in immutableDataset" class="vue-ui-vertical-bar-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" height="12" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" :fill="legendItem.color"/></svg>
                 <span>{{ legendItem.name }} : </span>
@@ -602,7 +590,7 @@ defineExpose({
         />
 
         <!-- DATA TABLE -->
-        <div @click="closeDetails" class="vue-ui-vertical-bar-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div  class="vue-ui-vertical-bar-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
                 <thead data-cy="vertical-bar-thead">
                     <tr v-if="verticalBarConfig.style.chart.title.text">
@@ -724,61 +712,6 @@ path, line, rect, circle, polygon {
 }
 
 /** */
-.vue-ui-vertical-bar-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
-    position: absolute;
-    right:0;
-    top:0px;
-    max-width: 300px;
-    text-align:left;
-}
-.vue-ui-vertical-bar-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-}
-.vue-ui-vertical-bar summary {
-    text-align: right;
-    direction: rtl;
-}
-.vue-ui-vertical-bar-user-options-items {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-.vue-ui-vertical-bar-user-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-}
-
-.vue-ui-vertical-bar-button {
-    margin: 6px 0;
-    border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-.vue-ui-vertical-bar-button:hover {
-    background: rgba(0,0,0,0.05);
-}
-.vue-ui-vertical-bar-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
 
 .vue-ui-vertical-bar table {
     width: 100%;

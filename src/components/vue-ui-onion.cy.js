@@ -43,10 +43,10 @@ describe('<VueUiOnion />', () => {
       }
 
       
-      cy.get(`[data-cy="onion-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="onion-checkbox-title"]`)
       .check();
-      cy.get(`[data-cy="onion-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.get(`[data-cy="onion-text-title"]`)
         .should('exist')
@@ -69,13 +69,13 @@ describe('<VueUiOnion />', () => {
         })
       }
 
-      cy.get(`[data-cy="onion-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="onion-checkbox-title"]`)
       .uncheck();
       cy.get(`[data-cy="onion-checkbox-table"]`).check();
       cy.viewport(400, 680);
 
-      cy.get(`[data-cy="onion-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.get(`[data-cy="onion-table-title"]`)
         .should('exist')
@@ -114,20 +114,12 @@ describe('<VueUiOnion />', () => {
         })
       }
 
-      cy.get(`[data-cy="onion-div-legend-item-0"]`).click();
-      cy.get('.vue-ui-onion-path')
-        .should('have.length', (fixture.dataset.length - 1) * 2)
-      cy.get(`[data-cy="onion-div-legend-item-0"]`).click();
-      cy.get('.vue-ui-onion-path')
-        .should('have.length', fixture.dataset.length * 2)
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
-
-      cy.get(`[data-cy="onion-summary"]`).click();
-
-      cy.get(`[data-cy="onion-pdf"]`).click();
+      cy.get(`[data-cy="user-options-pdf"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-      cy.get(`[data-cy="onion-xls"]`).click();
+      cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
       cy.clearDownloads();

@@ -223,6 +223,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiRelationCircleConfig = {
         style?: {
+            color?: string;
             backgroundColor?: string;
             fontFamily?: string;
             size?: number;
@@ -263,6 +264,10 @@ declare module 'vue-data-ui' {
                 };
             };
         };
+        userOptions?: {
+            show?: boolean;
+            title?: string;
+        }
     };
 
     export type VueUiRelationCircleDatasetItem = {
@@ -1007,8 +1012,8 @@ declare module 'vue-data-ui' {
                 caption?: {
                     text?: string;
                     fontSize?: number;
-                    color?:number;
-                    bold?:boolean;
+                    color?: number;
+                    bold?: boolean;
                     offsetY?: boolean;
                     width?: "auto" | number;
                     textAlign?: "left" | "center" | "right";

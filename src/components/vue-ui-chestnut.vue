@@ -1,9 +1,10 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { treeShake, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, convertConfigColors, makeXls } from "../lib";
+import { palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, makeXls } from "../lib";
 import pdf from "../pdf.js";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
+import UserOptions from "../atoms/UserOptions.vue";
 
 const props = defineProps({
     config: {
@@ -396,15 +397,6 @@ function generateXls() {
     });
 }
 
-function closeDetails(e){
-    if(e.target && e.target.tagName === 'svg') {
-        resetTree();
-    }
-    if(details.value) {
-        details.value.removeAttribute("open")
-    }
-}
-
 defineExpose({
     getData,
     generatePdf,
@@ -421,32 +413,27 @@ defineExpose({
         :style="`font-family:${chestnutConfig.style.fontFamily};width:100%; text-align:center;${chestnutConfig.userOptions.show ? 'padding-top:36px' : ''}`"
     >
         <!-- OPTIONS -->
-        <details class="vue-ui-chestnut-user-options" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" data-html2canvas-ignore v-if="chestnutConfig.userOptions.show" ref="details">
-            <summary data-cy="chestnut-summary" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`">{{ chestnutConfig.userOptions.title }}</summary>
-            <div class="vue-ui-chestnut-user-option-item">
-                <input data-cy="chestnut-checkbox-table" type="checkbox" :id="`vue-ui-chestnut-option-table_${uid}`" :name="`vue-ui-chestnut-option-table_${uid}`"
-                v-model="mutableConfig.showTable">
-                <label :for="`vue-ui-chestnut-option-table_${uid}`">{{ chestnutConfig.userOptions.labels.showTable }}</label>
-            </div>
-            <div class="vue-ui-chestnut-user-options-items" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`">
-                <button data-cy="chestnut-pdf" class="vue-ui-chestnut-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${chestnutConfig.style.chart.color}`">
-                    <svg class="vue-ui-chestnut-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="chestnutConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M18 16v.01" />
-                        <path d="M6 16v.01" />
-                        <path d="M12 5v.01" />
-                        <path d="M12 12v.01" />
-                        <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                    </svg>
-                    <span v-else>PDF</span>
-                </button>
-                <button data-cy="chestnut-xls" class="vue-ui-chestnut-button" @click="generateXls" :style="`background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`">
-                    XLSX
-                </button>
-            </div>
-        </details>
+        <UserOptions
+            ref="details"
+            v-if="chestnutConfig.userOptions.show"
+            :backgroundColor="chestnutConfig.style.chart.backgroundColor"
+            :color="chestnutConfig.style.chart.color"
+            :isPrinting="isPrinting"
+            :title="chestnutConfig.userOptions.title"
+            :uid="uid"
+            @generatePdf="generatePdf"
+            @generateXls="generateXls"
+        >
+            <template #checkboxes>
+                <div class="vue-ui-options-item">
+                    <input data-cy="chestnut-checkbox-table" type="checkbox" :id="`vue-ui-chestnut-option-table_${uid}`" :name="`vue-ui-chestnut-option-table_${uid}`"
+                    v-model="mutableConfig.showTable">
+                    <label :for="`vue-ui-chestnut-option-table_${uid}`">{{ chestnutConfig.userOptions.labels.showTable }}</label>
+                </div>
+            </template>
+        </UserOptions>
 
-        <svg v-if="svg.height > 0" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" @click="closeDetails">
+        <svg v-if="svg.height > 0" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
 
             <!-- TITLE AS G -->
             <g v-if="!selectedNut">
@@ -970,7 +957,7 @@ defineExpose({
         </g>
         </svg>
         <!-- DATA TABLE -->
-        <div @click="closeDetails" class="vue-ui-chestnut-table" :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable">
+        <div  class="vue-ui-chestnut-table" :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable">
             <table data-cy="chestnut-table">
                 <thead>
                     <tr v-if="chestnutConfig.style.chart.layout.title.text">
@@ -1105,62 +1092,6 @@ defineExpose({
 }
 
 /** */
-.vue-ui-chestnut-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
-    position: absolute;
-    right:0;
-    top:0px;
-    max-width: 300px;
-    text-align:left;
-}
-.vue-ui-chestnut-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-}
-.vue-ui-chestnut summary {
-    text-align: right;
-    direction: rtl;
-}
-.vue-ui-chestnut-user-options-items {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-.vue-ui-chestnut-user-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-}
-
-.vue-ui-chestnut-button {
-    margin: 6px 0;
-    border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-.vue-ui-chestnut-button:hover {
-    background: rgba(0,0,0,0.05);
-}
-.vue-ui-chestnut-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 .vue-ui-chestnut table {
     width: 100%;
     border-collapse:collapse;

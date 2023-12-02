@@ -37,7 +37,7 @@ describe('<VueUiScatter />', () => {
         })
       }
 
-      cy.get(`[data-cy="scatter-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="scatter-checkbox-title"]`).check();
 
       cy.get(`[data-cy="scatter-text-title"]`)
@@ -63,7 +63,7 @@ describe('<VueUiScatter />', () => {
 
       cy.get(`[data-cy="scatter-checkbox-title"]`).uncheck();
       cy.get(`[data-cy="scatter-checkbox-table"]`).check();
-      cy.get(`[data-cy="scatter-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
       for (let i = 0; i < fixture.dataset.length; i += 1) {
         for (let j = 0; j < fixture.dataset[i].values.length; j += 1) {
@@ -228,17 +228,17 @@ describe('<VueUiScatter />', () => {
           }
         });
 
-        cy.get(`[data-cy="scatter-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click();
 
-        cy.get(`[data-cy="scatter-pdf"]`).click();
+        cy.get(`[data-cy="user-options-pdf"]`).click();
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);
-        cy.get(`[data-cy="scatter-xls"]`).click();
+        cy.get(`[data-cy="user-options-xls"]`).click();
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.xlsx`);
         cy.clearDownloads();
 
-        cy.get(`[data-cy="scatter-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click();
 
     });
   })

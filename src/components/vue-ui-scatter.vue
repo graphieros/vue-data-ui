@@ -1,12 +1,13 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
-import { treeShake, palette, opacity, convertConfigColors, makeXls } from '../lib';
+import { palette, opacity, makeXls } from '../lib';
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
+import UserOptions from "../atoms/UserOptions.vue";
 
 const props = defineProps({
     config: {
@@ -261,13 +262,6 @@ function generateXls() {
     });
 }
 
-
-function closeDetails(){
-    if(details.value) {
-        details.value.removeAttribute("open")
-    }
-}
-
 defineExpose({
     getData,
     generatePdf,
@@ -302,39 +296,33 @@ defineExpose({
         </div>
 
         <!-- OPTIONS -->
-        <details class="vue-ui-scatter-user-options" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`" data-html2canvas-ignore v-if="scatterConfig.userOptions.show" ref="details">
-            <summary data-cy="scatter-summary" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">{{ scatterConfig.userOptions.title }}</summary>
-
-            <div class="vue-ui-scatter-user-options-items" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
-                <div class="vue-ui-scatter-user-option-item">
+        <UserOptions
+            ref="details"
+            v-if="scatterConfig.userOptions.show"
+            :backgroundColor="scatterConfig.style.backgroundColor"
+            :color="scatterConfig.style.color"
+            :isPrinting="isPrinting"
+            :title="scatterConfig.userOptions.title"
+            :uid="uid"
+            @generatePdf="generatePdf"
+            @generateXls="generateXls"
+        >
+            <template #checkboxes>
+                <div class="vue-ui-options-item">
                     <input data-cy="scatter-checkbox-title" type="checkbox" :id="`vue-ui-scatter-option-title_${uid}`" :name="`vue-ui-scatter-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-scatter-option-title_${uid}`">{{ scatterConfig.userOptions.labels.useDiv }}</label>
                 </div>
-                <div class="vue-ui-scatter-user-option-item">
+                <div class="vue-ui-options-item">
                     <input data-cy="scatter-checkbox-table" type="checkbox" :id="`vue-ui-scatter-option-table_${uid}`" :name="`vue-ui-scatter-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-scatter-option-table_${uid}`">{{ scatterConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button data-cy="scatter-pdf" class="vue-ui-scatter-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
-                    <svg class="vue-ui-scatter-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="scatterConfig.style.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M18 16v.01" />
-                        <path d="M6 16v.01" />
-                        <path d="M12 5v.01" />
-                        <path d="M12 12v.01" />
-                        <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                    </svg>
-                    <span v-else>PDF</span>
-                </button>
-                <button data-cy="scatter-xls" class="vue-ui-scatter-button" @click="generateXls" :style="`background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
-                    XLSX
-                </button>
-            </div>
-        </details>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`" @click="closeDetails">
+        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
 
             <!-- TITLE AS G -->
             <g v-if="scatterConfig.style.title.text && mutableConfig.inside && !isPrinting">
@@ -519,7 +507,7 @@ defineExpose({
                 :height="svg.height - drawingArea.bottom"
                 style="overflow:visible"
             >
-                <div class="vue-ui-scatter-legend" :style="`color:${scatterConfig.style.legend.color};font-size:${scatterConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${scatterConfig.style.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+                <div class="vue-ui-scatter-legend" :style="`color:${scatterConfig.style.legend.color};font-size:${scatterConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${scatterConfig.style.legend.bold ? 'bold' : ''}`" >
                     <div v-for="(legendItem, i) in datasetWithId" :data-cy="`scatter-foreignObject-legend-item-${i}`" class="vue-ui-scatter-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                         <svg viewBox="0 0 12 12" :height="scatterConfig.style.legend.fontSize" :width="scatterConfig.style.legend.fontSize">
                             <circle cx="6" cy="6" r="6" :fill="legendItem.color"/>
@@ -531,7 +519,7 @@ defineExpose({
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="scatterConfig.style.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-scatter-legend" :style="`background:${scatterConfig.style.legend.backgroundColor};color:${scatterConfig.style.legend.color};font-size:${scatterConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${scatterConfig.style.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+        <div v-if="scatterConfig.style.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-scatter-legend" :style="`background:${scatterConfig.style.legend.backgroundColor};color:${scatterConfig.style.legend.color};font-size:${scatterConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${scatterConfig.style.legend.bold ? 'bold' : ''}`" >
             <div v-for="(legendItem, i) in datasetWithId" :data-cy="`scatter-div-legend-item-${i}`" class="vue-ui-scatter-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" :height="scatterConfig.style.legend.fontSize" :width="scatterConfig.style.legend.fontSize">
                     <circle cx="6" cy="6" r="6" :fill="legendItem.color"/>
@@ -551,7 +539,7 @@ defineExpose({
         />
 
         <!-- DATA TABLE -->
-        <div @click="closeDetails" :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
                 <thead data-cy="scatter-thead">
                     <tr v-if="scatterConfig.style.title.text">
@@ -661,61 +649,6 @@ path, line, circle {
     position: fixed;
     padding:12px;
     z-index:1;
-}
-.vue-ui-scatter-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
-    position: absolute;
-    right:0;
-    top:0px;
-    max-width: 300px;
-    text-align:left;
-}
-.vue-ui-scatter-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-}
-.vue-ui-scatter summary {
-    text-align: right;
-    direction: rtl;
-}
-.vue-ui-scatter-user-options-items {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-.vue-ui-scatter-user-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-}
-
-.vue-ui-scatter-button {
-    margin: 6px 0;
-    border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-.vue-ui-scatter-button:hover {
-    background: rgba(0,0,0,0.05);
-}
-.vue-ui-scatter-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 .vue-ui-scatter table {

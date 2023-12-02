@@ -37,9 +37,9 @@ describe('<VueUiGauge />', () => {
         .should('exist')
         .contains(`${fixture.config.translations.base} : ${fixture.dataset.base}`);
 
-      cy.get(`[data-cy="gauge-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="gauge-checkbox-title"]`).uncheck();
-      cy.get(`[data-cy="gauge-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
 
       cy.get(`[data-cy="gauge-div-title"]`)
@@ -123,13 +123,13 @@ describe('<VueUiGauge />', () => {
           .should('eq', fixture.config.style.chart.layout.pointer.circle.stroke);
       })
 
-      cy.get(`[data-cy="gauge-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
-      cy.get(`[data-cy="gauge-pdf"]`).click();
-      cy.wait(2000);
+      cy.get(`[data-cy="user-options-pdf"]`).click();
+      cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-
       cy.clearDownloads();
+      cy.get(`[data-cy="user-options-summary"]`).click();
     });
   });
 })

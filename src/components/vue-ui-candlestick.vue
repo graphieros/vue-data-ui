@@ -1,12 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { treeShake, convertConfigColors, shiftHue, opacity, makeXls } from "../lib";
+import { shiftHue, opacity, makeXls } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
+import UserOptions from "../atoms/UserOptions.vue";
 
 const props = defineProps({
     config: {
@@ -267,12 +268,6 @@ function generateXls() {
     });
 }
 
-function closeDetails(){
-    if(details.value) {
-        details.value.removeAttribute("open")
-    }
-}
-
 defineExpose({
     generatePdf,
     generateXls
@@ -305,40 +300,33 @@ defineExpose({
         </div>
 
          <!-- OPTIONS -->
-         <details class="vue-ui-candlestick-user-options" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`" data-html2canvas-ignore v-if="candlestickConfig.userOptions.show" ref="details">
-            <summary data-cy="candlestick-summary" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">{{ candlestickConfig.userOptions.title }}</summary>
-
-            <div class="vue-ui-candlestick-user-options-items" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
-                <div class="vue-ui-candlestick-user-option-item">
+         <UserOptions
+            ref="details"
+            v-if="candlestickConfig.userOptions.show"
+            :backgroundColor="candlestickConfig.style.backgroundColor"
+            :color="candlestickConfig.style.color"
+            :isPrinting="isPrinting"
+            :title="candlestickConfig.userOptions.title"
+            :uid="uid"
+            @generatePdf="generatePdf"
+            @generateXls="generateXls"
+         >
+            <template #checkboxes>
+                <div class="vue-ui-options-item">
                     <input data-cy="candlestick-checkbox-title" type="checkbox" :id="`vue-ui-candlestick-option-title_${uid}`" :name="`vue-ui-candlestick-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-candlestick-option-title_${uid}`">{{ candlestickConfig.userOptions.labels.useDiv }}</label>
                 </div>
-                <div class="vue-ui-candlestick-user-option-item">
+                <div class="vue-ui-options-item">
                     <input data-cy="candlestick-checkbox-table" type="checkbox" :id="`vue-ui-candlestick-option-table_${uid}`" :name="`vue-ui-candlestick-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-candlestick-option-table_${uid}`">{{ candlestickConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button data-cy="candlestick-svg" class="vue-ui-candlestick-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
-                    <svg class="vue-ui-candlestick-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="candlestickConfig.style.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M18 16v.01" />
-                        <path d="M6 16v.01" />
-                        <path d="M12 5v.01" />
-                        <path d="M12 12v.01" />
-                        <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                    </svg>
-                    <span v-else>PDF</span>
-                </button>
-                <button data-cy="candlestick-xls" class="vue-ui-candlestick-button" @click="generateXls" :style="`background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
-                    XLSX
-                </button>
-            </div>
-        </details>
-        
+            </template>
+         </UserOptions>
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`" @click="closeDetails">
+        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
             <g v-if="drawableDataset.length > 0">
                 <!-- DEFS -->
             <defs>
@@ -572,7 +560,7 @@ defineExpose({
         />
 
         <!-- DATA TABLE -->
-        <div @click="closeDetails" :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
+        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
             <table>
                 <thead data-cy="candlestick-thead">
                     <tr v-if="candlestickConfig.style.title.text">
@@ -695,61 +683,6 @@ path, line, rect {
     position: fixed;
     padding:12px;
     z-index:1;
-}
-.vue-ui-candlestick-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
-    position: absolute;
-    right:0;
-    top:0px;
-    max-width: 300px;
-    text-align:left;
-}
-.vue-ui-candlestick-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-}
-.vue-ui-candlestick summary {
-    text-align: right;
-    direction: rtl;
-}
-.vue-ui-candlestick-user-options-items {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-.vue-ui-candlestick-user-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-}
-
-.vue-ui-candlestick-button {
-    margin: 6px 0;
-    border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-.vue-ui-candlestick-button:hover {
-    background: rgba(0,0,0,0.05);
-}
-.vue-ui-candlestick-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 .vue-ui-candlestick table {

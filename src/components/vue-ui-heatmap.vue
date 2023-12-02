@@ -1,12 +1,13 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { treeShake, convertConfigColors, opacity, makeXls } from "../lib";
+import { opacity, makeXls } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
+import UserOptions from "../atoms/UserOptions.vue";
 
 const props = defineProps({
     config: {
@@ -198,12 +199,6 @@ function generateXls() {
     });
 }
 
-function closeDetails(){
-    if(details.value) {
-        details.value.removeAttribute("open")
-    }
-}
-
 defineExpose({
     generatePdf,
     generateXls
@@ -235,39 +230,33 @@ defineExpose({
         </div>
         
          <!-- OPTIONS -->
-         <details class="vue-ui-heatmap-user-options" :style="`background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" data-html2canvas-ignore v-if="heatmapConfig.userOptions.show" ref="details">
-            <summary data-cy="heatmap-summary" :style="`background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`">{{ heatmapConfig.userOptions.title }}</summary>
-
-            <div class="vue-ui-heatmap-user-options-items" :style="`background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`">
-                <div class="vue-ui-heatmap-user-option-item">
+        <UserOptions
+            ref="details"
+            v-if="heatmapConfig.userOptions.show"
+            :backgroundColor="heatmapConfig.style.backgroundColor"
+            :color="heatmapConfig.style.color"
+            :isPrinting="isPrinting"
+            :title="heatmapConfig.userOptions.title"
+            :uid="uid"
+            @generatePdf="generatePdf"
+            @generateXls="generateXls"
+        >
+            <template #checkboxes>
+                <div class="vue-ui-options-item">
                     <input data-cy="heatmap-checkbox-title" type="checkbox" :id="`vue-ui-heatmap-option-title_${uid}`" :name="`vue-ui-heatmap-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-heatmap-option-title_${uid}`">{{ heatmapConfig.userOptions.labels.useDiv }}</label>
                 </div>
-                <div class="vue-ui-heatmap-user-option-item">
+                <div class="vue-ui-options-item">
                     <input data-cy="heatmap-checkbox-table" type="checkbox" :id="`vue-ui-heatmap-option-table_${uid}`" :name="`vue-ui-heatmap-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-heatmap-option-table_${uid}`">{{ heatmapConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button data-cy="heatmap-pdf" class="vue-ui-heatmap-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`">
-                    <svg class="vue-ui-heatmap-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="heatmapConfig.style.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M18 16v.01" />
-                        <path d="M6 16v.01" />
-                        <path d="M12 5v.01" />
-                        <path d="M12 12v.01" />
-                        <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                    </svg>
-                    <span v-else>PDF</span>
-                </button>
-                <button data-cy="heatmap-xls" class="vue-ui-heatmap-button" @click="generateXls" :style="`background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`">
-                    XLSX
-                </button>
-            </div>
-        </details>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" @click="closeDetails">
+        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
             <!-- TITLE AS G -->
             <g v-if="heatmapConfig.style.title.text && mutableConfig.inside && !isPrinting">
                 <text
@@ -376,7 +365,7 @@ defineExpose({
                 height="100"
                 style="overflow:visible"
             >
-                <div class="vue-ui-heatmap-legend" :style="`color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize*2}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" @click="closeDetails">
+                <div class="vue-ui-heatmap-legend" :style="`color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize*2}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" >
                     <span data-cy="heatmap-legend-foreignObject-min" style="text-align:right">{{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
                     <svg viewBox="0 0 120 12" style="width: 25%">
                         <rect v-for="(_,i) in 12"
@@ -401,7 +390,7 @@ defineExpose({
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="heatmapConfig.style.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-heatmap-legend" :style="`background:${heatmapConfig.style.legend.backgroundColor};color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" @click="closeDetails">
+        <div v-if="heatmapConfig.style.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-heatmap-legend" :style="`background:${heatmapConfig.style.legend.backgroundColor};color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" >
             <span data-cy="heatmap-legend-min" style="text-align:right">{{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
             <svg viewBox="0 0 132 12" style="width: 300px">
                 <rect v-for="(_,i) in 13"
@@ -432,7 +421,7 @@ defineExpose({
             v-html="tooltipContent"
         />
         <!-- DATA TABLE -->
-        <div @click="closeDetails" :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div  :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
                 <thead>
                     <tr data-cy="heatmap-table-title" v-if="heatmapConfig.style.title.text">
@@ -508,61 +497,6 @@ defineExpose({
     position: fixed;
     padding:12px;
     z-index:1;
-}
-.vue-ui-heatmap-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
-    position: absolute;
-    right:0;
-    top:0px;
-    max-width: 300px;
-    text-align:left;
-}
-.vue-ui-heatmap-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-}
-.vue-ui-heatmap summary {
-    text-align: right;
-    direction: rtl;
-}
-.vue-ui-heatmap-user-options-items {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-.vue-ui-heatmap-user-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-}
-
-.vue-ui-heatmap-button {
-    margin: 6px 0;
-    border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-.vue-ui-heatmap-button:hover {
-    background: rgba(0,0,0,0.05);
-}
-.vue-ui-heatmap-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 .vue-ui-heatmap table {

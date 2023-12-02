@@ -24,7 +24,7 @@ describe('<VueUiThermometer />', () => {
         .should('exist')
         .contains(fixture.config.style.title.subtitle.text);
 
-      cy.get(`[data-cy="thermometer-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.get(`[data-cy="thermometer-checkbox-title"]`).check();
 
@@ -56,12 +56,12 @@ describe('<VueUiThermometer />', () => {
           .should('eq', fixture.config.style.chart.label.bold ? 'bold' : 'normal');
       });
 
-      cy.get(`[data-cy="thermometer-pdf"]`).click();
+      cy.get(`[data-cy="user-options-pdf"]`).click();
       cy.wait(500);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);
       cy.clearDownloads();
 
-      cy.get(`[data-cy="thermometer-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
     });
   });

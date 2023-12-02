@@ -207,7 +207,7 @@ describe('<VueUiDonut />', () => {
           .contains(sortedDataset[i].name)
       }
 
-      cy.get(`[data-cy="donut-summary"]`)
+      cy.get(`[data-cy="user-options-summary"]`)
         .should('exist')
         .click();
 
@@ -299,10 +299,10 @@ describe('<VueUiDonut />', () => {
         }
       });
 
-      cy.get(`[data-cy="donut-pdf"]`).click();
+      cy.get(`[data-cy="user-options-pdf"]`).click();
       cy.wait(5000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-      cy.get(`[data-cy="donut-xls"]`).click();
+      cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
       cy.clearDownloads();

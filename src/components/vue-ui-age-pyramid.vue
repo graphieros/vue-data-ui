@@ -1,12 +1,13 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
-import { treeShake, palette, opacity, convertConfigColors, makeXls, shiftHue } from '../lib';
+import { ref, computed, nextTick } from "vue";
+import { opacity, makeXls, shiftHue } from '../lib';
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
+import UserOptions from "../atoms/UserOptions.vue";
 
 const props = defineProps({
     config: {
@@ -237,12 +238,6 @@ function generateXls() {
     });
 }
 
-function closeDetails(){
-    if(details.value) {
-        details.value.removeAttribute("open")
-    }
-}
-
 defineExpose({
     generatePdf,
     generateXls
@@ -275,39 +270,33 @@ defineExpose({
         </div>
 
         <!-- OPTIONS -->
-        <details class="vue-ui-age-pyramid-user-options" :style="`background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" data-html2canvas-ignore v-if="agePyramidConfig.userOptions.show" ref="details">
-            <summary :style="`background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`">{{ agePyramidConfig.userOptions.title }}</summary>
-
-            <div class="vue-ui-age-pyramid-user-options-items" :style="`background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`">
-                <div class="vue-ui-age-pyramid-user-option-item">
+        <UserOptions
+            ref="details"
+            v-if="agePyramidConfig.userOptions.show"
+            :backgroundColor="agePyramidConfig.style.backgroundColor"
+            :color="agePyramidConfig.style.color"
+            :isPrinting="isPrinting"
+            :title="agePyramidConfig.userOptions.title"
+            :uid="uid"
+            @generatePdf="generatePdf"
+            @generateXls="generateXls"
+        >
+            <template #checkboxes>
+                <div class="vue-ui-options-item">
                     <input type="checkbox" :id="`vue-ui-age-pyramid-option-title_${uid}`" :name="`vue-ui-age-pyramid-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-age-pyramid-option-title_${uid}`">{{ agePyramidConfig.userOptions.labels.useDiv }}</label>
                 </div>
-                <div class="vue-ui-age-pyramid-user-option-item">
+                <div class="vue-ui-options-item">
                     <input type="checkbox" :id="`vue-ui-age-pyramid-option-table_${uid}`" :name="`vue-ui-age-pyramid-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-age-pyramid-option-table_${uid}`">{{ agePyramidConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button class="vue-ui-age-pyramid-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`">
-                    <svg class="vue-ui-age-pyramid-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="agePyramidConfig.style.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M18 16v.01" />
-                        <path d="M6 16v.01" />
-                        <path d="M12 5v.01" />
-                        <path d="M12 12v.01" />
-                        <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                    </svg>
-                    <span v-else>PDF</span>
-                </button>
-                <button class="vue-ui-age-pyramid-button" @click="generateXls" :style="`background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`">
-                    XLSX
-                </button>
-            </div>
-        </details>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" @click="closeDetails">
+        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" >
 
             <defs>
                 <linearGradient 
@@ -539,7 +528,7 @@ defineExpose({
         />
 
         <!-- DATA TABLE -->
-        <div @click="closeDetails" :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div  :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
                 <thead>
                     <tr v-if="agePyramidConfig.style.title.text">
@@ -627,61 +616,6 @@ defineExpose({
     padding:12px;
     z-index:1;
     font-variant-numeric: tabular-nums;
-}
-.vue-ui-age-pyramid-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
-    position: absolute;
-    right:0;
-    top:0px;
-    max-width: 300px;
-    text-align:left;
-}
-.vue-ui-age-pyramid-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-}
-.vue-ui-age-pyramid summary {
-    text-align: right;
-    direction: rtl;
-}
-.vue-ui-age-pyramid-user-options-items {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-.vue-ui-age-pyramid-user-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-}
-
-.vue-ui-age-pyramid-button {
-    margin: 6px 0;
-    border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-.vue-ui-age-pyramid-button:hover {
-    background: rgba(0,0,0,0.05);
-}
-.vue-ui-age-pyramid-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 .vue-ui-age-pyramid table {

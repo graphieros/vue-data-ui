@@ -1,12 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { treeShake, palette, createPolygonPath, createStar, giftWrap, shiftHue, opacity, convertColorToHex, convertConfigColors, makeXls } from "../lib";
+import { palette, createPolygonPath, createStar, giftWrap, shiftHue, opacity, convertColorToHex, makeXls } from "../lib";
 import pdf from "../pdf.js";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
+import UserOptions from "../atoms/UserOptions.vue";
 
 const props = defineProps({
     config: {
@@ -426,12 +427,6 @@ function getData() {
     });
 }
 
-function closeDetails(){
-    if(details.value) {
-        details.value.removeAttribute("open")
-    }
-}
-
 function generatePdf(){
     isPrinting.value = true;
     nextTick(() => {
@@ -488,43 +483,38 @@ defineExpose({
         </div>
 
         <!-- OPTIONS -->
-        <details class="vue-ui-quadrant-user-options" :style="`background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`" data-html2canvas-ignore v-if="quadrantConfig.userOptions.show" ref="details">
-            <summary data-cy="quadrant-summary" :style="`background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`">{{ quadrantConfig.userOptions.title }}</summary>
-            <div class="vue-ui-quadrant-user-options-items" :style="`background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`">
-                <div class="vue-ui-quadrant-user-option-item">
+        <UserOptions
+            ref="details"
+            v-if="quadrantConfig.userOptions.show"
+            :backgroundColor="quadrantConfig.style.chart.backgroundColor"
+            :color="quadrantConfig.style.chart.color"
+            :isPrinting="isPrinting"
+            :title="quadrantConfig.userOptions.title"
+            :uid="uid"
+            @generatePdf="generatePdf"
+            @generateXls="generateXls"
+        >
+            <template #checkboxes>
+                <div class="vue-ui-options-item">
                     <input type="checkbox" :id="`vue-ui-quadrant-option-plotLabels_${uid}`" :name="`vue-ui-quadrant-option-plotLabels_${uid}`"
                     v-model="mutableConfig.plotLabels.show">
                     <label :for="`vue-ui-quadrant-option-plotLabels_${uid}`">{{ quadrantConfig.userOptions.labels.showPlotLabels }}</label>
                 </div>
-                <div class="vue-ui-quadrant-user-option-item">
+                <div class="vue-ui-options-item">
                     <input data-cy="quadrant-checkbox-title" type="checkbox" :id="`vue-ui-quadrant-option-title_${uid}`" :name="`vue-ui-quadrant-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-quadrant-option-title_${uid}`">{{ quadrantConfig.userOptions.labels.useDiv }}</label>
                 </div>
-                <div class="vue-ui-quadrant-user-option-item">
+                <div class="vue-ui-options-item">
                     <input data-cy="quadrant-checkbox-table" type="checkbox" :id="`vue-ui-quadrant-option-table_${uid}`" :name="`vue-ui-quadrant-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-quadrant-option-table_${uid}`">{{ quadrantConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button data-cy="quadrant-pdf" class="vue-ui-quadrant-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${quadrantConfig.style.chart.color}`">
-                    <svg class="vue-ui-quadrant-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="quadrantConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M18 16v.01" />
-                        <path d="M6 16v.01" />
-                        <path d="M12 5v.01" />
-                        <path d="M12 12v.01" />
-                        <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                    </svg>
-                    <span v-else>PDF</span>
-                </button>
-                <button data-cy="quadrant-xls" class="vue-ui-quadrant-button" @click="generateXls" :style="`color:${quadrantConfig.style.chart.color}`">
-                    XLSX
-                </button>
-            </div>
-        </details>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`" @click="closeDetails" :id="`svg_${uid}`">
+        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`"  :id="`svg_${uid}`">
             
             <!-- DEFS -->
             <defs>
@@ -883,7 +873,7 @@ defineExpose({
                 height="90"
                 style="overflow: visible;"
             >
-                <div class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+                <div class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" >
                     <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-foreignObject-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                         <div v-html="legendItem.shapePath" style="display:flex;align-items:center;justify-content:center"/>
                         <span>{{ legendItem.name }}</span>
@@ -894,7 +884,7 @@ defineExpose({
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="quadrantConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};background:${quadrantConfig.style.chart.legend.backgroundColor};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+        <div v-if="quadrantConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};background:${quadrantConfig.style.chart.legend.backgroundColor};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" >
             <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-div-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
                 <div v-html="legendItem.shapePath" style="display:flex;align-items:center;justify-content:center"/>
                 <span>{{ legendItem.name }}</span>
@@ -911,7 +901,7 @@ defineExpose({
         />
 
         <!-- DATA TABLE -->
-        <div @click="closeDetails" class="vue-ui-quadrant-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div  class="vue-ui-quadrant-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
                 <thead data-cy="quadrant-thead">
                     <tr v-if="quadrantConfig.style.chart.title.text">
@@ -1006,62 +996,6 @@ path, line, rect, circle, polygon {
 }
 
 /** */
-.vue-ui-quadrant-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
-    position: absolute;
-    right:0;
-    top:0px;
-    max-width: 300px;
-    text-align:left;
-}
-.vue-ui-quadrant-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-}
-.vue-ui-quadrant summary {
-    text-align: right;
-    direction: rtl;
-}
-.vue-ui-quadrant-user-options-items {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-.vue-ui-quadrant-user-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-}
-
-.vue-ui-quadrant-button {
-    margin: 6px 0;
-    border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-.vue-ui-quadrant-button:hover {
-    background: rgba(0,0,0,0.05);
-}
-.vue-ui-quadrant-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 .vue-ui-quadrant table {
     width: 100%;
     border-collapse:collapse;

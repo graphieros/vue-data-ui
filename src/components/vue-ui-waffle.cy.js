@@ -92,7 +92,7 @@ describe('<VueUiWaffle />', () => {
       cy.get(`[data-cy="waffle-rect-0"]`)
         .trigger('mouseleave');
 
-      cy.get(`[data-cy="waffle-summary"]`)
+      cy.get(`[data-cy="user-options-summary"]`)
         .click();
 
       cy.get(`[data-cy="waffle-checkbox-title"]`).then(($checkbox) => {
@@ -159,13 +159,15 @@ describe('<VueUiWaffle />', () => {
         }
       })
 
-      cy.get(`[data-cy="waffle-pdf"]`).click();
+      cy.get(`[data-cy="user-options-pdf"]`).click();
       cy.wait(5000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-      cy.get(`[data-cy="waffle-xls"]`).click();
+      cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
       cy.clearDownloads();
+      cy.get(`[data-cy="user-options-summary"]`)
+      .click();
     });
   });
 })

@@ -2909,6 +2909,9 @@ const smileyConfig = ref({
 });
 
 const relationConfig = ref({
+  userOptions: {
+    show: true
+  },  
   style: {
     backgroundColor: "#FFFFFF",
     fontFamily: "inherit",
@@ -3469,18 +3472,18 @@ const showLocalTest = ref(false);
       <Box>
         <template #title>VueUiRelationCircle</template>
         <template #dev>
-            <VueUiRelationCircle 
-              ref="relation" 
-              :dataset="relationDataset" 
-              :config="relationConfig"
-            />
-        </template>
-        <template #prod>
           <RelationTest
             ref="relation"
             :dataset="relationDataset"
             :config="relationConfig"
           />
+        </template>
+        <template #prod>
+            <VueUiRelationCircle 
+              ref="relation" 
+              :dataset="relationDataset" 
+              :config="relationConfig"
+            />
         </template>
       </Box>
 
@@ -3505,7 +3508,7 @@ const showLocalTest = ref(false);
         <template #dev>
           <XyTest
             ref="xytest"
-            :config="{ ...config, useCanvas: true }"
+            :config="{ ...config, useCanvas: false }"
             :dataset="dataset2"
             @selectLegend="selectLegendXY"
             @selectX="selectX"
@@ -3514,7 +3517,7 @@ const showLocalTest = ref(false);
         <template #prod>
           <VueUiXy
             ref="xytest"
-            :config="{ ...config, useCanvas: true, useCssAnimation: false }"
+            :config="{ ...config, useCanvas: false, useCssAnimation: false }"
             :dataset="dataset2"
             @selectLegend="selectLegendXY"
             @selectX="selectX"

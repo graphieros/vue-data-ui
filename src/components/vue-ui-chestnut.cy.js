@@ -70,7 +70,7 @@ describe('<VueUiChestnut />', () => {
         })
       }
 
-      cy.get(`[data-cy="chestnut-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.get(`[data-cy="chestnut-checkbox-table"]`).check();
       cy.viewport(1000, 1600);
@@ -78,15 +78,15 @@ describe('<VueUiChestnut />', () => {
       cy.get(`[data-cy="chestnut-table"]`)
         .should('exist');
 
-      cy.get(`[data-cy="chestnut-pdf"]`).click();
+      cy.get(`[data-cy="user-options-pdf"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.layout.title.text}.pdf`);
-      cy.get(`[data-cy="chestnut-xls"]`).click();
+      cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.layout.title.text}.xlsx`);
       cy.clearDownloads();
 
-      cy.get(`[data-cy="chestnut-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
     });
   });
 });

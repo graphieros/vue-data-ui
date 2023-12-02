@@ -1,12 +1,13 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { treeShake, palette, shiftHue, opacity, convertConfigColors, convertColorToHex, makeXls } from "../lib";
+import { palette, shiftHue, opacity, convertColorToHex, makeXls } from "../lib";
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
+import UserOptions from "../atoms/UserOptions.vue";
 
 // TODO: accept color formats
 
@@ -216,16 +217,6 @@ const total = computed(() => {
     return waffleSet.value.map(s => s.value).reduce((a,b) => a + b, 0);
 });
 
-const average = computed(() => {
-    return total.value / waffleSet.value.length;
-});
-
-function closeDetails(){
-    if(details.value) {
-        details.value.removeAttribute("open")
-    }
-}
-
 function useTooltip(index) {
     if(segregated.value.length === props.dataset.length) return;
     const selected = rects.value[index];
@@ -341,38 +332,33 @@ defineExpose({
         </div>
 
         <!-- OPTIONS -->
-        <details class="vue-ui-waffle-user-options" :style="`background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" data-html2canvas-ignore v-if="waffleConfig.userOptions.show" ref="details">
-            <summary data-cy="waffle-summary" :style="`background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`">{{ waffleConfig.userOptions.title }}</summary>
-            <div class="vue-ui-waffle-user-options-items" :style="`background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`">
-                <div class="vue-ui-waffle-user-option-item">
+        <UserOptions
+            ref="details"
+            v-if="waffleConfig.userOptions.show"
+            :backgroundColor="waffleConfig.style.chart.backgroundColor"
+            :color="waffleConfig.style.chart.color"
+            :isPrinting="isPrinting"
+            :title="waffleConfig.userOptions.title"
+            :uid="uid"
+            @generatePdf="generatePdf"
+            @generateXls="generateXls"
+        >
+            <template #checkboxes>
+                <div class="vue-ui-options-item">
                     <input data-cy="waffle-checkbox-title" type="checkbox" :id="`vue-ui-waffle-option-title_${uid}`" :name="`vue-ui-waffle-option-title_${uid}`"
                     v-model="mutableConfig.inside">
                     <label :for="`vue-ui-waffle-option-title_${uid}`">{{ waffleConfig.userOptions.labels.useDiv }}</label>
                 </div>
-                <div class="vue-ui-waffle-user-option-item">
+                <div class="vue-ui-options-item">
                     <input data-cy="waffle-checkbox-table" type="checkbox" :id="`vue-ui-waffle-option-table_${uid}`" :name="`vue-ui-waffle-option-table_${uid}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-waffle-option-table_${uid}`">{{ waffleConfig.userOptions.labels.showTable }}</label>
                 </div>
-                <button data-cy="waffle-pdf" class="vue-ui-waffle-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`">
-                    <svg class="vue-ui-waffle-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="waffleConfig.style.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M18 16v.01" />
-                        <path d="M6 16v.01" />
-                        <path d="M12 5v.01" />
-                        <path d="M12 12v.01" />
-                        <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                    </svg>
-                    <span v-else>PDF</span>
-                </button>
-                <button data-cy="waffle-xls" class="vue-ui-waffle-button" @click="generateXls" :style="`background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`">
-                    XLSX
-                </button>
-            </div>
-        </details>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
-        <svg data-cy="waffle-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" @click="closeDetails">
+        <svg data-cy="waffle-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >
 
             <!-- DEFS -->
             <defs>
@@ -446,7 +432,7 @@ defineExpose({
                 height="100"
                 style="overflow: visible;"
             >
-                <div class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+                <div class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" >
                     <div v-for="(legendItem, i) in legendSet" :data-cy="`waffle-foreginObject-legend-item-${i}`" class="vue-ui-waffle-legend-item" @click="segregate(legendItem.uid)" :style="`opacity:${segregated.includes(legendItem.uid) ? 0.5 : 1}`">
                         <svg viewBox="0 0 12 12" height="14" width="14"><rect height="14" width="14" x="0" y="0" stroke="none" :fill="legendItem.color" /></svg>
                         <span>{{ legendItem.name }} : </span>
@@ -459,7 +445,7 @@ defineExpose({
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="waffleConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" @click="closeDetails">
+        <div v-if="waffleConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" >
             <div v-for="(legendItem, i) in legendSet" :data-cy="`waffle-legend-item-${i}`" class="vue-ui-waffle-legend-item" @click="segregate(legendItem.uid)" :style="`opacity:${segregated.includes(legendItem.uid) ? 0.5 : 1}`">
                 <svg viewBox="0 0 12 12" height="14" width="14"><rect height="14" width="14" x="0" y="0" stroke="none" :fill="legendItem.color" /></svg>
                 <span>{{ legendItem.name }} : </span>
@@ -479,7 +465,7 @@ defineExpose({
         />
 
         <!-- DATA TABLE -->
-        <div @click="closeDetails" class="vue-ui-waffle-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div  class="vue-ui-waffle-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
                 <thead>
                     <tr data-cy="waffle-table-title" v-if="waffleConfig.style.chart.title.text">
@@ -567,61 +553,6 @@ defineExpose({
 }
 
 /** */
-.vue-ui-waffle-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
-    position: absolute;
-    right:0;
-    top:0px;
-    max-width: 300px;
-    text-align:left;
-}
-.vue-ui-waffle-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-}
-.vue-ui-waffle summary {
-    text-align: right;
-    direction: rtl;
-}
-.vue-ui-waffle-user-options-items {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-.vue-ui-waffle-user-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-}
-
-.vue-ui-waffle-button {
-    margin: 6px 0;
-    border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-.vue-ui-waffle-button:hover {
-    background: rgba(0,0,0,0.05);
-}
-.vue-ui-waffle-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
 
 .vue-ui-waffle table {
     width: 100%;

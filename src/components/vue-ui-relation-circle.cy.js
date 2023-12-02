@@ -71,11 +71,11 @@ describe('<VueUiRelationCircle />', () => {
             .wait(100)
             .click();
 
-            if(i === fixture.dataset.length - 1) {
-              cy.wrap($text)
-                .wait(100)
-                .click();
-            }
+          if (i === fixture.dataset.length - 1) {
+            cy.wrap($text)
+              .wait(100)
+              .click();
+          }
         });
       }
 
@@ -87,6 +87,14 @@ describe('<VueUiRelationCircle />', () => {
             .should('eq', fixture.config.style.plot.color)
         });
       }
+
+      cy.get(`[data-cy="user-options-summary"]`).click();
+      cy.get(`[data-cy="user-options-pdf"]`).click();
+      cy.wait(3000);
+      cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);
+
+      cy.get(`[data-cy="user-options-summary"]`).click();
+      cy.clearDownloads();
 
     });
   })

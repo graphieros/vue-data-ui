@@ -37,7 +37,7 @@ describe('<VueUiQuadrant />', () => {
           .contains(fixture.dataset[i].name)
       }
       
-      cy.get(`[data-cy="quadrant-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="quadrant-checkbox-title"]`).check();
       
       [
@@ -63,7 +63,7 @@ describe('<VueUiQuadrant />', () => {
 
       cy.get(`[data-cy="quadrant-checkbox-title"]`).uncheck();
       cy.get(`[data-cy="quadrant-checkbox-table"]`).check();
-      cy.get(`[data-cy="quadrant-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
       cy.viewport(500, 850);
 
       [
@@ -94,16 +94,16 @@ describe('<VueUiQuadrant />', () => {
         .contains(`${fixture.config.style.chart.title.text} : ${fixture.config.style.chart.title.subtitle.text}`);
 
 
-      cy.get(`[data-cy="quadrant-summary"]`).click();        
-      cy.get(`[data-cy="quadrant-pdf"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();        
+      cy.get(`[data-cy="user-options-pdf"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-      cy.get(`[data-cy="quadrant-xls"]`).click();
+      cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
       cy.clearDownloads();
 
-      cy.get(`[data-cy="quadrant-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
     });
   })
 })

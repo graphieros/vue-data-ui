@@ -23,50 +23,45 @@
             />
         </div>
 
-        <details class="vue-ui-xy-user-options" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`" data-html2canvas-ignore v-if="chartConfig.chart.userOptions.show" ref="details">
-            <summary data-cy="xy-summary" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">{{ chartConfig.chart.userOptions.title }}</summary>
-            <div class="vue-ui-xy-user-options-items" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">
-                <div class="vue-ui-xy-user-option-item">
+        <UserOptions
+            ref="defails"
+            v-if="chartConfig.chart.userOptions.show"
+            :backgroundColor="chartConfig.chart.backgroundColor"
+            :color="chartConfig.chart.color"
+            :isPrinting="isPrinting"
+            :title="chartConfig.chart.userOptions.title"
+            :uid="uniqueId"
+            @generatePdf="generatePdf"
+            @generateXls="generateXls"
+        >
+            <template #checkboxes>
+                <div class="vue-ui-options-item">
                     <input type="checkbox" :id="`vue-ui-xy-option-datalabels_${uniqueId}`" :name="`vue-ui-xy-option-datalabels_${uniqueId}`"
                     v-model="mutableConfig.dataLabels.show">
                     <label :for="`vue-ui-xy-option-datalabels_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.dataLabels }}</label>
                 </div>
-                <div class="vue-ui-xy-user-option-item" v-if="!chartConfig.useCanvas">
+                <div class="vue-ui-options-item" v-if="!chartConfig.useCanvas">
                     <input type="checkbox" :id="`vue-ui-xy-option-title_${uniqueId}`" :name="`vue-ui-xy-option-title_${uniqueId}`"
                     v-model="mutableConfig.titleInside">
                     <label :for="`vue-ui-xy-option-title_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.titleInside }}</label>
                 </div>
-                <div class="vue-ui-xy-user-option-item" v-if="!chartConfig.useCanvas">
+                <div class="vue-ui-options-item" v-if="!chartConfig.useCanvas">
                     <input type="checkbox" :id="`vue-ui-xy-option-legend_${uniqueId}`" :name="`vue-ui-xy-option-legend_${uniqueId}`"
                     v-model="mutableConfig.legendInside">
                     <label :for="`vue-ui-xy-option-legend_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.legendInside }}</label>
                 </div>
-                <div class="vue-ui-xy-user-option-item">
+                <div class="vue-ui-options-item">
                     <input type="checkbox" :id="`vue-ui-xy-option-table_${uniqueId}`" :name="`vue-ui-xy-option-table_${uniqueId}`"
                     v-model="mutableConfig.showTable">
                     <label :for="`vue-ui-xy-option-table_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.showTable }}</label>
                 </div>
-                <button data-cy="xy-pdf" class="vue-ui-xy-button" @click="generatePdf" :disabled="isPrinting" :style="`margin-top: 12px; background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">
-                    <svg class="vue-ui-xy-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="chartConfig.chart.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M18 16v.01" />
-                        <path d="M6 16v.01" />
-                        <path d="M12 5v.01" />
-                        <path d="M12 12v.01" />
-                        <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                    </svg>
-                    <span v-else>PDF</span>
-                </button>
-                <button data-cy="xy-xls" class="vue-ui-xy-button" @click="generateXls" :style="`background:${chartConfig.chart.backgroundColor};color:${chartConfig.chart.color}`">
-                    XLSX
-                </button>
-            </div>
-        </details>
+            </template>
+        </UserOptions>
 
         <canvas ref="vueUiXyCanvas" v-if="chartConfig.useCanvas" :height="chartConfig.chart.height" :width="chartConfig.chart.width" @mouseover="isInsideCanvas = true" @mouseleave="resetCanvas">
         </canvas>
 
-        <svg data-cy="xy-svg" v-else width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`" @click="closeDetails">
+        <svg data-cy="xy-svg" v-else width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
@@ -627,7 +622,7 @@
         />
 
         <!-- DATA TABLE -->
-        <div :class="{'vue-ui-xy-table-wrapper': true, 'vue-ui-xy-table-wrapper-printing': isPrinting}" v-if="mutableConfig.showTable" @click="closeDetails">
+        <div :class="{'vue-ui-xy-table-wrapper': true, 'vue-ui-xy-table-wrapper-printing': isPrinting}" v-if="mutableConfig.showTable">
             <table class="vue-ui-xy-table">
                 <thead>
                     <tr>
@@ -674,10 +669,11 @@ import {
     makeXls,
     adaptColorToBackground,
     calcLinearProgression,
-    createSmoothPath
+    createSmoothPath,
 } from '../lib';
 import mainConfig from "../default_configs.json";
 import Title from '../atoms/Title.vue';
+import UserOptions from "../atoms/UserOptions.vue";
 
 export default {
     name: "vue-ui-xy",
@@ -697,6 +693,7 @@ export default {
     },
     components: {
         Title,
+        UserOptions
     },
     data(){
         const uniqueId = `vue-data-ui-xy_${Math.random()}_${Math.random()}`;
@@ -1730,12 +1727,6 @@ export default {
         canShowValue(value) {
             return ![null, undefined, NaN].includes(value);
         },
-        closeDetails(){
-            const details = this.$refs.details;
-            if(details) {
-                details.removeAttribute("open")
-            }
-        },
         closestDecimal(number) {
             if (number === 0) return 0;
 
@@ -1865,36 +1856,7 @@ path, line, rect {
 .vue-ui-xy {
     position: relative;
 }
-.vue-ui-xy-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
-    position: absolute;
-    right:0;
-    top:0;
-    user-select:none;
-    max-width: 300px;
-}
-.vue-ui-xy-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-}
-.vue-ui-xy-user-options summary {
-    text-align: right;
-    direction: rtl;
-}
-.vue-ui-xy-user-options-items {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-}
-.vue-ui-xy-user-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-}
+
 .vue-ui-xy-legend {
     align-items:center;
     column-gap: 24px;

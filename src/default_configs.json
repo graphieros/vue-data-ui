@@ -2198,6 +2198,7 @@
     },
     "vue_ui_relation_circle": {
         "style": {
+            "color":"#2D353C",
             "backgroundColor": "#FFFFFF",
             "fontFamily":"inherit",
             "size": 400,
@@ -2237,6 +2238,10 @@
                     "bold": false
                 }
             }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options"
         }
     },
     "vue_ui_thermometer": {

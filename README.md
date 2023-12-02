@@ -92,4 +92,4 @@ Or you can import just what you need in your files:
 Types are available in the 'vue-data-ui.d.ts' file under the types directory of the package.
 
 ## Nuxt
-[Check this repo for a boilerplate implementation in Nuxt](https://github.com/graphieros/vue-data-ui-nuxt)
+[This repo contains a boilerplate implementation of the vue-data-ui package in Nuxt](https://github.com/graphieros/vue-data-ui-nuxt)

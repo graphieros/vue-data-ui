@@ -44,9 +44,9 @@ describe('<VueUiHeatmap />', () => {
         .should('exist')
         .contains(maxRoundedValue);
 
-      cy.get(`[data-cy="heatmap-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="heatmap-checkbox-title"]`).check();
-      cy.get(`[data-cy="heatmap-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.get(`[data-cy="heatmap-text-title"]`)
         .should('exist')
@@ -64,10 +64,10 @@ describe('<VueUiHeatmap />', () => {
         .should('exist')
         .contains(maxRoundedValue);
 
-      cy.get(`[data-cy="heatmap-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="heatmap-checkbox-title"]`).uncheck();
       cy.get(`[data-cy="heatmap-checkbox-table"]`).check();
-      cy.get(`[data-cy="heatmap-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.viewport(1200, 750);
 
@@ -118,17 +118,17 @@ describe('<VueUiHeatmap />', () => {
         })
       }
 
-      cy.get(`[data-cy="heatmap-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
-      cy.get(`[data-cy="heatmap-pdf"]`).click();
+      cy.get(`[data-cy="user-options-pdf"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);
-      cy.get(`[data-cy="heatmap-xls"]`).click();
+      cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.xlsx`);
       cy.clearDownloads();
 
-      cy.get(`[data-cy="heatmap-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
     });
   });
 })

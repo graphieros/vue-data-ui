@@ -36,11 +36,11 @@ describe('<VueUiRadar />', () => {
             .contains(fixture.dataset.categories[i].name)
         }
 
-        cy.get(`[data-cy="radar-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click();
         cy.get(`[data-cy="radar-checkbox-title"]`).check();
         cy.get(`[data-cy="radar-checkbox-table"]`).check();
         cy.viewport(500, 670);
-        cy.get(`[data-cy="radar-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click();
 
         [
           {
@@ -95,15 +95,15 @@ describe('<VueUiRadar />', () => {
           .contains(`${fixture.config.style.chart.title.text} : ${fixture.config.style.chart.title.subtitle.text}`);
 
 
-        cy.get(`[data-cy="radar-summary"]`).click();
-        cy.get(`[data-cy="radar-pdf"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click();
+        cy.get(`[data-cy="user-options-pdf"]`).click();
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-        cy.get(`[data-cy="radar-xls"]`).click();
+        cy.get(`[data-cy="user-options-xls"]`).click();
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
 
-        cy.get(`[data-cy="radar-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click();
         
         const { component, wrapper } = COMPONENT;
         cy.wait(3000);

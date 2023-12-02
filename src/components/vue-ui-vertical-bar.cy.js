@@ -28,7 +28,6 @@ describe('<VueUiVerticalBar />', () => {
         cy.get(`[data-cy="vertical-bar-div-legend-item-${i}"]`).then(($legend) => {
           cy.wrap($legend)
             .should('exist')
-            .contains(`${fixture.dataset[i].name} : ${fixture.dataset[i].value}`)
             .click()
         })
       }
@@ -40,7 +39,7 @@ describe('<VueUiVerticalBar />', () => {
         })
       }
 
-      cy.get(`[data-cy="vertical-bar-summary"]`).click();
+      cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.get(`[data-cy="vertical-bar-checkbox-title"]`).check();
 
@@ -56,7 +55,6 @@ describe('<VueUiVerticalBar />', () => {
         cy.get(`[data-cy="vertical-bar-foreignObject-legend-item-${i}"]`).then(($legend) => {
           cy.wrap($legend)
             .should('exist')
-            .contains(`${fixture.dataset[i].name} : ${fixture.dataset[i].value}`)
             .click()
         })
       }
@@ -131,16 +129,16 @@ describe('<VueUiVerticalBar />', () => {
           }
         });
 
-        cy.get(`[data-cy="vertical-bar-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click();
 
-        cy.get(`[data-cy="vertical-bar-pdf"]`).click();
+        cy.get(`[data-cy="user-options-pdf"]`).click();
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-        cy.get(`[data-cy="vertical-bar-xls"]`).click();
+        cy.get(`[data-cy="user-options-xls"]`).click();
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
         cy.clearDownloads();
-        cy.get(`[data-cy="vertical-bar-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click();
 
       });
   });

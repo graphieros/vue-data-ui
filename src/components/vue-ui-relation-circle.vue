@@ -1,10 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { convertConfigColors, treeShake, palette } from "../lib.js";
+import { palette } from "../lib.js";
 import pdf from "../pdf";
 import mainConfig from "../default_configs.json";
 import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
+import UserOptions from "../atoms/UserOptions.vue";
 
 const props = defineProps({
     dataset: {
@@ -78,6 +79,15 @@ onBeforeUnmount(() => {
 
 function clickOutside(e) {
     const target = e.target;
+    if (target && Array.from(target.classList).includes("vue-ui-user-options")) {
+        return;
+    }
+    if (target && Array.from(target.classList).includes("vue-ui-user-options-summary")) {
+        return;
+    }
+    if (target && Array.from(target.classList).includes("vue-data-ui-button")) {
+        return;
+    }
     if(target && Array.from(target.classList).includes("vue-ui-relation-circle-legend")) {
         return;
     } else {
@@ -217,12 +227,10 @@ defineExpose({
     generatePdf
 })
 
-
-
 </script>
 
 <template>
-    <div class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor}`" :id="`relation_circle_${uid}`"> 
+    <div class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor};${relationConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`relation_circle_${uid}`"> 
      <!-- TITLE AS DIV -->
         <div v-if="relationConfig.style.title.useDiv && relationConfig.style.title.text" :style="`width:100%;background:${relationConfig.style.backgroundColor}`">
             <Title
@@ -243,7 +251,20 @@ defineExpose({
                     },
                 }"
             />
-        </div>  
+        </div>
+
+        <UserOptions
+            ref="details"
+            v-if="relationConfig.userOptions.show"
+            :hasXls="false"
+            :backgroundColor="relationConfig.style.backgroundColor"
+            :color="relationConfig.style.color"
+            :isPrinting="isPrinting"
+            :title="relationConfig.userOptions.title"
+            :uid="uid"
+            @generatePdf="generatePdf"
+        />
+
         <svg 
             :viewBox="`0 0 ${size} ${size}`"
             class="relation-circle"
@@ -347,6 +368,9 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
+.vue-ui-relation-circle {
+    position: relative;
+}
 svg.relation-circle{
     background: transparent;
     overflow: visible;
