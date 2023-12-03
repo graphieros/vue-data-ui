@@ -3,6 +3,7 @@ import { ref, computed, onMounted, nextTick } from "vue";
 import { shiftHue, opacity, makeXls } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
+import img from "../img";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
@@ -27,6 +28,7 @@ const props = defineProps({
 const uid = ref(`vue-ui-candlestick-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_candlestick);
 
+const isImaging = ref(false);
 const isPrinting = ref(false);
 const tooltip = ref(null);
 const details = ref(null);
@@ -235,16 +237,41 @@ function useTooltip(index) {
     }
 }
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
-    nextTick(() => {
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
         pdf({
             domElement: document.getElementById(`vue-ui-candlestick_${uid.value}`),
             fileName: candlestickConfig.value.style.title.text || 'vue-ui-candlestick'
         }).finally(() => {
             isPrinting.value = false;
         });
-    })
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`vue-ui-candlestick_${uid.value}`),
+            fileName: candlestickConfig.value.style.title.text || 'vue-ui-candlestick',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
 }
 
 function generateXls() {
@@ -270,7 +297,8 @@ function generateXls() {
 
 defineExpose({
     generatePdf,
-    generateXls
+    generateXls,
+    generateImage
 });
 
 </script>
@@ -305,11 +333,14 @@ defineExpose({
             v-if="candlestickConfig.userOptions.show"
             :backgroundColor="candlestickConfig.style.backgroundColor"
             :color="candlestickConfig.style.color"
+            :isImaging="isImaging"
             :isPrinting="isPrinting"
             :title="candlestickConfig.userOptions.title"
             :uid="uid"
+            :hasImg="true"
             @generatePdf="generatePdf"
             @generateXls="generateXls"
+            @generateImage="generateImage"
          >
             <template #checkboxes>
                 <div class="vue-ui-options-item">

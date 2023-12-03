@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import { palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, makeXls } from "../lib";
-import pdf from "../pdf.js";
+import pdf from "../pdf";
+import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -25,6 +26,7 @@ const uid = ref(`vue-ui-chestnut-${Math.random()}`);
 
 const defaultConfig = ref(mainConfig.vue_ui_chestnut);
 
+const isImaging = ref(false);
 const isPrinting = ref(false);
 const chestnutChart = ref(null);
 const details = ref(null);
@@ -325,24 +327,46 @@ function isArcBigEnough(arc) {
     return arc.proportion * 100 > chestnutConfig.value.style.chart.layout.nuts.selected.labels.dataLabels.hideUnderValue;
 }
 
-function sumValues(source) {
-    return [...source].map(s => s.value).reduce((a, b) => a + b, 0);
-}
-
 onMounted(() => {
     const height = totalBranches.value * (svg.value.branchSize + svg.value.gap) + svg.value.padding.top + svg.value.padding.bottom;
     svg.value.height = height;
 });
 
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
+    isPrinting.value = true;
+}
 
 function generatePdf(){
-    isPrinting.value = true;
-    pdf({
-        domElement: document.getElementById(`vue-ui-chestnut_${uid.value}`),
-        fileName: chestnutConfig.value.style.chart.layout.title.text || 'vue-ui-chestnut'
-    }).finally(() => {
-        isPrinting.value = false;
-    });
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        pdf({
+            domElement: document.getElementById(`vue-ui-chestnut_${uid.value}`),
+            fileName: chestnutConfig.value.style.chart.layout.title.text || 'vue-ui-chestnut'
+        }).finally(() => {
+            isPrinting.value = false;
+        });
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`vue-ui-chestnut_${uid.value}`),
+            fileName: chestnutConfig.value.style.chart.layout.title.text || 'vue-ui-chestnut',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
 }
 
 const table = computed(() => {
@@ -400,7 +424,8 @@ function generateXls() {
 defineExpose({
     getData,
     generatePdf,
-    generateXls
+    generateXls,
+    generateImage
 });
 
 </script>
@@ -418,11 +443,14 @@ defineExpose({
             v-if="chestnutConfig.userOptions.show"
             :backgroundColor="chestnutConfig.style.chart.backgroundColor"
             :color="chestnutConfig.style.chart.color"
+            :isImaging="isImaging"
             :isPrinting="isPrinting"
             :title="chestnutConfig.userOptions.title"
             :uid="uid"
+            :hasImg="true"
             @generatePdf="generatePdf"
             @generateXls="generateXls"
+            @generateImage="generateImage"
         >
             <template #checkboxes>
                 <div class="vue-ui-options-item">

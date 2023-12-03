@@ -10,6 +10,7 @@
  * 
  */
 import { ref, computed, onMounted } from "vue";
+import PROD_CONFIG from "./default_configs.json";
 import Box from "./Box.vue";
 import TableTest from "./components/vue-ui-table.vue";
 import DonutTest from "./components/vue-ui-donut.vue";
@@ -188,12 +189,6 @@ const config = ref({
   plot: {
     labels: {
       show: true,
-    },
-  },
-  table: {
-    rounding: 1,
-    th: {
-      backgroundColor: "#FF0000",
     },
   },
 });
@@ -3433,43 +3428,32 @@ const histoDataset = ref([
 ]);
 
 const showLocalTest = ref(false);
+
+function copyConfig(c) {
+  let selBox = document.createElement('textarea');
+      selBox.style.position = 'fixed';
+      selBox.style.left = '0';
+      selBox.style.top = '0';
+      selBox.style.opacity = '0';
+      selBox.value = JSON.stringify(c);
+      document.body.appendChild(selBox);
+      selBox.focus();
+      selBox.select();
+      document.execCommand('copy');
+      document.body.removeChild(selBox);
+}
+
 </script>
 
 <template>
-  <div>
-    <!-- <button @click="sstest">SCREENSHOT</button>
-    <button @click="toggleRead">TOGGLE RATING READONLY</button>
-    <button @click="getDashPositions">DASH POSITIONS</button>
-    <button @click="makeDashPdf">PDF FROM OUTSIDE</button> -->
-    <button @click="printXy">PRINT XY</button>
-    <button @click="xlsXy">XLS XY</button>
-    <button @click="printDonut">PRINT DONUT</button>
-    <button @click="xlsDonut">XLS DONUT</button>
-    <button @click="printWaffle">PRINT WAFFLE</button>
-    <button @click="xlsWaffle">XLS WAFFLE</button>
-    <button @click="printRadar">PRINT RADAR</button>
-    <button @click="xlsRadar">XLS RADAR</button>
-    <button @click="printQuadrant">PRINT QUADRANT</button>
-    <button @click="xlsQuadrant">XLS QUADRANT</button>
-    <button @click="printGauge">PRINT GAUGE</button>
-    <button @click="printChestnut">PRINT CHESTNUT</button>
-    <button @click="xlsChestnut">XLS CHESTNUT</button>
-    <button @click="printOnion">PRINT ONION</button>
-    <button @click="xlsOnion">XLS ONION</button>
-    <button @click="printVB">PRINT VERTICAL BAR</button>
-    <button @click="xlsVB">XLS VERTICAL BAR</button>
-    <button @click="printHeatmap">PRINT HEATMAP</button>
-    <button @click="xlsHeatmap">XLS HEATMAP</button>
-    <button @click="printScatter">PRINT SCATTER</button>
-    <button @click="xlsScatter">XLS SCATTER</button>
-    <button @click="printCandle">PRINT CANDLE</button>
-    <button @click="xlsCandle">XLS CANDLE</button>
-    <button @click="printPyramid">PRINT PYRAMID</button>
-    <button @click="xlsPyramid">XLS PYRAMID</button>
-    <button @click="printRelation">PRINT RELATION CIRCLE</button>
-    <button @click="printThermo">PRINT THERMO</button>
-
-      <Box>
+  <div style="padding: 48px; font-weight: bold; line-height: 20px">
+    <h1 style="font-size: 36px; color: #666666">
+      Vue Data UI
+    </h1>
+    <h2 style="color: #A6A6A6">Components</h2>
+  </div>
+  <div style="padding-left: 48px; padding-right: 48px">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_relation_circle)">
         <template #title>VueUiRelationCircle</template>
         <template #dev>
           <RelationTest
@@ -3485,9 +3469,12 @@ const showLocalTest = ref(false);
               :config="relationConfig"
             />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_relation_circle }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
         <template #title>VueUiSparkline</template>
         <template #dev>
           <SparklineTest
@@ -3501,9 +3488,12 @@ const showLocalTest = ref(false);
             :dataset="sparklineDataset"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_sparkline }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
         <template #title>VueUiXy</template>
         <template #dev>
           <XyTest
@@ -3523,9 +3513,12 @@ const showLocalTest = ref(false);
             @selectX="selectX"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_xy }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkhistogram)">
         <template #title>VueUiSparkHistogram</template>
         <template #dev>
           <HistoTest 
@@ -3539,9 +3532,12 @@ const showLocalTest = ref(false);
              :config="histoConfig"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_sparkhistogram }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_candlestick)">
         <template #title>VueUiCandleStick</template>
         <template #dev>
           <CandlestickTest 
@@ -3557,9 +3553,12 @@ const showLocalTest = ref(false);
             :config="{...candlestickConfig, useCssAnimation: false}"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_candlestick }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>VueUiScatter</template>
         <template #dev>
           <ScatterTest 
@@ -3575,9 +3574,12 @@ const showLocalTest = ref(false);
             :dataset="scatterDataset"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_scatter }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_vertical_bar)">
         <template #title>VueUiVerticalBar</template>
         <template #dev>
           <VerticalTest 
@@ -3594,9 +3596,12 @@ const showLocalTest = ref(false);
             @selectLegend="selectVerticalLegend"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_vertical_bar }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
         <template #title>VueUiOnion</template>
         <template #dev>
           <OnionTest
@@ -3613,9 +3618,12 @@ const showLocalTest = ref(false);
             @selectLegend="selectOnionLegend"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_onion }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
         <template #title>VueUiQuadrant</template>
         <template #dev>
           <QuadrantTest
@@ -3637,9 +3645,12 @@ const showLocalTest = ref(false);
             @selectLegend="selectQuadrantLegend"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_quadrant }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_radar)">
         <template #title>VueUiRadar</template>
         <template #dev>
           <RadarTest
@@ -3657,9 +3668,12 @@ const showLocalTest = ref(false);
             @selectLegend="selectRadarLegend"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_radar }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
         <template #title>VueUiDonut</template>
         <template #dev>
           <DonutTest
@@ -3699,9 +3713,12 @@ const showLocalTest = ref(false);
             @selectLegend="selectLegendDonut"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_donut }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
         <template #title>VueUiSparkStackbar</template>
         <template #dev>
           <StackTest 
@@ -3713,9 +3730,12 @@ const showLocalTest = ref(false);
             :dataset="stackDataset"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_sparkstackbar }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_thermometer)">
         <template #title>VueUiThermometer</template>
         <template #dev>
           <ThermoTest 
@@ -3731,9 +3751,12 @@ const showLocalTest = ref(false);
             :config="thermoConfig" 
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_thermometer }}
+        </template>
       </Box>
       
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)">
         <template #title>VueUiSkeleton</template>
         <template #dev>
           <SkeletonTest
@@ -3745,9 +3768,12 @@ const showLocalTest = ref(false);
             :config="{ type: 'rating', style: { rating: { useSmiley: true, filled: true } } }"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_skeleton }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_smiley)">
         <template #title>VueUiSmiley</template>
         <template #dev>
           <SmileyTest 
@@ -3761,9 +3787,12 @@ const showLocalTest = ref(false);
             :config="smileyConfig"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_smiley }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_rating)">
         <template #title>VueUiRating</template>
         <template #dev>
           <RatingTest
@@ -3779,9 +3808,12 @@ const showLocalTest = ref(false);
             :dataset="ratingDataset"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_rating }}
+        </template>
       </Box>
       
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_chestnut)">
         <template #title>VueUiChestnut</template>
         <template #dev>
           <ChestnutTest
@@ -3801,9 +3833,12 @@ const showLocalTest = ref(false);
             @selectNut="selectNut"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_chestnut }}
+        </template>
       </Box>
       
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_age_pyramid)">
         <template #title>VueUiPyramid</template>
         <template #dev>
           <PyramidTest 
@@ -3819,9 +3854,12 @@ const showLocalTest = ref(false);
             :config="{style:{title:{text:'Title', subtitle:{text: 'Subtitle'}}}}"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_age_pyramid }}
+        </template>
       </Box>
       
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_waffle)">
         <template #title>VueUiWaffle</template>
         <template #dev>
           <WaffleTest
@@ -3839,9 +3877,12 @@ const showLocalTest = ref(false);
             @selectLegend="selectLegendWaffle"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_waffle }}
+        </template>
       </Box>
       
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_annotator)">
         <template #title>VueUiAnnotator</template>
         <template #dev>
           <AnnotatorTest
@@ -3889,10 +3930,13 @@ const showLocalTest = ref(false);
             </DashboardTest>
           </VueUiAnnotator>
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_annotator }}
+        </template>
       </Box>
 
             
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_dashboard)">
         <template #title>VueUiDashboard</template>
         <template #dev>
           <DashboardTest
@@ -3922,9 +3966,12 @@ const showLocalTest = ref(false);
             </template>
           </VueUiDashboard>
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_dashboard }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkbar)">
         <template #title>VueUiSparkbar</template>
         <template #dev>
           <SparkbarTest
@@ -3938,9 +3985,12 @@ const showLocalTest = ref(false);
             :dataset="sparkbarDataset"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_sparkbar }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
         <template #title>VueUiHeatmap</template>
         <template #dev>
           <HeatmapTest
@@ -3956,9 +4006,12 @@ const showLocalTest = ref(false);
             :dataset="heatmapDataset"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_heatmap }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_gauge)">
         <template #title>VueUiGauge</template>
         <template #dev>
           <GaugeTest 
@@ -3972,9 +4025,12 @@ const showLocalTest = ref(false);
             :dataset="gaugeDataset"
           />
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_gauge }}
+        </template>
       </Box>
 
-      <Box>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_table)">
         <template #title>VueUiTable</template>
         <template #dev>
           <TableTest 
@@ -3985,6 +4041,9 @@ const showLocalTest = ref(false);
           <VueUiTable 
             :dataset="tableTestDataset" 
           />
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_table }}
         </template>
       </Box>
 

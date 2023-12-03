@@ -3,6 +3,7 @@ import { ref, computed, nextTick } from "vue";
 import { opacity, makeXls } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
+import img from "../img";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
@@ -28,6 +29,7 @@ const uid = ref(`vue-ui-heatmap-${Math.random()}`);
 
 const defaultConfig = ref(mainConfig.vue_ui_heatmap);
 
+const isImaging = ref(false);
 const isPrinting = ref(false);
 const heatmapChart = ref(null);
 const tooltip = ref(null);
@@ -155,16 +157,41 @@ function useTooltip(datapoint) {
     tooltipContent.value = `<div style="font-size:${heatmapConfig.value.style.tooltip.fontSize}px">${html}</div>`;
 }
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
-    nextTick(() => {
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
         pdf({
             domElement: document.getElementById(`heatmap__${uid.value}`),
             fileName: heatmapConfig.value.style.title.text || 'vue-ui-heatmap'
         }).finally(() => {
             isPrinting.value = false;
         });
-    })
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`heatmap__${uid.value}`),
+            fileName: heatmapConfig.value.style.title.text || 'vue-ui-heatmap',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
 }
 
 const table = computed(() => {
@@ -176,6 +203,7 @@ const table = computed(() => {
     const body = props.dataset.map(ds => ds.values);
     return { head, body };
 });
+
 
 function generateXls() {
     nextTick(() => {
@@ -201,7 +229,8 @@ function generateXls() {
 
 defineExpose({
     generatePdf,
-    generateXls
+    generateXls,
+    generateImage
 });
 
 </script>
@@ -235,11 +264,14 @@ defineExpose({
             v-if="heatmapConfig.userOptions.show"
             :backgroundColor="heatmapConfig.style.backgroundColor"
             :color="heatmapConfig.style.color"
+            :isImaging="isImaging"
             :isPrinting="isPrinting"
             :title="heatmapConfig.userOptions.title"
             :uid="uid"
+            :hasImg="true"
             @generatePdf="generatePdf"
             @generateXls="generateXls"
+            @generateImage="generateImage"
         >
             <template #checkboxes>
                 <div class="vue-ui-options-item">

@@ -84,6 +84,9 @@ describe('<VueUiChestnut />', () => {
       cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.layout.title.text}.xlsx`);
+      cy.get(`[data-cy="user-options-img"]`).click();
+      cy.wait(3000);
+      cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.layout.title.text}.png`);
       cy.clearDownloads();
 
       cy.get(`[data-cy="user-options-summary"]`).click();

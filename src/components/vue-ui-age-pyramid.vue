@@ -2,6 +2,7 @@
 import { ref, computed, nextTick } from "vue";
 import { opacity, makeXls, shiftHue } from '../lib';
 import pdf from "../pdf";
+import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
@@ -28,6 +29,7 @@ const uid = ref(`vue-ui-age-pyramid-${Math.random()}`);
 
 const defaultConfig = ref(mainConfig.vue_ui_age_pyramid);
 
+const isImaging = ref(false);
 const isPrinting = ref(false);
 const agePyramid = ref(null);
 const tooltip = ref(null);
@@ -206,16 +208,41 @@ function hoverIndex(index) {
     isTooltip.value = true;
 }
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
-    nextTick(() => {
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
         pdf({
             domElement: document.getElementById(`vue-ui-age-pyramid_${uid.value}`),
             fileName: agePyramidConfig.value.style.title.text || 'vue-ui-age-pyramid'
         }).finally(() => {
             isPrinting.value = false;
         });
-    })
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`vue-ui-age-pyramid_${uid.value}`),
+            fileName: agePyramidConfig.value.style.title.text || 'vue-ui-age-pyramid',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
 }
 
 function generateXls() {
@@ -240,7 +267,8 @@ function generateXls() {
 
 defineExpose({
     generatePdf,
-    generateXls
+    generateXls,
+    generateImage
 });
 
 </script>
@@ -275,11 +303,14 @@ defineExpose({
             v-if="agePyramidConfig.userOptions.show"
             :backgroundColor="agePyramidConfig.style.backgroundColor"
             :color="agePyramidConfig.style.color"
+            :isImaging="isImaging"
             :isPrinting="isPrinting"
             :title="agePyramidConfig.userOptions.title"
             :uid="uid"
+            :hasImg="true"
             @generatePdf="generatePdf"
             @generateXls="generateXls"
+            @generateImage="generateImage"
         >
             <template #checkboxes>
                 <div class="vue-ui-options-item">

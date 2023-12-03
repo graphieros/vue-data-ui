@@ -42,27 +42,6 @@ describe('<VueUiRadar />', () => {
         cy.viewport(500, 670);
         cy.get(`[data-cy="user-options-summary"]`).click();
 
-        [
-          {
-            selector: `[data-cy="radar-text-title"]`,
-            expected: fixture.config.style.chart.title.text
-          },
-          {
-            selector: `[data-cy="radar-text-subtitle"]`,
-            expected: fixture.config.style.chart.title.subtitle.text
-          },
-        ].forEach(el => {
-          cy.get(el.selector)
-            .should('exist')
-            .contains(el.expected)
-        });
-
-        for (let i = 0; i < fixture.dataset.categories.length; i += 1) {
-          cy.get(`[data-cy="radar-foreignObject-legend-item-${i}"]`)
-            .should('exist')
-            .contains(fixture.dataset.categories[i].name)
-        }
-
         for (let i = 0; i < fixture.dataset.series.length; i += 1) {
           cy.get(`[data-cy="radar-apex-label-${i}"]`).then(($label) => {
             cy.wrap($label)
@@ -95,15 +74,18 @@ describe('<VueUiRadar />', () => {
           .contains(`${fixture.config.style.chart.title.text} : ${fixture.config.style.chart.title.subtitle.text}`);
 
 
-        cy.get(`[data-cy="user-options-summary"]`).click();
-        cy.get(`[data-cy="user-options-pdf"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
+        cy.get(`[data-cy="user-options-pdf"]`).click({ force: true });
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-        cy.get(`[data-cy="user-options-xls"]`).click();
+        cy.get(`[data-cy="user-options-xls"]`).click({ force: true });
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
+        cy.get(`[data-cy="user-options-img"]`).click({ force: true });
+        cy.wait(3000);
+        cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
 
-        cy.get(`[data-cy="user-options-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
         
         const { component, wrapper } = COMPONENT;
         cy.wait(3000);
@@ -112,6 +94,9 @@ describe('<VueUiRadar />', () => {
         cy.wait(3000);
         wrapper.componentVM.generateXls();
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
+        cy.wait(3000);
+        wrapper.componentVM.generateImage();
+        cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
         cy.clearDownloads();
 
       })

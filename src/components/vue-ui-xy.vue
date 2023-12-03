@@ -29,10 +29,13 @@
             :backgroundColor="chartConfig.chart.backgroundColor"
             :color="chartConfig.chart.color"
             :isPrinting="isPrinting"
+            :isImaging="isImaging"
             :title="chartConfig.chart.userOptions.title"
             :uid="uniqueId"
+            hasImg
             @generatePdf="generatePdf"
             @generateXls="generateXls"
+            @generateImage="generateImage"
         >
             <template #checkboxes>
                 <div class="vue-ui-options-item">
@@ -656,6 +659,7 @@
 
 <script>
 import pdf from '../pdf';
+import img from "../img";
 import { useMouse } from '../useMouse';
 import { 
     treeShake, 
@@ -672,6 +676,7 @@ import {
     createSmoothPath,
 } from '../lib';
 import mainConfig from "../default_configs.json";
+import DataTable from "../atoms/DataTable.vue";
 import Title from '../atoms/Title.vue';
 import UserOptions from "../atoms/UserOptions.vue";
 
@@ -692,8 +697,9 @@ export default {
         }
     },
     components: {
+        DataTable,
         Title,
-        UserOptions
+        UserOptions,
     },
     data(){
         const uniqueId = `vue-data-ui-xy_${Math.random()}_${Math.random()}`;
@@ -724,6 +730,7 @@ export default {
             },
             isInsideCanvas: false,
             isPrinting: false,
+            isImaging: false,
             isTooltip: false,
             mutableConfig: {
                 dataLabels: {
@@ -738,6 +745,7 @@ export default {
             segregatedSeries: [],
             uniqueId,
             slicer,
+            __to__: null,
             maxX
         }
     },
@@ -1141,6 +1149,7 @@ export default {
         treeShake,
         shiftHue,
         pdf,
+        img,
         convertColorToHex,
         convertConfigColors,
         makeXls,
@@ -1810,14 +1819,20 @@ export default {
                 this.selectedSerieIndex = null;
             }
         },
-        generatePdf(){
+        showSpinnerPdf() {
             this.isPrinting = true;
-            this.pdf({
-                domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
-                fileName: this.chartConfig.chart.title.text || 'vue-ui-xy'
-            }).finally(() => {
-                this.isPrinting = false;
-            });
+        },
+        generatePdf(){
+            this.showSpinnerPdf();
+            clearTimeout(this.__to__);
+            this.__to__ = setTimeout(() => {
+                this.pdf({
+                    domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
+                    fileName: this.chartConfig.chart.title.text || 'vue-ui-xy'
+                }).finally(() => {
+                    this.isPrinting = false;
+                });
+            }, 100)
         },
         generateXls() {
             const title = [[this.chartConfig.chart.title.text], [this.chartConfig.chart.title.subtitle.text], [""]];
@@ -1826,6 +1841,22 @@ export default {
             const table = title.concat([head]).concat(body);
             this.makeXls(table, this.chartConfig.chart.title.text || 'vue-ui-xy');
         },
+        showSpinnerImage() {
+            this.isImaging = true;
+        },
+        generateImage() {
+            this.showSpinnerImage();
+            clearTimeout(this.__to__);
+            this.__to__ = setTimeout(() => {
+                this.img({
+                    domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
+                    fileName: this.chartConfig.chart.title.text || 'vue-ui-xy',
+                    format: 'png'
+                }).finally(() => {
+                    this.isImaging = false;
+                });
+            }, 100)
+        }
     }
 }
 </script>

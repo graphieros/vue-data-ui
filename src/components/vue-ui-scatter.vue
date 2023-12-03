@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, onMounted } from "vue";
 import { palette, opacity, makeXls } from '../lib';
 import pdf from "../pdf";
+import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
@@ -28,6 +29,7 @@ const uid = ref(`vue-ui-scatter-${Math.random()}`);
 
 const defaultConfig = ref(mainConfig.vue_ui_scatter);
 
+const isImaging = ref(false);
 const isPrinting = ref(false);
 const scatterChart = ref(null);
 const tooltip = ref(null);
@@ -230,16 +232,42 @@ function segregate(id) {
     }
 }
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
-    nextTick(() => {
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
         pdf({
             domElement: document.getElementById(`vue-ui-scatter_${uid.value}`),
             fileName: scatterConfig.value.style.title.text || 'vue-ui-scatter'
         }).finally(() => {
             isPrinting.value = false;
         });
-    })
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`vue-ui-scatter_${uid.value}`),
+                fileName: scatterConfig.value.style.title.text || 'vue-ui-scatter',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100);
+
 }
 
 function generateXls() {
@@ -265,7 +293,8 @@ function generateXls() {
 defineExpose({
     getData,
     generatePdf,
-    generateXls
+    generateXls,
+    generateImage
 });
 
 </script>
@@ -301,11 +330,14 @@ defineExpose({
             v-if="scatterConfig.userOptions.show"
             :backgroundColor="scatterConfig.style.backgroundColor"
             :color="scatterConfig.style.color"
+            :isImaging="isImaging"
             :isPrinting="isPrinting"
             :title="scatterConfig.userOptions.title"
             :uid="uid"
+            :hasImg="true"
             @generatePdf="generatePdf"
             @generateXls="generateXls"
+            @generateImage="generateImage"
         >
             <template #checkboxes>
                 <div class="vue-ui-options-item">

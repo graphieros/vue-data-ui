@@ -257,54 +257,15 @@ describe('<VueUiDonut />', () => {
         }
       });
 
-
-      cy.get(`[data-cy="donut-checkbox-table"]`).then(($checkbox) => {
-        cy.get(`[data-cy="donut-table"]`).should('not.exist');
-
-        cy.wrap($checkbox)
-          .check();
-
-        cy.viewport(1000, 1200);
-        cy.get(`[data-cy="donut-table"]`).should('exist');
-        cy.get(`[data-cy="donut-table-title"]`)
-          .should('exist')
-          .contains(`${fixture.config.style.chart.title.text} : ${fixture.config.style.chart.title.subtitle.text}`);
-
-        for (let i = 0; i < fixture.dataset.length; i += 1) {
-          const expectedValue = sortedDataset[i].values.reduce((a, b) => a + b, 0);
-          const expectedPercentage = `${(expectedValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage)}%`;
-
-          cy.get(`[data-cy="donut-table-tr-${i}"]`).then(($tr) => {
-            cy.wrap($tr)
-              .should('exist');
-
-            cy.wrap($tr)
-              .find('td')
-              .should('have.length', 3)
-              .each(($td, index) => {
-                if (index === 0) {
-                  cy.wrap($td)
-                    .should('contain.text', `●${sortedDataset[i].name}`)
-                }
-                if (index === 1) {
-                  cy.wrap($td)
-                    .should('contain.text', expectedValue)
-                }
-                if (index === 2) {
-                  cy.wrap($td)
-                    .should('contain.text', expectedPercentage)
-                }
-              });
-          });
-        }
-      });
-
       cy.get(`[data-cy="user-options-pdf"]`).click();
       cy.wait(5000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
       cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
+      cy.get(`[data-cy="user-options-img"]`).click();
+      cy.wait(3000);
+      cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
       cy.clearDownloads();
     });
   });

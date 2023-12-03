@@ -2,6 +2,7 @@
 import { ref, computed, nextTick } from "vue";
 import { convertColorToHex, palette, opacity, makeXls } from "../lib.js";
 import pdf from "../pdf";
+import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
@@ -26,6 +27,7 @@ const uid = ref(`vue-ui-onion-${Math.random()}`);
 
 const defaultConfig = ref(mainConfig.vue_ui_onion);
 
+const isImaging = ref(false);
 const isPrinting = ref(false);
 const onionChart = ref(null);
 const details = ref(null);
@@ -152,16 +154,41 @@ const table = computed(() => {
     return { head, body };
 });
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
-    nextTick(() => {
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
         pdf({
             domElement: document.getElementById(`vue-ui-onion_${uid.value}`),
             fileName: onionConfig.value.style.chart.title.text || 'vue-ui-onion'
         }).finally(() => {
             isPrinting.value = false;
         });
-    })
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`vue-ui-onion_${uid.value}`),
+            fileName: onionConfig.value.style.chart.title.text || 'vue-ui-onion',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
 }
 
 function generateXls() {
@@ -179,7 +206,8 @@ const selectedSerie = ref(undefined);
 defineExpose({
     getData,
     generatePdf,
-    generateXls
+    generateXls,
+    generateImage
 });
 
 </script>
@@ -219,11 +247,14 @@ defineExpose({
             v-if="onionConfig.userOptions.show"
             :backgroundColor="onionConfig.style.chart.backgroundColor"
             :color="onionConfig.style.chart.color"
+            :isImaging="isImaging"
             :isPrinting="isPrinting"
             :title="onionConfig.userOptions.title"
             :uid="uid"
+            :hasImg="true"
             @generatePdf="generatePdf"
             @generateXls="generateXls"
+            @generateImage="generateImage"
         >
             <template #checkboxes>
                 <div class="vue-ui-options-item">

@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { palette, convertColorToHex, opacity } from "../lib.js";
 import pdf from "../pdf";
+import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
@@ -24,6 +25,7 @@ const props = defineProps({
 
 const uid = ref(`vue-ui-thermometer-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_thermometer);
+const isImaging = ref(false);
 const isPrinting = ref(false);
 const thermoChart = ref(null);
 
@@ -171,20 +173,48 @@ const graduations = computed(() => {
     return grads;
 });
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
     usablePadding.value.top = thermoConfig.value.style.chart.padding.top;
-    pdf({
-        domElement: document.getElementById(`thermometer__${uid.value}`),
-        fileName: thermoConfig.value.style.title.text || 'vue-ui-thermometer'
-    }).finally(() => {
-        isPrinting.value = false;
-        setPaddingTop();
-    });
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        pdf({
+            domElement: document.getElementById(`thermometer__${uid.value}`),
+            fileName: thermoConfig.value.style.title.text || 'vue-ui-thermometer'
+        }).finally(() => {
+            isPrinting.value = false;
+            setPaddingTop();
+        });
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`thermometer__${uid.value}`),
+        fileName: thermoConfig.value.style.title.text || 'vue-ui-thermometer',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
 }
 
 defineExpose({
-    generatePdf
+    generatePdf,
+    generateImage
 })
 
 </script>
@@ -219,10 +249,13 @@ defineExpose({
             v-if="thermoConfig.userOptions.show"
             :backgroundColor="thermoConfig.style.chart.backgroundColor"
             :color="thermoConfig.style.chart.color"
+            :isImaging="isImaging"
             :isPrinting="isPrinting"
             :title="thermoConfig.userOptions.title"
             :uid="uid"
+            :hasImg="true"
             @generatePdf="generatePdf"
+            @generateImage="generateImage"
             :hasXls="false"
         >
             <template #checkboxes>

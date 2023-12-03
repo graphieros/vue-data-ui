@@ -191,6 +191,9 @@ describe('<VueUiCandlestick />', () => {
       cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.xlsx`);
+      cy.get(`[data-cy="user-options-img"]`).click();
+      cy.wait(3000);
+      cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.png`);
       cy.clearDownloads();
 
     });

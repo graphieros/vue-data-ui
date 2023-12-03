@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { palette } from "../lib.js";
 import pdf from "../pdf";
+import img from "../img";
 import mainConfig from "../default_configs.json";
 import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
@@ -24,6 +25,7 @@ const props = defineProps({
 
 const uid = ref(`vue-ui-relation-circle-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_relation_circle);
+const isImaging = ref(false);
 const isPrinting = ref(false);
 
 const relationConfig = computed(() => {
@@ -213,18 +215,47 @@ function calcLinkWidth(plot) {
     return plot.weight / maxWeight.value * relationConfig.value.style.links.maxWidth;
 }
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
-    pdf({
-        domElement: document.getElementById(`relation_circle_${uid.value}`),
-        fileName: relationConfig.value.style.title.text || 'vue-ui-relation-circle'
-    }).finally(() => {
-        isPrinting.value = false;
-    });
 }
 
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        pdf({
+            domElement: document.getElementById(`relation_circle_${uid.value}`),
+            fileName: relationConfig.value.style.title.text || 'vue-ui-relation-circle'
+        }).finally(() => {
+            isPrinting.value = false;
+        })
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`relation_circle_${uid.value}`),
+        fileName: relationConfig.value.style.title.text || 'vue-ui-relation-circle',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
+}
+
+
 defineExpose({
-    generatePdf
+    generatePdf,
+    generateImage
 })
 
 </script>
@@ -257,12 +288,15 @@ defineExpose({
             ref="details"
             v-if="relationConfig.userOptions.show"
             :hasXls="false"
+            :hasImg="true"
             :backgroundColor="relationConfig.style.backgroundColor"
             :color="relationConfig.style.color"
             :isPrinting="isPrinting"
+            :isImaging="isImaging"
             :title="relationConfig.userOptions.title"
             :uid="uid"
             @generatePdf="generatePdf"
+            @generateImage="generateImage"
         />
 
         <svg 

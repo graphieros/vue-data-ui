@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { palette, rotateMatrix, addVector, matrixTimes, opacity, convertColorToHex } from "../lib.js";
 import pdf from "../pdf";
+import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -24,6 +25,7 @@ const uid = ref(`vue-ui-gauge-${Math.random()}`);
 
 const defaultConfig = ref(mainConfig.vue_ui_gauge);
 
+const isImaging = ref(false);
 const isPrinting = ref(false);
 const gaugeChart = ref(null);
 const details = ref(null);
@@ -230,18 +232,46 @@ function calcMarkerFontSize(value) {
     return 20;
 }
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
-    pdf({
-        domElement: document.getElementById(`vue-ui-gauge_${uid.value}`),
-        fileName: gaugeConfig.value.style.chart.title.text || 'vue-ui-gauge'
-    }).finally(() => {
-        isPrinting.value = false;
-    });
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        pdf({
+            domElement: document.getElementById(`vue-ui-gauge_${uid.value}`),
+            fileName: gaugeConfig.value.style.chart.title.text || 'vue-ui-gauge'
+        }).finally(() => {
+            isPrinting.value = false;
+        });
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`vue-ui-gauge_${uid.value}`),
+            fileName: gaugeConfig.value.style.chart.title.text || 'vue-ui-gauge',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
 }
 
 defineExpose({
-    generatePdf
+    generatePdf,
+    generateImage
 });
 
 </script>
@@ -272,11 +302,14 @@ defineExpose({
             v-if="gaugeConfig.userOptions.show"
             :backgroundColor="gaugeConfig.style.chart.backgroundColor"
             :color="gaugeConfig.style.chart.color"
+            :isImaging="isImaging"
             :isPrinting="isPrinting"
             :title="gaugeConfig.userOptions.title"
             :uid="uid"
             :hasXls="false"
+            :hasImg="true"
             @generatePdf="generatePdf"
+            @generateImage="generateImage"
         >
             <template #checkboxes>
                 <div class="vue-ui-options-item">

@@ -8,6 +8,7 @@ import {
     makeXls
 } from "../lib.js";
 import pdf from "../pdf.js";
+import img from "../img.js";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
@@ -34,6 +35,7 @@ const uid = ref(`vue-ui-vertical-bar-${Math.random()}`);
 
 const defaultConfig = ref(mainConfig.vue_ui_vertical_bar);
 
+const isImaging = ref(false);
 const isPrinting = ref(false);
 const verticalBarChart = ref(null);
 const tooltip = ref(null);
@@ -251,16 +253,41 @@ function useTooltip(bar) {
     tooltipContent.value = `<div style="text-align:left">${html}</div>`;
 }
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
-    nextTick(() => {
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
         pdf({
             domElement: document.getElementById(`vue-ui-vertical-bar_${uid.value}`),
             fileName: verticalBarConfig.value.style.chart.title.text || 'vue-ui-vertical-bar'
         }).finally(() => {
             isPrinting.value = false;
         });
-    })
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`vue-ui-vertical-bar_${uid.value}`),
+            fileName: verticalBarConfig.value.style.chart.title.text || 'vue-ui-vertical-bar',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
 }
 
 const table = computed(() => {
@@ -339,7 +366,8 @@ defineExpose({
     getData,
     recalculateHeight,
     generatePdf,
-    generateXls
+    generateXls,
+    generateImage
 });
 
 </script>
@@ -375,11 +403,14 @@ defineExpose({
             v-if="verticalBarConfig.userOptions.show"
             :backgroundColor="verticalBarConfig.style.chart.backgroundColor"
             :color="verticalBarConfig.style.chart.color"
+            :isImaging="isImaging"
             :isPrinting="isPrinting"
             :title="verticalBarConfig.userOptions.title"
             :uid="uid"
+            :hasImg="true"
             @generatePdf="generatePdf"
             @generateXls="generateXls"
+            @generateImage="generateImage"
         >
             <template #checkboxes>
                 <div class="vue-ui-options-item">

@@ -151,10 +151,10 @@ describe('<VueUiXy />', () => {
 
       cy.get('[data-cy="xy-foreignObject-title"]')
         .should('exist')
-        .contains('Title');
+        .contains(fixture.config.chart.title.text);
       cy.get('[data-cy="xy-foreignObject-subtitle"]')
         .should('exist')
-        .contains('Subtitle');
+        .contains(fixture.config.chart.title.subtitle.text);
 
       cy.get('[data-cy="xy-foreignObject-legend"]').should('exist');
 
@@ -179,12 +179,16 @@ describe('<VueUiXy />', () => {
       cy.get(`[data-cy="user-options-summary"]`).click({force:true});
 
       cy.get(`[data-cy="user-options-pdf"]`).click();
-      cy.wait(5000);
-      cy.readFile('cypress\\Downloads\\Title.pdf');
+      cy.wait(3000);
+      cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.pdf`);
 
       cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
-      cy.readFile('cypress\\Downloads\\Title.xlsx');
+      cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.xlsx`);
+
+      cy.get(`[data-cy="user-options-img"]`).click();
+      cy.wait(3000);
+      cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.png`);
 
       cy.clearDownloads();
 

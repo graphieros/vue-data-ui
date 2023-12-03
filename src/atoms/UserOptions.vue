@@ -11,6 +11,10 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
+    hasImg: {
+        type: Boolean,
+        default: false,
+    },
     color: {
         type: String,
     },
@@ -18,6 +22,10 @@ const props = defineProps({
         type: String,
     },
     isPrinting: {
+        type: Boolean,
+        default: false,
+    },
+    isImaging: {
         type: Boolean,
         default: false,
     },
@@ -29,7 +37,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['generatePdf', 'generateXls']);
+const emit = defineEmits(['generatePdf', 'generateXls', 'generateImage']);
 
 function generatePdf() {
     emit('generatePdf');
@@ -39,9 +47,14 @@ function generateXls() {
     emit('generateXls');
 }
 
+function generateImage() {
+    emit('generateImage');
+}
+
 const details = ref(null);
 
 function close() {
+    if(props.isPrinting || props.isImaging) return;
     if(details.value) {
         details.value.removeAttribute('open')
     }
@@ -69,6 +82,17 @@ function close() {
         </button>
         <button v-if="hasXls" data-cy="user-options-xls" class="vue-data-ui-button" @click="generateXls" :style="`background:${backgroundColor};color:${color}`">
             XLSX
+        </button>
+        <button v-if="hasImg" data-cy="user-options-img" class="vue-data-ui-button" @click="generateImage" :style="`background:${backgroundColor};color:${color}`">
+            <svg class="vue-data-ui-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isImaging" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="color" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M18 16v.01" />
+                <path d="M6 16v.01" />
+                <path d="M12 5v.01" />
+                <path d="M12 12v.01" />
+                <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
+            </svg>
+            <span v-else>PNG</span>
         </button>
     </details>
 </template>

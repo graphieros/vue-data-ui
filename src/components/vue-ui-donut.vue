@@ -1,13 +1,15 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { treeShake, makeDonut, palette, convertColorToHex, opacity, convertConfigColors, makeXls } from '../lib';
+import { makeDonut, palette, convertColorToHex, opacity, makeXls } from '../lib';
 import pdf from "../pdf";
+import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useMouse } from "../useMouse";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
+import DataTable from "../atoms/DataTable.vue";
 
 const props = defineProps({
     config: {
@@ -29,6 +31,7 @@ const uid = ref(`vue-ui-donut-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_donut);
 
 const isPrinting = ref(false);
+const isImaging = ref(false);
 const donutChart = ref(null);
 const tooltip = ref(null);
 const details = ref(null);
@@ -191,14 +194,42 @@ function useTooltip(arc, i, showTooltip = true) {
     tooltipContent.value = `<div>${html}</div>`;
 }
 
-function generatePdf(){
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
     isPrinting.value = true;
-    pdf({
-        domElement: document.getElementById(`donut__${uid.value}`),
-        fileName: donutConfig.value.style.chart.title.text || 'vue-ui-donut'
-    }).finally(() => {
-        isPrinting.value = false;
-    });
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        pdf({
+            domElement: document.getElementById(`donut__${uid.value}`),
+            fileName: donutConfig.value.style.chart.title.text || 'vue-ui-donut'
+        }).finally(() => {
+            isPrinting.value = false;
+        });
+    }, 100)
+    
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`donut__${uid.value}`),
+            fileName: donutConfig.value.style.chart.title.text || 'vue-ui-donut',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
 }
 
 const table = computed(() => {
@@ -225,10 +256,49 @@ function generateXls() {
     });
 }
 
+const dataTable = computed(() => {
+    const head = [
+        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
+        Number(total.value.toFixed(donutConfig.value.table.td.roundingValue)).toLocaleString(),
+        '100%'
+    ];
+
+    const body = table.value.head.map((h,i) => {
+        return [
+            {
+                color: h.color,
+                name: h.name
+            },
+            table.value.body[i].toFixed(donutConfig.value.table.td.roundingValue),
+            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(donutConfig.value.table.td.roundingPercentage)
+        ]
+    });
+
+    const config = {
+        th: {
+            backgroundColor: donutConfig.value.table.th.backgroundColor,
+            color: donutConfig.value.table.th.color,
+            outline: donutConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: donutConfig.value.table.td.backgroundColor,
+            color: donutConfig.value.table.td.color,
+            outline: donutConfig.value.table.td.outline
+        }
+    }
+
+    return {
+        head,
+        body,
+        config
+    }
+});
+
 defineExpose({
     getData,
     generatePdf,
-    generateXls
+    generateXls,
+    generateImage
 });
 
 </script>
@@ -264,10 +334,13 @@ defineExpose({
             :backgroundColor="donutConfig.style.chart.backgroundColor"
             :color="donutConfig.style.chart.color"
             :isPrinting="isPrinting"
+            :isImaging="isImaging"
             :title="donutConfig.userOptions.title"
             :uid="uid"
+            hasImg
             @generatePdf="generatePdf"
             @generateXls="generateXls"
+            @generateImage="generateImage"
         >
             <template #checkboxes>
                 <div class="vue-ui-options-item">
@@ -484,47 +557,20 @@ defineExpose({
         />
 
         <!-- DATA TABLE -->
-        <div data-cy="donut-table" class="vue-ui-donut-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
-            <table>
-                <thead>
-                    <tr v-if="donutConfig.style.chart.title.text" data-cy="donut-table-title">
-                        <th colspan="3" :style="`background:${donutConfig.table.th.backgroundColor};color:${donutConfig.table.th.color};outline:${donutConfig.table.th.outline}`">
-                            <span>{{ donutConfig.style.chart.title.text }}</span>
-                            <span v-if="donutConfig.style.chart.title.subtitle.text">
-                                : {{ donutConfig.style.chart.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th align="right" :style="`background:${donutConfig.table.th.backgroundColor};color:${donutConfig.table.th.color};outline:${donutConfig.table.th.outline};padding-right:6px`">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>
-                        </th>
-                        <th :style="`background:${donutConfig.table.th.backgroundColor};color:${donutConfig.table.th.color};outline:${donutConfig.table.th.outline};text-align:right;padding-right:6px`">
-                            {{ Number(total.toFixed(donutConfig.table.td.roundingValue)).toLocaleString() }}
-                        </th>
-                        <th :style="`background:${donutConfig.table.th.backgroundColor};color:${donutConfig.table.th.color};outline:${donutConfig.table.th.outline};text-align:right;padding-right:6px`">
-                            100%
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(th, i) in table.head" :data-cy="`donut-table-tr-${i}`">
-                        <td :style="`background:${donutConfig.table.td.backgroundColor};color:${donutConfig.table.td.color};outline:${donutConfig.table.td.outline}`">
-                            <div style="max-width: 200px margin:0 auto">
-                                <span :style="`color:${th.color};margin-right:6px;`">●</span>
-                                <span>{{ th.name }}</span>
-                            </div>
-                        </td>
-                        <td :style="`background:${donutConfig.table.td.backgroundColor};color:${donutConfig.table.td.color};outline:${donutConfig.table.td.outline}`">
-                            {{ table.body[i].toFixed(donutConfig.table.td.roundingValue) }}
-                        </td>
-                        <td :style="`background:${donutConfig.table.td.backgroundColor};color:${donutConfig.table.td.color};outline:${donutConfig.table.td.outline}`">
-                            {{ isNaN(table.body[i] / total) ? "-" : (table.body[i] / total * 100).toFixed(donutConfig.table.td.roundingPercentage) }}%
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <DataTable
+            v-if="mutableConfig.showTable"
+            :head="dataTable.head" 
+            :body="dataTable.body"
+            :config="dataTable.config"
+            :title="`${donutConfig.style.chart.title.text}${donutConfig.style.chart.title.subtitle.text ? ` : ${donutConfig.style.chart.title.subtitle.text}` : ''}`"
+        >
+            <template #th="{th}">
+                <div v-html="th" style="display:flex;align-items:center"></div>
+            </template>
+            <template #td="{td}">
+                {{ td.name || td }}
+            </template>
+        </DataTable>
     </div>
 </template>
 
@@ -590,22 +636,6 @@ path {
     position: fixed;
     padding:12px;
     z-index:1;
-}
-
-.vue-ui-donut table {
-    width: 100%;
-    border-collapse:collapse;
-}
-.vue-ui-donut table td {
-    text-align:right;
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-.vue-ui-donut table th {
-    position: sticky;
-    top:0;
-    font-weight: 400;
-    user-select: none;
 }
 
 .vue-ui-dna * {

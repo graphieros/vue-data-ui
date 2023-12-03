@@ -122,6 +122,9 @@ describe('<VueUiOnion />', () => {
       cy.get(`[data-cy="user-options-xls"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
+      cy.get(`[data-cy="user-options-img"]`).click();
+      cy.wait(3000);
+      cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
       cy.clearDownloads();
     });
   });
