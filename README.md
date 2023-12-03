@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://vue-data-ui.graphieros.com/"><img src="https://vue-data-ui.graphieros.com/vue-data-ui.png"></a>
+    <a href="https://vue-data-ui.graphieros.com/"><img src="https://vue-data-ui.graphieros.com/vue-data-ui2.png"></a>
     <br>
     <br>
     <br>
