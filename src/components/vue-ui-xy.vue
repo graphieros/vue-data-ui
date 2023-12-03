@@ -435,6 +435,7 @@
                         :x="(drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))) - (chartConfig.chart.highlightArea.caption.width === 'auto' ? 0 : chartConfig.chart.highlightArea.caption.width / 2 - (drawingArea.width / maxSeries) * highlightAreaSpan / 2)"
                         :y="drawingArea.top + chartConfig.chart.highlightArea.caption.offsetY"
                         style="overflow:visible"
+                        height="1"
                         :width="chartConfig.chart.highlightArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * highlightAreaSpan : chartConfig.chart.highlightArea.caption.width"
                         
                     >
@@ -775,7 +776,6 @@ export default {
         },
         highlightAreaSpan() {
             const { from, to } = this.chartConfig.chart.highlightArea;
-            console.log({ from, to})
             if (from === to) return 1;
             if (to < from) return 0;
             return to - from + 1;
