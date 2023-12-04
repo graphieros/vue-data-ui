@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted } from "vue";
 import {
     convertColorToHex,
     palette,
@@ -10,11 +10,10 @@ import {
 import pdf from "../pdf.js";
 import img from "../img.js";
 import mainConfig from "../default_configs.json";
-import { useMouse } from "../useMouse";
-import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const props = defineProps({
     config: {
@@ -38,9 +37,7 @@ const defaultConfig = ref(mainConfig.vue_ui_vertical_bar);
 const isImaging = ref(false);
 const isPrinting = ref(false);
 const verticalBarChart = ref(null);
-const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 
@@ -57,14 +54,6 @@ onMounted(() => {
             return 1;
         }
     }).reduce((a, b) => a + b, 0);
-});
-
-const tooltipPosition = computed(() => {
-    return calcTooltipPosition({
-        tooltip: tooltip.value,
-        chart: verticalBarChart.value,
-        clientPosition: clientPosition.value
-    });
 });
 
 const verticalBarConfig = computed(() => {
@@ -611,13 +600,12 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <div 
-            data-cy="vertical-bar-tooltip"
-            class="vue-ui-vertical-bar-tooltip"
-            ref="tooltip"
-            v-if="verticalBarConfig.style.chart.tooltip.show && isTooltip && segregated.length < props.dataset.length"
-            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px;background:${verticalBarConfig.style.chart.tooltip.backgroundColor};color:${verticalBarConfig.style.chart.tooltip.color}`"
-            v-html="tooltipContent"
+        <Tooltip
+            :show="verticalBarConfig.style.chart.tooltip.show && isTooltip && segregated.length < props.dataset.length"
+            :backgroundColor="verticalBarConfig.style.chart.tooltip.backgroundColor"
+            :color="verticalBarConfig.style.chart.tooltip.color"
+            :parent="verticalBarChart"
+            :content="tooltipContent"
         />
 
         <!-- DATA TABLE -->

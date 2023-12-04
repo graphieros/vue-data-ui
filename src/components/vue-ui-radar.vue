@@ -4,11 +4,10 @@ import { palette, createPolygonPath, shiftHue, opacity, convertColorToHex, makeX
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
-import { useMouse } from "../useMouse";
-import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const props = defineProps({
     config: {
@@ -32,19 +31,9 @@ const defaultConfig = ref(mainConfig.vue_ui_radar);
 const isImaging = ref(false);
 const isPrinting = ref(false);
 const radarChart = ref(null);
-const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
-
-const tooltipPosition = computed(() => {
-    return calcTooltipPosition({
-        tooltip: tooltip.value,
-        chart: radarChart.value,
-        clientPosition: clientPosition.value
-    });
-});
 
 const radarConfig = computed(() => {
     return useNestedProp({
@@ -506,13 +495,12 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <div
-            data-cy="radar-tooltip"
-            class="vue-ui-radar-tooltip"
-            ref="tooltip"
-            v-if="radarConfig.style.chart.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px;background:${radarConfig.style.chart.tooltip.backgroundColor};color:${radarConfig.style.chart.tooltip.color}`"
-            v-html="tooltipContent"
+        <Tooltip
+            :show="radarConfig.style.chart.tooltip.show && isTooltip"
+            :backgroundColor="radarConfig.style.chart.tooltip.backgroundColor"
+            :color="radarConfig.style.chart.tooltip.color"
+            :parent="radarChart"
+            :content="tooltipContent"
         />
 
         <!-- DATA TABLE -->

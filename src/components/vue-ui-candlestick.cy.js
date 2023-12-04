@@ -134,7 +134,7 @@ describe('<VueUiCandlestick />', () => {
         cy.get(`[data-cy="candlestick-trap-0"]`)
           .trigger('mouseover');
 
-        cy.get(`[data-cy="candlestick-tooltip"]`).then(($tooltip) => {
+        cy.get(`[data-cy="tooltip"]`).then(($tooltip) => {
           [ 
             fixture.config.translations.volume,
             fixture.config.translations.open,

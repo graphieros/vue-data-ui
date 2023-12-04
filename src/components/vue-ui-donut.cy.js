@@ -159,7 +159,7 @@ describe('<VueUiDonut />', () => {
           cy.wrap($element)
             .trigger('mouseenter', { force: true })
 
-          cy.get(`[data-cy="donut-tooltip"]`).should('exist');
+          cy.get(`[data-cy="tooltip"]`).should('exist');
           cy.get(`[data-cy="donut-tooltip-name"]`)
             .should('exist')
             .contains(sortedDataset[0].name);

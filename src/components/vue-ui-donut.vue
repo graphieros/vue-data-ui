@@ -1,15 +1,14 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { makeDonut, palette, convertColorToHex, opacity, makeXls } from '../lib';
+import { makeDonut, palette, convertColorToHex, createUid, opacity, makeXls } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
-import { useMouse } from "../useMouse";
-import { calcTooltipPosition } from "../calcTooltipPosition";
 import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const props = defineProps({
     config: {
@@ -33,20 +32,10 @@ const defaultConfig = ref(mainConfig.vue_ui_donut);
 const isPrinting = ref(false);
 const isImaging = ref(false);
 const donutChart = ref(null);
-const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const selectedSerie = ref(null);
-
-const tooltipPosition = computed(() => {
-    return calcTooltipPosition({
-        tooltip: tooltip.value,
-        chart: donutChart.value,
-        clientPosition: clientPosition.value
-    });
-})
 
 const donutConfig = computed(() => {
     return useNestedProp({
@@ -547,13 +536,12 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <div 
-            data-cy="donut-tooltip"
-            class="vue-ui-donut-tooltip"
-            ref="tooltip"
-            v-if="donutConfig.style.chart.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px;background:${donutConfig.style.chart.tooltip.backgroundColor};color:${donutConfig.style.chart.tooltip.color}`"
-            v-html="tooltipContent"
+        <Tooltip
+            :show="donutConfig.style.chart.tooltip.show && isTooltip"
+            :backgroundColor="donutConfig.style.chart.tooltip.backgroundColor"
+            :color="donutConfig.style.chart.tooltip.color"
+            :parent="donutChart"
+            :content="tooltipContent"
         />
 
         <!-- DATA TABLE -->
@@ -625,17 +613,6 @@ path {
     gap: 6px;
     cursor: pointer;
     height: 24px;
-}
-
-/** */
-.vue-ui-donut-tooltip {
-    border: 1px solid #e1e5e8;
-    border-radius: 4px;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-    max-width: 300px;
-    position: fixed;
-    padding:12px;
-    z-index:1;
 }
 
 .vue-ui-dna * {

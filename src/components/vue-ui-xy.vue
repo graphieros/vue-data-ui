@@ -616,13 +616,12 @@
         </div>
 
         <!-- TOOLTIP -->
-        <div 
-            data-cy="xy-tooltip"
-            class="vue-ui-xy-tooltip"
-            ref="tooltip"
-            v-if="chartConfig.chart.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px; background-color:${chartConfig.chart.tooltip.backgroundColor};color:${chartConfig.chart.tooltip.color}`"
-            v-html="tooltipContent"
+        <Tooltip
+            :show="chartConfig.chart.tooltip.show && isTooltip"
+            :backgroundColor="chartConfig.chart.tooltip.backgroundColor"
+            :color="chartConfig.chart.tooltip.color"
+            :parent="$refs.chart"
+            :content="tooltipContent"
         />
 
         <!-- DATA TABLE -->
@@ -679,6 +678,7 @@ import {
 import mainConfig from "../default_configs.json";
 import DataTable from "../atoms/DataTable.vue";
 import Title from '../atoms/Title.vue';
+import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 
 export default {
@@ -700,6 +700,7 @@ export default {
     components: {
         DataTable,
         Title,
+        Tooltip,
         UserOptions,
     },
     data(){
@@ -961,32 +962,6 @@ export default {
                 }
             });
             return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
-        },
-        tooltipPosition() {
-            const tooltip = this.$refs.tooltip;
-            const chart = this.$refs.chart;
-            let offsetX = 0;
-            let offsetY = 48;
-            if(tooltip && chart) {
-                const { width, height } = tooltip.getBoundingClientRect();
-                const chartBox = chart.getBoundingClientRect();
-
-                if(this.clientPosition.x + width / 2 > chartBox.right) {
-                    offsetX = -width;
-                } else if(this.clientPosition.x - width / 2 < chartBox.left) {
-                    offsetX = 0;
-                } else {
-                    offsetX = -width / 2;
-                }
-
-                if(this.clientPosition.y + height > chartBox.bottom) {
-                    offsetY = -height - 48
-                }
-            }
-            return {
-                top: this.clientPosition.y + offsetY,
-                left: this.clientPosition.x + offsetX,
-            }
         },
         viewBox() {
             return `0 0 ${this.chartConfig.chart.width} ${this.chartConfig.chart.height}`;

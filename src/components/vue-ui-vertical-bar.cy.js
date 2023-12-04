@@ -89,13 +89,13 @@ describe('<VueUiVerticalBar />', () => {
       cy.get(`[data-cy="vertical-bar-trap-0"]`)
         .trigger('mouseenter');
         
-      cy.get(`[data-cy="vertical-bar-tooltip"]`)
+      cy.get(`[data-cy="tooltip"]`)
       .should('exist');
       
       cy.get(`[data-cy="vertical-bar-trap-0"]`)
       .trigger('mouseleave');
 
-      cy.get(`[data-cy="vertical-bar-tooltip"]`)
+      cy.get(`[data-cy="tooltip"]`)
       .should('not.exist');
 
       cy.get(`[data-cy="vertical-bar-thead"]`)

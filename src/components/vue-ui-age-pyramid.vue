@@ -4,11 +4,10 @@ import { opacity, makeXls, shiftHue } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
-import { useMouse } from "../useMouse";
-import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const props = defineProps({
     config: {
@@ -32,20 +31,10 @@ const defaultConfig = ref(mainConfig.vue_ui_age_pyramid);
 const isImaging = ref(false);
 const isPrinting = ref(false);
 const agePyramid = ref(null);
-const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const selectedIndex = ref(null);
-
-const tooltipPosition = computed(() => {
-    return calcTooltipPosition({
-        tooltip: tooltip.value,
-        chart: agePyramid.value,
-        clientPosition: clientPosition.value
-    });
-})
 
 const agePyramidConfig = computed(() => {
     return useNestedProp({
@@ -550,12 +539,12 @@ defineExpose({
         </svg>
 
         <!-- TOOLTIP -->
-        <div 
-            class="vue-ui-age-pyramid-tooltip"
-            ref="tooltip"
-            v-if="agePyramidConfig.style.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px;background:${agePyramidConfig.style.tooltip.backgroundColor};color:${agePyramidConfig.style.tooltip.color}`"
-            v-html="tooltipContent"
+        <Tooltip
+            :show="agePyramidConfig.style.tooltip.show && isTooltip"
+            :backgroundColor="agePyramidConfig.style.tooltip.backgroundColor"
+            :color="agePyramidConfig.style.tooltip.color"
+            :parent="agePyramid"
+            :content="tooltipContent"
         />
 
         <!-- DATA TABLE -->

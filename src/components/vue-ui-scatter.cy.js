@@ -157,7 +157,7 @@ describe('<VueUiScatter />', () => {
       cy.get(`[data-cy="scatter-plot-0-0"]`)
         .trigger('mouseover');
 
-      cy.get(`[data-cy="scatter-tooltip"]`).then(($tooltip) => {
+      cy.get(`[data-cy="tooltip"]`).then(($tooltip) => {
         cy.wrap($tooltip)
           .should('exist')
           .contains(fixture.dataset[0].name)

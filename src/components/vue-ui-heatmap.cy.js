@@ -75,7 +75,7 @@ describe('<VueUiHeatmap />', () => {
         cy.wrap($trap)
           .trigger('mouseover');
 
-        cy.get(`[data-cy="heatmap-tooltip"]`)
+        cy.get(`[data-cy="tooltip"]`)
           .should('exist');
 
         cy.get(`[data-cy="heatmap-tootlip-name"]`)

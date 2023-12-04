@@ -52,7 +52,7 @@ describe('<VueUiRadar />', () => {
               .trigger('mouseenter')
               .wait(100);
 
-            cy.get(`[data-cy="radar-tooltip"]`).then(($tooltip) => {
+            cy.get(`[data-cy="tooltip"]`).then(($tooltip) => {
               cy.wrap($tooltip)
                 .should('exist')
                 .contains(fixture.dataset.series[i].name)

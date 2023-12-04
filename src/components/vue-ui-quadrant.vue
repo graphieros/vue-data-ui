@@ -1,14 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { palette, createPolygonPath, createStar, giftWrap, shiftHue, opacity, convertColorToHex, makeXls } from "../lib";
+import { palette, createPolygonPath, createStar, createUid, giftWrap, shiftHue, opacity, convertColorToHex, makeXls } from "../lib";
 import pdf from "../pdf.js";
 import img from "../img.js";
 import mainConfig from "../default_configs.json";
-import { useMouse } from "../useMouse";
-import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const props = defineProps({
     config: {
@@ -34,9 +33,7 @@ const defaultConfig = ref(mainConfig.vue_ui_quadrant);
 const isImaging = ref(false);
 const isPrinting = ref(false);
 const quadrantChart = ref(null);
-const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 
@@ -95,14 +92,6 @@ onMounted(() => {
             chart.appendChild(xLabelMaxNameVisible);
         }
     }
-});
-
-const tooltipPosition = computed(() => {
-    return calcTooltipPosition({
-        tooltip: tooltip.value,
-        chart: quadrantChart.value,
-        clientPosition: clientPosition.value
-    });
 });
 
 const quadrantConfig = computed(() => {
@@ -247,7 +236,8 @@ const drawableDataset = computed(() => {
                     quadrantSide: getQuadrantSide({x: s.x, y: s.y}),
                     categoryName: category.name,
                     shape: category.shape,
-                    color: category.color
+                    color: category.color,
+                    uid: createUid()
                 }
             })
         }
@@ -366,7 +356,10 @@ function getQuadrantSide(plot) {
     }
 }
 
+const hoveredPlotId = ref(null);
+
 function hoverPlot(category, plot) {
+    hoveredPlotId.value = plot.uid;
     isTooltip.value = true;
     let html = "";
 
@@ -769,12 +762,12 @@ defineExpose({
                         v-for="plot in category.series"
                         :cx="plot.x"
                         :cy="plot.y"
-                        :r="quadrantConfig.style.chart.layout.plots.radius * 0.8"
+                        :r="quadrantConfig.style.chart.layout.plots.radius * 0.8 * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1)"
                         :fill="category.color"
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
                         @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false"
+                        @mouseout="isTooltip = false; hoveredPlotId = null"
                         @click="selectPlot(category, plot)"
                     />
                 </g>
@@ -783,7 +776,7 @@ defineExpose({
                         v-for="plot in category.series"
                         :d="createPolygonPath({
                             plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius,
+                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
                             sides: 3,
                             rotation: 0.52
                         }).path"
@@ -791,7 +784,7 @@ defineExpose({
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
                         @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false"
+                        @mouseout="isTooltip = false; hoveredPlotId = null"
                         @click="selectPlot(category, plot)"
                     />
                 </g>
@@ -800,7 +793,7 @@ defineExpose({
                         v-for="plot in category.series"
                         :d="createPolygonPath({
                             plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius,
+                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
                             sides: 4,
                             rotation: 0.8
                         }).path"
@@ -808,7 +801,7 @@ defineExpose({
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
                         @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false"
+                        @mouseout="isTooltip = false; hoveredPlotId = null"
                         @click="selectPlot(category, plot)"
                     />
                 </g>
@@ -817,7 +810,7 @@ defineExpose({
                         v-for="plot in category.series"
                         :d="createPolygonPath({
                             plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius,
+                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
                             sides: 4,
                             rotation: 0
                         }).path"
@@ -825,7 +818,7 @@ defineExpose({
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
                         @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false"
+                        @mouseout="isTooltip = false; hoveredPlotId = null"
                         @click="selectPlot(category, plot)"
                     />
                 </g>
@@ -834,7 +827,7 @@ defineExpose({
                         v-for="plot in category.series"
                         :d="createPolygonPath({
                             plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius,
+                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
                             sides: 5,
                             rotation: 0.95
                         }).path"
@@ -842,7 +835,7 @@ defineExpose({
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
                         @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false"
+                        @mouseout="isTooltip = false; hoveredPlotId = null"
                         @click="selectPlot(category, plot)"
                     />
                 </g>
@@ -851,7 +844,7 @@ defineExpose({
                         v-for="plot in category.series"
                         :d="createPolygonPath({
                             plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius,
+                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
                             sides: 6,
                             rotation: 0
                         }).path"
@@ -859,7 +852,7 @@ defineExpose({
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
                         @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false"
+                        @mouseout="isTooltip = false; hoveredPlotId = null"
                         @click="selectPlot(category, plot)"
                     />
                 </g>
@@ -868,13 +861,13 @@ defineExpose({
                         v-for="plot in category.series"
                         :points="createStar({
                             plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius
+                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1)
                         })" 
                         :fill="category.color"
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
                         @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false"
+                        @mouseout="isTooltip = false; hoveredPlotId = null"
                         @click="selectPlot(category, plot)"
                     />
                 </g>
@@ -923,12 +916,12 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <div 
-            class="vue-ui-quadrant-tooltip"
-            ref="tooltip"
-            v-if="quadrantConfig.style.chart.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px;background:${quadrantConfig.style.chart.tooltip.backgroundColor};color:${quadrantConfig.style.chart.tooltip.color}`"
-            v-html="tooltipContent"
+        <Tooltip
+            :show="quadrantConfig.style.chart.tooltip.show && isTooltip"
+            :backgroundColor="quadrantConfig.style.chart.tooltip.backgroundColor"
+            :color="quadrantConfig.style.chart.tooltip.color"
+            :parent="quadrantChart"
+            :content="tooltipContent"
         />
 
         <!-- DATA TABLE -->

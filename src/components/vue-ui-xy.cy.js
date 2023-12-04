@@ -169,11 +169,11 @@ describe('<VueUiXy />', () => {
       }
 
       cy.get(`[data-cy="xy-tooltip-trap-0"]`).trigger("mouseenter");
-      cy.get(`[data-cy="xy-tooltip"]`).should('exist');
+      cy.get(`[data-cy="tooltip"]`).should('exist');
       cy.get(`[data-cy="xy-tooltip-trap-0"]`).trigger("mouseleave");
-      cy.get(`[data-cy="xy-tooltip"]`).should('not.exist');
+      cy.get(`[data-cy="tooltip"]`).should('not.exist');
       cy.get(`[data-cy="xy-tooltip-trap-6"]`).trigger("mouseenter");
-      cy.get(`[data-cy="xy-tooltip"]`).should('exist');
+      cy.get(`[data-cy="tooltip"]`).should('exist');
       cy.get(`[data-cy="xy-tooltip-trap-6"]`).trigger("mouseleave");
 
       cy.get(`[data-cy="user-options-summary"]`).click({force:true});

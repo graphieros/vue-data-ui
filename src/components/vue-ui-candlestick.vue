@@ -4,11 +4,10 @@ import { shiftHue, opacity, makeXls } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
-import { useMouse } from "../useMouse";
-import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const props = defineProps({
     config: {
@@ -30,9 +29,7 @@ const defaultConfig = ref(mainConfig.vue_ui_candlestick);
 
 const isImaging = ref(false);
 const isPrinting = ref(false);
-const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const candlestickChart = ref(null);
@@ -67,14 +64,6 @@ onMounted(() => {
         slideOne();
         slideTwo();
     }
-});
-
-const tooltipPosition = computed(() => {
-    return calcTooltipPosition({
-        tooltip: tooltip.value,
-        chart: candlestickChart.value,
-        clientPosition: clientPosition.value
-    });
 });
 
 const candlestickConfig = computed(() => {
@@ -581,13 +570,12 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <div
-            data-cy="candlestick-tooltip"
-            class="vue-ui-candlestick-tooltip"
-            ref="tooltip"
-            v-if="candlestickConfig.style.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px;background:${candlestickConfig.style.tooltip.backgroundColor};color:${candlestickConfig.style.tooltip.color}`"
-            v-html="tooltipContent"
+        <Tooltip
+            :show="candlestickConfig.style.tooltip.show && isTooltip"
+            :backgroundColor="candlestickConfig.style.tooltip.backgroundColor"
+            :color="candlestickConfig.style.tooltip.color"
+            :parent="candlestickChart"
+            :content="tooltipContent"
         />
 
         <!-- DATA TABLE -->

@@ -61,7 +61,7 @@ describe('<VueUiWaffle />', () => {
       cy.get(`[data-cy="waffle-rect-0"]`)
         .trigger('mouseover');
 
-      cy.get(`[data-cy="waffle-tooltip"]`).then(($tooltip) => {
+      cy.get(`[data-cy="tooltip"]`).then(($tooltip) => {
 
         const expectedValue = sortedDataset[0].values.reduce((a, b) => a + b, 0);
         const expectedPercentage = (expectedValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage);

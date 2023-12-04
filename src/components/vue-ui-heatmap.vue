@@ -4,11 +4,10 @@ import { opacity, makeXls } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
-import { useMouse } from "../useMouse";
-import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const props = defineProps({
     config: {
@@ -32,20 +31,10 @@ const defaultConfig = ref(mainConfig.vue_ui_heatmap);
 const isImaging = ref(false);
 const isPrinting = ref(false);
 const heatmapChart = ref(null);
-const tooltip = ref(null);
 const details = ref(null);
-const clientPosition = ref(useMouse());
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const hoveredCell = ref(undefined);
-
-const tooltipPosition = computed(() => {
-    return calcTooltipPosition({
-        tooltip: tooltip.value,
-        chart: heatmapChart.value,
-        clientPosition: clientPosition.value
-    });
-});
    
 const heatmapConfig = computed(() => {
     return useNestedProp({
@@ -444,14 +433,14 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <div
-            data-cy="heatmap-tooltip"
-            class="vue-ui-heatmap-tooltip"
-            ref="tooltip"
-            v-if="heatmapConfig.style.tooltip.show && isTooltip"
-            :style="`top:${tooltipPosition.top}px;left:${tooltipPosition.left}px;background:${heatmapConfig.style.tooltip.backgroundColor};color:${heatmapConfig.style.tooltip.color}`"
-            v-html="tooltipContent"
+        <Tooltip
+            :show="heatmapConfig.style.tooltip.show && isTooltip"
+            :backgroundColor="heatmapConfig.style.tooltip.backgroundColor"
+            :color="heatmapConfig.style.tooltip.color"
+            :parent="heatmapChart"
+            :content="tooltipContent"
         />
+        
         <!-- DATA TABLE -->
         <div  :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
             <table>
