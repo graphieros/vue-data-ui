@@ -47,8 +47,10 @@ const position = computed(() => {
         class="vue-data-ui-tooltip"
         v-if="show"
         :style="`top:${position.top}px;left:${position.left}px;background:${props.backgroundColor};color:${props.color};max-width:${props.maxWidth}`"
-        v-html="content"
-    />
+    >
+        <slot/>
+        <div v-html="content"/>
+    </div>
 </template>
 
 <style scoped>

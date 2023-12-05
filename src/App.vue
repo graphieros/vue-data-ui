@@ -3629,7 +3629,7 @@ function copyConfig(c) {
           <QuadrantTest
             ref="quadranttest"
             :dataset="quadrantDataset"
-            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
+            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}},layout:{grid:{xAxis:{name:'xAxis'},yAxis:{name:'yAxis'}}}}}"
             @selectPlot="selectPlot"
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
@@ -3639,7 +3639,7 @@ function copyConfig(c) {
           <VueUiQuadrant
             ref="quadranttest"
             :dataset="quadrantDataset"
-            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
+            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}},layout:{grid:{xAxis:{name:'xAxis'},yAxis:{name:'yAxis'}}}}}"
             @selectPlot="selectPlot"
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"

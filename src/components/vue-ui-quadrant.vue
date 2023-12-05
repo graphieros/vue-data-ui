@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
-import { palette, createPolygonPath, createStar, createUid, giftWrap, shiftHue, opacity, convertColorToHex, makeXls } from "../lib";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { palette, createUid, giftWrap, shiftHue, opacity, convertColorToHex, makeXls } from "../lib";
 import pdf from "../pdf.js";
 import img from "../img.js";
 import mainConfig from "../default_configs.json";
@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import Shape from "../atoms/Shape.vue";
 
 const props = defineProps({
     config: {
@@ -38,61 +39,84 @@ const isTooltip = ref(false);
 const tooltipContent = ref("");
 
 onMounted(() => {
+    positionAxisLabels();
+});
 
+function positionAxisLabels() {
     if (quadrantConfig.value.style.chart.layout.labels.axisLabels.show) {
         const xmlns = "http://www.w3.org/2000/svg";
         const chart = document.getElementById(`svg_${uid.value}`);
 
-        const xLabelMinVisible = document.createElementNS(xmlns, 'text');
-        const xLabelMaxVisible = document.createElementNS(xmlns, 'text');
-        const xLabelMaxNameVisible = document.createElementNS(xmlns, "text");
-        const xLabelMin = document.getElementById("xLabelMin");
-        const xLabelMax = document.getElementById("xLabelMax");
-        const xLabelMaxName = document.getElementById("xLabelMaxName");
+        [
+            `xlabminvis_${uid.value}`,
+            `xlabmaxvis_${uid.value}`,
+            `xlabmaxnamevis_${uid.value}`,
+        ].forEach(el => {
+            const t = document.getElementById(el);
+            if(t) t.remove()
+        });
 
-        if(xLabelMin) {
-            const bboxXMin = xLabelMin.getBBox();
-            const xPosition = bboxXMin.height / 2 + svg.value.padding * 0.6;
-            const yPosition = svg.value.centerY;
-            xLabelMinVisible.setAttributeNS(null, "transform", `rotate(-90, ${xPosition}, ${yPosition})`);
-            xLabelMinVisible.setAttributeNS(null, "x", xPosition);
-            xLabelMinVisible.setAttributeNS(null, "y", yPosition);
-            xLabelMinVisible.innerHTML = axisValues.value.x.min;
-            xLabelMinVisible.setAttribute("text-anchor", "middle");
-            xLabelMinVisible.setAttribute("fontSize", quadrantConfig.value.style.chart.layout.labels.axisLabels.fontSize)
-            xLabelMinVisible.setAttributeNS(null, "fill", quadrantConfig.value.style.chart.layout.labels.axisLabels.color.negative)
-            chart.appendChild(xLabelMinVisible);
-        }
+        nextTick(() => {
+            const xLabelMinVisible = document.createElementNS(xmlns, 'text');
+            xLabelMinVisible.setAttribute("id", `xlabminvis_${uid.value}`);
+            
+            const xLabelMaxVisible = document.createElementNS(xmlns, 'text');
+            xLabelMaxVisible.setAttribute("id", `xlabmaxvis_${uid.value}`);
+    
+            const xLabelMaxNameVisible = document.createElementNS(xmlns, "text");
+            xLabelMaxNameVisible.setAttribute("id", `xlabmaxnamevis_${uid.value}`);
+    
+            const xLabelMin = document.getElementById(`xLabelMin_${uid.value}`);
+            const xLabelMax = document.getElementById(`xLabelMax_${uid.value}`);
+            const xLabelMaxName = document.getElementById(`xLabelMaxName_${uid.value}`);
 
-        if(xLabelMax) {
-            const bboxXMax = xLabelMax.getBBox();
-            const xPosition = bboxXMax.height / 2 + svg.value.right;
-            const yPosition = svg.value.centerY;
-            xLabelMaxVisible.setAttributeNS(null, "transform", `rotate(90, ${xPosition}, ${yPosition})`);
-            xLabelMaxVisible.setAttributeNS(null, "x", xPosition);
-            xLabelMaxVisible.setAttributeNS(null, "y", yPosition);
-            xLabelMaxVisible.innerHTML = axisValues.value.x.max;
-            xLabelMaxVisible.setAttribute("text-anchor", "middle");
-            xLabelMaxVisible.setAttribute("fontSize", quadrantConfig.value.style.chart.layout.labels.axisLabels.fontSize)
-            xLabelMaxVisible.setAttributeNS(null, "fill", quadrantConfig.value.style.chart.layout.labels.axisLabels.color.positive)
-            chart.appendChild(xLabelMaxVisible);
-        }
+    
+    
+            if(xLabelMin) {
+                const bboxXMin = xLabelMin.getBBox();
+                const xPosition = bboxXMin.height / 2 + svg.value.padding * 0.6;
+                const yPosition = svg.value.centerY;
+                xLabelMinVisible.setAttributeNS(null, "transform", `rotate(-90, ${xPosition}, ${yPosition})`);
+                xLabelMinVisible.setAttributeNS(null, "x", xPosition);
+                xLabelMinVisible.setAttributeNS(null, "y", yPosition);
+                xLabelMinVisible.innerHTML = axisValues.value.x.min;
+                xLabelMinVisible.setAttribute("text-anchor", "middle");
+                xLabelMinVisible.setAttribute("fontSize", quadrantConfig.value.style.chart.layout.labels.axisLabels.fontSize)
+                xLabelMinVisible.setAttributeNS(null, "fill", quadrantConfig.value.style.chart.layout.labels.axisLabels.color.negative)
+                chart.appendChild(xLabelMinVisible);
+            }
+    
+            if(xLabelMax) {
+                const bboxXMax = xLabelMax.getBBox();
+                const xPosition = bboxXMax.height / 2 + svg.value.right;
+                const yPosition = svg.value.centerY;
+                xLabelMaxVisible.setAttributeNS(null, "transform", `rotate(90, ${xPosition}, ${yPosition})`);
+                xLabelMaxVisible.setAttributeNS(null, "x", xPosition);
+                xLabelMaxVisible.setAttributeNS(null, "y", yPosition);
+                xLabelMaxVisible.innerHTML = axisValues.value.x.max;
+                xLabelMaxVisible.setAttribute("text-anchor", "middle");
+                xLabelMaxVisible.setAttribute("fontSize", quadrantConfig.value.style.chart.layout.labels.axisLabels.fontSize)
+                xLabelMaxVisible.setAttributeNS(null, "fill", quadrantConfig.value.style.chart.layout.labels.axisLabels.color.positive)
+                chart.appendChild(xLabelMaxVisible);
+            }
+    
+            if(xLabelMaxName && quadrantConfig.value.style.chart.layout.grid.xAxis.name) {
+                const bboxXMaxName = xLabelMaxName.getBBox();
+                const xPosition = bboxXMaxName.height / 2 + svg.value.right + svg.value.padding * 0.3;
+                const yPosition = svg.value.centerY;
+                xLabelMaxNameVisible.setAttributeNS(null, "transform", `rotate(90, ${xPosition}, ${yPosition})`);
+                xLabelMaxNameVisible.setAttributeNS(null, "x", xPosition);
+                xLabelMaxNameVisible.setAttributeNS(null, "y", yPosition);
+                xLabelMaxNameVisible.innerHTML = quadrantConfig.value.style.chart.layout.grid.xAxis.name;
+                xLabelMaxNameVisible.setAttribute("text-anchor", "middle");
+                xLabelMaxNameVisible.setAttribute("fontSize", quadrantConfig.value.style.chart.layout.labels.axisLabels.fontSize)
+                xLabelMaxNameVisible.setAttributeNS(null, "fill", quadrantConfig.value.style.chart.layout.labels.axisLabels.color.positive)
+                chart.appendChild(xLabelMaxNameVisible);
+            }
+        })
 
-        if(xLabelMaxName && quadrantConfig.value.style.chart.layout.grid.xAxis.name) {
-            const bboxXMaxName = xLabelMaxName.getBBox();
-            const xPosition = bboxXMaxName.height / 2 + svg.value.right + svg.value.padding * 0.3;
-            const yPosition = svg.value.centerY;
-            xLabelMaxNameVisible.setAttributeNS(null, "transform", `rotate(90, ${xPosition}, ${yPosition})`);
-            xLabelMaxNameVisible.setAttributeNS(null, "x", xPosition);
-            xLabelMaxNameVisible.setAttributeNS(null, "y", yPosition);
-            xLabelMaxNameVisible.innerHTML = quadrantConfig.value.style.chart.layout.grid.xAxis.name;
-            xLabelMaxNameVisible.setAttribute("text-anchor", "middle");
-            xLabelMaxNameVisible.setAttribute("fontSize", quadrantConfig.value.style.chart.layout.labels.axisLabels.fontSize)
-            xLabelMaxNameVisible.setAttributeNS(null, "fill", quadrantConfig.value.style.chart.layout.labels.axisLabels.color.positive)
-            chart.appendChild(xLabelMaxNameVisible);
-        }
     }
-});
+}
 
 const quadrantConfig = computed(() => {
     return useNestedProp({
@@ -108,6 +132,12 @@ const mutableConfig = ref({
     inside: !quadrantConfig.value.style.chart.layout.useDiv,
     showTable: quadrantConfig.value.table.show
 });
+
+const isInside = computed(() => mutableConfig.value.inside);
+
+watch(isInside, (_) => {
+    positionAxisLabels();
+})
 
 const svg = computed(() => {
     const offsetTop = mutableConfig.value.inside ? 100 : 0;
@@ -280,53 +310,16 @@ const table = computed(() => {
     return { head, body };
 });
 
-function makeLegendShape(shape, color) {
-    let result = "";
-    switch (shape) {
-        case 'circle':
-            result = `<span style="color:${color}">●</span>`;
-            break;
-        
-        case 'triangle':
-            result = `<span style="color:${color}">▲</span>`;
-            break;
-        
-        case 'square':
-            result = `<span style="color:${color}">◼</span>`;
-            break;
-
-        case 'diamond':
-            result = `<span style="color:${color}">◆</span>`;
-            break;
-
-        case 'pentagon':
-            result = `<span style="color:${color}">⬟</span>`;
-            break;
-
-        case 'hexagon':
-            result = `<span style="color:${color}">⬣</span>`;
-            break;
-
-        case 'star':
-            result = `<span style="color:${color}">🟊</span>`;
-            break;
-    
-        default:
-            break;
-    }
-    return result;
-}
-
 const legend = computed(() => {
     return datasetReference.value.map(category => {
         return {
             name: category.name,
-            shapePath: makeLegendShape(category.shape, category.color),
+            shape: category.shape,
+            color: category.color,
             id: category.id
         }
     })
 });
-
 
 function segregate(id) {
     if(segregated.value.includes(id)) {
@@ -357,9 +350,14 @@ function getQuadrantSide(plot) {
 }
 
 const hoveredPlotId = ref(null);
+const hoveredPlot = ref(null);
 
 function hoverPlot(category, plot) {
     hoveredPlotId.value = plot.uid;
+    hoveredPlot.value = {
+        color: category.color,
+        shape: category.shape
+    }
     isTooltip.value = true;
     let html = "";
 
@@ -377,6 +375,7 @@ function hoverPlot(category, plot) {
 function selectPlot(category, plot) {
     const plotEmit = {
         category: category.name,
+        shape: category.shape,
         itemName: plot.name,
         x: plot.xValue,
         y: plot.yValue,
@@ -717,7 +716,7 @@ defineExpose({
 
                 <!-- X MIN -->
                 <text
-                    id="xLabelMin"
+                    :id="`xLabelMin_${uid}`"
                     text-anchor="middle"
                     :font-size="quadrantConfig.style.chart.layout.labels.axisLabels.fontSize"
                     fill="transparent"
@@ -727,7 +726,7 @@ defineExpose({
 
                 <!-- X MAX -->
                 <text
-                    id="xLabelMax"
+                    :id="`xLabelMax_${uid}`"
                     text-anchor="middle"
                     :font-size="quadrantConfig.style.chart.layout.labels.axisLabels.fontSize"
                     fill="transparent"
@@ -735,7 +734,7 @@ defineExpose({
                     {{ axisValues.x.max }}
                 </text>       
                 <text
-                    id="xLabelMaxName"
+                    :id="`xLabelMaxName_${uid}`"
                     text-anchor="middle"
                     :font-size="quadrantConfig.style.chart.layout.labels.axisLabels.fontSize"
                     fill="transparent"
@@ -757,120 +756,19 @@ defineExpose({
 
             <!-- PLOTS -->
             <g v-for="category in drawableDataset">
-                <g v-if="category.shape === 'circle'">
-                    <circle
-                        v-for="plot in category.series"
-                        :cx="plot.x"
-                        :cy="plot.y"
-                        :r="quadrantConfig.style.chart.layout.plots.radius * 0.8 * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1)"
-                        :fill="category.color"
-                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                        :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                        @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false; hoveredPlotId = null"
-                        @click="selectPlot(category, plot)"
-                    />
-                </g>
-                <g v-if="category.shape === 'triangle'">
-                    <path 
-                        v-for="plot in category.series"
-                        :d="createPolygonPath({
-                            plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
-                            sides: 3,
-                            rotation: 0.52
-                        }).path"
-                        :fill="category.color"
-                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                        :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                        @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false; hoveredPlotId = null"
-                        @click="selectPlot(category, plot)"
-                    />
-                </g>
-                <g v-if="category.shape === 'square'">
-                    <path 
-                        v-for="plot in category.series"
-                        :d="createPolygonPath({
-                            plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
-                            sides: 4,
-                            rotation: 0.8
-                        }).path"
-                        :fill="category.color"
-                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                        :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                        @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false; hoveredPlotId = null"
-                        @click="selectPlot(category, plot)"
-                    />
-                </g>
-                <g v-if="category.shape === 'diamond'">
-                    <path 
-                        v-for="plot in category.series"
-                        :d="createPolygonPath({
-                            plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
-                            sides: 4,
-                            rotation: 0
-                        }).path"
-                        :fill="category.color"
-                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                        :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                        @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false; hoveredPlotId = null"
-                        @click="selectPlot(category, plot)"
-                    />
-                </g>
-                <g v-if="category.shape === 'pentagon'">
-                    <path 
-                        v-for="plot in category.series"
-                        :d="createPolygonPath({
-                            plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
-                            sides: 5,
-                            rotation: 0.95
-                        }).path"
-                        :fill="category.color"
-                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                        :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                        @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false; hoveredPlotId = null"
-                        @click="selectPlot(category, plot)"
-                    />
-                </g>
-                <g v-if="category.shape === 'hexagon'">
-                    <path 
-                        v-for="plot in category.series"
-                        :d="createPolygonPath({
-                            plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1),
-                            sides: 6,
-                            rotation: 0
-                        }).path"
-                        :fill="category.color"
-                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                        :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                        @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false; hoveredPlotId = null"
-                        @click="selectPlot(category, plot)"
-                    />
-                </g>
-                <g v-if="category.shape === 'star'">
-                    <polygon
-                        v-for="plot in category.series"
-                        :points="createStar({
-                            plot: { x: plot.x, y: plot.y },
-                            radius: quadrantConfig.style.chart.layout.plots.radius * (hoveredPlotId && plot.uid === hoveredPlotId ? 1.2 : 1)
-                        })" 
-                        :fill="category.color"
-                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                        :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                        @mouseover="hoverPlot(category, plot)"
-                        @mouseout="isTooltip = false; hoveredPlotId = null"
-                        @click="selectPlot(category, plot)"
-                    />
-                </g>
+                <Shape
+                    v-for="plot in category.series"
+                    :color="category.color"
+                    :isSelected="hoveredPlotId && plot.uid === hoveredPlotId"
+                    :plot="plot"
+                    :radius="quadrantConfig.style.chart.layout.plots.radius"
+                    :shape="category.shape"
+                    :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
+                    :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
+                    @mouseover="hoverPlot(category, plot)"
+                    @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
+                    @click="selectPlot(category, plot)"
+                />
             </g>
 
             <g v-if="mutableConfig.plotLabels.show">
@@ -897,9 +795,18 @@ defineExpose({
                 height="90"
                 style="overflow: visible;"
             >
-                <div class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" >
-                    <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-foreignObject-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                        <div v-html="legendItem.shapePath" style="display:flex;align-items:center;justify-content:center"/>
+                <div class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};height: 100%;width:100%;display: flex;align-items:center;flex-wrap: wrap;justify-content:center;column-gap: 18px;`" >
+                    <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-foreignObject-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1};display: flex;align-items:center;justify-content: center;gap: 6px;cursor: pointer;height: 24px;`">
+                        <svg height="12" width="12" viewBox="0 0 20 20">
+                            <Shape
+                                :plot="{ x: 10, y: 10}"
+                                :shape="legendItem.shape"
+                                :color="legendItem.color"
+                                :radius="9"
+                                :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
+                                :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
+                            />
+                        </svg>
                         <span>{{ legendItem.name }}</span>
                     </div>
                 </div>
@@ -910,7 +817,16 @@ defineExpose({
         <!-- LEGEND AS DIV -->
         <div v-if="quadrantConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};background:${quadrantConfig.style.chart.legend.backgroundColor};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" >
             <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-div-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                <div v-html="legendItem.shapePath" style="display:flex;align-items:center;justify-content:center"/>
+                <svg height="12" width="12" viewBox="0 0 20 20">
+                    <Shape
+                        :plot="{ x: 10, y: 10}"
+                        :shape="legendItem.shape"
+                        :color="legendItem.color"
+                        :radius="9"
+                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
+                        :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
+                    />
+                </svg>
                 <span>{{ legendItem.name }}</span>
             </div>
         </div>
@@ -922,7 +838,18 @@ defineExpose({
             :color="quadrantConfig.style.chart.tooltip.color"
             :parent="quadrantChart"
             :content="tooltipContent"
-        />
+        >
+            <svg height="12" width="12" viewBox="0 0 20 20">
+                <Shape
+                    :plot="{ x: 10, y: 10 }"
+                    :shape="hoveredPlot.shape"
+                    :color="hoveredPlot.color"
+                    :radius="9"
+                    :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
+                    :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
+                />
+            </svg>
+        </Tooltip>
 
         <!-- DATA TABLE -->
         <div  class="vue-ui-quadrant-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
