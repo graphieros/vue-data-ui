@@ -61,12 +61,14 @@ const dataset2 = ref([
         useArea: true,
         useProgression: true,
         dataLabels: false,
+        shape: "hexagon"
     },
     {
         name: "Series 3",
         series: [ 64, 60, 52, 42, 30, 16, 0, -18, -38, -46, -50, -46, -38, -18, 0, 16, 30, 42, 52, 60, 64],
         type: "plot",
-        color: "rgb(255,100,0)"
+        color: "rgb(255,100,0)",
+        shape: "star"
     },
     {
         name: "Series 4",
@@ -75,7 +77,8 @@ const dataset2 = ref([
         smooth: true,
         useArea: false,
         dataLabels: false,
-        color: "rgb(200,200,50)"
+        color: "rgb(200,200,50)",
+        shape: "pentagon"
     },
     {
         name: "Target",
@@ -3656,7 +3659,7 @@ function copyConfig(c) {
           <RadarTest
             ref="radartest"
             :dataset="radarDataset"
-            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
+            :config="{...radarConfig, useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
             @selectLegend="selectRadarLegend"
           />
         </template>
@@ -3865,7 +3868,7 @@ function copyConfig(c) {
           <WaffleTest
             ref="waffletest"
             :dataset="donutDataset"
-            :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
+            :config="{useBlurOnHover: true, style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
             @selectLegend="selectLegendWaffle"
           />
         </template>
@@ -3873,7 +3876,7 @@ function copyConfig(c) {
           <VueUiWaffle
             ref="waffletest"
             :dataset="donutDataset"
-             :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
+             :config="{useBlurOnHover: true, style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
             @selectLegend="selectLegendWaffle"
           />
         </template>

@@ -421,6 +421,7 @@ declare module 'vue-data-ui' {
             };
             gutter?: {
                 backgroundColor?: string;
+                opacity?: number;
             };
             bar?: {
                 gradient?: {
@@ -1295,6 +1296,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiWaffleConfig = {
+        useBlurOnHover?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {

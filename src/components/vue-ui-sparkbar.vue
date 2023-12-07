@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-import { treeShake, shiftHue, opacity, convertConfigColors, palette, convertColorToHex } from "../lib";
+import { shiftHue, opacity, palette, convertColorToHex } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -90,7 +90,7 @@ function ratioTo(val) {
                             <stop offset="100%" :stop-color="bar.color"/>
                         </linearGradient>
                     </defs>
-                    <rect :height="svg.height" :width="svg.width" :x="0" :y="0" :fill="sparkbarConfig.style.gutter.backgroundColor" :rx="svg.height / 2" />
+                    <rect :height="svg.height" :width="svg.width" :x="0" :y="0" :fill="`${sparkbarConfig.style.gutter.backgroundColor}${opacity[sparkbarConfig.style.gutter.opacity]}`" :rx="svg.height / 2" />
                     <rect :height="svg.height" :width="svg.width * ratioTo(bar.value)" :x="0" :y="0" :fill="sparkbarConfig.style.bar.gradient.underlayerColor" :rx="svg.height / 2" />
                     <rect :height="svg.height" :width="svg.width * ratioTo(bar.value)" :x="0" :y="0" :fill="sparkbarConfig.style.bar.gradient.show ? `url(#sparkbar_gradient_${i}_${uid})` : bar.color" :rx="svg.height / 2" />
                 </svg>

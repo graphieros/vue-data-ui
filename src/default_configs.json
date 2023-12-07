@@ -449,6 +449,7 @@
         }
     },
     "vue_ui_waffle": {
+        "useBlurOnHover": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -2027,7 +2028,8 @@
                 "target": 0
             },
             "gutter": {
-                "backgroundColor": "#e1e5e8"
+                "backgroundColor": "#e1e5e8",
+                "opacity": 100
             },
             "bar": {
                 "gradient": {

@@ -305,9 +305,17 @@ const table = computed(() => {
 
     const body = tableData.map(td => {
         return [td.category, td.name, td.x, td.y, td.sideName || td.quadrantSide]
-    });
+    }); 
 
-    return { head, body };
+    const itsShapes = tableData.map(td => {
+        return {
+            shape: td.shape,
+            color: td.color
+        }
+    });
+    console.log({itsShapes});
+;
+    return { head, body, itsShapes };
 });
 
 const legend = computed(() => {
@@ -797,12 +805,12 @@ defineExpose({
             >
                 <div class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};height: 100%;width:100%;display: flex;align-items:center;flex-wrap: wrap;justify-content:center;column-gap: 18px;`" >
                     <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-foreignObject-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1};display: flex;align-items:center;justify-content: center;gap: 6px;cursor: pointer;height: 24px;`">
-                        <svg height="12" width="12" viewBox="0 0 20 20">
+                        <svg height="14" width="14" viewBox="0 0 20 20">
                             <Shape
                                 :plot="{ x: 10, y: 10}"
                                 :shape="legendItem.shape"
                                 :color="legendItem.color"
-                                :radius="9"
+                                :radius="8"
                                 :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                                 :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
                             />
@@ -817,12 +825,12 @@ defineExpose({
         <!-- LEGEND AS DIV -->
         <div v-if="quadrantConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};background:${quadrantConfig.style.chart.legend.backgroundColor};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" >
             <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-div-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                <svg height="12" width="12" viewBox="0 0 20 20">
+                <svg height="14" width="14" viewBox="0 0 20 20">
                     <Shape
                         :plot="{ x: 10, y: 10}"
                         :shape="legendItem.shape"
                         :color="legendItem.color"
-                        :radius="9"
+                        :radius="8"
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
                     />
@@ -839,12 +847,12 @@ defineExpose({
             :parent="quadrantChart"
             :content="tooltipContent"
         >
-            <svg height="12" width="12" viewBox="0 0 20 20">
+            <svg height="14" width="14" viewBox="0 0 20 20">
                 <Shape
                     :plot="{ x: 10, y: 10 }"
                     :shape="hoveredPlot.shape"
                     :color="hoveredPlot.color"
-                    :radius="9"
+                    :radius="8"
                     :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                     :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
                 />
@@ -872,8 +880,18 @@ defineExpose({
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="tr in table.body">
-                        <td v-for="td in tr" :style="`background:${quadrantConfig.table.td.backgroundColor};color:${quadrantConfig.table.td.color};outline:${quadrantConfig.table.td.outline}`">
+                    <tr v-for="(tr, i) in table.body">
+                        <td v-for="(td, j) in tr" :style="`background:${quadrantConfig.table.td.backgroundColor};color:${quadrantConfig.table.td.color};outline:${quadrantConfig.table.td.outline}`">
+                            <svg v-if="j === 0" height="14" width="14" viewBox="0 0 20 20">
+                                <Shape
+                                    :plot="{ x: 10, y: 10 }"
+                                    :color="table.itsShapes[i].color"
+                                    :shape="table.itsShapes[i].shape"
+                                    :radius="8"
+                                    :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
+                                    :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
+                                />
+                            </svg>
                             {{ isNaN(td) ? td : td.toFixed(quadrantConfig.table.td.roundingValue) }}
                         </td>
                     </tr>

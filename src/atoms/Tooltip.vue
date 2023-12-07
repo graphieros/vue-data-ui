@@ -50,6 +50,7 @@ const position = computed(() => {
     >
         <slot/>
         <div v-html="content"/>
+        <slot name="content-after"/>
     </div>
 </template>
 

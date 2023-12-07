@@ -376,14 +376,14 @@ defineExpose({
 
             <!-- LABELS -->
             <g v-if="onionConfig.style.chart.layout.labels.show">
-                <g v-for="onion in mutableDataset">                
+                <g v-for="(onion, i) in mutableDataset">                
                     <text
                         v-if="!segregated.includes(onion.id)"
                         :x="svg.width / 2 - onionSkin.gutter * 0.8 + onionConfig.style.chart.layout.labels.offsetX"
                         :y="onion.labelY"
                         text-anchor="end"
                         :font-size="onionConfig.style.chart.layout.labels.fontSize"
-                        :fill="onionConfig.style.chart.layout.labels.color"
+                        :fill="onionConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie === i ? onion.color:  onionConfig.style.chart.layout.labels.color"
                         :font-weight="onionConfig.style.chart.layout.labels.bold ? 'bold' : 'normal'"
                     >
                         {{ onion.name }} {{ onionConfig.style.chart.layout.labels.percentage.show ? ` : ${onion.percentage.toFixed(onionConfig.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !onionConfig.style.chart.layout.labels.percentage.show && onionConfig.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""}` : '' }` : `${onionConfig.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""})` : '' : ''}` }}

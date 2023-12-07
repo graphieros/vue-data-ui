@@ -68,6 +68,10 @@ const rectDimension = computed(() => {
     return ((drawingArea.value.width - (waffleConfig.value.style.chart.layout.grid.size * waffleConfig.value.style.chart.layout.grid.spaceBetween )) / waffleConfig.value.style.chart.layout.grid.size);
 });
 
+const absoluteRectDimension = computed(() => {
+    return ((drawingArea.value.width ) / waffleConfig.value.style.chart.layout.grid.size);
+})
+
 function calculateProportions(numbers) {
   const totalSum = numbers.reduce((a, b) => a + b, 0);
   const proportions = numbers.map(num => Math.round((num / totalSum) * 100) / 100);
@@ -430,9 +434,7 @@ defineExpose({
             />
             <rect
                 v-for="(position, i) in positions"
-                :data-cy="`waffle-rect-${i}`"
-                @mouseover="useTooltip(i)"
-                @mouseleave="isTooltip = false; selectedSerie = null"
+                :class="{'vue-ui-waffle-blur': waffleConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && rects[i].serieIndex !== selectedSerie}"
                 :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
                 :x="position.x"
                 :y="position.y"
@@ -441,6 +443,18 @@ defineExpose({
                 :fill="waffleConfig.style.chart.layout.rect.useGradient && waffleConfig.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
                 :stroke="waffleConfig.style.chart.layout.rect.stroke"
                 :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
+            />
+            <rect
+                v-for="(position, i) in positions"
+                :data-cy="`waffle-rect-${i}`"
+                @mouseover="useTooltip(i)"
+                @mouseleave="isTooltip = false; selectedSerie = null"
+                :x="position.x"
+                :y="position.y"
+                :height="absoluteRectDimension"
+                :width="absoluteRectDimension"
+                fill="transparent"
+                stroke="none"
             />
 
             <!-- LEGEND AS G -->
@@ -587,5 +601,10 @@ defineExpose({
     top:0;
     font-weight: 400;
     user-select: none;
+}
+
+.vue-ui-waffle-blur {
+    filter: blur(3px) opacity(50%) grayscale(100%);
+    transition: all 0.15s ease-in-out;
 }
 </style>

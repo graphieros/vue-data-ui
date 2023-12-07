@@ -198,15 +198,15 @@
                         v-for="(plot, j) in serie.plots" 
                         :key="`circle_plot_${i}_${j}`"
                     >
-                        <circle
+                        <Shape
                             :data-cy="`xy-plot-${i}-${j}`"
                             v-if="canShowValue(plot.value)"
-                            :cx="plot.x"
-                            :cy="plot.y"
-                            :r="chartConfig.plot.radius"
-                            :fill="chartConfig.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : serie.color"
+                            :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
+                            :color="chartConfig.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : serie.color"
+                            :plot="{ x: plot.x, y: plot.y }"
+                            :radius="chartConfig.plot.radius"
                             :stroke="chartConfig.chart.backgroundColor"
-                            stroke-width="0.5"
+                            :strokeWidth="0.5"
                         />
                     </g>
                     <g :data-cy="`xy-plot-progression-${i}`" v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
@@ -268,15 +268,16 @@
                     </g>
                     <g v-for="(plot, j) in serie.plots" 
                         :key="`circle_line_${i}_${j}`">
-                        <circle 
-                            :data-cy="`xy-line-plot-${i}-${j}`"
+
+                        <Shape
+                            :data-cy="`xy-plot-${i}-${j}`"
                             v-if="canShowValue(plot.value)"
-                            :cx="plot.x"
-                            :cy="plot.y"
-                            :r="chartConfig.line.radius"
-                            :fill="chartConfig.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
+                            :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
+                            :color="chartConfig.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
+                            :plot="{ x: plot.x, y: plot.y }"
+                            :radius="chartConfig.plot.radius"
                             :stroke="chartConfig.chart.backgroundColor"
-                            stroke-width="0.5"
+                            :strokeWidth="0.5"
                         />
                     </g > 
                     <g :data-cy="`xy-line-progression-${i}`" v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
@@ -539,10 +540,25 @@
                     >
                         <div class="vue-ui-xy-legend">
                             <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-foreignObject-legend-item-${i}`" :key="`div_legend_item_${i}`" @click="segregate(legendItem)" :class="{'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated' : segregatedSeries.includes(legendItem.id)}">
-                                <svg viewBox="0 0 12 12" height="14" width="14">
-                                    <rect v-if="icons[legendItem.type] === 'line'" x="0" y="6" stroke="none" height="4" width="12" :fill="legendItem.color" />
-                                    <rect v-else-if="icons[legendItem.type] === 'bar'" x="0" y="0" height="12" width="12" stroke="none" :fill="legendItem.color" />
-                                    <circle v-else cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" />
+                                <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
+                                        <rect x="0" y="7" rx="3" stroke="none" height="4" width="20" :fill="legendItem.color" />
+                                        <Shape
+                                            :plot="{x: 10, y:9}"
+                                            :radius="4"
+                                            :color="legendItem.color"
+                                            :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
+                                            :stroke="chartConfig.chart.backgroundColor"
+                                            :strokeWidth="1"
+                                        />
+                                </svg>
+                                <svg v-else viewBox="0 0 12 12" height="14" width="14">
+                                    <rect v-if="icons[legendItem.type] === 'bar'" x="0" y="0" rx="1" height="12" width="12" stroke="none" :fill="legendItem.color" />
+                                    <Shape v-else
+                                        :plot="{x: 6, y:6}"
+                                        :radius="5"
+                                        :color="legendItem.color"
+                                        :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
+                                    />
                                 </svg>
                                 <span :style="`color:${chartConfig.chart.legend.color}`">{{legendItem.name}}</span>
                             </div>
@@ -606,10 +622,25 @@
         <!-- LEGEND AS OUTSIDE DIV -->
         <div data-cy="xy-div-legend" v-if="chartConfig.chart.legend.show && (!mutableConfig.legendInside || isPrinting)" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
             <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`" :key="`div_legend_item_${i}`" @click="segregate(legendItem)" :class="{'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated' : segregatedSeries.includes(legendItem.id)}">
-                <svg viewBox="0 0 12 12" height="14" width="14">
-                    <rect v-if="icons[legendItem.type] === 'line'" x="0" y="6" stroke="none" height="4" width="12" :fill="legendItem.color" />
-                    <rect v-else-if="icons[legendItem.type] === 'bar'" x="0" y="0" height="12" width="12" stroke="none" :fill="legendItem.color" />
-                    <circle v-else cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" />
+                <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
+                        <rect x="0" y="7" rx="3" stroke="none" height="4" width="20" :fill="legendItem.color" />
+                        <Shape
+                            :plot="{x: 10, y:9}"
+                            :radius="4"
+                            :color="legendItem.color"
+                            :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
+                            :stroke="chartConfig.chart.backgroundColor"
+                            :strokeWidth="1"
+                        />
+                </svg>
+                <svg v-else viewBox="0 0 12 12" height="14" width="14">
+                    <rect v-if="icons[legendItem.type] === 'bar'" x="0" y="0" rx="1" height="12" width="12" stroke="none" :fill="legendItem.color" />
+                    <Shape v-else
+                        :plot="{x: 6, y:6}"
+                        :radius="5"
+                        :color="legendItem.color"
+                        :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
+                    />
                 </svg>
                 <span :style="`color:${chartConfig.chart.legend.color}`">{{legendItem.name}}</span>
             </div>
@@ -674,12 +705,15 @@ import {
     adaptColorToBackground,
     calcLinearProgression,
     createSmoothPath,
+    createStar,
+    createPolygonPath
 } from '../lib';
 import mainConfig from "../default_configs.json";
 import DataTable from "../atoms/DataTable.vue";
 import Title from '../atoms/Title.vue';
 import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Shape from "../atoms/Shape.vue";
 
 export default {
     name: "vue-ui-xy",
@@ -699,6 +733,7 @@ export default {
     },
     components: {
         DataTable,
+        Shape,
         Title,
         Tooltip,
         UserOptions,
@@ -926,6 +961,7 @@ export default {
         tooltipContent() {
             const selectedSeries = this.relativeDataset.map(datapoint => {
                 return {
+                    shape: datapoint.shape || null,
                     name: datapoint.name,
                     color: datapoint.color,
                     type: datapoint.type,
@@ -944,17 +980,60 @@ export default {
             selectedSeries.forEach(s => {
                 if(this.isSafeValue(s.value) && s.value !== null) {
                     let shape = '';
+                    let insideShape = '';
                     switch (this.icons[s.type]) {
                         case 'bar':
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" stroke="none" height="12" width="12" fill="${s.color}" /></svg>`;
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" rx="1" stroke="none" height="12" width="12" fill="${s.color}" /></svg>`;
                             break;
                         
                         case 'line':
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="6" stroke="none" height="4" width="12" fill="${s.color}" /></svg>`;
+                            if(!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
+                                insideShape = `<circle cx="10" cy="8" r="4" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" />`
+                            } else if(s.shape === 'triangle') {
+                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                            } else if(s.shape === 'square') {
+                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                            } else if(s.shape === 'diamond') {
+                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                            } else if(s.shape === 'pentagon') {
+                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                            } else if(s.shape === 'hexagon') {
+                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                            } else if(s.shape === 'star') {
+                                insideShape = `<polygon stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 10, y: 8 }, radius: 4})}" />`
+                            }
+                            shape = `<svg viewBox="0 0 20 12" height="14" width="20"><rect rx="3" x="0" y="6" stroke="none" height="4" width="20" fill="${s.color}" />${insideShape}</svg>`;
                             break;
 
                         case 'plot':
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" fill="${s.color}" /></svg>`;
+                            if (!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
+                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" /></svg>`;
+                                break;
+                            }
+                            if(s.shape === 'star') {
+                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5})}" /></svg>`;
+                                break;
+                            }
+                            if(s.shape === 'triangle') {
+                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                break;
+                            }
+                            if(s.shape === 'square') {
+                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                break;
+                            }
+                            if(s.shape === 'diamond') {
+                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                break;
+                            }
+                            if(s.shape === 'pentagon') {
+                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                break;
+                            }
+                            if(s.shape === 'hexagon') {
+                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                break;
+                            }
                         default:
                             break;
                     }
@@ -1140,6 +1219,8 @@ export default {
             });
             return [ start.x, start.y, ...path, end.x, end.y].toString();
         },
+        createStar,
+        createPolygonPath,
         /////////////////////////////// CANVAS /////////////////////////////////
         createCanvasArea(plots) {
             const start = { x: plots[0].x, y: this.zero };

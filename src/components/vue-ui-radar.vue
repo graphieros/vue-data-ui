@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import SparkBar from "./vue-ui-sparkbar.vue";
 
 const props = defineProps({
     config: {
@@ -49,6 +50,24 @@ const mutableConfig = ref({
     inside: !radarConfig.value.style.chart.layout.useDiv,
     showTable: radarConfig.value.table.show
 });
+
+const sparkBarConfig = computed(() => {
+    return {
+        style: {
+            backgroundColor: radarConfig.value.style.chart.tooltip.backgroundColor,
+            labels: {
+                fontSize: radarConfig.value.style.chart.tooltip.fontSize,
+                name: {
+                    color: radarConfig.value.style.chart.tooltip.color
+                },
+            },
+            gutter: {
+                backgroundColor: '#CCCCCC',
+                opacity: 30
+            }
+        }
+    }
+})
 
 const svg = computed(() => {
     const height = mutableConfig.value.inside ? 412 : 312;
@@ -216,15 +235,24 @@ const table = computed(() => {
 });
 
 const selectedIndex = ref(null);
+const sparkBarData = ref([]);
 
 function useTooltip(apex, i) {
+    sparkBarData.value = [];
     selectedIndex.value = i;
     isTooltip.value = true;
     let html = "";
     html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
     for(let k = 0; k < apex.values.length; k += 1) {
         if(!segregated.value.includes(k)) {
-            html += `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" fill="${datasetCopy.value[k].color}" /></svg><span>${datasetCopy.value[k].name}</span> : ${radarConfig.value.style.chart.tooltip.showValue ? `<span>${apex.values[k].toFixed(radarConfig.value.style.chart.tooltip.roundingValue)}</span>` : ''} ${!radarConfig.value.style.chart.tooltip.showValue && radarConfig.value.style.chart.tooltip.showPercentage ? `<span>${(apex.values[k] / apex.target * 100).toFixed(radarConfig.value.style.chart.tooltip.roundingPercentage)}%</span>` : radarConfig.value.style.chart.tooltip.showPercentage ? `<span>(${(apex.values[k] / apex.target * 100).toFixed(radarConfig.value.style.chart.tooltip.roundingPercentage)}%)</span>` : ''}</div>`
+            sparkBarData.value.push({
+                name: datasetCopy.value[k].name,
+                value: apex.values[k] / apex.target * 100,
+                color: datasetCopy.value[k].color,
+                suffix: '%)',
+                prefix: `${apex.values[k].toFixed(radarConfig.value.style.chart.tooltip.roundingValue)} (`,
+                rounding: radarConfig.value.style.chart.tooltip.roundingPercentage
+            })
         }
     }
     tooltipContent.value = html;
@@ -501,7 +529,13 @@ defineExpose({
             :color="radarConfig.style.chart.tooltip.color"
             :parent="radarChart"
             :content="tooltipContent"
-        />
+        >
+            <template #content-after>
+                <div style="max-width: 200px;margin:0 auto">
+                    <SparkBar :dataset="sparkBarData" :config="sparkBarConfig"/>
+                </div>
+            </template>
+        </Tooltip>
 
         <!-- DATA TABLE -->
         <div  class="vue-ui-radar-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
