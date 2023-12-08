@@ -882,17 +882,21 @@ defineExpose({
                 <tbody>
                     <tr v-for="(tr, i) in table.body">
                         <td v-for="(td, j) in tr" :style="`background:${quadrantConfig.table.td.backgroundColor};color:${quadrantConfig.table.td.color};outline:${quadrantConfig.table.td.outline}`">
-                            <svg v-if="j === 0" height="14" width="14" viewBox="0 0 20 20">
-                                <Shape
-                                    :plot="{ x: 10, y: 10 }"
-                                    :color="table.itsShapes[i].color"
-                                    :shape="table.itsShapes[i].shape"
-                                    :radius="8"
-                                    :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                                    :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                                />
-                            </svg>
-                            {{ isNaN(td) ? td : td.toFixed(quadrantConfig.table.td.roundingValue) }}
+                            <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
+                                <svg v-if="j === 0" height="14" width="14" viewBox="0 0 20 20">
+                                    <Shape
+                                        :plot="{ x: 10, y: 10 }"
+                                        :color="table.itsShapes[i].color"
+                                        :shape="table.itsShapes[i].shape"
+                                        :radius="8"
+                                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
+                                        :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
+                                    />
+                                </svg>
+                                <span>
+                                    {{ isNaN(td) ? td : td.toFixed(quadrantConfig.table.td.roundingValue) }}
+                                </span>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -953,15 +957,6 @@ path, line, rect, circle, polygon {
     gap: 6px;
     cursor: pointer;
     height: 24px;
-}
-.vue-ui-quadrant-tooltip {
-    border: 1px solid #e1e5e8;
-    border-radius: 4px;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-    max-width: 300px;
-    position: fixed;
-    padding:12px;
-    z-index:1;
 }
 
 /** */
