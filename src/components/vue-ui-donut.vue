@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { makeDonut, palette, convertColorToHex, createUid, opacity, makeXls } from '../lib';
+import { makeDonut, palette, convertColorToHex, opacity, makeXls } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";

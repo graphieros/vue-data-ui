@@ -69,6 +69,7 @@ const computedDataset = computed(() => {
         const width = unitWidth - gap;
         const y = drawingArea.value.centerY - height / 2;
         const x = drawingArea.value.left + (gap / 2  + (i * unitWidth));
+        const trapX = drawingArea.value.left + (i * unitWidth);
         const intensity = typeof dp.intensity === 'undefined' ? 100 : Math.round(dp.intensity * 100);
         const color = dp.value >= 0 ? `${histoConfig.value.style.bars.colors.positive}${opacity[intensity]}` : `${histoConfig.value.style.bars.colors.negative}${opacity[intensity]}`;
         const stroke = dp.value >= 0 ? histoConfig.value.style.bars.colors.positive : histoConfig.value.style.bars.colors.negative;
@@ -83,6 +84,8 @@ const computedDataset = computed(() => {
             proportion,
             stroke,
             textAnchor,
+            trapX,
+            unitWidth,
             width,
             x,
             y
@@ -90,21 +93,23 @@ const computedDataset = computed(() => {
     });
 });
 
+const selectedIndex = ref(null);
+
 </script>
 
 <template>
-    <div :style="`width:100%;background:${histoConfig.style.backgroundColor};font-family:${histoConfig.style.fontFamily}`">
+    <div :style="`width:100%;background:${histoConfig.style.backgroundColor};font-family:${histoConfig.style.fontFamily}`" @mouseleave="selectedIndex = null">
         <!-- TITLE -->
         <div v-if="histoConfig.style.title.text" :style="`width:calc(100% - 12px);background:${histoConfig.style.backgroundColor};margin:0 auto;margin:${histoConfig.style.title.margin};padding: 0 6px;text-align:${histoConfig.style.title.textAlign}`">
             <div :style="`font-size:${histoConfig.style.title.fontSize}px;color:${histoConfig.style.title.color};font-weight:${histoConfig.style.title.bold ? 'bold' : 'normal'}`">
-                {{ histoConfig.style.title.text }}
+                {{ histoConfig.style.title.text }} <span v-if="selectedIndex !== null">- {{ computedDataset[selectedIndex].timeLabel || '' }} {{ histoConfig.style.labels.value.prefix }}{{ isNaN(computedDataset[selectedIndex].value) ? '' : ': ' + Number(computedDataset[selectedIndex].value.toFixed(histoConfig.style.labels.value.rounding)).toLocaleString() }}{{ histoConfig.style.labels.value.suffix }}</span> <span v-if="![undefined, null].includes(selectedIndex)">({{ computedDataset[selectedIndex].valueLabel || 0 }})</span>
             </div>
             <div v-if="histoConfig.style.title.subtitle.text" :style="`font-size:${histoConfig.style.title.subtitle.fontSize}px;color:${histoConfig.style.title.subtitle.color};font-weight:${histoConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
                 {{ histoConfig.style.title.subtitle.text }}
             </div>    
         </div>
 
-        <svg data-cy="sparkhistogram-svg" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`">
+        <svg data-cy="sparkhistogram-svg" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" style="overflow: visible">
             <defs>
                 <radialGradient v-for="(posGrad, i) in computedDataset" :id="`gradient_positive_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
                     <stop offset="0%" :stop-color="`${shiftHue(histoConfig.style.bars.colors.positive, 0.05)}${opacity[posGrad.intensity]}`"/>
@@ -168,6 +173,22 @@ const computedDataset = computed(() => {
                 >
                     {{ time.timeLabel }}
                 </text>
+            </g>
+
+            <!-- TOOLTIP TRAPS -->
+            <g v-for="(rect, i) in computedDataset">
+                <rect 
+                    :height="drawingArea.height" 
+                    :width="rect.unitWidth" 
+                    fill="transparent" 
+                    :x="rect.trapX" 
+                    :y="0" @mouseover="selectedIndex = i" 
+                    @mouseleave="selectedIndex = null" 
+                    :stroke="selectedIndex !== null && selectedIndex === i ? histoConfig.style.selector.stroke : ''"
+                    :stroke-width="selectedIndex !== null && selectedIndex === i ? histoConfig.style.selector.strokeWidth : 0"
+                    :rx="histoConfig.style.selector.borderRadius"
+                    :stroke-dasharray="histoConfig.style.selector.strokeDasharray"
+                />
             </g>
 
         </svg>

@@ -52,6 +52,12 @@ declare module 'vue-data-ui' {
                     bold?: boolean;
                 };
             };
+            selector?: {
+                stroke?: string;
+                strokeDasharray?: number;
+                strokeWidth?: number;
+                borderRadius?: number;
+            };
             title?: {
                 textAlign?: "left" | "right" | "center";
                 text?: string;

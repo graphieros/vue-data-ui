@@ -2405,6 +2405,12 @@
                     "bold": false
                 }
             },
+            "selector": {
+                "stroke": "#3366cc",
+                "strokeWidth": 2,
+                "strokeDasharray": 0,
+                "borderRadius": 2
+            },
             "title": {
                 "textAlign": "left",
                 "text": "",
