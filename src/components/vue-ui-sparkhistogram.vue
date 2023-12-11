@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-import { treeShake, shiftHue, opacity, convertConfigColors, palette, convertColorToHex } from "../lib";
+import { shiftHue, opacity } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -102,7 +102,7 @@ const selectedIndex = ref(null);
         <!-- TITLE -->
         <div v-if="histoConfig.style.title.text" :style="`width:calc(100% - 12px);background:${histoConfig.style.backgroundColor};margin:0 auto;margin:${histoConfig.style.title.margin};padding: 0 6px;text-align:${histoConfig.style.title.textAlign}`">
             <div :style="`font-size:${histoConfig.style.title.fontSize}px;color:${histoConfig.style.title.color};font-weight:${histoConfig.style.title.bold ? 'bold' : 'normal'}`">
-                {{ histoConfig.style.title.text }} <span v-if="selectedIndex !== null">- {{ computedDataset[selectedIndex].timeLabel || '' }} {{ histoConfig.style.labels.value.prefix }}{{ isNaN(computedDataset[selectedIndex].value) ? '' : ': ' + Number(computedDataset[selectedIndex].value.toFixed(histoConfig.style.labels.value.rounding)).toLocaleString() }}{{ histoConfig.style.labels.value.suffix }}</span> <span v-if="![undefined, null].includes(selectedIndex)">({{ computedDataset[selectedIndex].valueLabel || 0 }})</span>
+                {{ histoConfig.style.title.text }} <span v-if="selectedIndex !== null">- {{ computedDataset[selectedIndex].timeLabel || '' }} {{ histoConfig.style.labels.value.prefix }}{{ isNaN(computedDataset[selectedIndex].value) ? '' : ': ' + Number(computedDataset[selectedIndex].value.toFixed(histoConfig.style.labels.value.rounding)).toLocaleString() }}{{ histoConfig.style.labels.value.suffix }}</span> <span v-if="![undefined, null].includes(selectedIndex) && ![null, undefined].includes(computedDataset[selectedIndex].valueLabel)">({{ computedDataset[selectedIndex].valueLabel || 0 }})</span>
             </div>
             <div v-if="histoConfig.style.title.subtitle.text" :style="`font-size:${histoConfig.style.title.subtitle.fontSize}px;color:${histoConfig.style.title.subtitle.color};font-weight:${histoConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
                 {{ histoConfig.style.title.subtitle.text }}
