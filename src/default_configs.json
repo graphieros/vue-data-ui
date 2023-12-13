@@ -329,7 +329,6 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "layout": {
-                    "useDiv": false,
                     "labels": {
                         "dataLabels": {
                             "show": true,
@@ -2424,6 +2423,82 @@
                     "fontSize": 12,
                     "bold": false
                 }
+            }
+        }
+    },
+    "vue_ui_rings": {
+        "useCssAnimation": true,
+        "useBlurOnHover": true,
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "layout": {
+                    "rings": {
+                        "strokeWidth": 2,
+                        "stroke":"#FFFFFF",
+                        "gradient": {
+                            "show": true,
+                            "intensity": 40,
+                            "underlayerColor":"#FFFFFF"
+                        },
+                        "useShadow": true
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "show": true,
+                    "fontSize": 16,
+                    "bold": false,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "tooltip": {
+                    "show": true,
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options",
+            "labels": {
+                "showTable": "Show table"
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0
             }
         }
     }

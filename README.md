@@ -14,7 +14,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-26-green)
+![Static Badge](https://img.shields.io/badge/components-27-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -38,6 +38,8 @@ Available components:
 - [VueUiAgePyramid](https://vue-data-ui.graphieros.com/docs#vue-ui-age-pyramid)
 - [VueUiRelationCircle](https://vue-data-ui.graphieros.com/docs#vue-ui-relation-circle)
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
+- [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
+
 
 ## Mini charts
 - [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)

@@ -5,6 +5,94 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiRingsConfig = {
+        useCssAnimation: boolean;
+        useBlurOnHover: boolean;
+        style: {
+            fontFamily: string;
+            chart: {
+                backgroundColor: string;
+                color: string;
+                layout: {
+                    rings: {
+                        strokeWidth: number;
+                        stroke: string;
+                        gradient: {
+                            show: boolean;
+                            intensity: number;
+                            underlayerColor: string;
+                        };
+                        useShadow: boolean;
+                    };
+                };
+                legend: {
+                    backgroundColor: string;
+                    color: string;
+                    show: boolean;
+                    fontSize: number;
+                    bold: boolean;
+                    roundingValue: number;
+                    roundingPercentage: number;
+                };
+                title: {
+                    text: string;
+                    color: string;
+                    fontSize: number;
+                    bold: boolean;
+                    subtitle: {
+                        color: string;
+                        text: string;
+                        fontSize: number;
+                        bold: boolean;
+                    };
+                };
+                tooltip: {
+                    show: boolean;
+                    color: string;
+                    backgroundColor: string;
+                    fontSize: number;
+                    showValue: boolean;
+                    showPercentage: boolean;
+                    roundingValue: number;
+                    roundingPercentage: number;
+                };
+            };
+        };
+        userOptions: {
+            show: boolean;
+            title: string;
+            labels: {
+                showTable: string;
+            };
+        };
+        table: {
+            show: string;
+            th: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+            };
+            td: {
+                backgroundColor: string;
+                color: string;
+                outline: string;
+                roundingValue: number;
+                roundingPercentage: number;
+            };
+        };
+    };
+
+    export type VueUiRingsDatasetItem = {
+        name: string;
+        color?: string;
+        values: number[];
+    }
+
+    export const VueUiRings: DefineComponent<{
+        config?: VueUiRingsConfig,
+        dataset: VueUiRingsDatasetItem[]
+    }>
+
     export type VueUiSparkHistogramConfig = {
         style?: {
             backgroundColor?: string;

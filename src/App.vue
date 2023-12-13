@@ -38,6 +38,7 @@ import RelationTest from "./components/vue-ui-relation-circle.vue";
 import ThermoTest from "./components/vue-ui-thermometer.vue";
 import StackTest from "./components/vue-ui-sparkstackbar.vue";
 import HistoTest from "./components/vue-ui-sparkhistogram.vue";
+import RingsTest from "./components/vue-ui-rings.vue";
 
 const dataset = ref([
   {
@@ -3430,6 +3431,50 @@ const histoDataset = ref([
   },
 ]);
 
+const ringsConfig = ref({
+  style: {
+    chart: {
+      title: {
+        text: "Title",
+        subtitle: {
+          text: "Subtitle"
+        }
+      }
+    }
+  }
+});
+const ringsDataset = ref([
+  {
+    name: "Serie 1",
+    values: [100]
+  },
+  {
+    name: "Serie 2",
+    values: [100, 80]
+  },
+  {
+    name: "Serie 3",
+    values: [120]
+  },
+  {
+    name: "Serie 4",
+    values: [60]
+  },
+  {
+    name: "Serie 5",
+    values: [20]
+  },
+  {
+    name: "Serie 6",
+    values: [10]
+  },
+  {
+    name: "Serie 7",
+    values: [2]
+  },
+])
+
+
 const showLocalTest = ref(false);
 
 function copyConfig(c) {
@@ -3446,16 +3491,41 @@ function copyConfig(c) {
       document.body.removeChild(selBox);
 }
 
+const updateStep = ref(0);
+
 </script>
 
 <template>
+  <button @click="updateStep += 1">UPDATE</button>
   <div style="padding: 48px; font-weight: bold; line-height: 20px">
     <h1 style="font-size: 36px; color: #666666">
       Vue Data UI
     </h1>
     <h2 style="color: #A6A6A6">Components</h2>
   </div>
+
   <div style="padding-left: 48px; padding-right: 48px">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_rings)">
+        <template #title>VueUiRings</template>
+        <template #dev>
+          <RingsTest
+            ref="rings"
+            :dataset="ringsDataset"
+            :config="ringsConfig"
+          />
+        </template>
+        <template #prod>
+            <VueUiRings 
+              ref="rings" 
+              :dataset="ringsDataset" 
+              :config="ringsConfig"
+            />
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_rings }}
+        </template>
+      </Box>
+
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_relation_circle)">
         <template #title>VueUiRelationCircle</template>
         <template #dev>

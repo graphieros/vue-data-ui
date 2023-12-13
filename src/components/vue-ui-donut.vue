@@ -259,7 +259,7 @@ const dataTable = computed(() => {
                 name: h.name
             },
             table.value.body[i].toFixed(donutConfig.value.table.td.roundingValue),
-            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(donutConfig.value.table.td.roundingPercentage)
+            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(donutConfig.value.table.td.roundingPercentage) + '%'
         ]
     });
 

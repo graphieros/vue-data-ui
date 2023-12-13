@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "1.9.20",
+  "version": "1.9.21",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
   "keywords": [
@@ -30,7 +30,8 @@
     "annotator",
     "smiley",
     "relationship circle",
-    "thermometer"
+    "thermometer",
+    "rings"
   ],
   "author": "Alec Lloyd Probert",
   "repository": {
