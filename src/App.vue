@@ -3496,12 +3496,12 @@ const updateStep = ref(0);
 </script>
 
 <template>
-  <button @click="updateStep += 1">UPDATE</button>
   <div style="padding: 48px; font-weight: bold; line-height: 20px">
-    <h1 style="font-size: 36px; color: #666666">
+    <h1 style="font-size: 36px; color: #42d392">
       Vue Data UI
     </h1>
     <h2 style="color: #A6A6A6">Components</h2>
+    <h4 style="color: #5f8bee">Manual testing arena</h4>
   </div>
 
   <div style="padding-left: 48px; padding-right: 48px">

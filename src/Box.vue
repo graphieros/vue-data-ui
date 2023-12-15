@@ -17,28 +17,37 @@ function copy() {
 </script>
 
 <template>
-    <div style="width: 100%;margin-top:12px; background: #e1e5e8">
+    <div style="width: 100%;margin-top:12px; background: #2A2A2A">
         <details>
-            <summary style="user-select:none;cursor:pointer;height:30px;background:linear-gradient(to right, #e1e5e8, white);line-height:24px;font-size:24px;padding:12px;">
-                <slot name="title"></slot>
+            <summary style="user-select:none;cursor:pointer;height:30px;background:linear-gradient(to right, #2A2A2A, #1A1A1A);line-height:24px;font-size:24px;padding:12px;">
+                <span style="color:#42d392">
+                    <slot name="title"></slot>
+                </span>
             </summary>
             <div style="display: flex; flex-direction:column;">
                 <button class="btn" @click="showConfig = !showConfig">
                     Config &nbsp;<span v-if="showConfig">&lt;</span><span v-else>&gt;</span>
                 </button>
                 <br>
+                <small style="margin-left: 24px; margin-bottom: 12px; color: #AAAAAA" v-if="showConfig">Click to copy</small>
                 <code :class="{cde: true, wow: isCopying}" v-if="showConfig" @click="copy">
                     <slot name="config"></slot>
                 </code>
             </div>
-            <div style="display: flex;flex-direction:row; gap:12px; align-items:center;justify-content:center;background:#e1e5e8;padding:12px">
+            <div style="display: flex;flex-direction:row; gap:12px; align-items:center;justify-content:center;background:#2A2A2A;padding:12px">
                 <div style="width:100%;padding:12px;">
-                    <div style="width:100%;text-align:center">DEV</div>
-                    <slot name="dev"></slot>
+                    <div style="width:100%;text-align:center;color: #ff6400;margin-bottom:12px">DEV</div>
+
+                    <div style="resize:both;overflow: auto; border: 1px solid #ff6400; padding: 12px; border-radius: 6px">
+                        <slot name="dev"></slot>
+                    </div>
                 </div>
                 <div style="width:100%;padding:12px">
-                    <div style="width:100%;text-align:center">PRODUCTION</div>
-                    <slot name="prod"></slot>
+                    <div style="width:100%;text-align:center;color: #42d392;margin-bottom:12px">PRODUCTION</div>
+
+                    <div style="resize:both;overflow: auto; border: 1px solid #42d392; padding: 12px;border-radius: 6px">
+                        <slot name="prod"></slot>
+                    </div>
                 </div>
             </div>
         </details>
@@ -50,13 +59,18 @@ function copy() {
     border: none;
     width: 100px;
     height: 40px;
-    background: #fafafa;
+    background: linear-gradient(to bottom right, #42d392, #42d392AA);
+    font-weight: bold;
     cursor: pointer;
-    border: 1px solid #CCCCCC;
     border-radius: 6px;
     margin-top: 24px;
     margin-left: 24px;
     box-shadow: 0 6px 12px -6px rgba(0, 0,0,0.6);
+    color: white;
+}
+
+.btn:hover {
+    background: linear-gradient(to top left, #42d392, #42d392AA);
 }
 .cde {
     background: rgba(0,0,0,0.8);
@@ -66,7 +80,11 @@ function copy() {
     padding: 12px;
     border-radius: 6px;
     cursor: copy;
-    outline: 2px solid greenyellow;
+    outline: 2px solid #42d392;
+}
+
+summary::marker {
+    color: #A6A6A6;
 }
 .wow {
     animation: wow 0.2s ease-in-out;
