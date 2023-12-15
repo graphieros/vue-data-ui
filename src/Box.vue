@@ -17,7 +17,7 @@ function copy() {
 </script>
 
 <template>
-    <div style="width: 100%;margin-top:12px; background: #2A2A2A">
+    <div style="width: 100%;margin-top:12px; background: #2A2A2A;">
         <details>
             <summary style="user-select:none;cursor:pointer;height:30px;background:linear-gradient(to right, #2A2A2A, #1A1A1A);line-height:24px;font-size:24px;padding:12px;">
                 <span style="color:#42d392">
@@ -73,7 +73,7 @@ function copy() {
     background: linear-gradient(to top left, #42d392, #42d392AA);
 }
 .cde {
-    background: rgba(0,0,0,0.8);
+    background: #1A1A1A;
     margin-left: 24px;
     margin-right: 24px;
     color: #fafafa;
