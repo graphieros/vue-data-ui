@@ -16,6 +16,7 @@ import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Legend from "../atoms/Legend.vue";
 
 const props = defineProps({
   config: {
@@ -109,6 +110,28 @@ const datasetCopy = computed(() => {
     })
 })
 
+const legendSet = computed(() => {
+    return datasetCopy.value.map((el) => {
+      return {
+        ...el,
+        shape: 'circle',
+        opacity: segregated.value.includes(el.uid) ? 0.5 : 1
+      }
+    })
+    .toSorted((a,b) => b.value - a.value)
+})
+
+const legendConfig = computed(() => {
+    return {
+        cy: 'rings-div-legend',
+        backgroundColor: ringsConfig.value.style.chart.legend.backgroundColor,
+        color: ringsConfig.value.style.chart.legend.color,
+        fontSize: ringsConfig.value.style.chart.legend.fontSize,
+        paddingBottom: 12,
+        fontWeight: ringsConfig.value.style.chart.legend.bold ? 'bold' : ''
+    }
+})
+
 const grandTotal = computed(() => {
   return datasetCopy.value
     .filter(el => !segregated.value.includes(el.uid))
@@ -137,6 +160,8 @@ const convertedDataset = computed(() => {
     })
     .toSorted((a, b) => b.value - a.value);
 });
+
+
 
 function getData() {
   return convertedDataset.value.map(
@@ -407,6 +432,7 @@ defineExpose({
           :fill="ringsConfig.style.chart.layout.rings.gradient.underlayerColor"
         />
         <circle
+        :data-cy="`ring-${i}`"
           :class="{
             'vue-ui-rings-item': ringsConfig.useCssAnimation,
             'vue-ui-rings-shadow': ringsConfig.style.chart.layout.rings.useShadow,
@@ -429,6 +455,7 @@ defineExpose({
           "
         />
         <circle
+          :data-cy="`mouse-trap-${i}`"
           stroke="none"
           :cx="svg.width / 2"
           :cy="
@@ -448,51 +475,24 @@ defineExpose({
     </svg>
 
     <!-- LEGEND AS DIV -->
-    <div
+    <Legend
       v-if="ringsConfig.style.chart.legend.show"
-      class="vue-ui-rings-legend"
-      :style="`font-weight:${
-        ringsConfig.style.chart.legend.bold ? 'bold' : ''
-      };background:${ringsConfig.style.chart.legend.backgroundColor};color:${
-        ringsConfig.style.chart.legend.color
-      };font-size:${
-        ringsConfig.style.chart.legend.fontSize
-      }px;padding-bottom:12px;font-weight:${
-        ringsConfig.style.chart.legend.bold ? 'bold' : ''
-      }`"
+      :legendSet="legendSet"
+      :config="legendConfig"
+      @clickMarker="({legend}) => segregate(legend.uid)"
     >
-      <div
-        v-for="(legendItem, i) in datasetCopy.toSorted((a,b) => b.value - a.value)"
-        :data-cy="`waffle-legend-item-${i}`"
-        class="vue-ui-rings-legend-item"
-        @click="segregate(legendItem.uid)"
-        :style="`opacity:${segregated.includes(legendItem.uid) ? 0.5 : 1}`"
-      >
-        <svg viewBox="0 0 12 12" height="14" width="14">
-          <circle
-            cx="6"
-            cy="6"
-            r="6"
-            stroke="none"
-            :fill="legendItem.color"
-          />
-        </svg>
-        <span>{{ legendItem.name }} : </span>
-        <span>{{
-          legendItem.value.toFixed(ringsConfig.style.chart.legend.roundingValue)
-        }}</span>
-        <span v-if="!segregated.includes(legendItem.uid)"
-          >({{
-            isNaN(legendItem.value / grandTotal)
-              ? "-"
-              : ((legendItem.value / grandTotal) * 100).toFixed(
-                  ringsConfig.style.chart.legend.roundingPercentage
-                )
-          }}%)</span
-        >
-        <span v-else>( - % )</span>
-      </div>
-    </div>
+      <template #item="{legend}">
+          <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+              {{ legend.name }} : {{ Number(legend.value.toFixed(ringsConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+              <span v-if="!segregated.includes(legend.uid)">
+                  ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(ringsConfig.style.chart.legend.roundingPercentage)}}%)
+              </span>
+              <span v-else>
+                  ( - % )
+              </span>
+          </div>
+      </template>
+    </Legend>
 
     <!-- TOOLTIP -->
     <Tooltip
@@ -545,24 +545,6 @@ defineExpose({
 .vue-ui-rings-opacity {
   opacity: 0.3;
   transition: opacity 0.15s ease-in-out;
-}
-
-.vue-ui-rings-legend {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
-  column-gap: 18px;
-}
-.vue-ui-rings-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  height: 24px;
-  user-select: none;
 }
 
 .vue-ui-rings-item {

@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import Legend from "../atoms/Legend.vue";
 
 const props = defineProps({
     config: {
@@ -94,12 +95,26 @@ const zero = computed(() => {
 
 const datasetWithId = computed(() => {
     return props.dataset.map((ds, i) => {
+        const id = `cluster_${uid.value}_${i}`;
         return {
             ...ds,
-            id: `cluster_${uid.value}_${i}`,
-            color: ds.color ? ds.color : (palette[i] || palette[i % palette.length])
+            id,
+            color: ds.color ? ds.color : (palette[i] || palette[i % palette.length]),
+            opacity: segregated.value.includes(id) ? 0.5: 1,
+            shape: 'circle'
         }
     })
+})
+
+const legendConfig = computed(() => {
+    return {
+        cy: 'scatter-div-legend',
+        backgroundColor: scatterConfig.value.style.legend.backgroundColor,
+        color: scatterConfig.value.style.legend.color,
+        fontSize: scatterConfig.value.style.legend.fontSize,
+        paddingBottom: 12,
+        fontWeight: scatterConfig.value.style.legend.bold ? 'bold' : ''
+    }
 })
 
 const mutableDataset = computed(() => {
@@ -528,26 +543,33 @@ defineExpose({
                 :height="svg.height - drawingArea.bottom"
                 style="overflow:visible"
             >
-                <div class="vue-ui-scatter-legend" :style="`color:${scatterConfig.style.legend.color};font-size:${scatterConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${scatterConfig.style.legend.bold ? 'bold' : ''}`" >
-                    <div v-for="(legendItem, i) in datasetWithId" :data-cy="`scatter-foreignObject-legend-item-${i}`" class="vue-ui-scatter-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                        <svg viewBox="0 0 12 12" :height="scatterConfig.style.legend.fontSize" :width="scatterConfig.style.legend.fontSize">
-                            <circle cx="6" cy="6" r="6" :fill="legendItem.color"/>
-                        </svg>
-                        <span>{{ legendItem.name }} </span>
-                    </div>
-                </div>
+                <Legend
+                    :legendSet="datasetWithId"
+                    :config="legendConfig"
+                    @clickMarker="({ legend }) => segregate(legend.id)"
+                >
+                    <template #item="{ legend }">
+                        <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                            {{ legend.name }}
+                        </div>
+                    </template>
+                </Legend>
             </foreignObject>
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="scatterConfig.style.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-scatter-legend" :style="`background:${scatterConfig.style.legend.backgroundColor};color:${scatterConfig.style.legend.color};font-size:${scatterConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${scatterConfig.style.legend.bold ? 'bold' : ''}`" >
-            <div v-for="(legendItem, i) in datasetWithId" :data-cy="`scatter-div-legend-item-${i}`" class="vue-ui-scatter-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                <svg viewBox="0 0 12 12" :height="scatterConfig.style.legend.fontSize" :width="scatterConfig.style.legend.fontSize">
-                    <circle cx="6" cy="6" r="6" :fill="legendItem.color"/>
-                </svg>
-                <span>{{ legendItem.name }} </span>
-            </div>
-        </div>
+        <Legend
+            v-if="scatterConfig.style.legend.show && (!mutableConfig.inside || isPrinting)"
+            :legendSet="datasetWithId"
+            :config="legendConfig"
+            @clickMarker="({ legend }) => segregate(legend.id)"
+        >
+            <template #item="{ legend }">
+                <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    {{ legend.name }}
+                </div>
+            </template>
+        </Legend>
 
         <!-- TOOLTIP -->
         <Tooltip
@@ -642,22 +664,6 @@ path, line, circle {
     justify-content: center;
     text-align:center;
     width:100%;
-}
-.vue-ui-scatter-legend {
-    height: 100%;
-    width:100%;
-    display: flex;
-    align-items:center;
-    flex-wrap: wrap;
-    justify-content:center;
-    column-gap: 18px;
-}
-.vue-ui-scatter-legend-item {
-    display: flex;
-    align-items:center;
-    gap: 6px;
-    cursor: pointer;
-    height: 24px;
 }
 
 /** */

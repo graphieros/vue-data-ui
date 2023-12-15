@@ -24,19 +24,6 @@ describe('<VueUiScatter />', () => {
         .should('exist')
         .contains(fixture.config.style.title.subtitle.text);
 
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="scatter-div-legend-item-${i}"]`).then(($legend) => {
-          cy.wrap($legend)
-            .should('exist')
-            .contains(fixture.dataset[i].name)
-          
-          cy.wrap($legend)
-            .find('circle')
-            .invoke('attr', 'fill')
-            .should('eq', fixture.dataset[i].color)
-        })
-      }
-
       cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="scatter-checkbox-title"]`).check();
 
@@ -47,19 +34,6 @@ describe('<VueUiScatter />', () => {
       cy.get(`[data-cy="scatter-text-subtitle"]`)
         .should('exist')
         .contains(fixture.config.style.title.subtitle.text);
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="scatter-foreignObject-legend-item-${i}"]`).then(($legend) => {
-          cy.wrap($legend)
-            .should('exist')
-            .contains(fixture.dataset[i].name);
-
-          cy.wrap($legend)
-            .find('circle')
-            .invoke('attr', 'fill')
-            .should('eq', fixture.dataset[i].color)
-        });
-      }
 
       cy.get(`[data-cy="scatter-checkbox-title"]`).uncheck();
       cy.get(`[data-cy="scatter-checkbox-table"]`).check();

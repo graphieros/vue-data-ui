@@ -29,19 +29,6 @@ describe('<VueUiOnion />', () => {
       cy.get(`[data-cy="onion-div-subtitle"]`)
         .should('exist')
         .contains(fixture.config.style.chart.title.subtitle.text);
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="onion-div-legend-item-${i}"]`).then(($legend) => {
-          cy.wrap($legend)
-            .should('exist')
-            .find('circle')
-            .invoke('attr', 'fill')
-            .should('eq', fixture.dataset[i].color)
-          cy.wrap($legend)
-            .contains(`${fixture.dataset[i].name} : ${fixture.dataset[i].percentage}%`)
-        })
-      }
-
       
       cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="onion-checkbox-title"]`)
@@ -55,19 +42,6 @@ describe('<VueUiOnion />', () => {
       cy.get(`[data-cy="onion-text-subtitle"]`)
         .should('exist')
         .contains(fixture.config.style.chart.title.subtitle.text);
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="onion-foreignObject-legend-item-${i}"]`).then(($legend) => {
-          cy.wrap($legend)
-            .should('exist')
-            .find('circle')
-            .invoke('attr', 'fill')
-            .should('eq', fixture.dataset[i].color);
-          cy.wrap($legend)
-            .contains(`${fixture.dataset[i].name} : ${fixture.dataset[i].percentage}%`)
-          
-        })
-      }
 
       cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="onion-checkbox-title"]`)

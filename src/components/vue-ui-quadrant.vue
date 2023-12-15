@@ -9,6 +9,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Shape from "../atoms/Shape.vue";
+import Legend from "../atoms/Legend.vue";
 
 const props = defineProps({
     config: {
@@ -318,16 +319,28 @@ const table = computed(() => {
     return { head, body, itsShapes };
 });
 
-const legend = computed(() => {
+const legendSet = computed(() => {
     return datasetReference.value.map(category => {
         return {
             name: category.name,
             shape: category.shape,
             color: category.color,
-            id: category.id
+            id: category.id,
+            opacity: segregated.value.includes(category.id) ? 0.5 : 1
         }
     })
 });
+
+const legendConfig = computed(() => {
+    return {
+        cy: 'quadrant-div-legend',
+        backgroundColor: quadrantConfig.value.style.chart.legend.backgroundColor,
+        color: quadrantConfig.value.style.chart.legend.color,
+        fontSize: quadrantConfig.value.style.chart.legend.fontSize,
+        paddingBottom: 12,
+        fontWeight: quadrantConfig.value.style.chart.legend.bold ? 'bold' : ''
+    }
+})
 
 function segregate(id) {
     if(segregated.value.includes(id)) {
@@ -803,41 +816,34 @@ defineExpose({
                 height="90"
                 style="overflow: visible;"
             >
-                <div class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};height: 100%;width:100%;display: flex;align-items:center;flex-wrap: wrap;justify-content:center;column-gap: 18px;`" >
-                    <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-foreignObject-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1};display: flex;align-items:center;justify-content: center;gap: 6px;cursor: pointer;height: 24px;`">
-                        <svg height="14" width="14" viewBox="0 0 20 20">
-                            <Shape
-                                :plot="{ x: 10, y: 10}"
-                                :shape="legendItem.shape"
-                                :color="legendItem.color"
-                                :radius="8"
-                                :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                                :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                            />
-                        </svg>
-                        <span>{{ legendItem.name }}</span>
-                    </div>
-                </div>
+                <Legend
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    @clickMarker="({legend}) => segregate(legend.id)"
+                >
+                    <template #item="{ legend }">
+                        <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                            {{ legend.name }} 
+                        </div>
+                    </template>
+                </Legend>
             </foreignObject>
 
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="quadrantConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-quadrant-legend" :style="`font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''};background:${quadrantConfig.style.chart.legend.backgroundColor};color:${quadrantConfig.style.chart.legend.color};font-size:${quadrantConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${quadrantConfig.style.chart.legend.bold ? 'bold' : ''}`" >
-            <div v-for="(legendItem, i) in legend" :data-cy="`quadrant-div-legend-item-${i}`" class="vue-ui-quadrant-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                <svg height="14" width="14" viewBox="0 0 20 20">
-                    <Shape
-                        :plot="{ x: 10, y: 10}"
-                        :shape="legendItem.shape"
-                        :color="legendItem.color"
-                        :radius="8"
-                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                        :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                    />
-                </svg>
-                <span>{{ legendItem.name }}</span>
-            </div>
-        </div>
+        <Legend
+            v-if="quadrantConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
+            :legendSet="legendSet"
+            :config="legendConfig"
+            @clickMarker="({legend}) => segregate(legend.id)"
+        >
+            <template #item="{ legend }">
+                <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    {{ legend.name }} 
+                </div>
+            </template>
+        </Legend>
 
         <!-- TOOLTIP -->
         <Tooltip
@@ -940,23 +946,6 @@ path, line, rect, circle, polygon {
     justify-content: center;
     text-align:center;
     width:100%;
-}
-.vue-ui-quadrant-legend {
-    height: 100%;
-    width:100%;
-    display: flex;
-    align-items:center;
-    flex-wrap: wrap;
-    justify-content:center;
-    column-gap: 18px;
-}
-.vue-ui-quadrant-legend-item {
-    display: flex;
-    align-items:center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    height: 24px;
 }
 
 /** */

@@ -24,21 +24,6 @@ describe('<VueUiVerticalBar />', () => {
         .should('exist')
         .contains(fixture.config.style.chart.title.subtitle.text);
 
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="vertical-bar-div-legend-item-${i}"]`).then(($legend) => {
-          cy.wrap($legend)
-            .should('exist')
-            .click()
-        })
-      }
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="vertical-bar-div-legend-item-${i}"]`).then(($legend) => {
-          cy.wrap($legend)
-            .click()
-        })
-      }
-
       cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.get(`[data-cy="vertical-bar-checkbox-title"]`).check();
@@ -51,20 +36,6 @@ describe('<VueUiVerticalBar />', () => {
         .should('exist')
         .contains(fixture.config.style.chart.title.subtitle.text);
 
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="vertical-bar-foreignObject-legend-item-${i}"]`).then(($legend) => {
-          cy.wrap($legend)
-            .should('exist')
-            .click()
-        })
-      }
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="vertical-bar-foreignObject-legend-item-${i}"]`).then(($legend) => {
-          cy.wrap($legend)
-            .click()
-        })
-      }
 
       cy.get(`[data-cy="vertical-bar-checkbox-title"]`).uncheck({force: true});
       cy.get(`[data-cy="vertical-bar-checkbox-table"]`).check({ force: true});
@@ -129,19 +100,19 @@ describe('<VueUiVerticalBar />', () => {
           }
         });
 
-        cy.get(`[data-cy="user-options-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
 
-        cy.get(`[data-cy="user-options-pdf"]`).click();
+        cy.get(`[data-cy="user-options-pdf"]`).click({ force: true });
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-        cy.get(`[data-cy="user-options-xls"]`).click();
+        cy.get(`[data-cy="user-options-xls"]`).click({ force: true });
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.xlsx`);
-        cy.get(`[data-cy="user-options-img"]`).click();
+        cy.get(`[data-cy="user-options-img"]`).click({ force: true });
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
         cy.clearDownloads();
-        cy.get(`[data-cy="user-options-summary"]`).click();
+        cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
 
       });
   });

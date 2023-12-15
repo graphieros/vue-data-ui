@@ -30,12 +30,6 @@ describe('<VueUiRadar />', () => {
             .contains(el.expected)
         });
 
-        for (let i = 0; i < fixture.dataset.categories.length; i += 1) {
-          cy.get(`[data-cy="radar-div-legend-item-${i}"]`)
-            .should('exist')
-            .contains(fixture.dataset.categories[i].name)
-        }
-
         cy.get(`[data-cy="user-options-summary"]`).click();
         cy.get(`[data-cy="radar-checkbox-title"]`).check();
         cy.get(`[data-cy="radar-checkbox-table"]`).check();

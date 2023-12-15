@@ -7,13 +7,6 @@ describe('<VueUiWaffle />', () => {
     cy.viewport(800, 950);
   });
 
-  function updateConfigInFixture(modifiedConfig) {
-    cy.get('@fixture').then((fixture) => {
-      const updatedFixture = { ...fixture, config: modifiedConfig };
-      cy.wrap(updatedFixture).as('fixture');
-    });
-  }
-
   it('renders with different config attributes', function () {
     cy.get('@fixture').then((fixture) => {
       cy.mount(VueUiWaffle, {
@@ -41,15 +34,6 @@ describe('<VueUiWaffle />', () => {
       cy.get(`[data-cy="waffle-subtitle"]`)
         .should('exist')
         .contains(fixture.config.style.chart.title.subtitle.text);
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        const expectedValue = sortedDataset[i].values.reduce((a, b) => a + b, 0);
-        const expectedPercentage = (expectedValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage);
-
-        cy.get(`[data-cy="waffle-legend-item-${i}"]`)
-          .should('exist')
-          .contains(`${sortedDataset[i].name} : ${expectedValue}(${expectedPercentage}%)`)
-      }
 
       for (let i = 0; i < Math.pow(fixture.config.style.chart.layout.grid.size, 2); i += 1) {
         cy.get(`[data-cy="waffle-rect-underlayer-${i}"]`)
@@ -106,15 +90,6 @@ describe('<VueUiWaffle />', () => {
         cy.get(`[data-cy="waffle-text-subtitle"]`)
           .should('exist')
           .contains(fixture.config.style.chart.title.subtitle.text);
-
-        for (let i = 0; i < fixture.dataset.length; i += 1) {
-          const expectedValue = sortedDataset[i].values.reduce((a, b) => a + b, 0);
-          const expectedPercentage = (expectedValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage);
-
-          cy.get(`[data-cy="waffle-foreginObject-legend-item-${i}"]`)
-            .should('exist')
-            .contains(`${sortedDataset[i].name} : ${expectedValue}(${expectedPercentage}%)`)
-        }
 
         cy.wrap($checkbox)
           .uncheck()

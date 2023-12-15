@@ -7,6 +7,7 @@ import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Legend from "../atoms/Legend.vue";
 
 const props = defineProps({
     config: {
@@ -77,13 +78,27 @@ const drawableArea = computed(() => {
 
 const immutableDataset = computed(() => {
     return props.dataset.map((onion, i) => {
+        const id = `onion_serie_${i}_${uid.value}`;
         return {
             ...onion,
             color: convertColorToHex(onion.color) || palette[i],
-            id: `onion_serie_${i}_${uid.value}`,
+            id,
+            shape: 'circle',
+            opacity: segregated.value.includes(id) ? 0.5 : 1
         }
     })
 });
+
+const legendConfig = computed(() => {
+    return {
+        cy: 'onion-div-legend',
+        backgroundColor: onionConfig.value.style.chart.legend.backgroundColor,
+        color: onionConfig.value.style.chart.legend.color,
+        fontSize: onionConfig.value.style.chart.legend.fontSize,
+        paddingBottom: 12,
+        fontWeight: onionConfig.value.style.chart.legend.bold ? 'bold' : ''
+    }
+})
 
 const segregated = ref([]);
 
@@ -400,26 +415,38 @@ defineExpose({
                 :height="svg.height - drawableArea.bottom"
                 style="overflow:visible"
             >
-                <div class="vue-ui-onion-legend" :style="`color:${onionConfig.style.chart.legend.color};font-size:${onionConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${onionConfig.style.chart.legend.bold ? 'bold' : ''}`" >
-                    <div v-for="(legendItem, i) in immutableDataset" :data-cy="`onion-foreignObject-legend-item-${i}`" class="vue-ui-onion-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                        <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color"/></svg>
-                        <span>{{ legendItem.name }} : </span>
-                        <span>{{ legendItem.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}% </span>
-                    </div>
-                </div>
+                <Legend
+                    :legendSet="immutableDataset"
+                    :config="legendConfig"
+                    @clickMarker="({legend}) => segregate(legend.id)"
+                >
+                    <template #item="{ legend }">
+                        <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                            {{ legend.name }} : {{ legend.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
+
+
+                        </div>
+                    </template>
+                </Legend>
             </foreignObject>
 
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="onionConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-onion-legend" :style="`background:${onionConfig.style.chart.legend.backgroundColor};color:${onionConfig.style.chart.legend.color};font-size:${onionConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${onionConfig.style.chart.legend.bold ? 'bold' : ''}`" >
-            <div v-for="(legendItem, i) in immutableDataset" :data-cy="`onion-div-legend-item-${i}`" class="vue-ui-onion-legend-item" @click="segregate(legendItem.id)" :style="`opacity:${segregated.includes(legendItem.id) ? 0.5 : 1}`">
-                <svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color"/></svg>
-                <span>{{ legendItem.name }} : </span>
-                <span>{{ legendItem.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}% </span>
-            </div>
-        </div>
-        
+        <Legend
+            v-if="onionConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
+            :legendSet="immutableDataset"
+            :config="legendConfig"
+            @clickMarker="({legend}) => segregate(legend.id)"
+        >
+            <template #item="{ legend }">
+                <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    {{ legend.name }} : {{ legend.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
+
+
+                </div>
+            </template>
+        </Legend>
 
         <!-- DATA TABLE -->
         <div  class="vue-ui-onion-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
@@ -496,22 +523,7 @@ circle {
     text-align:center;
     width:100%;
 }
-.vue-ui-onion-legend {
-    height: 100%;
-    width:100%;
-    display: flex;
-    align-items:center;
-    flex-wrap: wrap;
-    justify-content:center;
-    column-gap: 18px;
-}
-.vue-ui-onion-legend-item {
-    display: flex;
-    align-items:center;
-    gap: 6px;
-    cursor: pointer;
-    height: 24px;
-}
+
 .vue-ui-onion-tooltip {
     border: 1px solid #e1e5e8;
     border-radius: 4px;

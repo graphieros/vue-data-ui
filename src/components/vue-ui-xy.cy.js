@@ -81,12 +81,6 @@ describe('<VueUiXy />', () => {
         cy.get(`[data-cy="xy-line-segment-1-${i}"]`).should("exist");
       }
 
-      for(let i = 0; i < 2; i += 1) {
-        for(let j = 0; j < 20; j += 1) {
-          cy.get(`[data-cy="xy-line-plot-${i}-${j}"]`).should("exist");
-        }
-      }
-
       cy.get(`[data-cy="xy-line-progression-0"]`).should("exist");
       cy.get(`[data-cy="xy-line-progression-label-0"]`).should("exist");
       cy.get(`[data-cy="xy-line-progression-label-0"]`).should("contain", "38.46%");

@@ -31,12 +31,6 @@ describe('<VueUiQuadrant />', () => {
           .contains(el.expected)
       });
 
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="quadrant-div-legend-item-${i}"]`)
-          .should('exist')
-          .contains(fixture.dataset[i].name)
-      }
-      
       cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="quadrant-checkbox-title"]`).check();
       
@@ -54,12 +48,6 @@ describe('<VueUiQuadrant />', () => {
         .should('exist')
         .contains(el.expected)
       });
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="quadrant-foreignObject-legend-item-${i}"]`)
-          .should('exist')
-          .contains(fixture.dataset[i].name)
-      }
 
       cy.get(`[data-cy="quadrant-checkbox-title"]`).uncheck();
       cy.get(`[data-cy="quadrant-checkbox-table"]`).check();

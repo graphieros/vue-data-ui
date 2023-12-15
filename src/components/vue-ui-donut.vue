@@ -9,6 +9,7 @@ import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import Legend from "../atoms/Legend.vue";
 
 const props = defineProps({
     config: {
@@ -122,11 +123,29 @@ const legendSet = computed(() => {
             return {
                 name: serie.name,
                 color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
-                value: serie.values.reduce((a,b) => a + b, 0)
+                value: serie.values.reduce((a,b) => a + b, 0),
+                shape: 'circle',
             }
         })
         .sort((a,b) => b.value - a.value)
+        .map((el, i) => {
+            return {
+                ...el,
+                opacity: segregated.value.includes(i) ? 0.5 : 1
+            }
+        })
 });
+
+const legendConfig = computed(() => {
+    return {
+        cy: 'donut-div-legend',
+        backgroundColor: donutConfig.value.style.chart.legend.backgroundColor,
+        color: donutConfig.value.style.chart.legend.color,
+        fontSize: donutConfig.value.style.chart.legend.fontSize,
+        paddingBottom: 12,
+        fontWeight: donutConfig.value.style.chart.legend.bold ? 'bold' : ''
+    }
+})
 
 const currentDonut = computed(() => {
     return makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, 100, 100)
@@ -514,26 +533,46 @@ defineExpose({
                 height="100"
                 style="overflow:visible"
             >
-                <div data-cy="donut-foreignObject-legend" class="vue-ui-donut-legend" :style="`background:transparent;color:${donutConfig.style.chart.legend.color};font-size:${donutConfig.style.chart.legend.fontSize}px;font-weight:${donutConfig.style.chart.legend.bold ? 'bold' : ''}`">
-                    <div v-for="(legendItem, i) in legendSet" :data-cy="`donut-foreignObject-legend-item-${i}`" class="vue-ui-donut-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
-                        <svg viewBox="0 0 12 12" height="14" width="14"><circle :data-cy="`donut-foreignObject-legend-marker-${i}`" cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
-                        <span :data-cy="`donut-foreignObject-legend-name-${i}`">{{ legendItem.name }} : </span>
-                        <span :data-cy="`donut-foreignObject-legend-value-${i}`">{{ Number(legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}</span>
-                        <span :data-cy="`donut-foreignObject-legend-percentage-${i}`">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>
-                    </div>
-                </div>
+                <Legend
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    @clickMarker="({i}) => segregate(i)"
+                >
+                    <template #item="{legend, index}">
+                        <div @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                            {{ legend.name }} : {{ Number(legend.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                            <span v-if="!segregated.includes(index)">
+                                ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)
+                            </span>
+                            <span v-else>
+                                ( - % )
+                            </span>
+                        </div>
+                    </template>
+                </Legend>
             </foreignObject>
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div data-cy="donut-div-legend" v-if="donutConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-donut-legend" :style="`background:${donutConfig.style.chart.legend.backgroundColor};color:${donutConfig.style.chart.legend.color};font-size:${donutConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${donutConfig.style.chart.legend.bold ? 'bold' : ''}`">
-            <div v-for="(legendItem, i) in legendSet" class="vue-ui-donut-legend-item" @click="segregate(i)" :style="`opacity:${segregated.includes(i) ? 0.5 : 1}`">
-                <svg viewBox="0 0 12 12" height="14" width="14"><circle :data-cy="`donut-div-legend-marker-${i}`" cx="6" cy="6" r="6" stroke="none" :fill="legendItem.color" /></svg>
-                <span :data-cy="`donut-div-legend-name-${i}`">{{ legendItem.name }} : </span>
-                <span :data-cy="`donut-div-legend-value-${i}`">{{ Number(legendItem.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}</span>
-                <span :data-cy="`donut-div-legend-percentage-${i}`" v-if="!segregated.includes(i)">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)</span>
-            </div>
-        </div>
+
+        <Legend
+            v-if="donutConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
+            :legendSet="legendSet"
+            :config="legendConfig"
+            @clickMarker="({i}) => segregate(i)"
+        >
+            <template #item="{legend, index}">
+                <div @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                    {{ legend.name }} : {{ Number(legend.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                    <span v-if="!segregated.includes(index)">
+                        ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)
+                    </span>
+                    <span v-else>
+                        ( - % )
+                    </span>
+                </div>
+            </template>
+        </Legend>
 
         <!-- TOOLTIP -->
         <Tooltip
@@ -597,22 +636,6 @@ path {
     justify-content: center;
     text-align:center;
     width:100%;
-}
-.vue-ui-donut-legend {
-    height: 100%;
-    width:100%;
-    display: flex;
-    align-items:center;
-    flex-wrap: wrap;
-    justify-content:center;
-    column-gap: 18px;
-}
-.vue-ui-donut-legend-item {
-    display: flex;
-    align-items:center;
-    gap: 6px;
-    cursor: pointer;
-    height: 24px;
 }
 
 .vue-ui-dna * {

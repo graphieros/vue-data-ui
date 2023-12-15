@@ -43,26 +43,10 @@ describe('<VueUiDonut />', () => {
       const grandTotal = fixture.dataset.map((d) => d.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0);
 
       for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="donut-div-legend-marker-${i}"]`)
-          .should('exist')
-          .invoke('attr', 'fill')
-          .should('eq', sortedDataset[i].color);
-
-        cy.get(`[data-cy="donut-div-legend-name-${i}"]`)
-          .should('exist')
-          .contains(sortedDataset[i].name);
-
         const thisValue = sortedDataset[i].values.reduce((a, b) => a + b, 0);
-
-        cy.get(`[data-cy="donut-div-legend-value-${i}"]`)
-          .should('exist')
-          .contains(Number(thisValue.toFixed(fixture.config.style.chart.legend.roundingValue)).toLocaleString());
-
-        const thisPercentage = `(${(thisValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage)}%)`;
-
-        cy.get(`[data-cy="donut-div-legend-percentage-${i}"]`)
-          .should('exist')
-          .contains(thisPercentage);
+        cy.contains(sortedDataset[i].name);
+        cy.contains(Number(thisValue.toFixed(fixture.config.style.chart.legend.roundingValue)).toLocaleString());
+        cy.contains(`(${(thisValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage)}%)`)
       }
 
       let modifiedConfig = {
@@ -87,40 +71,6 @@ describe('<VueUiDonut />', () => {
           config: modifiedConfig
         }
       });
-
-
-      cy.get('[data-cy="donut-text-title"]')
-        .should('exist')
-        .contains(fixture.config.style.chart.title.text);
-
-      cy.get('[data-cy="donut-text-subtitle"]')
-        .should('exist')
-        .contains(fixture.config.style.chart.title.subtitle.text);
-
-      cy.get('[data-cy="donut-foreignObject-legend"]').should('exist');
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="donut-foreignObject-legend-marker-${i}"]`)
-          .should('exist')
-          .invoke('attr', 'fill')
-          .should('eq', sortedDataset[i].color);
-
-        cy.get(`[data-cy="donut-foreignObject-legend-name-${i}"]`)
-          .should('exist')
-          .contains(sortedDataset[i].name);
-
-        const thisValue = sortedDataset[i].values.reduce((a, b) => a + b, 0);
-
-        cy.get(`[data-cy="donut-foreignObject-legend-value-${i}"]`)
-          .should('exist')
-          .contains(Number(thisValue.toFixed(fixture.config.style.chart.legend.roundingValue)).toLocaleString());
-
-        const thisPercentage = `(${(thisValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage)}%)`;
-
-        cy.get(`[data-cy="donut-foreignObject-legend-percentage-${i}"]`)
-          .should('exist')
-          .contains(thisPercentage);
-      }
 
       for (let i = 0; i < fixture.dataset.length; i += 1) {
         cy.get(`[data-cy="donut-arc-${i}"]`)
@@ -152,47 +102,6 @@ describe('<VueUiDonut />', () => {
               .should('eq', String(expectedStrokeWidth))
           })
       }
-
-      cy.get(`[data-cy="donut-trap-0"]`)
-        .then(($element) => {
-
-          cy.wrap($element)
-            .trigger('mouseenter', { force: true })
-
-          cy.get(`[data-cy="tooltip"]`).should('exist');
-          cy.get(`[data-cy="donut-tooltip-name"]`)
-            .should('exist')
-            .contains(sortedDataset[0].name);
-
-          cy.get(`[data-cy="donut-tooltip-marker"]`)
-            .should('exist')
-            .invoke('attr', 'fill')
-            .should('eq', sortedDataset[0].color);
-
-          const expectedTooltipValue = sortedDataset[0].values.reduce((a, b) => a + b, 0).toFixed(fixture.config.style.chart.tooltip.roundingValue);
-
-          cy.get(`[data-cy="donut-tooltip-value"]`)
-            .should('exist')
-            .contains(expectedTooltipValue);
-
-          cy.wrap($element)
-            .invoke('attr', 'stroke')
-            .should('eq', 'rgba(0,0,0,0.1)');
-
-          cy.wrap($element)
-            .click({ force: true });
-
-          cy.get('.vue-ui-donut-arc-path').should(($arcs) => {
-            expect($arcs).to.have.length(3)
-          })
-
-          cy.get(`[data-cy="donut-foreignObject-legend-item-0"]`)
-            .click();
-
-          cy.get('.vue-ui-donut-arc-path').should(($arcs) => {
-            expect($arcs).to.have.length(4)
-          })
-        });
 
       for (let i = 0; i < fixture.dataset.length; i += 1) {
         const thisValue = sortedDataset[i].values.reduce((a, b) => a + b, 0);

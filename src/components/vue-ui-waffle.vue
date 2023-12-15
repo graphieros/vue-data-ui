@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import Legend from "../atoms/Legend.vue";
 
 const props = defineProps({
     config: {
@@ -200,11 +201,29 @@ const legendSet = computed(() => {
                 name: serie.name,
                 color: serie.color || palette[i] || palette[i % palette.length],
                 value: serie.values.reduce((a,b) => a + b, 0),
-                uid: serie.uid
+                uid: serie.uid,
+                shape: 'square'
             }
         })
-        .sort((a,b) => b.value - a.value);
+        .sort((a,b) => b.value - a.value)
+        .map((el, i) => {
+            return {
+                ...el,
+                opacity: segregated.value.includes(el.uid) ? 0.5 : 1
+            }
+        })
 });
+
+const legendConfig = computed(() => {
+    return {
+        cy: 'waffle-div-legend',
+        backgroundColor: waffleConfig.value.style.chart.legend.backgroundColor,
+        color: waffleConfig.value.style.chart.legend.color,
+        fontSize: waffleConfig.value.style.chart.legend.fontSize,
+        paddingBottom: 12,
+        fontWeight: waffleConfig.value.style.chart.legend.bold ? 'bold' : ''
+    }
+})
 
 const total = computed(() => {
     return waffleSet.value.map(s => s.value).reduce((a,b) => a + b, 0);
@@ -466,27 +485,46 @@ defineExpose({
                 height="100"
                 style="overflow: visible;"
             >
-                <div class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" >
-                    <div v-for="(legendItem, i) in legendSet" :data-cy="`waffle-foreginObject-legend-item-${i}`" class="vue-ui-waffle-legend-item" @click="segregate(legendItem.uid)" :style="`opacity:${segregated.includes(legendItem.uid) ? 0.5 : 1}`">
-                        <svg viewBox="0 0 12 12" height="14" width="14"><rect height="14" width="14" x="0" y="0" stroke="none" :fill="legendItem.color" /></svg>
-                        <span>{{ legendItem.name }} : </span>
-                        <span>{{ legendItem.value.toFixed(waffleConfig.style.chart.legend.roundingValue) }}</span>
-                        <span v-if="!segregated.includes(legendItem.uid)">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)</span>
-                    </div>
-                </div>
+                <Legend
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    @clickMarker="({legend}) => segregate(legend.uid)"
+                >
+                    <template #item="{ legend }">
+                        <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                            {{ legend.name }} : {{ Number(legend.value.toFixed(waffleConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                            <span v-if="!segregated.includes(legend.uid)">
+                                ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)
+                            </span>
+                            <span v-else>
+                                ( - % )
+                            </span>
+                        </div>
+                    </template>
+                </Legend>
             </foreignObject>
             
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="waffleConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-waffle-legend" :style="`font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''};background:${waffleConfig.style.chart.legend.backgroundColor};color:${waffleConfig.style.chart.legend.color};font-size:${waffleConfig.style.chart.legend.fontSize}px;padding-bottom:12px;font-weight:${waffleConfig.style.chart.legend.bold ? 'bold' : ''}`" >
-            <div v-for="(legendItem, i) in legendSet" :data-cy="`waffle-legend-item-${i}`" class="vue-ui-waffle-legend-item" @click="segregate(legendItem.uid)" :style="`opacity:${segregated.includes(legendItem.uid) ? 0.5 : 1}`">
-                <svg viewBox="0 0 12 12" height="14" width="14"><rect height="14" width="14" x="0" y="0" stroke="none" :fill="legendItem.color" /></svg>
-                <span>{{ legendItem.name }} : </span>
-                <span>{{ legendItem.value.toFixed(waffleConfig.style.chart.legend.roundingValue) }}</span>
-                <span v-if="!segregated.includes(legendItem.uid)">({{ isNaN(legendItem.value / total) ? '-' : (legendItem.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)</span>
-            </div>
-        </div>
+        <Legend
+            v-if="waffleConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
+            :legendSet="legendSet"
+            :config="legendConfig"
+            @clickMarker="({legend}) => segregate(legend.uid)"
+        >
+            <template #item="{ legend }">
+                <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                    {{ legend.name }} : {{ Number(legend.value.toFixed(waffleConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                    <span v-if="!segregated.includes(legend.uid)">
+                        ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)
+                    </span>
+                    <span v-else>
+                        ( - % )
+                    </span>
+                </div>
+            </template>
+        </Legend>
 
         <!-- TOOLTIP -->
         <Tooltip
@@ -559,31 +597,7 @@ defineExpose({
     text-align:center;
     width:100%;
 }
-.vue-ui-waffle-legend {
-    height: 100%;
-    width:100%;
-    display: flex;
-    align-items:center;
-    flex-wrap: wrap;
-    justify-content:center;
-    column-gap: 18px;
-}
-.vue-ui-waffle-legend-item {
-    display: flex;
-    align-items:center;
-    gap: 6px;
-    cursor: pointer;
-    height: 24px;
-}
-.vue-ui-waffle-tooltip {
-    border: 1px solid #e1e5e8;
-    border-radius: 4px;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-    max-width: 300px;
-    position: fixed;
-    padding:12px;
-    z-index:1;
-}
+
 
 /** */
 
