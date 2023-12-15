@@ -3496,15 +3496,16 @@ const updateStep = ref(0);
 </script>
 
 <template>
-  <div style="padding: 48px; font-weight: bold; line-height: 20px">
-    <h1 style="font-size: 36px; color: #42d392">
-      Vue Data UI
-    </h1>
-    <h2 style="color: #A6A6A6">Components</h2>
-    <h4 style="color: #5f8bee">Manual testing arena</h4>
-  </div>
 
-  <div style="padding-left: 48px; padding-right: 48px">
+  <div style="padding-left: 48px; padding-right: 48px; width: 100%; max-width: 80%;margin: 0 auto">
+      <div style="padding-top: 48px; padding-bottom: 48px;font-weight: bold; line-height: 20px">
+        <h1 style="font-size: 36px; color: #42d392">
+          Vue Data UI
+        </h1>
+        <h2 style="color: #A6A6A6">Components</h2>
+        <h4 style="color: #5f8bee">Manual testing arena</h4>
+      </div>
+
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_rings)">
         <template #title>VueUiRings</template>
         <template #dev>
