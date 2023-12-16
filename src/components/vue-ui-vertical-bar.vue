@@ -15,6 +15,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -417,21 +418,27 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input data-cy="vertical-bar-checkbox-title" type="checkbox" :id="`vue-ui-vertical-bar-option-title_${uid}`" :name="`vue-ui-vertical-bar-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-vertical-bar-option-title_${uid}`">{{ verticalBarConfig.userOptions.labels.useDiv }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="vertical-bar-checkbox-table" type="checkbox" :id="`vue-ui-vertical-bar-option-table_${uid}`" :name="`vue-ui-vertical-bar-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-vertical-bar-option-table_${uid}`">{{ verticalBarConfig.userOptions.labels.showTable }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input type="checkbox" :id="`vue-ui-vertical-bar-option-sort_${uid}`" :name="`vue-ui-vertical-bar-option-sort_${uid}`"
-                    v-model="mutableConfig.sortDesc" @change="recalculateHeight">
-                    <label :for="`vue-ui-vertical-bar-option-sort_${uid}`">{{ verticalBarConfig.userOptions.labels.sort }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="vertical-bar-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="verticalBarConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
+                <BaseCheckbox 
+                    cy="vertical-bar-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="verticalBarConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
+                <BaseCheckbox 
+                    cy="vertical-bar-checkbox-sort" 
+                    :model="mutableConfig.sortDesc" 
+                    :label="verticalBarConfig.userOptions.labels.sort" 
+                    @update:model="val => {
+                        mutableConfig.sortDesc = val; 
+                        recalculateHeight()
+                    }"
+                />
             </template>
         </UserOptions>
 

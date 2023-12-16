@@ -5,7 +5,7 @@ import {
     shiftHue,
     opacity,
     convertConfigColors,
-    createSmoothPath
+    createSmoothPath,
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";

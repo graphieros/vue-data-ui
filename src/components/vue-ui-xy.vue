@@ -38,26 +38,32 @@
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input type="checkbox" :id="`vue-ui-xy-option-datalabels_${uniqueId}`" :name="`vue-ui-xy-option-datalabels_${uniqueId}`"
-                    v-model="mutableConfig.dataLabels.show">
-                    <label :for="`vue-ui-xy-option-datalabels_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.dataLabels }}</label>
-                </div>
-                <div class="vue-ui-options-item" v-if="!chartConfig.useCanvas">
-                    <input type="checkbox" :id="`vue-ui-xy-option-title_${uniqueId}`" :name="`vue-ui-xy-option-title_${uniqueId}`"
-                    v-model="mutableConfig.titleInside">
-                    <label :for="`vue-ui-xy-option-title_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.titleInside }}</label>
-                </div>
-                <div class="vue-ui-options-item" v-if="!chartConfig.useCanvas">
-                    <input type="checkbox" :id="`vue-ui-xy-option-legend_${uniqueId}`" :name="`vue-ui-xy-option-legend_${uniqueId}`"
-                    v-model="mutableConfig.legendInside">
-                    <label :for="`vue-ui-xy-option-legend_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.legendInside }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input type="checkbox" :id="`vue-ui-xy-option-table_${uniqueId}`" :name="`vue-ui-xy-option-table_${uniqueId}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-xy-option-table_${uniqueId}`">{{ chartConfig.chart.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="xy-checkbox-datalabels" 
+                    :model="mutableConfig.dataLabels.show" 
+                    :label="chartConfig.chart.userOptions.labels.dataLabels" 
+                    @update:model="val => mutableConfig.dataLabels.show = val"
+                />
+                <BaseCheckbox
+                    v-if="!chartConfig.useCanvas"
+                    cy="xy-checkbox-title" 
+                    :model="mutableConfig.titleInside" 
+                    :label="chartConfig.chart.userOptions.labels.titleInside" 
+                    @update:model="val => mutableConfig.titleInside = val"
+                />
+                <BaseCheckbox
+                    v-if="!chartConfig.useCanvas"
+                    cy="xy-checkbox-legend" 
+                    :model="mutableConfig.legendInside" 
+                    :label="chartConfig.chart.userOptions.labels.legendInside" 
+                    @update:model="val => mutableConfig.legendInside = val"
+                />
+                <BaseCheckbox 
+                    cy="xy-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="chartConfig.chart.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
         </UserOptions>
 
@@ -714,6 +720,7 @@ import Title from '../atoms/Title.vue';
 import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Shape from "../atoms/Shape.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 export default {
     name: "vue-ui-xy",
@@ -732,6 +739,7 @@ export default {
         }
     },
     components: {
+        BaseCheckbox,
         DataTable,
         Shape,
         Title,
@@ -1974,15 +1982,6 @@ path, line, rect {
 .vue-ui-xy svg rect {
     transition: all 0.11s ease-in-out;
 }
-.vue-ui-xy-tooltip {
-    border: 1px solid #e1e5e8;
-    border-radius: 4px;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-    width: fit-content;
-    max-width: 300px;
-    position: fixed;
-    z-index:1;
-}
 .vue-ui-xy-table-wrapper {
     width: 100%;
     max-height: 300px;
@@ -2015,30 +2014,6 @@ path, line, rect {
 }
 .vue-ui-xy-table-tr-selected {
     background: #e1e5e8;
-}
-.vue-ui-xy-button {
-    margin: 6px 0;
-    border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-.vue-ui-xy-button:hover {
-    background: rgba(0,0,0,0.05);
-}
-.vue-ui-xy-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 .vue-ui-xy-range-slider-wrapper {

@@ -9,6 +9,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -344,16 +345,18 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input data-cy="scatter-checkbox-title" type="checkbox" :id="`vue-ui-scatter-option-title_${uid}`" :name="`vue-ui-scatter-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-scatter-option-title_${uid}`">{{ scatterConfig.userOptions.labels.useDiv }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="scatter-checkbox-table" type="checkbox" :id="`vue-ui-scatter-option-table_${uid}`" :name="`vue-ui-scatter-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-scatter-option-table_${uid}`">{{ scatterConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="scatter-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="scatterConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
+                <BaseCheckbox 
+                    cy="scatter-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="scatterConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
         </UserOptions>
 

@@ -10,6 +10,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import SparkBar from "./vue-ui-sparkbar.vue";
 import Legend from "../atoms/Legend.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -381,16 +382,18 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input data-cy="radar-checkbox-title" type="checkbox" :id="`vue-ui-radar-option-title_${uid}`" :name="`vue-ui-radar-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-radar-option-title_${uid}`">{{ radarConfig.userOptions.labels.useDiv }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="radar-checkbox-table" type="checkbox" :id="`vue-ui-radar-option-table_${uid}`" :name="`vue-ui-radar-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-radar-option-table_${uid}`">{{ radarConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="radar-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="radarConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
+                <BaseCheckbox 
+                    cy="radar-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="radarConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
         </UserOptions>
 

@@ -6,6 +6,7 @@ import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -453,11 +454,12 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input data-cy="chestnut-checkbox-table" type="checkbox" :id="`vue-ui-chestnut-option-table_${uid}`" :name="`vue-ui-chestnut-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-chestnut-option-table_${uid}`">{{ chestnutConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="chestnut-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="chestnutConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
         </UserOptions>
 

@@ -17,6 +17,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
   config: {
@@ -379,11 +380,12 @@ defineExpose({
         @generateImage="generateImage"
         >
         <template #checkboxes>
-            <div class="vue-ui-options-item">
-                <input data-cy="rings-checkbox-table" type="checkbox" :id="`vue-ui-rings-option-table_${uid}`" :name="`vue-ui-rings-option-table_${uid}`"
-                v-model="mutableConfig.showTable">
-                <label :for="`vue-ui-rings-option-table_${uid}`">{{ ringsConfig.userOptions.labels.showTable }}</label>
-            </div>
+          <BaseCheckbox
+            cy="rings-checkbox-table"
+            :model="mutableConfig.showTable"
+            :label="ringsConfig.userOptions.labels.showTable"
+            @update:model="val => mutableConfig.showTable = val"
+          />
         </template>
     </UserOptions>
 
@@ -515,13 +517,13 @@ defineExpose({
             :config="dataTable.config"
             :title="`${ringsConfig.style.chart.title.text}${ringsConfig.style.chart.title.subtitle.text ? ` : ${ringsConfig.style.chart.title.subtitle.text}` : ''}`"
         >
-            <template #th="{th}">
-                <div v-html="th" style="display:flex;align-items:center"></div>
-            </template>
-            <template #td="{td}">
-                {{ td.name || td }}
-            </template>
-        </DataTable>
+          <template #th="{th}">
+              <div v-html="th" style="display:flex;align-items:center"></div>
+          </template>
+          <template #td="{td}">
+              {{ td.name || td }}
+          </template>
+      </DataTable>
   </div>
 </template>
 

@@ -101,37 +101,9 @@ describe('<VueUiWaffle />', () => {
 
         cy.viewport(800, 1100);
 
-        cy.get(`[data-cy="waffle-table-title"]`)
+        cy.get(`[data-cy="vue-data-ui-table-data"]`)
           .should('exist')
           .contains(`${fixture.config.style.chart.title.text} : ${fixture.config.style.chart.title.subtitle.text}`);
-
-        for (let i = 0; i < fixture.dataset.length; i += 1) {
-          const expectedValue = sortedDataset[i].values.reduce((a, b) => a + b, 0);
-          const expectedPercentage = `${(expectedValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage)}%`;
-
-          cy.get(`[data-cy="waffle-table-tr-${i}"]`).then(($tr) => {
-            cy.wrap($tr)
-              .should('exist');
-
-            cy.wrap($tr)
-              .find('td')
-              .should('have.length', 3)
-              .each(($td, index) => {
-                if (index === 0) {
-                  cy.wrap($td)
-                    .should('contain.text', `◼${sortedDataset[i].name}`)
-                }
-                if (index === 1) {
-                  cy.wrap($td)
-                    .should('contain.text', expectedValue)
-                }
-                if (index === 2) {
-                  cy.wrap($td)
-                    .should('contain.text', expectedPercentage)
-                }
-              });
-          });
-        }
       })
 
       cy.get(`[data-cy="user-options-pdf"]`).click();

@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -332,16 +333,18 @@ defineExpose({
             @generateImage="generateImage"
          >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input data-cy="candlestick-checkbox-title" type="checkbox" :id="`vue-ui-candlestick-option-title_${uid}`" :name="`vue-ui-candlestick-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-candlestick-option-title_${uid}`">{{ candlestickConfig.userOptions.labels.useDiv }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="candlestick-checkbox-table" type="checkbox" :id="`vue-ui-candlestick-option-table_${uid}`" :name="`vue-ui-candlestick-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-candlestick-option-table_${uid}`">{{ candlestickConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="candlestick-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="candlestickConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
+                <BaseCheckbox 
+                    cy="candlestick-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="candlestickConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
          </UserOptions>
 

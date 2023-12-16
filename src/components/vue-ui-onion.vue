@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Legend from "../atoms/Legend.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -272,16 +273,18 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input data-cy="onion-checkbox-title" type="checkbox" :id="`vue-ui-onion-option-title_${uid}`" :name="`vue-ui-onion-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-onion-option-title_${uid}`">{{ onionConfig.userOptions.labels.useDiv }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="onion-checkbox-table" type="checkbox" :id="`vue-ui-onion-option-table_${uid}`" :name="`vue-ui-onion-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-onion-option-table_${uid}`">{{ onionConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="onion-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="onionConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
+                <BaseCheckbox 
+                    cy="onion-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="onionConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
         </UserOptions>
 

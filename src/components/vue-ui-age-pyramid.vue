@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -302,16 +303,18 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input type="checkbox" :id="`vue-ui-age-pyramid-option-title_${uid}`" :name="`vue-ui-age-pyramid-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-age-pyramid-option-title_${uid}`">{{ agePyramidConfig.userOptions.labels.useDiv }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input type="checkbox" :id="`vue-ui-age-pyramid-option-table_${uid}`" :name="`vue-ui-age-pyramid-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-age-pyramid-option-table_${uid}`">{{ agePyramidConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="pyramid-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="agePyramidConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
+                <BaseCheckbox 
+                    cy="pyramid-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="agePyramidConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
         </UserOptions>
 

@@ -8,7 +8,9 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -333,6 +335,46 @@ function generateXls() {
     });
 }
 
+const dataTable = computed(() => {
+    const head = [
+        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
+        Number(total.value.toFixed(waffleConfig.value.table.td.roundingValue)).toLocaleString(),
+        '100%'
+    ];
+
+    const body = table.value.head.map((h,i) => {
+        return [
+            {
+                color: h.color,
+                name: h.name
+            },
+            table.value.body[i].toFixed(waffleConfig.value.table.td.roundingValue),
+            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(waffleConfig.value.table.td.roundingPercentage) + '%'
+        ]
+    });
+
+    const config = {
+        th: {
+            backgroundColor: waffleConfig.value.table.th.backgroundColor,
+            color: waffleConfig.value.table.th.color,
+            outline: waffleConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: waffleConfig.value.table.td.backgroundColor,
+            color: waffleConfig.value.table.td.color,
+            outline: waffleConfig.value.table.td.outline
+        },
+        shape: 'square'
+    }
+
+    return {
+        head,
+        body,
+        config
+    }
+});
+
+
 defineExpose({
     getData,
     generatePdf,
@@ -387,16 +429,18 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input data-cy="waffle-checkbox-title" type="checkbox" :id="`vue-ui-waffle-option-title_${uid}`" :name="`vue-ui-waffle-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-waffle-option-title_${uid}`">{{ waffleConfig.userOptions.labels.useDiv }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="waffle-checkbox-table" type="checkbox" :id="`vue-ui-waffle-option-table_${uid}`" :name="`vue-ui-waffle-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-waffle-option-table_${uid}`">{{ waffleConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="waffle-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="waffleConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
+                <BaseCheckbox 
+                    cy="waffle-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="waffleConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
         </UserOptions>
 
@@ -536,47 +580,20 @@ defineExpose({
         />
 
         <!-- DATA TABLE -->
-        <div  class="vue-ui-waffle-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
-            <table>
-                <thead>
-                    <tr data-cy="waffle-table-title" v-if="waffleConfig.style.chart.title.text">
-                        <th colspan="3" :style="`background:${waffleConfig.table.th.backgroundColor};color:${waffleConfig.table.th.color};outline:${waffleConfig.table.th.outline}`">
-                            <span>{{ waffleConfig.style.chart.title.text }}</span>
-                            <span v-if="waffleConfig.style.chart.title.subtitle.text">
-                                : {{ waffleConfig.style.chart.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th align="right" :style="`background:${waffleConfig.table.th.backgroundColor};color:${waffleConfig.table.th.color};outline:${waffleConfig.table.th.outline};padding-right:6px`">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>
-                        </th>
-                        <th :style="`background:${waffleConfig.table.th.backgroundColor};color:${waffleConfig.table.th.color};outline:${waffleConfig.table.th.outline};text-align:right;padding-right:6px`">
-                            {{ total.toFixed(waffleConfig.table.td.roundingValue) }}
-                        </th>
-                        <th :style="`background:${waffleConfig.table.th.backgroundColor};color:${waffleConfig.table.th.color};outline:${waffleConfig.table.th.outline};text-align:right;padding-right:6px`">
-                            100%
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(th, i) in table.head" :data-cy="`waffle-table-tr-${i}`">
-                        <td :style="`background:${waffleConfig.table.td.backgroundColor};color:${waffleConfig.table.td.color};outline:${waffleConfig.table.td.outline}`">
-                            <div style="max-width: 200px margin:0 auto">
-                                <span :style="`color:${th.color};margin-right:6px;`">◼</span>
-                                <span>{{ th.name }}</span>
-                            </div>
-                        </td>
-                        <td :style="`background:${waffleConfig.table.td.backgroundColor};color:${waffleConfig.table.td.color};outline:${waffleConfig.table.td.outline}`">
-                            {{ table.body[i].toFixed(waffleConfig.table.td.roundingValue) }}
-                        </td>
-                        <td :style="`background:${waffleConfig.table.td.backgroundColor};color:${waffleConfig.table.td.color};outline:${waffleConfig.table.td.outline}`">
-                            {{ isNaN(table.body[i] / total) ? "-" : (table.body[i] / total * 100).toFixed(waffleConfig.table.td.roundingPercentage) }}%
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <DataTable
+            v-if="mutableConfig.showTable"
+            :head="dataTable.head" 
+            :body="dataTable.body"
+            :config="dataTable.config"
+            :title="`${waffleConfig.style.chart.title.text}${waffleConfig.style.chart.title.subtitle.text ? ` : ${waffleConfig.style.chart.title.subtitle.text}` : ''}`"
+        >
+            <template #th="{th}">
+                <div v-html="th" style="display:flex;align-items:center"></div>
+            </template>
+            <template #td="{td}">
+                {{ td.name || td }}
+            </template>
+        </DataTable>
     </div>
 </template>
 
@@ -598,24 +615,6 @@ defineExpose({
     width:100%;
 }
 
-
-/** */
-
-.vue-ui-waffle table {
-    width: 100%;
-    border-collapse:collapse;
-}
-.vue-ui-waffle table td {
-    text-align:right;
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-.vue-ui-waffle table th {
-    position: sticky;
-    top:0;
-    font-weight: 400;
-    user-select: none;
-}
 
 .vue-ui-waffle-blur {
     filter: blur(3px) opacity(50%) grayscale(100%);

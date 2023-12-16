@@ -6,6 +6,7 @@ import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config:{
@@ -312,11 +313,12 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input data-cy="gauge-checkbox-title" type="checkbox" :id="`vue-ui-gauge-option-title_${uid}`" :name="`vue-ui-gauge-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-gauge-option-title_${uid}`">{{ gaugeConfig.userOptions.labels.useDiv }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="gauge-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="gaugeConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
             </template>
         </UserOptions>
 

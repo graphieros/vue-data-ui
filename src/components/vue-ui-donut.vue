@@ -10,6 +10,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -351,21 +352,24 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input data-cy="donut-checkbox-datalabels" type="checkbox" :id="`vue-ui-donut-option-datalabels_${uid}`" :name="`vue-ui-donut-option-datalabels_${uid}`"
-                    v-model="mutableConfig.dataLabels.show">
-                    <label :for="`vue-ui-donut-option-datalabels_${uid}`">{{ donutConfig.userOptions.labels.dataLabels }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="donut-checkbox-title" type="checkbox" :id="`vue-ui-donut-option-title_${uid}`" :name="`vue-ui-donut-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-donut-option-title_${uid}`">{{ donutConfig.userOptions.labels.useDiv }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="donut-checkbox-table" type="checkbox" :id="`vue-ui-donut-option-table_${uid}`" :name="`vue-ui-donut-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-donut-option-table_${uid}`">{{ donutConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="donut-checkbox-datalabels" 
+                    :model="mutableConfig.dataLabels.show" 
+                    :label="donutConfig.userOptions.labels.dataLabels" 
+                    @update:model="val => mutableConfig.dataLabels.show = val"
+                />
+                <BaseCheckbox 
+                    cy="donut-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="donutConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
+                <BaseCheckbox 
+                    cy="donut-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="donutConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
         </UserOptions>
 

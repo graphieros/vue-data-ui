@@ -10,6 +10,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Shape from "../atoms/Shape.vue";
 import Legend from "../atoms/Legend.vue";
+import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -539,21 +540,24 @@ defineExpose({
             @generateImage="generateImage"
         >
             <template #checkboxes>
-                <div class="vue-ui-options-item">
-                    <input type="checkbox" :id="`vue-ui-quadrant-option-plotLabels_${uid}`" :name="`vue-ui-quadrant-option-plotLabels_${uid}`"
-                    v-model="mutableConfig.plotLabels.show">
-                    <label :for="`vue-ui-quadrant-option-plotLabels_${uid}`">{{ quadrantConfig.userOptions.labels.showPlotLabels }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="quadrant-checkbox-title" type="checkbox" :id="`vue-ui-quadrant-option-title_${uid}`" :name="`vue-ui-quadrant-option-title_${uid}`"
-                    v-model="mutableConfig.inside">
-                    <label :for="`vue-ui-quadrant-option-title_${uid}`">{{ quadrantConfig.userOptions.labels.useDiv }}</label>
-                </div>
-                <div class="vue-ui-options-item">
-                    <input data-cy="quadrant-checkbox-table" type="checkbox" :id="`vue-ui-quadrant-option-table_${uid}`" :name="`vue-ui-quadrant-option-table_${uid}`"
-                    v-model="mutableConfig.showTable">
-                    <label :for="`vue-ui-quadrant-option-table_${uid}`">{{ quadrantConfig.userOptions.labels.showTable }}</label>
-                </div>
+                <BaseCheckbox 
+                    cy="quadrant-plot-labels" 
+                    :model="mutableConfig.plotLabels.show" 
+                    :label="quadrantConfig.userOptions.labels.showPlotLabels" 
+                    @update:model="val => mutableConfig.plotLabels.show = val"
+                />
+                <BaseCheckbox 
+                    cy="quadrant-checkbox-title" 
+                    :model="mutableConfig.inside" 
+                    :label="quadrantConfig.userOptions.labels.useDiv" 
+                    @update:model="val => mutableConfig.inside = val"
+                />
+                <BaseCheckbox 
+                    cy="quadrant-checkbox-table" 
+                    :model="mutableConfig.showTable" 
+                    :label="quadrantConfig.userOptions.labels.showTable" 
+                    @update:model="val => mutableConfig.showTable = val"
+                />
             </template>
         </UserOptions>
 

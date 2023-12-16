@@ -1,4 +1,5 @@
 <script setup>
+import Shape from "./Shape.vue";
 
 const props = defineProps({
     head: Array,
@@ -36,8 +37,13 @@ const { backgroundColor:tdbg, color:tdc, outline:tdo } = props.config.td;
             <tr v-for="(tr, i) in body">
                 <td v-for="(td, j) in tr" :style="{backgroundColor: tdbg, color: tdc, outline: tdo}">
                     <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                        <svg height="12" width="12" v-if="td.color" viewBox="0 0 20 20" style="background: none;">
-                            <circle cx="10" cy="10" r="10" :fill="td.color"/>
+                        <svg height="12" width="12" v-if="td.color" viewBox="0 0 20 20" style="background: none;overflow: visible">
+                            <Shape
+                                :plot="{ x: 10, y: 10 }"
+                                :color="td.color"
+                                :radius="9"
+                                :shape="config.shape || 'circle'"
+                            />
                         </svg>
                         <slot name="td" :td="td"></slot>
                     </div>
