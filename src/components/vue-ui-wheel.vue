@@ -134,6 +134,11 @@ function generateImage() {
     }, 100)
 }
 
+defineExpose({
+    generatePdf,
+    generateImage
+});
+
 </script>
 
 <template>
@@ -208,6 +213,7 @@ function generateImage() {
                 :fill="wheelConfig.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(wheelConfig.style.chart.layout.wheel.ticks.activeColor, activeValue / 100 * (wheelConfig.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : wheelConfig.style.chart.layout.wheel.ticks.activeColor"
                 text-anchor="middle"
                 :font-weight="wheelConfig.style.chart.layout.percentage.bold ? 'bold' : 'normal'"
+                style="font-variant-numeric:tabluar-nums"
             >
                 {{ Number(activeValue.toFixed(wheelConfig.style.chart.layout.percentage.rounding)).toLocaleString() }}%
             </text>
