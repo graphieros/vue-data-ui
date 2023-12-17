@@ -627,10 +627,54 @@ export function createUid() {
     }); 
 }
 
+export function calcMarkerOffsetX(arc, isTitle = false, offset = 16) {
+    let x = 0;
+    let offsetX = isTitle ? offset : 0;
+    let anchor="middle";
+    if(arc.center.endX > arc.cx) {
+        x = arc.center.endX + offset + offsetX;
+        anchor = "start";
+    } else if (arc.center.endX < arc.cx) {
+        x = arc.center.endX - offset - offsetX;
+        anchor = "end";
+    } else {
+        x = arc.centerX + offsetX;
+        anchor = "middle";
+    }
+    return {x, anchor}
+}
+
+export function calcMarkerOffsetY(arc) {
+    if (arc.center.endY > arc.cy) {
+        return arc.center.endY + 16;
+    } else if (arc.center.endY < arc.cy) {
+        return arc.center.endY - 32;
+    } else {
+        return arc.center.endY;
+    }
+}
+
+export function calcNutArrowPath(arc, center=false) {
+    const start = `M${calcMarkerOffsetX(arc).x},${calcMarkerOffsetY(arc) - 4} `;
+    const end = ` ${center? center.x : arc.center.endX},${center ? center.y : arc.center.endY}`;
+    let mid = "";
+    if (arc.center.endX > arc.cx) {
+        mid = `${calcMarkerOffsetX(arc).x - 12},${calcMarkerOffsetY(arc) - 4}`;
+    } else if(arc.center.endX < arc.cx) {
+        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc) - 4}`;
+    } else {
+        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc) - 4}`;
+    }
+    return `${start}${mid}${end}`;
+}
+
 const lib = {
     adaptColorToBackground,
     addVector,
     calcLinearProgression,
+    calcMarkerOffsetX,
+    calcMarkerOffsetY,
+    calcNutArrowPath,
     calcMedian,
     checkArray,
     checkNaN,

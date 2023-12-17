@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, makeXls } from "../lib";
+import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, makeXls } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -274,33 +274,6 @@ function pickRoot(root) {
     }
 }
 
-function calcMarkerOffsetX(arc, isTitle = false) {
-    let x = 0;
-    let offsetX = isTitle ? 16 : 0;
-    let anchor="middle";
-    if(arc.center.endX > arc.cx) {
-        x = arc.center.endX + 16 + offsetX;
-        anchor = "start";
-    } else if (arc.center.endX < arc.cx) {
-        x = arc.center.endX - 16 - offsetX;
-        anchor = "end";
-    } else {
-        x = arc.centerX + offsetX;
-        anchor = "middle";
-    }
-    return {x, anchor}
-}
-
-function calcMarkerOffsetY(arc) {
-    if (arc.center.endY > arc.cy) {
-        return arc.center.endY + 16;
-    } else if (arc.center.endY < arc.cy) {
-        return arc.center.endY - 32;
-    } else {
-        return arc.center.endY;
-    }
-}
-
 function placeLegendTopOrBottom() {
     const overflowsBottom = drawableArea.value.bottom - (selectedNut.value.y1 + 180) < 0;
     if(overflowsBottom) {
@@ -308,20 +281,6 @@ function placeLegendTopOrBottom() {
     } else {
         return drawableArea.value.bottom;
     }
-}
-
-function calcNutArrowPath(arc) {
-    const start = `M${calcMarkerOffsetX(arc).x},${calcMarkerOffsetY(arc) - 4} `;
-    const end = ` ${arc.center.endX},${arc.center.endY}`;
-    let mid = "";
-    if (arc.center.endX > arc.cx) {
-        mid = `${calcMarkerOffsetX(arc).x - 12},${calcMarkerOffsetY(arc) - 4}`;
-    } else if(arc.center.endX < arc.cx) {
-        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc) - 4}`;
-    } else {
-        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc) - 4}`;
-    }
-    return `${start}${mid}${end}`;
 }
 
 function isArcBigEnough(arc) {

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { makeDonut, palette, convertColorToHex, opacity, makeXls } from '../lib';
+import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, makeDonut, palette, convertColorToHex, opacity, makeXls } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -314,7 +314,7 @@ defineExpose({
 
 <template>
     <div :ref="`donutChart`" :class="`vue-ui-donut ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${donutConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`donut__${uid}`">
-        <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor}`">
+        <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
@@ -391,7 +391,7 @@ defineExpose({
                     :font-size="donutConfig.style.chart.title.fontSize"
                     :fill="donutConfig.style.chart.title.color"
                     :x="svg.width / 2"
-                    :y="48"
+                    :y="24"
                     text-anchor="middle"
                     :style="`font-weight:${donutConfig.style.chart.title.bold ? 'bold' : ''}`"
                 >
@@ -403,13 +403,35 @@ defineExpose({
                     :font-size="donutConfig.style.chart.title.subtitle.fontSize"
                     :fill="donutConfig.style.chart.title.subtitle.color"
                     :x="svg.width / 2"
-                    :y="48 + donutConfig.style.chart.title.fontSize"
+                    :y="24 + donutConfig.style.chart.title.fontSize"
                     text-anchor="middle"
                     :style="`font-weight:${donutConfig.style.chart.title.subtitle.bold ? 'bold' : ''}`"
                 >
                     {{ donutConfig.style.chart.title.subtitle.text }}
                 </text>
             </g>
+
+            <!-- LABEL CONNECTOR -->
+            <g v-for="(arc, i) in currentDonut">
+                <path
+                    v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                    :d="calcNutArrowPath(arc, {x: svg.width / 2, y: svg.height / 2})"
+                    :stroke="arc.color"
+                    stroke-width="1"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    fill="none"
+                    :class="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? '' : 'vue-ui-donut-blur'"
+                />
+            </g>
+
+            <path 
+                v-for="(arc, i) in currentDonut"
+                :stroke="donutConfig.style.chart.backgroundColor"
+                :d="arc.path"
+                :stroke-width="defaultConfig.style.chart.layout.donut.strokeWidth" 
+                fill="#FFFFFF"
+            />
             <path 
                 v-for="(arc, i) in currentDonut"
                 class="vue-ui-donut-arc-path"
@@ -503,9 +525,22 @@ defineExpose({
                 <text
                     :data-cy="`donut-datalabel-value-${i}`"
                     v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                    text-anchor="middle"
-                    :x="calcDonutMarkerLabelPositionX(arc)"
-                    :y="arc.center.endY - donutConfig.style.chart.layout.labels.percentage.fontSize / 2"
+                    :text-anchor="calcMarkerOffsetX(arc, true).anchor"
+                    :x="calcMarkerOffsetX(arc).x"
+                    :y="calcMarkerOffsetY(arc)"
+                    :fill="arc.color"
+                    :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize * 0.8"
+                    font-family="Arial"
+                    :class="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? '' : 'vue-ui-donut-blur'"
+                >
+                    ⬤
+                </text>
+                <text
+                    :data-cy="`donut-datalabel-value-${i}`"
+                    v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                    :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
+                    :x="calcMarkerOffsetX(arc, true, 20).x"
+                    :y="calcMarkerOffsetY(arc)"
                     :fill="donutConfig.style.chart.layout.labels.percentage.color"
                     :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize"
                     :style="`font-weight:${donutConfig.style.chart.layout.labels.percentage.bold ? 'bold': ''}`"
@@ -514,10 +549,10 @@ defineExpose({
                 </text>
                 <text
                     :data-cy="`donut-datalabel-name-${i}`"
-                    v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                    text-anchor="middle"
-                    :x="calcDonutMarkerLabelPositionX(arc)"
-                    :y="arc.center.endY + donutConfig.style.chart.layout.labels.percentage.fontSize / 2"
+                    v-if="isArcBigEnough(arc, true, 20) && mutableConfig.dataLabels.show"
+                    :text-anchor="calcMarkerOffsetX(arc).anchor"
+                    :x="calcMarkerOffsetX(arc, true, 20).x"
+                    :y="calcMarkerOffsetY(arc) + donutConfig.style.chart.layout.labels.percentage.fontSize"
                     :fill="donutConfig.style.chart.layout.labels.name.color"
                     :font-size="donutConfig.style.chart.layout.labels.name.fontSize"
                     :style="`font-weight:${donutConfig.style.chart.layout.labels.name.bold ? 'bold': ''}`"
