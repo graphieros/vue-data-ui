@@ -39,6 +39,7 @@ import ThermoTest from "./components/vue-ui-thermometer.vue";
 import StackTest from "./components/vue-ui-sparkstackbar.vue";
 import HistoTest from "./components/vue-ui-sparkhistogram.vue";
 import RingsTest from "./components/vue-ui-rings.vue";
+import WheelTest from "./components/vue-ui-wheel.vue";
 
 const dataset = ref([
   {
@@ -3475,6 +3476,12 @@ const ringsDataset = ref([
 ])
 
 
+const wheelDataset = ref({
+  percentage: 66.5
+})
+
+const wheelConfig = ref(PROD_CONFIG.vvue_ui_wheel)
+
 const showLocalTest = ref(false);
 
 function copyConfig(c) {
@@ -3505,6 +3512,27 @@ const updateStep = ref(0);
         <h2 style="color: #A6A6A6">Components</h2>
         <h4 style="color: #5f8bee">Manual testing arena</h4>
       </div>
+
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_wheel)">
+        <template #title>VueUiWheel</template>
+        <template #dev>
+          <WheelTest
+            ref="rings"
+            :dataset="wheelDataset"
+            :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
+          />
+        </template>
+        <template #prod>
+          <VueUiWheel
+            ref="rings"
+            :dataset="wheelDataset"
+            :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
+          />
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_wheel }}
+        </template>
+      </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_rings)">
         <template #title>VueUiRings</template>

@@ -5,6 +5,70 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiWheelConfig = {
+        style: {
+            fontFamily: string;
+            chart: {
+                backgroundColor: string;
+                color: string;
+                animation: {
+                    use: boolean;
+                    speed: number;
+                    acceleration: number;
+                };
+                layout: {
+                    wheel: {
+                        ticks: {
+                            rounded: boolean;
+                            inactiveColor: string;
+                            activeColor: string;
+                            gradient: {
+                                show: boolean;
+                                shiftHueIntensity: number;
+                            };
+                        };
+                    };
+                    innerCircle: {
+                        show: boolean;
+                        stroke: string;
+                        strokeWidth: number;
+                    };
+                    percentage: {
+                        show: boolean;
+                        fontSize: number;
+                        rounding: number;
+                        bold: boolean;
+                    };
+                };
+                title: {
+                    text: string;
+                    color: string;
+                    fontSize: number;
+                    bold: boolean;
+                    subtitle: {
+                        color: string;
+                        text: string;
+                        fontSize: number;
+                        bold: boolean;
+                    };
+                };
+            };
+        };
+        userOptions: {
+            show: boolean;
+            title: string;
+        };
+    };
+
+    export type VueUiWheelDataset = {
+        percentage: number;
+    }
+
+    export const VueUiWheel: DefineComponent<{
+        dataset: VueUiWheelDataset;
+        config?: VueUiWheelConfig;
+    }>;
+
     export type VueUiRingsConfig = {
         useCssAnimation: boolean;
         useBlurOnHover: boolean;

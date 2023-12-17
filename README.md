@@ -39,6 +39,7 @@ Available components:
 - [VueUiRelationCircle](https://vue-data-ui.graphieros.com/docs#vue-ui-relation-circle)
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
 - [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
+- [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
 
 
 ## Mini charts

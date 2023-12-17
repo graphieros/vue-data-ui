@@ -28,7 +28,8 @@ import {
     VueUiThermometer,
     VueUiSparkStackbar,
     VueUiSparkHistogram,
-    VueUiRings
+    VueUiRings,
+    VueUiWheel
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -60,4 +61,5 @@ app.component("VueUiThermometer", VueUiThermometer);
 app.component("VueUiSparkStackbar", VueUiSparkStackbar);
 app.component("VueUiSparkHistogram", VueUiSparkHistogram);
 app.component("VueUiRings", VueUiRings);
+app.component("VueUiWheel", VueUiWheel);
 app.mount('#app');

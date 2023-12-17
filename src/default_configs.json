@@ -2501,5 +2501,59 @@
                 "roundingPercentage": 0
             }
         }
+    },
+    "vue_ui_wheel": {
+        "style": {
+            "fontFamily":"inherit",
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "animation": {
+                    "use": true,
+                    "speed": 0.5,
+                    "acceleration": 1
+                },
+                "layout": {
+                    "wheel": {
+                        "ticks": {
+                            "rounded": true,
+                            "inactiveColor": "#e1e5e8",
+                            "activeColor": "#5f8bee",
+                            "gradient": {
+                                "show": true,
+                                "shiftHueIntensity": 100
+                            }
+                        }
+                    },
+                    "innerCircle": {
+                        "show": true,
+                        "stroke": "#e1e5e8",
+                        "strokeWidth": 1
+                    },
+                    "percentage": {
+                        "show": true,
+                        "fontSize": 48,
+                        "rounding": 1,
+                        "bold": true
+                    }
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "", 
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options"
+        }
     }
 }
