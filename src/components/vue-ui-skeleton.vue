@@ -258,6 +258,29 @@ const sparkline = ref(
     ]
 )
 
+function calcTickStart(angle, distance = 1) {
+    const angleStart = 29.85;
+    return {
+        x: 200 + 160 * Math.cos(angleStart + angle * Math.PI / 180) * distance,
+        y: 200 + 160 * Math.sin(angleStart + angle * Math.PI / 180) * distance
+    }
+}
+
+const ticks = computed(() => {
+    const tickArray = [];
+    const tickAmount = 100;
+    for(let i = 0; i < tickAmount; i += 1) {
+        tickArray.push({
+            x1: calcTickStart((360 / tickAmount) * i).x,
+            y1: calcTickStart((360 / tickAmount) * i).y,
+            x2: calcTickStart((360 / tickAmount) * i, 0.9).x,
+            y2: calcTickStart((360 / tickAmount) * i, 0.9).y,
+            color: skeletonConfig.value.style.wheel.color
+        })
+    }
+    return tickArray;
+})
+
 </script>
 
 <template>
@@ -271,6 +294,63 @@ const sparkline = ref(
                 </g>
             </svg>
         </template>
+        <!-- TYPE RINGS -->
+        <template v-if="type === 'rings'">
+            <svg data-cy="skeleton-rings" width="100%" viewBox="0 0 400 400" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <circle
+                    :cx="200"
+                    :cy="200"
+                    :r="180"
+                    :fill="`${skeletonConfig.style.rings.color}${opacity[40]}`"
+                />
+                <circle
+                    :cx="200"
+                    :cy="250"
+                    :r="130"
+                    :fill="`${skeletonConfig.style.rings.color}${opacity[60]}`"
+                />
+                <circle
+                    :cx="200"
+                    :cy="290"
+                    :r="90"
+                    :fill="`${skeletonConfig.style.rings.color}${opacity[100]}`"
+                />
+            </svg>
+        </template>
+
+        <!-- TYPE WHEEL -->
+        <template v-if="type === 'wheel'">
+            <svg data-cy="skeleton-wheel" width="100%" viewBox="0 0 400 400" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <line 
+                v-for="(tick, i) in ticks"
+                :x1="tick.x1"
+                :x2="tick.x2"
+                :y1="tick.y1"
+                :y2="tick.y2"
+                :stroke="i < 66 ? tick.color : `${tick.color}${opacity[50]}`"
+                :stroke-width="5"
+                stroke-linecap="round"
+            />
+            <circle
+                :cx="200"
+                :cy="200"
+                :r="130"
+                :stroke-width="3"
+                :stroke="`${skeletonConfig.style.wheel.color}${opacity[50]}`"
+                fill="none"
+            />
+            <rect 
+                :fill="`${skeletonConfig.style.wheel.color}${opacity[50]}`"
+                :rx="12"
+                :x="160"
+                :y="170"
+                :height="60"
+                :width="80"
+                stroke="none"
+            />
+            </svg>
+        </template>
+
         <!-- TYPE SPARKLINE -->
         <template v-if="type === 'sparkline'">
             <svg data-cy="skeleton-sparkline" width="100%" viewBox="0 0 150 32" :style="`background:${skeletonConfig.style.backgroundColor}`">

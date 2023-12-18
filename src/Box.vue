@@ -41,6 +41,9 @@ function copy() {
                     <slot name="config"></slot>
                 </code>
             </div>
+            <div style="padding-left:24px">
+                <slot name="general"/>
+            </div>
             <div style="display: flex;flex-direction:row; gap:12px; align-items:center;justify-content:center;background:#2A2A2A;padding:12px">
                 <div style="width:100%;padding:12px;">
                     <div style="width:100%;text-align:center;color: #ff6400;margin-bottom:12px">DEV</div>

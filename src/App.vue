@@ -3500,6 +3500,28 @@ function copyConfig(c) {
 
 const updateStep = ref(0);
 
+const skeletonOptions = ref([
+  'line',
+  'sparkline',
+  'bar',
+  'donut',
+  'onion',
+  'gauge',
+  'quadrant',
+  'radar',
+  'waffle',
+  'table',
+  'rating',
+  'verticalBar',
+  'heatmap',
+  'candlesticks',
+  'pyramid',
+  'rings',
+  'wheel'
+]);
+
+const skeletonChoice = ref('wheel')
+
 </script>
 
 <template>
@@ -3513,7 +3535,29 @@ const updateStep = ref(0);
         <h4 style="color: #5f8bee">Manual testing arena</h4>
       </div>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_wheel)" open>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)" open>
+        <template #general>
+          <select v-model="skeletonChoice">
+            <option v-for="(opt) in skeletonOptions">{{ opt }}</option>
+          </select>
+        </template>
+        <template #title>VueUiSkeleton</template>
+        <template #dev>
+          <SkeletonTest
+            :config="{ type: skeletonChoice, style: { rating: { useSmiley: true, filled: true } } }"
+          />
+        </template>
+        <template #prod>
+          <VueUiSkeleton
+            :config="{ type: skeletonChoice, style: { rating: { useSmiley: true, filled: true } } }"
+          />
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_skeleton }}
+        </template>
+      </Box>
+
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_wheel)">
         <template #title>VueUiWheel</template>
         <template #dev>
           <WheelTest
@@ -3855,23 +3899,6 @@ const updateStep = ref(0);
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_thermometer }}
-        </template>
-      </Box>
-      
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)">
-        <template #title>VueUiSkeleton</template>
-        <template #dev>
-          <SkeletonTest
-            :config="{ type: 'rating', style: { rating: { useSmiley: true, filled: true } } }"
-          />
-        </template>
-        <template #prod>
-          <VueUiSkeleton
-            :config="{ type: 'rating', style: { rating: { useSmiley: true, filled: true } } }"
-          />
-        </template>
-        <template #config>
-          {{ PROD_CONFIG.vue_ui_skeleton }}
         </template>
       </Box>
 

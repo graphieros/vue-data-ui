@@ -1474,6 +1474,12 @@
             },
             "pyramid": {
                 "color": "#e1e5e8"
+            },
+            "wheel": {
+                "color": "#e1e5e8"
+            },
+            "rings": {
+                "color": "#e1e5e8"
             }
         }
     },
