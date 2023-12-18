@@ -2,6 +2,13 @@
 import { ref } from "vue";
 const showConfig = ref(false);
 
+const props = defineProps({
+    open: {
+        type: Boolean,
+        default: false
+    }
+})
+
 const emit = defineEmits(['copy'])
 
 const isCopying = ref(false);
@@ -18,7 +25,7 @@ function copy() {
 
 <template>
     <div style="width: 100%;margin-top:12px; background: #2A2A2A;">
-        <details>
+        <details :open="open">
             <summary style="user-select:none;cursor:pointer;height:30px;background:linear-gradient(to right, #2A2A2A, #1A1A1A);line-height:24px;font-size:24px;padding:12px;">
                 <span style="color:#42d392">
                     <slot name="title"></slot>

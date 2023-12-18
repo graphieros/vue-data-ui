@@ -3513,7 +3513,7 @@ const updateStep = ref(0);
         <h4 style="color: #5f8bee">Manual testing arena</h4>
       </div>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_wheel)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_wheel)" open>
         <template #title>VueUiWheel</template>
         <template #dev>
           <WheelTest

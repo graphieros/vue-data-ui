@@ -195,6 +195,7 @@ defineExpose({
                 :stroke="tick.color"
                 :stroke-width="5"
                 :stroke-linecap="wheelConfig.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
+                :class="{ 'vue-ui-tick-animated': wheelConfig.style.chart.animation.use && i <= activeValue }"
             />
             <circle 
                 v-if="wheelConfig.style.chart.layout.innerCircle.show"
@@ -229,5 +230,21 @@ defineExpose({
 .vue-ui-wheel {
     user-select: none;
     position: relative;
+}
+.vue-ui-tick-animated {
+    animation: animate-tick 0.3s ease-in;
+    transform-origin: center;
+}
+
+@keyframes animate-tick {
+    0% {
+        stroke-width: 8;
+    }
+    80% {
+        stroke-width: 6;
+    }
+    100% {
+        stroke-width: 5;
+    }
 }
 </style>
