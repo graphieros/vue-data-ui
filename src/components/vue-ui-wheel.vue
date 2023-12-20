@@ -146,7 +146,7 @@ defineExpose({
         class="vue-ui-wheel" 
         ref="wheelChart"
         :id="uid"
-        :style="`font-family:${wheelConfig.style.fontFamily};width:100%; text-align:center;${wheelConfig.userOptions.show ? 'padding-top:36px' : ''}`"
+        :style="`font-family:${wheelConfig.style.fontFamily};width:100%; text-align:center;${(wheelConfig.userOptions.show && !isImaging) ? 'padding-top:36px' : ''}`"
     >
 
         <div v-if="wheelConfig.style.chart.title.text" :style="`width:100%;background:${wheelConfig.style.chart.backgroundColor};padding-bottom:12px`">

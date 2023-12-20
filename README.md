@@ -40,6 +40,7 @@ Available components:
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
 - [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
 - [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
+- [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
 
 
 ## Mini charts

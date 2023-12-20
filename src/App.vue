@@ -40,6 +40,7 @@ import StackTest from "./components/vue-ui-sparkstackbar.vue";
 import HistoTest from "./components/vue-ui-sparkhistogram.vue";
 import RingsTest from "./components/vue-ui-rings.vue";
 import WheelTest from "./components/vue-ui-wheel.vue";
+import TireTest from "./components/vue-ui-tiremarks.vue";
 
 const dataset = ref([
   {
@@ -3522,6 +3523,10 @@ const skeletonOptions = ref([
 
 const skeletonChoice = ref('wheel')
 
+const tiremarksDataset = ref({
+  percentage: 75
+})
+
 </script>
 
 <template>
@@ -3535,7 +3540,24 @@ const skeletonChoice = ref('wheel')
         <h4 style="color: #5f8bee">Manual testing arena</h4>
       </div>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)" open>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_tiremarks)" open>
+        <template #title>VueUiTiremarks</template>
+        <template #dev>
+          <TireTest
+            :dataset="tiremarksDataset"
+          />
+        </template>
+        <template #prod>
+          <VueUiTiremarks
+            :dataset="tiremarksDataset"
+          />
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_tiremarks }}
+        </template>
+      </Box>
+
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)">
         <template #general>
           <select v-model="skeletonChoice">
             <option v-for="(opt) in skeletonOptions">{{ opt }}</option>

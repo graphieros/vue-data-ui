@@ -2561,5 +2561,60 @@
             "show": true,
             "title": "options"
         }
+    },
+    "vue_ui_tiremarks": {
+        "style": {
+            "fontFamily":"inherit",
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "animation": {
+                    "use":true,
+                    "speed": 0.5,
+                    "acceleration": 1
+                },
+                "layout": {
+                    "display": "horizontal",
+                    "crescendo": true,
+                    "curved": true,
+                    "curveAngleX": 10,
+                    "curveAngleY": 10,
+                    "activeColor":"#5f8bee",
+                    "inactiveColor":"#e1e5e8",
+                    "ticks": {
+                        "gradient": {
+                            "show": true,
+                            "shiftHueIntensity": 100
+                        }
+                    }
+                },
+                "percentage": {
+                    "show": true,
+                    "useGradientColor": true,
+                    "color": "#5f8bee",
+                    "fontSize": 16,
+                    "bold": true,
+                    "rounding": 1,
+                    "verticalPosition": "bottom",
+                    "horizontalPosition": "left"
+                },
+                "title": {
+                    "text": "Title",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "Subtitle", 
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                }
+            }
+        },
+        "userOptions": {
+            "show": true,
+            "title": "options"
+        }
     }
 }

@@ -5,6 +5,67 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiTiremarksConfig = {
+        style: {
+            fontFamily: string;
+            chart: {
+                backgroundColor: string;
+                color: string;
+                animation: {
+                    use: boolean;
+                    speed: number;
+                    acceleration: number;
+                };
+                layout: {
+                    display: "horizontal" | "vertical";
+                    crescendo: boolean;
+                    curved: boolean;
+                    curveAngleX: number;
+                    curveAngleY: number;
+                    activeColor: string;
+                    inactiveColor: string;
+                    ticks: {
+                        gradient: {
+                            show: boolean;
+                            shiftHueIntensity: number;
+                        };
+                    };
+                };
+                percentage: {
+                    show: boolean;
+                    useGradientColor: boolean;
+                    color: string;
+                    fontSize: number;
+                    bold: boolean;
+                    rounding: 1;
+                    verticalPosition: "bottom" | "top";
+                    horizontalPosition: "left" | "right";
+                };
+                title: {
+                    text: string;
+                    color: string;
+                    fontSize: number;
+                    bold: boolean;
+                    subtitle: {
+                        color: string;
+                        text: string;
+                        fontSize: number;
+                        bold: boolean;
+                    };
+                };
+            };
+        };
+    };
+
+    export type VueUiTiremarksDataset = {
+        percentage: number;
+    }
+
+    export const VueUiTiremarks: DefineComponent<{
+        config?: VueUiTiremarksConfig;
+        dataset: VueUiTiremarksDataset;
+    }>;
+
     export type VueUiWheelConfig = {
         style: {
             fontFamily: string;
