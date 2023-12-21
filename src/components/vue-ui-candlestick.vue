@@ -294,7 +294,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="candlestickChart" :class="`vue-ui-candlestick ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center;${candlestickConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`vue-ui-candlestick_${uid}`">
+    <div ref="candlestickChart" :class="`vue-ui-candlestick ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center;${!candlestickConfig.style.title.text ? 'padding-top:36px' : ''};background:${candlestickConfig.style.backgroundColor}`" :id="`vue-ui-candlestick_${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
@@ -328,26 +328,13 @@ defineExpose({
             :title="candlestickConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-         >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="candlestick-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="candlestickConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="candlestick-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="candlestickConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-         </UserOptions>
-
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+         />
+         
         <!-- CHART -->
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
             <g v-if="drawableDataset.length > 0">

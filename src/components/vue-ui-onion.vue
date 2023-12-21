@@ -233,7 +233,7 @@ defineExpose({
         :class="`vue-ui-onion ${onionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" 
         ref="onionChart" 
         :id="`vue-ui-onion_${uid}`"
-        :style="`font-family:${onionConfig.style.fontFamily};width:100%; text-align:center;${onionConfig.userOptions.show ? 'padding-top:36px' : ''}`"
+        :style="`font-family:${onionConfig.style.fontFamily};width:100%; text-align:center;background:${onionConfig.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
@@ -268,25 +268,12 @@ defineExpose({
             :title="onionConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="onion-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="onionConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="onion-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="onionConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+        />
 
         <!-- CHART -->
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >

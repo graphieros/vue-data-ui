@@ -79,25 +79,10 @@ describe('<VueUiWaffle />', () => {
       cy.get(`[data-cy="user-options-summary"]`)
         .click();
 
-      cy.get(`[data-cy="waffle-checkbox-title"]`).then(($checkbox) => {
+
+      cy.get(`[data-cy="user-options-table"]`).then(($checkbox) => {
         cy.wrap($checkbox)
-          .check();
-
-        cy.get(`[data-cy="waffle-text-title"]`)
-          .should('exist')
-          .contains(fixture.config.style.chart.title.text);
-
-        cy.get(`[data-cy="waffle-text-subtitle"]`)
-          .should('exist')
-          .contains(fixture.config.style.chart.title.subtitle.text);
-
-        cy.wrap($checkbox)
-          .uncheck()
-      });
-
-      cy.get(`[data-cy="waffle-checkbox-table"]`).then(($checkbox) => {
-        cy.wrap($checkbox)
-          .check();
+          .click();
 
         cy.viewport(800, 1100);
 

@@ -311,16 +311,7 @@ defineExpose({
             :hasImg="true"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="gauge-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="gaugeConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-            </template>
-        </UserOptions>
+        />
 
         <!-- CHART -->
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:hidden !important;background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">

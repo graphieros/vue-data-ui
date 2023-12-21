@@ -12,6 +12,7 @@
 import { ref, computed, onMounted } from "vue";
 import PROD_CONFIG from "./default_configs.json";
 import Box from "./Box.vue";
+import BaseIcon from "./atoms/BaseIcon.vue";
 import TableTest from "./components/vue-ui-table.vue";
 import DonutTest from "./components/vue-ui-donut.vue";
 import XyTest from "./components/vue-ui-xy.vue";
@@ -3540,7 +3541,23 @@ const tiremarksDataset = ref({
         <h4 style="color: #5f8bee">Manual testing arena</h4>
       </div>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_tiremarks)" open>
+      <Box open :misc="true">
+      <template #title>__Icons__</template>
+      <template #misc>
+        <BaseIcon name="pdf" />
+        <BaseIcon name="image" />
+        <BaseIcon name="excel" />
+        <BaseIcon name="tableOpen" />
+        <BaseIcon name="tableClose" />
+        <BaseIcon name="spin" />
+        <BaseIcon name="close" />
+        <BaseIcon name="labelOpen" />
+        <BaseIcon name="labelClose" />
+        <BaseIcon name="sort" />
+      </template>
+      </Box>
+
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_tiremarks)">
         <template #title>VueUiTiremarks</template>
         <template #dev>
           <TireTest

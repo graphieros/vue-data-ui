@@ -313,7 +313,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :ref="`donutChart`" :class="`vue-ui-donut ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${donutConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`donut__${uid}`">
+    <div :ref="`donutChart`" :class="`vue-ui-donut ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${!donutConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutConfig.style.chart.backgroundColor}`" :id="`donut__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <!-- TITLE AS DIV -->
             <Title
@@ -347,31 +347,14 @@ defineExpose({
             :title="donutConfig.userOptions.title"
             :uid="uid"
             hasImg
+            hasTable
+            hasLabel
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="donut-checkbox-datalabels" 
-                    :model="mutableConfig.dataLabels.show" 
-                    :label="donutConfig.userOptions.labels.dataLabels" 
-                    @update:model="val => mutableConfig.dataLabels.show = val"
-                />
-                <BaseCheckbox 
-                    cy="donut-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="donutConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="donut-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="donutConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+            @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
+        />
 
         <svg data-cy="donut-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             

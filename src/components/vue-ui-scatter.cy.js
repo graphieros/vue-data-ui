@@ -24,20 +24,6 @@ describe('<VueUiScatter />', () => {
         .should('exist')
         .contains(fixture.config.style.title.subtitle.text);
 
-      cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.get(`[data-cy="scatter-checkbox-title"]`).check();
-
-      cy.get(`[data-cy="scatter-text-title"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.text);
-
-      cy.get(`[data-cy="scatter-text-subtitle"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.subtitle.text);
-
-      cy.get(`[data-cy="scatter-checkbox-title"]`).uncheck();
-      cy.get(`[data-cy="scatter-checkbox-table"]`).check();
-      cy.get(`[data-cy="user-options-summary"]`).click();
 
       for (let i = 0; i < fixture.dataset.length; i += 1) {
         for (let j = 0; j < fixture.dataset[i].values.length; j += 1) {
@@ -128,6 +114,7 @@ describe('<VueUiScatter />', () => {
         })
       }
 
+      cy.wait(100)
       cy.get(`[data-cy="scatter-plot-0-0"]`)
         .trigger('mouseover');
 
@@ -141,6 +128,9 @@ describe('<VueUiScatter />', () => {
 
       cy.get(`[data-cy="scatter-plot-0-0"]`)
         .trigger('mouseleave');
+
+        cy.get(`[data-cy="user-options-summary"]`).click();
+        cy.get(`[data-cy="user-options-table"]`).click();
 
       cy.get(`[data-cy="scatter-thead"]`)
         .should('exist')
@@ -201,8 +191,6 @@ describe('<VueUiScatter />', () => {
               .should('contain.text', `${Number(yAverage.toFixed(fixture.config.table.td.roundingAverage)).toLocaleString()}`)
           }
         });
-
-        cy.get(`[data-cy="user-options-summary"]`).click();
 
         cy.get(`[data-cy="user-options-pdf"]`).click();
         cy.wait(3000);

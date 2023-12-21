@@ -264,7 +264,7 @@ defineExpose({
 </script>
 
 <template>
-    <div class="vue-ui-age-pyramid" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center;${agePyramidConfig.userOptions.show ? 'padding-top:36px' : ''}`">
+    <div class="vue-ui-age-pyramid" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center;${!agePyramidConfig.style.title.text ? 'padding-top:36px' : ''};background:${agePyramidConfig.style.backgroundColor}`">
     
         <div v-if="(!mutableConfig.inside || isPrinting) && agePyramidConfig.style.title.text" :style="`width:100%;background:${agePyramidConfig.style.backgroundColor}`">
             <Title
@@ -298,25 +298,12 @@ defineExpose({
             :title="agePyramidConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="pyramid-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="agePyramidConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="pyramid-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="agePyramidConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+        />
 
         <!-- CHART -->
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" >

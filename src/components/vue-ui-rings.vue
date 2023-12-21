@@ -330,9 +330,7 @@ defineExpose({
   <div
     ref="ringsChart"
     :class="`vue-ui-rings ${ringsConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
-    :style="`font-family:${ringsConfig.style.fontFamily};width:100%;${
-      ringsConfig.userOptions.show ? 'padding-top:36px' : ''
-    }`"
+    :style="`font-family:${ringsConfig.style.fontFamily};width:100%`"
     :id="`rings_${uid}`"
     @mouseleave="
       selectedSerie = null;
@@ -375,19 +373,12 @@ defineExpose({
         :title="ringsConfig.userOptions.title"
         :uid="uid"
         hasImg
+        hasTable
         @generatePdf="generatePdf"
         @generateXls="generateXls"
         @generateImage="generateImage"
-        >
-        <template #checkboxes>
-          <BaseCheckbox
-            cy="rings-checkbox-table"
-            :model="mutableConfig.showTable"
-            :label="ringsConfig.userOptions.labels.showTable"
-            @update:model="val => mutableConfig.showTable = val"
-          />
-        </template>
-    </UserOptions>
+        @toggleTable="() => mutableConfig.showTable  = !mutableConfig.showTable"
+      />
 
     <!-- CHART -->
 

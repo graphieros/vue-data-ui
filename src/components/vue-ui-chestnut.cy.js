@@ -72,7 +72,7 @@ describe('<VueUiChestnut />', () => {
 
       cy.get(`[data-cy="user-options-summary"]`).click();
 
-      cy.get(`[data-cy="chestnut-checkbox-table"]`).check();
+      cy.get(`[data-cy="user-options-table"]`).click();
       cy.viewport(1000, 1600);
 
       cy.get(`[data-cy="chestnut-table"]`)

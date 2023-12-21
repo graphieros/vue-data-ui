@@ -26,19 +26,7 @@ describe('<VueUiVerticalBar />', () => {
 
       cy.get(`[data-cy="user-options-summary"]`).click();
 
-      cy.get(`[data-cy="vertical-bar-checkbox-title"]`).check();
-
-      cy.get(`[data-cy="vertical-bar-text-title"]`)
-        .should('exist')
-        .contains(fixture.config.style.chart.title.text);
-
-      cy.get(`[data-cy="vertical-bar-text-subtitle"]`)
-        .should('exist')
-        .contains(fixture.config.style.chart.title.subtitle.text);
-
-
-      cy.get(`[data-cy="vertical-bar-checkbox-title"]`).uncheck({force: true});
-      cy.get(`[data-cy="vertical-bar-checkbox-table"]`).check({ force: true});
+      cy.get(`[data-cy="user-options-table"]`).click({ force: true});
       cy.viewport(1000, 1050);
 
       const bars = fixture.dataset.map(d => {

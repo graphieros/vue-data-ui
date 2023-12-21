@@ -223,7 +223,7 @@ defineExpose({
 <template>
     <div ref="thermoChart" class="vue-ui-thermometer" :style="`width:100%;background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color};font-family:${thermoConfig.style.fontFamily}`" :id="`thermometer__${uid}`">
         <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && thermoConfig.style.title.text" :style="`width:100%;background:${thermoConfig.style.chart.backgroundColor};padding-top:32px`">
+        <div v-if="(!mutableConfig.inside || isPrinting) && thermoConfig.style.title.text" :style="`width:100%`">
             <Title
                 :config="{
                     title: {
@@ -258,16 +258,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateImage="generateImage"
             :hasXls="false"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="thermometer-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="thermoConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-            </template>
-        </UserOptions>
+        />
 
         <svg width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`">
             <defs>

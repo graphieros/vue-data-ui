@@ -226,7 +226,7 @@ defineExpose({
 </script>
 
 <template>
-     <div ref="heatmapChart" class="vue-ui-heatmap" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center;${heatmapConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`heatmap__${uid}`">
+     <div ref="heatmapChart" class="vue-ui-heatmap" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center;${!heatmapConfig.style.title.text ? 'padding-top:36px' : ''};background:${heatmapConfig.style.backgroundColor}`" :id="`heatmap__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && heatmapConfig.style.title.text" :style="`width:100%;background:${heatmapConfig.style.backgroundColor}`">
             <Title
                 :config="{
@@ -259,25 +259,12 @@ defineExpose({
             :title="heatmapConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="heatmap-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="heatmapConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="heatmap-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="heatmapConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+        />
 
         <!-- CHART -->
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >

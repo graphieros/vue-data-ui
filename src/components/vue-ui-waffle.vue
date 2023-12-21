@@ -389,7 +389,7 @@ defineExpose({
         class="vue-ui-waffle" 
         ref="waffleChart" 
         :id="`vue-ui-waffle_${uid}`"
-        :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center;${waffleConfig.userOptions.show ? 'padding-top:36px' : ''}`"
+        :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center;${!waffleConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${waffleConfig.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -424,25 +424,12 @@ defineExpose({
             :title="waffleConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="waffle-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="waffleConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="waffle-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="waffleConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+        />
 
         <!-- CHART -->
         <svg data-cy="waffle-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >

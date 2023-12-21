@@ -120,33 +120,12 @@ describe('<VueUiDonut />', () => {
         .should('exist')
         .click();
 
-      cy.get(`[data-cy="donut-checkbox-title"]`).then(($checkbox) => {
+      cy.get(`[data-cy="user-options-table"]`).click()
+
+
+      cy.get(`[data-cy="user-options-label"]`).then(($checkbox) => {
         cy.wrap($checkbox)
-          .uncheck();
-
-        cy.get('[data-cy="donut-div-title"]')
-          .should('exist')
-          .contains(fixture.config.style.chart.title.text);
-
-        cy.get('[data-cy="donut-div-subtitle"]')
-          .should('exist')
-          .contains(fixture.config.style.chart.title.subtitle.text);
-
-        cy.wrap($checkbox)
-          .check();
-
-        cy.get('[data-cy="donut-text-title"]')
-          .should('exist')
-          .contains(fixture.config.style.chart.title.text);
-
-        cy.get('[data-cy="donut-text-subtitle"]')
-          .should('exist')
-          .contains(fixture.config.style.chart.title.subtitle.text);
-      });
-
-      cy.get(`[data-cy="donut-checkbox-datalabels"]`).then(($checkbox) => {
-        cy.wrap($checkbox)
-          .uncheck();
+          .click();
 
         for (let i = 0; i < fixture.dataset.length; i += 1) {
           cy.get(`[data-cy="donut-datalabel-value-${i}"]`)
@@ -156,7 +135,7 @@ describe('<VueUiDonut />', () => {
         }
 
         cy.wrap($checkbox)
-          .check();
+          .click();
 
         for (let i = 0; i < fixture.dataset.length; i += 1) {
           cy.get(`[data-cy="donut-datalabel-value-${i}"]`)

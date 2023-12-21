@@ -6,6 +6,10 @@ const props = defineProps({
     open: {
         type: Boolean,
         default: false
+    },
+    misc: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -31,7 +35,10 @@ function copy() {
                     <slot name="title"></slot>
                 </span>
             </summary>
-            <div style="display: flex; flex-direction:column;">
+            <div style="display: flex; flex-direction: row; gap: 24px; align-items:center;justify-content:center; padding: 24px">
+                <slot name="misc"/>
+            </div>
+            <div style="display: flex; flex-direction:column;" v-if="!misc">
                 <button class="btn" @click="showConfig = !showConfig">
                     Config &nbsp;<span v-if="showConfig">&lt;</span><span v-else>&gt;</span>
                 </button>
@@ -44,7 +51,7 @@ function copy() {
             <div style="padding-left:24px">
                 <slot name="general"/>
             </div>
-            <div style="display: flex;flex-direction:row; gap:12px; align-items:center;justify-content:center;background:#2A2A2A;padding:12px">
+            <div style="display: flex;flex-direction:row; gap:12px; align-items:center;justify-content:center;background:#2A2A2A;padding:12px" v-if="!misc">
                 <div style="width:100%;padding:12px;">
                     <div style="width:100%;text-align:center;color: #ff6400;margin-bottom:12px">DEV</div>
 

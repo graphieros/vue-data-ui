@@ -32,25 +32,7 @@ describe('<VueUiQuadrant />', () => {
       });
 
       cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.get(`[data-cy="quadrant-checkbox-title"]`).check();
-      
-      [
-        {
-          selector: '[data-cy="quadrant-text-title"]',
-          expected: fixture.config.style.chart.title.text
-        },
-        {
-          selector: '[data-cy="quadrant-text-subtitle"]',
-          expected: fixture.config.style.chart.title.subtitle.text
-        },
-      ].forEach(el => {
-        cy.get(el.selector)
-        .should('exist')
-        .contains(el.expected)
-      });
-
-      cy.get(`[data-cy="quadrant-checkbox-title"]`).uncheck();
-      cy.get(`[data-cy="quadrant-checkbox-table"]`).check();
+      cy.get(`[data-cy="user-options-table"]`).click();
       cy.get(`[data-cy="user-options-summary"]`).click();
       cy.viewport(500, 850);
 

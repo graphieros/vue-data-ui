@@ -36,37 +36,8 @@ describe('<VueUiHeatmap />', () => {
         .should('exist')
         .contains(fixture.config.style.title.subtitle.text);
 
-      cy.get(`[data-cy="heatmap-legend-min"]`)
-        .should('exist')
-        .contains(minRoundedValue);
-
-      cy.get(`[data-cy="heatmap-legend-max"]`)
-        .should('exist')
-        .contains(maxRoundedValue);
-
       cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.get(`[data-cy="heatmap-checkbox-title"]`).check();
-      cy.get(`[data-cy="user-options-summary"]`).click();
-
-      cy.get(`[data-cy="heatmap-text-title"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.text);
-
-      cy.get(`[data-cy="heatmap-text-subtitle"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.subtitle.text);
-
-      cy.get(`[data-cy="heatmap-legend-foreignObject-min"]`)
-        .should('exist')
-        .contains(minRoundedValue);
-
-      cy.get(`[data-cy="heatmap-legend-foreignObject-max"]`)
-        .should('exist')
-        .contains(maxRoundedValue);
-
-      cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.get(`[data-cy="heatmap-checkbox-title"]`).uncheck();
-      cy.get(`[data-cy="heatmap-checkbox-table"]`).check();
+      cy.get(`[data-cy="user-options-table"]`).click();
       cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.viewport(1200, 750);

@@ -25,18 +25,7 @@ describe('<VueUiThermometer />', () => {
         .contains(fixture.config.style.title.subtitle.text);
 
       cy.get(`[data-cy="user-options-summary"]`).click();
-
-      cy.get(`[data-cy="thermometer-checkbox-title"]`).check();
-
-      cy.get(`[data-cy="thermometer-text-title"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.text);
-
-      cy.get(`[data-cy="thermometer-text-subtitle"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.subtitle.text);
-       
-      cy.get(`[data-cy="thermometer-checkbox-title"]`).uncheck();
+  
 
       cy.get(`[data-cy="thermometer-datalabel"]`).then(($label) => {
         cy.wrap($label)

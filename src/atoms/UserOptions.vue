@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import vClickOutside from '../directives/vClickOutside';
+import BaseIcon from "./BaseIcon.vue";
 
 const props = defineProps({
     hasPdf: {
@@ -12,6 +13,22 @@ const props = defineProps({
         default: true,
     },
     hasImg: {
+        type: Boolean,
+        default: false,
+    },
+    hasLabel: {
+        type: Boolean,
+        default: false,
+    },
+    isLabelActive: {
+        type: Boolean,
+        default: false,
+    },
+    hasTable: {
+        type: Boolean,
+        default: false,
+    },
+    hasSort: {
         type: Boolean,
         default: false,
     },
@@ -37,7 +54,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['generatePdf', 'generateXls', 'generateImage']);
+const emit = defineEmits(['generatePdf', 'generateXls', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort']);
 
 function generatePdf() {
     emit('generatePdf');
@@ -51,108 +68,150 @@ function generateImage() {
     emit('generateImage');
 }
 
-const details = ref(null);
+const isTableOpen = ref(false);
+function toggleTable() {
+    isTableOpen.value = !isTableOpen.value;
+    emit('toggleTable');
+}
+
+const isOpen = ref(false);
+const preventClose = ref(true);
+
+function toggle() {
+    isOpen.value = !isOpen.value;
+    if(isOpen.value) {
+        preventClose.value = false;
+    }
+}
 
 function close() {
     if(props.isPrinting || props.isImaging) return;
-    if(details.value) {
-        details.value.removeAttribute('open')
+    isOpen.value = false;
+}
+
+function closeIfOpen() {
+    if(isOpen.value) {
+        close();
     }
+}
+
+const isLabel = ref(props.isLabelActive);
+
+function toggleLabels() {
+    isLabel.value = !isLabel.value;
+    emit('toggleLabels')
+}
+
+function toggleSort() {
+    emit('toggleSort')
 }
 
 </script>
 
 <template>
-    <details ref="details" v-click-outside="close" :id="`details_${uid}`" class="vue-ui-user-options" :style="`background:${backgroundColor};color:${color}`" data-html2canvas-ignore>
-        <summary class="vue-ui-user-options-summary" data-cy="user-options-summary" :style="`background:${backgroundColor};color:${color}`">
-            {{ title }}
-        </summary>
-        <slot name="checkboxes"></slot>
+    <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`width: 34px; height: 34px; position: absolute; top: 0; right:0; padding: 4px; background:transparent; `">
+        <div tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${backgroundColor};`" @click.stop="toggle" @keypress.enter="toggle">
+            <BaseIcon  :name="isOpen ? 'close' : 'menu'" stroke="#CCCCCC" :stroke-width="2" />
+        </div>
+        <div :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}`">
 
-        <button v-if="hasPdf" data-cy="user-options-pdf" class="vue-data-ui-button" @click="generatePdf" :disabled="isPrinting" :style="`margin-top: 12px; background:${backgroundColor};color:${color}`">
-            <svg class="vue-data-ui-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M18 16v.01" />
-                <path d="M6 16v.01" />
-                <path d="M12 5v.01" />
-                <path d="M12 12v.01" />
-                <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-            </svg>
-            <span v-else>PDF</span>
-        </button>
-        <button v-if="hasXls" data-cy="user-options-xls" class="vue-data-ui-button" @click="generateXls" :style="`background:${backgroundColor};color:${color}`">
-            XLSX
-        </button>
-        <button v-if="hasImg" data-cy="user-options-img" class="vue-data-ui-button" @click="generateImage" :style="`background:${backgroundColor};color:${color}`">
-            <svg class="vue-data-ui-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isImaging" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M18 16v.01" />
-                <path d="M6 16v.01" />
-                <path d="M12 5v.01" />
-                <path d="M12 12v.01" />
-                <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-            </svg>
-            <span v-else>PNG</span>
-        </button>
-    </details>
+            <button tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf">
+                <BaseIcon v-if="isPrinting" name="spin" isSpin />
+                <BaseIcon v-else name="pdf" :stroke="color" />
+            </button>
+            
+            <button tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateXls">
+                <BaseIcon name="excel" :stroke="color" />
+            </button>
+
+            <button tabindex="0" v-if="hasImg" data-cy="user-options-img" class="vue-ui-user-options-button" @click="generateImage">
+                <BaseIcon v-if="isImaging" name="spin" isSpin />
+                <BaseIcon v-else name="image" :stroke="color" />
+            </button>
+
+            <button tabindex="0" v-if="hasTable" data-cy="user-options-table" class="vue-ui-user-options-button" @click="toggleTable">
+                <BaseIcon :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" />
+            </button>
+
+            <button tabindex="0" v-if="hasLabel" data-cy="user-options-label" class="vue-ui-user-options-button" @click="toggleLabels">
+                <BaseIcon :name="isLabel ? 'labelClose' : 'labelOpen'" :stroke="color"/>
+            </button>
+
+            <button tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
+                <BaseIcon name="sort" :stroke="color"/>
+            </button>
+
+        </div>
+    </div>
 </template>
 
 <style scoped>
 .vue-ui-user-options {
-    border-radius: 4px;
-    padding: 6px 12px;
+    z-index: 1;
+}
+.vue-ui-user-options-drawer[data-open="false"] {
+    display: none;
+}
+
+.vue-ui-user-options-drawer[data-open="true"] {
     position: absolute;
-    right:0;
-    top:0;
-    user-select:none;
-    max-width: 300px;
+    right: 4px;
+    top: 36px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    gap: 4px;
+    animation: show-user-options 125ms ease-in  forwards;
+    transform-origin: top;
+    opacity:0;
+    border-radius: 0 0 3px 3px;
+    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.3);
 }
-.vue-ui-user-options[open] {
-    border: 1px solid #e1e5e8;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
+
+@keyframes show-user-options {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(1, 0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1, 1);
+    }
 }
-.vue-ui-user-options summary {
-    text-align: right;
-    direction: rtl;
+
+.vue-ui-user-options-closing {
+    animation: close-user-options 125ms ease-out;
+    transform-origin: top;
+    opacity:1;
 }
-.vue-data-ui-button {
-    margin: 6px 0;
+
+@keyframes close-user-options {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1, 1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-6px) scale(1, 0.95);
+    }
+}
+
+.vue-ui-user-options-button {
+    all: unset;
+    padding: 0 3px;
     border-radius: 3px;
     height: 30px;
-    border: 1px solid #b9bfc4;
+    border: 1px solid transparent;
     background: inherit;
     display: flex;
     align-items:center;
     justify-content: center;
-    width: 100%;
+    width: fit-content;
     cursor: pointer;
 }
-.vue-data-ui-button:hover {
+.vue-ui-user-options-button:hover {
     background: rgba(0,0,0,0.05) !important;
 }
-.vue-data-ui-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-</style>
-
-<style>
-.vue-ui-options-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    align-items:center;
-    justify-content:flex-start;
+.vue-ui-user-options-button:focus-visible {
+    outline: 1px solid #CCCCCC;
 }
 </style>

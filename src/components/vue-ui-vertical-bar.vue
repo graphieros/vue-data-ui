@@ -378,7 +378,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-vertical-bar ${verticalBarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center;${verticalBarConfig.userOptions.show ? 'padding-top:36px' : ''}`">
+    <div :class="`vue-ui-vertical-bar ${verticalBarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center;${!verticalBarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${verticalBarConfig.style.chart.backgroundColor}`">
         
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.title.text" :style="`width:100%;background:${verticalBarConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -386,7 +386,7 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'vertical-bar-div-title',
-                        text: verticalBarConfig.style.chart.title.text ,
+                        text: verticalBarConfig.style.chart.title.text,
                         color: verticalBarConfig.style.chart.title.color,
                         fontSize: verticalBarConfig.style.chart.title.fontSize,
                         bold: verticalBarConfig.style.chart.title.bold
@@ -413,34 +413,17 @@ defineExpose({
             :title="verticalBarConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
+            hasSort
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="vertical-bar-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="verticalBarConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="vertical-bar-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="verticalBarConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-                <BaseCheckbox 
-                    cy="vertical-bar-checkbox-sort" 
-                    :model="mutableConfig.sortDesc" 
-                    :label="verticalBarConfig.userOptions.labels.sort" 
-                    @update:model="val => {
-                        mutableConfig.sortDesc = val; 
-                        recalculateHeight()
-                    }"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+            @toggleSort="() => {
+                mutableConfig.sortDesc = !mutableConfig.sortDesc;
+                recalculateHeight()
+            }"
+        />
 
          <!-- LEGEND AS DIV : TOP -->
         <Legend

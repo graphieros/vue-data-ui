@@ -500,7 +500,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-quadrant ${quadrantConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="quadrantChart" :id="`vue-ui-quadrant_${uid}`" :style="`font-family:${quadrantConfig.style.fontFamily};width:100%; text-align:center;${quadrantConfig.userOptions.show ? 'padding-top: 36px' : ''}`">
+    <div :class="`vue-ui-quadrant ${quadrantConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="quadrantChart" :id="`vue-ui-quadrant_${uid}`" :style="`font-family:${quadrantConfig.style.fontFamily};width:100%; text-align:center;${!quadrantConfig.style.chart.title.text ? 'padding-top: 36px' : ''};background:${quadrantConfig.style.chart.backgroundColor}`">
 
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && quadrantConfig.style.chart.title.text" :style="`width:100%;background:${quadrantConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -535,31 +535,14 @@ defineExpose({
             :title="quadrantConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
+            hasLabel
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="quadrant-plot-labels" 
-                    :model="mutableConfig.plotLabels.show" 
-                    :label="quadrantConfig.userOptions.labels.showPlotLabels" 
-                    @update:model="val => mutableConfig.plotLabels.show = val"
-                />
-                <BaseCheckbox 
-                    cy="quadrant-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="quadrantConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="quadrant-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="quadrantConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+            @toggleLabels="mutableConfig.plotLabels.show = !mutableConfig.plotLabels.show"
+        />
 
         <!-- CHART -->
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`"  :id="`svg_${uid}`">

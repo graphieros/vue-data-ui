@@ -252,7 +252,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :ref="`tiremarksChart`" :class="`vue-ui-tiremarks ${tiremarksConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${tiremarksConfig.style.fontFamily};width:100%; text-align:center;${(tiremarksConfig.userOptions.show && !isImaging) ? 'padding-top:36px' : ''}`" :id="uid">
+    <div :ref="`tiremarksChart`" :class="`vue-ui-tiremarks ${tiremarksConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${tiremarksConfig.style.fontFamily};width:100%; text-align:center;${(!tiremarksConfig.style.chart.title.text) ? 'padding-top:36px' : ''};background:${tiremarksConfig.style.chart.backgroundColor}`" :id="uid">
 
         <div v-if="tiremarksConfig.style.chart.title.text" :style="`width:100%;background:${tiremarksConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title

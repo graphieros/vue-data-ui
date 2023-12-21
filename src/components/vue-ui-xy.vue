@@ -1,6 +1,6 @@
 
 <template>
-    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${chartConfig.chart.userOptions.show ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily}`">
+    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${!chartConfig.chart.title.text ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily}`">
         <!-- TITLE AS OUTSIDE DIV -->
         <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show && (!mutableConfig.titleInside || isPrinting)" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <Title
@@ -33,40 +33,15 @@
             :title="chartConfig.chart.userOptions.title"
             :uid="uniqueId"
             hasImg
+            hasLabel
+            hasTable
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="xy-checkbox-datalabels" 
-                    :model="mutableConfig.dataLabels.show" 
-                    :label="chartConfig.chart.userOptions.labels.dataLabels" 
-                    @update:model="val => mutableConfig.dataLabels.show = val"
-                />
-                <BaseCheckbox
-                    v-if="!chartConfig.useCanvas"
-                    cy="xy-checkbox-title" 
-                    :model="mutableConfig.titleInside" 
-                    :label="chartConfig.chart.userOptions.labels.titleInside" 
-                    @update:model="val => mutableConfig.titleInside = val"
-                />
-                <BaseCheckbox
-                    v-if="!chartConfig.useCanvas"
-                    cy="xy-checkbox-legend" 
-                    :model="mutableConfig.legendInside" 
-                    :label="chartConfig.chart.userOptions.labels.legendInside" 
-                    @update:model="val => mutableConfig.legendInside = val"
-                />
-                <BaseCheckbox 
-                    cy="xy-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="chartConfig.chart.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
-
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+            @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
+        />
+        
         <canvas ref="vueUiXyCanvas" v-if="chartConfig.useCanvas" :height="chartConfig.chart.height" :width="chartConfig.chart.width" @mouseover="isInsideCanvas = true" @mouseleave="resetCanvas">
         </canvas>
 

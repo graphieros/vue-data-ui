@@ -26,19 +26,7 @@ describe('<VueUiCandlestick />', () => {
 
       cy.get(`[data-cy="user-options-summary"]`).click();
 
-      cy.get(`[data-cy="candlestick-checkbox-title"]`).check();
-
-      cy.get(`[data-cy="candlestick-text-title"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.text);
-
-      cy.get(`[data-cy="candlestick-text-subtitle"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.subtitle.text);
-
-      cy.get(`[data-cy="candlestick-checkbox-title"]`).uncheck();
-      cy.get(`[data-cy="candlestick-checkbox-table"]`).check();
-      cy.get(`[data-cy="user-options-summary"]`).click();
+      cy.get(`[data-cy="user-options-table"]`).click();
       cy.viewport(1000, 1150);
 
       [
@@ -184,7 +172,6 @@ describe('<VueUiCandlestick />', () => {
       cy.get(`[data-cy="candlestick-trap-0"]`)
           .trigger('mouseleave');
 
-      cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="user-options-pdf"]`).click();
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);

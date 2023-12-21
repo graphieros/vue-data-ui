@@ -342,7 +342,7 @@ defineExpose({
         :class="`vue-ui-radar ${radarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
         ref="radarChart"
         :id="`vue-ui-radar_${uid}`"
-        :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${radarConfig.userOptions.show ? 'padding-top:36px' : ''}`"
+        :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${!radarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${radarConfig.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -377,25 +377,12 @@ defineExpose({
             :title="radarConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="radar-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="radarConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="radar-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="radarConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+        />
 
         <!-- CHART -->
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`" >

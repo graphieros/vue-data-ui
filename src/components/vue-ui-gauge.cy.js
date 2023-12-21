@@ -37,22 +37,6 @@ describe('<VueUiGauge />', () => {
         .should('exist')
         .contains(`${fixture.config.translations.base} : ${fixture.dataset.base}`);
 
-      cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.get(`[data-cy="gauge-checkbox-title"]`).uncheck();
-      cy.get(`[data-cy="user-options-summary"]`).click();
-
-
-      cy.get(`[data-cy="gauge-div-title"]`)
-        .should('exist')
-        .contains(`${fixture.config.style.chart.title.text}`);
-
-      cy.get(`[data-cy="gauge-div-subtitle"]`)
-        .should('exist')
-        .contains(`${fixture.config.style.chart.title.subtitle.text}`);
-
-      cy.get(`[data-cy="gauge-div-base"]`)
-        .should('exist')
-        .contains(`${fixture.config.translations.base} : ${fixture.dataset.base}`);
 
       for (let i = 0; i < fixture.dataset.series.length; i += 1) {
         cy.get(`[data-cy="gauge-arc-${i}"]`).then(($arc) => {

@@ -395,7 +395,7 @@ defineExpose({
         class="vue-ui-chestnut"
         ref="chestnutChart"
         :id="`vue-ui-chestnut_${uid}`"
-        :style="`font-family:${chestnutConfig.style.fontFamily};width:100%; text-align:center;${chestnutConfig.userOptions.show ? 'padding-top:36px' : ''}`"
+        :style="`font-family:${chestnutConfig.style.fontFamily};width:100%; text-align:center;padding-top:36px;background:${chestnutConfig.style.chart.backgroundColor}`"
     >
         <!-- OPTIONS -->
         <UserOptions
@@ -408,19 +408,12 @@ defineExpose({
             :title="chestnutConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="chestnut-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="chestnutConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+       />
 
         <svg v-if="svg.height > 0" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
 

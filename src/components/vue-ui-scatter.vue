@@ -305,7 +305,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-scatter ${scatterConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center;${scatterConfig.userOptions.show ? 'padding-top:36px' : ''}`">
+    <div :class="`vue-ui-scatter ${scatterConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center;${!scatterConfig.style.title.text ? 'padding-top:36px' : ''};background:${scatterConfig.style.backgroundColor}`">
         
         <div v-if="(!mutableConfig.inside || isPrinting) && scatterConfig.style.title.text" :style="`width:100%;background:${scatterConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
@@ -340,25 +340,12 @@ defineExpose({
             :title="scatterConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasTable
             @generatePdf="generatePdf"
             @generateXls="generateXls"
             @generateImage="generateImage"
-        >
-            <template #checkboxes>
-                <BaseCheckbox 
-                    cy="scatter-checkbox-title" 
-                    :model="mutableConfig.inside" 
-                    :label="scatterConfig.userOptions.labels.useDiv" 
-                    @update:model="val => mutableConfig.inside = val"
-                />
-                <BaseCheckbox 
-                    cy="scatter-checkbox-table" 
-                    :model="mutableConfig.showTable" 
-                    :label="scatterConfig.userOptions.labels.showTable" 
-                    @update:model="val => mutableConfig.showTable = val"
-                />
-            </template>
-        </UserOptions>
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+        />
 
         <!-- CHART -->
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">

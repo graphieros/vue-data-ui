@@ -29,24 +29,10 @@ describe('<VueUiOnion />', () => {
       cy.get(`[data-cy="onion-div-subtitle"]`)
         .should('exist')
         .contains(fixture.config.style.chart.title.subtitle.text);
-      
-      cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.get(`[data-cy="onion-checkbox-title"]`)
-      .check();
-      cy.get(`[data-cy="user-options-summary"]`).click();
-
-      cy.get(`[data-cy="onion-text-title"]`)
-        .should('exist')
-        .contains(fixture.config.style.chart.title.text);
-
-      cy.get(`[data-cy="onion-text-subtitle"]`)
-        .should('exist')
-        .contains(fixture.config.style.chart.title.subtitle.text);
+    
 
       cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.get(`[data-cy="onion-checkbox-title"]`)
-      .uncheck();
-      cy.get(`[data-cy="onion-checkbox-table"]`).check();
+      cy.get(`[data-cy="user-options-table"]`).click();
       cy.viewport(400, 680);
 
       cy.get(`[data-cy="user-options-summary"]`).click();

@@ -261,7 +261,7 @@ defineExpose({
 </script>
 
 <template>
-    <div class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor};${relationConfig.userOptions.show ? 'padding-top:36px' : ''}`" :id="`relation_circle_${uid}`"> 
+    <div class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor}`" :id="`relation_circle_${uid}`"> 
      <!-- TITLE AS DIV -->
         <div v-if="relationConfig.style.title.useDiv && relationConfig.style.title.text" :style="`width:100%;background:${relationConfig.style.backgroundColor}`">
             <Title

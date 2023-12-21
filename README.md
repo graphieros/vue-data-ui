@@ -14,7 +14,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-28-green)
+![Static Badge](https://img.shields.io/badge/components-29-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 

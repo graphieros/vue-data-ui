@@ -31,8 +31,7 @@ describe('<VueUiRadar />', () => {
         });
 
         cy.get(`[data-cy="user-options-summary"]`).click();
-        cy.get(`[data-cy="radar-checkbox-title"]`).check();
-        cy.get(`[data-cy="radar-checkbox-table"]`).check();
+        cy.get(`[data-cy="user-options-table"]`).click();
         cy.viewport(500, 670);
         cy.get(`[data-cy="user-options-summary"]`).click();
 
