@@ -58,9 +58,9 @@
     "dev": "vite",
     "clean": "node cleanup.cjs",
     "build": "npm run clean && vite build --mode production && node copy-types.cjs && npm i",
+    "prod": "npm run test && npx cypress run --component && npm run clean && vite build --mode production && node copy-types.cjs && npm i",
     "build:dev": "npm run build && npm run dev",
-    "preview": "vite preview",
-    "test": "vitest",
+    "test": "vitest --run",
     "test:e2e": "npx cypress open"
   },
   "devDependencies": {
