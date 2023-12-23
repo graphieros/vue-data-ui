@@ -42,6 +42,7 @@ declare module 'vue-data-ui' {
                                 values?: string[];
                                 fontSize?: number;
                                 showOnlyFirstAndLast?: boolean;
+                                color?: string;
                             };
                         };
                     };
