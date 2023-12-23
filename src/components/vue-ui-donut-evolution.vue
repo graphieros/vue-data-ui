@@ -710,7 +710,7 @@ defineExpose({
                     :x="padding.left + 6"
                     :y="padding.top + donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2"
                     :font-size="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 1.6"
-                    :fill="donutEvolution.style.chart.layout.dataLabels.color"
+                    :fill="donutEvolutionConfig.style.chart.layout.dataLabels.color"
                 >
                     {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[fixedDatapoint.index] }}
                 </text>
