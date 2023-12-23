@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "1.9.32",
+  "version": "1.9.33",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
   "keywords": [
@@ -33,7 +33,8 @@
     "thermometer",
     "rings",
     "wheel",
-    "tiremarks"
+    "tiremarks",
+    "donut evolution"
   ],
   "author": "Alec Lloyd Probert",
   "repository": {

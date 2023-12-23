@@ -41,6 +41,7 @@ Available components:
 - [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
 - [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
 - [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
+- [VueUiDonutEvolution](https://vue-data-ui.graphieros.com/docs#vue-ui-donut-evolution)
 
 
 ## Mini charts

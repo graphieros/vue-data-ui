@@ -644,28 +644,45 @@ export function calcMarkerOffsetX(arc, isTitle = false, offset = 16) {
     return {x, anchor}
 }
 
-export function calcMarkerOffsetY(arc) {
+export function calcMarkerOffsetY(arc, yOffsetTop = 16, yOffsetBottom = 16) {
     if (arc.center.endY > arc.cy) {
-        return arc.center.endY + 16;
+        return arc.center.endY + yOffsetBottom;
     } else if (arc.center.endY < arc.cy) {
-        return arc.center.endY - 32;
+        return arc.center.endY - yOffsetTop;
     } else {
         return arc.center.endY;
     }
 }
 
-export function calcNutArrowPath(arc, center=false) {
-    const start = `M${calcMarkerOffsetX(arc).x},${calcMarkerOffsetY(arc) - 4} `;
+export function calcNutArrowPath(arc, center=false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false) {
+    const start = `${calcMarkerOffsetX(arc).x},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4} `;
     const end = ` ${center? center.x : arc.center.endX},${center ? center.y : arc.center.endY}`;
     let mid = "";
     if (arc.center.endX > arc.cx) {
-        mid = `${calcMarkerOffsetX(arc).x - 12},${calcMarkerOffsetY(arc) - 4}`;
+        mid = `${calcMarkerOffsetX(arc).x - 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
     } else if(arc.center.endX < arc.cx) {
-        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc) - 4}`;
+        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
     } else {
-        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc) - 4}`;
+        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
     }
-    return `${start}${mid}${end}`;
+    return `M${hideStart ? '' : start}${mid}${end}${toCenter ? `,${toCenter.x} ${toCenter.y}` : ''}`;
+}
+
+export function closestDecimal(num) {
+    if (num === 0) return 0;
+    const orderOfMagnitude = Math.floor(Math.log10(Math.abs(num)));
+    const powerOf10 = 10 ** orderOfMagnitude;
+    let roundedValue;
+    if (num < 0) {
+        roundedValue = Math.round(num / powerOf10) * powerOf10;
+    } else {
+        roundedValue = Math.round(num / powerOf10) * powerOf10;
+    }
+    return roundedValue;
+}
+
+export function canShowValue(num) {
+    return ![null, undefined, NaN].includes(num);
 }
 
 const lib = {
@@ -676,9 +693,11 @@ const lib = {
     calcMarkerOffsetY,
     calcNutArrowPath,
     calcMedian,
+    canShowValue,
     checkArray,
     checkNaN,
     checkObj,
+    closestDecimal,
     convertColorToHex,
     convertConfigColors,
     createPolygonPath,

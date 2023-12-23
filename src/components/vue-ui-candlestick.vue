@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { shiftHue, opacity, makeXls } from "../lib";
+import { canShowValue, closestDecimal, shiftHue, opacity, makeXls } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
@@ -163,23 +163,6 @@ const drawableDataset = computed(() => {
 
 function ratioToMax(value) {
     return value / extremes.value.max;
-}
-
-function canShowValue(value) {
-    return ![null, undefined, NaN].includes(value);
-}
-
-function closestDecimal(number) {
-    if (number === 0) return 0;
-    const orderOfMagnitude = Math.floor(Math.log10(Math.abs(number)));
-    const powerOf10 = 10 ** orderOfMagnitude;
-    let roundedValue;
-    if (number < 0) {
-        roundedValue = Math.round(number / powerOf10) * powerOf10;
-    } else {
-        roundedValue = Math.round(number / powerOf10) * powerOf10;
-    }
-    return roundedValue;
 }
 
 const yLabels = computed(() => {

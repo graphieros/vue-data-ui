@@ -48,6 +48,7 @@ function handleClick(legend, i) {
 
 <style scoped>
 .vue-data-ui-legend {
+    user-select:none;
     height: 100%;
     width:100%;
     display: flex;
@@ -57,6 +58,7 @@ function handleClick(legend, i) {
     column-gap: 18px;
 }
 .vue-data-ui-legend-item {
+    user-select: none;
     display: flex;
     align-items:center;
     gap: 6px;

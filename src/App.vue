@@ -42,6 +42,7 @@ import HistoTest from "./components/vue-ui-sparkhistogram.vue";
 import RingsTest from "./components/vue-ui-rings.vue";
 import WheelTest from "./components/vue-ui-wheel.vue";
 import TireTest from "./components/vue-ui-tiremarks.vue";
+import DonutEvolutionTest from "./components/vue-ui-donut-evolution.vue";
 
 const dataset = ref([
   {
@@ -3528,6 +3529,26 @@ const tiremarksDataset = ref({
   percentage: 75
 })
 
+const donutEvolutionDataset = ref([
+  {
+    name: "Serie 1",
+    values: [0, null, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 0  ]
+  },
+  {
+    name: "Serie 2",
+    values: [10, null, 20, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0 ]
+  },
+  {
+    name: "Serie 3",
+    values: [5, null, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0 ]
+  },
+  {
+    name: "Serie 3",
+    values: [5, null, 5, 5, 5, 5 ]
+  }
+])
+
+
 </script>
 
 <template>
@@ -3555,6 +3576,20 @@ const tiremarksDataset = ref({
         <BaseIcon name="labelClose" />
         <BaseIcon name="sort" />
       </template>
+      </Box>
+
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)" open>
+        <template #title>VueUiDonutEvolution</template>
+        <template #dev>
+          <DonutEvolutionTest
+            :dataset="donutEvolutionDataset"
+          />
+        </template>
+        <template #prod>
+          <VueUiDonutEvolution
+            :dataset="donutEvolutionDataset"
+          />
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_tiremarks)">

@@ -10,7 +10,6 @@ import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -151,17 +150,6 @@ const legendConfig = computed(() => {
 const currentDonut = computed(() => {
     return makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, 100, 100)
 });
-
-function calcDonutMarkerLabelPositionX(arc) {
-    return arc.center.endX + calcMarkerOffset(arc, 256);
-}
-function calcMarkerOffset(arc, centerX) {
-    const isRight = arc.center.endX - centerX >= 0;
-    if (isRight) {
-        return 30;
-    }
-    return -30;
-}
 
 function isArcBigEnough(arc) {
     return arc.proportion * 100 > donutConfig.value.style.chart.layout.labels.dataLabels.hideUnderValue;

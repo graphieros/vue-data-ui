@@ -5,52 +5,166 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
-    export type VueUiTiremarksConfig = {
-        style: {
-            fontFamily: string;
-            chart: {
-                backgroundColor: string;
-                color: string;
-                animation: {
-                    use: boolean;
-                    speed: number;
-                    acceleration: number;
+    export type VueUiDonutEvolutionConfig = {
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                layout?: {
+                    height?: number;
+                    width?: number;
+                    padding?: {
+                        top?: number;
+                        left?: number;
+                        right?: number;
+                        bottom?: number;
+                    };
+                    grid?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        showVerticalLines?: boolean;
+                        yAxis?: {
+                            dataLabels?: {
+                                show?: boolean;
+                                fontSize?: number;
+                                color?: string;
+                                roundingValue?: number;
+                                offsetX?: number;
+                                bold?: boolean;
+                                steps?: number;
+                            };
+                        };
+                        xAxis?: {
+                            dataLabels?: {
+                                show?: boolean;
+                                values?: string[];
+                                fontSize?: number;
+                                showOnlyFirstAndLast?: boolean;
+                            };
+                        };
+                    };
+                    line?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                    highlighter?: {
+                        color?: string;
+                        opacity?: number;
+                    };
+                    dataLabels?: {
+                        show?: boolean;
+                        fontSize?: number;
+                        color?: string;
+                        bold?: boolean;
+                        rounding?: number;
+                        prefix?: string;
+                        suffix?: string;
+                        offsetY?: number;
+                    };
                 };
-                layout: {
-                    display: "horizontal" | "vertical";
-                    crescendo: boolean;
-                    curved: boolean;
-                    curveAngleX: number;
-                    curveAngleY: number;
-                    activeColor: string;
-                    inactiveColor: string;
-                    ticks: {
-                        gradient: {
-                            show: boolean;
-                            shiftHueIntensity: number;
+                title?: {
+                    text?: string;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                    subtitle?: {
+                        color?: string;
+                        text?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                    };
+                };
+                legend?: {
+                    color?: string;
+                    backgroundColor?: string;
+                    bold?: boolean;
+                    show?: boolean;
+                    fontSize?: number;
+                    roundingPercentage?: number;
+                    roundingValue?: number;
+                };
+            };
+        };
+        table?: {
+            show?: boolean;
+            th?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+            };
+            td?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+                roundingValue?: number;
+                roundingPercentage?: number;
+            };
+        };
+        userOptions?: {
+            show?: boolean;
+        }
+    }
+
+    export type VueUiDonutEvolutionDatasetItem = {
+        name: string;
+        values: number[];
+        color?: string;
+    }
+
+    export const VueUiDonutEvolution: DefineComponent<{
+        config?: VueUiDonutEvolutionConfig,
+        dataset: VueUiDonutEvolutionDatasetItem[]
+    }>;
+
+    export type VueUiTiremarksConfig = {
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                animation?: {
+                    use?: boolean;
+                    speed?: number;
+                    acceleration?: number;
+                };
+                layout?: {
+                    display?: "horizontal" | "vertical";
+                    crescendo?: boolean;
+                    curved?: boolean;
+                    curveAngleX?: number;
+                    curveAngleY?: number;
+                    activeColor?: string;
+                    inactiveColor?: string;
+                    ticks?: {
+                        gradient?: {
+                            show?: boolean;
+                            shiftHueIntensity?: number;
                         };
                     };
                 };
-                percentage: {
-                    show: boolean;
-                    useGradientColor: boolean;
-                    color: string;
-                    fontSize: number;
-                    bold: boolean;
-                    rounding: 1;
-                    verticalPosition: "bottom" | "top";
-                    horizontalPosition: "left" | "right";
+                percentage?: {
+                    show?: boolean;
+                    useGradientColor?: boolean;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                    rounding?: 1;
+                    verticalPosition?: "bottom" | "top";
+                    horizontalPosition?: "left" | "right";
                 };
-                title: {
-                    text: string;
-                    color: string;
-                    fontSize: number;
-                    bold: boolean;
-                    subtitle: {
-                        color: string;
-                        text: string;
-                        fontSize: number;
-                        bold: boolean;
+                title?: {
+                    text?: string;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                    subtitle?: {
+                        color?: string;
+                        text?: string;
+                        fontSize?: number;
+                        bold?: boolean;
                     };
                 };
             };
@@ -67,57 +181,57 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiWheelConfig = {
-        style: {
-            fontFamily: string;
-            chart: {
-                backgroundColor: string;
-                color: string;
-                animation: {
-                    use: boolean;
-                    speed: number;
-                    acceleration: number;
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                animation?: {
+                    use?: boolean;
+                    speed?: number;
+                    acceleration?: number;
                 };
-                layout: {
-                    wheel: {
-                        ticks: {
-                            rounded: boolean;
-                            inactiveColor: string;
-                            activeColor: string;
-                            gradient: {
-                                show: boolean;
-                                shiftHueIntensity: number;
+                layout?: {
+                    wheel?: {
+                        ticks?: {
+                            rounded?: boolean;
+                            inactiveColor?: string;
+                            activeColor?: string;
+                            gradient?: {
+                                show?: boolean;
+                                shiftHueIntensity?: number;
                             };
                         };
                     };
-                    innerCircle: {
-                        show: boolean;
-                        stroke: string;
-                        strokeWidth: number;
+                    innerCircle?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
                     };
-                    percentage: {
-                        show: boolean;
-                        fontSize: number;
-                        rounding: number;
-                        bold: boolean;
+                    percentage?: {
+                        show?: boolean;
+                        fontSize?: number;
+                        rounding?: number;
+                        bold?: boolean;
                     };
                 };
-                title: {
-                    text: string;
-                    color: string;
-                    fontSize: number;
-                    bold: boolean;
-                    subtitle: {
-                        color: string;
-                        text: string;
-                        fontSize: number;
-                        bold: boolean;
+                title?: {
+                    text?: string;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                    subtitle?: {
+                        color?: string;
+                        text?: string;
+                        fontSize?: number;
+                        bold?: boolean;
                     };
                 };
             };
         };
-        userOptions: {
-            show: boolean;
-            title: string;
+        userOptions?: {
+            show?: boolean;
+            title?: string;
         };
     };
 
@@ -131,78 +245,78 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRingsConfig = {
-        useCssAnimation: boolean;
-        useBlurOnHover: boolean;
-        style: {
-            fontFamily: string;
-            chart: {
-                backgroundColor: string;
-                color: string;
-                layout: {
-                    rings: {
-                        strokeWidth: number;
-                        stroke: string;
-                        gradient: {
-                            show: boolean;
-                            intensity: number;
-                            underlayerColor: string;
+        useCssAnimation?: boolean;
+        useBlurOnHover?: boolean;
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                layout?: {
+                    rings?: {
+                        strokeWidth?: number;
+                        stroke?: string;
+                        gradient?: {
+                            show?: boolean;
+                            intensity?: number;
+                            underlayerColor?: string;
                         };
-                        useShadow: boolean;
+                        useShadow?: boolean;
                     };
                 };
-                legend: {
-                    backgroundColor: string;
-                    color: string;
-                    show: boolean;
-                    fontSize: number;
-                    bold: boolean;
-                    roundingValue: number;
-                    roundingPercentage: number;
+                legend?: {
+                    backgroundColor?: string;
+                    color?: string;
+                    show?: boolean;
+                    fontSize?: number;
+                    bold?: boolean;
+                    roundingValue?: number;
+                    roundingPercentage?: number;
                 };
-                title: {
-                    text: string;
-                    color: string;
-                    fontSize: number;
-                    bold: boolean;
-                    subtitle: {
-                        color: string;
-                        text: string;
-                        fontSize: number;
-                        bold: boolean;
+                title?: {
+                    text?: string;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                    subtitle?: {
+                        color?: string;
+                        text?: string;
+                        fontSize?: number;
+                        bold?: boolean;
                     };
                 };
-                tooltip: {
-                    show: boolean;
-                    color: string;
-                    backgroundColor: string;
-                    fontSize: number;
-                    showValue: boolean;
-                    showPercentage: boolean;
-                    roundingValue: number;
-                    roundingPercentage: number;
+                tooltip?: {
+                    show?: boolean;
+                    color?: string;
+                    backgroundColor?: string;
+                    fontSize?: number;
+                    showValue?: boolean;
+                    showPercentage?: boolean;
+                    roundingValue?: number;
+                    roundingPercentage?: number;
                 };
             };
         };
-        userOptions: {
-            show: boolean;
-            title: string;
-            labels: {
-                showTable: string;
+        userOptions?: {
+            show?: boolean;
+            title?: string;
+            labels?: {
+                showTable?: string;
             };
         };
-        table: {
-            show: string;
-            th: {
-                backgroundColor: string;
-                color: string;
-                outline: string;
+        table?: {
+            show?: string;
+            th?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
             };
-            td: {
-                backgroundColor: string;
-                color: string;
-                outline: string;
-                roundingValue: number;
-                roundingPercentage: number;
+            td?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+                roundingValue?: number;
+                roundingPercentage?: number;
             };
         };
     };
@@ -221,7 +335,7 @@ declare module 'vue-data-ui' {
     export type VueUiSparkHistogramConfig = {
         style?: {
             backgroundColor?: string;
-            fontFamily: string;
+            fontFamily?: string;
             layout?: {
                 height?: number;
                 width?: number;

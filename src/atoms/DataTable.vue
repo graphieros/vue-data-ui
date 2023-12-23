@@ -23,7 +23,7 @@ const { backgroundColor:tdbg, color:tdc, outline:tdo } = props.config.td;
             </tr>
             <tr>
                 <th :style="{backgroundColor: thbg, color: thc, outline: tho}" v-for="(th, i) in head" :key="`th_${i}`">
-                    <div style="display: flex; align-items:center; justify-content:center; justify-content:flex-end;padding-right: 3px;">
+                    <div style="display: flex; align-items:center; justify-content:center; justify-content:flex-end;padding-right: 3px; gap:3px">
                         <svg height="12" width="12" v-if="th.color" viewBox="0 0 20 20" style="background: none;">
                             <circle cx="10" cy="10" r="10" :fill="th.color"/>
                         </svg>
