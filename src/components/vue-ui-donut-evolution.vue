@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, canShowValue, closestDecimal, makeDonut, palette, convertColorToHex, opacity, makeXls, createUid } from '../lib';
+import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, canShowValue, closestDecimal, makeDonut, palette, convertColorToHex, opacity, makeXls, createUid, sumByAttribute } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -179,13 +179,8 @@ const yLabels = computed(() => {
     return steps;
 });
 
-// lib
-function sumValues(source) {
-    return [...source].map(s => s.value).reduce((a, b) => a + b, 0);
-}
-// lib
 function displayArcPercentage(arc, stepBreakdown) {
-    return isNaN(arc.value / sumValues(stepBreakdown)) ? 0 : ((arc.value / sumValues(stepBreakdown)) * 100).toFixed(0) + "%";
+    return isNaN(arc.value / sumByAttribute(stepBreakdown, 'value')) ? 0 : ((arc.value / sumByAttribute(stepBreakdown, "value")) * 100).toFixed(0) + "%";
 }
 
 function leave() {
@@ -641,13 +636,12 @@ defineExpose({
                     :stroke="donutEvolutionConfig.style.chart.color"
                     stroke-width="1.5"
                 />
-                <rect
+                <circle
                     @click="unfixDatapoint"
                     @keypress.enter="unfixDatapoint"
-                    :x="svg.absoluteWidth - padding.right - 20"
-                    :y="padding.top"
-                    :width="20"
-                    :height="20"
+                    :cx="svg.absoluteWidth - padding.right - svg.width / 40"
+                    :cy="padding.top + svg.height / 30"
+                    :r="svg.height / 12"
                     fill="transparent"
                     style="cursor:pointer"
                     tabindex="0"
@@ -669,16 +663,6 @@ defineExpose({
                     :r="svg.height / 7"
                     :fill="donutEvolutionConfig.style.chart.backgroundColor"
                 />
-                <text 
-                    text-anchor="middle"
-                    :x="padding.left + svg.width / 2"
-                    :y="padding.top + (svg.height / 2) + 14 / 3"
-                    :font-size="14"
-                    :font-weight="'bold'"
-                    :fill="donutEvolutionConfig.style.chart.layout.dataLabels.color"
-                >
-                    {{ labellizeValue(fixedDatapoint.subtotal) }}
-                </text>
                 <path 
                     v-for="(arc, k) in fixedDatapoint.donutFocus"
                     :d="arc.path"
@@ -705,6 +689,22 @@ defineExpose({
                     :r="svg.height / 3.8"
                     :fill="`url(#focus_${uid})`"
                 />
+                <circle
+                :cx="padding.left + (svg.width / 2)"
+                    :cy="padding.top + (svg.height / 2)"
+                    :r="svg.height / 7.7"
+                    :fill="donutEvolutionConfig.style.chart.backgroundColor"
+                />
+                <text 
+                    text-anchor="middle"
+                    :x="padding.left + svg.width / 2"
+                    :y="padding.top + (svg.height / 2) + 14 / 3"
+                    :font-size="14"
+                    :font-weight="'bold'"
+                    :fill="donutEvolutionConfig.style.chart.layout.dataLabels.color"
+                >
+                    {{ labellizeValue(fixedDatapoint.subtotal) }}
+                </text>
                 <text 
                     v-if="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[fixedDatapoint.index]"
                     :x="padding.left + 6"
@@ -749,8 +749,11 @@ defineExpose({
             </template>
             <template #td="{td}">
                 <span v-if="td.value === null">-</span>
-                <span v-else>
-                    {{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.prefix : '' }}{{ !isNaN(td.value) && td.value !== null ? Number(td.value.toFixed(donutEvolutionConfig.table.td.roundingValue)).toLocaleString() : td }}{{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.suffix : '' }}
+                <b v-else>
+                    {{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.prefix : '' }}{{ !isNaN(td.value) && td.value !== null ? Number(td.value.toFixed(donutEvolutionConfig.table.td.roundingValue)).toLocaleString() : td }}{{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.suffix : '' }} 
+                </b>
+                <span>
+                    {{ td.percentage && !isNaN(td.percentage) ? `(${Number(td.percentage.toFixed(donutEvolutionConfig.table.td.roundingPercentage)).toLocaleString()}%)` : '' }}
                 </span>
             </template>
         </DataTable>

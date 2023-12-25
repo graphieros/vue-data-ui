@@ -2,56 +2,56 @@ import * as XLSX from "xlsx";
 
 export function makeDonut(item, cx, cy, rx, ry) {
     let { series } = item;
-            if (!series || item.base === 0)
-                return {
-                    ...series,
-                    proportion: 0,
-                    ratio: 0,
-                    path: "",
-                    startX: 0,
-                    startY: 0,
-                    endX: 0,
-                    center: {},
-                };
-                const sum = [...series]
-                .map((serie) => serie.value)
-                .reduce((a, b) => a + b, 0);
-                
-                const ratios = [];
-                let acc = 0;
-                for (let i = 0; i < series.length; i += 1) {
-                let proportion = series[i].value / sum;
-                const ratio = proportion * (Math.PI * 1.9999); // (Math.PI * 2) fails to display a donut with only one value > 0 as it goes full circle again
-                // midProportion & midRatio are used to find the midpoint of the arc to display markers
-                const midProportion = series[i].value / 2 / sum;
-                const midRatio = midProportion * (Math.PI * 2);
-                const { startX, startY, endX, endY, path } = createArc(
-                    [cx, cy],
-                    [rx, ry],
-                    [acc, ratio],
-                    110
-                );
-                ratios.push({
-                    cx,
-                    cy,
-                    ...series[i],
-                    proportion,
-                    ratio: ratio,
-                    path,
-                    startX,
-                    startY,
-                    endX,
-                    endY,
-                    center: createArc(
-                    [cx, cy],
-                    [rx * 1.45, ry * 1.45],
-                    [acc, midRatio],
-                    110
-                    ), // center of the arc, to display the marker. rx & ry are larger to be displayed with a slight offset
-                });
-                acc += ratio;
-                }
-            return ratios;
+    if (!series || item.base === 0)
+        return {
+            ...series,
+            proportion: 0,
+            ratio: 0,
+            path: "",
+            startX: 0,
+            startY: 0,
+            endX: 0,
+            center: {},
+        };
+    const sum = [...series]
+        .map((serie) => serie.value)
+        .reduce((a, b) => a + b, 0);
+
+    const ratios = [];
+    let acc = 0;
+    for (let i = 0; i < series.length; i += 1) {
+        let proportion = series[i].value / sum;
+        const ratio = proportion * (Math.PI * 1.9999); // (Math.PI * 2) fails to display a donut with only one value > 0 as it goes full circle again
+        // midProportion & midRatio are used to find the midpoint of the arc to display markers
+        const midProportion = series[i].value / 2 / sum;
+        const midRatio = midProportion * (Math.PI * 2);
+        const { startX, startY, endX, endY, path } = createArc(
+            [cx, cy],
+            [rx, ry],
+            [acc, ratio],
+            110
+        );
+        ratios.push({
+            cx,
+            cy,
+            ...series[i],
+            proportion,
+            ratio: ratio,
+            path,
+            startX,
+            startY,
+            endX,
+            endY,
+            center: createArc(
+                [cx, cy],
+                [rx * 1.45, ry * 1.45],
+                [acc, midRatio],
+                110
+            ), // center of the arc, to display the marker. rx & ry are larger to be displayed with a slight offset
+        });
+        acc += ratio;
+    }
+    return ratios;
 }
 
 export function addVector([a1, a2], [b1, b2]) {
@@ -64,8 +64,8 @@ export function matrixTimes([[a, b], [c, d]], [x, y]) {
 
 export function rotateMatrix(x) {
     return [
-    [Math.cos(x), -Math.sin(x)],
-    [Math.sin(x), Math.cos(x)],
+        [Math.cos(x), -Math.sin(x)],
+        [Math.sin(x), Math.cos(x)],
     ];
 }
 
@@ -73,18 +73,18 @@ export function createArc([cx, cy], [rx, ry], [position, ratio], phi) {
     ratio = ratio % (2 * Math.PI);
     const rotMatrix = rotateMatrix(phi);
     const [sX, sY] = addVector(
-    matrixTimes(rotMatrix, [
-        rx * Math.cos(position),
-        ry * Math.sin(position),
-    ]),
-    [cx, cy]
+        matrixTimes(rotMatrix, [
+            rx * Math.cos(position),
+            ry * Math.sin(position),
+        ]),
+        [cx, cy]
     );
     const [eX, eY] = addVector(
-    matrixTimes(rotMatrix, [
-        rx * Math.cos(position + ratio),
-        ry * Math.sin(position + ratio),
-    ]),
-    [cx, cy]
+        matrixTimes(rotMatrix, [
+            rx * Math.cos(position + ratio),
+            ry * Math.sin(position + ratio),
+        ]),
+        [cx, cy]
     );
     const fA = ratio > Math.PI ? 1 : 0;
     const fS = ratio > 0 ? 1 : 0;
@@ -106,22 +106,22 @@ export function createArc([cx, cy], [rx, ry], [position, ratio], phi) {
 }
 
 export function treeShake({ defaultConfig, userConfig }) {
-    const finalConfig = {...defaultConfig};
+    const finalConfig = { ...defaultConfig };
 
     Object.keys(finalConfig).forEach(key => {
-        if(Object.hasOwn(userConfig, key)) {
+        if (Object.hasOwn(userConfig, key)) {
             const currentVal = userConfig[key]
-            if(typeof currentVal === 'boolean'){
+            if (typeof currentVal === 'boolean') {
                 finalConfig[key] = currentVal;
-            } else if(["string", "number"].includes(typeof currentVal)) {
-                if(isValidUserValue(currentVal)) {
+            } else if (["string", "number"].includes(typeof currentVal)) {
+                if (isValidUserValue(currentVal)) {
                     finalConfig[key] = currentVal;
                 }
-            } else if(Array.isArray(finalConfig[key])) {
-                if(checkArray({ userConfig, key})) {
+            } else if (Array.isArray(finalConfig[key])) {
+                if (checkArray({ userConfig, key })) {
                     finalConfig[key] = currentVal;
                 }
-            } else if(checkObj({ userConfig, key})){
+            } else if (checkObj({ userConfig, key })) {
                 finalConfig[key] = treeShake({
                     defaultConfig: finalConfig[key],
                     userConfig: currentVal
@@ -136,8 +136,8 @@ export function checkArray({ userConfig, key }) {
     return Object.hasOwn(userConfig, key) && Array.isArray(userConfig[key]) && userConfig[key].length >= 0;
 }
 
-export function checkObj({ userConfig, key}) {
-    return  Object.hasOwn(userConfig, key) && !Array.isArray(userConfig[key]) && typeof userConfig[key] === "object";
+export function checkObj({ userConfig, key }) {
+    return Object.hasOwn(userConfig, key) && !Array.isArray(userConfig[key]) && typeof userConfig[key] === "object";
 }
 
 export function isValidUserValue(val) {
@@ -149,9 +149,9 @@ export function isSafeValue(val) {
 }
 
 export function checkNaN(val, fallback = 0) {
-    if(isNaN(val)) {
+    if (isNaN(val)) {
         return fallback
-    }else {
+    } else {
         return val
     }
 }
@@ -190,18 +190,18 @@ export const palette = [
     '#743411',
 ];
 
-export const opacity = ["00","03","05","08","0A","0D","0F","12","14","17","1A","1C","1F","21","24","26","29","2B","2E","30","33","36","38","3B","3D","40","42","45","47","4A","4D","4F","52","54","57","59","5C","5E","61","63","66","69","6B","6E","70","73","75","78","7A","7D","80","82","85","87","8A","8C","8F","91","94","96","99","9C","9E","A1","A3","A6","A8","AB","AD","B0","B3","B5","B8","BA","BD","BF","C2","C4","C7","C9","CC","CF","D1","D4","D6","D9","DB","DE","E0","E3","E6","E8","EB","ED","F0","F2","F5","F7","FA","FC","FF"];
+export const opacity = ["00", "03", "05", "08", "0A", "0D", "0F", "12", "14", "17", "1A", "1C", "1F", "21", "24", "26", "29", "2B", "2E", "30", "33", "36", "38", "3B", "3D", "40", "42", "45", "47", "4A", "4D", "4F", "52", "54", "57", "59", "5C", "5E", "61", "63", "66", "69", "6B", "6E", "70", "73", "75", "78", "7A", "7D", "80", "82", "85", "87", "8A", "8C", "8F", "91", "94", "96", "99", "9C", "9E", "A1", "A3", "A6", "A8", "AB", "AD", "B0", "B3", "B5", "B8", "BA", "BD", "BF", "C2", "C4", "C7", "C9", "CC", "CF", "D1", "D4", "D6", "D9", "DB", "DE", "E0", "E3", "E6", "E8", "EB", "ED", "F0", "F2", "F5", "F7", "FA", "FC", "FF"];
 
 export function convertColorToHex(color) {
     const hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
     const rgbRegex = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/i;
     const hslRegex = /^hsla?\((\d+),\s*([\d.]+)%,\s*([\d.]+)%(?:,\s*[\d.]+)?\)$/i;
 
-    if([undefined, null, NaN].includes(color)) {
+    if ([undefined, null, NaN].includes(color)) {
         return null;
     }
 
-    if(color === 'transparent') {
+    if (color === 'transparent') {
         return "#FFFFFF00";
     }
 
@@ -238,12 +238,12 @@ export function hslToRgb(h, s, l) {
         r = g = b = l;
     } else {
         const hueToRgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1 / 6) return p + (q - p) * 6 * t;
-        if (t < 1 / 2) return q;
-        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-        return p;
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
         };
 
         const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
@@ -379,17 +379,17 @@ export function calcStarPoints({
     outerRadius
 }) {
     const angle = Math.PI / innerCirclePoints;
-      const angleOffsetToCenterStar = 60;
-      const totalPoints = innerCirclePoints * 2;
-      let points = "";
-      for (let i = 0; i < totalPoints; i += 1) {
+    const angleOffsetToCenterStar = 60;
+    const totalPoints = innerCirclePoints * 2;
+    let points = "";
+    for (let i = 0; i < totalPoints; i += 1) {
         let isEvenIndex = i % 2 == 0;
         let r = isEvenIndex ? outerRadius : innerRadius;
         let currX = centerX + Math.cos(i * angle + angleOffsetToCenterStar) * r;
         let currY = centerY + Math.sin(i * angle + angleOffsetToCenterStar) * r;
         points += `${currX},${currY} `;
-      }
-      return points;
+    }
+    return points;
 }
 
 export function createStar({
@@ -414,47 +414,47 @@ export function createStar({
 
 export function giftWrap({ series }) {
     series = series.sort((a, b) => a.x - b.x);
-      function polarAngle(a, b, c) {
+    function polarAngle(a, b, c) {
         const x = (a.x - b.x) * (c.x - b.x) + (a.y - b.y) * (c.y - b.y);
         const y = (a.x - b.x) * (c.y - b.y) - (c.x - b.x) * (a.y - b.y);
         return Math.atan2(y, x);
-      }
-      const perimeter = [];
-      let currentPoint;
-      currentPoint = series[0];
-      for (const p of series) {
+    }
+    const perimeter = [];
+    let currentPoint;
+    currentPoint = series[0];
+    for (const p of series) {
         if (p.x < currentPoint.x) {
-          currentPoint = p;
+            currentPoint = p;
         }
-      }
-      perimeter[0] = currentPoint;
-      let endpoint, secondlast;
-      let minAngle, newEnd;
-      endpoint = perimeter[0];
-      secondlast = { x: endpoint.x, y: endpoint.y + 1 };
-      do {
+    }
+    perimeter[0] = currentPoint;
+    let endpoint, secondlast;
+    let minAngle, newEnd;
+    endpoint = perimeter[0];
+    secondlast = { x: endpoint.x, y: endpoint.y + 1 };
+    do {
         minAngle = Math.PI;
         for (const p of series) {
-          currentPoint = polarAngle(secondlast, endpoint, p);
-          if (currentPoint <= minAngle) {
-            newEnd = p;
-            minAngle = currentPoint;
-          }
+            currentPoint = polarAngle(secondlast, endpoint, p);
+            if (currentPoint <= minAngle) {
+                newEnd = p;
+                minAngle = currentPoint;
+            }
         }
         if (newEnd !== perimeter[0]) {
-          perimeter.push(newEnd);
-          secondlast = endpoint;
-          endpoint = newEnd;
+            perimeter.push(newEnd);
+            secondlast = endpoint;
+            endpoint = newEnd;
         }
-      } while (newEnd !== perimeter[0]);
-      let result;
-      perimeter.forEach((res) => {
+    } while (newEnd !== perimeter[0]);
+    let result;
+    perimeter.forEach((res) => {
         if (res && res.x && res.y) {
-          result += `${Math.round(res.x)},${Math.round(res.y)} `;
+            result += `${Math.round(res.x)},${Math.round(res.y)} `;
         }
-      });
-      result = result.replaceAll("undefined", "");
-      return result;
+    });
+    result = result.replaceAll("undefined", "");
+    return result;
 }
 
 export function degreesToRadians(degrees) {
@@ -464,7 +464,7 @@ export function degreesToRadians(degrees) {
 export function adaptColorToBackground(bgColor) {
     if (bgColor) {
         let color = bgColor;
-        if(color.charAt(0) !== "#"){
+        if (color.charAt(0) !== "#") {
             color = this.rgbToHex(bgColor);
         }
         color = color.substring(1, 7);
@@ -473,33 +473,33 @@ export function adaptColorToBackground(bgColor) {
         let b = parseInt(color.substring(4, 6), 16);
         let uiColors = [r / 255, g / 255, b / 255];
         let c = uiColors.map((col) => {
-          if (col <= 0.03928) {
-            return col / 12.92;
-          }
-          return Math.pow((col + 0.055) / 1.055, 2.4);
+            if (col <= 0.03928) {
+                return col / 12.92;
+            }
+            return Math.pow((col + 0.055) / 1.055, 2.4);
         });
         let L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
         return L > 0.3 ? "#000000" : "#FFFFFF";
-      }
-      return "#000000";
+    }
+    return "#000000";
 }
 
 export function convertConfigColors(config) {
     for (const key in config) {
-      if (typeof config[key] === 'object' && !Array.isArray(config[key]) && config[key] !== null) {
-        convertConfigColors(config[key]);
-      } else if (key === 'color' || key === 'backgroundColor' || key === 'stroke') {
-        if(config[key] === '') {
-            config[key] = '#000000';
-        } else if (config[key] === 'transparent') {
-            config[key] = '#FFFFFF00'
-        } else {
-            config[key] = convertColorToHex(config[key]);
+        if (typeof config[key] === 'object' && !Array.isArray(config[key]) && config[key] !== null) {
+            convertConfigColors(config[key]);
+        } else if (key === 'color' || key === 'backgroundColor' || key === 'stroke') {
+            if (config[key] === '') {
+                config[key] = '#000000';
+            } else if (config[key] === 'transparent') {
+                config[key] = '#FFFFFF00'
+            } else {
+                config[key] = convertColorToHex(config[key]);
+            }
         }
-      }
     }
     return config;
-  }
+}
 
 export function makeXls(table, fileName) {
 
@@ -530,15 +530,15 @@ export function calcLinearProgression(plots) {
 
     if (!plots || plots.length === 0) {
         return {
-            x1:0,
-            y1:0,
-            x2:0,
-            y2:0,
+            x1: 0,
+            y1: 0,
+            x2: 0,
+            y2: 0,
             slope: 0,
             trend: 0
         }
     }
-    
+
     let sumX = 0;
     let sumY = 0;
     let sumXY = 0;
@@ -579,8 +579,8 @@ export function calcPercentageTrend(arr) {
 
 export function calcMedian(arr) {
     const mid = Math.floor(arr.length / 2);
-    const nums = [...arr].sort((a,b) => a - b);
-    return arr.length % 2 !== 0 ? nums[mid] : (nums[mid-1] + nums[mid]) / 2;
+    const nums = [...arr].sort((a, b) => a - b);
+    return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
 }
 
 export function createSmoothPath(points) {
@@ -611,27 +611,27 @@ export function createSmoothPath(points) {
         return `C ${cps.x},${cps.y} ${cpe.x},${cpe.y} ${point.x},${point.y}`;
     }
     const d = points.reduce((acc, point, i, a) => i === 0
-    ? `${point.x},${point.y} `
-    : `${acc} ${bezierCommand(point, i, a)} `
-    , '');
+        ? `${point.x},${point.y} `
+        : `${acc} ${bezierCommand(point, i, a)} `
+        , '');
 
     return d;
 }
 
 export function createUid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-    .replace(/[xy]/g, function (c) { 
-        const r = Math.random() * 16 | 0,  
-            v = c == 'x' ? r : (r & 0x3 | 0x8); 
-        return v.toString(16); 
-    }); 
+        .replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0,
+                v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
 }
 
 export function calcMarkerOffsetX(arc, isTitle = false, offset = 16) {
     let x = 0;
     let offsetX = isTitle ? offset : 0;
-    let anchor="middle";
-    if(arc.center.endX > arc.cx) {
+    let anchor = "middle";
+    if (arc.center.endX > arc.cx) {
         x = arc.center.endX + offset + offsetX;
         anchor = "start";
     } else if (arc.center.endX < arc.cx) {
@@ -641,7 +641,7 @@ export function calcMarkerOffsetX(arc, isTitle = false, offset = 16) {
         x = arc.centerX + offsetX;
         anchor = "middle";
     }
-    return {x, anchor}
+    return { x, anchor }
 }
 
 export function calcMarkerOffsetY(arc, yOffsetTop = 16, yOffsetBottom = 16) {
@@ -654,13 +654,13 @@ export function calcMarkerOffsetY(arc, yOffsetTop = 16, yOffsetBottom = 16) {
     }
 }
 
-export function calcNutArrowPath(arc, center=false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false) {
+export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false) {
     const start = `${calcMarkerOffsetX(arc).x},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4} `;
-    const end = ` ${center? center.x : arc.center.endX},${center ? center.y : arc.center.endY}`;
+    const end = ` ${center ? center.x : arc.center.endX},${center ? center.y : arc.center.endY}`;
     let mid = "";
     if (arc.center.endX > arc.cx) {
         mid = `${calcMarkerOffsetX(arc).x - 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
-    } else if(arc.center.endX < arc.cx) {
+    } else if (arc.center.endX < arc.cx) {
         mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
     } else {
         mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
@@ -683,6 +683,10 @@ export function closestDecimal(num) {
 
 export function canShowValue(num) {
     return ![null, undefined, NaN].includes(num);
+}
+
+export function sumByAttribute(arr, attr) {
+    return [...arr].map(a => a[attr]).reduce((a, b) => a + b, 0)
 }
 
 const lib = {
@@ -716,6 +720,7 @@ const lib = {
     palette,
     rotateMatrix,
     shiftHue,
+    sumByAttribute,
     treeShake,
 };
 export default lib;
