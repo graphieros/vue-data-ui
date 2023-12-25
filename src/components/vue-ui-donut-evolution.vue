@@ -8,7 +8,6 @@ import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
-import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
 
 const props = defineProps({
@@ -32,10 +31,6 @@ const defaultConfig = ref(mainConfig.vue_ui_donut_evolution);
 
 const isPrinting = ref(false);
 const isImaging = ref(false);
-const donutEvolutionChart = ref(null);
-const isTooltip = ref(false);
-const tooltipContent = ref("");
-const selectedSerie = ref(null);
 const segregated = ref([]);
 const hoveredIndex = ref(null);
 const hoveredDatapoint = ref(null);
@@ -506,7 +501,7 @@ defineExpose({
                 </g>
             </g>
 
-            <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || isFixed}">
+            <g v-for="(datapoint, i ) in drawableDataset" :data-cy="`donut-wrapper-${i}`" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || isFixed}">
                 <g v-if="datapoint.subtotal">
                     <g v-if="hoveredIndex !== null && hoveredIndex === i">
                         <g v-for="arc in datapoint.donut">
@@ -594,6 +589,7 @@ defineExpose({
             />
             <rect 
                 v-for="(datapoint, i) in drawableDataset"
+                :data-cy="`trap-${i}`"
                 :x="padding.left + (i * slit)"
                 :y="padding.top"
                 :width="slit"
@@ -637,6 +633,7 @@ defineExpose({
                     stroke-width="1.5"
                 />
                 <circle
+                    data-cy="quit-dialog"
                     @click="unfixDatapoint"
                     @keypress.enter="unfixDatapoint"
                     :cx="svg.absoluteWidth - padding.right - svg.width / 40"

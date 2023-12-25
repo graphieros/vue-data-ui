@@ -574,7 +574,7 @@ export function calcPercentageTrend(arr) {
     }
 
     const percentageTrend = (overallChange / totalMagnitude);
-    return percentageTrend;
+    return isNaN(percentageTrend) ? 0 : percentageTrend;
 }
 
 export function calcMedian(arr) {
@@ -695,8 +695,8 @@ const lib = {
     calcLinearProgression,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
-    calcNutArrowPath,
     calcMedian,
+    calcNutArrowPath,
     canShowValue,
     checkArray,
     checkNaN,

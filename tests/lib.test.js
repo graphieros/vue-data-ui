@@ -1,26 +1,31 @@
 import { expect, test, describe } from "vitest";
 import {
-    degreesToRadians,
+    adaptColorToBackground,
+    addVector,
+    calcLinearProgression,
+    calcMedian,
+    calcPercentageTrend,
+    calcPolygonPoints,
+    calcStarPoints,
+    checkArray,
     checkNaN,
+    checkObj,
+    closestDecimal,
+    convertColorToHex,
+    createArc,
+    createPolygonPath,
+    createSmoothPath,
+    createStar,
+    degreesToRadians,
+    hslToRgb,
     isSafeValue,
     isValidUserValue,
-    checkObj,
-    checkArray,
-    treeShake,
-    convertColorToHex,
-    sumByAttribute,
-    closestDecimal,
     makeDonut,
-    createArc,
-    addVector,
     matrixTimes,
     rotateMatrix,
-    hslToRgb,
     shiftHue,
-    calcPolygonPoints,
-    createPolygonPath,
-    calcStarPoints,
-    createStar
+    sumByAttribute,
+    treeShake,
 } from "../src/lib"
 
 describe('degreesToRadians', () => {
@@ -209,6 +214,21 @@ describe('treeShake', () => {
             }
         });
     });
+})
+
+describe('adaptColorToBackground', () => {
+    test('returns a light color for a dark background', () => {
+        const backgroundColor = "#1A1A1A";
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF')
+        const backgroundColor2 = "#6A6A6A";
+        expect(adaptColorToBackground(backgroundColor2)).toBe('#FFFFFF')
+    });
+    test('returns a dark color for a light background', () => {
+        const backgroundColor = "#FFFFFF";
+        expect(adaptColorToBackground(backgroundColor)).toBe('#000000')
+        const backgroundColor2 = "#BBBBBB";
+        expect(adaptColorToBackground(backgroundColor2)).toBe('#000000')
+    })
 })
 
 describe('convertColorToHex', () => {
@@ -493,16 +513,83 @@ describe('calcStarPoints', () => {
             outerRadius: ((30 * 3.5) / 5) * 2
         }
 
-        expect(calcStarPoints({...star})).toEqual('59.99865482256344,87.1979539137069 87.58154292114362,83.06536319312983 99.81437389459367,58.00041020499139 112.26828240498303,82.9562549059315 139.88662193509617,86.84487207942455 120.00067258871826,106.40102304314662 124.83691415771287,133.86927361374026 100.09281305270324,120.9997948975043 75.46343519003383,134.0874901881369 80.05668903245189,106.57756396028766 ')
+        expect(calcStarPoints({ ...star })).toEqual('59.99865482256344,87.1979539137069 87.58154292114362,83.06536319312983 99.81437389459367,58.00041020499139 112.26828240498303,82.9562549059315 139.88662193509617,86.84487207942455 120.00067258871826,106.40102304314662 124.83691415771287,133.86927361374026 100.09281305270324,120.9997948975043 75.46343519003383,134.0874901881369 80.05668903245189,106.57756396028766 ')
     })
 })
 
 describe('createStar', () => {
     test('also creates star points with a trailing blank space ready to be passed to a polygon svg object', () => {
         const star = {
-            plot: { x: 100, y: 100},
+            plot: { x: 100, y: 100 },
             radius: 30
         }
-        expect(createStar({...star})).toEqual('59.99865482256344,87.1979539137069 87.58154292114362,83.06536319312983 99.81437389459367,58.00041020499139 112.26828240498303,82.9562549059315 139.88662193509617,86.84487207942455 120.00067258871826,106.40102304314662 124.83691415771287,133.86927361374026 100.09281305270324,120.9997948975043 75.46343519003383,134.0874901881369 80.05668903245189,106.57756396028766 ')
+        expect(createStar({ ...star })).toEqual('59.99865482256344,87.1979539137069 87.58154292114362,83.06536319312983 99.81437389459367,58.00041020499139 112.26828240498303,82.9562549059315 139.88662193509617,86.84487207942455 120.00067258871826,106.40102304314662 124.83691415771287,133.86927361374026 100.09281305270324,120.9997948975043 75.46343519003383,134.0874901881369 80.05668903245189,106.57756396028766 ')
+    })
+})
+
+describe('calcMedian', () => {
+    test('caclulates a median from an array of numbers', () => {
+        const arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        expect(calcMedian(arr)).toBe(4.5)
+        const arr2 = [0.212, 1.313, 2.333, 3.618];
+        expect(calcMedian(arr2)).toBe(1.823)
+    })
+})
+
+describe('createSmoothPath', () => {
+    test('creates a smooth curved path usable in a d attribute', () => {
+        const points = [
+            { x: 1, y: 3 },
+            { x: 2, y: 1 },
+            { x: 3, y: 3 },
+            { x: 4, y: 1 },
+            { x: 5, y: 3 },
+            { x: 6, y: 1 },
+            { x: 7, y: 3 },
+            { x: 8, y: 1 },
+            { x: 9, y: 3 },
+        ]
+
+        expect(createSmoothPath(points)).toBe('1,3  C 1.2000000000000002,2.6 1.6,1 2,1  C 2.4,1 2.6,3 3,3  C 3.4,3 3.6,1 4,1  C 4.4,1 4.6,3 5,3  C 5.4,3 5.6,1 6,1  C 6.4,1 6.6,3 7,3  C 7.4,3 7.6,1 8,1  C 8.4,1 8.8,2.6 9,3 ')
+    })
+})
+
+describe('calcPercentageTrend', () => {
+    test('returns a growth trend from an array of numbers', () => {
+        const arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        expect(calcPercentageTrend(arr)).toBe(1);
+
+        const arr2 = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+        expect(calcPercentageTrend(arr2)).toBe(-1)
+
+        const arr3 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+        expect(calcPercentageTrend(arr3)).toBe(0)
+
+        const arr4 = [1, 2, 1.5, 1.25, 1.125, 1.065];
+        expect(calcPercentageTrend(arr4)).toBe(0.033591731266149845)
+    })
+})
+
+describe('calcLinearProgression', () => {
+    test('creates a linear progression object from an array of coordinates', () => {
+        const plots = [
+            { x: 1, y: 1, value: 1 },
+            { x: 2, y: 1.1, value: 1.1 },
+            { x: 3, y: 1.3, value: 1.3 },
+            { x: 4, y: 1.6, value: 1.6 },
+            { x: 5, y: 2, value: 2 },
+            { x: 6, y: 2.5, value: 2.5 },
+            { x: 7, y: 3.1, value: 3.1 },
+            { x: 8, y: 3.8, value: 3.8 },
+            { x: 9, y: 2.6, value: 2.6 },
+        ];
+        expect(calcLinearProgression(plots)).toStrictEqual({
+            x1: 1,
+            y1: 0.8444444444444444,
+            x2: 9,
+            y2: 3.3777777777777773,
+            slope: 0.31666666666666665,
+            trend: 0.4000000000000001
+        })
     })
 })

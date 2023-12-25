@@ -1,0 +1,172 @@
+{
+    "dataset": [
+        {
+            "name": "Serie 1",
+            "values": [
+                0,
+                1,
+                1,
+                2,
+                3,
+                5,
+                8,
+                13,
+                21,
+                34,
+                55,
+                89,
+                12
+            ]
+        },
+        {
+            "name": "Serie 2",
+            "values": [
+                10,
+                5,
+                20,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                0
+            ]
+        },
+        {
+            "name": "Serie 3",
+            "values": [
+                5,
+                5,
+                5,
+                5,
+                5,
+                5,
+                5,
+                5,
+                5,
+                5,
+                5,
+                5,
+                0
+            ]
+        },
+        {
+            "name": "Serie 3",
+            "values": [
+                5,
+                5,
+                5,
+                5,
+                5,
+                5
+            ]
+        }
+    ],
+    "config": {
+        "style": {
+            "fontFamily":"inherit",
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "layout": {
+                    "height": 316,
+                    "width": 500,
+                    "padding": {
+                        "top": 24,
+                        "left": 48,
+                        "right": 48,
+                        "bottom": 24
+                    },
+                    "grid": {
+                        "show": true,
+                        "stroke":"#e1e5e8",
+                        "strokeWidth": 0.7,
+                        "showVerticalLines": true,
+                        "yAxis": {
+                            "dataLabels": {
+                                "show": true,
+                                "fontSize": 10,
+                                "color":"#2D353C",
+                                "roundingValue": 0,
+                                "offsetX": 0,
+                                "bold": false,
+                                "steps": 10
+                            }
+                        },
+                        "xAxis": {
+                            "dataLabels": {
+                                "show": true,
+                                "values": ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN"],
+                                "fontSize": 8,
+                                "showOnlyFirstAndLast": false,
+                                "color": "#2D353C"
+                            }
+                        }
+                    },
+                    "line": {
+                        "show": true,
+                        "stroke": "#CCCCCC",
+                        "strokeWidth": 4
+                    },
+                    "highlighter": {
+                        "color": "#2D353C",
+                        "opacity": 5
+                    },
+                    "dataLabels": {
+                        "show": true,
+                        "fontSize": 10,
+                        "color":"#2D353C",
+                        "bold": false,
+                        "rounding": 0,
+                        "prefix": "",
+                        "suffix": "",
+                        "offsetY": 0
+                    }
+                },
+                "title": {
+                    "text": "Title",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "Subtitle", 
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "legend": {
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "bold": false,
+                    "show": true,
+                    "fontSize": 16,
+                    "roundingPercentage": 0,
+                    "roundingValue": 0
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
+        },
+        "userOptions": {
+            "show": true
+        }
+    }
+}
