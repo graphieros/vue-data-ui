@@ -2397,7 +2397,8 @@
                     "bold": true,
                     "rounding": 1,
                     "prefix":"",
-                    "suffix":""
+                    "suffix":"",
+                    "offsetY": 0
                 },
                 "valueLabel": {
                     "fontSize": 14,

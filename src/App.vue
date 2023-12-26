@@ -3326,7 +3326,8 @@ const histoConfig = ref({
                     "bold": true,
                     "rounding": 1,
                     "prefix":"",
-                    "suffix":""
+                    "suffix":"",
+                    "offsetY": -6
                 },
                 "valueLabel": {
                     "fontSize": 14,

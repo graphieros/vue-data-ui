@@ -368,6 +368,7 @@ declare module 'vue-data-ui' {
                     rounding?: number;
                     prefix?: string;
                     suffix?: string;
+                    offsetY?: number;
                 };
                 valueLabel?: {
                     fontSize?: number;
