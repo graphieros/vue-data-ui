@@ -9,7 +9,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
+import Shape from "../atoms/Shape.vue";
 
 const props = defineProps({
     config: {
@@ -102,7 +102,7 @@ const datasetWithId = computed(() => {
             id,
             color: ds.color ? ds.color : (palette[i] || palette[i % palette.length]),
             opacity: segregated.value.includes(id) ? 0.5: 1,
-            shape: 'circle'
+            shape: ds.shape ?? 'circle'
         }
     })
 })
@@ -185,7 +185,9 @@ const drawableDataset = computed(() => {
                 const deviation = Math.sqrt(Math.pow(plot.x - x_proj, 2) + Math.pow(plot.y - y_proj, 2));
                 return {
                     ...plot,
-                    deviation
+                    deviation,
+                    shape: ds.shape,
+                    color: ds.color
                 }
             })
         }
@@ -197,13 +199,15 @@ function getData() {
 }
 
 const selectedPlotId = ref(undefined);
+const selectedPlot = ref(null);
 
 function hoverPlot(plot) {
     selectedPlotId.value = plot.id;
+    selectedPlot.value = plot;
     let html = "";
 
     if (plot.clusterName) {
-        html += `<div style="display:flex;gap:3px;align-items:center"><svg viewBox="0 0 12 12" height="${scatterConfig.value.style.tooltip.fontSize}" width="${scatterConfig.value.style.tooltip.fontSize}"><circle cx="6" cy="6" r="6" stroke="none" fill="${plot.color}"/></svg>${plot.clusterName}</div>`
+        html += `<div style="display:flex;gap:3px;align-items:center">${plot.clusterName}</div>`
     }
 
     if (plot.v.name) {
@@ -222,7 +226,8 @@ function hoverPlot(plot) {
 
 function clearHover() {
     isTooltip.value = false;
-    selectedPlotId.value = undefined
+    selectedPlotId.value = undefined;
+    selectedPlot.value = null;
 }
 
 const segregated = ref([]);
@@ -403,19 +408,36 @@ defineExpose({
 
             <!-- PLOTS -->
             <g v-for="(ds, i) in drawableDataset">
-                <circle 
-                    v-for="(plot, j) in ds.plots"
-                    :data-cy="`scatter-plot-${i}-${j}`"
-                    :cx="plot.x"
-                    :cy="plot.y"
-                    :r="selectedPlotId && selectedPlotId === plot.id ? scatterConfig.style.layout.plots.radius * 2 : scatterConfig.style.layout.plots.radius"
-                    :fill="`${ds.color}${opacity[scatterConfig.style.layout.plots.opacity * 100]}`"
-                    :stroke="scatterConfig.style.layout.plots.stroke"
-                    :stroke-width="scatterConfig.style.layout.plots.strokeWidth"
-                    @mouseover="hoverPlot(plot)"
-                    @mouseleave="clearHover"
-                    :style="`opacity:${scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
-                />
+                <g v-if="!ds.shape || ds.shape === 'circle'">
+                    <circle 
+                        v-for="(plot, j) in ds.plots"
+                        :data-cy="`scatter-plot-${i}-${j}`"
+                        :cx="plot.x"
+                        :cy="plot.y"
+                        :r="selectedPlotId && selectedPlotId === plot.id ? scatterConfig.style.layout.plots.radius * 2 : scatterConfig.style.layout.plots.radius"
+                        :fill="`${ds.color}${opacity[scatterConfig.style.layout.plots.opacity * 100]}`"
+                        :stroke="scatterConfig.style.layout.plots.stroke"
+                        :stroke-width="scatterConfig.style.layout.plots.strokeWidth"
+                        @mouseover="hoverPlot(plot)"
+                        @mouseleave="clearHover"
+                        :style="`opacity:${scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
+                    />
+                </g>
+                <g v-else>
+                    <Shape
+                        v-for="(plot, j) in ds.plots"
+                        :data-cy="`scatter-plot-${i}-${j}`"
+                        :plot="{x: plot.x, y: plot.y }"
+                        :radius="selectedPlotId && selectedPlotId === plot.id ? scatterConfig.style.layout.plots.radius * 2 : scatterConfig.style.layout.plots.radius"
+                        :shape="ds.shape"
+                        :color="`${ds.color}${opacity[scatterConfig.style.layout.plots.opacity * 100]}`"
+                        :stroke="scatterConfig.style.layout.plots.stroke"
+                        :strokeWidth="scatterConfig.style.layout.plots.strokeWidth"
+                        @mouseover="hoverPlot(plot)"
+                        @mouseleave="clearHover"
+                        :style="`opacity:${scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
+                    />
+                </g>
             </g>
 
             <!-- AXIS LABELS -->
@@ -568,7 +590,18 @@ defineExpose({
             :color="scatterConfig.style.tooltip.color"
             :parent="scatterChart"
             :content="tooltipContent"
-        />
+        >
+            <div style="width: 100%; display: flex; align-items:center;justify-content:center;">
+                <svg viewBox="0 0 20 20" height="20" width="20" style="overflow: hidden;background:transparent;">
+                    <Shape 
+                        :shape="selectedPlot.shape"
+                        :color="selectedPlot.color"
+                        :plot="{x: 10, y: 10}"
+                        :radius="7"
+                    />
+                </svg>
+            </div>
+        </Tooltip>
 
         <!-- DATA TABLE -->
         <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">

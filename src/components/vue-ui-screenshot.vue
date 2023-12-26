@@ -56,6 +56,7 @@ function createOverlay() {
     o.style.resize = 'both';
     o.style.padding = "none !important";
     o.style.margin = "none !important";
+    o.dataset.cy = "screenshot-overlay"
     return o;
 }
 
@@ -71,6 +72,7 @@ function createInfoText(o) {
     infoText.classList.add("vue-ui-screenshot-info-text");
     infoText.innerHTML = screenshotConfig.value.translations.info;
     infoText.dataset.html2canvasIgnore = "true";
+    infoText.dataset.cy = "screenshot-info-text";
     infoText.style.background = screenshotConfig.value.style.info.background;
     infoText.style.color = screenshotConfig.value.style.info.color;
     infoText.style.fontWeight = screenshotConfig.value.style.info.bold ? 'bold' : 'normal';
@@ -91,6 +93,7 @@ function createInfoText(o) {
     closeButton.classList.add("vue-ui-screenshot-close-button");
     closeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>`;
     closeButton.style.outline = "none";
+    closeButton.dataset.cy = "screenshot-close-button"
     closeButton.style.display = "flex";
     closeButton.style.cursor = "pointer"; 
     closeButton.style.borderRadius = "50%";
@@ -323,6 +326,7 @@ function createHandles(o) {
     NW.style.left = `${-offset}px`;
     NW.style.cursor = "nw-resize";
     NW.classList.add("vue-ui-screenshot-handle-nw");
+    NW.dataset.cy = "screenshot-handle-nw";
 
     const NE = document.createElement("DIV");
     NE.style.top = `${-offset}px`;
@@ -330,6 +334,7 @@ function createHandles(o) {
     NE.style.right = `${-offset}px`;
     NE.style.cursor = "ne-resize";
     NE.classList.add("vue-ui-screenshot-handle-ne");
+    NE.dataset.cy = "screenshot-handle-ne";
 
     const SW = document.createElement("DIV");
     SW.style.top = "auto";
@@ -337,6 +342,7 @@ function createHandles(o) {
     SW.style.left = `${-offset}px`;
     SW.style.cursor = "sw-resize";
     SW.classList.add("vue-ui-screenshot-handle-sw");
+    SW.dataset.cy = "screenshot-handle-sw";
 
     const SE = document.createElement("DIV");
     SE.style.top = "auto";
@@ -345,6 +351,7 @@ function createHandles(o) {
     SE.style.bottom = `${-offset}px`;
     SE.style.cursor = "se-resize";
     SE.classList.add("vue-ui-screenshot-handle-se");
+    SE.dataset.cy = "screenshot-handle-se";
 
     const saveButton = document.createElement("BUTTON");
     saveButton.innerHTML = `<svg id="saveButtonSvg" xmlns="http://www.w3.org/2000/svg"  width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8v-2a2 2 0 0 1 2 -2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 0 2 -2v-2" /><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /></svg><span>${screenshotConfig.value.translations.captureButton}</span>`;
@@ -375,6 +382,7 @@ function createHandles(o) {
     saveButton.style.opacity = "0.95";
     saveButton.style.textAlign="left";
     saveButton.style.fontWeight = screenshotConfig.value.style.captureButton.bold ? 'bold' : 'normal';
+    saveButton.dataset.cy = "screenshot-save-button";
     saveButton.addEventListener("mouseenter", () => {
         saveButton.style.opacity = "1";
     });

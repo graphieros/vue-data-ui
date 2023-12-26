@@ -577,21 +577,25 @@ const donutDataset = [
     name: "serie 1",
     color: "",
     values: [1],
+    shape: "star"
   },
   {
     name: "serie 2",
     color: "",
     values: [2],
+    shape: "diamond"
   },
   {
     name: "serie 3",
     color: "",
     values: [3],
+    shape: "triangle"
   },
   {
     name: "serie 4",
     color: "",
     values: [3, 5],
+    shape: "hexagon"
   },
 ];
 
@@ -726,6 +730,7 @@ const donutConfig = {
 };
 
 const waffleConfig = ref({
+  shape: 'triangle',
   style: {
     fontFamily: "inherit",
     chart: {
@@ -2440,10 +2445,12 @@ const scatterDataset = computed(() => {
     {
       name: "Cluster 1",
       values: scat1.value,
+      shape: "star"
     },
     {
       name: "Cluster 2",
       values: scat2.value,
+      shape: "diamond"
     },
   ];
 });
@@ -3300,6 +3307,7 @@ const histoConfig = ref({
                 }
             },
             "bars": {
+              "shape": "star",
                 "strokeWidth": 0,
                 "colors": {
                     "positive": "#3366cc",
@@ -3548,6 +3556,15 @@ const donutEvolutionDataset = ref([
   }
 ])
 
+const screenshotTest = ref(null)
+const screenshotProd = ref(null)
+
+function shootScreenTest() {
+  screenshotTest.value.shoot();
+}
+function shootScreenProd() {
+  screenshotProd.value.shoot();
+}
 
 </script>
 
@@ -3578,7 +3595,23 @@ const donutEvolutionDataset = ref([
       </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)" open>
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_screenshot)">
+        <template #title>VueUiScreenshot</template>
+        <template #dev>
+          <ScreenshotTest ref="screenshotTest"/>
+          <button class="btn--orange" @click="shootScreenTest">SCREENSHOT</button>
+        </template>
+        <template #prod>
+          <VueUiScreenshot ref="screenshotProd"/>
+          <button class="btn--green" @click="shootScreenProd">SCREENSHOT</button>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_screenshot }}
+        </template>
+        
+      </Box>
+
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
         <template #title>VueUiDonutEvolution</template>
         <template #dev>
           <DonutEvolutionTest
@@ -3589,6 +3622,9 @@ const donutEvolutionDataset = ref([
           <VueUiDonutEvolution
             :dataset="donutEvolutionDataset"
           />
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_donut_evolution }}
         </template>
       </Box>
 
@@ -4253,3 +4289,31 @@ const donutEvolutionDataset = ref([
     <img v-if="pic" :src="pic" />
   </div>
 </template>
+
+<style scoped>
+.btn--green,
+.btn--orange {
+  border: none;
+  height: 40px;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0 12px;
+  box-shadow: 0 6px 12px -6px rgba(0, 0,0,0.6);
+  color: white;
+  font-weight: bold;
+
+}
+.btn--green {
+    background: linear-gradient(to bottom right, #42d392, #42d392AA);
+}
+
+.btn--green:hover {
+    background: linear-gradient(to top left, #42d392, #42d392AA);
+}
+.btn--orange {
+    background: linear-gradient(to bottom right, #ff6400, #ff6400AA);
+}
+.btn--orange:hover {
+    background: linear-gradient(to top left, #ff6400, #ff6400AA);
+}
+</style>

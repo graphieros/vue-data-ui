@@ -2378,6 +2378,7 @@
                 }
             },
             "bars": {
+                "shape": "square",
                 "strokeWidth": 0,
                 "colors": {
                     "positive": "#3366cc",

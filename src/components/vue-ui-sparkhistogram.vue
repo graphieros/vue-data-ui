@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import { shiftHue, opacity } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
+import Shape from "../atoms/Shape.vue";
 
 const props = defineProps({
     config: {
@@ -121,19 +122,30 @@ const selectedIndex = ref(null);
                     <stop offset="100%" :stop-color="`${histoConfig.style.bars.colors.negative}${opacity[negGrad.intensity]}`"/>
                 </radialGradient>
             </defs>
+            
+            <g v-if="!histoConfig.style.bars.shape || histoConfig.style.bars.shape === 'square'">
+                <rect v-for="(rect, i) in computedDataset"
+                    :data-cy="`sparkhistogram-rect-${i}`"
+                    :x="rect.x"
+                    :y="rect.y"
+                    :height="rect.height"
+                    :width="rect.width"
+                    :fill="histoConfig.style.bars.colors.gradient.show ? rect.gradient : rect.color"
+                    :stroke="rect.stroke"
+                    :stroke-width="histoConfig.style.bars.strokeWidth"
+                    :rx="`${histoConfig.style.bars.borderRadius * rect.proportion / 12}%`"
+                />
+            </g>
+            <g v-else>
+                <Shape 
+                    v-for="(rect, i) in computedDataset"
+                    :plot="{ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }"
+                    :color="histoConfig.style.bars.colors.gradient.show ? rect.gradient : rect.color"
+                    :shape="histoConfig.style.bars.shape"
+                    :radius="rect.height * 0.4"
+                />
+            </g>
 
-
-            <rect v-for="(rect, i) in computedDataset"
-                :data-cy="`sparkhistogram-rect-${i}`"
-                :x="rect.x"
-                :y="rect.y"
-                :height="rect.height"
-                :width="rect.width"
-                :fill="histoConfig.style.bars.colors.gradient.show ? rect.gradient : rect.color"
-                :stroke="rect.stroke"
-                :stroke-width="histoConfig.style.bars.strokeWidth"
-                :rx="`${histoConfig.style.bars.borderRadius * rect.proportion / 12}%`"
-            />
 
             <text v-for="(val, i) in computedDataset"
                 :data-cy="`sparkhistogram-value-label-${i}`"

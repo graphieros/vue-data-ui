@@ -348,6 +348,7 @@ declare module 'vue-data-ui' {
                 };
             };
             bars?: {
+                shape?: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star";
                 strokeWidth?: number;
                 colors?: {
                     positive?: number;
@@ -1054,6 +1055,7 @@ declare module 'vue-data-ui' {
         name: string;
         x: number;
         y: number;
+        shape?: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star";
     }
 
     export type VueUiScatterDatasetItem = {
