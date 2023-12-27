@@ -28,6 +28,7 @@ import VueUiRings from "./components/vue-ui-rings.vue";
 import VueUiWheel from "./components/vue-ui-wheel.vue";
 import VueUiTiremarks from "./components/vue-ui-tiremarks.vue";
 import VueUiDonutEvolution from "./components/vue-ui-donut-evolution.vue";
+import VueUiIcon from "./atoms/BaseIcon.vue";
 
 export { 
     VueUiXy, 
@@ -59,5 +60,6 @@ export {
     VueUiRings,
     VueUiWheel,
     VueUiTiremarks,
-    VueUiDonutEvolution
+    VueUiDonutEvolution,
+    VueUiIcon
 };
