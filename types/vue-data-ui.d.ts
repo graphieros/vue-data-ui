@@ -5,6 +5,14 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export const VueUiIcon: DefineComponent<{
+        name: string;
+        stroke?: string;
+        strokeWidth?: number;
+        size?: number;
+        isSpin?: boolean;
+    }>;
+
     export type VueUiDonutEvolutionConfig = {
         style?: {
             fontFamily?: string;

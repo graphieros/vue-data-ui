@@ -3583,16 +3583,47 @@ function shootScreenProd() {
       <Box open :misc="true">
       <template #title>__Icons__</template>
       <template #misc>
-        <BaseIcon name="pdf" />
-        <BaseIcon name="image" />
-        <BaseIcon name="excel" />
-        <BaseIcon name="tableOpen" />
-        <BaseIcon name="tableClose" />
-        <BaseIcon name="spin" />
-        <BaseIcon name="close" />
-        <BaseIcon name="labelOpen" />
-        <BaseIcon name="labelClose" />
-        <BaseIcon name="sort" />
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%">        
+          <BaseIcon name="pdf" />
+          <BaseIcon name="image" />
+          <BaseIcon name="excel" />
+          <BaseIcon name="tableOpen" />
+          <BaseIcon name="tableClose" />
+          <BaseIcon name="spin" />
+          <BaseIcon name="close" />
+          <BaseIcon name="labelOpen" />
+          <BaseIcon name="labelClose" />
+          <BaseIcon name="sort" />
+          <BaseIcon name="chartBar" stroke="#42d392" />
+          <BaseIcon name="chartLine" stroke="#42d392" />
+          <BaseIcon name="chartRings" stroke="#42d392" />
+          <BaseIcon name="chartDonut" stroke="#42d392" />
+          <BaseIcon name="chartGauge" stroke="#42d392" />
+          <BaseIcon name="chartTiremarks" stroke="#42d392" />
+          <BaseIcon name="chartDonutEvolution" stroke="#42d392" />
+          <BaseIcon name="screenshot" stroke="#42d392" />
+          <BaseIcon name="chartWheel" stroke="#42d392" />
+          <BaseIcon name="skeleton" stroke="#42d392" />
+          <BaseIcon name="chartSparkHistogram" stroke="#42d392" />
+          <BaseIcon name="chartRelationCircle" stroke="#42d392" />
+          <BaseIcon name="chartCandlestick" stroke="#42d392" />
+          <BaseIcon name="chartScatter" stroke="#42d392" />
+          <BaseIcon name="chartVerticalBar" stroke="#42d392" />
+          <BaseIcon name="chartOnion" stroke="#42d392" />
+          <BaseIcon name="chartQuadrant" stroke="#42d392" />
+          <BaseIcon name="chartThermometer" stroke="#42d392" />
+          <BaseIcon name="chartRadar" stroke="#42d392" />
+          <BaseIcon name="chartSparkStackbar" stroke="#42d392" />
+          <BaseIcon name="smiley" stroke="#42d392" />
+          <BaseIcon name="star" stroke="#42d392" />
+          <BaseIcon name="chartChestnut" stroke="#42d392" />
+          <BaseIcon name="chartAgePyramid" stroke="#42d392" />
+          <BaseIcon name="chartWaffle" stroke="#42d392" />
+          <BaseIcon name="annotator" stroke="#42d392" />
+          <BaseIcon name="dashboard" stroke="#42d392" />
+          <BaseIcon name="chartHeatmap" stroke="#42d392" />
+          <BaseIcon name="chartTable" stroke="#42d392" />
+        </div>
       </template>
       </Box>
 
