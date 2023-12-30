@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { palette, shiftHue, opacity, convertColorToHex, makeXls } from "../lib";
+import { palette, shiftHue, opacity, convertColorToHex, makeXls, createUid } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -10,7 +10,6 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -27,7 +26,7 @@ const props = defineProps({
     },
 });
 
-const uid = ref(`vue-ui-waffle-${Math.random()}`);
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_waffle);
 
 const isImaging = ref(false);

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-import { shiftHue, opacity } from "../lib";
+import { shiftHue, opacity, createUid } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import Shape from "../atoms/Shape.vue";
@@ -20,7 +20,7 @@ const props = defineProps({
     }
 });
 
-const uid = ref(`vue-ui-sparkhistogram-${Math.random()}`);
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkhistogram);
 
 const histoConfig = computed(() => {

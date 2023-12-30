@@ -1,12 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, makeXls } from "../lib";
+import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, makeXls, createUid } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -23,7 +22,7 @@ const props = defineProps({
     }
 });
 
-const uid = ref(`vue-ui-chestnut-${Math.random()}`);
+const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_chestnut);
 

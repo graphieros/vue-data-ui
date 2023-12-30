@@ -1,13 +1,12 @@
 <script setup>
 import { ref, computed } from "vue";
-import { palette, convertColorToHex, opacity } from "../lib.js";
+import { palette, convertColorToHex, opacity, createUid } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     dataset: {
@@ -24,7 +23,7 @@ const props = defineProps({
     }
 });
 
-const uid = ref(`vue-ui-thermometer-${Math.random()}`);
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_thermometer);
 const isImaging = ref(false);
 const isPrinting = ref(false);

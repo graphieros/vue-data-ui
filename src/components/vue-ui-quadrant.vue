@@ -10,7 +10,6 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Shape from "../atoms/Shape.vue";
 import Legend from "../atoms/Legend.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -27,7 +26,7 @@ const props = defineProps({
     }
 });
 
-const uid = ref(`vue-ui-quadrant-${Math.random()}`);
+const uid = ref(createUid());
 
 const emit = defineEmits(['selectPlot', 'selectSide', 'selectLegend']);
 

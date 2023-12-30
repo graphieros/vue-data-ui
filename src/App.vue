@@ -3730,7 +3730,7 @@ const moodRadarConfig = ref({
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_mood_radar)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_mood_radar)">
         <template #title>
           <BaseIcon name="chartMoodRadar"/>
           VueUiMoodRadar

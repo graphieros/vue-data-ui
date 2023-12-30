@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { treeShake, convertConfigColors, createStar, shiftHue } from "../lib.js";
+import { createStar, shiftHue, createUid } from "../lib.js";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -19,7 +19,7 @@ const props = defineProps({
     }
 });
 
-const uid = ref(`vue-ui-rating-${Math.random()}`);
+const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_rating);
 const isTooltip = ref(false);

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-import { treeShake, shiftHue, opacity, convertConfigColors, palette, convertColorToHex } from "../lib";
+import { shiftHue, opacity, palette, convertColorToHex, createUid } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -19,7 +19,7 @@ const props = defineProps({
     }
 })
 
-const uid = ref(`vue-ui-sparkstackbar-${Math.random()}`);
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkstackbar);
 
 const stackConfig = computed(() => {

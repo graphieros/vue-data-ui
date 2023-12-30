@@ -1,10 +1,10 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import pdf from "../pdf";
 import img from "../img";
 import { useNestedProp } from "../useNestedProp";
 import mainConfig from "../default_configs.json";
-import { shiftHue } from "../lib";
+import { shiftHue, createUid } from "../lib";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 
@@ -23,13 +23,12 @@ const props = defineProps({
     },
 });
 
-const uid = ref(`vue-ui-tiremarks-${Math.random()}`);
+const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_tiremarks);
 
 const isPrinting = ref(false);
 const isImaging = ref(false);
-const tiremarksChart = ref(null);
 
 const tiremarksConfig = computed(() => {
     return useNestedProp({

@@ -1,10 +1,9 @@
 <script setup>
 import { ref, computed } from "vue";
 import {
-    treeShake,
+    createUid,
     shiftHue,
     opacity,
-    convertConfigColors,
     createSmoothPath,
 } from "../lib";
 import mainConfig from "../default_configs.json";
@@ -25,7 +24,7 @@ const props = defineProps({
     }
 });
 
-const uid = ref(`vue-ui-sparkline-${Math.random()}`);
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkline);
 
 const sparklineConfig = computed(() => {

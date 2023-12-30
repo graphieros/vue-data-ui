@@ -2723,7 +2723,6 @@
         }
     },
     "vue_ui_mood_radar": {
-        "useCssAnimation": true,
         "style": {
             "fontFamily":"inherit",
             "chart": {
@@ -2733,8 +2732,7 @@
                     "grid": {
                         "show": true,
                         "stroke": "#e1e5e8",
-                        "strokeWidth": 0.5,
-                        "graduations": 5
+                        "strokeWidth": 0.5
                     },
                     "outerPolygon": {
                         "stroke":"#e1e5e8",

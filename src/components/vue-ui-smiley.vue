@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-import { treeShake, convertConfigColors, shiftHue } from "../lib";
+import { shiftHue } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -19,7 +19,6 @@ const props = defineProps({
   },
 });
 
-const uid = ref(`vue-ui-smiley-${Math.random()}`);
 const defaultConfig = ref(mainConfig.vue_ui_smiley);
 const isTooltip = ref(false);
 const hoveredValue = ref(undefined);

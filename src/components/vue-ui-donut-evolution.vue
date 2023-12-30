@@ -25,7 +25,7 @@ const props = defineProps({
     },
 });
 
-const uid = ref(`vue-ui-donut-evolution-${Math.random()}`);
+const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_donut_evolution);
 

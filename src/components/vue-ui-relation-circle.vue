@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { palette } from "../lib.js";
+import { palette, createUid } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -23,7 +23,7 @@ const props = defineProps({
     }
 });
 
-const uid = ref(`vue-ui-relation-circle-${Math.random()}`);
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_relation_circle);
 const isImaging = ref(false);
 const isPrinting = ref(false);

@@ -14,7 +14,6 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiMoodRadarConfig = {
-        useCssAnimation?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -25,7 +24,6 @@ declare module 'vue-data-ui' {
                         show?: boolean;
                         stroke?: string;
                         strokeWidth?: number;
-                        graduations?: number;
                     };
                     outerPolygon?: {
                         stroke?: string;

@@ -5,7 +5,8 @@ import {
     palette,
     opacity,
     shiftHue,
-    makeXls
+    makeXls,
+    createUid
 } from "../lib.js";
 import pdf from "../pdf.js";
 import img from "../img.js";
@@ -15,7 +16,6 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -32,7 +32,7 @@ const props = defineProps({
     }
 });
 
-const uid = ref(`vue-ui-vertical-bar-${Math.random()}`);
+const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_vertical_bar);
 

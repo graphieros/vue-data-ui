@@ -1,12 +1,11 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { palette, rotateMatrix, addVector, matrixTimes, opacity, convertColorToHex } from "../lib.js";
+import { palette, rotateMatrix, addVector, matrixTimes, opacity, convertColorToHex, createUid } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config:{
@@ -22,7 +21,7 @@ const props = defineProps({
         }
     }
 });
-const uid = ref(`vue-ui-gauge-${Math.random()}`);
+const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_gauge);
 

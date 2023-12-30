@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
-import { palette, opacity, makeXls } from '../lib';
+import { palette, opacity, makeXls, createUid } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -26,7 +26,7 @@ const props = defineProps({
     },
 });
 
-const uid = ref(`vue-ui-scatter-${Math.random()}`);
+const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_scatter);
 

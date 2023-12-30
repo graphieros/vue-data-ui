@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { createPolygonPath, shiftHue, opacity, makeXls } from "../lib";
+import { createPolygonPath, shiftHue, opacity, makeXls, makePath, createUid } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -26,7 +26,7 @@ const props = defineProps({
     },
 });
 
-const uid = ref(`vue-ui-mood-radar-${Math.random()}`);
+const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_mood_radar);
 
@@ -113,14 +113,6 @@ const radar = computed(() => {
         };
     });
 });
-
-function makePath(plots) {
-    let path = "";
-    plots.forEach((plot) => {
-        path += `${plot.x},${plot.y} `;
-    });
-    return `M${path}Z`;
-}
 
 const legendConfig = computed(() => {
     return {

@@ -687,7 +687,8 @@ import {
     calcLinearProgression,
     createSmoothPath,
     createStar,
-    createPolygonPath
+    createPolygonPath,
+    createUid
 } from '../lib';
 import mainConfig from "../default_configs.json";
 import DataTable from "../atoms/DataTable.vue";
@@ -695,7 +696,8 @@ import Title from '../atoms/Title.vue';
 import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Shape from "../atoms/Shape.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
+
+const uid = createUid();
 
 export default {
     name: "vue-ui-xy",
@@ -714,7 +716,6 @@ export default {
         }
     },
     components: {
-        BaseCheckbox,
         DataTable,
         Shape,
         Title,
@@ -722,7 +723,7 @@ export default {
         UserOptions,
     },
     data(){
-        const uniqueId = `vue-data-ui-xy_${Math.random()}_${Math.random()}`;
+        const uniqueId = uid;
         const maxX = Math.max(...this.dataset.map(datapoint => datapoint.series.length));
         const slicer = {
             start: 0,

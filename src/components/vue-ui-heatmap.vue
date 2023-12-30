@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { opacity, makeXls } from "../lib";
+import { opacity, makeXls, createUid } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
@@ -8,7 +8,6 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
     config: {
@@ -25,7 +24,7 @@ const props = defineProps({
     }
 });
 
-const uid = ref(`vue-ui-heatmap-${Math.random()}`);
+const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_heatmap);
 

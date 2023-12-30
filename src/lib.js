@@ -689,6 +689,14 @@ export function sumByAttribute(arr, attr) {
     return [...arr].map(a => a[attr]).reduce((a, b) => a + b, 0)
 }
 
+export function makePath(plots, closed = true) {
+    let path = "";
+    plots.forEach(plot => {
+        path += `${plot.x},${plot.y } `
+    })
+    return `M${path}${closed ? 'Z' : ''}`;
+}
+
 const lib = {
     adaptColorToBackground,
     addVector,
@@ -714,6 +722,7 @@ const lib = {
     isSafeValue,
     isValidUserValue,
     makeDonut,
+    makePath,
     makeXls,
     matrixTimes,
     opacity,

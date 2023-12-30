@@ -17,7 +17,6 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
-import BaseCheckbox from "../atoms/BaseCheckbox.vue";
 
 const props = defineProps({
   config: {
