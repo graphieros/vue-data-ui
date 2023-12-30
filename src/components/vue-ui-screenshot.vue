@@ -259,13 +259,8 @@ const emit = defineEmits(['postImage']);
 
 function animateSaveButton() {
     const button = document.getElementById(`vue-ui-screenshot-button-${uid.value}`);
-    button.innerHTML = `<svg id="saveButtonSvg" xmlns="http://www.w3.org/2000/svg"  width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-    <path d="M4 8v-2a2 2 0 0 1 2 -2h2" />
-    <path d="M4 16v2a2 2 0 0 0 2 2h2" />
-    <path d="M16 4h2a2 2 0 0 1 2 2v2" />
-    <path d="M16 20h2a2 2 0 0 0 2 -2v-2" />
-    <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+    button.innerHTML = `<svg id="saveButtonSvg" xmlns="http://www.w3.org/2000/svg"  width="24" height="24" viewBox="0 0 20 20" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path fill="none" stroke="currentColor" d="M1 4 1 3C1 2 2 1 3 1L4 1M16 1 17 1C18 1 19 2 19 3L19 4M1 16 1 17C1 18 2 19 3 19L4 19M16 19 17 19C18 19 19 18 19 17L19 16M8 10A1 1 0 0012 10 1 1 0 008 10M5 13 5 8C5 7 5 7 6 7L14 7C15 7 15 7 15 8L15 13C15 14 15 14 14 14L6 14C5 14 5 14 5 13M7 6 13 6" />
     </svg>`;
 
     document.getElementById(`vue-ui-screenshot-button-${uid.value}`).animate([
@@ -354,7 +349,7 @@ function createHandles(o) {
     SE.dataset.cy = "screenshot-handle-se";
 
     const saveButton = document.createElement("BUTTON");
-    saveButton.innerHTML = `<svg id="saveButtonSvg" xmlns="http://www.w3.org/2000/svg"  width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8v-2a2 2 0 0 1 2 -2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 0 2 -2v-2" /><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /></svg><span>${screenshotConfig.value.translations.captureButton}</span>`;
+    saveButton.innerHTML = `<svg id="saveButtonSvg" xmlns="http://www.w3.org/2000/svg"  width="24" height="24" viewBox="0 0 20 20" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M1 4 1 3C1 2 2 1 3 1L4 1M16 1 17 1C18 1 19 2 19 3L19 4M1 16 1 17C1 18 2 19 3 19L4 19M16 19 17 19C18 19 19 18 19 17L19 16M8 10A1 1 0 0012 10 1 1 0 008 10M5 13 5 8C5 7 5 7 6 7L14 7C15 7 15 7 15 8L15 13C15 14 15 14 14 14L6 14C5 14 5 14 5 13M7 6 13 6" /></svg><span>${screenshotConfig.value.translations.captureButton}</span>`;
 
     saveButton.classList.add("vue-ui-screenshot-capture-button");
     saveButton.id = `vue-ui-screenshot-button-${uid.value}`;

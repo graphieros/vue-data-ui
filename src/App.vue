@@ -42,6 +42,7 @@ import HistoTest from "./components/vue-ui-sparkhistogram.vue";
 import RingsTest from "./components/vue-ui-rings.vue";
 import WheelTest from "./components/vue-ui-wheel.vue";
 import TireTest from "./components/vue-ui-tiremarks.vue";
+import MoodRadarTest from "./components/vue-ui-mood-radar.vue";
 import DonutEvolutionTest from "./components/vue-ui-donut-evolution.vue";
 
 const dataset = ref([
@@ -3567,21 +3568,118 @@ function shootScreenProd() {
   screenshotProd.value.shoot();
 }
 
+const moodRadarDataset = ref({
+  "1": 98,
+  "2": 150,
+  "3": 300,
+  "4": 350,
+  "5": 400
+})
+
+const moodRadarConfig = ref({
+        "useCssAnimation": true,
+        "style": {
+            "fontFamily":"inherit",
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "layout": {
+                    "grid": {
+                        "show": true,
+                        "stroke": "#e1e5e8",
+                        "strokeWidth": 0.5,
+                        "graduations": 5
+                    },
+                    "outerPolygon": {
+                        "stroke":"#e1e5e8",
+                        "strokeWidth":1
+                    },
+                    "dataPolygon": {
+                        "color": "#5f8bee",
+                        "opacity": 60,
+                        "gradient": {
+                            "show": true,
+                            "intensity": 5
+                        },
+                        "stroke":"#5f8bee",
+                        "strokeWidth": 0
+                    },
+                    "smileys": {
+                        "strokeWidth": 1,
+                        "colors": {
+                            "1": "#e20001",
+                            "2": "#ff9f03",
+                            "3": "#ffd004",
+                            "4": "#9ac900",
+                            "5": "#059f00"
+                        }
+                    }
+                },
+                "title": {
+                    "text": "TItle",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "Subtitle", 
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "legend": {
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "bold": false,
+                    "show": true,
+                    "fontSize": 16,
+                    "roundingPercentage": 0,
+                    "roundingValue": 0
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
+        },
+        "userOptions": {
+            "show": true
+        }
+    })
+
 </script>
 
 <template>
 
   <div style="padding-left: 48px; padding-right: 48px; width: 100%; max-width: 80%;margin: 0 auto">
-      <div style="padding-top: 48px; padding-bottom: 48px;font-weight: bold; line-height: 20px">
-        <h1 style="font-size: 36px; color: #42d392">
-          Vue Data UI
-        </h1>
-        <h2 style="color: #A6A6A6">Components</h2>
-        <h4 style="color: #5f8bee">Manual testing arena</h4>
+      <div style="padding-top: 48px; padding-bottom: 48px;font-weight: bold; line-height: 20px; display: flex; flex-direction:row; gap:24px; align-items:center">
+          <img src="../../vue-data-ui-logo.png" height="128px"/>
+          <!-- <BaseIcon name="chartRelationCircle" :size="118" :strokeWidth="0.8" stroke="#5A5A5A"/> -->
+        <div>
+          <h1 style="font-size: 36px; color: #42d392">
+            Vue Data UI
+          </h1>
+          <h2 style="color: #5A5A5A">Components</h2>
+          <h4 style="color: #5f8bee">Manual testing arena</h4>
+        </div>
       </div>
 
-      <Box open :misc="true">
-      <template #title>__Icons__</template>
+      <Box :misc="true">
+      <template #title>
+        <BaseIcon name="smiley" />
+        VueUiIcon
+      </template>
       <template #misc>
         <div style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%">        
           <BaseIcon name="pdf" />
@@ -3614,7 +3712,11 @@ function shootScreenProd() {
           <BaseIcon name="chartThermometer" stroke="#42d392" />
           <BaseIcon name="chartRadar" stroke="#42d392" />
           <BaseIcon name="chartSparkStackbar" stroke="#42d392" />
+          <BaseIcon name="moodSad" stroke="#42d392" />
+          <BaseIcon name="moodFlat" stroke="#42d392" />
+          <BaseIcon name="moodNeutral" stroke="#42d392" />
           <BaseIcon name="smiley" stroke="#42d392" />
+          <BaseIcon name="moodHappy" stroke="#42d392" />
           <BaseIcon name="star" stroke="#42d392" />
           <BaseIcon name="chartChestnut" stroke="#42d392" />
           <BaseIcon name="chartAgePyramid" stroke="#42d392" />
@@ -3623,12 +3725,30 @@ function shootScreenProd() {
           <BaseIcon name="dashboard" stroke="#42d392" />
           <BaseIcon name="chartHeatmap" stroke="#42d392" />
           <BaseIcon name="chartTable" stroke="#42d392" />
+          <BaseIcon name="chartMoodRadar" stroke="#42d392" />
         </div>
       </template>
       </Box>
 
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_mood_radar)">
+        <template #title>
+          <BaseIcon name="chartMoodRadar"/>
+          VueUiMoodRadar
+        </template>
+        <template #dev>
+          <MoodRadarTest :dataset="moodRadarDataset" :config="moodRadarConfig" />
+        </template>
+        <template #prod>
+          <VueUiMoodRadar :dataset="moodRadarDataset" :config="moodRadarConfig" />
+        </template>
+
+      </Box>
+
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_screenshot)">
-        <template #title>VueUiScreenshot</template>
+        <template #title>
+          <BaseIcon name="screenshot"/>
+        VueUiScreenshot
+        </template>
         <template #dev>
           <ScreenshotTest ref="screenshotTest"/>
           <button class="btn--orange" @click="shootScreenTest">SCREENSHOT</button>
@@ -3644,7 +3764,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
-        <template #title>VueUiDonutEvolution</template>
+        <template #title>
+          <BaseIcon name="chartDonutEvolution"/>
+          VueUiDonutEvolution
+        </template>
         <template #dev>
           <DonutEvolutionTest
             :dataset="donutEvolutionDataset"
@@ -3661,7 +3784,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_tiremarks)">
-        <template #title>VueUiTiremarks</template>
+        <template #title>
+          <BaseIcon name="chartTiremarks"/>
+          VueUiTiremarks
+        </template>
         <template #dev>
           <TireTest
             :dataset="tiremarksDataset"
@@ -3678,12 +3804,15 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)">
+        <template #title>
+          <BaseIcon name="skeleton"/>
+          VueUiSkeleton
+        </template>
         <template #general>
           <select v-model="skeletonChoice">
             <option v-for="(opt) in skeletonOptions">{{ opt }}</option>
           </select>
         </template>
-        <template #title>VueUiSkeleton</template>
         <template #dev>
           <SkeletonTest
             :config="{ type: skeletonChoice, style: { rating: { useSmiley: true, filled: true } } }"
@@ -3700,7 +3829,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_wheel)">
-        <template #title>VueUiWheel</template>
+        <template #title>
+          <BaseIcon name="chartWheel"/>  
+          VueUiWheel
+        </template>
         <template #dev>
           <WheelTest
             ref="rings"
@@ -3721,7 +3853,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_rings)">
-        <template #title>VueUiRings</template>
+        <template #title>
+          <BaseIcon name="chartRings" />
+          VueUiRings
+        </template>
         <template #dev>
           <RingsTest
             ref="rings"
@@ -3742,7 +3877,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_relation_circle)">
-        <template #title>VueUiRelationCircle</template>
+        <template #title>
+          <BaseIcon name="chartRelationCircle"/>
+          VueUiRelationCircle
+        </template>
         <template #dev>
           <RelationTest
             ref="relation"
@@ -3763,7 +3901,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
-        <template #title>VueUiSparkline</template>
+        <template #title>
+          <BaseIcon name="chartLine" />
+          VueUiSparkline
+        </template>
         <template #dev>
           <SparklineTest
             :config="sparklineConfig"
@@ -3782,7 +3923,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
-        <template #title>VueUiXy</template>
+        <template #title>
+          <BaseIcon name="chartLine" />
+          VueUiXy
+        </template>
         <template #dev>
           <XyTest
             ref="xytest"
@@ -3807,7 +3951,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkhistogram)">
-        <template #title>VueUiSparkHistogram</template>
+        <template #title>
+          <BaseIcon name="chartSparkHistogram" />
+          VueUiSparkHistogram
+        </template>
         <template #dev>
           <HistoTest 
             :dataset="histoDataset" 
@@ -3826,7 +3973,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_candlestick)">
-        <template #title>VueUiCandleStick</template>
+        <template #title>
+          <BaseIcon name="chartCandlestick" />
+          VueUiCandleStick
+        </template>
         <template #dev>
           <CandlestickTest 
             ref="candlestick"
@@ -3847,7 +3997,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
-        <template #title>VueUiScatter</template>
+        <template #title>
+          <BaseIcon name="chartScatter" />
+          VueUiScatter
+        </template>
         <template #dev>
           <ScatterTest 
             ref="scatter" 
@@ -3868,7 +4021,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_vertical_bar)">
-        <template #title>VueUiVerticalBar</template>
+        <template #title>
+          <BaseIcon name="chartVerticalBar" />
+          VueUiVerticalBar
+        </template>
         <template #dev>
           <VerticalTest 
             ref="verticaltest"
@@ -3890,7 +4046,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
-        <template #title>VueUiOnion</template>
+        <template #title>
+          <BaseIcon name="chartOnion" />
+          VueUiOnion
+        </template>
         <template #dev>
           <OnionTest
             :config="{ useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}} }"
@@ -3912,7 +4071,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
-        <template #title>VueUiQuadrant</template>
+        <template #title>
+          <BaseIcon name="chartQuadrant" />
+          VueUiQuadrant
+        </template>
         <template #dev>
           <QuadrantTest
             ref="quadranttest"
@@ -3939,7 +4101,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_radar)">
-        <template #title>VueUiRadar</template>
+        <template #title>
+          <BaseIcon name="chartRadar" />
+          VueUiRadar
+        </template>
         <template #dev>
           <RadarTest
             ref="radartest"
@@ -3962,7 +4127,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
-        <template #title>VueUiDonut</template>
+        <template #title>
+          <BaseIcon name="chartDonut" />
+          VueUiDonut
+        </template>
         <template #dev>
           <DonutTest
             ref="donuttest"
@@ -4007,7 +4175,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
-        <template #title>VueUiSparkStackbar</template>
+        <template #title>
+          <BaseIcon name="chartSparkStackbar" />
+          VueUiSparkStackbar
+        </template>
         <template #dev>
           <StackTest 
             :dataset="stackDataset"
@@ -4024,7 +4195,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_thermometer)">
-        <template #title>VueUiThermometer</template>
+        <template #title>
+          <BaseIcon name="chartThermometer"/>
+          VueUiThermometer
+        </template>
         <template #dev>
           <ThermoTest 
             ref="thermo" 
@@ -4045,17 +4219,28 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_smiley)">
-        <template #title>VueUiSmiley</template>
+        <template #title>
+          <BaseIcon name="smiley"/>
+          VueUiSmiley
+        </template>
         <template #dev>
           <SmileyTest 
             :dataset="ratingDataset" 
             :config="smileyConfig" 
+          />
+          <SmileyTest
+            :dataset="ratingDataset" 
+            :config="{...smileyConfig, readonly: true}" 
           />
         </template>
         <template #prod>
           <VueUiSmiley
             :dataset="ratingDataset"
             :config="smileyConfig"
+          />
+          <VueUiSmiley
+            :dataset="ratingDataset"
+            :config="{...smileyConfig, readonly: true}" 
           />
         </template>
         <template #config>
@@ -4064,7 +4249,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_rating)">
-        <template #title>VueUiRating</template>
+        <template #title>
+          <BaseIcon name="star" />
+          VueUiRating
+        </template>
         <template #dev>
           <RatingTest
             ref="ratingtest"
@@ -4085,7 +4273,10 @@ function shootScreenProd() {
       </Box>
       
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_chestnut)">
-        <template #title>VueUiChestnut</template>
+        <template #title>
+          <BaseIcon name="chartChestnut" />
+          VueUiChestnut
+        </template>
         <template #dev>
           <ChestnutTest
             ref="chestnuttest"
@@ -4110,7 +4301,10 @@ function shootScreenProd() {
       </Box>
       
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_age_pyramid)">
-        <template #title>VueUiPyramid</template>
+        <template #title>
+          <BaseIcon name="chartAgePyramid" />
+          VueUiAgePyramid
+        </template>
         <template #dev>
           <PyramidTest 
             ref="pyramid" 
@@ -4131,7 +4325,10 @@ function shootScreenProd() {
       </Box>
       
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_waffle)">
-        <template #title>VueUiWaffle</template>
+        <template #title>
+          <BaseIcon name="chartWaffle"/>
+          VueUiWaffle
+        </template>
         <template #dev>
           <WaffleTest
             ref="waffletest"
@@ -4154,7 +4351,10 @@ function shootScreenProd() {
       </Box>
       
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_annotator)">
-        <template #title>VueUiAnnotator</template>
+        <template #title>
+          <BaseIcon name="annotator"/>
+          VueUiAnnotator
+        </template>
         <template #dev>
           <AnnotatorTest
             @saveAnnotations="saveAnnotations"
@@ -4208,7 +4408,10 @@ function shootScreenProd() {
 
             
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_dashboard)">
-        <template #title>VueUiDashboard</template>
+        <template #title>
+          <BaseIcon name="dashboard" />
+          VueUiDashboard
+        </template>
         <template #dev>
           <DashboardTest
             ref="dash"
@@ -4243,7 +4446,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkbar)">
-        <template #title>VueUiSparkbar</template>
+        <template #title>
+          <BaseIcon name="chartVerticalBar"/>
+          VueUiSparkbar
+        </template>
         <template #dev>
           <SparkbarTest
             :config="sparkbarConfig"
@@ -4262,7 +4468,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
-        <template #title>VueUiHeatmap</template>
+        <template #title>
+          <BaseIcon name="chartHeatmap"/>
+          VueUiHeatmap
+        </template>
         <template #dev>
           <HeatmapTest
             ref="heatmaptest"
@@ -4283,7 +4492,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_gauge)">
-        <template #title>VueUiGauge</template>
+        <template #title>
+          <BaseIcon name="chartGauge"/>
+          VueUiGauge
+        </template>
         <template #dev>
           <GaugeTest 
             ref="gaugetest" 
@@ -4302,7 +4514,10 @@ function shootScreenProd() {
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_table)">
-        <template #title>VueUiTable</template>
+        <template #title>
+          <BaseIcon name="chartTable"/>
+          VueUiTable
+        </template>
         <template #dev>
           <TableTest 
             :dataset="tableTestDataset" 
@@ -4348,4 +4563,5 @@ function shootScreenProd() {
 .btn--orange:hover {
     background: linear-gradient(to top left, #ff6400, #ff6400AA);
 }
+
 </style>

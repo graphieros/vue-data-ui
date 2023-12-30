@@ -5,6 +5,107 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiMoodRadarDataset = {
+        "1": number;
+        "2": number;
+        "3": number;
+        "4": number;
+        "5": number;
+    }
+
+    export type VueUiMoodRadarConfig = {
+        useCssAnimation?: boolean;
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                layout?: {
+                    grid?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        graduations?: number;
+                    };
+                    outerPolygon?: {
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                    dataPolygon?: {
+                        color?: string;
+                        opacity?: 60,
+                        gradient?: {
+                            show?: boolean;
+                            intensity?: number;
+                        };
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                    smileys?: {
+                        strokeWidth?: number;
+                        colors?: {
+                            "1": string;
+                            "2": string;
+                            "3": string;
+                            "4": string;
+                            "5": string;
+                        };
+                    };
+                    dataLabel?: {
+                        color?: string;
+                        roundingPercentage?: number;
+                        roundingValue?: number;
+                        bold?: boolean;
+                    };
+                };
+                title?: {
+                    text?: string;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                    subtitle?: {
+                        color?: string;
+                        text?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                    };
+                };
+                legend?: {
+                    color?: string;
+                    backgroundColor?: string;
+                    bold?: boolean;
+                    show?: boolean;
+                    fontSize?: number;
+                    roundingPercentage?: number;
+                    roundingValue?: number;
+                };
+            };
+        };
+        table?: {
+            show?: boolean;
+            th?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+            };
+            td?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+                roundingValue?: number;
+                roundingPercentage?: number;
+            };
+        };
+        userOptions?: {
+            show?: boolean;
+        };
+    };
+
+    export const VueUiMoodRadar: DefineComponent<{
+        dataset: VueUiMoodRadarDataset,
+        config?: VueUiMoodRadarConfig
+    }>;
+
     export const VueUiIcon: DefineComponent<{
         name: string;
         stroke?: string;

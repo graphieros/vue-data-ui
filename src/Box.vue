@@ -30,10 +30,10 @@ function copy() {
 <template>
     <div style="width: 100%;margin-top:12px; background: #2A2A2A;">
         <details :open="open">
-            <summary style="user-select:none;cursor:pointer;height:30px;background:linear-gradient(to right, #2A2A2A, #1A1A1A);line-height:24px;font-size:24px;padding:12px;">
-                <span style="color:#42d392">
+            <summary style="user-select:none;cursor:pointer;height:30px;background:linear-gradient(to right, #2A2A2A, #1A1A1A);line-height:24px;font-size:24px;padding:12px; display: flex; align-items:center; gap: 6px">
+                <div style="color:#42d392">
                     <slot name="title"></slot>
-                </span>
+                </div>
             </summary>
             <div style="display: flex; flex-direction: row; gap: 24px; align-items:center;justify-content:center; padding: 24px">
                 <slot name="misc"/>
@@ -116,5 +116,16 @@ summary::marker {
     100% {
         transform: scale(1, 1);
     }
+}
+
+@keyframes details-show {
+  from {
+    opacity:0;
+    transform: var(--details-translate, translateY(-0.5em));
+  }
+}
+
+details[open] > *:not(summary) {
+  animation: details-show 250ms ease-in-out;
 }
 </style>

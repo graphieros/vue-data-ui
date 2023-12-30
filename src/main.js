@@ -32,7 +32,8 @@ import {
     VueUiWheel,
     VueUiTiremarks,
     VueUiDonutEvolution,
-    VueUiIcon
+    VueUiIcon,
+    VueUiMoodRadar
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -68,4 +69,5 @@ app.component("VueUiWheel", VueUiWheel);
 app.component("VueUiTiremarks", VueUiTiremarks);
 app.component("VueUiDonutEvolution", VueUiDonutEvolution);
 app.component("VueUiIcon", VueUiIcon);
+app.component("VueUiMoodRadar", VueUiMoodRadar);
 app.mount('#app');
