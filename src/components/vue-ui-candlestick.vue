@@ -523,6 +523,7 @@ defineExpose({
                 />
             </g>
             </g>
+            <slot name="svg" :svg="svg"/>
         </svg>
 
         <!-- SLICER -->

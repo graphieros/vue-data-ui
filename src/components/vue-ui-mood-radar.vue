@@ -390,9 +390,8 @@ defineExpose({
                     >
                         ({{ Number((plot.value / grandTotal * 100).toFixed(radarConfig.style.chart.layout.dataLabel.roundingPercentage)).toLocaleString() }}%)
                     </text>
-
                 </g>
-
+                <slot name="svg" :svg="svg"/>
         </svg>
 
         <!-- LEGEND AS DIV -->

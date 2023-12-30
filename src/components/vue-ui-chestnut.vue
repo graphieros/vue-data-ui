@@ -936,6 +936,7 @@ defineExpose({
                     {{ (branch.value / treeTotal * 100).toFixed(chestnutConfig.style.chart.layout.branches.labels.dataLabels.roundingPercentage) }}% {{ chestnutConfig.translations.proportionToTree }}
                 </text>
         </g>
+        <slot name="svg" :svg="svg"/>
         </svg>
         <!-- DATA TABLE -->
         <div  class="vue-ui-chestnut-table" :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable">

@@ -112,6 +112,10 @@ const drawingArea = computed(() => {
     }
 });
 
+const svg = computed(() => {
+    return drawingArea.value;
+})
+
 const temperature = computed(() => {
     const from = props.dataset.from < 0 ? Math.abs(props.dataset.from) : props.dataset.from;
     const to = props.dataset.to < 0 ? Math.abs(props.dataset.to) : props.dataset.to;
@@ -436,7 +440,7 @@ defineExpose({
             >
                 {{ isNaN(dataset.value) ? '' : Number(dataset.value.toFixed(thermoConfig.style.chart.label.rounding)).toLocaleString() }}
             </text>
-            
+            <slot name="svg" :svg="svg"/>
         </svg>
     </div>
 </template>

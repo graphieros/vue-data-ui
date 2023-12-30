@@ -3736,10 +3736,18 @@ const moodRadarConfig = ref({
           VueUiMoodRadar
         </template>
         <template #dev>
-          <MoodRadarTest :dataset="moodRadarDataset" :config="moodRadarConfig" />
+          <MoodRadarTest :dataset="moodRadarDataset" :config="moodRadarConfig">
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </MoodRadarTest>
         </template>
         <template #prod>
-          <VueUiMoodRadar :dataset="moodRadarDataset" :config="moodRadarConfig" />
+          <VueUiMoodRadar :dataset="moodRadarDataset" :config="moodRadarConfig">
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiMoodRadar>
         </template>
 
       </Box>
@@ -3771,12 +3779,20 @@ const moodRadarConfig = ref({
         <template #dev>
           <DonutEvolutionTest
             :dataset="donutEvolutionDataset"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.absoluteWidth / 2" :cy="svg.absoluteHeight / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </DonutEvolutionTest>
         </template>
         <template #prod>
           <VueUiDonutEvolution
             :dataset="donutEvolutionDataset"
-          />
+          >
+          <template #svg="{ svg }">
+            <circle :cx="svg.absoluteWidth / 2" :cy="svg.absoluteHeight / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiDonutEvolution>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_donut_evolution }}
@@ -3791,12 +3807,20 @@ const moodRadarConfig = ref({
         <template #dev>
           <TireTest
             :dataset="tiremarksDataset"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </TireTest>
         </template>
         <template #prod>
           <VueUiTiremarks
             :dataset="tiremarksDataset"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiTiremarks>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_tiremarks }}
@@ -3838,14 +3862,22 @@ const moodRadarConfig = ref({
             ref="rings"
             :dataset="wheelDataset"
             :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </WheelTest>
         </template>
         <template #prod>
           <VueUiWheel
             ref="rings"
             :dataset="wheelDataset"
             :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiWheel>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_wheel }}
@@ -3862,14 +3894,22 @@ const moodRadarConfig = ref({
             ref="rings"
             :dataset="ringsDataset"
             :config="ringsConfig"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </RingsTest>
         </template>
         <template #prod>
             <VueUiRings 
               ref="rings" 
               :dataset="ringsDataset" 
               :config="ringsConfig"
-            />
+            >
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            </VueUiRings>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_rings }}
@@ -3886,14 +3926,22 @@ const moodRadarConfig = ref({
             ref="relation"
             :dataset="relationDataset"
             :config="relationConfig"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </RelationTest>
         </template>
         <template #prod>
             <VueUiRelationCircle 
               ref="relation" 
               :dataset="relationDataset" 
               :config="relationConfig"
-            />
+            >
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            </VueUiRelationCircle>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_relation_circle }}
@@ -3909,13 +3957,21 @@ const moodRadarConfig = ref({
           <SparklineTest
             :config="sparklineConfig"
             :dataset="sparklineDataset"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </SparklineTest>
         </template>
         <template #prod>
           <VueUiSparkline
             :config="sparklineConfig"
             :dataset="sparklineDataset"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiSparkline>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_sparkline }}
@@ -3934,7 +3990,11 @@ const moodRadarConfig = ref({
             :dataset="dataset2"
             @selectLegend="selectLegendXY"
             @selectX="selectX"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </XyTest>
         </template>
         <template #prod>
           <VueUiXy
@@ -3943,7 +4003,11 @@ const moodRadarConfig = ref({
             :dataset="dataset2"
             @selectLegend="selectLegendXY"
             @selectX="selectX"
-          />
+          >
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiXy>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_xy }}
@@ -3982,14 +4046,22 @@ const moodRadarConfig = ref({
             ref="candlestick"
             :dataset="candlestickDataset" 
             :config="{...candlestickConfig, useCssAnimation: false}"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </CandlestickTest>
         </template>
         <template #prod>
           <VueUiCandlestick
             ref="candlestick"
             :dataset="candlestickDataset"
             :config="{...candlestickConfig, useCssAnimation: false}"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiCandlestick>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_candlestick }}
@@ -4006,14 +4078,22 @@ const moodRadarConfig = ref({
             ref="scatter" 
             :dataset="scatterDataset" 
             :config="{...scatterConfig, useCssAnimation: false}"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </ScatterTest>
         </template>
         <template #prod>
           <VueUiScatter
             ref="scatter"
             :config="{...scatterConfig, useCssAnimation: false}"
             :dataset="scatterDataset"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiScatter>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_scatter }}
@@ -4030,7 +4110,11 @@ const moodRadarConfig = ref({
             ref="verticaltest"
             :dataset="verticalDataset"
             :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VerticalTest>
         </template>
         <template #prod>
           <VueUiVerticalBar
@@ -4038,7 +4122,11 @@ const moodRadarConfig = ref({
             :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
             :dataset="verticalDataset"
             @selectLegend="selectVerticalLegend"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiVerticalBar>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_vertical_bar }}
@@ -4055,7 +4143,11 @@ const moodRadarConfig = ref({
             :config="{ useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}} }"
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </OnionTest>
         </template>
         <template #prod>
           <VueUiOnion
@@ -4063,7 +4155,11 @@ const moodRadarConfig = ref({
             :config="{ useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}} }"
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiOnion>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_onion }}
@@ -4083,7 +4179,11 @@ const moodRadarConfig = ref({
             @selectPlot="selectPlot"
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </QuadrantTest>
         </template>
         <template #prod>
           <VueUiQuadrant
@@ -4093,7 +4193,11 @@ const moodRadarConfig = ref({
             @selectPlot="selectPlot"
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiQuadrant>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_quadrant }}
@@ -4111,7 +4215,11 @@ const moodRadarConfig = ref({
             :dataset="radarDataset"
             :config="{...radarConfig, useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
             @selectLegend="selectRadarLegend"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </RadarTest>
         </template>
         <template #prod>
           <VueUiRadar
@@ -4119,7 +4227,11 @@ const moodRadarConfig = ref({
             :dataset="radarDataset"
             :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
             @selectLegend="selectRadarLegend"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiRadar>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_radar }}
@@ -4148,7 +4260,11 @@ const moodRadarConfig = ref({
               }
             }"
             @selectLegend="selectLegendDonut"
-          />
+          >
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </DonutTest>
         </template>
         <template #prod>
           <VueUiDonut
@@ -4167,7 +4283,11 @@ const moodRadarConfig = ref({
               }
             }"
             @selectLegend="selectLegendDonut"
-          />
+          >
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiDonut>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_donut }}
@@ -4204,14 +4324,22 @@ const moodRadarConfig = ref({
             ref="thermo" 
             :dataset="thermoDataset" 
             :config="thermoConfig" 
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </ThermoTest>
         </template>
         <template #prod>
           <VueUiThermometer 
             ref="thermo" 
             :dataset="thermoDataset" 
             :config="thermoConfig" 
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiThermometer>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_thermometer }}
@@ -4284,7 +4412,11 @@ const moodRadarConfig = ref({
             @selectRoot="selectRoot"
             @selectBranch="selectBranch"
             @selectNut="selectNut"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </ChestnutTest>
         </template>
         <template #prod>
           <VueUiChestnut
@@ -4293,7 +4425,11 @@ const moodRadarConfig = ref({
             @selectRoot="selectRoot"
             @selectBranch="selectBranch"
             @selectNut="selectNut"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiChestnut>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_chestnut }}
@@ -4310,14 +4446,22 @@ const moodRadarConfig = ref({
             ref="pyramid" 
             :dataset="pyramidDataset"
             :config="{style:{title:{text:'Title', subtitle:{text: 'Subtitle'}}}}"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </PyramidTest>
         </template>
         <template #prod>
           <VueUiAgePyramid
             ref="pyramid"
             :dataset="pyramidDataset"
             :config="{style:{title:{text:'Title', subtitle:{text: 'Subtitle'}}}}"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiAgePyramid>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_age_pyramid }}
@@ -4335,7 +4479,11 @@ const moodRadarConfig = ref({
             :dataset="donutDataset"
             :config="{useBlurOnHover: true, style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
             @selectLegend="selectLegendWaffle"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </WaffleTest>
         </template>
         <template #prod>
           <VueUiWaffle
@@ -4343,7 +4491,11 @@ const moodRadarConfig = ref({
             :dataset="donutDataset"
              :config="{useBlurOnHover: true, style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
             @selectLegend="selectLegendWaffle"
-          />
+          >
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiWaffle>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_waffle }}
@@ -4477,14 +4629,22 @@ const moodRadarConfig = ref({
             ref="heatmaptest"
             :config="heatmapConfig"
             :dataset="heatmapDataset"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </HeatmapTest>
         </template>
         <template #prod>
           <VueUiHeatmap
             ref="heatmaptest"
             :config="heatmapConfig"
             :dataset="heatmapDataset"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiHeatmap>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_heatmap }}
@@ -4500,13 +4660,21 @@ const moodRadarConfig = ref({
           <GaugeTest 
             ref="gaugetest" 
             :dataset="gaugeDataset" 
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </GaugeTest>
         </template>
         <template #prod>
           <VueUiGauge
             ref="gaugetest"
             :dataset="gaugeDataset"
-          />
+          >
+          <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUiGauge>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_gauge }}

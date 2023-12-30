@@ -269,6 +269,7 @@ const isBar = computed(() => {
                 @mouseenter="selectPlot(plot)"
                 @mouseleave="selectedPlot = undefined"
             />
+            <slot name="svg" :svg="svg"/>
         </svg>
     </div>
 </template>

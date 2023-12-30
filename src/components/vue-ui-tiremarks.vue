@@ -324,6 +324,7 @@ defineExpose({
             >
                 {{ activeValue.toFixed(tiremarksConfig.style.chart.percentage.rounding) + '%' }}
             </text>
+            <slot name="svg" :svg="svg"/>
         </svg>
     </div>
 </template>

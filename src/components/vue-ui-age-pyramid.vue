@@ -525,6 +525,8 @@ defineExpose({
                     @mouseleave="selectedIndex = null; isTooltip = false"
                 />
             </g>
+
+            <slot name="svg" :svg="svg"/>
         </svg>
 
         <!-- TOOLTIP -->

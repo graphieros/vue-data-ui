@@ -582,6 +582,8 @@
                     </g>
                 </g>
             </g>
+
+            <slot name="svg" :svg="svg"/>
         </svg>
         
         <!-- SLICER -->
@@ -1025,6 +1027,12 @@ export default {
                 }
             });
             return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
+        },
+        svg() {
+            return {
+                height: this.chartConfig.chart.height,
+                width: this.chartConfig.chart.width
+            }
         },
         viewBox() {
             return `0 0 ${this.chartConfig.chart.width} ${this.chartConfig.chart.height}`;

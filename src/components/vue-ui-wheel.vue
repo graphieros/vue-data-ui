@@ -40,7 +40,9 @@ const wheelConfig = computed(() => {
 });
 
 const svg = ref({
-    size: 360
+    size: 360,
+    height: 360,
+    width: 360
 })
 
 const wheel = computed(() => {
@@ -218,6 +220,7 @@ defineExpose({
             >
                 {{ Number(activeValue.toFixed(wheelConfig.style.chart.layout.percentage.rounding)).toLocaleString() }}%
             </text>
+            <slot name="svg" :svg="svg"/>
         </svg>
     
     </div>

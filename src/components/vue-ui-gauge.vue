@@ -470,7 +470,7 @@ defineExpose({
             >
                 {{ gaugeConfig.style.chart.legend.prefix }} {{ gaugeConfig.style.chart.legend.showPlusSymbol && activeRating > 0 ? '+' : '' }}{{ activeRating.toFixed(gaugeConfig.style.chart.legend.roundingValue) }} {{ gaugeConfig.style.chart.legend.suffix }}
             </text>
-
+            <slot name="svg" :svg="svg"/>
         </svg>
     </div>
 </template>

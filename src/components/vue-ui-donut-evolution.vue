@@ -712,7 +712,7 @@ defineExpose({
                     {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[fixedDatapoint.index] }}
                 </text>
             </g>
-
+            <slot name="svg" :svg="svg"/>
         </svg>
 
         <Legend

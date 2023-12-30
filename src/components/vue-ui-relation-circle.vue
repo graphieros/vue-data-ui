@@ -51,6 +51,13 @@ const size = computed(() => {
     return relationConfig.value.style.size;
 });
 
+const svg = computed(() => {
+    return {
+        height: relationConfig.value.style.size,
+        width: relationConfig.value.style.size
+    }
+})
+
 const isCurved = computed(() => {
     return relationConfig.value.style.links.curved;
 });
@@ -397,6 +404,7 @@ defineExpose({
                 @click="selectPlot(plot)" 
                 :r="relationConfig.style.plot.radius" 
             />
+            <slot name="svg" :svg="svg"/>
         </svg>
     </div>
 </template>

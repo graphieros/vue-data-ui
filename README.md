@@ -100,3 +100,6 @@ Types are available in the 'vue-data-ui.d.ts' file under the types directory of 
 
 ## Nuxt
 [This repo contains a boilerplate implementation of the vue-data-ui package in Nuxt](https://github.com/graphieros/vue-data-ui-nuxt)
+
+# Slots
+Most Vue Data UI chart components include a #svg slot you can use to introduce customized svg elements (shapes, text, etc).

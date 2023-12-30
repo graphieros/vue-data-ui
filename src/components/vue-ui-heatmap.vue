@@ -396,7 +396,7 @@ defineExpose({
                     <span data-cy="heatmap-legend-foreignObject-max" style="text-align:left">{{ Number(maxValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
                 </div>
             </foreignObject>
-
+            <slot name="svg" :svg="svg"/>
         </svg>
 
         <!-- LEGEND AS DIV -->

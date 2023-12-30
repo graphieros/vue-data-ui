@@ -464,6 +464,7 @@ defineExpose({
           "
         />
       </g>
+      <slot name="svg" :svg="svg"/>
     </svg>
 
     <!-- LEGEND AS DIV -->
