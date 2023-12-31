@@ -5,6 +5,71 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUi3dBarDataset = {
+        percentage: number;
+    };
+
+    export type VueUi3dBarConfig = {
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                animation?: {
+                    use?: boolean;
+                    speed?: number;
+                    acceleration?: number;
+                };
+                backgroundColor?: string;
+                color?: string;
+                bar?: {
+                    color?: string;
+                    stroke?: string;
+                    strokeWidth?: number;
+                };
+                box?: {
+                    stroke?: string;
+                    strokeWidth?: number;
+                    strokeDasharray?: number; 2,
+                    dimensions?: {
+                        width?: number;
+                        height?: number;
+                        top?: number;
+                        bottom?: number;
+                        left?: number;
+                        right?: number;
+                        perspective?: number;
+                    };
+                };
+                title?: {
+                    text?: string;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                    subtitle?: {
+                        color?: string;
+                        text?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                    };
+                };
+                dataLabel?: {
+                    show?: boolean;
+                    bold?: boolean;
+                    color?: string;
+                    fontSize?: number;
+                    rounding?: number;
+                };
+            };
+        };
+        userOptions?: {
+            show?: boolean;
+        }
+    };
+
+    export const VueUi3dBar: DefineComponent<{
+        config?: VueUi3dBarConfig,
+        dataset: VueUi3dBarDataset
+    }>;
+
     export type VueUiMoodRadarDataset = {
         "1": number;
         "2": number;

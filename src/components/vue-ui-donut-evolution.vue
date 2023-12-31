@@ -310,7 +310,6 @@ const table = computed(() => {
         }
     })).concat(['Σ']);
     let body = [];
-    let time = [];
 
     for(let i = 0; i < maxLength.value; i += 1) {
         const sum = convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => {

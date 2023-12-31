@@ -690,7 +690,8 @@ import {
     createSmoothPath,
     createStar,
     createPolygonPath,
-    createUid
+    createUid,
+    closestDecimal
 } from '../lib';
 import mainConfig from "../default_configs.json";
 import DataTable from "../atoms/DataTable.vue";
@@ -1202,6 +1203,7 @@ export default {
         adaptColorToBackground,
         calcLinearProgression,
         useMouse,
+        closestDecimal,
         createArea(plots) {
             const start = { x: plots[0].x, y: this.zero };
             const end = { x: plots.at(-1).x, y: this.zero };
@@ -1783,21 +1785,6 @@ export default {
         },
         canShowValue(value) {
             return ![null, undefined, NaN].includes(value);
-        },
-        closestDecimal(number) {
-            if (number === 0) return 0;
-
-            const orderOfMagnitude = Math.floor(Math.log10(Math.abs(number)));
-            const powerOf10 = 10 ** orderOfMagnitude;
-
-            let roundedValue;
-            if (number < 0) {
-                roundedValue = Math.round(number / powerOf10) * powerOf10;
-            } else {
-                roundedValue = Math.round(number / powerOf10) * powerOf10;
-            }
-
-            return roundedValue;
         },
         findClosestValue(val, arr) {
             let closest = arr[0];

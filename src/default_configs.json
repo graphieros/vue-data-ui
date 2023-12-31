@@ -2806,5 +2806,60 @@
         "userOptions": {
             "show": true
         }
+    },
+    "vue_ui_3d_bar": {
+        "style": {
+            "fontFamily":"inherit",
+            "chart": {
+                "animation": {
+                    "use": true,
+                    "speed":1,
+                    "acceleration":1
+                },
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "bar": {
+                    "color": "#5f8bee",
+                    "stroke": "#5f8bee",
+                    "strokeWidth": 0.7
+                },
+                "box": {
+                    "stroke": "#CCCCCC",
+                    "strokeWidth": 0.7,
+                    "strokeDasharray": 2,
+                    "dimensions": {
+                        "width": 128,
+                        "height": 256,
+                        "top": 27,
+                        "bottom": 9,
+                        "left": 24,
+                        "right": 24,
+                        "perspective": 18
+                    }
+                },
+                "title": {
+                    "text": "Title",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "Subtitle", 
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "dataLabel": {
+                    "show": true,
+                    "bold": true,
+                    "color": "#5f8bee",
+                    "fontSize": 12,
+                    "rounding": 1
+                }
+            }
+        },
+        "userOptions": {
+            "show": true
+        }
     }
 }

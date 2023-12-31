@@ -67,7 +67,8 @@ const icons = computed(() => {
         moodFlat: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" d="M1 10A1 1 0 0019 10 1 1 0 001 10M5 13C8 11 12 11 15 13M5 7A1 1 0 008 7 1 1 0 005 7M12 7A1 1 0 0015 7 1 1 0 0012 7" />`,
         moodNeutral: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" d="M1 10A1 1 0 0019 10 1 1 0 001 10M5 12C9 12 11 12 15 12M5 7A1 1 0 008 7 1 1 0 005 7M12 7A1 1 0 0015 7 1 1 0 0012 7" />`,
         moodHappy: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" d="M1 10A1 1 0 0019 10 1 1 0 001 10M5 11C6 18 14 18 15 11L5 11M5 7A1 1 0 008 7 1 1 0 005 7M12 7A1 1 0 0015 7 1 1 0 0012 7" />`,
-        chartMoodRadar: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M10 4 4 9 6 16 14 16 16 9 10 4M9 2A1 1 0 0011 2 1 1 0 009 2M1 8A1 1 0 003 8 1 1 0 001 8M3 17A1 1 0 005 17 1 1 0 003 17M15 17A1 1 0 0017 17 1 1 0 0015 17M17 8A1 1 0 0019 8 1 1 0 0017 8M10 7 13 10 13 14 8 13 7 9 10 7" />`
+        chartMoodRadar: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M10 4 4 9 6 16 14 16 16 9 10 4M9 2A1 1 0 0011 2 1 1 0 009 2M1 8A1 1 0 003 8 1 1 0 001 8M3 17A1 1 0 005 17 1 1 0 003 17M15 17A1 1 0 0017 17 1 1 0 0015 17M17 8A1 1 0 0019 8 1 1 0 0017 8M10 7 13 10 13 14 8 13 7 9 10 7" />`,
+        chart3dBar: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" d="M10 1 6 3 6 17 10 19 14 17 14 3 10 1M6 3 10 5 14 3M10 5 10 19" stroke-linecap="round" stroke-linejoin="round" />`
     }
 })
 

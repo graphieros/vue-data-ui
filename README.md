@@ -51,6 +51,9 @@ Available components:
 - [VueUiSparkstackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
 - [VueUiSparkHistogram](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkhistogram)
 
+## 3d
+- [VueUi3dBar](https://vue-data-ui.graphieros.com/docs#vue-ui-3d-bar)
+
 ## Tables
 - [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
 

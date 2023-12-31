@@ -35,22 +35,22 @@ const CONFIG = useNestedProp({
 <template>
   <div
     :data-cy="CONFIG.title.cy"
-    :style="`width:100%;text-align:center;color:${
+    :style="`width:calc(100% - 72px);text-align:center;color:${
       CONFIG.title.color
     };font-size:${CONFIG.title.fontSize}px;font-weight:${
       CONFIG.title.bold ? 'bold' : ''
-    }`"
+    };padding: 0 36px`"
   >
     {{ CONFIG.title.text }}
   </div>
   <div
     :data-cy="CONFIG.subtitle.cy"
     v-if="CONFIG.subtitle.text"
-    :style="`width:100%;text-align:center;color:${
+    :style="`width:calc(100% - 72px);text-align:center;color:${
       CONFIG.subtitle.color
     };font-size:${CONFIG.subtitle.fontSize}px;font-weight:${
       CONFIG.subtitle.bold ? 'bold' : ''
-    }`"
+    };padding: 0 36px`"
   >
     {{ CONFIG.subtitle.text }}
   </div>

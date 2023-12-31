@@ -43,6 +43,7 @@ import RingsTest from "./components/vue-ui-rings.vue";
 import WheelTest from "./components/vue-ui-wheel.vue";
 import TireTest from "./components/vue-ui-tiremarks.vue";
 import MoodRadarTest from "./components/vue-ui-mood-radar.vue";
+import Bar3dTest from "./components/vue-ui-3d-bar.vue";
 import DonutEvolutionTest from "./components/vue-ui-donut-evolution.vue";
 
 const dataset = ref([
@@ -3658,6 +3659,10 @@ const moodRadarConfig = ref({
         }
     })
 
+  const bar3dDataset = ref({
+    percentage: 66
+  })
+
 </script>
 
 <template>
@@ -3726,6 +3731,7 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartHeatmap" stroke="#42d392" />
           <BaseIcon name="chartTable" stroke="#42d392" />
           <BaseIcon name="chartMoodRadar" stroke="#42d392" />
+          <BaseIcon name="chart3dBar" stroke="#42d392" />
         </div>
       </template>
       </Box>
@@ -3752,6 +3758,27 @@ const moodRadarConfig = ref({
 
       </Box>
 
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_3d_bar)">
+        <template #title>
+          <BaseIcon name="chart3dBar"/>
+        VueUi3dBar
+        </template>
+        <template #dev>
+          <Bar3dTest :dataset="bar3dDataset">
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </Bar3dTest>
+        </template>
+        <template #prod>
+          <VueUi3dBar :dataset="bar3dDataset">
+            <template #svg="{ svg }">
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+          </VueUi3dBar>
+        </template>
+      </Box>
+
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_screenshot)">
         <template #title>
           <BaseIcon name="screenshot"/>
@@ -3768,7 +3795,6 @@ const moodRadarConfig = ref({
         <template #config>
           {{ PROD_CONFIG.vue_ui_screenshot }}
         </template>
-        
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">

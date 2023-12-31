@@ -30,6 +30,7 @@ import VueUiTiremarks from "./components/vue-ui-tiremarks.vue";
 import VueUiDonutEvolution from "./components/vue-ui-donut-evolution.vue";
 import VueUiIcon from "./atoms/BaseIcon.vue";
 import VueUiMoodRadar from "./components/vue-ui-mood-radar.vue";
+import VueUi3dBar from "./components/vue-ui-3d-bar.vue";
 
 export { 
     VueUiXy, 
@@ -63,5 +64,6 @@ export {
     VueUiTiremarks,
     VueUiDonutEvolution,
     VueUiIcon,
-    VueUiMoodRadar
+    VueUiMoodRadar,
+    VueUi3dBar
 };

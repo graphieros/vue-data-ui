@@ -21,6 +21,7 @@ import {
     isSafeValue,
     isValidUserValue,
     makeDonut,
+    makePath,
     matrixTimes,
     rotateMatrix,
     shiftHue,
@@ -591,5 +592,21 @@ describe('calcLinearProgression', () => {
             slope: 0.31666666666666665,
             trend: 0.4000000000000001
         })
+    })
+})
+
+describe('makePath', () => {
+    const plots = [
+        { x: 1, y: 2 },
+        { x: 2, y: 3 },
+        { x: 3, y: 4 },
+        { x: 4, y: 5 },
+        { x: 5, y: 6 },
+    ]
+    test('creates an open svg path from an array of plots', () => {
+        expect(makePath(plots, false)).toBe('M1,2 2,3 3,4 4,5 5,6 ')
+    })
+    test('creates a closed svg path from an array of plots', () => {
+        expect(makePath(plots)).toBe('M1,2 2,3 3,4 4,5 5,6 Z')
     })
 })

@@ -31,7 +31,6 @@ const isPrinting = ref(false);
 const wheelChart = ref(null);
 const details = ref(null);
 
-
 const wheelConfig = computed(() => {
     return useNestedProp({
         userConfig: props.config,
@@ -88,11 +87,13 @@ const ticks = computed(() => {
     const tickAmount = 100;
     for(let i = 0; i < tickAmount; i += 1) {
         const color = activeValue.value > i ? wheelConfig.value.style.chart.layout.wheel.ticks.activeColor : wheelConfig.value.style.chart.layout.wheel.ticks.inactiveColor;
+        const { x: x1, y: y1 } = calcTickStart((svg.value.size / tickAmount) * i);
+        const { x: x2, y: y2 } = calcTickStart((svg.value.size / tickAmount) * i, 0.9);
         tickArray.push({
-            x1: calcTickStart((360 / tickAmount) * i).x,
-            y1: calcTickStart((360 / tickAmount) * i).y,
-            x2: calcTickStart((360 / tickAmount) * i, 0.9).x,
-            y2: calcTickStart((360 / tickAmount) * i, 0.9).y,
+            x1,
+            y1,
+            x2,
+            y2,
             color: wheelConfig.value.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(color, i / tickAmount * (wheelConfig.value.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : color
         })
     }
