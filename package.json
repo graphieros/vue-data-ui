@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "1.9.48",
+  "version": "1.9.49",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
   "keywords": [

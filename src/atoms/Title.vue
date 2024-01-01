@@ -39,7 +39,7 @@ const CONFIG = useNestedProp({
       CONFIG.title.color
     };font-size:${CONFIG.title.fontSize}px;font-weight:${
       CONFIG.title.bold ? 'bold' : ''
-    };padding: 0 36px; margin: 0 auto;`"
+    }`"
   >
     {{ CONFIG.title.text }}
   </div>
@@ -50,7 +50,7 @@ const CONFIG = useNestedProp({
       CONFIG.subtitle.color
     };font-size:${CONFIG.subtitle.fontSize}px;font-weight:${
       CONFIG.subtitle.bold ? 'bold' : ''
-    };padding: 0 36px; margin: 0 auto;`"
+    }`"
   >
     {{ CONFIG.subtitle.text }}
   </div>
