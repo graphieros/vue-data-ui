@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { opacity, makeXls, shiftHue, createUid } from '../lib';
+import { opacity, shiftHue, createUid, createCsvContent, downloadCsv } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -234,7 +234,7 @@ function generateImage() {
     }, 100)
 }
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const labels = [agePyramidConfig.value.translations.year, agePyramidConfig.value.translations.age, agePyramidConfig.value.translations.female, agePyramidConfig.value.translations.male, agePyramidConfig.value.translations.total];
 
@@ -249,14 +249,14 @@ function generateXls() {
         });
 
         const tableXls = [[agePyramidConfig.value.style.title.text],[agePyramidConfig.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
-
-        makeXls(tableXls, agePyramidConfig.value.style.title.text || "vue-ui-heatmap");
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: agePyramidConfig.value.style.title.text || "vue-ui-heatmap"});
     });
 }
 
 defineExpose({
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -299,7 +299,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />

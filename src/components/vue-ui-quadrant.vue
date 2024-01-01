@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from "vue";
-import { palette, createUid, giftWrap, shiftHue, opacity, convertColorToHex, makeXls } from "../lib";
+import { palette, createUid, giftWrap, shiftHue, opacity, convertColorToHex, createCsvContent, downloadCsv } from "../lib";
 import pdf from "../pdf.js";
 import img from "../img.js";
 import mainConfig from "../default_configs.json";
@@ -479,20 +479,21 @@ function generateImage() {
     }, 100)
 }
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const title = [[quadrantConfig.value.style.chart.title.text], [quadrantConfig.value.style.chart.title.subtitle.text], [""]];
         const head = table.value.head;
         const body = table.value.body
         const tableXls = title.concat([head]).concat(body);
-        makeXls(tableXls, quadrantConfig.value.style.chart.title.text || 'vue-ui-quadrant');
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: quadrantConfig.value.style.chart.title.text || 'vue-ui-quadrant'})
     });
 }
 
 defineExpose({
     getData,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -537,7 +538,7 @@ defineExpose({
             hasTable
             hasLabel
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
             @toggleLabels="mutableConfig.plotLabels.show = !mutableConfig.plotLabels.show"

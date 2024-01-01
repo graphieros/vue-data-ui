@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { opacity, makeXls, createUid } from "../lib";
+import { opacity, createUid, createCsvContent, downloadCsv } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
@@ -194,7 +194,7 @@ const table = computed(() => {
 });
 
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const labels = ["", ...props.dataset.map((ds,i) => {
             return ds.name
@@ -211,14 +211,14 @@ function generateXls() {
         }
 
         const tableXls = [[heatmapConfig.value.style.title.text],[heatmapConfig.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values);
-
-        makeXls(tableXls, heatmapConfig.value.style.title.text || "vue-ui-heatmap");
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({csvContent, title: heatmapConfig.value.style.title.text || "vue-ui-heatmap"})
     });
 }
 
 defineExpose({
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -260,7 +260,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />

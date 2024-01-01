@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, makeDonut, palette, convertColorToHex, opacity, makeXls, createUid } from '../lib';
+import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, makeDonut, palette, convertColorToHex, opacity, createUid, createCsvContent, downloadCsv } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -240,7 +240,7 @@ const table = computed(() => {
     return { head, body };
 });
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const labels = table.value.head.map((h,i) => {
             return [[
@@ -249,7 +249,8 @@ function generateXls() {
         });
         const tableXls = [[donutConfig.value.style.chart.title.text],[donutConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
 
-        makeXls(tableXls, donutConfig.value.style.chart.title.text || "vue-ui-donut");
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: donutConfig.value.style.chart.title.text || "vue-ui-donut" })
     });
 }
 
@@ -294,7 +295,7 @@ const dataTable = computed(() => {
 defineExpose({
     getData,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -338,7 +339,7 @@ defineExpose({
             hasTable
             hasLabel
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
             @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"

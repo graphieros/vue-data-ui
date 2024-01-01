@@ -5,8 +5,9 @@ import {
     palette,
     opacity,
     shiftHue,
-    makeXls,
-    createUid
+    createUid,
+    createCsvContent,
+    downloadCsv
 } from "../lib.js";
 import pdf from "../pdf.js";
 import img from "../img.js";
@@ -348,7 +349,7 @@ const table = computed(() => {
     return { head, body };
 });
 
-function generateXls() {
+function generateCsv() {
     const title = [[verticalBarConfig.value.style.chart.title.text], [verticalBarConfig.value.style.chart.title.subtitle.text], [""]];
     const head = table.value.head;
     const body = table.value.body.map(tr => {
@@ -364,14 +365,15 @@ function generateXls() {
     });
     
     const tableXls = title.concat([head]).concat(body);
-    makeXls(tableXls, verticalBarConfig.value.style.chart.title.text || "vue-ui-vertical-bar");
+    const csvContent = createCsvContent(tableXls);
+    downloadCsv({ csvContent, title: verticalBarConfig.value.style.chart.title.text || "vue-ui-vertical-bar"})
 }
 
 defineExpose({
     getData,
     recalculateHeight,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -416,7 +418,7 @@ defineExpose({
             hasTable
             hasSort
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
             @toggleSort="() => {

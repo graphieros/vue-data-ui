@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, canShowValue, closestDecimal, makeDonut, palette, convertColorToHex, opacity, makeXls, createUid, sumByAttribute } from '../lib';
+import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, canShowValue, closestDecimal, makeDonut, palette, convertColorToHex, opacity, createUid, sumByAttribute, createCsvContent, downloadCsv } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -345,22 +345,23 @@ function getData() {
     return convertedDataset.value;
 }
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const title = [[donutEvolutionConfig.value.style.chart.title.text],[donutEvolutionConfig.value.style.chart.title.subtitle.text],[""]];
         const head = [...table.value.head.map(h => h.name ?? h)];
         const body = [...table.value.body.map(b => {
             return b.map(t => t.value ?? t)
         })];
-        const tableXls = title.concat([head]).concat(body)
-        makeXls(tableXls, donutEvolutionConfig.value.style.chart.title.text || "vue-ui-donut-evolution");
+        const tableXls = title.concat([head]).concat(body);
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: donutEvolutionConfig.value.style.chart.title.text || "vue-ui-donut-evolution"});
     });
 }
 
 defineExpose({
     getData,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -402,7 +403,7 @@ defineExpose({
             hasImg
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />

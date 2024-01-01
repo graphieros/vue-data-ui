@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
-import { palette, opacity, makeXls, createUid } from '../lib';
+import { palette, opacity, createUid, createCsvContent, downloadCsv } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -280,7 +280,7 @@ function generateImage() {
 
 }
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const labels = ["", scatterConfig.value.table.translations.correlationCoefficient, scatterConfig.value.table.translations.nbrPlots, `${scatterConfig.value.style.layout.dataLabels.xAxis.name} ${scatterConfig.value.table.translations.average}`, `${scatterConfig.value.style.layout.dataLabels.yAxis.name} ${scatterConfig.value.table.translations.average}`];
 
@@ -295,15 +295,15 @@ function generateXls() {
         });
 
         const tableXls = [[scatterConfig.value.style.title.text],[scatterConfig.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
-
-        makeXls(tableXls, scatterConfig.value.style.title.text || "vue-ui-heatmap");
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: scatterConfig.value.style.title.text || "vue-ui-heatmap"})
     });
 }
 
 defineExpose({
     getData,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -347,7 +347,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />

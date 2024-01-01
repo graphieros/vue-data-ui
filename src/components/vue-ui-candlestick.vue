@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { canShowValue, closestDecimal, shiftHue, opacity, makeXls, createUid } from "../lib";
+import { canShowValue, closestDecimal, shiftHue, opacity, createUid, createCsvContent, downloadCsv } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
@@ -246,7 +246,7 @@ function generateImage() {
     }, 100)
 }
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const labels = [candlestickConfig.value.translations.period, candlestickConfig.value.translations.open, candlestickConfig.value.translations.high, candlestickConfig.value.translations.low, candlestickConfig.value.translations.last, candlestickConfig.value.translations.volume];
 
@@ -262,14 +262,14 @@ function generateXls() {
         });
 
         const tableXls = [[candlestickConfig.value.style.title.text],[candlestickConfig.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
-
-        makeXls(tableXls, candlestickConfig.value.style.title.text || "vue-ui-candlestick");
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: candlestickConfig.value.style.title.text || "vue-ui-candlestick"});
     });
 }
 
 defineExpose({
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -312,7 +312,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
          />

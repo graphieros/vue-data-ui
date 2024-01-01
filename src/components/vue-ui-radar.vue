@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { palette, createPolygonPath, shiftHue, opacity, convertColorToHex, makeXls, makePath, createUid } from "../lib";
+import { palette, createPolygonPath, shiftHue, opacity, convertColorToHex, makePath, createUid, createCsvContent, downloadCsv } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -301,7 +301,7 @@ function generateImage() {
     }, 100)
 }
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const title = [[radarConfig.value.style.chart.title.text], [radarConfig.value.style.chart.title.subtitle.text], [""]];
         const head = [[""],[radarConfig.value.translations.target], ...legendSet.value.flatMap(l => [[l.name], ["%"]])];
@@ -314,15 +314,15 @@ function generateXls() {
         });
 
         const tableXls = title.concat([head]).concat(body);
-
-        makeXls(tableXls, radarConfig.value.style.chart.title.text || "vue-ui-radar");
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: radarConfig.value.style.chart.title.text || "vue-ui-radar"})
     });
 }
 
 defineExpose({
     getData,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -370,7 +370,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />

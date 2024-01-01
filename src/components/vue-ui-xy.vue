@@ -36,7 +36,7 @@
             hasLabel
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
             @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
@@ -683,15 +683,16 @@ import {
     shiftHue, 
     opacity, 
     convertColorToHex, 
-    convertConfigColors, 
-    makeXls,
+    convertConfigColors,
     adaptColorToBackground,
     calcLinearProgression,
     createSmoothPath,
     createStar,
     createPolygonPath,
     createUid,
-    closestDecimal
+    closestDecimal,
+    createCsvContent,
+    downloadCsv
 } from '../lib';
 import mainConfig from "../default_configs.json";
 import DataTable from "../atoms/DataTable.vue";
@@ -1199,7 +1200,8 @@ export default {
         img,
         convertColorToHex,
         convertConfigColors,
-        makeXls,
+        downloadCsv,
+        createCsvContent,
         adaptColorToBackground,
         calcLinearProgression,
         useMouse,
@@ -1869,12 +1871,13 @@ export default {
                 });
             }, 100)
         },
-        generateXls() {
+        generateCsv() {
             const title = [[this.chartConfig.chart.title.text], [this.chartConfig.chart.title.subtitle.text], [""]];
             const head = ["",...this.table.head.map(h => h.label)]
             const body = this.table.body
             const table = title.concat([head]).concat(body);
-            this.makeXls(table, this.chartConfig.chart.title.text || 'vue-ui-xy');
+            const csvContent = this.createCsvContent(table);
+            this.downloadCsv({ csvContent, title: this.chartConfig.chart.title.text || 'vue-ui-xy'})
         },
         showSpinnerImage() {
             this.isImaging = true;
