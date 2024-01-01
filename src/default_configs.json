@@ -2810,6 +2810,7 @@
     "vue_ui_3d_bar": {
         "style": {
             "fontFamily":"inherit",
+            "shape": "bar",
             "chart": {
                 "animation": {
                     "use": true,

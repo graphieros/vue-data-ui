@@ -12,6 +12,7 @@ declare module 'vue-data-ui' {
     export type VueUi3dBarConfig = {
         style?: {
             fontFamily?: string;
+            shape?: "bar" | "tube";
             chart?: {
                 animation?: {
                     use?: boolean;

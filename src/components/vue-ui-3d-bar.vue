@@ -1,15 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, makeDonut, palette, convertColorToHex, opacity, makeXls, createUid } from '../lib';
+import { convertColorToHex, createUid } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
 import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Tooltip from "../atoms/Tooltip.vue";
-import Legend from "../atoms/Legend.vue";
 
 const props = defineProps({
     config: {
@@ -32,11 +29,7 @@ const defaultConfig = ref(mainConfig.vue_ui_3d_bar);
 
 const isPrinting = ref(false);
 const isImaging = ref(false);
-const bar3dChart = ref(null);
 const details = ref(null);
-const isTooltip = ref(false);
-const tooltipContent = ref("");
-const selectedSerie = ref(null);
 
 const barConfig = computed(() => {
     return useNestedProp({
@@ -62,7 +55,11 @@ const box = computed(() => {
         right: `M${svg.value.width / 2},${svg.value.top} ${svg.value.width - svg.value.right}, ${svg.value.top + svg.value.perspective} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective} ${svg.value.width / 2},${svg.value.height - svg.value.bottom}`,
         left: `M${svg.value.width / 2},${svg.value.top} ${svg.value.left},${svg.value.top + svg.value.perspective} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective} ${svg.value.width / 2},${svg.value.height - svg.value.bottom}`,
         side: `M${svg.value.width / 2},${svg.value.height - svg.value.bottom} ${svg.value.width / 2},${svg.value.top + (svg.value.perspective * 2)}`,
-        topSides: `M${svg.value.left},${svg.value.top + svg.value.perspective} ${svg.value.width / 2},${svg.value.top + (svg.value.perspective * 2)} ${svg.value.width - svg.value.right},${svg.value.top + svg.value.perspective}`
+        topSides: `M${svg.value.left},${svg.value.top + svg.value.perspective} ${svg.value.width / 2},${svg.value.top + (svg.value.perspective * 2)} ${svg.value.width - svg.value.right},${svg.value.top + svg.value.perspective}`,
+        tubeTop: `M${svg.value.left},${svg.value.top + svg.value.perspective} C ${svg.value.left},${svg.value.top - (svg.value.perspective / 3)} ${svg.value.width - svg.value.right},${svg.value.top - (svg.value.perspective / 3)} ${svg.value.width - svg.value.right},${svg.value.top + svg.value.perspective} C ${svg.value.width - svg.value.right},${svg.value.top + (svg.value.perspective * 2.3)} ${svg.value.left},${svg.value.top + (svg.value.perspective * 2.3)} ${svg.value.left},${svg.value.top + svg.value.perspective}`,
+        tubeLeft: `M${svg.value.left},${svg.value.top + svg.value.perspective} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective}`,
+        tubeRight: `M${svg.value.width - svg.value.right},${svg.value.top + svg.value.perspective} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective}`,
+        tubeBottom: `M${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective} C ${svg.value.width - svg.value.right},${svg.value.height} ${svg.value.left},${svg.value.height} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective}`
     }
 });
 
@@ -94,7 +91,18 @@ const fill = computed(() => {
     return {
         right: `M${svg.value.width / 2},${svg.value.height - svg.value.bottom} ${svg.value.width / 2},${svg.value.height - svg.value.bottom - height * proportion} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective}Z`,
         left: `M${svg.value.width / 2},${svg.value.height - svg.value.bottom} ${svg.value.width / 2},${svg.value.height - svg.value.bottom - height * proportion} ${svg.value.left}, ${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective}Z`,
-        top: `M${svg.value.width / 2},${svg.value.height - svg.value.bottom - height * proportion} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} ${svg.value.width / 2},${svg.value.height - svg.value.bottom - (svg.value.perspective * 2) - (height * proportion)} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} Z`
+        top: `M${svg.value.width / 2},${svg.value.height - svg.value.bottom - height * proportion} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} ${svg.value.width / 2},${svg.value.height - svg.value.bottom - (svg.value.perspective * 2) - (height * proportion)} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} Z`,
+        tubeTop: `M${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective} C ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion - (svg.value.perspective *2.5)} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion - (svg.value.perspective * 2.5)} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective} C ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion + svg.value.perspective /2} ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion + svg.value.perspective / 2} ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective}`,
+        tubeBody: `M
+        ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective} 
+        C ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion + svg.value.perspective / 2} 
+        ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion + svg.value.perspective /2} 
+        ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective} 
+        L${svg.value.width - svg.value.right},${svg.value.height - svg.value.perspective * 1.5}
+        C 
+        ${svg.value.width - svg.value.right},${svg.value.height}
+        ${svg.value.left},${svg.value.height}
+        ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective}Z`
     }
 })
 
@@ -201,6 +209,11 @@ defineExpose({
                     <stop offset="0%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
                     <stop offset="100%" :stop-color="`${barConfig.style.chart.bar.color}33`" />
                 </radialGradient>
+                <linearGradient :id="`gradient_tube_body${uid}`" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" :stop-color="`${barConfig.style.chart.bar.color}`"/>
+                    <stop offset="75%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`"/>
+                    <stop offset="100%" :stop-color="`${barConfig.style.chart.bar.color}66`"/>
+                </linearGradient>
             </defs>
 
             <text
@@ -214,17 +227,31 @@ defineExpose({
             >
                 {{Number((isNaN(activeValue) ? 0 : activeValue).toFixed(barConfig.style.chart.dataLabel.rounding)).toLocaleString() }} %
             </text>
-        
-            <!-- BOX SKELETON -->
-            <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.right" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-            <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.left" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-            <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.side" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-            <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.topSides" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+            
 
-            <!-- FILL BOX -->
-            <path :d="fill.right" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_right${uid})`"/>
-            <path :d="fill.left" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_left${uid})`"/>
-            <path :d="fill.top" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
+            <g v-if="!barConfig.style.shape || barConfig.style.shape === 'bar'">            
+                <!-- BOX SKELETON -->
+                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.right" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.left" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.side" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.topSides" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+
+                <!-- FILL BOX -->
+                <path :d="fill.right" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_right${uid})`"/>
+                <path :d="fill.left" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_left${uid})`"/>
+                <path :d="fill.top" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
+            </g>
+
+            <g v-if="barConfig.style.shape === 'tube'">
+                <!-- TUBE SKELETON -->
+                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeTop" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeLeft" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeRight" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeBottom" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <!-- FILL TUBE -->
+                <path :d="fill.tubeTop" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
+                <path :d="fill.tubeBody" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body${uid})`"/>
+            </g>
 
             <slot name="svg" :svg="svg"/>
         </svg>
