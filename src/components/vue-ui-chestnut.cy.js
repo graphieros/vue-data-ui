@@ -78,13 +78,13 @@ describe('<VueUiChestnut />', () => {
       cy.get(`[data-cy="chestnut-table"]`)
         .should('exist');
 
-      cy.get(`[data-cy="user-options-pdf"]`).click();
+      cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.layout.title.text}.pdf`);
-      cy.get(`[data-cy="user-options-xls"]`).click();
+      cy.get(`[data-cy="user-options-xls"]`).click( { force: true});
       cy.wait(3000);
-      cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.layout.title.text}.xlsx`);
-      cy.get(`[data-cy="user-options-img"]`).click();
+      cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.layout.title.text}.csv`);
+      cy.get(`[data-cy="user-options-img"]`).click({ force: true});
       cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.layout.title.text}.png`);
       cy.clearDownloads();

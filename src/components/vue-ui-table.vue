@@ -871,7 +871,7 @@
 </template>
 
 <script>
-import { makeDonut, treeShake, palette, convertColorToHex, convertConfigColors, makeXls, calcLinearProgression } from "../lib";
+import { makeDonut, treeShake, palette, convertColorToHex, convertConfigColors, calcLinearProgression, createCsvContent, downloadCsv } from "../lib";
 import mainConfig from "../default_configs.json";
 
 export default {
@@ -1132,8 +1132,8 @@ export default {
         makeDonut,
         convertColorToHex,
         convertConfigColors,
-        makeXls,
-
+        createCsvContent,
+        downloadCsv,
         // specific
         applyDonutOption() {
             const donutSet = this.selectedDonutCategory.options.map((option, i) => {
@@ -1168,7 +1168,8 @@ export default {
             const head = this.dataset.header.map(h => h.name);
             const body = selection === 'all' ? this.bodyCopy.map(b => b.td) : this.visibleRows.map(r => r.td);
             const table = [head].concat(body);
-            this.makeXls(table, 'vue-ui-table');
+            const csvContent = this.createCsvContent(table);
+            this.downloadCsv({ csvContent, title: 'vue-ui-table'})
         },
         calcLinearProgression,
         closeAllDropdowns() {

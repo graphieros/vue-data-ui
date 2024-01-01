@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { convertColorToHex, palette, opacity, makeXls, createUid } from "../lib.js";
+import { convertColorToHex, palette, opacity, createUid, createCsvContent, downloadCsv } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -206,13 +206,14 @@ function generateImage() {
     }, 100)
 }
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const title = [[onionConfig.value.style.chart.title.text], [onionConfig.value.style.chart.title.subtitle.text], [""]];
         const head = table.value.head;
         const body = table.value.body;
         const tableXls = title.concat([head]).concat(body);
-        makeXls(tableXls, onionConfig.value.style.chart.title.text || 'vue-ui-onion');
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: onionConfig.value.style.chart.title.text || 'vue-ui-onion'})
     });
 }
 
@@ -221,7 +222,7 @@ const selectedSerie = ref(undefined);
 defineExpose({
     getData,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -269,7 +270,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />

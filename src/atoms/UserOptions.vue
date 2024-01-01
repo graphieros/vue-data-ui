@@ -54,14 +54,14 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['generatePdf', 'generateXls', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort']);
+const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort']);
 
 function generatePdf() {
     emit('generatePdf');
 }
 
-function generateXls() {
-    emit('generateXls');
+function generateCsv() {
+    emit('generateCsv');
 }
 
 function generateImage() {
@@ -120,7 +120,7 @@ function toggleSort() {
                 <BaseIcon v-else name="pdf" :stroke="color" />
             </button>
             
-            <button tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateXls">
+            <button tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateCsv">
                 <BaseIcon name="excel" :stroke="color" />
             </button>
 

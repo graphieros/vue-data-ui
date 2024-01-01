@@ -3130,31 +3130,31 @@ function printXy() {
   xytest.value.generatePdf();
 }
 function xlsXy() {
-  xytest.value.generateXls();
+  xytest.value.generateCsv();
 }
 function printDonut(){
   donuttest.value.generatePdf();
 }
 function xlsDonut() {
-  donuttest.value.generateXls();
+  donuttest.value.generateCsv();
 }
 function printWaffle(){
   waffletest.value.generatePdf();
 }
 function xlsWaffle() {
-  waffletest.value.generateXls();
+  waffletest.value.generateCsv();
 }
 function printRadar(){
   radartest.value.generatePdf();
 }
 function xlsRadar() {
-  radartest.value.generateXls();
+  radartest.value.generateCsv();
 }
 function printQuadrant(){
   quadranttest.value.generatePdf();
 }
 function xlsQuadrant() {
-  quadranttest.value.generateXls();
+  quadranttest.value.generateCsv();
 }
 const gaugetest = ref(null);
 function printGauge(){
@@ -3166,7 +3166,7 @@ function printChestnut(){
   chestnuttest.value.generatePdf();
 }
 function xlsChestnut() {
-  chestnuttest.value.generateXls();
+  chestnuttest.value.generateCsv();
 }
 
 const oniontest = ref(null);
@@ -3174,7 +3174,7 @@ function printOnion(){
   oniontest.value.generatePdf();
 }
 function xlsOnion() {
-  oniontest.value.generateXls();
+  oniontest.value.generateCsv();
 }
 
 const verticaltest = ref(null);
@@ -3182,7 +3182,7 @@ function printVB(){
   verticaltest.value.generatePdf();
 }
 function xlsVB() {
-  verticaltest.value.generateXls();
+  verticaltest.value.generateCsv();
 }
 
 const heatmaptest = ref(null);
@@ -3190,14 +3190,14 @@ function printHeatmap(){
   heatmaptest.value.generatePdf();
 }
 function xlsHeatmap() {
-  heatmaptest.value.generateXls();
+  heatmaptest.value.generateCsv();
 }
 
 function printScatter(){
   scatter.value.generatePdf();
 }
 function xlsScatter() {
-  scatter.value.generateXls();
+  scatter.value.generateCsv();
 }
 
 const candlestick = ref(null);
@@ -3205,7 +3205,7 @@ function printCandle(){
   candlestick.value.generatePdf();
 }
 function xlsCandle() {
-  candlestick.value.generateXls();
+  candlestick.value.generateCsv();
 }
 
 const pyramid = ref(null);
@@ -3213,7 +3213,7 @@ function printPyramid(){
   pyramid.value.generatePdf();
 }
 function xlsPyramid() {
-  pyramid.value.generateXls();
+  pyramid.value.generateCsv();
 }
 
 const relation = ref(null);

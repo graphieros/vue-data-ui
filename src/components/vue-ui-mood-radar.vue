@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { createPolygonPath, shiftHue, opacity, makeXls, makePath, createUid } from "../lib";
+import { createPolygonPath, shiftHue, opacity, makePath, createUid, createCsvContent, downloadCsv } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -182,7 +182,7 @@ const table = computed(() => {
     return { head, body };
 });
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const labels = table.value.head.map((h,i) => {
             return [[
@@ -190,8 +190,8 @@ function generateXls() {
             ],[table.value.body[i]], [isNaN(table.value.body[i] / grandTotal.value) ? '-' : table.value.body[i] / grandTotal.value * 100]]
         });
         const tableXls = [[radarConfig.value.style.chart.title.text],[radarConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
-
-        makeXls(tableXls, radarConfig.value.style.chart.title.text || "vue-ui-mood-radar");
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: radarConfig.value.style.chart.title.text || "vue-ui-mood-radar"});
     });
 }
 
@@ -240,7 +240,7 @@ function getData() {
 defineExpose({
     getData,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -283,7 +283,7 @@ defineExpose({
             hasImg
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />

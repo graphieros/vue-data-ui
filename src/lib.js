@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 export function makeDonut(item, cx, cy, rx, ry) {
     let { series } = item;
     if (!series || item.base === 0)
@@ -501,29 +499,6 @@ export function convertConfigColors(config) {
     return config;
 }
 
-export function makeXls(table, fileName) {
-
-    function s2ab(s) {
-        let buf = new ArrayBuffer(s.length);
-        let view = new Uint8Array(buf);
-        for (let i = 0; i < s.length; i++) {
-            view[i] = s.charCodeAt(i) & 0xff;
-        }
-        return buf;
-    }
-
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.aoa_to_sheet(table);
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    const excelFile = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-    const blob = new Blob([s2ab(excelFile)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.download = `${fileName.replaceAll(" ", "_")}.xlsx`;
-    link.click();
-    window.URL.revokeObjectURL(link.href);
-}
-
 export function calcLinearProgression(plots) {
     let x1, y1, x2, y2;
     const len = plots.length;
@@ -697,6 +672,26 @@ export function makePath(plots, closed = true) {
     return `M${path}${closed ? 'Z' : ''}`;
 }
 
+export function downloadCsv({ csvContent, title = "vue-data-ui" }) {
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${title}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(encodedUri);
+}
+
+/**
+ * 
+ * @param {string[][]} rows
+ * @returns 
+ */
+export function createCsvContent(rows) {
+    return `data:text/csv;charset=utf-8,${rows.map(r => r.join(',')).join('\n')}`;
+}
+
 const lib = {
     adaptColorToBackground,
     addVector,
@@ -712,18 +707,19 @@ const lib = {
     closestDecimal,
     convertColorToHex,
     convertConfigColors,
+    createCsvContent,
     createPolygonPath,
     createSmoothPath,
     createStar,
     createUid,
     degreesToRadians,
     degreesToRadians,
+    downloadCsv,
     giftWrap,
     isSafeValue,
     isValidUserValue,
     makeDonut,
     makePath,
-    makeXls,
     matrixTimes,
     opacity,
     palette,

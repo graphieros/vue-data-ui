@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { palette, shiftHue, opacity, convertColorToHex, makeXls, createUid } from "../lib";
+import { palette, shiftHue, opacity, convertColorToHex, createUid, createCsvContent, downloadCsv } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -321,7 +321,7 @@ function generateImage() {
     }, 100)
 }
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const labels = table.value.head.map((h,i) => {
             return [[
@@ -330,7 +330,8 @@ function generateXls() {
         });
         const tableXls = [[waffleConfig.value.style.chart.title.text],[waffleConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
 
-        makeXls(tableXls, waffleConfig.value.style.chart.title.text || "vue-ui-waffle");
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: waffleConfig.value.style.chart.title.text || "vue-ui-waffle"})
     });
 }
 
@@ -377,7 +378,7 @@ const dataTable = computed(() => {
 defineExpose({
     getData,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -425,7 +426,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, makeXls, createUid } from "../lib";
+import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, createUid, createCsvContent, downloadCsv } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -355,7 +355,7 @@ const table = computed(() => {
     return { head, body }
 });
 
-function generateXls() {
+function generateCsv() {
     nextTick(() => {
         const title = [[chestnutConfig.value.style.chart.layout.title.text], [chestnutConfig.value.style.chart.layout.title.subtitle.text], [""],["Grand total", treeTotal.value],[""]];
         const head = table.value.head;
@@ -376,14 +376,15 @@ function generateXls() {
             ]
         });
         const tableXls = title.concat([head]).concat(body);
-        makeXls(tableXls, chestnutConfig.value.style.chart.layout.title.text || 'vue-ui-chestnut');
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: chestnutConfig.value.style.chart.layout.title.text || 'vue-ui-chestnut'})
     });
 }
 
 defineExpose({
     getData,
     generatePdf,
-    generateXls,
+    generateCsv,
     generateImage
 });
 
@@ -409,7 +410,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             @generatePdf="generatePdf"
-            @generateXls="generateXls"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
        />
