@@ -67,6 +67,7 @@ Available components:
 - [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
 - [VueUiAnnotator](https://vue-data-ui.graphieros.com/docs#vue-ui-annotator)
 - [VueUiIcon](https://vue-data-ui.graphieros.com/docs#vue-ui-icon)
+- [VueUiDigits](https://vue-data-ui.graphieros.com/docs#vue-ui-digits)
 
 # Installation
 ```
