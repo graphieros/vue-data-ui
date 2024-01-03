@@ -44,6 +44,7 @@ import WheelTest from "./components/vue-ui-wheel.vue";
 import TireTest from "./components/vue-ui-tiremarks.vue";
 import MoodRadarTest from "./components/vue-ui-mood-radar.vue";
 import Bar3dTest from "./components/vue-ui-3d-bar.vue";
+import DigitsTest from "./components/vue-ui-digits.vue";
 import DonutEvolutionTest from "./components/vue-ui-donut-evolution.vue";
 
 const dataset = ref([
@@ -3732,6 +3733,16 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartTable" stroke="#42d392" />
           <BaseIcon name="chartMoodRadar" stroke="#42d392" />
           <BaseIcon name="chart3dBar" stroke="#42d392" />
+          <BaseIcon name="digit0" stroke="#42d392" />
+          <BaseIcon name="digit1" stroke="#42d392" />
+          <BaseIcon name="digit2" stroke="#42d392" />
+          <BaseIcon name="digit3" stroke="#42d392" />
+          <BaseIcon name="digit4" stroke="#42d392" />
+          <BaseIcon name="digit5" stroke="#42d392" />
+          <BaseIcon name="digit6" stroke="#42d392" />
+          <BaseIcon name="digit7" stroke="#42d392" />
+          <BaseIcon name="digit8" stroke="#42d392" />
+          <BaseIcon name="digit9" stroke="#42d392" />
         </div>
       </template>
       </Box>
@@ -3758,7 +3769,23 @@ const moodRadarConfig = ref({
 
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_3d_bar)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_digits)">
+        <template #title>
+          <BaseIcon name="digit8"/>
+          VueUiDigits
+        </template>
+        <template #dev>
+          <DigitsTest :dataset="299792458" :config="{ backgroundColor: '#1A1A1A', digits: { color: '#42d392', skeletonColor: '#2A2A2A'}}"/>
+        </template>
+        <template #prod>
+          <VueUiDigits :dataset="299792458" :config="{ backgroundColor: '#1A1A1A', digits: { color: '#42d392', skeletonColor: '#2A2A2A'}}"/>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_digits }}
+        </template>
+      </Box>
+
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_3d_bar)">
         <template #title>
           <BaseIcon name="chart3dBar"/>
         VueUi3dBar
@@ -3776,6 +3803,9 @@ const moodRadarConfig = ref({
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
           </VueUi3dBar>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_3d_bar }}
         </template>
       </Box>
 

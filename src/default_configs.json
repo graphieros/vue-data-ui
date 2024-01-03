@@ -2862,5 +2862,14 @@
         "userOptions": {
             "show": true
         }
+    },
+    "vue_ui_digits": {
+        "height": "100%",
+        "width": null,
+        "backgroundColor":"#FFFFFF",
+        "digits": {
+            "color": "#2D353C",
+            "skeletonColor": "#e1e5e8"
+        }
     }
 }

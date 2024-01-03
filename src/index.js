@@ -31,6 +31,7 @@ import VueUiDonutEvolution from "./components/vue-ui-donut-evolution.vue";
 import VueUiIcon from "./atoms/BaseIcon.vue";
 import VueUiMoodRadar from "./components/vue-ui-mood-radar.vue";
 import VueUi3dBar from "./components/vue-ui-3d-bar.vue";
+import VueUiDigits from "./components/vue-ui-digits.vue";
 
 export { 
     VueUiXy, 
@@ -65,5 +66,6 @@ export {
     VueUiDonutEvolution,
     VueUiIcon,
     VueUiMoodRadar,
-    VueUi3dBar
+    VueUi3dBar,
+    VueUiDigits
 };

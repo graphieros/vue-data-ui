@@ -5,6 +5,21 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiDigitsConfig = {
+        backgroundColor?: string;
+        height?: string;
+        width?: string;
+        digits?: {
+            color?: string;
+            skeletonColor?: string;
+        }
+    }
+
+    export const VueUiDigits: DefineComponent<{
+        dataset: number,
+        config?: VueUiDigitsConfig
+    }>;
+
     export type VueUi3dBarDataset = {
         percentage: number;
     };
@@ -170,8 +185,10 @@ declare module 'vue-data-ui' {
         config?: VueUiMoodRadarConfig
     }>;
 
+    export type VueUiIconName = "annotator" | "chart3bar" | "chartAgePyramid" | "chartBar" | "chartCandlestick" | "chartChestnut" | "chartDonut" | "chartDonutEvolution" | "chartGauge" | "chartHeatmap" | "chartLine" | "chartMoodbar" | "chartOnion" | "chartQuadrant" | "chartRadar" | "chartRelationCircle" | "chartRings" | "chartScatter" | "chartSparkHistogram" | "chartSparkStackbar" | "chartTable" | "chartThermometer" | "chartTiremarks" | "chartVerticalBar" | "chartWaffle" | "chartWheel" | "close" | "dashboard" | "digit0" | "digit1" | "digit2" | "digit3" | "digit4" | "digit5" | "digit6" | "digit7" | "digit8" | "digit9" | "excel" | "image" | "labelClose" | "labelOpen" | "menu" | "moodFlat" | "moodHappy" | "moodNeutral" | "moodSad" | "pdf" | "screenshot" | "skeleton" | "smiley" | "sort" | "spin" | "star" | "tableClose" | "tableOpen";
+
     export const VueUiIcon: DefineComponent<{
-        name: string;
+        name: VueUiIconName;
         stroke?: string;
         strokeWidth?: number;
         size?: number;
