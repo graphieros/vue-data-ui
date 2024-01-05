@@ -3670,7 +3670,7 @@ const moodRadarConfig = ref({
 
   <div style="padding-left: 48px; padding-right: 48px; width: 100%; max-width: 80%;margin: 0 auto">
       <div style="padding-top: 48px; padding-bottom: 48px;font-weight: bold; line-height: 20px; display: flex; flex-direction:row; gap:24px; align-items:center">
-          <img src="../../vue-data-ui-logo.png" height="128px"/>
+          <img src="../../vue-data-ui-logo.png" height="100px"/>
           <!-- <BaseIcon name="chartRelationCircle" :size="118" :strokeWidth="0.8" stroke="#5A5A5A"/> -->
         <div>
           <h1 style="font-size: 36px; color: #42d392">
@@ -3766,10 +3766,13 @@ const moodRadarConfig = ref({
             </template>
           </VueUiMoodRadar>
         </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_mood_radar }}
+        </template>
 
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_digits)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_digits)">
         <template #title>
           <BaseIcon name="digit8"/>
           VueUiDigits
