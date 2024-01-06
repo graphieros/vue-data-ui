@@ -13,6 +13,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiMoleculeConfig = {
         style?: {
+            fontFamily?: string;
             chart?: {
                 backgroundColor?: string;
                 color?: string;
