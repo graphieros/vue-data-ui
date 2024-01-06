@@ -406,6 +406,17 @@ function generateCsv() {
     });
 }
 
+function getData() {
+    return convertedDataset.value
+}
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateCsv,
+    generateImage
+});
+
 </script>
 
 <template>
