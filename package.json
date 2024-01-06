@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "1.9.54",
+  "version": "1.9.55",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
   "keywords": [
@@ -36,7 +36,9 @@
     "tiremarks",
     "donut evolution",
     "mood radar",
-    "3d bar"
+    "3d bar",
+    "molecule",
+    "tree"
   ],
   "author": "Alec Lloyd Probert",
   "repository": {

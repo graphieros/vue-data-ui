@@ -692,6 +692,29 @@ export function createCsvContent(rows) {
     return `data:text/csv;charset=utf-8,${rows.map(r => r.join(',')).join('\n')}`;
 }
 
+export function lightenHexColor(hexColor, percentLighter) {
+    if (!/^#([0-9A-F]{3}){1,2}$/i.test(hexColor)) {
+        throw new Error('Invalid hex color format');
+    }
+
+    let color = hexColor.replace('#', '');
+    if (color.length === 3) {
+        color = color.split('').map(c => c + c).join('');
+    }
+
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+
+    const newR = Math.min(255, r + (255 - r) * percentLighter);
+    const newG = Math.min(255, g + (255 - g) * percentLighter);
+    const newB = Math.min(255, b + (255 - b) * percentLighter);
+
+    const lighterHex = `#${Math.round(newR).toString(16).padStart(2, '0')}${Math.round(newG).toString(16).padStart(2, '0')}${Math.round(newB).toString(16).padStart(2, '0')}`;
+
+    return lighterHex;
+}
+
 const lib = {
     adaptColorToBackground,
     addVector,
@@ -718,6 +741,7 @@ const lib = {
     giftWrap,
     isSafeValue,
     isValidUserValue,
+    lightenHexColor,
     makeDonut,
     makePath,
     matrixTimes,

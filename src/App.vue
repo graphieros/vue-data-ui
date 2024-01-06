@@ -45,6 +45,7 @@ import TireTest from "./components/vue-ui-tiremarks.vue";
 import MoodRadarTest from "./components/vue-ui-mood-radar.vue";
 import Bar3dTest from "./components/vue-ui-3d-bar.vue";
 import DigitsTest from "./components/vue-ui-digits.vue";
+import MoleculeTest from './components/vue-ui-molecule.vue';
 import DonutEvolutionTest from "./components/vue-ui-donut-evolution.vue";
 
 const dataset = ref([
@@ -3664,6 +3665,130 @@ const moodRadarConfig = ref({
     percentage: 66
   })
 
+  const clusterDataset = ref([
+    {
+      name: "root",
+      details: 'Lorem root',
+      nodes: [
+        {
+          name: 'node1',
+          details: 'Lorem ipsum',
+          nodes: [
+            { name: 'node1.1', details: 'Lorem ipsum', nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+            { name: 'node1.3'},
+          ]},
+            { name: 'node1.2',nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+            { name: 'node1.3'},
+            { name: 'node1.4'},
+          ]},
+            { name: 'node1.3',nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+          ]},
+            { name: 'node1.4',nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+            { name: 'node1.3'},
+            { name: 'node1.4'},
+            { name: 'node1.5'},
+            { name: 'node1.6'},
+          ]},
+            { name: 'node1.5',nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+            { name: 'node1.3'},
+            { name: 'node1.4'},
+            { name: 'node1.5'},
+            { name: 'node1.6'},
+          ]},
+            { name: 'node1.6', nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+            { name: 'node1.3'},
+            { name: 'node1.4'},
+            { name: 'node1.5'},
+            { name: 'node1.6'},
+          ]},
+          ]
+        },
+        {
+          name: 'node2',
+          nodes: [
+            { name: 'node2.1', nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+            { name: 'node1.3'},
+            { name: 'node1.4'},
+            { name: 'node1.5'},
+            { name: 'node1.6', nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+            { name: 'node1.3'},
+            { name: 'node1.4'},
+            { name: 'node1.5'},
+            { name: 'node1.6', nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+            { name: 'node1.3'},
+            { name: 'node1.4'},
+            { name: 'node1.5'},
+            { name: 'node1.6', nodes: [
+            { name: 'node1.1'},
+            { name: 'node1.2'},
+            { name: 'node1.3'},
+            { name: 'node1.4'},
+            { name: 'node1.5'},
+            { name: 'node1.6'},
+          ]},
+          ]},
+          ]},
+          ]},
+          ]
+        },
+        {
+          name: 'node2',
+          nodes: [
+            { name: 'node3.1'},
+            { name: 'node3.2'},
+            { name: 'node3.3'},
+          ]
+        },
+        {
+          name: 'node3',
+          nodes: [
+            { name: 'node4.1'},
+            { name: 'node4.2'},
+            { name: 'node4.3'},
+            { name: 'node4.4'},
+          ]
+        },
+        {
+          name: 'node3',
+          nodes: [
+            { name: 'node4.1'},
+            { name: 'node4.2'},
+            { name: 'node4.3'},
+            { name: 'node4.4'},
+            { name: 'node4.5'},
+          ]
+        },
+        {
+          name: 'node3',
+          nodes: [
+            { name: 'node4.1'},
+            { name: 'node4.2'},
+            { name: 'node4.3'},
+            { name: 'node4.4'},
+          ]
+        },
+      ]
+    }
+  ])
+
 </script>
 
 <template>
@@ -3743,8 +3868,30 @@ const moodRadarConfig = ref({
           <BaseIcon name="digit7" stroke="#42d392" />
           <BaseIcon name="digit8" stroke="#42d392" />
           <BaseIcon name="digit9" stroke="#42d392" />
+          <BaseIcon name="chartCluster" stroke="#42d392" />
+          <BaseIcon name="arrowRight" stroke="#42d392" />
+          <BaseIcon name="arrowTop" stroke="#42d392" />
+          <BaseIcon name="arrowLeft" stroke="#42d392" />
+          <BaseIcon name="arrowBottom" stroke="#42d392" />
+
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
+        <template #title>
+          <BaseIcon name="chartCluster"/>
+          VueUiMolecule
+        </template>
+        <template #dev>
+          <MoleculeTest :dataset="clusterDataset"/>
+        </template>
+        <template #prod>
+          <VueUiMolecule :dataset="clusterDataset"/>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_molecule }}
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_mood_radar)">

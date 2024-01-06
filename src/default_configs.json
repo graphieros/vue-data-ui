@@ -2871,5 +2871,62 @@
             "color": "#2D353C",
             "skeletonColor": "#e1e5e8"
         }
+    },
+    "vue_ui_molecule": {
+        "style": {
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "nodes": {
+                    "stroke":"#FFFFFF",
+                    "strokeHovered": "#2D353C"
+                },
+                "links": {
+                    "stroke": "#DDDDDD"
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "", 
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "tooltip": {
+                    "show": true,
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "fontSize": 14
+                },
+                "zoom": {
+                    "speed": 1
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "1px solid #e1e5e8"
+            },
+            "translations": {
+                "nodeName": "Node name",
+                "details": "Details",
+                "parentNode": "Parent node"
+            }
+        },
+        "userOptions": {
+            "show": true
+        }
     }
 }

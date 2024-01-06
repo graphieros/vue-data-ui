@@ -79,13 +79,14 @@ const icons = computed(() => {
         star: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M3 19 10 15 17 19 14 12 19 8 13 8 10 2 7 8 1 8 6 12 3 19" />`,
         tableClose: `<path stroke-width="${props.strokeWidth}" stroke-linecap="round" fill="none" stroke="${props.stroke}" d="M4 1 4 1C2 1 1 2 1 4L1 16C1 18 2 19 4 19L7 19M4 1 16 1C18 1 19 2 19 4L19 14M18 19 14 16 10 19"/><line stroke-width="${props.strokeWidth}" stroke="${props.stroke}" x1="8" y1="1" x2="8" y2="19" stroke-linecap="round" /><line stroke-width="${props.strokeWidth}" stroke="${props.stroke}" x1="1" y1="8" x2="19" y2="8" />`,
         tableOpen: `<path stroke-width="${props.strokeWidth}" fill="none" stroke-linecap="round" stroke="${props.stroke}" d="M4 1 4 1C2 1 1 2 1 4L1 16C1 18 2 19 4 19L7 19M4 1 16 1C18 1 19 2 19 4L19 14M18 16 14 19 10 16"/><line stroke-width="${props.strokeWidth}" stroke="${props.stroke}" x1="8" y1="1" x2="8" y2="19" stroke-linecap="round" /><line stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke="${props.stroke}" x1="1" y1="8" x2="19" y2="8" />`,
+        chartCluster: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" d="M7 10A1 1 0 0013 10 1 1 0 007 10M10 7 10 4A1 1 0 0010 1 1 1 0 0010 4M7 10 4 10A1 1 0 001 10 1 1 0 004 10M10 13 10 16A1 1 0 0010 19 1 1 0 0010 16M13 10 16 10A1 1 0 0019 10 1 1 0 0016 10" />`,
+        arrowRight: `<path fill="${props.stroke}" stroke="none" stroke-width="none" d="M18 10 3 1C6 7 6 13 3 19L18 10" stroke-linejoin="round" />`,
+        arrowTop: `<path fill="${props.stroke}" stroke="none" stroke-width="none" d="M10 2 1 17C7 14 13 14 19 17L10 2" stroke-linejoin="round" />`,
+        arrowLeft: `<path fill="${props.stroke}" stroke="none" stroke-width="none" d="M2 10 17 1C14 7 14 13 17 19L2 10" stroke-linejoin="round" />`,
+        arrowBottom: `<path fill="${props.stroke}" stroke="none" stroke-width="none" d="M10 18 1 3C7 6 13 6 19 3L10 18" stroke-linejoin="round" />`,
     }
 })
 
-
-/**
- * M8 1 7 2 8 3 12 3 13 2 12 1 8 1M7 10 8 9 12 9 13 10 12 11 8 11 7 10M7 18 8 17 12 17 13 18 12 19 8 19 7 18M6 3 7 4 7 8 6 9 5 8 5 4 6 3M6 11 7 12 7 16 6 17 5 16 5 12 6 11M14 3 13 4 13 8 14 9 15 8 15 4 14 3M14 11 15 12 15 16 14 17 13 16 13 12 14 11
- */
 </script>
 
 <template>

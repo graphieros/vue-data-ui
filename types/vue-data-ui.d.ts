@@ -5,6 +5,75 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiMoleculeDatasetNode = {
+        name: string;
+        details?: string;
+        nodes?: VueUiMoleculeDatasetNode[];
+    };
+
+    export type VueUiMoleculeConfig = {
+        style?: {
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                nodes?: {
+                    stroke?: string;
+                    strokeHovered?: string;
+                };
+                links?: {
+                    stroke?: string;
+                };
+                title?: {
+                    text?: string;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                    subtitle?: {
+                        color?: string;
+                        text?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                    };
+                };
+                tooltip?: {
+                    show?: boolean;
+                    color?: string;
+                    backgroundColor?: string;
+                    fontSize?: number;
+                };
+                zoom?: {
+                    speed?: number;
+                };
+            };
+        };
+        table?: {
+            show?: boolean;
+            th?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+            };
+            td?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+            };
+            translations?: {
+                nodeName?: string;
+                details?: string;
+                parentNode?: string;
+            };
+        };
+        userOptions?: {
+            show?: boolean;
+        };
+    };
+
+    export const VueUiMolecule: DefineComponent<{
+        dataset: VueUiMoleculeDatasetNode[],
+        config?: VueUiMoleculeConfig
+    }>
+
     export type VueUiDigitsConfig = {
         backgroundColor?: string;
         height?: string;
