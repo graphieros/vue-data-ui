@@ -416,7 +416,7 @@ function generateCsv() {
         :style="`font-family:${moleculeConfig.style.fontFamily};width:100%; text-align:center;background:${moleculeConfig.style.chart.backgroundColor}`"
         :id="`cluster_${uid}`">
 
-        <div v-if="moleculeConfig.style.chart.title.text" :style="`width:100%;background:${moleculeConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        <div v-if="moleculeConfig.style.chart.title.text" :style="`width:100%;background:${moleculeConfig.style.chart.backgroundColor};`">
             <Title
                 :config="{
                     title: {
