@@ -19,7 +19,7 @@
                 <RecursiveCircles 
                     :dataset="node.nodes" 
                     :color="color" 
-                    :linkColor="linkColor" 
+                    :stroke="stroke" 
                     :strokeHovered="strokeHovered" 
                     :hoveredUid="hoveredUid" 
                     @zoom="zoom" 
