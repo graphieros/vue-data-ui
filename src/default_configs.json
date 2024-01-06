@@ -2874,6 +2874,7 @@
     },
     "vue_ui_molecule": {
         "style": {
+            "fontFamily": "inherit",
             "chart": {
                 "backgroundColor":"#FFFFFF",
                 "color":"#2D353C",
