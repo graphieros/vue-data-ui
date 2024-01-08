@@ -3278,7 +3278,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings";
+        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution";
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -3293,6 +3293,17 @@ declare module 'vue-data-ui' {
                     color?: string;
                     strokeWidth?: number;
                     showPlots?: boolean;
+                };
+            };
+            donutEvolution?: {
+                axis?: {
+                    show?: boolean;
+                    color?: string;
+                    strokeWidth?: number;
+                };
+                donuts?: {
+                    strokeWidth?: number;
+                    color?: string;
                 };
             };
             bar?: {

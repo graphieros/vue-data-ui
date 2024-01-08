@@ -486,6 +486,25 @@ const ticks = computed(() => {
                 <line :x1="200" :x2="200" :y1="10" :y2="300" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="3"/>
             </svg>
         </template>
+
+        <!-- TYPE DONUT EVOLUTION -->
+        <template v-if="type === 'donutEvolution'">
+            <svg data-cy="skeleton-donut-evolution" width="100%" viewBox="0 0 108 70" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path v-if="skeletonConfig.style.line.axis.show" d="M3 3 3 67 105 67" :stroke="skeletonConfig.style.donutEvolution.axis.color" :stroke-width="skeletonConfig.style.donutEvolution.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+                <path fill="none" d="M10 55A1 1 0 0020 55 1 1 0 0010 55M12 55A1 1 0 0018 55 1 1 0 0012 55M10 55 12 55M15 52 15 50M27 45A1 1 0 0037 45 1 1 0 0027 45M29 45A1 1 0 0035 45 1 1 0 0029 45M32 48 32 50M35 45 37 45M44 50A1 1 0 0054 50 1 1 0 0044 50M46 50A1 1 0 0052 50 1 1 0 0046 50M49 45 49 47M49 53 49 55M61 35A1 1 0 0071 35 1 1 0 0061 35M63 35A1 1 0 0069 35 1 1 0 0063 35M66 30 66 32M61 35 63 35M78 41A1 1 0 0088 41 1 1 0 0078 41M80 41A1 1 0 0086 41 1 1 0 0080 41M78 41 80 41M86 41 88 41M95 14A1 1 0 00105 14 1 1 0 0095 14M97 14A1 1 0 00103 14 1 1 0 0097 14M95 14 97 14M100 17 100 19" :stroke="skeletonConfig.style.donutEvolution.donuts.color" :stroke-width="skeletonConfig.style.donutEvolution.donuts.strokeWidth"/>
+
+                <path fill="none" d="M19 52 27 45M37 45 44 49M52 46 62 38M71 36 78 40M86 37 97 18" :stroke="skeletonConfig.style.donutEvolution.axis.color" :stroke-width="skeletonConfig.style.donutEvolution.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
+
+                <path d="M10 55 12 55C12 53 14 52 15 52L15 50C13 50 10 52 10 55" :fill="skeletonConfig.style.donutEvolution.donuts.color" stroke="none" style="opacity:0.3" />
+                <path d="M32 48 32 50C35 50 37 47 37 45L35 45C35 47 33 48 32 48" :fill="skeletonConfig.style.donutEvolution.donuts.color" stroke="none" style="opacity:0.3" />
+                <path d="M49 53 49 55A1 1 0 0049 45L49 47C53 47 53 53 49 53" :fill="skeletonConfig.style.donutEvolution.donuts.color" stroke="none" style="opacity:0.3" />
+                <path d="M63 35C63 33 65 32 66 32L66 30C63 30 61 33 61 35L63 35" :fill="skeletonConfig.style.donutEvolution.donuts.color" stroke="none" style="opacity:0.3" />
+                <path d="M78 41A1 1 0 0088 41L86 41C86 45 80 45 80 41L78 41" :fill="skeletonConfig.style.donutEvolution.donuts.color" stroke="none" style="opacity:0.3" />
+                <path d="M95 14C95 17 98 19 100 19L100 17C99 17 97 16 97 14L95 14" :fill="skeletonConfig.style.donutEvolution.donuts.color" stroke="none" style="opacity:0.3" />
+
+            </svg>
+        </template>
         
         <!-- TYPE LINE -->
         <template v-if="type === 'line'">

@@ -1377,6 +1377,17 @@
                 "color": "#e1e5e8",
                 "strokeWidth": 0.7
             },
+            "donutEvolution": {
+                "axis": {
+                    "show": true,
+                    "color": "#E1E5E8",
+                    "strokeWidth": 0.5
+                },
+                "donuts": {
+                    "strokeWidth": 0.5,
+                    "color": "e1e5e8"
+                }
+            },
             "line": {
                 "axis": {
                     "show": true,
