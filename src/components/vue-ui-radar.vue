@@ -319,6 +319,11 @@ function generateCsv() {
     });
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -369,6 +374,9 @@ defineExpose({
             :uid="uid"
             :hasImg="true"
             hasTable
+            hasFullscreen
+            :chartElement="radarChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -376,7 +384,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`" >
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`" >
 
             <!-- DEFS -->
             <defs>
@@ -631,5 +639,11 @@ path, line, rect, circle {
 
 .vue-ui-dna * {
     animation: none !important;
+}
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

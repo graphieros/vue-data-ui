@@ -30,6 +30,7 @@ const defaultConfig = ref(mainConfig.vue_ui_3d_bar);
 const isPrinting = ref(false);
 const isImaging = ref(false);
 const details = ref(null);
+const bar3dChart = ref(null)
 
 const barConfig = computed(() => {
     return useNestedProp({
@@ -144,6 +145,11 @@ function generateImage() {
     }, 100)
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     generatePdf,
     generateImage
@@ -153,7 +159,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :ref="`bar3dChart`" :class="`vue-ui-3d-bar`" :style="`font-family:${barConfig.style.fontFamily};width:100%; text-align:center;background:${barConfig.style.chart.backgroundColor}`" :id="`3d_bar_${uid}`">
+    <div ref="bar3dChart" :class="`vue-ui-3d-bar`" :style="`font-family:${barConfig.style.fontFamily};width:100%; text-align:center;background:${barConfig.style.chart.backgroundColor}`" :id="`3d_bar_${uid}`">
 
         <div v-if="barConfig.style.chart.title.text" :style="`width:100%;background:${barConfig.style.chart.backgroundColor}`">
             <!-- TITLE AS DIV -->
@@ -188,12 +194,15 @@ defineExpose({
             :title="barConfig.userOptions.title"
             :uid="uid"
             hasImg
+            hasFullscreen
+            :chartElement="bar3dChart"
+            @toggleFullscreen="toggleFullscreen"
             :hasXls="false"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
         />
 
-        <svg data-cy="3d-bar-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${barConfig.style.chart.backgroundColor};color:${barConfig.style.chart.color}`">
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="3d-bar-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${barConfig.style.chart.backgroundColor};color:${barConfig.style.chart.color}`">
 
             <!-- DEFS -->
             <defs>
@@ -265,5 +274,11 @@ defineExpose({
 .vue-ui-3d-bar {
     user-select: none;
     position: relative;
+}
+.vue-data-ui-fullscreen--on {
+    height: 100% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

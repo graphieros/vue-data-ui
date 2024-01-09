@@ -35,6 +35,9 @@
             hasImg
             hasLabel
             hasTable
+            hasFullscreen
+            :chartElement="$refs.chart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -45,7 +48,7 @@
         <canvas ref="vueUiXyCanvas" v-if="chartConfig.useCanvas" :height="chartConfig.chart.height" :width="chartConfig.chart.width" @mouseover="isInsideCanvas = true" @mouseleave="resetCanvas">
         </canvas>
 
-        <svg data-cy="xy-svg" v-else width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" v-else width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
@@ -753,6 +756,7 @@ export default {
                 bar: "bar",
                 plot: "plot"
             },
+            isFullscreen: false,
             isInsideCanvas: false,
             isPrinting: false,
             isImaging: false,
@@ -1856,6 +1860,9 @@ export default {
                 this.selectedSerieIndex = null;
             }
         },
+        toggleFullscreen(state) {
+            this.isFullscreen = state;
+        },
         showSpinnerPdf() {
             this.isPrinting = true;
         },
@@ -2090,5 +2097,12 @@ canvas {
 
 .vue-ui-dna * {
     animation: none !important;
+}
+
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

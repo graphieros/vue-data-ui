@@ -36,6 +36,7 @@ const hoveredIndex = ref(null);
 const hoveredDatapoint = ref(null);
 const isFixed = ref(false);
 const fixedDatapoint = ref(null);
+const donutEvolutionChart = ref(null)
 
 const emit = defineEmits(['selectLegend'])
 
@@ -358,6 +359,11 @@ function generateCsv() {
     });
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -368,7 +374,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :ref="`donutEvolutionChart`" :class="`vue-ui-donut-evolution ${donutEvolutionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`overflow: visible;font-family:${donutEvolutionConfig.style.fontFamily};width:100%; text-align:center;${!donutEvolutionConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutEvolutionConfig.style.chart.backgroundColor}`" :id="uid">
+    <div ref="donutEvolutionChart" :class="`vue-ui-donut-evolution ${donutEvolutionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`overflow: visible;font-family:${donutEvolutionConfig.style.fontFamily};width:100%; text-align:center;${!donutEvolutionConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutEvolutionConfig.style.chart.backgroundColor}`" :id="uid">
         <div v-if="donutEvolutionConfig.style.chart.title.text" :style="`width:100%;background:${donutEvolutionConfig.style.chart.backgroundColor};padding-bottom:24px`" @mouseleave="leave">
             <!-- TITLE AS DIV -->
             <Title
@@ -402,6 +408,9 @@ defineExpose({
             :uid="uid"
             hasImg
             hasTable
+            hasFullscreen
+            @toggleFullscreen="toggleFullscreen"
+            :chartElement="donutEvolutionChart"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -409,7 +418,7 @@ defineExpose({
         />
 
         
-        <svg data-cy="donut-evolution-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${donutEvolutionConfig.style.chart.backgroundColor};color:${donutEvolutionConfig.style.chart.color}`">
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-evolution-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${donutEvolutionConfig.style.chart.backgroundColor};color:${donutEvolutionConfig.style.chart.color}`">
 
             <defs>
                 <linearGradient :id="`hover_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -798,5 +807,10 @@ path {
         opacity: 1;
     }
 }
-
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
+}
 </style>

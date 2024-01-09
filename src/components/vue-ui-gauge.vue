@@ -269,6 +269,11 @@ function generateImage() {
     }, 100)
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     generatePdf,
     generateImage
@@ -281,7 +286,7 @@ defineExpose({
         class="vue-ui-gauge"
         ref="gaugeChart"
         :id="`vue-ui-gauge_${uid}`"
-        :style="`font-family:${gaugeConfig.style.fontFamily};width:100%; text-align:center`"
+        :style="`font-family:${gaugeConfig.style.fontFamily};width:100%; text-align:center;background:${gaugeConfig.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && gaugeConfig.style.chart.title.text" :style="`width:100%;background:${gaugeConfig.style.chart.backgroundColor};padding-bottom:12px;${gaugeConfig.userOptions.show ? 'padding-top:36px' : ''}`">
@@ -308,12 +313,15 @@ defineExpose({
             :uid="uid"
             :hasXls="false"
             :hasImg="true"
+            hasFullscreen
+            :chartElement="gaugeChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
         />
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:hidden !important;background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">
+        <svg  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:hidden !important;background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">
 
             <defs>
                 <radialGradient :id="`gradient_${uid}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -517,5 +525,11 @@ defineExpose({
     position: fixed;
     padding:12px;
     z-index:1;
+}
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

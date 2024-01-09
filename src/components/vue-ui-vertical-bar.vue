@@ -369,6 +369,11 @@ function generateCsv() {
     downloadCsv({ csvContent, title: verticalBarConfig.value.style.chart.title.text || "vue-ui-vertical-bar"})
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     recalculateHeight,
@@ -417,6 +422,9 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasSort
+            hasFullscreen
+            :chartElement="verticalBarChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -442,7 +450,7 @@ defineExpose({
         </Legend>
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" >
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" >
 
             <!-- defs -->
             <linearGradient
@@ -745,5 +753,11 @@ path, line, rect, circle, polygon {
 
 .vue-ui-dna * {
     animation: none !important;
+}
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

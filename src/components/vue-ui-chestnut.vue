@@ -381,6 +381,11 @@ function generateCsv() {
     });
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -409,13 +414,16 @@ defineExpose({
             :uid="uid"
             :hasImg="true"
             hasTable
+            hasFullscreen
+            :chartElement="chestnutChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
        />
 
-        <svg v-if="svg.height > 0" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
 
             <!-- TITLE AS G -->
             <g v-if="!selectedNut">
@@ -1105,5 +1113,11 @@ defineExpose({
         transform: scale(1,1);
         opacity: 1;
     }
+}
+.vue-data-ui-fullscreen--on {
+    height: 100% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

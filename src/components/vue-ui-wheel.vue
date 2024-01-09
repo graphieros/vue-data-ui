@@ -137,6 +137,11 @@ function generateImage() {
     }, 100)
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     generatePdf,
     generateImage
@@ -149,7 +154,7 @@ defineExpose({
         class="vue-ui-wheel" 
         ref="wheelChart"
         :id="uid"
-        :style="`font-family:${wheelConfig.style.fontFamily};width:100%; text-align:center`"
+        :style="`font-family:${wheelConfig.style.fontFamily};width:100%; text-align:center;background:${wheelConfig.style.chart.backgroundColor}`"
     >
 
         <div v-if="wheelConfig.style.chart.title.text" :style="`width:100%;background:${wheelConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -184,11 +189,14 @@ defineExpose({
             :uid="uid"
             :hasImg="true"
             :hasXls="false"
+            hasFullscreen
+            :chartElement="wheelChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
         />
 
-        <svg data-cy="wheel-svg" :viewBox="`0 0 ${svg.size} ${svg.size}`" :style="`max-width:100%;overflow:visible;background:${wheelConfig.style.chart.backgroundColor};color:${wheelConfig.style.chart.color}`">
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="wheel-svg" :viewBox="`0 0 ${svg.size} ${svg.size}`" :style="`max-width:100%;overflow:visible;background:${wheelConfig.style.chart.backgroundColor};color:${wheelConfig.style.chart.color}`">
             <line 
                 v-for="(tick, i) in ticks"
                 :x1="tick.x1"
@@ -250,5 +258,11 @@ defineExpose({
     100% {
         stroke-width: 5;
     }
+}
+.vue-data-ui-fullscreen--on {
+    height: 90% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

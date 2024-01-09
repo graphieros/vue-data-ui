@@ -3875,12 +3875,14 @@ const moodRadarConfig = ref({
           <BaseIcon name="arrowTop" stroke="#42d392" />
           <BaseIcon name="arrowLeft" stroke="#42d392" />
           <BaseIcon name="arrowBottom" stroke="#42d392" />
+          <BaseIcon name="fullscreen" stroke="#42d392" />
+          <BaseIcon name="exitFullscreen" stroke="#42d392" />
 
         </div>
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
         <template #title>
           <BaseIcon name="chartCluster"/>
           VueUiMolecule
@@ -3896,7 +3898,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_mood_radar)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_mood_radar)">
         <template #title>
           <BaseIcon name="chartMoodRadar"/>
           VueUiMoodRadar

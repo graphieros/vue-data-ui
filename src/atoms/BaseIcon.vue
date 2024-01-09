@@ -84,6 +84,9 @@ const icons = computed(() => {
         arrowTop: `<path fill="${props.stroke}" stroke="none" stroke-width="none" d="M10 2 1 17C7 14 13 14 19 17L10 2" stroke-linejoin="round" />`,
         arrowLeft: `<path fill="${props.stroke}" stroke="none" stroke-width="none" d="M2 10 17 1C14 7 14 13 17 19L2 10" stroke-linejoin="round" />`,
         arrowBottom: `<path fill="${props.stroke}" stroke="none" stroke-width="none" d="M10 18 1 3C7 6 13 6 19 3L10 18" stroke-linejoin="round" />`,
+        fullscreen: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M1 6 1 4C1 2 2 1 4 1L6 1M14 1 16 1C18 1 19 2 19 4L19 6M19 14 19 16C19 18 18 19 16 19L14 19M6 19 4 19C2 19 1 18 1 16L1 14M9 9 5 5M11 9 15 5M11 11 15 15M9 11 5 15M5 12 5 15 8 15M12 15 15 15 15 12M15 8 15 5 12 5M8 5 5 5 5 8" />`,
+        exitFullscreen: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M1 6 1 4C1 2 2 1 4 1L6 1M14 1 16 1C18 1 19 2 19 4L19 6M19 14 19 16C19 18 18 19 16 19L14 19M6 19 4 19C2 19 1 18 1 16L1 14M8 8 4 4M12 8 16 4M12 12 16 16M8 12 4 16M5 12 8 12 8 15M12 15 12 12 15 12M15 8 12 8 12 5M8 5 8 8 5 8" />`,
+        
     }
 })
 

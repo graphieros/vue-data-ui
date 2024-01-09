@@ -317,6 +317,11 @@ function generateCsv() {
     });
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -330,7 +335,7 @@ defineExpose({
   <div
     ref="ringsChart"
     :class="`vue-ui-rings ${ringsConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
-    :style="`font-family:${ringsConfig.style.fontFamily};width:100%`"
+    :style="`font-family:${ringsConfig.style.fontFamily};text-align:center;width:100%;background:${ringsConfig.style.chart.backgroundColor}`"
     :id="`rings_${uid}`"
     @mouseleave="
       selectedSerie = null;
@@ -374,6 +379,9 @@ defineExpose({
         :uid="uid"
         hasImg
         hasTable
+        hasFullscreen
+        :chartElement="ringsChart"
+        @toggleFullscreen="toggleFullscreen"
         @generatePdf="generatePdf"
         @generateCsv="generateCsv"
         @generateImage="generateImage"
@@ -383,6 +391,7 @@ defineExpose({
     <!-- CHART -->
 
     <svg
+      :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
       data-cy="rings-svg"
       :viewBox="`0 0 ${svg.width} ${svg.height}`"
       :style="`max-width:100%;overflow:visible;background:${ringsConfig.style.chart.backgroundColor};color:${ringsConfig.style.chart.color}`"
@@ -565,5 +574,11 @@ defineExpose({
     opacity: 1;
     transform: scale(1, 1);
   }
+}
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

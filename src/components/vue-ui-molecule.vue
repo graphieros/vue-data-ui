@@ -410,6 +410,11 @@ function getData() {
     return convertedDataset.value
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -460,6 +465,9 @@ defineExpose({
             hasImg
             hasTable
             hasLabel
+            hasFullscreen
+            :chartElement="moleculeChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -468,7 +476,8 @@ defineExpose({
         />
 
         <svg data-cy="cluster-svg" :viewBox="dynamicViewBox"
-            :style="`max-width:100%; overflow: hidden; background:${moleculeConfig.style.chart.backgroundColor};color:${moleculeConfig.style.chart.color}`" @click="unzoom($event)">
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :style="`overflow: hidden; background:${moleculeConfig.style.chart.backgroundColor};color:${moleculeConfig.style.chart.color}`" @click="unzoom($event)">
 
             <defs>
                 <radialGradient v-for="color in Object.keys(gradientIds)" :id="`gradient_${color}`" cx="50%" cy="30%" r="50%" fx="50%" fy="50%">
@@ -544,5 +553,11 @@ defineExpose({
 .vue-ui-molecule {
     user-select: none;
     position: relative;
+}
+.vue-data-ui-fullscreen--on {
+    height: 100% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

@@ -27,6 +27,7 @@ const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_relation_circle);
 const isImaging = ref(false);
 const isPrinting = ref(false);
+const relationCircleChart = ref(null);
 
 const relationConfig = computed(() => {
     return useNestedProp({
@@ -259,6 +260,10 @@ function generateImage() {
     }, 100)
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
 
 defineExpose({
     generatePdf,
@@ -268,7 +273,7 @@ defineExpose({
 </script>
 
 <template>
-    <div class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor}`" :id="`relation_circle_${uid}`"> 
+    <div ref="relationCircleChart" class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor};text-align:center`" :id="`relation_circle_${uid}`"> 
      <!-- TITLE AS DIV -->
         <div v-if="relationConfig.style.title.useDiv && relationConfig.style.title.text" :style="`width:100%;background:${relationConfig.style.backgroundColor}`">
             <Title
@@ -302,11 +307,15 @@ defineExpose({
             :isImaging="isImaging"
             :title="relationConfig.userOptions.title"
             :uid="uid"
+            hasFullscreen
+            :chartElement="relationCircleChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
         />
 
-        <svg 
+        <svg
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`0 0 ${size} ${size}`"
             class="relation-circle"
             width="100%"
@@ -432,5 +441,11 @@ line.vue-ui-relation-circle-selected {
     to {
         stroke-dashoffset: v-bind(radiusOffset);
     }
+}
+.vue-data-ui-fullscreen--on {
+    height: 100% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

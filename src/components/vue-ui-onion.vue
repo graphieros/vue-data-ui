@@ -219,6 +219,11 @@ function generateCsv() {
 
 const selectedSerie = ref(undefined);
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -269,6 +274,9 @@ defineExpose({
             :uid="uid"
             :hasImg="true"
             hasTable
+            hasFullscreen
+            :chartElement="onionChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -276,7 +284,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
 
             <defs>
                 <radialGradient :id="`onion_gradient_${uid}`">
@@ -549,5 +557,12 @@ circle {
 .vue-ui-onion-blur {
     filter: blur(3px) opacity(50%) grayscale(100%);
     transition: all 0.15s ease-in-out;
+}
+
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

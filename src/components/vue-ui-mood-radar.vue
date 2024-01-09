@@ -237,6 +237,11 @@ function getData() {
     return convertedDataset.value;
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -282,6 +287,9 @@ defineExpose({
             :uid="uid"
             hasImg
             hasTable
+            hasFullscreen
+            :chartElement="moodRadarChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -289,7 +297,8 @@ defineExpose({
         />
 
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`"
-            :style="`max-width:100%;overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`">
+        :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :style="`overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`">
             <!-- DEFS -->
             <defs>
                 <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" :id="`mood_radar_gradient_${uid}`">
@@ -452,5 +461,11 @@ defineExpose({
 }
 .vue-ui-mood-radar-trap {
     transition: all 0.2s ease-in-out;
+}
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

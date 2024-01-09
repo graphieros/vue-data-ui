@@ -216,6 +216,12 @@ function generateCsv() {
     });
 }
 
+
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     generatePdf,
     generateCsv,
@@ -259,6 +265,9 @@ defineExpose({
             :uid="uid"
             :hasImg="true"
             hasTable
+            hasFullscreen
+            :chartElement="heatmapChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -266,7 +275,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
+        <svg  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
             <!-- TITLE AS G -->
             <g v-if="heatmapConfig.style.title.text && mutableConfig.inside && !isPrinting">
                 <text
@@ -525,5 +534,11 @@ defineExpose({
     top:0;
     font-weight: 400;
     user-select: none;
+}
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

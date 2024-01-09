@@ -216,6 +216,11 @@ function generateImage() {
     }, 100)
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     generatePdf,
     generateImage
@@ -258,12 +263,15 @@ defineExpose({
             :title="thermoConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
+            hasFullscreen
+            :chartElement="thermoChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
             :hasXls="false"
         />
 
-        <svg width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`">
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`">
             <defs>
                 <clipPath id="vueUiPill" clipPathUnits="objectBoundingBox">
                     <rect 
@@ -498,5 +506,11 @@ text.vue-ui-thermometer-temperature-value {
     100% {
         height: v-bind(cssTemp);
     }
+}
+.vue-data-ui-fullscreen--on {
+    height: 90% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

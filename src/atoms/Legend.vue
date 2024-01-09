@@ -49,7 +49,7 @@ function handleClick(legend, i) {
 <style scoped>
 .vue-data-ui-legend {
     user-select:none;
-    height: 100%;
+    height: fit-content;
     width:100%;
     display: flex;
     align-items:center;

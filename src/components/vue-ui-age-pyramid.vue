@@ -254,6 +254,11 @@ function generateCsv() {
     });
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     generatePdf,
     generateCsv,
@@ -298,6 +303,9 @@ defineExpose({
             :uid="uid"
             :hasImg="true"
             hasTable
+            hasFullscreen
+            :chartElement="agePyramid"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -305,7 +313,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" >
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" >
 
             <defs>
                 <linearGradient 
@@ -643,5 +651,11 @@ defineExpose({
     top:0;
     font-weight: 400;
     user-select: none;
+}
+.vue-data-ui-fullscreen--on {
+    height: 90% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

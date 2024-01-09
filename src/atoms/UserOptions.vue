@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from "./BaseIcon.vue";
 
@@ -51,10 +51,18 @@ const props = defineProps({
     },
     uid: {
         type: String,
+    },
+    hasFullscreen: {
+        type: Boolean,
+        default: false
+    },
+    chartElement: {
+        type: HTMLElement,
+        default: null
     }
 });
 
-const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort']);
+const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen']);
 
 function generatePdf() {
     emit('generatePdf');
@@ -106,6 +114,38 @@ function toggleSort() {
     emit('toggleSort')
 }
 
+const isFullscreen = ref(false);
+
+function toggleFullscreen(state) {
+    if(!props.chartElement) return;
+    if(state === "in") {
+        isFullscreen.value = true;
+        props.chartElement.requestFullscreen();
+        emit('toggleFullscreen', true)
+    }else {
+        isFullscreen.value = false;
+        document.exitFullscreen();
+        emit('toggleFullscreen', false)
+    }
+}
+
+function fullscreenchanged(event) {
+  if (document.fullscreenElement) {
+    isFullscreen.value = true;
+  } else {
+    isFullscreen.value = false;
+  }
+}
+
+onMounted(() => {
+    document.addEventListener('fullscreenchange', fullscreenchanged)
+})
+
+onBeforeUnmount(() => {
+    document.removeEventListener('fullscreenchange', fullscreenchanged)
+})
+
+
 </script>
 
 <template>
@@ -139,6 +179,11 @@ function toggleSort() {
 
             <button tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
                 <BaseIcon name="sort" :stroke="color"/>
+            </button>
+
+            <button tabindex="0" v-if="hasFullscreen" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
+                <BaseIcon v-if="isFullscreen" name="exitFullscreen" :stroke="color" @click="toggleFullscreen('out')"/>
+                <BaseIcon v-if="!isFullscreen" name="fullscreen" :stroke="color" @click="toggleFullscreen('in')"/>
             </button>
 
         </div>

@@ -490,6 +490,11 @@ function generateCsv() {
     });
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -537,6 +542,9 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasLabel
+            hasFullscreen
+            :chartElement="quadrantChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -545,7 +553,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`"  :id="`svg_${uid}`">
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`"  :id="`svg_${uid}`">
             
             <!-- DEFS -->
             <defs>
@@ -954,5 +962,11 @@ path, line, rect, circle, polygon {
 
 .vue-ui-dna * {
     animation: none !important;
+}
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

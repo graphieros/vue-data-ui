@@ -26,6 +26,7 @@ const props = defineProps({
 const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_tiremarks);
+const tiremarksChart = ref(null)
 
 const isPrinting = ref(false);
 const isImaging = ref(false);
@@ -243,6 +244,11 @@ function generateImage() {
     }, 100)
 }
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     generatePdf,
     generateImage
@@ -251,7 +257,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :ref="`tiremarksChart`" :class="`vue-ui-tiremarks ${tiremarksConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${tiremarksConfig.style.fontFamily};width:100%; text-align:center;${(!tiremarksConfig.style.chart.title.text) ? 'padding-top:36px' : ''};background:${tiremarksConfig.style.chart.backgroundColor}`" :id="uid">
+    <div ref="tiremarksChart" :class="`vue-ui-tiremarks ${tiremarksConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${tiremarksConfig.style.fontFamily};width:100%; text-align:center;${(!tiremarksConfig.style.chart.title.text) ? 'padding-top:36px' : ''};background:${tiremarksConfig.style.chart.backgroundColor}`" :id="uid">
 
         <div v-if="tiremarksConfig.style.chart.title.text" :style="`width:100%;background:${tiremarksConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
@@ -283,13 +289,16 @@ defineExpose({
             :isImaging="isImaging"
             :title="tiremarksConfig.userOptions.title"
             :uid="uid"
+            hasFullscreen
+            @toggleFullscreen="toggleFullscreen"
+            :chartElement="tiremarksChart"
             :hasImg="true"
             :hasXls="false"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
         />
 
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${tiremarksConfig.style.chart.backgroundColor};color:${tiremarksConfig.style.chart.color}`">
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${tiremarksConfig.style.chart.backgroundColor};color:${tiremarksConfig.style.chart.color}`">
             <g v-if="tiremarksConfig.style.chart.layout.curved">
                 <path
                     v-for="(tick, i) in ticks"
@@ -351,5 +360,11 @@ defineExpose({
         stroke-width: initial;
         transform: scale(1,1);
     }
+}
+.vue-data-ui-fullscreen--on {
+    height: 100% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>

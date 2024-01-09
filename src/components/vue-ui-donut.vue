@@ -292,6 +292,11 @@ const dataTable = computed(() => {
     }
 });
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -302,7 +307,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :ref="`donutChart`" :class="`vue-ui-donut ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${!donutConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutConfig.style.chart.backgroundColor}`" :id="`donut__${uid}`">
+    <div ref="donutChart" :class="`vue-ui-donut ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${!donutConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutConfig.style.chart.backgroundColor}`" :id="`donut__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <!-- TITLE AS DIV -->
             <Title
@@ -338,6 +343,9 @@ defineExpose({
             hasImg
             hasTable
             hasLabel
+            hasFullscreen
+            :chartElement="donutChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -345,7 +353,7 @@ defineExpose({
             @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
         />
 
-        <svg data-cy="donut-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             
             <!-- DEFS -->
             <defs>
@@ -659,5 +667,10 @@ path {
     filter: blur(3px) opacity(50%) grayscale(100%);
     transition: all 0.15s ease-in-out;
 }
-
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
+}
 </style>

@@ -374,6 +374,10 @@ const dataTable = computed(() => {
     }
 });
 
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+}
 
 defineExpose({
     getData,
@@ -425,6 +429,9 @@ defineExpose({
             :uid="uid"
             :hasImg="true"
             hasTable
+            hasFullscreen
+            :chartElement="waffleChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -432,7 +439,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg data-cy="waffle-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="waffle-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >
 
             <!-- DEFS -->
             <defs>
@@ -606,5 +613,11 @@ defineExpose({
 .vue-ui-waffle-blur {
     filter: blur(3px) opacity(50%) grayscale(100%);
     transition: all 0.15s ease-in-out;
+}
+.vue-data-ui-fullscreen--on {
+    height: 80% !important;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
 }
 </style>
