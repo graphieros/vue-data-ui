@@ -41,6 +41,7 @@ const zoomedId = ref(null);
 const isZoom = ref(false);
 const zoomReference = ref(null);
 const selectedNode = ref(null);
+const step = ref(0);
 
 const moleculeConfig = computed(() => {
     return useNestedProp({
@@ -413,6 +414,7 @@ function getData() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -428,7 +430,7 @@ defineExpose({
     <div
         @mouseleave="hoveredNode = null; hoveredUid = null"
         ref="moleculeChart"
-        :class="`vue-ui-molecule`"
+        :class="`vue-ui-molecule ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         :style="`font-family:${moleculeConfig.style.fontFamily};width:100%; text-align:center;background:${moleculeConfig.style.chart.backgroundColor}`"
         :id="`cluster_${uid}`">
 
@@ -455,6 +457,7 @@ defineExpose({
 
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="moleculeConfig.userOptions.show"
             :backgroundColor="moleculeConfig.style.chart.backgroundColor"
             :color="moleculeConfig.style.chart.color"
@@ -512,7 +515,9 @@ defineExpose({
 
         <BaseDirectionPad 
             v-if="isZoom"
+            :key="`direction_pad_${step}`"
             :color="moleculeConfig.style.chart.color"
+            :isFullscreen="isFullscreen"
             @moveLeft="move('left')"
             @moveRight="move('right')"
             @moveTop="move('top')"
@@ -560,5 +565,8 @@ defineExpose({
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

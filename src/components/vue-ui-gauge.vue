@@ -29,6 +29,7 @@ const isImaging = ref(false);
 const isPrinting = ref(false);
 const gaugeChart = ref(null);
 const details = ref(null);
+const step = ref(0);
 
 const gaugeConfig = computed(() => {
     return useNestedProp({
@@ -272,6 +273,7 @@ function generateImage() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -283,7 +285,7 @@ defineExpose({
 
 <template>
     <div 
-        class="vue-ui-gauge"
+        :class="`vue-ui-gauge ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         ref="gaugeChart"
         :id="`vue-ui-gauge_${uid}`"
         :style="`font-family:${gaugeConfig.style.fontFamily};width:100%; text-align:center;background:${gaugeConfig.style.chart.backgroundColor}`"
@@ -304,6 +306,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="gaugeConfig.userOptions.show"
             :backgroundColor="gaugeConfig.style.chart.backgroundColor"
             :color="gaugeConfig.style.chart.color"
@@ -314,6 +317,7 @@ defineExpose({
             :hasXls="false"
             :hasImg="true"
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="gaugeChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -532,5 +536,8 @@ defineExpose({
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

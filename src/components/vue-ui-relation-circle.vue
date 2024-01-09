@@ -28,6 +28,7 @@ const defaultConfig = ref(mainConfig.vue_ui_relation_circle);
 const isImaging = ref(false);
 const isPrinting = ref(false);
 const relationCircleChart = ref(null);
+const step = ref(0);
 
 const relationConfig = computed(() => {
     return useNestedProp({
@@ -263,6 +264,7 @@ function generateImage() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -298,6 +300,7 @@ defineExpose({
 
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="relationConfig.userOptions.show"
             :hasXls="false"
             :hasImg="true"
@@ -308,6 +311,7 @@ defineExpose({
             :title="relationConfig.userOptions.title"
             :uid="uid"
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="relationCircleChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"

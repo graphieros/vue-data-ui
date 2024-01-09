@@ -38,6 +38,7 @@ const quadrantChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
+const step = ref(0);
 
 onMounted(() => {
     positionAxisLabels();
@@ -493,6 +494,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -505,7 +507,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-quadrant ${quadrantConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="quadrantChart" :id="`vue-ui-quadrant_${uid}`" :style="`font-family:${quadrantConfig.style.fontFamily};width:100%; text-align:center;${!quadrantConfig.style.chart.title.text ? 'padding-top: 36px' : ''};background:${quadrantConfig.style.chart.backgroundColor}`">
+    <div :class="`vue-ui-quadrant ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${quadrantConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="quadrantChart" :id="`vue-ui-quadrant_${uid}`" :style="`font-family:${quadrantConfig.style.fontFamily};width:100%; text-align:center;${!quadrantConfig.style.chart.title.text ? 'padding-top: 36px' : ''};background:${quadrantConfig.style.chart.backgroundColor}`">
 
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && quadrantConfig.style.chart.title.text" :style="`width:100%;background:${quadrantConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -532,6 +534,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="quadrantConfig.userOptions.show"
             :backgroundColor="quadrantConfig.style.chart.backgroundColor"
             :color="quadrantConfig.style.chart.color"
@@ -543,6 +546,7 @@ defineExpose({
             hasTable
             hasLabel
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="quadrantChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -969,5 +973,8 @@ path, line, rect, circle, polygon {
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

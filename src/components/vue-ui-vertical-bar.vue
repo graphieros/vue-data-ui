@@ -43,9 +43,9 @@ const verticalBarChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
-
 const barCount = ref(0);
 const hoveredBar = ref(null);
+const step = ref(0);
 
 const emit = defineEmits(['selectLegend']);
 
@@ -372,6 +372,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -385,7 +386,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-vertical-bar ${verticalBarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center;${!verticalBarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${verticalBarConfig.style.chart.backgroundColor}`">
+    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${verticalBarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center;${!verticalBarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${verticalBarConfig.style.chart.backgroundColor}`">
         
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.title.text" :style="`width:100%;background:${verticalBarConfig.style.chart.backgroundColor};padding-bottom:12px`">
@@ -412,6 +413,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="verticalBarConfig.userOptions.show"
             :backgroundColor="verticalBarConfig.style.chart.backgroundColor"
             :color="verticalBarConfig.style.chart.color"
@@ -423,6 +425,7 @@ defineExpose({
             hasTable
             hasSort
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="verticalBarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -760,5 +763,8 @@ path, line, rect, circle, polygon {
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

@@ -1,6 +1,6 @@
 
 <template>
-    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${!chartConfig.chart.title.text ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily}`">
+    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${!chartConfig.chart.title.text ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily}`">
         <!-- TITLE AS OUTSIDE DIV -->
         <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show && (!mutableConfig.titleInside || isPrinting)" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <Title
@@ -25,6 +25,7 @@
 
         <UserOptions
             ref="defails"
+            :key="`user_options_${step}`"
             v-if="chartConfig.chart.userOptions.show"
             :backgroundColor="chartConfig.chart.backgroundColor"
             :color="chartConfig.chart.color"
@@ -36,6 +37,7 @@
             hasLabel
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="$refs.chart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -773,6 +775,7 @@ export default {
             selectedRowIndex: null,
             segregatedSeries: [],
             uniqueId,
+            step: 0,
             slicer,
             __to__: null,
             maxX
@@ -1862,6 +1865,7 @@ export default {
         },
         toggleFullscreen(state) {
             this.isFullscreen = state;
+            this.step += 1;
         },
         showSpinnerPdf() {
             this.isPrinting = true;
@@ -2104,5 +2108,8 @@ canvas {
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: scroll;
 }
 </style>

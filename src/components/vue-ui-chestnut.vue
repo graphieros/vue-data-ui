@@ -30,6 +30,7 @@ const isImaging = ref(false);
 const isPrinting = ref(false);
 const chestnutChart = ref(null);
 const details = ref(null);
+const step = ref(0);
 
 const chestnutConfig = computed(() => {
     return useNestedProp({
@@ -384,6 +385,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -397,7 +399,7 @@ defineExpose({
 
 <template>
     <div 
-        class="vue-ui-chestnut"
+        :class="`vue-ui-chestnut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         ref="chestnutChart"
         :id="`vue-ui-chestnut_${uid}`"
         :style="`font-family:${chestnutConfig.style.fontFamily};width:100%; text-align:center;padding-top:36px;background:${chestnutConfig.style.chart.backgroundColor}`"
@@ -405,6 +407,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="chestnutConfig.userOptions.show"
             :backgroundColor="chestnutConfig.style.chart.backgroundColor"
             :color="chestnutConfig.style.chart.color"
@@ -415,6 +418,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="chestnutChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -1119,5 +1123,8 @@ defineExpose({
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

@@ -252,7 +252,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-mood-radar ${radarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="moodRadarChart"
+    <div :class="`vue-ui-mood-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${radarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="moodRadarChart"
         :id="`${uid}`" :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${!radarConfig.style.chart.title.text ? 'padding-top:36px' : ''
             };background:${radarConfig.style.chart.backgroundColor}`">
         <div v-if="radarConfig.style.chart.title.text"
@@ -468,5 +468,8 @@ defineExpose({
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

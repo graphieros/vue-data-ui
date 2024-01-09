@@ -45,6 +45,7 @@ const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const selectedSerie = ref(null);
+const step = ref(0);
 
 const ringsConfig = computed(() => {
   return useNestedProp({
@@ -320,6 +321,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -334,7 +336,7 @@ defineExpose({
 <template>
   <div
     ref="ringsChart"
-    :class="`vue-ui-rings ${ringsConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
+    :class="`vue-ui-rings ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${ringsConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
     :style="`font-family:${ringsConfig.style.fontFamily};text-align:center;width:100%;background:${ringsConfig.style.chart.backgroundColor}`"
     :id="`rings_${uid}`"
     @mouseleave="
@@ -370,6 +372,7 @@ defineExpose({
     <!-- USER OPTIONS -->
     <UserOptions
         ref="details"
+        :key="`user_options_${step}`"
         v-if="ringsConfig.userOptions.show"
         :backgroundColor="ringsConfig.style.chart.backgroundColor"
         :color="ringsConfig.style.chart.color"
@@ -380,6 +383,7 @@ defineExpose({
         hasImg
         hasTable
         hasFullscreen
+        :isFullscreen="isFullscreen"
         :chartElement="ringsChart"
         @toggleFullscreen="toggleFullscreen"
         @generatePdf="generatePdf"
@@ -581,5 +585,8 @@ defineExpose({
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

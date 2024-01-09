@@ -32,6 +32,7 @@ const isImaging = ref(false);
 const isPrinting = ref(false);
 const onionChart = ref(null);
 const details = ref(null);
+const step = ref(0);
 
 const onionConfig = computed(() => {
     return useNestedProp({
@@ -222,6 +223,7 @@ const selectedSerie = ref(undefined);
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -235,7 +237,7 @@ defineExpose({
 
 <template>
     <div 
-        :class="`vue-ui-onion ${onionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" 
+        :class="`vue-ui-onion ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${onionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" 
         ref="onionChart" 
         :id="`vue-ui-onion_${uid}`"
         :style="`font-family:${onionConfig.style.fontFamily};width:100%; text-align:center;background:${onionConfig.style.chart.backgroundColor}`"
@@ -265,6 +267,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options${step}`"
             v-if="onionConfig.userOptions.show"
             :backgroundColor="onionConfig.style.chart.backgroundColor"
             :color="onionConfig.style.chart.color"
@@ -275,6 +278,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="onionChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -565,5 +569,8 @@ circle {
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

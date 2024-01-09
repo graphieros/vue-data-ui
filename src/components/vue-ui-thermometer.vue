@@ -28,6 +28,7 @@ const defaultConfig = ref(mainConfig.vue_ui_thermometer);
 const isImaging = ref(false);
 const isPrinting = ref(false);
 const thermoChart = ref(null);
+const step = ref(0);
 
 const thermoConfig = computed(() => {
     return useNestedProp({
@@ -219,6 +220,7 @@ function generateImage() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -229,7 +231,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="thermoChart" class="vue-ui-thermometer" :style="`width:100%;background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color};font-family:${thermoConfig.style.fontFamily}`" :id="`thermometer__${uid}`">
+    <div ref="thermoChart" :class="`vue-ui-thermometer ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`width:100%;background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color};font-family:${thermoConfig.style.fontFamily}`" :id="`thermometer__${uid}`">
         <!-- TITLE AS DIV -->
         <div v-if="(!mutableConfig.inside || isPrinting) && thermoConfig.style.title.text" :style="`width:100%`">
             <Title
@@ -255,6 +257,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="thermoConfig.userOptions.show"
             :backgroundColor="thermoConfig.style.chart.backgroundColor"
             :color="thermoConfig.style.chart.color"
@@ -264,6 +267,7 @@ defineExpose({
             :uid="uid"
             :hasImg="true"
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="thermoChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -512,5 +516,8 @@ text.vue-ui-thermometer-temperature-value {
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

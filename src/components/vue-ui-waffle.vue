@@ -36,6 +36,7 @@ const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const selectedSerie = ref(null);
+const step = ref(0);
 
 const waffleConfig = computed(() => {
     return useNestedProp({
@@ -377,6 +378,7 @@ const dataTable = computed(() => {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -390,7 +392,7 @@ defineExpose({
 
 <template>
     <div 
-        class="vue-ui-waffle" 
+        :class="`vue-ui-waffle ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
         ref="waffleChart" 
         :id="`vue-ui-waffle_${uid}`"
         :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center;${!waffleConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${waffleConfig.style.chart.backgroundColor}`"
@@ -420,6 +422,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="waffleConfig.userOptions.show"
             :backgroundColor="waffleConfig.style.chart.backgroundColor"
             :color="waffleConfig.style.chart.color"
@@ -430,6 +433,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="waffleChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -620,5 +624,8 @@ defineExpose({
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

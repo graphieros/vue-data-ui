@@ -34,6 +34,7 @@ const isTooltip = ref(false);
 const tooltipContent = ref("");
 const candlestickChart = ref(null);
 const hoveredIndex = ref(undefined);
+const step = ref(0);
 
 onMounted(() => {
     const sliderOne = document.getElementById(`start_${uid.value}`);
@@ -270,6 +271,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -281,7 +283,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="candlestickChart" :class="`vue-ui-candlestick ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center;${!candlestickConfig.style.title.text ? 'padding-top:36px' : ''};background:${candlestickConfig.style.backgroundColor}`" :id="`vue-ui-candlestick_${uid}`">
+    <div ref="candlestickChart" :class="`vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center;${!candlestickConfig.style.title.text ? 'padding-top:36px' : ''};background:${candlestickConfig.style.backgroundColor}`" :id="`vue-ui-candlestick_${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
@@ -307,6 +309,7 @@ defineExpose({
          <!-- OPTIONS -->
          <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="candlestickConfig.userOptions.show"
             :backgroundColor="candlestickConfig.style.backgroundColor"
             :color="candlestickConfig.style.color"
@@ -317,6 +320,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="candlestickChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -806,5 +810,7 @@ input[type="range"]:active::-webkit-slider-thumb{
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
 }
-
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
+}
 </style>

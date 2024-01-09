@@ -36,6 +36,7 @@ const scatterChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
+const step = ref(0);
 
 onMounted(() => {
     const xLabel = document.getElementById(`vue-ui-scatter-xAxis-label-${uid.value}`);
@@ -303,6 +304,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -315,7 +317,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-scatter ${scatterConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center;${!scatterConfig.style.title.text ? 'padding-top:36px' : ''};background:${scatterConfig.style.backgroundColor}`">
+    <div :class="`vue-ui-scatter ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${scatterConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center;${!scatterConfig.style.title.text ? 'padding-top:36px' : ''};background:${scatterConfig.style.backgroundColor}`">
         
         <div v-if="(!mutableConfig.inside || isPrinting) && scatterConfig.style.title.text" :style="`width:100%;background:${scatterConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
@@ -342,6 +344,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="scatterConfig.userOptions.show"
             :backgroundColor="scatterConfig.style.backgroundColor"
             :color="scatterConfig.style.color"
@@ -352,6 +355,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="scatterChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -735,5 +739,8 @@ path, line, circle {
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

@@ -36,7 +36,8 @@ const hoveredIndex = ref(null);
 const hoveredDatapoint = ref(null);
 const isFixed = ref(false);
 const fixedDatapoint = ref(null);
-const donutEvolutionChart = ref(null)
+const donutEvolutionChart = ref(null);
+const step = ref(0);
 
 const emit = defineEmits(['selectLegend'])
 
@@ -362,6 +363,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -374,7 +376,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="donutEvolutionChart" :class="`vue-ui-donut-evolution ${donutEvolutionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`overflow: visible;font-family:${donutEvolutionConfig.style.fontFamily};width:100%; text-align:center;${!donutEvolutionConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutEvolutionConfig.style.chart.backgroundColor}`" :id="uid">
+    <div ref="donutEvolutionChart" :class="`vue-ui-donut-evolution ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${donutEvolutionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutEvolutionConfig.style.fontFamily};width:100%; text-align:center;${!donutEvolutionConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutEvolutionConfig.style.chart.backgroundColor}`" :id="uid">
         <div v-if="donutEvolutionConfig.style.chart.title.text" :style="`width:100%;background:${donutEvolutionConfig.style.chart.backgroundColor};padding-bottom:24px`" @mouseleave="leave">
             <!-- TITLE AS DIV -->
             <Title
@@ -399,6 +401,7 @@ defineExpose({
 
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="donutEvolutionConfig.userOptions.show"
             :backgroundColor="donutEvolutionConfig.style.chart.backgroundColor"
             :color="donutEvolutionConfig.style.chart.color"
@@ -409,6 +412,7 @@ defineExpose({
             hasImg
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             @toggleFullscreen="toggleFullscreen"
             :chartElement="donutEvolutionChart"
             @generatePdf="generatePdf"
@@ -813,5 +817,8 @@ path {
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

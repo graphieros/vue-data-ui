@@ -36,6 +36,7 @@ const radarChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
+const step = ref(0);
 
 const radarConfig = computed(() => {
     return useNestedProp({
@@ -322,6 +323,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -335,7 +337,7 @@ defineExpose({
 
 <template>
     <div 
-        :class="`vue-ui-radar ${radarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
+        :class="`vue-ui-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${radarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
         ref="radarChart"
         :id="`vue-ui-radar_${uid}`"
         :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${!radarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${radarConfig.style.chart.backgroundColor}`"
@@ -365,6 +367,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="radarConfig.userOptions.show"
             :backgroundColor="radarConfig.style.chart.backgroundColor"
             :color="radarConfig.style.chart.color"
@@ -375,6 +378,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="radarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -646,5 +650,8 @@ path, line, rect, circle {
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

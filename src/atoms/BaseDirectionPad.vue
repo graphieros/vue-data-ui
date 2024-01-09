@@ -4,13 +4,17 @@ const props = defineProps({
     color: {
         type: String,
         default: '#FF0000'
+    },
+    isFullscreen: {
+        type: Boolean,
+        default: false
     }
 });
 const emit = defineEmits(['moveLeft', 'moveTop', 'moveRight', 'moveBottom', 'reset'])
 </script>
 
 <template>
-    <div style="position: absolute;bottom:0;right:0;width:80px;height:80px" data-html2canvas-ignore>
+    <div :style="`position: ${isFullscreen ? 'fixed' : 'absolute'};bottom:0;right:${isFullscreen ? '12px' : '0'};width:80px;height:80px`" data-html2canvas-ignore>
         <div style="position: relative;height:100%;width:100%">           
             <button @click="emit('moveLeft')" style="position: absolute;left:0;top:50%;transform:translateY(-50%);height:24px;width:24px;padding:0;background:transparent;border:none;display:flex;align-items:center;justify-content:center;">
                 <BaseIcon :stroke="color" name="arrowLeft" style="cursor: pointer"/>

@@ -30,6 +30,7 @@ const isImaging = ref(false);
 const isPrinting = ref(false);
 const wheelChart = ref(null);
 const details = ref(null);
+const step = ref(0);
 
 const wheelConfig = computed(() => {
     return useNestedProp({
@@ -140,6 +141,7 @@ function generateImage() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -180,6 +182,7 @@ defineExpose({
 
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="wheelConfig.userOptions.show"
             :backgroundColor="wheelConfig.style.chart.backgroundColor"
             :color="wheelConfig.style.chart.color"
@@ -190,6 +193,7 @@ defineExpose({
             :hasImg="true"
             :hasXls="false"
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="wheelChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"

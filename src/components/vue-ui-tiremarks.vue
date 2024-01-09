@@ -30,6 +30,7 @@ const tiremarksChart = ref(null)
 
 const isPrinting = ref(false);
 const isImaging = ref(false);
+const step = ref(0);
 
 const tiremarksConfig = computed(() => {
     return useNestedProp({
@@ -247,6 +248,7 @@ function generateImage() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -282,6 +284,7 @@ defineExpose({
 
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="tiremarksConfig.userOptions.show"
             :backgroundColor="tiremarksConfig.style.chart.backgroundColor"
             :color="tiremarksConfig.style.chart.color"
@@ -290,6 +293,7 @@ defineExpose({
             :title="tiremarksConfig.userOptions.title"
             :uid="uid"
             hasFullscreen
+            :isFullscreen="isFullscreen"
             @toggleFullscreen="toggleFullscreen"
             :chartElement="tiremarksChart"
             :hasImg="true"

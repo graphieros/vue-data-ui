@@ -35,6 +35,7 @@ const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const selectedIndex = ref(null);
+const step = ref(0);
 
 const agePyramidConfig = computed(() => {
     return useNestedProp({
@@ -257,6 +258,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -268,7 +270,7 @@ defineExpose({
 </script>
 
 <template>
-    <div class="vue-ui-age-pyramid" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center;${!agePyramidConfig.style.title.text ? 'padding-top:36px' : ''};background:${agePyramidConfig.style.backgroundColor}`">
+    <div :class="`vue-ui-age-pyramid ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center;${!agePyramidConfig.style.title.text ? 'padding-top:36px' : ''};background:${agePyramidConfig.style.backgroundColor}`">
     
         <div v-if="(!mutableConfig.inside || isPrinting) && agePyramidConfig.style.title.text" :style="`width:100%;background:${agePyramidConfig.style.backgroundColor}`">
             <Title
@@ -294,6 +296,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="agePyramidConfig.userOptions.show"
             :backgroundColor="agePyramidConfig.style.backgroundColor"
             :color="agePyramidConfig.style.color"
@@ -304,6 +307,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="agePyramid"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -658,5 +662,8 @@ defineExpose({
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

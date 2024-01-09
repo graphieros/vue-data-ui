@@ -37,6 +37,7 @@ const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const selectedSerie = ref(null);
+const step = ref(0);
 
 const donutConfig = computed(() => {
     return useNestedProp({
@@ -295,6 +296,7 @@ const dataTable = computed(() => {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -307,7 +309,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="donutChart" :class="`vue-ui-donut ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${!donutConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutConfig.style.chart.backgroundColor}`" :id="`donut__${uid}`">
+    <div ref="donutChart" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${!donutConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutConfig.style.chart.backgroundColor}`" :id="`donut__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <!-- TITLE AS DIV -->
             <Title
@@ -333,6 +335,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_option_${step}`"
             v-if="donutConfig.userOptions.show"
             :backgroundColor="donutConfig.style.chart.backgroundColor"
             :color="donutConfig.style.chart.color"
@@ -344,6 +347,7 @@ defineExpose({
             hasTable
             hasLabel
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="donutChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -673,5 +677,8 @@ path {
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>

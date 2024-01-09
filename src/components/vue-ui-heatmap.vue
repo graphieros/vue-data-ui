@@ -35,6 +35,7 @@ const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const hoveredCell = ref(undefined);
+const step = ref(0);
    
 const heatmapConfig = computed(() => {
     return useNestedProp({
@@ -220,6 +221,7 @@ function generateCsv() {
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
+    step.value += 1;
 }
 
 defineExpose({
@@ -231,7 +233,7 @@ defineExpose({
 </script>
 
 <template>
-     <div ref="heatmapChart" class="vue-ui-heatmap" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center;${!heatmapConfig.style.title.text ? 'padding-top:36px' : ''};background:${heatmapConfig.style.backgroundColor}`" :id="`heatmap__${uid}`">
+     <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center;${!heatmapConfig.style.title.text ? 'padding-top:36px' : ''};background:${heatmapConfig.style.backgroundColor}`" :id="`heatmap__${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && heatmapConfig.style.title.text" :style="`width:100%;background:${heatmapConfig.style.backgroundColor}`">
             <Title
                 :config="{
@@ -256,6 +258,7 @@ defineExpose({
          <!-- OPTIONS -->
         <UserOptions
             ref="details"
+            :key="`user_options_${step}`"
             v-if="heatmapConfig.userOptions.show"
             :backgroundColor="heatmapConfig.style.backgroundColor"
             :color="heatmapConfig.style.color"
@@ -266,6 +269,7 @@ defineExpose({
             :hasImg="true"
             hasTable
             hasFullscreen
+            :isFullscreen="isFullscreen"
             :chartElement="heatmapChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -540,5 +544,8 @@ defineExpose({
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: auto;
 }
 </style>
