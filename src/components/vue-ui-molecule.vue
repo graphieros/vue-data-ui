@@ -556,6 +556,7 @@ defineExpose({
 }
 .vue-data-ui-fullscreen--on {
     height: 100% !important;
+    margin: 0 auto !important;
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;

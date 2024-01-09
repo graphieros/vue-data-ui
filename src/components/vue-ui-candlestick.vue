@@ -801,6 +801,7 @@ input[type="range"]:active::-webkit-slider-thumb{
 }
 .vue-data-ui-fullscreen--on {
     height: 80% !important;
+    margin: 0 auto !important;
 }
 .vue-data-ui-fullscreen--off {
     max-width: 100%;
