@@ -382,7 +382,8 @@
                         }
                     },
                     "donut": {
-                        "strokeWidth": 64
+                        "strokeWidth": 64,
+                        "borderWidth": 1
                     }
                 },
                 "legend": {

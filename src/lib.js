@@ -1,4 +1,4 @@
-export function makeDonut(item, cx, cy, rx, ry) {
+export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult = 2, arcAmpl = 1.45, degrees = 360, rotation = 105.25, size = 0) {
     let { series } = item;
     if (!series || item.base === 0)
         return {
@@ -19,17 +19,31 @@ export function makeDonut(item, cx, cy, rx, ry) {
     let acc = 0;
     for (let i = 0; i < series.length; i += 1) {
         let proportion = series[i].value / sum;
-        const ratio = proportion * (Math.PI * 1.9999); // (Math.PI * 2) fails to display a donut with only one value > 0 as it goes full circle again
+        const ratio = proportion * (Math.PI * piProportion); // (Math.PI * 2) fails to display a donut with only one value > 0 as it goes full circle again
         // midProportion & midRatio are used to find the midpoint of the arc to display markers
         const midProportion = series[i].value / 2 / sum;
-        const midRatio = midProportion * (Math.PI * 2);
+        const midRatio = midProportion * (Math.PI * piMult);
         const { startX, startY, endX, endY, path } = createArc(
             [cx, cy],
             [rx, ry],
             [acc, ratio],
-            110
+            rotation,
+            degrees,
+            piMult
         );
+
+        const inner = createArc(
+            [cx, cy],
+            [rx - size, ry - size],
+            [acc, ratio],
+            rotation,
+            degrees,
+            piMult,
+            true
+        )
+
         ratios.push({
+            arcSlice: `${path} L ${inner.startX} ${inner.startY} ${inner.path} L ${startX} ${startY}`,
             cx,
             cy,
             ...series[i],
@@ -42,9 +56,11 @@ export function makeDonut(item, cx, cy, rx, ry) {
             endY,
             center: createArc(
                 [cx, cy],
-                [rx * 1.45, ry * 1.45],
+                [rx * arcAmpl, ry * arcAmpl],
                 [acc, midRatio],
-                110
+                rotation,
+                degrees,
+                piMult
             ), // center of the arc, to display the marker. rx & ry are larger to be displayed with a slight offset
         });
         acc += ratio;
@@ -67,8 +83,8 @@ export function rotateMatrix(x) {
     ];
 }
 
-export function createArc([cx, cy], [rx, ry], [position, ratio], phi) {
-    ratio = ratio % (2 * Math.PI);
+export function createArc([cx, cy], [rx, ry], [position, ratio], phi, degrees = 360, piMult = 2, reverse = false) {
+    ratio = ratio % (piMult * Math.PI);
     const rotMatrix = rotateMatrix(phi);
     const [sX, sY] = addVector(
         matrixTimes(rotMatrix, [
@@ -85,20 +101,20 @@ export function createArc([cx, cy], [rx, ry], [position, ratio], phi) {
         [cx, cy]
     );
     const fA = ratio > Math.PI ? 1 : 0;
-    const fS = ratio > 0 ? 1 : 0;
+    const fS = ratio > 0 ? reverse ? 0 : 1 : reverse ? 1 : 0;
     return {
-        startX: sX,
-        startY: sY,
-        endX: eX,
-        endY: eY,
-        path: `M${sX} ${sY} A ${[
+        startX: reverse ? eX : sX,
+        startY: reverse ? eY : sY,
+        endX: reverse ? sX : eX,
+        endY: reverse ? sY : eY,
+        path: `M${reverse ? eX : sX} ${reverse ? eY : sY} A ${[
             rx,
             ry,
-            (phi / (2 * Math.PI)) * 360,
+            (phi / (piMult * Math.PI)) * degrees,
             fA,
             fS,
-            eX,
-            eY,
+            reverse ? sX : eX,
+            reverse ? sY : eY,
         ].join(" ")}`,
     };
 }
@@ -629,13 +645,65 @@ export function calcMarkerOffsetY(arc, yOffsetTop = 16, yOffsetBottom = 16) {
     }
 }
 
-export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false) {
+export function offsetFromCenterPoint({
+    initX,
+    initY,
+    offset,
+    centerX,
+    centerY
+}) {
+    const angle = Math.atan2(initY - centerY, initX - centerX);
+    return {
+        x: initX + offset * Math.cos(angle),
+        y: initY + offset * Math.sin(angle)
+    }
+}
+
+export function findArcMidpoint(pathElement) {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", 'path')
+    el.setAttribute('d', pathElement)
+
+    const length = el.getTotalLength();
+    let start = 0;
+    let end = length;
+    let midpointParameter = length / 2;
+
+    const epsilon = 0.01;
+    while (end - start > epsilon) {
+        const mid = (start + end) / 2;
+        const midPoint = el.getPointAtLength(mid);
+        const midLength = midPoint.x;
+
+        if (Math.abs(midLength - midpointParameter) < epsilon) {
+            midpointParameter = mid;
+            break;
+        } else if (midLength < midpointParameter) {
+            start = mid;
+        } else {
+            end = mid;
+        }
+    }
+    const { x, y } = el.getPointAtLength(midpointParameter);
+    return { x, y };
+}
+
+export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false, arcSize = 0) {
+    const { x, y } = findArcMidpoint(arc.path)
+
+    const { x:endX, y:endY } = offsetFromCenterPoint({
+        initX: x,
+        initY: y,
+        offset: arcSize,
+        centerX: center ? center.x : 0,
+        centerY: center ? center.y : 0
+    })
+
     const start = `${calcMarkerOffsetX(arc).x},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4} `;
-    const end = ` ${center ? center.x : arc.center.endX},${center ? center.y : arc.center.endY}`;
+    const end = ` ${center ? center.x : endX},${center ? center.y : endY}`;
     let mid = "";
-    if (arc.center.endX > arc.cx) {
+    if (x > arc.cx) {
         mid = `${calcMarkerOffsetX(arc).x - 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
-    } else if (arc.center.endX < arc.cx) {
+    } else if (x < arc.cx) {
         mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
     } else {
         mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;

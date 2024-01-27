@@ -765,6 +765,19 @@ defineExpose({
                         </div>
                     </div>
                 </foreignObject>
+                <!-- LABEL CONNECTOR -->
+                <g v-for="arc in openNut">
+                    <path
+                        v-if="isArcBigEnough(arc)"
+                        :d="calcNutArrowPath(arc)"
+                        :stroke="arc.color"
+                        stroke-width="1"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        fill="none"
+                        :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    />
+                </g>
                 <circle
                     :cx="selectedNut.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
                     :cy="selectedNut.y1 + svg.branchSize / 2"
@@ -807,19 +820,7 @@ defineExpose({
                     @click="leaveNut"
                     :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 />
-                <!-- LABEL CONNECTOR -->
-                <g v-for="arc in openNut">
-                    <path
-                        v-if="isArcBigEnough(arc)"
-                        :d="calcNutArrowPath(arc)"
-                        :stroke="arc.color"
-                        stroke-width="1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        fill="none"
-                        :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                    />
-                </g>
+
                 <text
                     :x="selectedNut.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
                     :y="selectedNut.y1 + 8"

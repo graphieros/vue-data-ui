@@ -149,7 +149,7 @@ const legendConfig = computed(() => {
 })
 
 const currentDonut = computed(() => {
-    return makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, 100, 100)
+    return makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, 130, 130, 1.99999, 2, 1, 360, 105.25, defaultConfig.value.style.chart.layout.donut.strokeWidth)
 });
 
 function isArcBigEnough(arc) {
@@ -399,7 +399,7 @@ defineExpose({
             <g v-for="(arc, i) in currentDonut">
                 <path
                     v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                    :d="calcNutArrowPath(arc, {x: svg.width / 2, y: svg.height / 2})"
+                    :d="calcNutArrowPath(arc, {x: svg.width / 2, y: svg.height / 2}, 16, 16, false, false, defaultConfig.style.chart.layout.donut.strokeWidth)"
                     :stroke="arc.color"
                     stroke-width="1"
                     stroke-linecap="round"
@@ -412,19 +412,18 @@ defineExpose({
             <path 
                 v-for="(arc, i) in currentDonut"
                 :stroke="donutConfig.style.chart.backgroundColor"
-                :d="arc.path"
-                :stroke-width="defaultConfig.style.chart.layout.donut.strokeWidth" 
+                :d="arc.arcSlice"
                 fill="#FFFFFF"
             />
             <path 
                 v-for="(arc, i) in currentDonut"
                 class="vue-ui-donut-arc-path"
                 :data-cy="`donut-arc-${i}`"
-                :d="arc.path" 
-                :stroke="`${arc.color}CC`"
+                :d="arc.arcSlice" 
+                :fill="`${arc.color}CC`"
                 :class="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? '' : 'vue-ui-donut-blur'"
-                :stroke-width="defaultConfig.style.chart.layout.donut.strokeWidth" 
-                fill="none"
+                :stroke="donutConfig.style.chart.backgroundColor"
+                :stroke-width="donutConfig.style.chart.layout.donut.borderWidth"
             />
 
             <!-- HOLLOW -->
@@ -441,10 +440,8 @@ defineExpose({
               <path 
                 v-for="(arc, i) in currentDonut"
                 :data-cy="`donut-trap-${i}`"
-                :d="arc.path" 
-                :stroke="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
-                :stroke-width="defaultConfig.style.chart.layout.donut.strokeWidth" 
-                fill="none"
+                :d="arc.arcSlice" 
+                :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
                 @mouseenter="useTooltip(arc, i, true)"
                 @mouseleave="isTooltip = false; selectedSerie = null"
                 @click="segregate(i)"

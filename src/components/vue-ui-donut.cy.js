@@ -76,7 +76,7 @@ describe('<VueUiDonut />', () => {
         cy.get(`[data-cy="donut-arc-${i}"]`)
           .should('exist')
           .then(($element) => {
-            const expectedColor = `${sortedDataset[i].color}CC`;
+            const expectedColor = fixture.config.style.chart.backgroundColor;
             const expectedStrokeWidth = fixture.config.style.chart.layout.donut.strokeWidth;
 
             cy.wrap($element)
@@ -85,21 +85,7 @@ describe('<VueUiDonut />', () => {
 
             cy.wrap($element)
               .invoke('attr', 'stroke-width')
-              .should('eq', String(expectedStrokeWidth))
-          })
-      }
-
-      cy.get(`[data-cy="donut-gradient-hollow"]`).should('exist');
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="donut-trap-${i}"]`)
-          .should('exist')
-          .then(($element) => {
-            const expectedStrokeWidth = fixture.config.style.chart.layout.donut.strokeWidth;
-
-            cy.wrap($element)
-              .invoke('attr', 'stroke-width')
-              .should('eq', String(expectedStrokeWidth))
+              .should('eq', "1")
           })
       }
 
