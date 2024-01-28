@@ -7,6 +7,7 @@ import {
     calcPercentageTrend,
     calcPolygonPoints,
     calcStarPoints,
+    calculateNiceScale,
     checkArray,
     checkNaN,
     checkObj,
@@ -23,6 +24,7 @@ import {
     makeDonut,
     makePath,
     matrixTimes,
+    niceNum,
     rotateMatrix,
     shiftHue,
     sumByAttribute,
@@ -615,5 +617,56 @@ describe('makePath', () => {
     })
     test('creates a closed svg path from an array of plots', () => {
         expect(makePath(plots)).toBe('M1,2 2,3 3,4 4,5 5,6 Z')
+    })
+})
+
+describe('calculateNiceScale', () => {
+    test('returns an object with nice scaling for y axis labels', () => {
+        expect(calculateNiceScale(0, 118, 10)).toStrictEqual({
+            max: 120,
+            min: 0,
+            tickSize: 20,
+            ticks: [
+                0,
+                20,
+                40,
+                60,
+                80,
+                100,
+                120,
+            ],
+        })
+
+        expect(calculateNiceScale(0, 1, 10)).toStrictEqual({
+            max: 1,
+            min: 0,
+            tickSize: 0.1,
+            ticks: [
+                0,
+                0.1,
+                0.2,
+                0.30000000000000004,
+                0.4,
+                0.5,
+                0.6,
+                0.7,
+                0.7999999999999999,
+                0.8999999999999999,
+                0.9999999999999999,
+            ],
+        })
+    })
+})
+
+describe('niceNum', () => {
+    test('returns a nice number', () => {
+        expect(niceNum(1.18, false)).toBe(2)
+        expect(niceNum(1.18, 1)).toBe(1)
+        expect(niceNum(11.8, false)).toBe(20)
+        expect(niceNum(11.8, 1)).toBe(10)
+        expect(niceNum(118, false)).toBe(200)
+        expect(niceNum(118, 1)).toBe(100)
+        expect(niceNum(1118, false)).toBe(2000)
+        expect(niceNum(1118, 1)).toBe(1000)
     })
 })

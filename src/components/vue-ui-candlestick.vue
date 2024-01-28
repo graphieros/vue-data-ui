@@ -129,7 +129,7 @@ const slot = computed(() => {
 const extremes = computed(() => {
     return {
         max: Math.max(...datasetBreakdown.value.map(ds => ds.high)),
-        min: Math.min(...datasetBreakdown.value.map(ds => ds.low))
+        min: 0
     }
 });
 

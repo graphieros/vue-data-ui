@@ -4246,7 +4246,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_candlestick)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_candlestick)">
         <template #title>
           <BaseIcon name="chartCandlestick" />
           VueUiCandleStick
