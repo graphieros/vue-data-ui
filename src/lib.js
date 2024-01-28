@@ -783,6 +783,55 @@ export function lightenHexColor(hexColor, percentLighter) {
     return lighterHex;
 }
 
+export function niceNum(range, round) {
+    const exponent = Math.floor(Math.log10(range));
+    const fraction = range / Math.pow(10, exponent);
+    let niceFraction;
+
+    if (round) {
+        if (fraction < 1.5) {
+            niceFraction = 1;
+        } else if (fraction < 3) {
+            niceFraction = 2;
+        } else if (fraction < 7) {
+            niceFraction = 5;
+        } else {
+            niceFraction = 10;
+        }
+    } else {
+        if (fraction <= 1) {
+            niceFraction = 1;
+        } else if (fraction <= 2) {
+            niceFraction = 2;
+        } else if (fraction <= 5) {
+            niceFraction = 5;
+        } else {
+            niceFraction = 10;
+        }
+    }
+
+    return niceFraction * Math.pow(10, exponent);
+}
+
+export function calculateNiceScale(minValue, maxValue, maxTicks) {
+    const range = niceNum(maxValue - minValue, false);
+    const tickSpacing = niceNum(range / (maxTicks - 1), true);
+    const niceMin = Math.floor(minValue / tickSpacing) * tickSpacing;
+    const niceMax = Math.ceil(maxValue / tickSpacing) * tickSpacing;
+
+    const ticks = [];
+    for (let tick = niceMin; tick <= niceMax; tick += tickSpacing) {
+        ticks.push(tick);
+    }
+
+    return {
+        min: niceMin,
+        max: niceMax,
+        tickSize: tickSpacing,
+        ticks
+    };
+}
+
 const lib = {
     adaptColorToBackground,
     addVector,

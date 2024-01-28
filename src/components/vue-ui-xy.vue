@@ -454,7 +454,7 @@
                 <g v-if="chartConfig.chart.grid.labels.show">
                     <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
                         <line 
-                            v-if="yLabel.value >= min && yLabel.value <= max"
+                            v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
                             :x1="drawingArea.left" 
                             :x2="drawingArea.left - 5" 
                             :y1="yLabel.y" 
@@ -464,7 +464,7 @@
                         />
                         <text
                             :data-cy="`xy-label-y-${i}`"
-                            v-if="yLabel.value >= min && yLabel.value <= max" 
+                            v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
                             :x="drawingArea.left - 7" 
                             :y="yLabel.y + chartConfig.chart.labels.fontSize / 3" 
                             :font-size="chartConfig.chart.grid.labels.fontSize" 
@@ -697,7 +697,8 @@ import {
     createUid,
     closestDecimal,
     createCsvContent,
-    downloadCsv
+    downloadCsv,
+    calculateNiceScale
 } from '../lib';
 import mainConfig from "../default_configs.json";
 import DataTable from "../atoms/DataTable.vue";
@@ -812,11 +813,11 @@ export default {
             return to - from + 1;
         },
         relativeZero() {
-            if(this.min >= 0) return 0;
-            return Math.abs(this.min);
+            if(this.niceScale.min >= 0) return 0;
+            return Math.abs(this.niceScale.min);
         },
         absoluteMax() {
-            return this.max + this.relativeZero;
+            return this.niceScale.max + this.relativeZero;
         },
         safeDataset(){
             if(!this.useSafeValues) return this.dataset;
@@ -913,6 +914,9 @@ export default {
             const min = Math.min(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => Math.min(...datapoint.series)));
             if(min > 0) return 0;
             return min;
+        },
+        niceScale() {
+            return this.calculateNiceScale(this.min, this.max, 10)
         },
         maxSeries(){
             return this.slicer.end - this.slicer.start;
@@ -1047,25 +1051,12 @@ export default {
             return `0 0 ${this.chartConfig.chart.width} ${this.chartConfig.chart.height}`;
         },
         yLabels() {
-            const positiveStep = this.closestDecimal(this.max / 5);
-            const positiveSteps = [];
-            for(let i = 5; i > 0; i -= 1) {
-                const value = positiveStep * i ;
-                positiveSteps.push({
-                    y: this.zero - (this.drawingArea.height * this.ratioToMax(positiveStep * i)),
-                    value,
-                });
-            }
-            const negativeStep = this.closestDecimal(this.min / 5);
-            const negativeSteps = [];
-            for(let i = 5; i >= 0; i -= 1) {
-                const value = Math.abs(negativeStep) * i ;
-                negativeSteps.push({
-                    y: this.zero + (this.drawingArea.height * this.ratioToMax(Math.abs(negativeStep) * i)),
-                    value: -value
-                });
-            }
-            return [...positiveSteps, ...negativeSteps];
+            return this.niceScale.ticks.map(t => {
+                return {
+                    y: t >= 0 ? this.zero - (this.drawingArea.height * this.ratioToMax(t)) : this.zero + (this.drawingArea.height * this.ratioToMax(Math.abs(t))),
+                    value: t
+                }
+            })
         },
         zero(){
             return this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(this.relativeZero));
@@ -1198,6 +1189,7 @@ export default {
         }
     },
     methods: {
+        calculateNiceScale,
         checkNaN,
         createSmoothPath,
         isSafeValue,

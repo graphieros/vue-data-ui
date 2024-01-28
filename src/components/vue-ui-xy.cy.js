@@ -99,10 +99,6 @@ describe('<VueUiXy />', () => {
         cy.get(`[data-cy="xy-line-tag-end-${i}"]`).should('exist')
       }
 
-      for(let i = 0; i < 11; i += 1) {
-        cy.get(`[data-cy="xy-label-y-${i}"]`).should('exist');
-      }
-
       cy.get('[data-cy="xy-axis-xLabel"]').should('exist');
       cy.get('[data-cy="xy-axis-yLabel"]').should('exist');
 

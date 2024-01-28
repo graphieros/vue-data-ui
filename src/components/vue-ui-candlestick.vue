@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { canShowValue, closestDecimal, shiftHue, opacity, createUid, createCsvContent, downloadCsv } from "../lib";
+import { canShowValue, closestDecimal, shiftHue, opacity, createUid, createCsvContent, downloadCsv, calculateNiceScale } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
@@ -133,11 +133,15 @@ const extremes = computed(() => {
     }
 });
 
+const niceScale = computed(() => {
+    return calculateNiceScale(extremes.value.min, extremes.value.max, 10)
+})
+
 function convertToPlot(item, index) {
     return {
         ...item,
         x: drawingArea.value.left + (index * slot.value) + (slot.value / 2),
-        y: drawingArea.value.top + (1 - (item / extremes.value.max)) * drawingArea.value.height,
+        y: drawingArea.value.top + (1 - (item / niceScale.value.max)) * drawingArea.value.height,
         value: item
     }
 }
@@ -162,20 +166,16 @@ const drawableDataset = computed(() => {
 });
 
 function ratioToMax(value) {
-    return value / extremes.value.max;
+    return value / niceScale.value.max;
 }
 
 const yLabels = computed(() => {
-    const positiveStep = closestDecimal(extremes.value.max / candlestickConfig.value.style.layout.grid.yAxis.dataLabels.steps);
-    const steps = [];
-    for(let i = candlestickConfig.value.style.layout.grid.yAxis.dataLabels.steps; i >= 0; i -= 1) {
-        const value = positiveStep * i ;
-        steps.push({
-            y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(positiveStep * i)),
-            value,
-        });
-    }
-    return steps;
+    return niceScale.value.ticks.map(t => {
+        return {
+            y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(t)),
+            value: t
+        }
+    })
 });
 
 const xLabels = computed(() => {
@@ -402,7 +402,7 @@ defineExpose({
             <g v-if="candlestickConfig.style.layout.grid.yAxis.dataLabels.show">
                 <g v-for="(yLabel, i) in yLabels">
                     <line 
-                        v-if="yLabel.value >= 0 && yLabel.value <= extremes.max"
+                        v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
                         :x1="drawingArea.left" 
                         :x2="drawingArea.left - 5" 
                         :y1="yLabel.y" 
@@ -411,7 +411,7 @@ defineExpose({
                         :stroke-width="candlestickConfig.style.layout.grid.strokeWidth" 
                     />
                     <text 
-                        v-if="yLabel.value >= 0 && yLabel.value <= extremes.max" 
+                        v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
                         :x="drawingArea.left - 8 + candlestickConfig.style.layout.grid.yAxis.dataLabels.offsetX" 
                         :y="yLabel.y + candlestickConfig.style.layout.grid.yAxis.dataLabels.fontSize / 3" 
                         :font-size="candlestickConfig.style.layout.grid.yAxis.dataLabels.fontSize" 

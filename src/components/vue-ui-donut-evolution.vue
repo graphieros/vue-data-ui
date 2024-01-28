@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, canShowValue, closestDecimal, makeDonut, palette, convertColorToHex, opacity, createUid, sumByAttribute, createCsvContent, downloadCsv } from '../lib';
+import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, canShowValue, closestDecimal, makeDonut, palette, convertColorToHex, opacity, createUid, sumByAttribute, createCsvContent, downloadCsv, calculateNiceScale } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -115,12 +115,15 @@ const drawableDataset = computed(() => {
             x,
         })
     }
-    const maxSubtotal = Math.max(...arr.map(a => a.subtotal));
+    
+    const minSubtotal = 0;
+    const maxSubtotal = Math.max(...arr.map(a => a.subtotal))
+    
     return arr.map((a, i) => {
         const radiusReference = (slit.value / 2) * 0.5;
         const radius = radiusReference > svg.value.width / 16 ? svg.value.width / 16 : radiusReference;
         const activeRadius = hoveredIndex.value === a.index ? svg.value.width / 20 : radius;
-        const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / maxSubtotal);
+        const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxSubtotal, 10).max);
         return {
             ...a,
             y,
@@ -159,21 +162,21 @@ const extremes = computed(() => {
     }
 });
 
+const niceScale = computed(() => {
+    return calculateNiceScale(extremes.value.min, extremes.value.max, 10)
+})
+
 function ratioToMax(value) {
-    return value / extremes.value.max;
+    return value / niceScale.value.max;
 }
 
 const yLabels = computed(() => {
-    const positiveStep = closestDecimal(extremes.value.max / donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps);
-    const steps = [];
-    for(let i = donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps; i >= 0; i -= 1) {
-        const value = positiveStep * i ;
-        steps.push({
-            y: svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * ratioToMax(positiveStep * i)),
-            value,
-        });
-    }
-    return steps;
+    return niceScale.value.ticks.map(t => {
+        return {
+            y: svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * ratioToMax(t)),
+            value: t
+        }
+    })
 });
 
 function displayArcPercentage(arc, stepBreakdown) {
@@ -452,7 +455,7 @@ defineExpose({
             <g v-if="donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null || isFixed}">
                 <g v-for="(yLabel, i) in yLabels">
                     <line 
-                        v-if="yLabel.value >= 0 && yLabel.value <= extremes.max"
+                        v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
                         :x1="padding.left" 
                         :x2="padding.left - 5" 
                         :y1="yLabel.y" 
@@ -461,7 +464,7 @@ defineExpose({
                         :stroke-width="donutEvolutionConfig.style.chart.layout.grid.strokeWidth" 
                     />
                     <text 
-                        v-if="yLabel.value >= 0 && yLabel.value <= extremes.max" 
+                        v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
                         :x="padding.left - 8 + donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.offsetX" 
                         :y="yLabel.y + donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.fontSize / 3" 
                         :font-size="donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.fontSize" 
