@@ -3898,7 +3898,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_mood_radar)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_mood_radar)">
         <template #title>
           <BaseIcon name="chartMoodRadar"/>
           VueUiMoodRadar
@@ -3981,7 +3981,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
         <template #title>
           <BaseIcon name="chartDonutEvolution"/>
           VueUiDonutEvolution
@@ -4246,7 +4246,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_candlestick)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_candlestick)">
         <template #title>
           <BaseIcon name="chartCandlestick" />
           VueUiCandleStick

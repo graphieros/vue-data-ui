@@ -120,9 +120,9 @@ const drawableDataset = computed(() => {
     const maxSubtotal = Math.max(...arr.map(a => a.subtotal))
     
     return arr.map((a, i) => {
-        const radiusReference = (slit.value / 2) * 0.5;
+        const radiusReference = (slit.value / 2) * 0.7;
         const radius = radiusReference > svg.value.width / 16 ? svg.value.width / 16 : radiusReference;
-        const activeRadius = hoveredIndex.value === a.index ? svg.value.width / 20 : radius;
+        const activeRadius = hoveredIndex.value === a.index ? svg.value.width / 16 : radius;
         const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxSubtotal, 10).max);
         return {
             ...a,
@@ -136,7 +136,16 @@ const drawableDataset = computed(() => {
                         value: s.values[i] ?? 0
                     }
                 })
-            }, a.x, y, activeRadius, activeRadius),
+            }, a.x, y, activeRadius, activeRadius, 1.99999, 2, 1, 360, 105.25, slit.value / 5 > 16 ? 16 : slit.value / 5),
+            donutHover: makeDonut({
+                series: mutableDataset.value.map((s, k) => {
+                    return {
+                        color: s.color,
+                        name: s.name,
+                        value: s.values[i] ?? 0
+                    }
+                })
+            }, a.x, y, activeRadius, activeRadius, 1.99999, 2, 1, 360, 105.25, 12),
             donutFocus: makeDonut({
                 series: mutableDataset.value.map((s, k) => {
                     return {
@@ -145,7 +154,7 @@ const drawableDataset = computed(() => {
                         value: s.values[i] ?? 0
                     }
                 })
-            }, svg.value.centerX, svg.value.centerY, svg.value.height / 5, svg.value.height / 5),
+            }, svg.value.centerX, svg.value.centerY, svg.value.height / 3.6, svg.value.height / 3.6, 1.99999, 2, 1, 360, 105.25, svg.value.height / 6),
         }
     })
 })
@@ -556,13 +565,22 @@ defineExpose({
                         :r="3"
                         :fill="donutEvolutionConfig.style.chart.color"
                     />
+                    <g v-else-if="hoveredIndex !== null && hoveredIndex === i">
+                        <path 
+                            v-for="(arc, k) in datapoint.donutHover"
+                            :d="arc.arcSlice"
+                            :fill="`${arc.color}`"
+                            :stroke-width="1"
+                            :stroke="donutEvolutionConfig.style.chart.backgroundColor"
+                        />
+                    </g>
                     <g v-else>
                         <path 
                             v-for="(arc, k) in datapoint.donut"
-                            :d="arc.path"
-                            :stroke="`${arc.color}`"
-                            :stroke-width="hoveredIndex === i ? 12 : slit / 5 > 16 ? 16 : slit / 5"
-                            fill="none"
+                            :d="arc.arcSlice"
+                            :fill="`${arc.color}`"
+                            :stroke-width="0.5"
+                            :stroke="donutEvolutionConfig.style.chart.backgroundColor"
                         />
                     </g>
                 </g>
@@ -571,7 +589,7 @@ defineExpose({
                         v-if="datapoint.subtotal"
                         :cx="datapoint.x"
                         :cy="datapoint.y"
-                        :r="hoveredIndex === datapoint.index ? svg.width / 22 : slit / 6"
+                        :r="hoveredIndex === datapoint.index ? svg.width / 30 : slit / 10"
                         :fill="donutEvolutionConfig.style.chart.backgroundColor"
                     />
                 </g>
@@ -662,7 +680,7 @@ defineExpose({
 
                 <g v-for="arc in fixedDatapoint.donutFocus">
                     <path
-                        :d="calcNutArrowPath(arc, {x: arc.center.endX, y: arc.center.endY}, 12, 12, { x: svg.width / 2 + padding.left, y: padding.top + svg.height / 2}, true)"
+                        :d="calcNutArrowPath(arc, {x: svg.centerX, y: svg.centerY}, 12, 12, false, false, 1)"
                         :stroke="arc.color"
                         stroke-width="1"
                         stroke-linecap="round"
@@ -678,16 +696,16 @@ defineExpose({
                 />
                 <path 
                     v-for="(arc, k) in fixedDatapoint.donutFocus"
-                    :d="arc.path"
-                    :stroke="`${arc.color}`"
-                    :stroke-width="svg.height / 7"
-                    fill="none"
+                    :d="arc.arcSlice"
+                    :fill="`${arc.color}`"
+                    :stroke-width="1"
+                    :stroke="donutEvolutionConfig.style.chart.backgroundColor"
                 />
                 <g v-for="(arc, i) in fixedDatapoint.donutFocus">
                     <text
                         :data-cy="`donut-datalabel-value-${i}`"
-                        :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
-                        :x="calcMarkerOffsetX(arc, true, 3).x"
+                        :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
+                        :x="calcMarkerOffsetX(arc, true, 10).x"
                         :y="calcMarkerOffsetY(arc)"
                         :fill="donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.color"
                         :font-size="10"
