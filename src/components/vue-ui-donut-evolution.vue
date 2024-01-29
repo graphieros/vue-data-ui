@@ -686,6 +686,7 @@ defineExpose({
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         fill="none"
+                        class="vue-ui-donut-evolution-focus"
                     />
                 </g>
                 <circle 
@@ -700,8 +701,9 @@ defineExpose({
                     :fill="`${arc.color}`"
                     :stroke-width="1"
                     :stroke="donutEvolutionConfig.style.chart.backgroundColor"
+                    class="vue-ui-donut-evolution-focus"
                 />
-                <g v-for="(arc, i) in fixedDatapoint.donutFocus">
+                <g v-for="(arc, i) in fixedDatapoint.donutFocus" class="vue-ui-donut-evolution-focus">
                     <text
                         :data-cy="`donut-datalabel-value-${i}`"
                         :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
@@ -733,6 +735,7 @@ defineExpose({
                     :font-size="14"
                     :font-weight="'bold'"
                     :fill="donutEvolutionConfig.style.chart.layout.dataLabels.color"
+                    class="vue-ui-donut-evolution-focus"
                 >
                     {{ labellizeValue(fixedDatapoint.subtotal) }}
                 </text>
@@ -802,7 +805,7 @@ defineExpose({
     position: relative;
 }
 
-path {
+.vue-ui-donut-evolution-focus {
     animation: donut 0.5s ease-in-out;
     transform-origin: center;
 }
