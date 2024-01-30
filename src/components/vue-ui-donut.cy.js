@@ -2,6 +2,13 @@ import VueUiDonut from './vue-ui-donut.vue';
 
 describe('<VueUiDonut />', () => {
   beforeEach(function () {
+    const stub = cy.stub()
+    Cypress.on('uncaught:exception', (err, runnable) => {
+      if (err.message.includes('ResizeObserver')) {
+          stub()
+          return false
+      }
+    })
     cy.fixture('donut.json').as('fixture');
     cy.viewport(1000, 1100);
   });

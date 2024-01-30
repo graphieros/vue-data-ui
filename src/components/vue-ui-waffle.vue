@@ -365,13 +365,21 @@ const dataTable = computed(() => {
             color: waffleConfig.value.table.td.color,
             outline: waffleConfig.value.table.td.outline
         },
-        shape: 'square'
+        shape: 'square',
+        breakpoint: waffleConfig.value.table.responsiveBreakpoint
     }
+
+    const colNames = [
+        waffleConfig.value.table.columnNames.series,
+        waffleConfig.value.table.columnNames.value,
+        waffleConfig.value.table.columnNames.percentage
+    ]
 
     return {
         head,
         body,
-        config
+        config,
+        colNames
     }
 });
 
@@ -580,6 +588,7 @@ defineExpose({
         <!-- DATA TABLE -->
         <DataTable
             v-if="mutableConfig.showTable"
+            :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"
             :config="dataTable.config"

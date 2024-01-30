@@ -263,6 +263,7 @@ const table = computed(() => {
         }
     });
     const body = convertedDataset.value.map(ds => ds.value);
+
     return { head, body };
 });
 
@@ -294,13 +295,21 @@ const dataTable = computed(() => {
             backgroundColor: ringsConfig.value.table.td.backgroundColor,
             color: ringsConfig.value.table.td.color,
             outline: ringsConfig.value.table.td.outline
-        }
+        },
+        breakpoint: ringsConfig.value.table.responsiveBreakpoint
     }
+
+    const colNames = [
+      ringsConfig.value.table.columnNames.series,
+      ringsConfig.value.table.columnNames.value,
+      ringsConfig.value.table.columnNames.percentage
+    ]
 
     return {
         head,
         body,
-        config
+        config,
+        colNames
     }
 });
 
@@ -517,6 +526,7 @@ defineExpose({
     <!-- DATA TABLE -->
     <DataTable
             v-if="mutableConfig.showTable"
+            :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"
             :config="dataTable.config"

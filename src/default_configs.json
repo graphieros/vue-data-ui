@@ -434,6 +434,12 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 300,
+            "columnNames": {
+                "series": "Series",
+                "value": "Value",
+                "percentage": "Percentage"
+            },
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -514,6 +520,12 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
+            "columnNames": {
+                "series": "Series",
+                "value": "Value",
+                "percentage": "Percentage"
+            },
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -2508,6 +2520,12 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
+            "columnNames": {
+                "series": "Series",
+                "value": "Value",
+                "percentage": "Percentage"
+            },
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -2717,6 +2735,11 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
+            "columnNames": {
+                "period": "Period",
+                "total": "Total"
+            },
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -2802,6 +2825,12 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 300,
+            "columnNames": {
+                "series": "Series",
+                "value": "Value",
+                "percentage": "Percentage"
+            },
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -2922,6 +2951,7 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",

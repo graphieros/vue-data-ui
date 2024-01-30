@@ -3,6 +3,13 @@ import VueUiRings from './vue-ui-rings.vue'
 describe('<VueUiRings />', () => {
 
   beforeEach(function() {
+    const stub = cy.stub()
+    Cypress.on('uncaught:exception', (err, runnable) => {
+      if (err.message.includes('ResizeObserver')) {
+          stub()
+          return false
+      }
+    })
     cy.fixture('rings.json').as('fixture');
     cy.viewport(600, 800);
   });

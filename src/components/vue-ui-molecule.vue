@@ -384,13 +384,21 @@ const dataTable = computed(() => {
             backgroundColor: moleculeConfig.value.table.td.backgroundColor,
             color: moleculeConfig.value.table.td.color,
             outline: moleculeConfig.value.table.td.outline
-        }
+        },
+        breakpoint: moleculeConfig.value.table.responsiveBreakpoint
     }
+
+    const colNames = [
+        moleculeConfig.value.table.translations.nodeName,
+        moleculeConfig.value.table.translations.details,
+        moleculeConfig.value.table.translations.parentNode
+    ]
 
     return {
         head,
         body,
-        config
+        config,
+        colNames
     }
 });
 
@@ -535,6 +543,7 @@ defineExpose({
 
         <DataTable
             v-if="mutableConfig.showTable"
+            :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"
             :config="dataTable.config"

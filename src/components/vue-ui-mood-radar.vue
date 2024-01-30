@@ -223,13 +223,21 @@ const dataTable = computed(() => {
             backgroundColor: radarConfig.value.table.td.backgroundColor,
             color: radarConfig.value.table.td.color,
             outline: radarConfig.value.table.td.outline
-        }
+        },
+        breakpoint: radarConfig.value.table.responsiveBreakpoint
     }
+
+    const colNames = [
+        radarConfig.value.table.columnNames.series,
+        radarConfig.value.table.columnNames.value,
+        radarConfig.value.table.columnNames.percentage
+    ]
 
     return {
         head,
         body,
-        config
+        config,
+        colNames
     }
 });
 
@@ -436,6 +444,7 @@ defineExpose({
         <!-- DATA TABLE -->
         <DataTable
             v-if="mutableConfig.showTable"
+            :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"
             :config="dataTable.config"

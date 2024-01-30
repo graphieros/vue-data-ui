@@ -1,7 +1,14 @@
 <script setup>
+import { computed, onMounted, ref } from "vue";
 import Shape from "./Shape.vue";
 
 const props = defineProps({
+    colNames: {
+        type: Array,
+        default() {
+            return []
+        }
+    },
     head: Array,
     body: Array,
     title: String,
@@ -11,61 +18,121 @@ const props = defineProps({
 const { backgroundColor:thbg, color:thc, outline:tho } = props.config.th;
 const { backgroundColor:tdbg, color:tdc, outline:tdo } = props.config.td;
 
+const breakpoint = computed(() => {
+    return props.config.breakpoint
+})
+
+const tableContainer = ref(null)
+const isResponsive = ref(false)
+
+onMounted(() => {
+    const observer = new ResizeObserver((entries) => {
+        entries.forEach(entry => {
+            isResponsive.value = entry.contentRect.width < breakpoint.value;
+        })
+    })
+    if(tableContainer.value) {
+        observer.observe(tableContainer.value)
+    }
+        
+})
+
 </script>
 
 <template>
-    <table data-cy="vue-data-ui-table-data" class="vue-ui-data-table">
-        <thead>
-            <tr>
-                <th :style="{backgroundColor: thbg, color: thc, outline: tho}" :colspan="head.length">
-                    {{  title }}
-                </th>
-            </tr>
-            <tr>
-                <th :style="{backgroundColor: thbg, color: thc, outline: tho}" v-for="(th, i) in head" :key="`th_${i}`">
-                    <div style="display: flex; align-items:center; justify-content:center; justify-content:flex-end;padding-right: 3px; gap:3px">
-                        <svg height="12" width="12" v-if="th.color" viewBox="0 0 20 20" style="background: none;">
-                            <circle cx="10" cy="10" r="10" :fill="th.color"/>
-                        </svg>
-                        <slot name="th" :th="th"/>
-                    </div>
-                </th>
-            </tr>
-        </thead>
+    <div ref="tableContainer" style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}"> 
+        <table data-cy="vue-data-ui-table-data" class="vue-ui-data-table">
+        <caption :style="{backgroundColor: thbg, color: thc, outline: tho}">
+            {{  title }}
+        </caption>
+            <thead>
+                <tr>
+                    <th :style="{backgroundColor: thbg, color: thc, outline: tho}" v-for="(th, i) in head" :key="`th_${i}`">
+                        <div style="display: flex; align-items:center; justify-content:center; justify-content:flex-end;padding-right: 3px; gap:3px">
+                            <svg height="12" width="12" v-if="th.color" viewBox="0 0 20 20" style="background: none;">
+                                <circle cx="10" cy="10" r="10" :fill="th.color"/>
+                            </svg>
+                            <slot name="th" :th="th"/>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
 
-        <tbody>
-            <tr v-for="(tr, i) in body">
-                <td v-for="(td, j) in tr" :style="{backgroundColor: tdbg, color: tdc, outline: tdo}">
-                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                        <svg height="12" width="12" v-if="td.color" viewBox="0 0 20 20" style="background: none;overflow: visible">
-                            <Shape
-                                :plot="{ x: 10, y: 10 }"
-                                :color="td.color"
-                                :radius="9"
-                                :shape="config.shape || 'circle'"
-                            />
-                        </svg>
-                        <slot name="td" :td="td"></slot>
-                    </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+            <tbody>
+                <tr v-for="(tr, i) in body">
+                    <td role="" v-for="(td, j) in tr" :data-cell="colNames[j]" :style="{backgroundColor: tdbg, color: tdc, outline: tdo}">
+                        <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                            <svg height="12" width="12" v-if="td.color" viewBox="0 0 20 20" style="background: none;overflow: visible">
+                                <Shape
+                                    :plot="{ x: 10, y: 10 }"
+                                    :color="td.color"
+                                    :radius="9"
+                                    :shape="config.shape || 'circle'"
+                                />
+                            </svg>
+                            <slot name="td" :td="td"></slot>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </template>
 
-<style scoped>
-table.vue-ui-data-table {
-    width: 100%;
-    border-collapse:collapse;
-}
-.vue-ui-data-table td {
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
+<style scoped lang="scss">
 .vue-ui-data-table th {
     position: sticky;
     top:0;
     font-weight: 400;
     user-select: none;
+}
+
+table {
+    width: 100%;
+    padding: 1rem;
+    border-collapse:collapse;
+}
+
+caption,
+th,
+td {
+    padding: 0.5rem;
+    font-variant-numeric: tabular-nums;
+}
+
+caption {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.vue-ui-responsive {
+    th {
+        display: none;
+    }
+    td {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0.5rem 1rem;
+        outline: none !important;
+        text-align: left;
+    }
+    tr {
+        outline: 1px solid #CCCCCC;
+    }
+
+    td:first-child {
+        padding-top: 1rem;
+    }
+
+    td:last-child {
+        padding-bottom: 1rem;
+    }
+
+    td::before {
+        content: attr(data-cell) ": ";
+        font-weight: 700;
+        text-transform: capitalize;
+    }
 }
 </style>

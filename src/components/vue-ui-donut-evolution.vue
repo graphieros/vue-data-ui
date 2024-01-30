@@ -349,10 +349,15 @@ const table = computed(() => {
             backgroundColor: donutEvolutionConfig.value.table.td.backgroundColor,
             color: donutEvolutionConfig.value.table.td.color,
             outline: donutEvolutionConfig.value.table.td.outline
-        }
+        },
+        breakpoint: donutEvolutionConfig.value.table.responsiveBreakpoint
     }
 
-    return { head, body, config };
+    const colNames = [
+         donutEvolutionConfig.value.table.columnNames.period
+    ].concat(convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => ds.name)).concat(donutEvolutionConfig.value.table.columnNames.total)
+
+    return { head, body, config, colNames };
 });
 
 function getData() {
@@ -773,6 +778,7 @@ defineExpose({
 
         <DataTable
             v-if="mutableConfig.showTable"
+            :colNames="table.colNames"
             :head="table.head" 
             :body="table.body" 
             :config="table.config" 

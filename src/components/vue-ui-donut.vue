@@ -283,10 +283,18 @@ const dataTable = computed(() => {
             backgroundColor: donutConfig.value.table.td.backgroundColor,
             color: donutConfig.value.table.td.color,
             outline: donutConfig.value.table.td.outline
-        }
+        },
+        breakpoint: donutConfig.value.table.responsiveBreakpoint
     }
 
+    const colNames = [
+        donutConfig.value.table.columnNames.series,
+        donutConfig.value.table.columnNames.value,
+        donutConfig.value.table.columnNames.percentage
+    ]
+
     return {
+        colNames,
         head,
         body,
         config
@@ -608,6 +616,7 @@ defineExpose({
         <!-- DATA TABLE -->
         <DataTable
             v-if="mutableConfig.showTable"
+            :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"
             :config="dataTable.config"

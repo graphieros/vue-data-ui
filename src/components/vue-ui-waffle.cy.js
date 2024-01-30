@@ -3,6 +3,13 @@ import VueUiWaffle from './vue-ui-waffle.vue'
 
 describe('<VueUiWaffle />', () => {
   beforeEach(function () {
+    const stub = cy.stub()
+    Cypress.on('uncaught:exception', (err, runnable) => {
+      if (err.message.includes('ResizeObserver')) {
+          stub()
+          return false
+      }
+    })
     cy.fixture('waffle.json').as('fixture');
     cy.viewport(800, 950);
   });

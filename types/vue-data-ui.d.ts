@@ -49,6 +49,7 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -232,6 +233,12 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                series?: string;
+                value?: string;
+                percentage?: string;
+            };
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -351,6 +358,11 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                period?: string;
+                total?: string;
+            };
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -567,6 +579,12 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: string;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                series?: string;
+                value?: string;
+                percentage?: string;
+            }
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -1867,6 +1885,12 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                series?: string;
+                value?: string;
+                percentage?: string;
+            },
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -1959,6 +1983,12 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                series?: string;
+                value?: string;
+                percentage?: string;
+            };
             th?: {
                 backgroundColor?: string;
                 color?: string;
