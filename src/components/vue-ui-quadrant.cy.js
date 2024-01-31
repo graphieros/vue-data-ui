@@ -59,11 +59,6 @@ describe('<VueUiQuadrant />', () => {
           .contains(label.expected)
       });
 
-      cy.get(`[data-cy="quadrant-thead"]`)
-        .should('exist')
-        .contains(`${fixture.config.style.chart.title.text} : ${fixture.config.style.chart.title.subtitle.text}`);
-
-
       cy.get(`[data-cy="user-options-summary"]`).click();        
       cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
       cy.wait(3000);

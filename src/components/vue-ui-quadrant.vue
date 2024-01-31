@@ -10,6 +10,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Shape from "../atoms/Shape.vue";
 import Legend from "../atoms/Legend.vue";
+import DataTable from "../atoms/DataTable.vue";
 
 const props = defineProps({
     config: {
@@ -315,10 +316,41 @@ const table = computed(() => {
             color: td.color
         }
     });
-    console.log({itsShapes});
-;
-    return { head, body, itsShapes };
+
+    return { head, body, itsShapes, tableData };
 });
+
+const dataTable = computed(() => {
+    const head = table.value.head;
+    const body = table.value.tableData.map(ds => {
+        return [
+            {
+                shape: ds.shape,
+                color: ds.color,
+                name: ds.category
+            },
+            ds.name,
+            ds.x,
+            ds.y,
+            ds.sideName || ds.quadrantSide
+        ]
+    })
+    const config = {
+        th: {
+            backgroundColor: quadrantConfig.value.table.th.backgroundColor,
+            color: quadrantConfig.value.table.th.color,
+            outline: quadrantConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: quadrantConfig.value.table.td.backgroundColor,
+            color: quadrantConfig.value.table.td.color,
+            outline: quadrantConfig.value.table.td.outline
+        },
+        breakpoint: quadrantConfig.value.table.responsiveBreakpoint
+    }
+
+    return { head, body, config, colNames: head }
+})
 
 const legendSet = computed(() => {
     return datasetReference.value.map(category => {
@@ -866,46 +898,20 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <div  class="vue-ui-quadrant-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
-            <table>
-                <thead data-cy="quadrant-thead">
-                    <tr v-if="quadrantConfig.style.chart.title.text">
-                        <th :colspan="5" :style="`background:${quadrantConfig.table.th.backgroundColor};color:${quadrantConfig.table.th.color};outline:${quadrantConfig.table.th.outline}`">
-                            <span>{{ quadrantConfig.style.chart.title.text }}</span>
-                            <span v-if="quadrantConfig.style.chart.title.subtitle.text">
-                                : {{ quadrantConfig.style.chart.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th v-for="th in table.head" :style="`background:${quadrantConfig.table.th.backgroundColor};color:${quadrantConfig.table.th.color};outline:${quadrantConfig.table.th.outline}`">
-                            <div style="width:100%">
-                                {{ th }}
-                            </div>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(tr, i) in table.body">
-                        <td v-for="(td, j) in tr" :style="`background:${quadrantConfig.table.td.backgroundColor};color:${quadrantConfig.table.td.color};outline:${quadrantConfig.table.td.outline}`">
-                            <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
-                                <svg v-if="j === 0" height="14" width="14" viewBox="0 0 20 20">
-                                    <Shape
-                                        :plot="{ x: 10, y: 10 }"
-                                        :color="table.itsShapes[i].color"
-                                        :shape="table.itsShapes[i].shape"
-                                        :radius="8"
-                                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                                        :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                                    />
-                                </svg>
-                                <span>
-                                    {{ isNaN(td) ? td : td.toFixed(quadrantConfig.table.td.roundingValue) }}
-                                </span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <DataTable
+                :colNames="dataTable.colNames"
+                :head="dataTable.head"
+                :body="dataTable.body"
+                :config="dataTable.config"
+                :title="`${quadrantConfig.style.chart.title.text}${quadrantConfig.style.chart.title.subtitle.text ? ` : ${quadrantConfig.style.chart.title.subtitle.text}` : ''}`"
+            >
+                <template #th="{ th }">
+                    {{ th }}
+                </template>
+                <template #td="{ td }">
+                    <div v-html="td.name || td"/>
+                </template>
+            </DataTable>
         </div>
     </div>
 </template>
@@ -945,23 +951,6 @@ path, line, rect, circle, polygon {
     justify-content: center;
     text-align:center;
     width:100%;
-}
-
-/** */
-.vue-ui-quadrant table {
-    width: 100%;
-    border-collapse:collapse;
-}
-.vue-ui-quadrant table td {
-    text-align:right;
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-.vue-ui-quadrant table th {
-    position: sticky;
-    top:0;
-    font-weight: 400;
-    user-select: none;
 }
 
 .vue-ui-dna * {

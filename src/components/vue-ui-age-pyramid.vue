@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import DataTable from "../atoms/DataTable.vue";
 
 const props = defineProps({
     config: {
@@ -254,6 +255,40 @@ function generateCsv() {
         downloadCsv({ csvContent, title: agePyramidConfig.value.style.title.text || "vue-ui-heatmap"});
     });
 }
+
+const dataTable = computed(() => {
+    const head = [
+        agePyramidConfig.value.translations.year,
+        agePyramidConfig.value.translations.age,
+        agePyramidConfig.value.translations.female,
+        agePyramidConfig.value.translations.male,
+        agePyramidConfig.value.translations.total
+    ];
+    const body = props.dataset.map(ds => {
+        return [
+            ds[0],
+            ds[1],
+            ds[2].toLocaleString(),
+            ds[3].toLocaleString(),
+            (ds[2] + ds[3]).toLocaleString()
+        ]
+    });
+    const config = {
+        th: {
+            backgroundColor: agePyramidConfig.value.table.th.backgroundColor,
+            color: agePyramidConfig.value.table.th.color,
+            outline: agePyramidConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: agePyramidConfig.value.table.td.backgroundColor,
+            color: agePyramidConfig.value.table.td.color,
+            outline: agePyramidConfig.value.table.td.outline
+        },
+        breakpoint: agePyramidConfig.value.table.responsiveBreakpoint
+    };
+    
+    return { head, body, config, colNames: head}
+})
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -552,44 +587,20 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <div  :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
-            <table>
-                <thead>
-                    <tr v-if="agePyramidConfig.style.title.text">
-                        <th :colspan="5" :style="`background:${agePyramidConfig.table.th.backgroundColor};color:${agePyramidConfig.table.th.color};outline:${agePyramidConfig.table.th.outline}`">
-                            <span>{{ agePyramidConfig.style.title.text }}</span>
-                            <span v-if="agePyramidConfig.style.title.subtitle.text">
-                                : {{ agePyramidConfig.style.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th :style="`background:${agePyramidConfig.table.th.backgroundColor};color:${agePyramidConfig.table.th.color};outline:${agePyramidConfig.table.th.outline};padding-right:6px`">{{ agePyramidConfig.translations.year }}</th>
-                        <th :style="`background:${agePyramidConfig.table.th.backgroundColor};color:${agePyramidConfig.table.th.color};outline:${agePyramidConfig.table.th.outline};padding-right:6px`">{{ agePyramidConfig.translations.age }}</th>
-                        <th :style="`background:${agePyramidConfig.table.th.backgroundColor};color:${agePyramidConfig.table.th.color};outline:${agePyramidConfig.table.th.outline};padding-right:6px`">{{ agePyramidConfig.translations.female }}</th>
-                        <th :style="`background:${agePyramidConfig.table.th.backgroundColor};color:${agePyramidConfig.table.th.color};outline:${agePyramidConfig.table.th.outline};padding-right:6px`">{{ agePyramidConfig.translations.male }}</th>
-                        <th :style="`background:${agePyramidConfig.table.th.backgroundColor};color:${agePyramidConfig.table.th.color};outline:${agePyramidConfig.table.th.outline};padding-right:6px`">{{ agePyramidConfig.translations.total }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="tr in dataset">
-                        <td :style="`background:${agePyramidConfig.table.td.backgroundColor};color:${agePyramidConfig.table.td.color};outline:${agePyramidConfig.table.td.outline}`">
-                            {{ tr[0] }}
-                        </td>
-                        <td :style="`background:${agePyramidConfig.table.td.backgroundColor};color:${agePyramidConfig.table.td.color};outline:${agePyramidConfig.table.td.outline}`">
-                            {{ tr[1] }}
-                        </td>
-                        <td :style="`background:${agePyramidConfig.table.td.backgroundColor};color:${agePyramidConfig.table.td.color};outline:${agePyramidConfig.table.td.outline}`">
-                            {{ tr[2].toLocaleString() }}
-                        </td>
-                        <td :style="`background:${agePyramidConfig.table.td.backgroundColor};color:${agePyramidConfig.table.td.color};outline:${agePyramidConfig.table.td.outline}`">
-                            {{ tr[3].toLocaleString() }}
-                        </td>
-                        <td :style="`background:${agePyramidConfig.table.td.backgroundColor};color:${agePyramidConfig.table.td.color};outline:${agePyramidConfig.table.td.outline}`">
-                            {{ (tr[2] + tr[3]).toLocaleString() }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <DataTable
+                :colNames="dataTable.colNames"
+                :head="dataTable.head"
+                :body="dataTable.body"
+                :config="dataTable.config"
+                :title="`${agePyramidConfig.style.title.text}${agePyramidConfig.style.title.subtitle.text ? ` : ${agePyramidConfig.style.title.subtitle.text}` : ''}`"
+            >
+                <template #th="{ th }">
+                    {{ th }}
+                </template>
+                <template #td="{ td }">
+                    {{ td }}
+                </template>
+            </DataTable>
         </div>
 
     </div>

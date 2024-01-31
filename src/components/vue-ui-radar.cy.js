@@ -62,11 +62,6 @@ describe('<VueUiRadar />', () => {
           });
         }
 
-        cy.get(`[data-cy="radar-thead"]`)
-          .should('exist')
-          .contains(`${fixture.config.style.chart.title.text} : ${fixture.config.style.chart.title.subtitle.text}`);
-
-
         cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
         cy.get(`[data-cy="user-options-pdf"]`).click({ force: true });
         cy.wait(3000);

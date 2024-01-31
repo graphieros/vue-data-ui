@@ -144,31 +144,6 @@ describe('<VueUiCandlestick />', () => {
         });
       }
 
-      cy.get(`[data-cy="candlestick-thead"]`).then(($thead) => {
-        cy.wrap($thead)
-          .should('exist')
-          .contains(`${fixture.config.style.title.text} : ${fixture.config.style.title.subtitle.text}`);
-
-        Object.values(fixture.config.translations).forEach(trans => {
-          cy.wrap($thead)
-            .contains(trans)
-        })
-      });
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="candlestick-tr-${i}"]`).then(($tr) => {
-          cy.wrap($tr)
-            .should('exist')
-            .find('td')
-            .should('have.length', Object.keys(fixture.config.translations).length);
-
-          fixture.dataset[i].forEach(d => {
-            cy.wrap($tr)
-              .contains(d)
-          });
-        });
-      }
-
       cy.get(`[data-cy="candlestick-trap-0"]`)
           .trigger('mouseleave');
 

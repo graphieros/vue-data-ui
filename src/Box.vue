@@ -31,8 +31,13 @@ function copy() {
     <div style="width: 100%;margin-top:12px; background: #2A2A2A;">
         <details :open="open">
             <summary style="user-select:none;cursor:pointer;height:30px;background:linear-gradient(to right, #2A2A2A, #1A1A1A);line-height:24px;font-size:24px;padding:12px; display: flex; align-items:center; gap: 6px">
-                <div style="color:#42d392">
-                    <slot name="title"></slot>
+                <div style="color:#42d392; display: flex; justify-content: space-between; width: 100%">
+                    <div style="display: flex; align-items:center; gap:12px">
+                        <slot name="title"></slot>
+                    </div>
+                    <div style="display: flex; align-items:center; gap: 12px">
+                        <slot name="info"></slot>
+                    </div>
                 </div>
             </summary>
             <div style="display: flex; flex-direction: row; gap: 24px; align-items:center;justify-content:center; padding: 24px">

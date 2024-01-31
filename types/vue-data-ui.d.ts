@@ -1309,6 +1309,7 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -1454,6 +1455,7 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -1470,6 +1472,7 @@ declare module 'vue-data-ui' {
                 correlationCoefficient?: string;
                 nbrPlots?: string;
                 average?: string;
+                series?: string;
             };
         };
     };
@@ -1737,6 +1740,11 @@ declare module 'vue-data-ui' {
         };
         table?: {
             rounding?: number;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                period?: string;
+                total?: string;
+            };
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -2086,6 +2094,7 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -2109,6 +2118,8 @@ declare module 'vue-data-ui' {
         };
         translations?: {
             target?: string;
+            value?: string;
+            datapoint?: string;
         };
     };
 
@@ -2269,6 +2280,7 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
             th?: {
                 backgroundColor?: string;
                 color?: string;

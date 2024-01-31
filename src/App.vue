@@ -3887,6 +3887,14 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartCluster"/>
           VueUiMolecule
         </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="labelOpen" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <MoleculeTest :dataset="clusterDataset"/>
         </template>
@@ -3902,6 +3910,13 @@ const moodRadarConfig = ref({
         <template #title>
           <BaseIcon name="chartMoodRadar"/>
           VueUiMoodRadar
+        </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <MoodRadarTest :dataset="moodRadarDataset" :config="moodRadarConfig">
@@ -3944,6 +3959,11 @@ const moodRadarConfig = ref({
           <BaseIcon name="chart3dBar"/>
         VueUi3dBar
         </template>
+        <template #info>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <Bar3dTest :dataset="bar3dDataset">
             <template #svg="{ svg }">
@@ -3981,10 +4001,17 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
         <template #title>
           <BaseIcon name="chartDonutEvolution"/>
           VueUiDonutEvolution
+        </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <DonutEvolutionTest
@@ -4013,6 +4040,11 @@ const moodRadarConfig = ref({
         <template #title>
           <BaseIcon name="chartTiremarks"/>
           VueUiTiremarks
+        </template>
+        <template #info>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <TireTest
@@ -4067,6 +4099,11 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartWheel"/>  
           VueUiWheel
         </template>
+        <template #info>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <WheelTest
             ref="rings"
@@ -4099,6 +4136,13 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartRings" />
           VueUiRings
         </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <RingsTest
             ref="rings"
@@ -4130,6 +4174,11 @@ const moodRadarConfig = ref({
         <template #title>
           <BaseIcon name="chartRelationCircle"/>
           VueUiRelationCircle
+        </template>
+        <template #info>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <RelationTest
@@ -4193,6 +4242,14 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartLine" />
           VueUiXy
         </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="labelOpen" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <XyTest
             ref="xytest"
@@ -4251,6 +4308,13 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartCandlestick" />
           VueUiCandleStick
         </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <CandlestickTest 
             ref="candlestick"
@@ -4283,6 +4347,13 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartScatter" />
           VueUiScatter
         </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <ScatterTest 
             ref="scatter" 
@@ -4314,6 +4385,14 @@ const moodRadarConfig = ref({
         <template #title>
           <BaseIcon name="chartVerticalBar" />
           VueUiVerticalBar
+        </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#ff6347"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="sort" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <VerticalTest 
@@ -4348,6 +4427,13 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartOnion" />
           VueUiOnion
         </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <OnionTest
             :config="{ useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}} }"
@@ -4380,6 +4466,14 @@ const moodRadarConfig = ref({
         <template #title>
           <BaseIcon name="chartQuadrant" />
           VueUiQuadrant
+        </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="labelOpen" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <QuadrantTest
@@ -4419,6 +4513,13 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartRadar" />
           VueUiRadar
         </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <RadarTest
             ref="radartest"
@@ -4452,6 +4553,14 @@ const moodRadarConfig = ref({
         <template #title>
           <BaseIcon name="chartDonut" />
           VueUiDonut
+        </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="labelOpen" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <DonutTest
@@ -4615,6 +4724,13 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartChestnut" />
           VueUiChestnut
         </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#ff6347"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <ChestnutTest
             ref="chestnuttest"
@@ -4651,6 +4767,13 @@ const moodRadarConfig = ref({
           <BaseIcon name="chartAgePyramid" />
           VueUiAgePyramid
         </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
         <template #dev>
           <PyramidTest 
             ref="pyramid" 
@@ -4682,6 +4805,13 @@ const moodRadarConfig = ref({
         <template #title>
           <BaseIcon name="chartWaffle"/>
           VueUiWaffle
+        </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <WaffleTest
@@ -4833,6 +4963,13 @@ const moodRadarConfig = ref({
         <template #title>
           <BaseIcon name="chartHeatmap"/>
           VueUiHeatmap
+        </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#ff6347"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <HeatmapTest

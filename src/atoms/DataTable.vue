@@ -46,8 +46,8 @@ onMounted(() => {
             {{  title }}
         </caption>
             <thead>
-                <tr>
-                    <th :style="{backgroundColor: thbg, color: thc, outline: tho}" v-for="(th, i) in head" :key="`th_${i}`">
+                <tr role="row" style="font-variant-numeric: tabular-nums">
+                    <th role="cell" :style="{backgroundColor: thbg, color: thc, outline: tho}" v-for="(th, i) in head" :key="`th_${i}`">
                         <div style="display: flex; align-items:center; justify-content:center; justify-content:flex-end;padding-right: 3px; gap:3px">
                             <svg height="12" width="12" v-if="th.color" viewBox="0 0 20 20" style="background: none;">
                                 <circle cx="10" cy="10" r="10" :fill="th.color"/>
@@ -59,15 +59,15 @@ onMounted(() => {
             </thead>
 
             <tbody>
-                <tr v-for="(tr, i) in body">
-                    <td role="" v-for="(td, j) in tr" :data-cell="colNames[j]" :style="{backgroundColor: tdbg, color: tdc, outline: tdo}">
+                <tr v-for="(tr, i) in body" role="row" style="font-variant-numeric: tabular-nums;">
+                    <td role="cell" v-for="(td, j) in tr" :data-cell="colNames[j].name || colNames[j]" :style="{backgroundColor: tdbg, color: tdc, outline: tdo}">
                         <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                             <svg height="12" width="12" v-if="td.color" viewBox="0 0 20 20" style="background: none;overflow: visible">
                                 <Shape
                                     :plot="{ x: 10, y: 10 }"
                                     :color="td.color"
                                     :radius="9"
-                                    :shape="config.shape || 'circle'"
+                                    :shape="config.shape || td.shape || 'circle'"
                                 />
                             </svg>
                             <slot name="td" :td="td"></slot>

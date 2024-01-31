@@ -644,35 +644,21 @@
         />
 
         <!-- DATA TABLE -->
-        <div :class="{'vue-ui-xy-table-wrapper': true, 'vue-ui-xy-table-wrapper-printing': isPrinting}" v-if="mutableConfig.showTable">
-            <table class="vue-ui-xy-table">
-                <thead>
-                    <tr>
-                        <th :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color}`"></th>
-                        <th v-for="(th, i) in table.head" :key="`th_${i}`" :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color}`">
-                            <div style="max-width: 200px; margin:0 auto;text-align:center">   
-                                {{ th.label }}
-                            </div>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th align="right" :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color}`">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>
-                        </th>
-                        <th align="right" v-for="(_, i) in table.head" :key="`th_sum_${i}`" :style="`background:${chartConfig.table.th.backgroundColor};color:${chartConfig.table.th.color};padding-right:6px`">
-                            {{ dataset[i].series.slice(slicer.start,slicer.end).reduce((a,b) => a + b, 0).toFixed(chartConfig.table.rounding) }}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(tr, i) in table.body" :key="`tr_${i}`" :class="{'vue-ui-xy-table-tr-selected': selectedSerieIndex === i || selectedRowIndex === i}" @mouseover="selectedRowIndex = i" @mouseleave="selectedRowIndex = null">
-                        <td v-for="(td, j) in tr" :key="`td_${i}_${j}`" :style="`background:${chartConfig.table.td.backgroundColor};color:${chartConfig.table.td.color};padding-right:6px;`">
-                            {{ td }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <DataTable 
+            v-if="mutableConfig.showTable"
+            :colNames="dataTable.colNames"
+            :head="dataTable.head"
+            :body="dataTable.body"
+            :config="dataTable.config"
+            :title="`${chartConfig.chart.title.text}${chartConfig.chart.title.subtitle.text ? ` : ${chartConfig.chart.title.subtitle.text}` : ''}`"
+        >
+            <template #th="{ th }">
+                <div v-html="th"/>
+            </template>
+            <template #td="{ td }">
+                {{ td }}
+            </template>
+        </DataTable>
     </div>
 </template>
 
@@ -935,7 +921,7 @@ export default {
             return Math.max(...Object.values(this.slot).filter(e => e !== Infinity))
         },
         table() {
-            if(this.safeDataset.length === 0) return { head: [], body: []};
+            if(this.safeDataset.length === 0) return { head: [], body: [], config: {}, columnNames: []};
 
             const head = this.relativeDataset.map(s => {
                 return {
@@ -956,6 +942,35 @@ export default {
             })
 
             return { head, body};
+        },
+        dataTable() {
+            const head = [''].concat(this.relativeDataset.map(ds => ds.name)).concat(` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`)
+
+            let body = [];
+            for(let i = 0; i < this.maxSeries; i += 1) {
+                const sum = this.relativeDataset.map(ds => {
+                    return ds.absoluteValues[i] ?? 0
+                }).reduce((a, b) => a + b, 0)
+
+                body.push([this.timeLabels[i] ?? '-'].concat(this.relativeDataset.map(ds => (ds.absoluteValues[i] ?? 0).toFixed(this.chartConfig.table.rounding))).concat((sum ?? 0).toFixed(this.chartConfig.table.rounding)))
+            }
+
+            const config = {
+                th: {
+                    backgroundColor: this.chartConfig.table.th.backgroundColor,
+                    color: this.chartConfig.table.th.color,
+                    outline: this.chartConfig.table.th.outline
+                },
+                td: {
+                    backgroundColor: this.chartConfig.table.td.backgroundColor,
+                    color: this.chartConfig.table.td.color,
+                    outline: this.chartConfig.table.td.outline
+                },
+                breakpoint: this.chartConfig.table.responsiveBreakpoint
+            }
+            const colNames = [this.chartConfig.table.columnNames.period].concat(this.relativeDataset.map(ds => ds.name)).concat(this.chartConfig.table.columnNames.total)
+
+            return { head, body, config, colNames}
         },
         tooltipContent() {
             const selectedSeries = this.relativeDataset.map(datapoint => {
@@ -1969,28 +1984,6 @@ path, line, rect {
 .vue-ui-xy-table-wrapper-printing {
     max-height: unset;
     height: fit-content;
-}
-.vue-ui-xy-table {
-    width: 100%;
-    border-collapse:collapse;
-}
-.vue-ui-xy-table td {
-    border: 1px solid #e1e5e8;
-    text-align:right;
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-.vue-ui-xy-table thead {
-    border: 1px solid #e1e5e8;
-    background: #fafafa;
-    position: sticky;
-    top:0;
-    font-weight: 400;
-    outline: 1px solid #e1e5e8;
-    user-select: none;
-}
-.vue-ui-xy-table-tr-selected {
-    background: #e1e5e8;
 }
 
 .vue-ui-xy-range-slider-wrapper {

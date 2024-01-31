@@ -334,8 +334,6 @@ describe('makeDonut', () => {
 
         const donut = makeDonut(item, cx, cy, rx, ry);
 
-        console.log(donut)
-
         expect(donut).toStrictEqual(
             [
                 {

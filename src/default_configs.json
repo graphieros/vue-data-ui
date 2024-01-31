@@ -305,6 +305,11 @@
         },
         "table": {
             "rounding": 0,
+            "responsiveBreakpoint": 400,
+            "columnNames": {
+                "period": "Period",
+                "total": "Total"
+            },
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -611,6 +616,7 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -633,7 +639,9 @@
             }
         },
         "translations": {
-            "target": "Target"
+            "target": "Target",
+            "value": "Value",
+            "datapoint": "Datapoint"
         }
     },
     "vue_ui_quadrant": {
@@ -758,6 +766,7 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -1106,6 +1115,7 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 300,
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -1778,6 +1788,7 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -1793,7 +1804,8 @@
             "translations": {
                 "correlationCoefficient": "Correlation Coef.",
                 "nbrPlots": "Nbr plots",
-                "average": "Average"
+                "average": "Average",
+                "series": "Series"
             }
         }
     },
@@ -1914,6 +1926,7 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -2035,6 +2048,7 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",

@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Legend from "../atoms/Legend.vue";
+import DataTable from "../atoms/DataTable.vue";
 
 const props = defineProps({
     config: {
@@ -169,6 +170,34 @@ const table = computed(() => {
     });
     return { head, body };
 });
+
+const dataTable = computed(() => {
+    const head = table.value.head;
+
+    const body = mutableDataset.value.map(ds => {
+        return [
+            `<span style="color:${ds.color}">⬤</span> ${ds.name}`,
+            `${Number(ds.percentage ?? 0).toFixed(onionConfig.value.table.td.roundingPercentage).toLocaleString()}%`,
+            `${ds.prefix}${Number((ds.value ?? 0).toFixed(onionConfig.value.table.td.roundingValue)).toLocaleString()}${ds.suffix}`
+        ]
+    })
+
+    const config = {
+        th: {
+            backgroundColor: onionConfig.value.table.th.backgroundColor,
+            color: onionConfig.value.table.th.color,
+            outline: onionConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: onionConfig.value.table.td.backgroundColor,
+            color: onionConfig.value.table.td.color,
+            outline: onionConfig.value.table.td.outline
+        },
+        breakpoint: onionConfig.value.table.responsiveBreakpoint
+    }
+
+    return { head, body, config, colNames: head}
+})
 
 const __to__ = ref(null);
 
@@ -451,40 +480,21 @@ defineExpose({
         </Legend>
 
         <!-- DATA TABLE -->
-        <div  class="vue-ui-onion-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
-            <table>
-                <thead >
-                    <tr v-if="onionConfig.style.chart.title.text">
-                        <th data-cy="onion-table-title" colspan="3" :style="`background:${onionConfig.table.th.backgroundColor};color:${onionConfig.table.th.color};outline:${onionConfig.table.th.outline}`">
-                            <span>{{ onionConfig.style.chart.title.text }}</span>
-                            <span v-if="onionConfig.style.chart.title.subtitle.text">
-                                : {{ onionConfig.style.chart.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th v-for="(th, i) in table.head" :data-cy="`onion-table-head-col-title-${i}`" :colspan="th.color ? 2 : 1" :style="`background:${onionConfig.table.th.backgroundColor};color:${onionConfig.table.th.color};outline:${onionConfig.table.th.outline}`">
-                            {{ th }}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(onion, i) in mutableDataset" :data-cy="`onion-table-tr-${i}`">
-                        <td :style="`background:${onionConfig.table.td.backgroundColor};color:${onionConfig.table.td.color};outline:${onionConfig.table.td.outline}`">
-                                <span :style="`color:${onion.color}`">
-                                    ⬤
-                                </span>
-                                {{ onion.name }}
-                        </td>
-                        <td :style="`background:${onionConfig.table.td.backgroundColor};color:${onionConfig.table.td.color};outline:${onionConfig.table.td.outline}`">
-                            {{ !isNaN(onion.percentage) ? onion.percentage.toFixed(onionConfig.table.td.roundingPercentage) : "" }}%
-                        </td>
-                        <td :style="`background:${onionConfig.table.td.backgroundColor};color:${onionConfig.table.td.color};outline:${onionConfig.table.td.outline}`">
-                            {{ onion.prefix }}{{ !isNaN(onion.value) ? onion.value.toFixed(onionConfig.table.td.roundingValue) : "" }}{{ onion.suffix }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="vue-ui-onion-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+            <DataTable
+                :colNames="dataTable.colNames"
+                :head="dataTable.head"
+                :body="dataTable.body"
+                :config="dataTable.config"
+                :title="`${onionConfig.style.chart.title.text}${onionConfig.style.chart.title.subtitle.text ? ` : ${onionConfig.style.chart.title.subtitle.text}` : ''}`"
+            >
+                <template #th="{ th }">
+                    {{ th }}
+                </template>
+                <template #td="{ td }">
+                    <div v-html="td"/>
+                </template>
+            </DataTable>
         </div>
     </div>
 </template>

@@ -10,6 +10,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
 import Shape from "../atoms/Shape.vue";
+import DataTable from "../atoms/DataTable.vue";
 
 const props = defineProps({
     config: {
@@ -300,6 +301,42 @@ function generateCsv() {
         downloadCsv({ csvContent, title: scatterConfig.value.style.title.text || "vue-ui-heatmap"})
     });
 }
+
+const dataTable = computed(() => {
+    const head = [
+        scatterConfig.value.table.translations.series,
+        scatterConfig.value.table.translations.correlationCoefficient,
+        scatterConfig.value.table.translations.nbrPlots,
+        `${scatterConfig.value.style.layout.dataLabels.xAxis.name} ${scatterConfig.value.table.translations.average}`,
+        `${scatterConfig.value.style.layout.dataLabels.yAxis.name} ${scatterConfig.value.table.translations.average}`
+    ];
+
+    const body = drawableDataset.value.map(ds => {
+        return [
+            `<span style="color:${ds.color}">⬤</span> ${ds.name}`,
+            Number((ds.correlation.coefficient ?? 0).toFixed(scatterConfig.value.table.td.roundingValue)).toLocaleString(),
+            ds.plots.length.toLocaleString(),
+            Number((ds.plots.map(p => p.v.x ?? 0).reduce((a,b) => a + b , 0) / ds.plots.length).toFixed(scatterConfig.value.table.td.roundingAverage)).toLocaleString(),
+            Number((ds.plots.map(p => p.v.y ?? 0).reduce((a,b) => a + b , 0) / ds.plots.length).toFixed(scatterConfig.value.table.td.roundingAverage)).toLocaleString(),
+        ]
+    });
+
+    const config = {
+        th: {
+            backgroundColor: scatterConfig.value.table.th.backgroundColor,
+            color: scatterConfig.value.table.th.color,
+            outline: scatterConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: scatterConfig.value.table.td.backgroundColor,
+            color: scatterConfig.value.table.td.color,
+            outline: scatterConfig.value.table.td.outline
+        },
+        breakpoint: scatterConfig.value.table.responsiveBreakpoint
+    };
+
+    return { head, body, config, colNames: head };
+})
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -618,49 +655,21 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
-            <table>
-                <thead data-cy="scatter-thead">
-                    <tr v-if="scatterConfig.style.title.text">
-                        <th :colspan="5" :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline}`">
-                            <span>{{ scatterConfig.style.title.text }}</span>
-                            <span v-if="scatterConfig.style.title.subtitle.text">
-                                : {{ scatterConfig.style.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr data-cy="scatter-thead-col">
-                        <th :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline};padding-right:6px`"></th>
-                        <th :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline};padding-right:6px`">{{ scatterConfig.table.translations.correlationCoefficient }}</th>
-                        <th :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline};padding-right:6px`">{{ scatterConfig.table.translations.nbrPlots }}</th>
-                        <th :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline};padding-right:6px`">{{ scatterConfig.style.layout.dataLabels.xAxis.name }} {{ scatterConfig.table.translations.average }} </th>
-                        <th :style="`background:${scatterConfig.table.th.backgroundColor};color:${scatterConfig.table.th.color};outline:${scatterConfig.table.th.outline};padding-right:6px`">{{ scatterConfig.style.layout.dataLabels.yAxis.name }} {{ scatterConfig.table.translations.average }} </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(tr, i) in drawableDataset" :data-cy="`scatter-table-tr-${i}`">
-                        <td :style="`background:${scatterConfig.table.td.backgroundColor};color:${scatterConfig.table.td.color};outline:${scatterConfig.table.td.outline}`">
-                            <div style="display:flex;flex-direction:row;gap:3px;align-items:center">
-                                <svg viewBox="0 0 12 12" :height="scatterConfig.style.legend.fontSize" :width="scatterConfig.style.legend.fontSize">
-                                    <circle cx="6" cy="6" r="6" :fill="tr.color"/>
-                                </svg>
-                                <span>{{ tr.name }}</span>
-                            </div>
-                        </td>
-                        <td :style="`background:${scatterConfig.table.td.backgroundColor};color:${scatterConfig.table.td.color};outline:${scatterConfig.table.td.outline}`">
-                            {{ Number(tr.correlation.coefficient.toFixed(scatterConfig.table.td.roundingValue)).toLocaleString() }}
-                        </td>
-                        <td :style="`background:${scatterConfig.table.td.backgroundColor};color:${scatterConfig.table.td.color};outline:${scatterConfig.table.td.outline}`">
-                            {{ tr.plots.length.toLocaleString() }}
-                        </td>
-                        <td :style="`background:${scatterConfig.table.td.backgroundColor};color:${scatterConfig.table.td.color};outline:${scatterConfig.table.td.outline}`">
-                            {{ isNaN(tr.plots.map(plot => plot.v.x).reduce((a,b) => a + b, 0) / tr.plots.length) ? "-" : Number((tr.plots.map(plot => plot.v.x).reduce((a,b) => a + b, 0) / tr.plots.length).toFixed(scatterConfig.table.td.roundingAverage)).toLocaleString() }}
-                        </td>
-                        <td :style="`background:${scatterConfig.table.td.backgroundColor};color:${scatterConfig.table.td.color};outline:${scatterConfig.table.td.outline}`">
-                            {{ isNaN(tr.plots.map(plot => plot.v.y).reduce((a,b) => a + b, 0) / tr.plots.length) ? "-" : Number((tr.plots.map(plot => plot.v.y).reduce((a,b) => a + b, 0) / tr.plots.length).toFixed(scatterConfig.table.td.roundingAverage)).toLocaleString() }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <DataTable
+                :colNames="dataTable.colNames"
+                :head="dataTable.head"
+                :body="dataTable.body"
+                :config="dataTable.config"
+                :title="`${scatterConfig.style.title.text}${scatterConfig.style.title.subtitle.text ? ` : ${scatterConfig.style.title.subtitle.text}` : ''}`"
+
+            >
+                <template #th="{ th }">
+                    {{ th }}
+                </template>
+                <template #td="{ td }">
+                    <div v-html="td"/>
+                </template>
+            </DataTable>
         </div>
     </div>
 </template>

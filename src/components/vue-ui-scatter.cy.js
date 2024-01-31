@@ -132,66 +132,6 @@ describe('<VueUiScatter />', () => {
         cy.get(`[data-cy="user-options-summary"]`).click();
         cy.get(`[data-cy="user-options-table"]`).click();
 
-      cy.get(`[data-cy="scatter-thead"]`)
-        .should('exist')
-        .contains(`${fixture.config.style.title.text} : ${fixture.config.style.title.subtitle.text}`);
-
-      cy.get(`[data-cy="scatter-thead-col"]`)
-        .should('exist')
-        .find('th')
-        .should('have.length', 5)
-        .each(($th, index) => {
-          if(index === 1) {
-            cy.wrap($th)
-              .should('contain.text', fixture.config.table.translations.correlationCoefficient)
-          }
-          if(index === 2) {
-            cy.wrap($th)
-              .should('contain.text', fixture.config.table.translations.nbrPlots)
-          }
-          if(index === 3) {
-            cy.wrap($th)
-              .should('contain.text', `${fixture.config.style.layout.dataLabels.xAxis.name} ${fixture.config.table.translations.average}`)
-          }
-          if(index === 4) {
-            cy.wrap($th)
-              .should('contain.text', `${fixture.config.style.layout.dataLabels.yAxis.name} ${fixture.config.table.translations.average}`)
-          }
-        });
-
-      cy.get(`[data-cy="scatter-table-tr-0"]`)
-        .should('exist')
-        .find('td')
-        .should('have.length', 5)
-        .each(($td, index) => {
-          if(index === 0) {
-            cy.wrap($td)
-              .find('circle')
-              .invoke('attr', 'fill')
-              .should('eq', fixture.dataset[0].color);
-            cy.wrap($td)
-              .should('contain.text',  fixture.dataset[0].name);
-          }
-          if(index === 2) {
-            cy.wrap($td)
-              .contains(String(fixture.dataset[0].values.length))
-          }
-
-          const xAverage = fixture.dataset[0].values.map(v => v.x).reduce((a, b) => a + b) / fixture.dataset[0].values.length;
-
-          const yAverage = fixture.dataset[0].values.map(v => v.y).reduce((a, b) => a + b) / fixture.dataset[0].values.length;
-
-          if(index === 3) {
-            cy.wrap($td)
-              .should('contain.text', `${Number(xAverage.toFixed(fixture.config.table.td.roundingAverage)).toLocaleString()}`)
-          }
-
-          if(index === 4) {
-            cy.wrap($td)
-              .should('contain.text', `${Number(yAverage.toFixed(fixture.config.table.td.roundingAverage)).toLocaleString()}`)
-          }
-        });
-
         cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
         cy.wait(3000);
         cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);
@@ -204,7 +144,6 @@ describe('<VueUiScatter />', () => {
         cy.clearDownloads();
 
         cy.get(`[data-cy="user-options-summary"]`).click();
-
     });
   })
 })

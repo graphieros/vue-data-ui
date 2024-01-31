@@ -8,6 +8,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import DataTable from "../atoms/DataTable.vue";
 
 const props = defineProps({
     config: {
@@ -267,6 +268,42 @@ function generateCsv() {
         downloadCsv({ csvContent, title: candlestickConfig.value.style.title.text || "vue-ui-candlestick"});
     });
 }
+
+const dataTable = computed(() => {
+    const body = drawableDataset.value.map(ds => [
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px"><rect x="0" y="0" height="12" width="12" :rx="${candlestickConfig.value.style.layout.candle.borderRadius * 3}" fill="${candlestickConfig.value.style.layout.candle.gradient.show ? ds.isBullish ? `url(#bullish_gradient_${uid.value}` : `url(#bearish_gradient_${uid.value})` : ds.isBullish ? candlestickConfig.value.style.layout.candle.colors.bullish : candlestickConfig.value.style.layout.candle.colors.bearish}"/></svg> ${ds.period}`,
+        `${candlestickConfig.value.table.td.prefix} ${isNaN(ds.open.value) ? '-' : Number(ds.open.value.toFixed(candlestickConfig.value.table.td.roundingValue)).toLocaleString()} ${candlestickConfig.value.table.td.suffix}`,
+        `${candlestickConfig.value.table.td.prefix} ${isNaN(ds.high.value) ? '-' : Number(ds.high.value.toFixed(candlestickConfig.value.table.td.roundingValue)).toLocaleString()} ${candlestickConfig.value.table.td.suffix}`,
+        `${candlestickConfig.value.table.td.prefix} ${isNaN(ds.low.value) ? '-' : Number(ds.low.value.toFixed(candlestickConfig.value.table.td.roundingValue)).toLocaleString()} ${candlestickConfig.value.table.td.suffix}`,
+        `${candlestickConfig.value.table.td.prefix} ${isNaN(ds.last.value) ? '-' : Number(ds.last.value.toFixed(candlestickConfig.value.table.td.roundingValue)).toLocaleString()} ${candlestickConfig.value.table.td.suffix}`,
+        `${isNaN(ds.volume) ? '-' : ds.volume.toLocaleString()}`,
+    ]);
+
+    const config = {
+        th: {
+            backgroundColor: candlestickConfig.value.table.th.backgroundColor,
+            color: candlestickConfig.value.table.th.color,
+            outline: candlestickConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: candlestickConfig.value.table.td.backgroundColor,
+            color: candlestickConfig.value.table.td.color,
+            outline: candlestickConfig.value.table.td.outline,
+        },
+        breakpoint: candlestickConfig.value.table.responsiveBreakpoint
+    };
+
+    const colNames = [
+        candlestickConfig.value.translations.period,
+        candlestickConfig.value.translations.open,
+        candlestickConfig.value.translations.high,
+        candlestickConfig.value.translations.low,
+        candlestickConfig.value.translations.last,
+        candlestickConfig.value.translations.volume
+    ]
+
+    return { head: colNames, body, config, colNames }
+})
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -565,78 +602,20 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
-            <table>
-                <thead data-cy="candlestick-thead">
-                    <tr v-if="candlestickConfig.style.title.text">
-                        <th :colspan="6" :style="`background:${candlestickConfig.table.th.backgroundColor};color:${candlestickConfig.table.th.color};outline:${candlestickConfig.table.th.outline}`">
-                            <span>{{ candlestickConfig.style.title.text }}</span>
-                            <span v-if="candlestickConfig.style.title.subtitle.text">
-                                : {{ candlestickConfig.style.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th :style="`background:${candlestickConfig.table.th.backgroundColor};color:${candlestickConfig.table.th.color};outline:${candlestickConfig.table.th.outline};padding-right:6px`">
-                            {{ candlestickConfig.translations.period }}
-                        </th>
-                        <th :style="`background:${candlestickConfig.table.th.backgroundColor};color:${candlestickConfig.table.th.color};outline:${candlestickConfig.table.th.outline};padding-right:6px`">
-                            {{ candlestickConfig.translations.open }}
-                        </th>
-                        <th :style="`background:${candlestickConfig.table.th.backgroundColor};color:${candlestickConfig.table.th.color};outline:${candlestickConfig.table.th.outline};padding-right:6px`">
-                            {{ candlestickConfig.translations.high }}
-                        </th>
-                        <th :style="`background:${candlestickConfig.table.th.backgroundColor};color:${candlestickConfig.table.th.color};outline:${candlestickConfig.table.th.outline};padding-right:6px`">
-                            {{ candlestickConfig.translations.low }}
-                        </th>
-                        <th :style="`background:${candlestickConfig.table.th.backgroundColor};color:${candlestickConfig.table.th.color};outline:${candlestickConfig.table.th.outline};padding-right:6px`">
-                            {{ candlestickConfig.translations.last }}
-                        </th>
-                        <th :style="`background:${candlestickConfig.table.th.backgroundColor};color:${candlestickConfig.table.th.color};outline:${candlestickConfig.table.th.outline};padding-right:6px`">
-                            {{ candlestickConfig.translations.volume }}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(tr, i) in drawableDataset" :data-cy="`candlestick-tr-${i}`">
-                        <td :style="`background:${candlestickConfig.table.td.backgroundColor};color:${candlestickConfig.table.td.color};outline:${candlestickConfig.table.td.outline}`">
-                            <div style="display:flex;flex-direction:row;gap:3px;align-items:center">
-                                <svg viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px">
-                                    <rect
-                                        x="0"
-                                        y="0"
-                                        height="12"
-                                        width="12"
-                                        :rx="candlestickConfig.style.layout.candle.borderRadius*3"
-                                        :fill="`${candlestickConfig.style.layout.candle.gradient.show 
-                                        ? tr.isBullish 
-                                            ? `url(#bullish_gradient_${uid})` 
-                                            : `url(#bearish_gradient_${uid})` 
-                                        : tr.isBullish 
-                                            ? candlestickConfig.style.layout.candle.colors.bullish 
-                                            : candlestickConfig.style.layout.candle.colors.bearish}`"
-                                    />
-                                </svg>
-                                <span>{{ tr.period }}</span>
-                            </div>
-                        </td>
-                        <td :style="`background:${candlestickConfig.table.td.backgroundColor};color:${candlestickConfig.table.td.color};outline:${candlestickConfig.table.td.outline}`">
-                           {{ candlestickConfig.table.td.prefix }} {{ isNaN(tr.open.value) ? '-' : Number(tr.open.value.toFixed(candlestickConfig.table.td.roundingValue)).toLocaleString() }} {{ candlestickConfig.table.td.suffix }}
-                        </td>
-                        <td :style="`background:${candlestickConfig.table.td.backgroundColor};color:${candlestickConfig.table.td.color};outline:${candlestickConfig.table.td.outline}`">
-                            {{ candlestickConfig.table.td.prefix }} {{ isNaN(tr.high.value) ? '-' : tr.high.value }} {{ candlestickConfig.table.td.suffix }}
-                        </td>
-                        <td :style="`background:${candlestickConfig.table.td.backgroundColor};color:${candlestickConfig.table.td.color};outline:${candlestickConfig.table.td.outline}`">
-                            {{ candlestickConfig.table.td.prefix }} {{ isNaN(tr.low.value) ? '-' : tr.low.value }} {{ candlestickConfig.table.td.suffix }}
-                        </td>
-                        <td :style="`background:${candlestickConfig.table.td.backgroundColor};color:${candlestickConfig.table.td.color};outline:${candlestickConfig.table.td.outline}`">
-                            {{ candlestickConfig.table.td.prefix }} {{ isNaN(tr.last.value) ? '-'  : tr.last.value }} {{ candlestickConfig.table.td.suffix }}
-                        </td>
-                        <td :style="`background:${candlestickConfig.table.td.backgroundColor};color:${candlestickConfig.table.td.color};outline:${candlestickConfig.table.td.outline}`">
-                            {{ tr.volume }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <DataTable
+                :colNames="dataTable.colNames"
+                :head="dataTable.head"
+                :body="dataTable.body"
+                :config="dataTable.config"
+                :title="`${candlestickConfig.style.title.text}${candlestickConfig.style.title.subtitle.text ? ` : ${candlestickConfig.style.title.subtitle.text}` : ''}`"
+            >
+                <template #th="{ th }">
+                    {{ th }}
+                </template>
+                <template #td="{ td }">
+                    <div v-html="td"/>
+                </template>
+            </DataTable>
         </div>
     </div>
 </template>
@@ -678,7 +657,6 @@ path, line, rect {
     width:100%;
 }
 
-/** */
 .vue-ui-candlestick-tooltip {
     border: 1px solid #e1e5e8;
     border-radius: 4px;
@@ -688,23 +666,6 @@ path, line, rect {
     padding:12px;
     z-index:1;
 }
-
-.vue-ui-candlestick table {
-    width: 100%;
-    border-collapse:collapse;
-}
-.vue-ui-candlestick table td {
-    text-align:right;
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-.vue-ui-candlestick table th {
-    position: sticky;
-    top:0;
-    font-weight: 400;
-    user-select: none;
-}
-
 .vue-ui-candlestick-range-slider-wrapper {
     width: 100%;
     display: flex;

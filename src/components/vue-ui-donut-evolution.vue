@@ -776,27 +776,28 @@ defineExpose({
             </template>
         </Legend>
 
-        <DataTable
-            v-if="mutableConfig.showTable"
-            :colNames="table.colNames"
-            :head="table.head" 
-            :body="table.body" 
-            :config="table.config" 
-            :title="`${donutEvolutionConfig.style.chart.title.text}${donutEvolutionConfig.style.chart.title.subtitle.text ? ` : ${donutEvolutionConfig.style.chart.title.subtitle.text}` : ''}`"
-        >
-            <template #th="{th}">
-                {{ th.name ?? th }}
-            </template>
-            <template #td="{td}">
-                <span v-if="td.value === null">-</span>
-                <b v-else>
-                    {{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.prefix : '' }}{{ !isNaN(td.value) && td.value !== null ? Number(td.value.toFixed(donutEvolutionConfig.table.td.roundingValue)).toLocaleString() : td }}{{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.suffix : '' }} 
-                </b>
-                <span>
-                    {{ td.percentage && !isNaN(td.percentage) ? `(${Number(td.percentage.toFixed(donutEvolutionConfig.table.td.roundingPercentage)).toLocaleString()}%)` : '' }}
-                </span>
-            </template>
-        </DataTable>
+        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
+            <DataTable
+                :colNames="table.colNames"
+                :head="table.head" 
+                :body="table.body" 
+                :config="table.config" 
+                :title="`${donutEvolutionConfig.style.chart.title.text}${donutEvolutionConfig.style.chart.title.subtitle.text ? ` : ${donutEvolutionConfig.style.chart.title.subtitle.text}` : ''}`"
+            >
+                <template #th="{th}">
+                    {{ th.name ?? th }}
+                </template>
+                <template #td="{td}">
+                    <span v-if="td.value === null">-</span>
+                    <b v-else>
+                        {{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.prefix : '' }}{{ !isNaN(td.value) && td.value !== null ? Number(td.value.toFixed(donutEvolutionConfig.table.td.roundingValue)).toLocaleString() : td }}{{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.suffix : '' }} 
+                    </b>
+                    <span>
+                        {{ td.percentage && !isNaN(td.percentage) ? `(${Number(td.percentage.toFixed(donutEvolutionConfig.table.td.roundingPercentage)).toLocaleString()}%)` : '' }}
+                    </span>
+                </template>
+            </DataTable>
+        </div>
 
     </div>
 </template>

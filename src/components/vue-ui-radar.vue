@@ -10,6 +10,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import SparkBar from "./vue-ui-sparkbar.vue";
 import Legend from "../atoms/Legend.vue";
+import DataTable from "../atoms/DataTable.vue";
 
 const props = defineProps({
     config: {
@@ -240,6 +241,38 @@ const table = computed(() => {
     });
     return { head, body };
 });
+
+const dataTable = computed(() => {
+    const head = [
+        { name: radarConfig.value.translations.datapoint, color: "" },
+        { name: radarConfig.value.translations.target, color: "" },
+        ...legendSet.value
+    ];
+    const body = props.dataset.series.map(ds => {
+        return [
+            ds.name,
+            ds.target,
+            ...ds.values.map(v => {
+                return `${![null, undefined].includes(v) ? v.toFixed(radarConfig.value.table.td.roundingPercentage) : '-'} (${isNaN(v / ds.target) ? '' : (v / ds.target * 100).toFixed(radarConfig.value.table.td.roundingPercentage)}%)`
+            })
+        ]
+    });
+    const config = {
+        th: {
+            backgroundColor: radarConfig.value.table.th.backgroundColor,
+            color: radarConfig.value.table.th.color,
+            outline: radarConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: radarConfig.value.table.td.backgroundColor,
+            color: radarConfig.value.table.td.color,
+            outline: radarConfig.value.table.td.outline
+        },
+        breakpoint: radarConfig.value.table.responsiveBreakpoint
+    };
+
+    return { head, body, config, colNames: head }
+})
 
 const selectedIndex = ref(null);
 const sparkBarData = ref([]);
@@ -555,33 +588,20 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <div  class="vue-ui-radar-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
-            <table>
-                <thead data-cy="radar-thead">
-                    <tr v-if="radarConfig.style.chart.title.text">
-                        <th :colspan="(legendSet.length + 2) + 3" :style="`background:${radarConfig.table.th.backgroundColor};color:${radarConfig.table.th.color};outline:${radarConfig.table.th.outline}`">
-                            <span>{{ radarConfig.style.chart.title.text }}</span>
-                            <span v-if="radarConfig.style.chart.title.subtitle.text">
-                                : {{ radarConfig.style.chart.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th v-for="th in table.head" :colspan="th.color ? 2 : 1" :style="`background:${radarConfig.table.th.backgroundColor};color:${radarConfig.table.th.color};outline:${radarConfig.table.th.outline}`">
-                            <div style="width:100%">
-                                <span v-if="th.color" :style="`color:${th.color};margin-right:3px`">●</span>
-                                <span>{{ th.name }}</span>
-                            </div>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="tr in table.body">
-                        <td v-for="td in tr" :style="`background:${radarConfig.table.td.backgroundColor};color:${radarConfig.table.td.color};outline:${radarConfig.table.td.outline}`">
-                            {{ td }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <DataTable
+                :colNames="dataTable.colNames"
+                :head="dataTable.head"
+                :body="dataTable.body"
+                :config="dataTable.config"
+                :title="`${radarConfig.style.chart.title.text}${radarConfig.style.chart.title.subtitle.text ? ` : ${radarConfig.style.chart.title.subtitle.text}` : ''}`"
+            >
+                <template #th="{ th }">
+                    {{ th.name }}
+                </template>
+                <template #td="{ td }">
+                    {{ td }}
+                </template>
+            </DataTable>
         </div>
     </div>
 </template>
@@ -621,24 +641,6 @@ path, line, rect, circle {
     justify-content: center;
     text-align:center;
     width:100%;
-}
-
-/** */
-
-.vue-ui-radar table {
-    width: 100%;
-    border-collapse:collapse;
-}
-.vue-ui-radar table td {
-    text-align:right;
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-.vue-ui-radar table th {
-    position: sticky;
-    top:0;
-    font-weight: 400;
-    user-select: none;
 }
 
 .vue-ui-dna * {
