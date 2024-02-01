@@ -42,12 +42,12 @@ onMounted(() => {
 <template>
     <div ref="tableContainer" style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}"> 
         <table data-cy="vue-data-ui-table-data" class="vue-ui-data-table">
-        <caption :style="{backgroundColor: thbg, color: thc, outline: tho}">
+        <caption :style="{backgroundColor: thbg, color: thc, outline: tho}" class="vue-ui-data-table__caption">
             {{  title }}
         </caption>
             <thead>
-                <tr role="row" style="font-variant-numeric: tabular-nums">
-                    <th role="cell" :style="{backgroundColor: thbg, color: thc, outline: tho}" v-for="(th, i) in head" :key="`th_${i}`">
+                <tr role="row" style="font-variant-numeric: tabular-nums" class="vue-ui-data-table__thead-row" :style="{backgroundColor: thbg, color: thc }">
+                    <th role="cell" :style="{outline: tho}" v-for="(th, i) in head" :key="`th_${i}`">
                         <div style="display: flex; align-items:center; justify-content:center; justify-content:flex-end;padding-right: 3px; gap:3px">
                             <svg height="12" width="12" v-if="th.color" viewBox="0 0 20 20" style="background: none;">
                                 <circle cx="10" cy="10" r="10" :fill="th.color"/>
@@ -59,8 +59,8 @@ onMounted(() => {
             </thead>
 
             <tbody>
-                <tr v-for="(tr, i) in body" role="row" style="font-variant-numeric: tabular-nums;">
-                    <td role="cell" v-for="(td, j) in tr" :data-cell="colNames[j].name || colNames[j]" :style="{backgroundColor: tdbg, color: tdc, outline: tdo}">
+                <tr v-for="(tr, i) in body" role="row" style="font-variant-numeric: tabular-nums;" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="{backgroundColor: tdbg, color: tdc }">
+                    <td role="cell" v-for="(td, j) in tr" :data-cell="colNames[j].name || colNames[j]" :style="{ outline: tdo}" class="vue-ui-data-table__tbody__td">
                         <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                             <svg height="12" width="12" v-if="td.color" viewBox="0 0 20 20" style="background: none;overflow: visible">
                                 <Shape
@@ -80,7 +80,7 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
-.vue-ui-data-table th {
+.vue-ui-data-table thead {
     position: sticky;
     top:0;
     font-weight: 400;
@@ -118,7 +118,7 @@ caption {
         text-align: left;
     }
     tr {
-        outline: 1px solid #CCCCCC;
+        outline: v-bind(tdo);
     }
 
     td:first-child {

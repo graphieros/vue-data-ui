@@ -313,12 +313,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             }
         },
         "showTable": false
@@ -448,12 +448,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0,
                 "roundingPercentage": 0
             }
@@ -534,12 +534,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0,
                 "roundingPercentage": 0
             }
@@ -620,12 +620,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0,
                 "roundingPercentage": 0
             }
@@ -770,12 +770,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0
             }
         },
@@ -1009,7 +1009,7 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "translations": {
                     "rootName": "root name",
                     "rootValue": "root value",
@@ -1028,7 +1028,7 @@
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0,
                 "roundingPercentage": 0
             }
@@ -1119,12 +1119,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0,
                 "roundingPercentage": 0
             },
@@ -1250,12 +1250,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0,
                 "roundingPercentage": 0,
                 "prefix": "",
@@ -1667,12 +1667,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0
             }
         }
@@ -1792,12 +1792,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 2,
                 "roundingAverage": 1
             },
@@ -1930,12 +1930,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 2,
                 "prefix": "",
                 "suffix": ""
@@ -2052,12 +2052,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             }
         }
     },
@@ -2543,12 +2543,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0,
                 "roundingPercentage": 0
             }
@@ -2757,12 +2757,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0,
                 "roundingPercentage": 0
             }
@@ -2848,12 +2848,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "outline": "none",
                 "roundingValue": 0,
                 "roundingPercentage": 0
             }
@@ -2969,12 +2969,12 @@
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "td": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "outline": "none"
             },
             "translations": {
                 "nodeName": "Node name",

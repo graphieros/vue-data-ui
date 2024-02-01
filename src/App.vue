@@ -3850,6 +3850,10 @@ const moodRadarConfig = ref({
           <BaseIcon name="moodNeutral" stroke="#42d392" />
           <BaseIcon name="smiley" stroke="#42d392" />
           <BaseIcon name="moodHappy" stroke="#42d392" />
+          <BaseIcon name="moodEmbarrassed" stroke="#42d392" />
+          <BaseIcon name="moodSurprised" stroke="#42d392" />
+          <BaseIcon name="moodWink" stroke="#42d392" />
+          <BaseIcon name="moodLaughing" stroke="#42d392" />
           <BaseIcon name="star" stroke="#42d392" />
           <BaseIcon name="chartChestnut" stroke="#42d392" />
           <BaseIcon name="chartAgePyramid" stroke="#42d392" />
@@ -3877,6 +3881,10 @@ const moodRadarConfig = ref({
           <BaseIcon name="arrowBottom" stroke="#42d392" />
           <BaseIcon name="fullscreen" stroke="#42d392" />
           <BaseIcon name="exitFullscreen" stroke="#42d392" />
+          <BaseIcon name="circleCancel" stroke="#42d392" />
+          <BaseIcon name="circleCheck" stroke="#42d392" />
+          <BaseIcon name="circleExclamation" stroke="#42d392" />
+          <BaseIcon name="circleQuestion" stroke="#42d392" />
 
         </div>
       </template>

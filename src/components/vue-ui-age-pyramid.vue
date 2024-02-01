@@ -652,21 +652,6 @@ defineExpose({
     font-variant-numeric: tabular-nums;
 }
 
-.vue-ui-age-pyramid table {
-    width: 100%;
-    border-collapse:collapse;
-}
-.vue-ui-age-pyramid table td {
-    text-align:right;
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-.vue-ui-age-pyramid table th {
-    position: sticky;
-    top:0;
-    font-weight: 400;
-    user-select: none;
-}
 .vue-data-ui-fullscreen--on {
     height: 90% !important;
     margin: 0 auto !important;
