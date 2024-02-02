@@ -1575,6 +1575,10 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
+            colNames?: {
+                xAxis?: string;
+            };
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -2562,6 +2566,7 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
             th?: {
                 backgroundColor?: string;
                 color?: string;
@@ -2834,6 +2839,7 @@ declare module 'vue-data-ui' {
         };
         table?: {
             show?: boolean;
+            responsiveBreakpoint?: number;
             th?: {
                 backgroundColor?: string;
                 color?: string;

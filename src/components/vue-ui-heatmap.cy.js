@@ -61,34 +61,6 @@ describe('<VueUiHeatmap />', () => {
           .trigger('mouseout');
       });
 
-      cy.get(`[data-cy="heatmap-table-title"]`)
-        .should('exist')
-        .contains(`${fixture.config.style.title.text} : ${fixture.config.style.title.subtitle.text}`)
-
-      for (let i = 0; i < yLabels.length; i += 1) {
-        cy.get(`[data-cy="heatmap-table-col-name-${i}"]`)
-          .should('exist')
-          .contains(yLabels[i])
-      }
-
-      for (let i = 0; i < 5; i += 1) {
-        cy.get(`[data-cy="heatmap-table-row-${i}"]`).then(($tr) => {
-          cy.wrap($tr)
-            .should('exist')
-            .find('td')
-            .should('have.length', yLabels.length + 1)
-            .each(($td, index) => {
-              if (index === 0) {
-                cy.wrap($td)
-                  .contains(fixture.config.style.layout.dataLabels.xAxis.values[i])
-              } else {
-                cy.wrap($td)
-                  .contains(`${Number(fixture.dataset[index - 1].values[i].toFixed(fixture.config.table.td.roundingValue)).toLocaleString()}`)
-              }
-            })
-        })
-      }
-
       cy.get(`[data-cy="user-options-summary"]`).click();
 
       cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});

@@ -1006,6 +1006,7 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -1247,6 +1248,7 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint":400,
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",
@@ -1664,6 +1666,10 @@
         },
         "table": {
             "show": false,
+            "responsiveBreakpoint": 400,
+            "colNames": {
+                "xAxis": "X"
+            },
             "th": {
                 "backgroundColor": "#FAFAFA",
                 "color": "#2D353C",

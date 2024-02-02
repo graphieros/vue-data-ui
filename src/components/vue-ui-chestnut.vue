@@ -43,6 +43,12 @@ const mutableConfig = ref({
     showTable: chestnutConfig.value.table.show,
 });
 
+const tableContainer = ref(null)
+const isResponsive = ref(false)
+const breakpoint = computed(() => {
+    return chestnutConfig.value.table.responsiveBreakpoint
+})
+
 const svg = ref({
     gap: 6,
     padding: {
@@ -287,9 +293,19 @@ function isArcBigEnough(arc) {
     return arc.proportion * 100 > chestnutConfig.value.style.chart.layout.nuts.selected.labels.dataLabels.hideUnderValue;
 }
 
+function observeTable() {
+    const observer = new ResizeObserver((entries) => {
+        entries.forEach(entry => {
+            isResponsive.value = entry.contentRect.width < breakpoint.value;
+        })
+    })
+    observer.observe(tableContainer.value)
+}
+
 onMounted(() => {
     const height = totalBranches.value * (svg.value.branchSize + svg.value.gap) + svg.value.padding.top + svg.value.padding.bottom;
     svg.value.height = height;
+    observeTable()
 });
 
 const __to__ = ref(null);
@@ -953,92 +969,115 @@ defineExpose({
         <slot name="svg" :svg="svg"/>
         </svg>
         <!-- DATA TABLE -->
-        <div  class="vue-ui-chestnut-table" :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable">
-            <table data-cy="chestnut-table">
-                <thead>
-                    <tr v-if="chestnutConfig.style.chart.layout.title.text">
-                        <th colspan="12" :style="`background:${chestnutConfig.table.th.backgroundColor};color:${chestnutConfig.table.th.color};outline:${chestnutConfig.table.th.outline}`">
-                            <span>{{ chestnutConfig.style.chart.layout.title.text }}</span>
-                            <span v-if="chestnutConfig.style.chart.layout.title.subtitle.text">
-                                : {{ chestnutConfig.style.chart.layout.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th :style="`background:${chestnutConfig.table.th.backgroundColor};color:${chestnutConfig.table.th.color};outline:${chestnutConfig.table.th.outline}`" v-for="th in table.head">
-                            {{ th }}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(tr, i) in table.body">
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
-                            </span>
-                            <span v-else>
-                                {{ tr.rootName }}
-                            </span>
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
-                            </span>
-                            <span v-else>
-                                {{ tr.rootValue.toFixed(chestnutConfig.table.td.roundingValue) }}
-                            </span>                           
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
-                            </span>
-                            <span v-else>
-                                {{ (tr.rootToTotal * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
-                            </span> 
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
-                            </span>
-                            <span v-else>
-                                {{ tr.branchName }}
-                            </span> 
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
-                            </span>
-                            <span v-else>
-                                {{ tr.branchValue.toFixed(chestnutConfig.table.td.roundingValue) }}
-                            </span> 
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
-                            </span>
-                            <span v-else>
-                                {{ (tr.branchToRoot * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
-                            </span>
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
-                            </span>
-                            <span v-else>
-                                {{ (tr.branchToTotal * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
-                            </span>
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            {{ tr.nutName }}
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            {{ tr.nutValue.toFixed(chestnutConfig.table.td.roundingValue) }}
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            {{ (tr.nutToBranch * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            {{ (tr.nutToRoot * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
-                        </td>
-                        <td :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color};outline:${chestnutConfig.table.td.outline}`">
-                            {{ (tr.nutToTotal * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div ref="tableContainer" class="vue-ui-chestnut-table">        
+            <div :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable">
+                <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">
+                    <table data-cy="chestnut-table" class="vue-ui-data-table">
+                        <caption :style="{backgroundColor: chestnutConfig.table.th.backgroundColor, color: chestnutConfig.table.th.color, outline: chestnutConfig.table.th.outline }" class="vue-ui-data-table__caption">
+                            {{ chestnutConfig.style.chart.layout.title.text }} <span v-if="chestnutConfig.style.chart.layout.title.subtitle.text">{{  chestnutConfig.style.chart.layout.title.subtitle.text }}</span>
+                        </caption>
+                        <thead>
+                            <tr role="row" :style="`background:${chestnutConfig.table.th.backgroundColor};color:${chestnutConfig.table.th.color}`">
+                                <th :style="`outline:${chestnutConfig.table.th.outline}`" v-for="th in table.head">
+                                    {{ th }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(tr, i) in table.body" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color}`">
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[0]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
+                                        </span>
+                                        <span v-else>
+                                            {{ tr.rootName }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[1]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
+                                        </span>
+                                        <span v-else>
+                                            {{ tr.rootValue.toFixed(chestnutConfig.table.td.roundingValue) }}
+                                        </span>                           
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[2]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
+                                        </span>
+                                        <span v-else>
+                                            {{ (tr.rootToTotal * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                        </span> 
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[3]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
+                                        </span>
+                                        <span v-else>
+                                            {{ tr.branchName }}
+                                        </span> 
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[4]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
+                                        </span>
+                                        <span v-else>
+                                            {{ tr.branchValue.toFixed(chestnutConfig.table.td.roundingValue) }}
+                                        </span> 
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[5]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
+                                        </span>
+                                        <span v-else>
+                                            {{ (tr.branchToRoot * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[6]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
+                                        </span>
+                                        <span v-else>
+                                            {{ (tr.branchToTotal * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[7]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        {{ tr.nutName }}
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[8]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        {{ tr.nutValue.toFixed(chestnutConfig.table.td.roundingValue) }}
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[9]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        {{ (tr.nutToBranch * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[10]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        {{ (tr.nutToRoot * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                    </div>
+                                </td>
+                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[11]">
+                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        {{ (tr.nutToTotal * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>  
 </template>
@@ -1087,23 +1126,6 @@ defineExpose({
     z-index:1;
 }
 
-/** */
-.vue-ui-chestnut table {
-    width: 100%;
-    border-collapse:collapse;
-}
-.vue-ui-chestnut table td {
-    text-align:right;
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-.vue-ui-chestnut table th {
-    position: sticky;
-    top:0;
-    font-weight: 400;
-    user-select: none;
-}
-
 .vue-ui-chestnut-animated {
     opacity:0;
     animation: chestnut-opacity 0.2s ease-in-out forwards;
@@ -1127,5 +1149,68 @@ defineExpose({
 }
 .vue-data-ui-wrapper-fullscreen {
     overflow: auto;
+}
+
+.vue-ui-chestnut-table {
+    width: 100%;
+    max-height: 300px;
+    overflow: auto;
+    margin-top: 24px;
+    position: relative;
+}
+.vue-ui-data-table thead {
+    position: sticky;
+    top:0;
+    font-weight: 400;
+    user-select: none;
+}
+
+table {
+    width: 100%;
+    padding: 1rem;
+    border-collapse:collapse;
+}
+
+caption,
+th,
+td {
+    padding: 0.5rem;
+    font-variant-numeric: tabular-nums;
+}
+
+caption {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.vue-ui-responsive {
+    th {
+        display: none;
+    }
+    td {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0.5rem 1rem;
+        outline: none !important;
+        text-align: left;
+    }
+    tr {
+        outline: v-bind(tdo);
+    }
+
+    td:first-child {
+        padding-top: 1rem;
+    }
+
+    td:last-child {
+        padding-bottom: 1rem;
+    }
+
+    td::before {
+        content: attr(data-cell) ": ";
+        font-weight: 700;
+        text-transform: capitalize;
+    }
 }
 </style>

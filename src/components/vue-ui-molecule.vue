@@ -540,22 +540,22 @@ defineExpose({
             :parent="moleculeChart"
             :content="tooltipContent"
         />
-
-        <DataTable
-            v-if="mutableConfig.showTable"
-            :colNames="dataTable.colNames"
-            :head="dataTable.head" 
-            :body="dataTable.body"
-            :config="dataTable.config"
-            :title="`${moleculeConfig.style.chart.title.text}${moleculeConfig.style.chart.title.subtitle.text ? ` : ${moleculeConfig.style.chart.title.subtitle.text}` : ''}`"
-        >
-            <template #th="{th}">
-                <div v-html="th" style="display:flex;align-items:center"></div>
-            </template>
-            <template #td="{td}">
-                {{ td.name || td }}
-            </template>
-        </DataTable>
+        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
+            <DataTable
+                :colNames="dataTable.colNames"
+                :head="dataTable.head" 
+                :body="dataTable.body"
+                :config="dataTable.config"
+                :title="`${moleculeConfig.style.chart.title.text}${moleculeConfig.style.chart.title.subtitle.text ? ` : ${moleculeConfig.style.chart.title.subtitle.text}` : ''}`"
+            >
+                <template #th="{th}">
+                    <div v-html="th" style="display:flex;align-items:center"></div>
+                </template>
+                <template #td="{td}">
+                    {{ td.name || td }}
+                </template>
+            </DataTable>
+        </div>
     </div>
 </template>
 

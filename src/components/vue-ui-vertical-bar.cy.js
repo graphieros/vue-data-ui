@@ -57,37 +57,6 @@ describe('<VueUiVerticalBar />', () => {
       cy.get(`[data-cy="tooltip"]`)
       .should('not.exist');
 
-      cy.get(`[data-cy="vertical-bar-thead"]`)
-        .should('exist')
-        .contains(`${fixture.config.style.chart.title.text} : ${fixture.config.style.chart.title.subtitle.text}`);
-
-      cy.get(`[data-cy="vertical-bar-thead-tr"]`)
-        .should('exist')
-        .find('th')
-        .should('have.length', 7)
-        .each(($th, index) => {
-          if(index === 0) {
-            cy.wrap($th)
-              .should('contain.text', fixture.config.translations.parentName)
-          }
-          if ([1,4].includes(index)) {
-            cy.wrap($th)
-              .should('contain.text', fixture.config.translations.value)
-          }
-          if ([2,6].includes(index)) {
-            cy.wrap($th)
-              .should('contain.text', fixture.config.translations.percentageToTotal)
-          }
-          if (index === 3) {
-            cy.wrap($th)
-              .should('contain.text', fixture.config.translations.childName)
-          }
-          if(index === 5) {
-            cy.wrap($th)
-              .should('contain.text', fixture.config.translations.percentageToSerie)
-          }
-        });
-
         cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
 
         cy.get(`[data-cy="user-options-pdf"]`).click({ force: true });

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, onMounted } from "vue";
 import { opacity, createUid, createCsvContent, downloadCsv } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
@@ -36,7 +36,9 @@ const isTooltip = ref(false);
 const tooltipContent = ref("");
 const hoveredCell = ref(undefined);
 const step = ref(0);
-   
+const tableContainer = ref(null);
+const isResponsive = ref(false);
+
 const heatmapConfig = computed(() => {
     return useNestedProp({
         userConfig: props.config,
@@ -48,6 +50,21 @@ const mutableConfig = ref({
     inside: !heatmapConfig.value.style.layout.useDiv,
     showTable: heatmapConfig.value.table.show
 })
+
+const breakpoint = computed(() => {
+    return heatmapConfig.value.table.responsiveBreakpoint
+})
+
+function observeTable() {
+    const observer = new ResizeObserver((entries) => {
+        entries.forEach(entry => {
+            isResponsive.value = entry.contentRect.width < breakpoint.value;
+        })
+    })
+    observer.observe(tableContainer.value)
+}
+
+onMounted(observeTable)
 
 const maxX = computed(() => {
     return Math.max(...props.dataset.flatMap(el => el.values.length));
@@ -416,20 +433,13 @@ defineExpose({
         <div v-if="heatmapConfig.style.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-heatmap-legend" :style="`background:${heatmapConfig.style.legend.backgroundColor};color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" >
             <span data-cy="heatmap-legend-min" style="text-align:right">{{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
             <svg viewBox="0 0 132 12" style="width: 300px">
-                <rect v-for="(_,i) in 13"
-                    :x="i * 12"
-                    :y="0"
-                    :height="12"
-                    :width="12"
-                    :fill="heatmapConfig.style.layout.cells.colors.underlayer"
-                />
-                <rect v-for="(_,i) in 13"
-                    :x="i * 12"
-                    :y="0"
-                    :height="12"
-                    :width="12"
-                    :fill="i < 5 ? `${heatmapConfig.style.layout.cells.colors.cold}${opacity[Math.round((1-(i / 5)) * 100)]}` : `${heatmapConfig.style.layout.cells.colors.hot}${opacity[Math.round((((i-5) / 5)) * 100)]}`"
-                />
+                <defs>
+                    <linearGradient id="colorScale" x1="0%" y1="0%" x2="100%" y2="0%" >
+                        <stop offset="0%" :stop-color="heatmapConfig.style.layout.cells.colors.cold"/>
+                        <stop offset="100%" :stop-color="heatmapConfig.style.layout.cells.colors.hot"/>
+                    </linearGradient>
+                </defs>
+                <rect x="0" y="0" height="12" width="132" fill="url(#colorScale)"/>
             </svg>
             <span data-cy="heatmap-legend-max" style="text-align:left">{{ Number(maxValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
         </div>
@@ -444,40 +454,41 @@ defineExpose({
         />
         
         <!-- DATA TABLE -->
-        <div  :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
-            <table>
-                <thead>
-                    <tr data-cy="heatmap-table-title" v-if="heatmapConfig.style.title.text">
-                        <th :colspan="dataset.length +1" :style="`background:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline}`">
-                            <span>{{ heatmapConfig.style.title.text }}</span>
-                            <span v-if="heatmapConfig.style.title.subtitle.text">
-                                : {{ heatmapConfig.style.title.subtitle.text }}
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th :style="`background:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline};padding-right:6px`"></th>
-                        <th align="right" :style="`background:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline};padding-right:6px`" v-for="(th,i) in dataset" :data-cy="`heatmap-table-col-name-${i}`">
-                           {{ th.name }}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(tr, i) in dataLabels.xLabels" :data-cy="`heatmap-table-row-${i}`">
-                        <td :data-cy="`heatmap-table-row-name-${i}`" :style="`background:${heatmapConfig.table.td.backgroundColor};color:${heatmapConfig.table.td.color};outline:${heatmapConfig.table.td.outline}`">
-                            {{ tr }}
-                        </td>
-                        <td v-for="(trData, j) in dataset" :style="`background:${heatmapConfig.table.td.backgroundColor};color:${heatmapConfig.table.td.color};outline:${heatmapConfig.table.td.outline}`">
-                            {{ isNaN(trData.values[i]) ? '-' : Number(trData.values[i].toFixed(heatmapConfig.table.td.roundingValue)).toLocaleString() }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div ref="tableContainer" class="vue-ui-heatmap-table">
+            <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable" :class="{'vue-ui-responsive' : isResponsive}">
+                <table class="vue-ui-data-table">
+                    <caption :style="`backgroundColor:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline}`">
+                        {{ heatmapConfig.style.title.text }} <span v-if="heatmapConfig.style.title.subtitle.text">{{  heatmapConfig.style.title.subtitle.text }}</span>
+                    </caption>
+                    <thead>
+                        <tr role="row" :style="`background:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color}`">
+                            <th :style="`outline:${heatmapConfig.table.th.outline};padding-right:6px`"></th>
+                            <th align="right" :style="`outline:${heatmapConfig.table.th.outline};padding-right:6px`" v-for="(th,i) in dataset" :data-cy="`heatmap-table-col-name-${i}`">
+                                {{ th.name }}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr role="row" v-for="(tr, i) in dataLabels.xLabels" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${heatmapConfig.table.td.backgroundColor};color:${heatmapConfig.table.td.color}`">
+                            <td :data-cell="heatmapConfig.table.colNames.xAxis" class="vue-ui-data-table__tbody__td"  :data-cy="`heatmap-table-row-name-${i}`" :style="`outline:${heatmapConfig.table.td.outline}`">
+                                <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                    {{ tr }}
+                                </div>
+                            </td>
+                            <td class="vue-ui-data-table__tbody__td"  v-for="(trData, j) in dataset" :data-cell="dataset[j].name" :style="`outline:${heatmapConfig.table.td.outline}`">
+                                <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                    {{ isNaN(trData.values[i]) ? '-' : Number(trData.values[i].toFixed(heatmapConfig.table.td.roundingValue)).toLocaleString() }}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
      </div> 
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .vue-ui-heatmap *{
     transition: unset;
 }
@@ -522,22 +533,12 @@ defineExpose({
     z-index:1;
 }
 
-.vue-ui-heatmap table {
+.vue-ui-heatmap-table {
     width: 100%;
-    border-collapse:collapse;
+    max-height: 300px;
     overflow: auto;
-    max-height: 400px;
-}
-.vue-ui-heatmap table td {
-    text-align:right;
-    padding-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-.vue-ui-heatmap table th {
-    position: sticky;
-    top:0;
-    font-weight: 400;
-    user-select: none;
+    margin-top: 24px;
+    position: relative;
 }
 .vue-data-ui-fullscreen--on {
     height: 80% !important;
@@ -547,5 +548,61 @@ defineExpose({
 }
 .vue-data-ui-wrapper-fullscreen {
     overflow: auto;
+}
+
+.vue-ui-data-table thead {
+    position: sticky;
+    top:0;
+    font-weight: 400;
+    user-select: none;
+}
+
+table {
+    width: 100%;
+    padding: 1rem;
+    border-collapse:collapse;
+}
+
+caption,
+th,
+td {
+    padding: 0.5rem;
+    font-variant-numeric: tabular-nums;
+}
+
+caption {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.vue-ui-responsive {
+    th {
+        display: none;
+    }
+    td {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0.5rem 1rem;
+        outline: none !important;
+        text-align: left;
+    }
+    tr {
+        outline: v-bind(tdo);
+    }
+
+    td:first-child {
+        padding-top: 1rem;
+    }
+
+    td:last-child {
+        padding-bottom: 1rem;
+    }
+
+    td::before {
+        content: attr(data-cell) ": ";
+        font-weight: 700;
+        text-transform: capitalize;
+    }
 }
 </style>

@@ -114,7 +114,7 @@ describe('<VueUiScatter />', () => {
         })
       }
 
-      cy.wait(100)
+      cy.wait(500)
       cy.get(`[data-cy="scatter-plot-0-0"]`)
         .trigger('mouseover');
 

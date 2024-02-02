@@ -644,21 +644,22 @@
         />
 
         <!-- DATA TABLE -->
-        <DataTable 
-            v-if="mutableConfig.showTable"
-            :colNames="dataTable.colNames"
-            :head="dataTable.head"
-            :body="dataTable.body"
-            :config="dataTable.config"
-            :title="`${chartConfig.chart.title.text}${chartConfig.chart.title.subtitle.text ? ` : ${chartConfig.chart.title.subtitle.text}` : ''}`"
-        >
-            <template #th="{ th }">
-                <div v-html="th"/>
-            </template>
-            <template #td="{ td }">
-                {{ td }}
-            </template>
-        </DataTable>
+        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
+            <DataTable 
+                :colNames="dataTable.colNames"
+                :head="dataTable.head"
+                :body="dataTable.body"
+                :config="dataTable.config"
+                :title="`${chartConfig.chart.title.text}${chartConfig.chart.title.subtitle.text ? ` : ${chartConfig.chart.title.subtitle.text}` : ''}`"
+            >
+                <template #th="{ th }">
+                    <div v-html="th"/>
+                </template>
+                <template #td="{ td }">
+                    {{ td }}
+                </template>
+            </DataTable>
+        </div>
     </div>
 </template>
 
