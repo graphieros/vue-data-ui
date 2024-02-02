@@ -1082,7 +1082,7 @@ defineExpose({
     </div>  
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .vue-ui-chestnut *{
     transition: unset;
 }
