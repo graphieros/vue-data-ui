@@ -455,7 +455,7 @@ defineExpose({
         
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-heatmap-table">
-            <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable" :class="{'vue-ui-responsive' : isResponsive}">
+            <div :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable" :class="{'vue-ui-responsive' : isResponsive}">
                 <table class="vue-ui-data-table">
                     <caption :style="`backgroundColor:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline}`">
                         {{ heatmapConfig.style.title.text }} <span v-if="heatmapConfig.style.title.subtitle.text">{{  heatmapConfig.style.title.subtitle.text }}</span>

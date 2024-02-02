@@ -970,8 +970,8 @@ defineExpose({
         </svg>
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-chestnut-table">        
-            <div :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable">
-                <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">
+            <div v-if="mutableConfig.showTable">
+                <div style="width: 100%" :class="{'vue-ui-responsive': isResponsive}">
                     <table data-cy="chestnut-table" class="vue-ui-data-table">
                         <caption :style="{backgroundColor: chestnutConfig.table.th.backgroundColor, color: chestnutConfig.table.th.color, outline: chestnutConfig.table.th.outline }" class="vue-ui-data-table__caption">
                             {{ chestnutConfig.style.chart.layout.title.text }} <span v-if="chestnutConfig.style.chart.layout.title.subtitle.text">{{  chestnutConfig.style.chart.layout.title.subtitle.text }}</span>
@@ -1169,6 +1169,7 @@ table {
     width: 100%;
     padding: 1rem;
     border-collapse:collapse;
+    overflow-x: auto;
 }
 
 caption,
