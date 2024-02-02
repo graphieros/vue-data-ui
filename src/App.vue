@@ -4973,7 +4973,7 @@ const moodRadarConfig = ref({
           VueUiHeatmap
         </template>
         <template #info>
-          <BaseIcon name="chartTable" stroke="#ff6347"/>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
           <BaseIcon name="pdf" stroke="#5f8bee"/>
           <BaseIcon name="image" stroke="#5f8bee"/>
           <BaseIcon name="excel" stroke="#5f8bee"/>

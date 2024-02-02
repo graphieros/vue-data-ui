@@ -91,8 +91,8 @@ function calcShapeFill(index, isImage = false) {
         const ratio = currentRating.value - index;
         const multiplicator = isImage ? 1 : 100;
         switch (true) {
-            case ratio < 0:
-                return 0;
+            case ratio <= 0:
+                return 0.001;
             case ratio > 1:
                 return 1 * multiplicator;
             default:

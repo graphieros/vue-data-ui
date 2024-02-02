@@ -209,7 +209,6 @@ function generatePdf(){
             isPrinting.value = false;
         });
     }, 100)
-    
 }
 
 function showSpinnerImage() {
@@ -444,8 +443,8 @@ defineExpose({
                 :fill="`url(#gradient_${uid})`"
             />
 
-              <!-- TOOLTIP TRAPS -->
-              <path 
+            <!-- TOOLTIP TRAPS -->
+            <path 
                 v-for="(arc, i) in currentDonut"
                 :data-cy="`donut-trap-${i}`"
                 :d="arc.arcSlice" 
@@ -550,7 +549,7 @@ defineExpose({
                 </text>
             </g>
 
-          
+
 
             <!-- LEGEND AS G -->
             <foreignObject 
@@ -622,10 +621,10 @@ defineExpose({
             :config="dataTable.config"
             :title="`${donutConfig.style.chart.title.text}${donutConfig.style.chart.title.subtitle.text ? ` : ${donutConfig.style.chart.title.subtitle.text}` : ''}`"
         >
-            <template #th="{th}">
+            <template #th="{ th }">
                 <div v-html="th" style="display:flex;align-items:center"></div>
             </template>
-            <template #td="{td}">
+            <template #td="{ td }">
                 {{ td.name || td }}
             </template>
         </DataTable>
