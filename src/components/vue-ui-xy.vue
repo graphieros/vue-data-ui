@@ -592,7 +592,7 @@
         </svg>
         
         <!-- SLICER -->
-        <div v-if="chartConfig.chart.zoom.show" class="vue-ui-xy-range-slider-wrapper" data-html2canvas-ignore>
+        <div v-if="chartConfig.chart.zoom.show" class="vue-ui-xy-range-slider-wrapper" data-html2canvas-ignore style="position:relative">
             <div class="vue-ui-xy-range-slider-label-left">
                 {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.start] }}
             </div>
@@ -604,6 +604,11 @@
             </div>
             <div class="vue-ui-xy-range-slider-label-right">
                 {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.end-1] }}
+            </div>
+            <div v-if="slicer.start > 0 || slicer.end < maxX" style="position:absolute;right:0">
+                <button tabindex="0" role="button" class="vue-ui-xy-refresh-button" @click="refreshSlicer">
+                    <BaseIcon name="refresh" :stroke="chartConfig.chart.color"/>
+                </button>
             </div>
         </div>
 
@@ -693,6 +698,7 @@ import Title from '../atoms/Title.vue';
 import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Shape from "../atoms/Shape.vue";
+import BaseIcon from '../atoms/BaseIcon.vue';
 
 const uid = createUid();
 
@@ -713,12 +719,13 @@ export default {
         }
     },
     components: {
-        DataTable,
-        Shape,
-        Title,
-        Tooltip,
-        UserOptions,
-    },
+    DataTable,
+    Shape,
+    Title,
+    Tooltip,
+    UserOptions,
+    BaseIcon
+},
     data(){
         const uniqueId = uid;
         const maxX = Math.max(...this.dataset.map(datapoint => datapoint.series.length));
@@ -1233,6 +1240,14 @@ export default {
         createStar,
         createPolygonPath,
         /////////////////////////////// CANVAS /////////////////////////////////
+        refreshSlicer() {
+            this.slicer = {
+                start: 0,
+                end: Math.max(...this.dataset.map(datapoint => datapoint.series.length))
+            }
+            const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.uniqueId}`);
+            sliderTrack.style.background = `linear-gradient(to right, #dadae5 0% , #858585 100% , #858585 0%, #dadae5 100%)`;
+        },
         createCanvasArea(plots) {
             const start = { x: plots[0].x, y: this.zero };
             const end = { x: plots.at(-1).x, y: this.zero };
@@ -1918,7 +1933,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .vue-ui-xy *{
     transition: unset;
 }
@@ -1989,6 +2004,7 @@ path, line, rect {
 
 .vue-ui-xy-range-slider-wrapper {
     width: 100%;
+    margin: 0 auto;
     display: flex;
     flex-direction: row;
     gap: 6px;
@@ -1997,11 +2013,12 @@ path, line, rect {
 .vue-ui-xy-range-slider {
     position: relative;
     width: 100%;
+    margin: 0 auto;
     height: 12px;
 }
 .vue-ui-xy-range-slider-label-right,
 .vue-ui-xy-range-slider-label-left {
-    width: 100px;
+    width: 100%;
 }
 
 .vue-ui-xy-range-slider-label-right {
@@ -2097,5 +2114,21 @@ canvas {
 }
 .vue-data-ui-wrapper-fullscreen {
     overflow: scroll;
+}
+
+.vue-ui-xy-refresh-button {
+    outline: none;
+    border: none;
+    background: transparent;
+    height: 36px;
+    width: 36px;
+    display: flex;
+    align-items:center;
+    justify-content:center;
+    border-radius: 50%;
+    cursor: pointer;
+    &:focus {
+        outline: 1px solid #CCCCCC
+    }
 }
 </style>

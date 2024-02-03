@@ -94,6 +94,8 @@ const icons = computed(() => {
         circleCheck: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1 10 A 1 1 0 0 0 19 10 A 1 1 0 0 0 1 10 M 5 10 L 9 14 M 15 7 L 9 14" />`,
         circleExclamation: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1 10 A 1 1 0 0 0 19 10 A 1 1 0 0 0 1 10 M 10 5 L 10 10 M 10 13 A 1 1 0 0 0 10 15 A 1 1 0 0 0 10 13" />`,
         circleQuestion: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1 10 A 1 1 0 0 0 19 10 A 1 1 0 0 0 1 10 M 10 5 C 14 5 14 10 10 10 M 10 13 A 1 1 0 0 0 10 15 A 1 1 0 0 0 10 13 M 7 7 C 7 6 8 5 10 5" />`,
+        refresh: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 2 10 A 1 1 0 0 0 17 10 C 17 5 12 2 7 4 L 10 1 M 7 4 L 10 7" />`,
+
         
     }
 })

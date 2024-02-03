@@ -3885,6 +3885,7 @@ const moodRadarConfig = ref({
           <BaseIcon name="circleCheck" stroke="#42d392" />
           <BaseIcon name="circleExclamation" stroke="#42d392" />
           <BaseIcon name="circleQuestion" stroke="#42d392" />
+          <BaseIcon name="refresh" stroke="#42d392" />
 
         </div>
       </template>
