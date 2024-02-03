@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
-import { opacity, createUid, createCsvContent, downloadCsv } from "../lib";
+import { opacity, createUid, createCsvContent, downloadCsv, interpolateColorHex, adaptColorToBackground } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
@@ -80,14 +80,18 @@ const svg = computed(() => {
     }
 });
 
+const legendPosition = computed(() => {
+    return heatmapConfig.value.style.legend.position;
+})
+
 const drawingArea = computed(() => {
     return {
         top: heatmapConfig.value.style.layout.padding.top + (mutableConfig.value.inside ? 36 : 0) ,
         left: heatmapConfig.value.style.layout.padding.left,
-        right: svg.value.width - heatmapConfig.value.style.layout.padding.right,
+        right: svg.value.width - heatmapConfig.value.style.layout.padding.right - (legendPosition.value === "right" && heatmapConfig.value.style.legend.show ? 92 : 0),
         bottom: svg.value.height - heatmapConfig.value.style.layout.padding.bottom,
         height: svg.value.height - heatmapConfig.value.style.layout.padding.top - heatmapConfig.value.style.layout.padding.bottom,
-        width: svg.value.width - heatmapConfig.value.style.layout.padding.right - heatmapConfig.value.style.layout.padding.left
+        width: svg.value.width - heatmapConfig.value.style.layout.padding.right - heatmapConfig.value.style.layout.padding.left - (legendPosition.value === "right" && heatmapConfig.value.style.legend.show ? 92 : 0)
     }
 });
 
@@ -132,6 +136,7 @@ const mutableDataset = computed(() => {
                 if (v >= average.value) {
                     return {
                         side: "up",
+                        color: interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, v),
                         ratio: Math.abs((Math.abs(v - average.value) / Math.abs(maxValue.value - average.value))) > 1 ? 1 : Math.abs((Math.abs(v - average.value) / Math.abs(maxValue.value - average.value))),
                         value: v,
                         yAxisName: ds.name,
@@ -142,6 +147,7 @@ const mutableDataset = computed(() => {
                     return {
                         side: "down",
                         ratio: Math.abs(1 - (Math.abs(v) / Math.abs(average.value))) > 1 ? 1 : Math.abs(1 - (Math.abs(v) / Math.abs(average.value))),
+                        color: interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, v),
                         value: v,
                         yAxisName: ds.name,
                         xAxisName: dataLabels.value.xLabels[i],
@@ -160,7 +166,7 @@ function useTooltip(datapoint) {
     let html = "";
 
     html += `<div data-cy="heatmap-tootlip-name">${yAxisName} ${xAxisName ? `${xAxisName}` : ''}</div>`;
-    html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8;font-weight:bold">${isNaN(value) ? "-" : Number(value.toFixed(heatmapConfig.value.style.tooltip.roundingValue)).toLocaleString()}</div>`
+    html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8;font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : Number(value.toFixed(heatmapConfig.value.style.tooltip.roundingValue)).toLocaleString()}</span></div>`
     tooltipContent.value = `<div style="font-size:${heatmapConfig.value.style.tooltip.fontSize}px">${html}</div>`;
 }
 
@@ -340,7 +346,7 @@ defineExpose({
                         :y="drawingArea.top + cellSize.width * i"
                         :width="cellSize.width - heatmapConfig.style.layout.cells.spacing"
                         :height="cellSize.width - heatmapConfig.style.layout.cells.spacing"
-                        :fill="`${cell.side === 'up' ? `${heatmapConfig.style.layout.cells.colors.hot}${opacity[Math.round(cell.ratio * 100)]}` : `${heatmapConfig.style.layout.cells.colors.cold}${opacity[Math.round(cell.ratio * 100)]}`}`"
+                        :fill="cell.color"
                         :stroke="hoveredCell && hoveredCell === cell.id ? heatmapConfig.style.layout.cells.selected.color : heatmapConfig.style.backgroundColor"
                         :stroke-width="heatmapConfig.style.layout.cells.spacing"
                     />
@@ -349,7 +355,7 @@ defineExpose({
                         text-anchor="middle"
                         :font-size="heatmapConfig.style.layout.cells.value.fontSize"
                         :font-weight="heatmapConfig.style.layout.cells.value.bold ? 'bold': 'normal'"
-                        :fill="heatmapConfig.style.layout.cells.value.color"
+                        :fill="adaptColorToBackground(cell.color)"
                         :x="(drawingArea.left + cellSize.width * j) + (cellSize.width / 2)"
                         :y="(drawingArea.top + cellSize.width * i) + (cellSize.width / 2) + heatmapConfig.style.layout.cells.value.fontSize / 3"
                     >
@@ -396,6 +402,41 @@ defineExpose({
                 </text>
             </g>
 
+            <g v-if="heatmapConfig.style.legend.show && legendPosition === 'right'">
+                <defs>
+                    <linearGradient id="colorScaleVertical" x2="0%" y2="100%" >
+                        <stop offset="0%" :stop-color="heatmapConfig.style.layout.cells.colors.hot"/>
+                        <stop offset="100%" :stop-color="heatmapConfig.style.layout.cells.colors.cold"/>
+                    </linearGradient>
+                </defs>
+                <text
+                    :x="drawingArea.right + 36 + 18"
+                    :y="drawingArea.top - heatmapConfig.style.legend.fontSize * 2"
+                    text-anchor="middle"
+                    :font-size="heatmapConfig.style.legend.fontSize * 2"
+                    :fill="heatmapConfig.style.legend.color"
+                >
+                    {{ Number(maxValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}
+                </text>
+                <rect
+                    :x="drawingArea.right + 36"
+                    :y="drawingArea.top"
+                    :width="36"
+                    :height="drawingArea.height - (heatmapConfig.style.layout.cells.spacing * mutableDataset.length)"
+                    :rx="heatmapConfig.style.legend.scaleBorderRadius"
+                    fill="url(#colorScaleVertical)"
+                />
+                <text
+                    :x="drawingArea.right + 36 + 18"
+                    :y="drawingArea.bottom + heatmapConfig.style.legend.fontSize * 2"
+                    text-anchor="middle"
+                    :font-size="heatmapConfig.style.legend.fontSize * 2"
+                    :fill="heatmapConfig.style.legend.color"
+                >
+                    {{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}
+                </text>
+            </g>
+
             <!-- LEGEND AS G -->
             <foreignObject 
                 v-if="heatmapConfig.style.legend.show && mutableConfig.inside && !isPrinting"
@@ -430,7 +471,7 @@ defineExpose({
         </svg>
 
         <!-- LEGEND AS DIV -->
-        <div v-if="heatmapConfig.style.legend.show && (!mutableConfig.inside || isPrinting)" class="vue-ui-heatmap-legend" :style="`background:${heatmapConfig.style.legend.backgroundColor};color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" >
+        <div v-if="heatmapConfig.style.legend.show && heatmapConfig.style.legend.position === 'bottom' && (!mutableConfig.inside || isPrinting)" class="vue-ui-heatmap-legend" :style="`background:${heatmapConfig.style.legend.backgroundColor};color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" >
             <span data-cy="heatmap-legend-min" style="text-align:right">{{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
             <svg viewBox="0 0 132 12" style="width: 300px">
                 <defs>

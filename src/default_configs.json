@@ -1645,7 +1645,9 @@
                 "color": "#2D353C",
                 "fontSize" : 12,
                 "bold": true,
-                "roundingValue": 0
+                "roundingValue": 0,
+                "position": "right",
+                "scaleBorderRadius": 18
             },
             "tooltip": {
                 "show": true,

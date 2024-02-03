@@ -1555,6 +1555,8 @@ declare module 'vue-data-ui' {
                 fontSize?: number;
                 bold?: boolean;
                 roundingValue?: number;
+                position?: "right" | "bottom";
+                scaleBorderRadius?: number;
             };
             tooltip?: {
                 show?: boolean;
