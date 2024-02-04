@@ -33,6 +33,7 @@ import VueUiMoodRadar from "./components/vue-ui-mood-radar.vue";
 import VueUi3dBar from "./components/vue-ui-3d-bar.vue";
 import VueUiDigits from "./components/vue-ui-digits.vue";
 import VueUiMolecule from "./components/vue-ui-molecule.vue";
+import VueUiTableSparkline from "./components/vue-ui-table-sparkline.vue";
 
 export { 
     VueUiXy, 
@@ -69,5 +70,6 @@ export {
     VueUiMoodRadar,
     VueUi3dBar,
     VueUiDigits,
-    VueUiMolecule
+    VueUiMolecule,
+    VueUiTableSparkline
 };

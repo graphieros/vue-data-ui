@@ -2993,5 +2993,65 @@
         "userOptions": {
             "show": true
         }
+    },
+    "vue_ui_table_sparkline": {
+        "responsiveBreakpoint": 500,
+        "showAverage": true,
+        "showMedian": true,
+        "showTotal": true,
+        "roundingAverage": 0,
+        "roundingMedian": 0,
+        "roundingValues": 0,
+        "roundingTotal": 0,
+        "showSparklines": true,
+        "fontFamily": "inherit",
+        "colNames": [],
+        "sparkline": {
+            "useGradient": true,
+            "showArea": true,
+            "strokeWidth": 3,
+            "type": "line",
+            "smooth": true
+        },
+        "translations": {
+            "serie": "Serie",
+            "total": "Total",
+            "average": "Average",
+            "median": "Median",
+            "chart": "Evolution"
+        },
+        "title": {
+            "backgroundColor": "#FFFFFF",
+            "text": "",
+            "fontSize":18,
+            "color":"#2D353C",
+            "bold":true,
+            "textAlign": "left",
+            "subtitle": {
+                "text": "",
+                "color":"#2D353C",
+                "fontSize":14,
+                "bold": false
+            }
+        },
+        "thead": {
+            "backgroundColor": "#FFFFFF",
+            "color":"#2D353C",
+            "fontSize": 14,
+            "outline":"none",
+            "textAlign": "left",
+            "bold": false
+        },
+        "tbody": {
+            "backgroundColor": "#FFFFFF",
+            "color": "#2D353C",
+            "fontSize": 14,
+            "outline": "none",
+            "textAlign": "left",
+            "bold": false
+        },
+        "userOptions": {
+            "show": true
+        }
     }
 }

@@ -5,6 +5,78 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiTableSparklineDatasetItem = {
+        name: string;
+        values: number[];
+        color?: string;
+    }
+
+    export type VueUiTableSparklineConfig = {
+        responsiveBreakpoint?: number;
+        showAverage?: boolean;
+        showMedian?: boolean;
+        showTotal?: boolean;
+        roundingAverage?: number;
+        roundingMedian?: number;
+        roundingValues?: number;
+        roundingTotal?: number;
+        showSparklines?: true,
+        fontFamily?: string;
+        colNames?: string[];
+        sparkline?: {
+            useGradient?: boolean;
+            showArea?: boolean;
+            strokeWidth?: number;
+            type?: "line" | "bar",
+            smooth?: boolean;
+        };
+        translations?: {
+            serie?: string;
+            total?: string;
+            average?: string;
+            median?: string;
+            chart?: string;
+        };
+        title?: {
+            backgroundColor?: string;
+            text?: string;
+            fontSize?: number;
+            color?: string;
+            bold?: boolean;
+            textAlign?: "left" | "center" | "right";
+            subtitle?: {
+                text?: string;
+                color?: string;
+                fontSize?: number;
+                bold?: boolean;
+            };
+        };
+        thead?: {
+            backgroundColor?: string;
+            color?: string;
+            fontSize?: number;
+            outline?: string;
+            textAlign?: "left" | "center" | "right";
+            bold?: boolean;
+        },
+        tbody?: {
+            backgroundColor?: string;
+            color?: string;
+            fontSize?: number;
+            outline?: string;
+            textAlign?: "left" | "center" | "right";
+            bold?: boolean;
+        };
+        userOptions?: {
+            show?: boolean;
+        }
+    };
+
+    export const VueUiTableSparkline: DefineComponent<{
+        dataset: VueUiTableSparklineDatasetItem[],
+        config: VueUiTableSparklineConfig
+    }>
+
     export type VueUiMoleculeDatasetNode = {
         name: string;
         details?: string;

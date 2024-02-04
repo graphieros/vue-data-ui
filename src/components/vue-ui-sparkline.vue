@@ -21,6 +21,10 @@ const props = defineProps({
         default() {
             return []
         }
+    },
+    showInfo : {
+        type: Boolean,
+        default: true
     }
 });
 
@@ -39,6 +43,8 @@ const svg = ref({
     width: 500,
 });
 
+const emits = defineEmits(['hoverIndex'])
+
 const drawingArea = computed(() => {
     const topPadding = 12;
     return {
@@ -46,8 +52,8 @@ const drawingArea = computed(() => {
         left: 0,
         right: svg.value.width,
         bottom: svg.value.height - 3,
-        start: sparklineConfig.value.style.dataLabel.position === 'left' ? 210 : 0,
-        width: 290,
+        start: props.showInfo && sparklineConfig.value.style.dataLabel.position === 'left' ? 210 : 0,
+        width: props.showInfo ? 290 : svg.value.width,
         height: svg.value.height - topPadding
     }
 });
@@ -110,8 +116,14 @@ const area = computed(() => {
 
 const selectedPlot = ref(undefined);
 
-function selectPlot(plot) {
+function selectPlot(plot, index) {
     selectedPlot.value = plot;
+    emits('hoverIndex', {index})
+}
+
+function unselectPlot() {
+    selectedPlot.value = undefined
+    emits('hoverIndex', {index:undefined})
 }
 
 const dataLabel = computed(() => {
@@ -135,7 +147,7 @@ const isBar = computed(() => {
 <template>
     <div class="vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${sparklineConfig.style.fontFamily}`">
         <!-- TITLE -->
-        <div v-if="sparklineConfig.style.title.show" class="vue-ui-sparkline-title" :style="`display:flex;align-items:center;width:100%;color:${sparklineConfig.style.title.color};background:${sparklineConfig.style.backgroundColor};justify-content:${sparklineConfig.style.title.textAlign === 'left' ? 'flex-start' : sparklineConfig.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${sparklineConfig.style.title.fontSize * 2}px;font-size:${sparklineConfig.style.title.fontSize}px;font-weight:${sparklineConfig.style.title.bold ? 'bold' : 'normal'};`">
+        <div v-if="sparklineConfig.style.title.show && showInfo" class="vue-ui-sparkline-title" :style="`display:flex;align-items:center;width:100%;color:${sparklineConfig.style.title.color};background:${sparklineConfig.style.backgroundColor};justify-content:${sparklineConfig.style.title.textAlign === 'left' ? 'flex-start' : sparklineConfig.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${sparklineConfig.style.title.fontSize * 2}px;font-size:${sparklineConfig.style.title.fontSize}px;font-weight:${sparklineConfig.style.title.bold ? 'bold' : 'normal'};`">
             <span data-cy="sparkline-period-label" :style="`padding:${sparklineConfig.style.title.textAlign === 'left' ? '0 0 0 12px' : sparklineConfig.style.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`">
                 {{ selectedPlot ? selectedPlot.period : sparklineConfig.style.title.text }}
             </span>
@@ -247,6 +259,7 @@ const isBar = computed(() => {
 
             <!-- DATALABEL -->
             <text
+                v-if="showInfo"
                 data-cy="sparkline-datalabel"
                 :x="sparklineConfig.style.dataLabel.position === 'left' ? 12 : drawingArea.width + 12"
                 :y="svg.height / 2 + sparklineConfig.style.dataLabel.fontSize / 2.5"
@@ -266,8 +279,8 @@ const isBar = computed(() => {
                 :height="drawingArea.height + 6"
                 :width="(drawingArea.width / len)"
                 fill="transparent"
-                @mouseenter="selectPlot(plot)"
-                @mouseleave="selectedPlot = undefined"
+                @mouseenter="selectPlot(plot, i)"
+                @mouseleave="unselectPlot"
             />
             <slot name="svg" :svg="svg"/>
         </svg>

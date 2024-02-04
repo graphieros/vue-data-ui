@@ -47,6 +47,7 @@ import Bar3dTest from "./components/vue-ui-3d-bar.vue";
 import DigitsTest from "./components/vue-ui-digits.vue";
 import MoleculeTest from './components/vue-ui-molecule.vue';
 import DonutEvolutionTest from "./components/vue-ui-donut-evolution.vue";
+import TableSparklineTest from "./components/vue-ui-table-sparkline.vue";
 
 const dataset = ref([
   {
@@ -3791,6 +3792,21 @@ const moodRadarConfig = ref({
     }
   ])
 
+  const tableSparklineDataset = ref([
+    {
+      name: "Serie 1",
+      values: [1, 2, 3, 8, 13, 21]
+    },
+    {
+      name: "Serie 2",
+      values: [12, 1, 6, 7, 5, 12]
+    },
+    {
+      name: "Serie 3",
+      values: [18, 12, 21, 12, 6, 7]
+    },
+  ])
+
 </script>
 
 <template>
@@ -3889,6 +3905,24 @@ const moodRadarConfig = ref({
 
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_table_sparkline)">
+        <template #title>
+          <BaseIcon name="chartTable"/>
+          VueUiTableSparkline
+        </template>
+        <template #info>
+        </template>
+        <template #dev>
+          <TableSparklineTest :dataset="tableSparklineDataset"/>
+        </template>
+        <template #prod>
+          <VueUiTableSparkline :dataset="tableSparklineDataset"/>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_table_sparkline }}
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">

@@ -36,7 +36,8 @@ import {
     VueUiMoodRadar,
     VueUi3dBar,
     VueUiDigits,
-    VueUiMolecule
+    VueUiMolecule,
+    VueUiTableSparkline
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -76,4 +77,5 @@ app.component("VueUiMoodRadar", VueUiMoodRadar);
 app.component("VueUi3dBar", VueUi3dBar);
 app.component("VueUiDigits", VueUiDigits);
 app.component("VueUiMolecule", VueUiMolecule);
+app.component("VueUiTableSparkline", VueUiTableSparkline);
 app.mount('#app');
