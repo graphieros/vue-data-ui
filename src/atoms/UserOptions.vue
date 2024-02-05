@@ -153,7 +153,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`width: 34px; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; right:${isFullscreen ? '12px': '0'}; padding: 4px; background:transparent; `">
+    <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`width: 34px; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; right:${isFullscreen ? '12px': '0'}; padding: 4px; background:transparent; z-index: 1`">
         <div tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${backgroundColor};`" @click.stop="toggle" @keypress.enter="toggle">
             <BaseIcon  :name="isOpen ? 'close' : 'menu'" stroke="#CCCCCC" :stroke-width="2" />
         </div>

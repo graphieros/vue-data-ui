@@ -253,172 +253,180 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tableContainer" style="width: 100%;position:relative" :class="{ 'vue-ui-responsive': isResponsive }" :id="`table_${uid}`">
-        <UserOptions
-            ref="details"
-            :key="`user_option_${step}`"
-            v-if="tableConfig.userOptions.show"
-            :backgroundColor="tableConfig.thead.backgroundColor"
-            :color="tableConfig.thead.color"
-            :isPrinting="isPrinting"
-            :isImaging="isImaging"
-            :uid="uid"
-            hasImg
-            hasFullscreen
-            :isFullscreen="isFullscreen"
-            :chartElement="tableContainer"
-            @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf"
-            @generateImage="generateImage"
-            @generateCsv="generateCsv"
-        />
-        <table data-cy="vue-data-ui-table-sparkline" class="vue-ui-data-table"
-            :style="{ fontFamily: tableConfig.fontFamily }">
-            <caption v-if="tableConfig.title.text" :style="{ backgroundColor: tableConfig.title.backgroundColor }">
-                <div :style="{
-                    fontSize: `${tableConfig.title.fontSize}px`,
-                    fontWeight: tableConfig.title.bold ? 'bold' : 'normal',
-                    color: tableConfig.title.color,
-                    textAlign: tableConfig.title.textAlign,
-                }">
-                    {{ tableConfig.title.text }}
-                </div>
-                <div v-if="tableConfig.title.subtitle.text" :style="{
-                    fontSize: `${tableConfig.title.subtitle.fontSize}px`,
-                    fontWeight: tableConfig.title.subtitle.bold ? 'bold' : 'normal',
-                    color: tableConfig.title.subtitle.color,
-                    textAlign: tableConfig.title.textAlign,
-                }">
-                    {{ tableConfig.title.subtitle.text }}
-                </div>
-            </caption>
+    <div ref="tableContainer" :class="{ 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`">
 
-            <thead>
-                <tr role="row" class="vue-ui-data-table__thead-row" :style="{
-                    backgroundColor: tableConfig.thead.backgroundColor,
-                    color: tableConfig.thead.color,
-                }">
-                    <th role="cell" :style="{
-                        outline: tableConfig.thead.outline,
-                        textAlign: tableConfig.thead.textAlign,
-                        fontWeight: tableConfig.thead.bold ? 'bold' : 'normal',
+        <div style="overflow: auto">
+
+            <table data-cy="vue-data-ui-table-sparkline" class="vue-ui-data-table"
+                :style="{ fontFamily: tableConfig.fontFamily, position: 'relative' }">
+                <caption v-if="tableConfig.title.text" :style="{ backgroundColor: tableConfig.title.backgroundColor }">
+                    <div :style="{
+                        fontSize: `${tableConfig.title.fontSize}px`,
+                        fontWeight: tableConfig.title.bold ? 'bold' : 'normal',
+                        color: tableConfig.title.color,
+                        textAlign: tableConfig.title.textAlign,
                     }">
-                        {{ tableConfig.translations.serie }}
-                    </th>
-                    <th role="cell" v-for="(th, i) in colNames" :style="{
-                        outline: tableConfig.thead.outline,
-                        textAlign: tableConfig.thead.textAlign,
-                        fontWeight: tableConfig.thead.bold ? 'bold' : 'normal',
-                        minWidth: i === colNames.length - 1 ? '150px' : '',
-                        cursor: datasetWithOrders[0].values[i] !== undefined ? 'pointer' : 'default'
-                    }" @click="() => orderDatasetByIndex(i)">
-                        <div style="display: flex; flex-direction: row; gap: 3px; align-items:center">
-                            <span>{{ th }}</span>
-                            <BaseIcon :size="18" v-if="isSorting && i === currentSortingIndex && datasetWithOrders[0].values[i] !== undefined" :name="currentSortOrder === 1 ? 'sort' : 'sortReverse'" :stroke="tableConfig.thead.color"/>
-                        </div>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr role="row" v-for="(tr, i) in mutableDataset" :style="{
-                    backgroundColor: tableConfig.tbody.backgroundColor,
-                    color: tableConfig.tbody.color,
-                }">
-                    <td role="cell" :style="{
-                        outline: tableConfig.tbody.outline,
-                        fontSize: `${tableConfig.tbody.fontSize}px`,
-                        fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
-                        textAlign: tableConfig.tbody.textAlign,
-                    }" :data-cell="tableConfig.translations.serie">
-                        <div style="display: flex; flex-direction: row; align-items: center; gap: 6px">
-                            <span :style="{ color: tr.color }">⬤</span>
-                            <span>{{ tr.name ?? "-" }}</span>
-                        </div>
-                    </td>
-                    <td role="cell" v-for="(td, j) in tr.values" :style="{
-                        outline: tableConfig.tbody.outline,
-                        fontSize: `${tableConfig.tbody.fontSize}px`,
-                        fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
-                        textAlign: tableConfig.tbody.textAlign,
-                        backgroundColor:
-                            selectedDataIndex !== undefined &&
-                                selectedSerieIndex !== undefined &&
-                                j === selectedDataIndex &&
-                                selectedSerieIndex === i
-                                ? `${tr.color}33`
-                                : '',
-                        borderRadius:
-                            selectedDataIndex !== undefined &&
-                                selectedSerieIndex !== undefined &&
-                                j === selectedDataIndex &&
-                                selectedSerieIndex === i
-                                ? '3px'
-                                : '',
-                    }" :data-cell="colNames[j]">
-                        {{ Number(td.toFixed(tableConfig.roundingValues)).toLocaleString() }}
-                    </td>
-                    <td role="cell" v-if="tableConfig.showTotal" :style="{
-                        outline: tableConfig.tbody.outline,
-                        fontSize: `${tableConfig.tbody.fontSize}px`,
-                        fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
-                        textAlign: tableConfig.tbody.textAlign,
-                    }" :data-cell="tableConfig.translations.total">
-                        {{ Number(tr.sum.toFixed(tableConfig.roundingTotal)).toLocaleString() }}
-                    </td>
-                    <td role="cell" v-if="tableConfig.showAverage" :style="{
-                        outline: tableConfig.tbody.outline,
-                        fontSize: `${tableConfig.tbody.fontSize}px`,
-                        fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
-                        textAlign: tableConfig.tbody.textAlign,
-                    }" :data-cell="tableConfig.translations.average">
-                        {{ Number(tr.average.toFixed(tableConfig.roundingAverage)).toLocaleString() }}
-                    </td>
-                    <td role="cell" v-if="tableConfig.showMedian" :style="{
-                        outline: tableConfig.tbody.outline,
-                        fontSize: `${tableConfig.tbody.fontSize}px`,
-                        fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
-                        textAlign: tableConfig.tbody.textAlign,
-                    }" :data-cell="tableConfig.translations.median">
-                        {{ Number(tr.median.toFixed(tableConfig.roundingMedian)).toLocaleString() }}
-                    </td>
-                    <td role="cell" v-if="tableConfig.showSparklines" :data-cell="tableConfig.translations.chart" :style="{
-                        outline: tableConfig.tbody.outline,
-                        fontSize: `${tableConfig.tbody.fontSize}px`,
-                        fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
-                        textAlign: tableConfig.tbody.textAlign,
+                        {{ tableConfig.title.text }}
+                    </div>
+                    <div v-if="tableConfig.title.subtitle.text" :style="{
+                        fontSize: `${tableConfig.title.subtitle.fontSize}px`,
+                        fontWeight: tableConfig.title.subtitle.bold ? 'bold' : 'normal',
+                        color: tableConfig.title.subtitle.color,
+                        textAlign: tableConfig.title.textAlign,
                     }">
-                        <SparkLine @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
-                            " :dataset="tr.sparklineDataset" :showInfo="false" :config="{
-                            type: tableConfig.sparkline.type,
-                            style: {
-                                backgroundColor: tableConfig.tbody.backgroundColor,
-                                line: {
-                                    color: tr.color,
-                                    smooth: tableConfig.sparkline.smooth,
-                                    strokeWidth: tableConfig.sparkline.strokeWidth
+                        {{ tableConfig.title.subtitle.text }}
+                    </div>
+                </caption>
+
+                <thead style="z-index: 1;padding-right:24px">
+                    <tr role="row" class="vue-ui-data-table__thead-row" :style="{
+                        backgroundColor: tableConfig.thead.backgroundColor,
+                        color: tableConfig.thead.color
+                    }">
+                        <th role="cell" :style="{
+                            backgroundColor: tableConfig.thead.backgroundColor,
+                            outline: tableConfig.thead.outline,
+                            textAlign: tableConfig.thead.textAlign,
+                            fontWeight: tableConfig.thead.bold ? 'bold' : 'normal',
+                        }" class="sticky-col-first">
+                            {{ tableConfig.translations.serie }}
+                        </th>
+                        <th role="cell" v-for="(th, i) in colNames" :style="{
+                            background: tableConfig.thead.backgroundColor,
+                            outline: tableConfig.thead.outline,
+                            textAlign: tableConfig.thead.textAlign,
+                            fontWeight: tableConfig.thead.bold ? 'bold' : 'normal',
+                            minWidth: i === colNames.length - 1 ? '150px' : '',
+                            cursor: datasetWithOrders[0].values[i] !== undefined ? 'pointer' : 'default'
+                        }" @click="() => orderDatasetByIndex(i)" :class="{'sticky-col': i === colNames.length - 1 && tableConfig.showSparklines}" >
+                            <div style="display: flex; flex-direction: row; gap: 3px; align-items:center">
+                                <span>{{ th }}</span>
+                                <BaseIcon :size="18" v-if="isSorting && i === currentSortingIndex && datasetWithOrders[0].values[i] !== undefined" :name="currentSortOrder === 1 ? 'sort' : 'sortReverse'" :stroke="tableConfig.thead.color"/>
+                            </div>
+                            <UserOptions
+                                ref="details"
+                                :key="`user_option_${step}`"
+                                v-if="tableConfig.userOptions.show && i === colNames.length - 1"
+                                :backgroundColor="tableConfig.thead.backgroundColor"
+                                :color="tableConfig.thead.color"
+                                :isPrinting="isPrinting"
+                                :isImaging="isImaging"
+                                :uid="uid"
+                                hasImg
+                                hasFullscreen
+                                :isFullscreen="isFullscreen"
+                                :chartElement="tableContainer"
+                                @toggleFullscreen="toggleFullscreen"
+                                @generatePdf="generatePdf"
+                                @generateImage="generateImage"
+                                @generateCsv="generateCsv"
+                            />
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr role="row" v-for="(tr, i) in mutableDataset" :style="{
+                        backgroundColor: tableConfig.tbody.backgroundColor,
+                        color: tableConfig.tbody.color,
+                    }" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}">
+                        <td role="cell" :style="{
+                            backgroundColor: tableConfig.tbody.backgroundColor,
+                            outline: tableConfig.tbody.outline,
+                            fontSize: `${tableConfig.tbody.fontSize}px`,
+                            fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
+                            textAlign: tableConfig.tbody.textAlign
+                        }" :data-cell="tableConfig.translations.serie" class="vue-ui-data-table__tbody__td sticky-col-first">
+                            <div style="display: flex; flex-direction: row; align-items: center; gap: 6px">
+                                <span :style="{ color: tr.color }">⬤</span>
+                                <span>{{ tr.name ?? "-" }}</span>
+                            </div>
+                        </td>
+                        <td role="cell" v-for="(td, j) in tr.values" :style="{
+                            outline: tableConfig.tbody.outline,
+                            fontSize: `${tableConfig.tbody.fontSize}px`,
+                            fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
+                            textAlign: tableConfig.tbody.textAlign,
+                            backgroundColor:
+                                selectedDataIndex !== undefined &&
+                                    selectedSerieIndex !== undefined &&
+                                    j === selectedDataIndex &&
+                                    selectedSerieIndex === i
+                                    ? `${tr.color}33`
+                                    : '',
+                            borderRadius:
+                                selectedDataIndex !== undefined &&
+                                    selectedSerieIndex !== undefined &&
+                                    j === selectedDataIndex &&
+                                    selectedSerieIndex === i
+                                    ? '3px'
+                                    : '',
+                        }" :data-cell="colNames[j]" class="vue-ui-data-table__tbody__td">
+                            {{ Number(td.toFixed(tableConfig.roundingValues)).toLocaleString() }}
+                        </td>
+                        <td role="cell" v-if="tableConfig.showTotal" :style="{
+                            outline: tableConfig.tbody.outline,
+                            fontSize: `${tableConfig.tbody.fontSize}px`,
+                            fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
+                            textAlign: tableConfig.tbody.textAlign,
+                        }" :data-cell="tableConfig.translations.total" class="vue-ui-data-table__tbody__td">
+                            {{ Number(tr.sum.toFixed(tableConfig.roundingTotal)).toLocaleString() }}
+                        </td>
+                        <td role="cell" v-if="tableConfig.showAverage" :style="{
+                            outline: tableConfig.tbody.outline,
+                            fontSize: `${tableConfig.tbody.fontSize}px`,
+                            fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
+                            textAlign: tableConfig.tbody.textAlign,
+                        }" :data-cell="tableConfig.translations.average" class="vue-ui-data-table__tbody__td">
+                            {{ Number(tr.average.toFixed(tableConfig.roundingAverage)).toLocaleString() }}
+                        </td>
+                        <td role="cell" v-if="tableConfig.showMedian" :style="{
+                            outline: tableConfig.tbody.outline,
+                            fontSize: `${tableConfig.tbody.fontSize}px`,
+                            fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
+                            textAlign: tableConfig.tbody.textAlign,
+                        }" :data-cell="tableConfig.translations.median" class="vue-ui-data-table__tbody__td">
+                            {{ Number(tr.median.toFixed(tableConfig.roundingMedian)).toLocaleString() }}
+                        </td>
+                        <td role="cell" v-if="tableConfig.showSparklines" :data-cell="tableConfig.translations.chart" :style="{
+                            outline: tableConfig.tbody.outline,
+                            fontSize: `${tableConfig.tbody.fontSize}px`,
+                            fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
+                            textAlign: tableConfig.tbody.textAlign,
+                        }" class="vue-ui-data-table__tbody__td sticky-col">
+                            <SparkLine @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
+                                " :dataset="tr.sparklineDataset" :showInfo="false" :config="{
+                                type: tableConfig.sparkline.type,
+                                style: {
+                                    backgroundColor: tableConfig.tbody.backgroundColor,
+                                    line: {
+                                        color: tr.color,
+                                        smooth: tableConfig.sparkline.smooth,
+                                        strokeWidth: tableConfig.sparkline.strokeWidth
+                                    },
+                                    bar: {
+                                        color: tr.color
+                                    },
+                                    area: {
+                                        color: tr.color,
+                                        opacity: tableConfig.sparkline.showArea ? 16 : 0,
+                                        useGradient: tableConfig.sparkline.useGradient,
+                                    },
+                                    verticalIndicator: {
+                                        color: tr.color,
+                                    },
+                                    plot: {
+                                        radius: 9,
+                                        stroke: tableConfig.tbody.backgroundColor,
+                                        strokeWidth: 3,
+                                    },
                                 },
-                                bar: {
-                                    color: tr.color
-                                },
-                                area: {
-                                    color: tr.color,
-                                    opacity: tableConfig.sparkline.showArea ? 16 : 0,
-                                    useGradient: tableConfig.sparkline.useGradient,
-                                },
-                                verticalIndicator: {
-                                    color: tr.color,
-                                },
-                                plot: {
-                                    radius: 9,
-                                    stroke: tableConfig.tbody.backgroundColor,
-                                    strokeWidth: 3,
-                                },
-                            },
-                        }" />
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                            }" />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
     </div>
 </template>
 
@@ -447,7 +455,32 @@ td {
     white-space: nowrap;
 }
 
+.sticky-col {
+    position: -webkit-sticky;
+    position: sticky;
+    width: 100px;
+    min-width: 100px;
+    right: 0;
+}
+
+.sticky-col-first {
+    position: -webkit-sticky;
+    position: sticky;
+    width: 100px;
+    min-width: 100px;
+    left: 0;
+}
+
 .vue-ui-responsive {
+    .sticky-col,
+    .sticky-col-first {
+        position: initial;
+        width: initial;
+        min-width: initial;
+        left: initial;
+        right: initial;
+    }
+    
     th {
         display: none;
     }

@@ -83,7 +83,7 @@ function ratioToMax(v) {
     return v / absoluteMax.value;
 }
 
-const len = computed(() => props.dataset.length);
+const len = computed(() => props.dataset.length - 1);
 
 const mutableDataset = computed(() => {
     return props.dataset.map((s, i) => {
