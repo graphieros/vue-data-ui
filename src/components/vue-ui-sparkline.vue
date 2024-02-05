@@ -24,7 +24,11 @@ const props = defineProps({
     },
     showInfo : {
         type: Boolean,
-        default: true
+        default: true,
+    },
+    selectedIndex: {
+        type: Number,
+        default: undefined
     }
 });
 
@@ -217,7 +221,7 @@ const isBar = computed(() => {
                 <!-- VERTICAL INDICATORS -->
                 <line
                     :data-cy="`sparkline-vertical-indicator-${i}`"
-                    v-if="sparklineConfig.style.verticalIndicator.show && selectedPlot && plot.id === selectedPlot.id"
+                    v-if="sparklineConfig.style.verticalIndicator.show && ((selectedPlot && plot.id === selectedPlot.id) || selectedIndex === i)"
                     :x1="plot.x"
                     :x2="plot.x"
                     :y1="drawingArea.top - 6"
@@ -247,7 +251,7 @@ const isBar = computed(() => {
             <g v-if="sparklineConfig.style.plot.show" v-for="(plot, i) in mutableDataset">
                 <circle
                     :data-cy="`sparkline-plot-${i}`"
-                    v-if="selectedPlot && plot.id === selectedPlot.id" 
+                    v-if="(selectedPlot && plot.id === selectedPlot.id) || selectedIndex === i" 
                     :cx="plot.x" 
                     :cy="plot.y" 
                     :r="sparklineConfig.style.plot.radius"

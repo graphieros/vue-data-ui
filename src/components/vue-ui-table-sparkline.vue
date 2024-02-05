@@ -255,7 +255,7 @@ defineExpose({
 <template>
     <div ref="tableContainer" :class="{ 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`">
 
-        <div style="overflow: auto">
+        <div style="overflow: auto" @pointerleave="selectedSerieIndex = undefined; selectedDataIndex = undefined">
 
             <table data-cy="vue-data-ui-table-sparkline" class="vue-ui-data-table"
                 :style="{ fontFamily: tableConfig.fontFamily, position: 'relative' }">
@@ -330,7 +330,7 @@ defineExpose({
                         color: tableConfig.tbody.color,
                     }" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}">
                         <td role="cell" :style="{
-                            backgroundColor: tableConfig.tbody.backgroundColor,
+                            backgroundColor: 'inherit',
                             outline: tableConfig.tbody.outline,
                             fontSize: `${tableConfig.tbody.fontSize}px`,
                             fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
@@ -360,7 +360,7 @@ defineExpose({
                                     selectedSerieIndex === i
                                     ? '3px'
                                     : '',
-                        }" :data-cell="colNames[j]" class="vue-ui-data-table__tbody__td">
+                        }" :data-cell="colNames[j]" class="vue-ui-data-table__tbody__td" @pointerenter="selectedSerieIndex = i; selectedDataIndex = j">
                             {{ Number(td.toFixed(tableConfig.roundingValues)).toLocaleString() }}
                         </td>
                         <td role="cell" v-if="tableConfig.showTotal" :style="{
@@ -394,7 +394,7 @@ defineExpose({
                             textAlign: tableConfig.tbody.textAlign,
                         }" class="vue-ui-data-table__tbody__td sticky-col">
                             <SparkLine @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
-                                " :dataset="tr.sparklineDataset" :showInfo="false" :config="{
+                                " :dataset="tr.sparklineDataset" :showInfo="false" :selectedIndex="selectedDataIndex" :config="{
                                 type: tableConfig.sparkline.type,
                                 style: {
                                     backgroundColor: tableConfig.tbody.backgroundColor,

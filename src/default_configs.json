@@ -3026,7 +3026,7 @@
             "fontSize":18,
             "color":"#2D353C",
             "bold":true,
-            "textAlign": "left",
+            "textAlign": "center",
             "subtitle": {
                 "text": "",
                 "color":"#2D353C",
