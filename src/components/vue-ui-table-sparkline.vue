@@ -330,7 +330,7 @@ defineExpose({
                         color: tableConfig.tbody.color,
                     }" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}">
                         <td role="cell" :style="{
-                            backgroundColor: 'inherit',
+                            backgroundColor: tableConfig.tbody.backgroundColor,
                             outline: tableConfig.tbody.outline,
                             fontSize: `${tableConfig.tbody.fontSize}px`,
                             fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
