@@ -422,7 +422,7 @@ defineExpose({
                     :x="drawingArea.right + 36"
                     :y="drawingArea.top"
                     :width="36"
-                    :height="drawingArea.height - (heatmapConfig.style.layout.cells.spacing * mutableDataset.length)"
+                    :height="drawingArea.height - 12"
                     :rx="heatmapConfig.style.legend.scaleBorderRadius"
                     fill="url(#colorScaleVertical)"
                 />
