@@ -56,7 +56,7 @@ const viewBox = computed(() => {
 })
 
 const refC = computed(() => props.markerSize / 2)
-const markerSize = computed(() => {
+const markerS = computed(() => {
     return refC.value + (props.markerSize / 10)
 })
 
@@ -65,10 +65,10 @@ const markerSize = computed(() => {
 <template>
     <g class="vue-ui-element-arrow">
         <defs>
-            <marker :id="`arrow_end_${uid}`" orient="auto" :viewBox="viewBox" :refX="refC" :refY="refC" :markerWidth="markerSize" :markerHeight="markerSize">
+            <marker :id="`arrow_end_${uid}`" orient="auto" :viewBox="viewBox" :refX="refC" :refY="refC" :markerWidth="markerS" :markerHeight="markerS">
                 <path :d="`M 0 0 L ${markerSize} ${refC} L 0 ${markerSize} z`" :fill="stroke" />
             </marker>
-            <marker :id="`arrow_start_${uid}`" orient="auto-start-reverse" :viewBox="viewBox" :refX="refC" :refY="refC" :markerWidth="markerSize" :markerHeight="markerSize">
+            <marker :id="`arrow_start_${uid}`" orient="auto-start-reverse" :viewBox="viewBox" :refX="refC" :refY="refC" :markerWidth="markerS" :markerHeight="markerS">
                 <path :d="`M 0 0 L ${markerSize} ${refC} L 0 ${markerSize} z`" :fill="stroke" />
             </marker>
         </defs>
