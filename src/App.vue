@@ -4625,6 +4625,14 @@ const moodRadarConfig = ref({
           >
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+              <Arrow
+                :x1="20"
+                :y1="20"
+                :x2="100"
+                :y2="100"
+                :pointerSize="10"
+                :strokeWidth="2"
+              />
             </template>
           </DonutTest>
         </template>

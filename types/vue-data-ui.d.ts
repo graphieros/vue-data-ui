@@ -5,6 +5,20 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export const Arrow: DefineComponent<{
+        markerEnd?: boolean,
+        markerSize?: number,
+        markerStart?: boolean,
+        stroke?: string,
+        strokeDasharray?: number,
+        strokeLinecap?: "round" | "butt" | "square",
+        strokeWidth?: number,
+        x1: number,
+        x2: number,
+        y1: number,
+        y2: number
+    }>
+
     export type VueUiTableSparklineDatasetItem = {
         name: string;
         values: number[];

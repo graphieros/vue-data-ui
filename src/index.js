@@ -34,6 +34,7 @@ import VueUi3dBar from "./components/vue-ui-3d-bar.vue";
 import VueUiDigits from "./components/vue-ui-digits.vue";
 import VueUiMolecule from "./components/vue-ui-molecule.vue";
 import VueUiTableSparkline from "./components/vue-ui-table-sparkline.vue";
+import Arrow from "./atoms/Arrow.vue"
 
 export { 
     VueUiXy, 
@@ -71,5 +72,6 @@ export {
     VueUi3dBar,
     VueUiDigits,
     VueUiMolecule,
-    VueUiTableSparkline
+    VueUiTableSparkline,
+    Arrow
 };
