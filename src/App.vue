@@ -3907,7 +3907,7 @@ const moodRadarConfig = ref({
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_table_sparkline)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_table_sparkline)">
         <template #title>
           <BaseIcon name="chartTable"/>
           VueUiTableSparkline
@@ -4280,7 +4280,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
         <template #title>
           <BaseIcon name="chartLine" />
           VueUiXy

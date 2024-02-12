@@ -19,6 +19,7 @@ import {
     createStar,
     degreesToRadians,
     hslToRgb,
+    interpolateColorHex,
     isSafeValue,
     isValidUserValue,
     makeDonut,
@@ -666,5 +667,21 @@ describe('niceNum', () => {
         expect(niceNum(118, 1)).toBe(100)
         expect(niceNum(1118, false)).toBe(2000)
         expect(niceNum(1118, 1)).toBe(1000)
+    })
+})
+
+describe('interpolateColorHex', () => {
+    test('returns a color between two hex colors at a given range', () => {
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 0)).toBe('#0000ff')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 10)).toBe('#1a00e6')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 20)).toBe('#3300cc')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 30)).toBe('#4d00b3')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 40)).toBe('#660099')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 50)).toBe('#800080')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 60)).toBe('#990066')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 70)).toBe('#b3004d')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 80)).toBe('#cc0033')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 90)).toBe('#e6001a')
+        expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 100)).toBe('#ff0000')
     })
 })
