@@ -220,12 +220,15 @@
                         "show": true,
                         "values": [],
                         "fontSize": 6,
-                        "showOnlyFirstAndLast": false
+                        "showOnlyFirstAndLast": false,
+                        "yOffset": 0
                     }
                 }
             },
             "labels": {
-                "fontSize": 10
+                "fontSize": 10,
+                "prefix": "",
+                "suffix": ""
             },
             "legend": {
                 "color": "#2D353C",
@@ -337,7 +340,13 @@
                     "labels": {
                         "dataLabels": {
                             "show": true,
-                            "hideUnderValue": 3
+                            "hideUnderValue": 3,
+                            "prefix": "",
+                            "suffix": ""
+                        },
+                        "value": {
+                            "rounding": 0,
+                            "show": true
                         },
                         "percentage": {
                             "color": "#2D353C",
@@ -467,6 +476,12 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "layout": {
+                    "labels": {
+                        "dataLabels": {
+                            "prefix": "",
+                            "suffix": ""
+                        }
+                    },
                     "grid": {
                         "size": 20,
                         "spaceBetween": 2,
@@ -1555,7 +1570,9 @@
                 "bold": true,
                 "color": "#2D353C",
                 "roundingValue": 0,
-                "valueType": "latest"
+                "valueType": "latest",
+                "prefix": "",
+                "suffix": ""
             },
             "title": {
                 "show": true,
@@ -1607,6 +1624,8 @@
                     }
                 },
                 "dataLabels": {
+                    "prefix": "",
+                    "suffix": "",
                     "xAxis": {
                         "show": true,
                         "values": [],
@@ -2333,7 +2352,9 @@
                     "fontSize": 20,
                     "rounding": 1,
                     "bold": true,
-                    "color": "#2D353C"
+                    "color": "#2D353C",
+                    "prefix": "",
+                    "suffix": ""
                 }
             },
             "title": {
@@ -2489,6 +2510,12 @@
                 "backgroundColor":"#FFFFFF",
                 "color":"#2D353C",
                 "layout": {
+                    "labels": {
+                        "dataLabels": {
+                            "prefix": "",
+                            "suffix": ""
+                        }
+                    },
                     "rings": {
                         "strokeWidth": 2,
                         "stroke":"#FFFFFF",

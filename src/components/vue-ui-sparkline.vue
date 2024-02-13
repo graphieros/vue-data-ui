@@ -1,10 +1,11 @@
 <script setup>
 import { ref, computed } from "vue";
 import {
-    createUid,
-    shiftHue,
-    opacity,
     createSmoothPath,
+    createUid,
+    dataLabel as dl,
+    opacity,
+    shiftHue,
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
@@ -271,7 +272,7 @@ const isBar = computed(() => {
                 :font-weight="sparklineConfig.style.dataLabel.bold ? 'bold' : 'normal'"
                 :fill="sparklineConfig.style.dataLabel.color"
             >
-                {{ selectedPlot ? (Number(selectedPlot.absoluteValue.toFixed(sparklineConfig.style.dataLabel.roundingValue))).toLocaleString() : (Number(dataLabel.toFixed(sparklineConfig.style.dataLabel.roundingValue))).toLocaleString() }}
+            {{ selectedPlot ? dl({p: sparklineConfig.style.dataLabel.prefix, v: selectedPlot.absoluteValue, s: sparklineConfig.style.dataLabel.suffix, r: sparklineConfig.style.dataLabel.roundingValue }) : dl({p: sparklineConfig.style.dataLabel.prefix, v: dataLabel, s: sparklineConfig.style.dataLabel.suffix, r: sparklineConfig.style.dataLabel.roundingValue }) }}
             </text>
 
             <!-- MOUSE TRAP -->

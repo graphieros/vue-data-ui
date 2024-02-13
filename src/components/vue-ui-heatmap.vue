@@ -1,6 +1,14 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
-import { opacity, createUid, createCsvContent, downloadCsv, interpolateColorHex, adaptColorToBackground } from "../lib";
+import { 
+    adaptColorToBackground, 
+    createCsvContent, 
+    createUid, 
+    dataLabel,
+    downloadCsv, 
+    interpolateColorHex, 
+    opacity, 
+} from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
@@ -166,7 +174,7 @@ function useTooltip(datapoint) {
     let html = "";
 
     html += `<div data-cy="heatmap-tootlip-name">${yAxisName} ${xAxisName ? `${xAxisName}` : ''}</div>`;
-    html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8;font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : Number(value.toFixed(heatmapConfig.value.style.tooltip.roundingValue)).toLocaleString()}</span></div>`
+    html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8;font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : dataLabel({p:heatmapConfig.value.style.layout.dataLabels.prefix, v: value, s: heatmapConfig.value.style.layout.dataLabels.suffix, r:heatmapConfig.value.style.tooltip.roundingValue })}</span></div>`
     tooltipContent.value = `<div style="font-size:${heatmapConfig.value.style.tooltip.fontSize}px">${html}</div>`;
 }
 
@@ -518,7 +526,7 @@ defineExpose({
                             </td>
                             <td class="vue-ui-data-table__tbody__td"  v-for="(trData, j) in dataset" :data-cell="dataset[j].name" :style="`outline:${heatmapConfig.table.td.outline}`">
                                 <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                    {{ isNaN(trData.values[i]) ? '-' : Number(trData.values[i].toFixed(heatmapConfig.table.td.roundingValue)).toLocaleString() }}
+                                    {{ isNaN(trData.values[i]) ? '-' : dataLabel({p:heatmapConfig.style.layout.dataLabels.prefix, v:trData.values[i], s: heatmapConfig.style.layout.dataLabels.suffix, r: heatmapConfig.table.td.roundingValue}) }}
                                 </div>
                             </td>
                         </tr>

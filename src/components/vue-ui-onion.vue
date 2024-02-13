@@ -1,6 +1,13 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { convertColorToHex, palette, opacity, createUid, createCsvContent, downloadCsv } from "../lib.js";
+import { 
+    convertColorToHex, 
+    palette, 
+    opacity, 
+    createUid, 
+    createCsvContent, 
+    downloadCsv 
+} from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";

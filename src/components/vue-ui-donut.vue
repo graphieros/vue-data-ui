@@ -1,6 +1,18 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, makeDonut, palette, convertColorToHex, opacity, createUid, createCsvContent, downloadCsv } from '../lib';
+import { 
+    calcMarkerOffsetX, 
+    calcMarkerOffsetY, 
+    calcNutArrowPath, 
+    convertColorToHex, 
+    createCsvContent, 
+    createUid, 
+    dataLabel,
+    downloadCsv, 
+    makeDonut, 
+    opacity, 
+    palette, 
+} from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -180,7 +192,7 @@ function useTooltip(arc, i, showTooltip = true) {
     html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${arc.name}</div>`;
     html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${arc.color}"/></svg>`;
     if(donutConfig.value.style.chart.tooltip.showValue) {
-        html += `<b data-cy="donut-tooltip-value">${arc.value.toFixed(donutConfig.value.style.chart.tooltip.roundingValue)}</b>`;
+        html += `<b data-cy="donut-tooltip-value">${ dataLabel({p: donutConfig.value.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: donutConfig.value.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.value.style.chart.tooltip.roundingValue})}</b>`;
     }
     if(donutConfig.value.style.chart.tooltip.showPercentage) {
         if(!donutConfig.value.style.chart.tooltip.showValue) {
@@ -256,18 +268,18 @@ function generateCsv() {
 
 const dataTable = computed(() => {
     const head = [
-        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
-        Number(total.value.toFixed(donutConfig.value.table.td.roundingValue)).toLocaleString(),
+        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`, dataLabel({p: donutConfig.value.style.chart.layout.labels.dataLabels.prefix, v: total.value, s: donutConfig.value.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.value.table.td.roundingValue}),
         '100%'
     ];
 
     const body = table.value.head.map((h,i) => {
+        const label = dataLabel({p: donutConfig.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: donutConfig.value.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.value.table.td.roundingValue});
         return [
             {
                 color: h.color,
                 name: h.name
             },
-            table.value.body[i].toFixed(donutConfig.value.table.td.roundingValue),
+            label,
             isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(donutConfig.value.table.td.roundingPercentage) + '%'
         ]
     });
@@ -481,7 +493,7 @@ defineExpose({
                 :font-size="donutConfig.style.chart.layout.labels.hollow.total.value.fontSize"
                 :style="`font-weight:${donutConfig.style.chart.layout.labels.hollow.total.value.bold ? 'bold': ''}`"
             >
-                {{ donutConfig.style.chart.layout.labels.hollow.total.value.prefix }} {{ Number(total.toFixed(donutConfig.style.chart.layout.labels.hollow.total.value.rounding)).toLocaleString() }} {{ donutConfig.style.chart.layout.labels.hollow.total.value.suffix }}
+                {{ dataLabel({p: donutConfig.style.chart.layout.labels.hollow.total.value.prefix, v: total, s: donutConfig.style.chart.layout.labels.hollow.total.value.suffix}) }}
             </text>
 
             <text 
@@ -533,7 +545,7 @@ defineExpose({
                     :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize"
                     :style="`font-weight:${donutConfig.style.chart.layout.labels.percentage.bold ? 'bold': ''}`"
                 >
-                    {{ displayArcPercentage(arc, currentDonut)  }}
+                    {{ displayArcPercentage(arc, currentDonut)  }} {{ donutConfig.style.chart.layout.labels.value.show ? `(${dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, rounding: donutConfig.style.chart.layout.labels.value.rounding})})` : '' }}
                 </text>
                 <text
                     :data-cy="`donut-datalabel-name-${i}`"
@@ -567,7 +579,7 @@ defineExpose({
                 >
                     <template #item="{legend, index}">
                         <div @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                            {{ legend.name }} : {{ Number(legend.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                            {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
                             <span v-if="!segregated.includes(index)">
                                 ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)
                             </span>
@@ -592,7 +604,7 @@ defineExpose({
         >
             <template #item="{legend, index}">
                 <div @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{ Number(legend.value.toFixed(donutConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                    {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
                     <span v-if="!segregated.includes(index)">
                         ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)
                     </span>

@@ -174,6 +174,10 @@ const config = ref({
         },
       },
     },
+    labels: {
+      prefix: "$",
+      suffix: "£"
+    },
     legend: {
       useDiv: true,
     },
@@ -818,12 +822,18 @@ const radarDataset = ref({
   categories: [
     {
       name: "category 1",
+      prefix: "a",
+      suffix: "b"
     },
     {
       name: "category 2",
+      prefix: "c",
+      suffix: "d"
     },
     {
       name: "category 3",
+      prefix: "e",
+      suffix: "f"
     },
   ],
   series: [
@@ -2261,6 +2271,8 @@ const sparklineConfig = ref({
       color: "#CCCCCC",
       roundingValue: 0,
       valueType: "latest",
+      prefix: "$",
+      suffix: "£"
     },
     title: {
       show: true,
@@ -2382,6 +2394,8 @@ const heatmapConfig = ref({
         },
       },
       dataLabels: {
+        prefix: "$",
+        suffix: "£",
         yAxis: {
           fontSize: 24,
         },
@@ -3103,7 +3117,9 @@ const thermoConfig = ref({
         fontSize: 14,
         rounding: 1,
         bold: true,
-        color: "#FAFAFA"
+        color: "#FAFAFA",
+        prefix: "$",
+        suffix: "£"
       }
     },
     title: {
@@ -3452,6 +3468,14 @@ const histoDataset = ref([
 const ringsConfig = ref({
   style: {
     chart: {
+      layout: {
+        labels: {
+          dataLabels: {
+            prefix: "$",
+            suffix: "£"
+          }
+        }
+      },
       title: {
         text: "Title",
         subtitle: {
@@ -4612,6 +4636,14 @@ const moodRadarConfig = ref({
             :config="{
               style: {
                 chart: {
+                  layout: {
+                    labels: {
+                      dataLabels: {
+                        prefix: '$',
+                        suffix: '£'
+                      }
+                    }
+                  },
                   title: {
                     text: 'Title',
                     subtitle: {
@@ -4868,7 +4900,7 @@ const moodRadarConfig = ref({
           <WaffleTest
             ref="waffletest"
             :dataset="donutDataset"
-            :config="{useBlurOnHover: true, style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
+            :config="{useBlurOnHover: true, style:{chart:{layout:{labels:{dataLabels:{prefix: '$', suffix: '£'}}},title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
             @selectLegend="selectLegendWaffle"
           >
           <template #svg="{ svg }">

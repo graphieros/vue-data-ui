@@ -915,6 +915,20 @@ export function interpolateColorHex(minColor, maxColor, minValue, maxValue, valu
     return finalHexColor;
 }
 
+/**
+ * @typedef DataLabel
+ * @type {object}
+ * @property {string=} p - prefix
+ * @property {(number|string)} v - value
+ * @property {string=} s - suffix
+ * @property {number=} r - rounding
+ * @property {boolean=} space  - space between elements
+ * @type {DataLabel}
+ */
+export function dataLabel({p = '', v, s = '', r = 0, space = false}) {
+    return `${p ?? ''}${space ? ' ': ''}${[undefined, null].includes(v) ? '-' : Number(Number(v).toFixed(r).toLocaleString())}${space ? ' ' : ''}${s ?? ''}`
+}
+
 const lib = {
     adaptColorToBackground,
     addVector,
@@ -935,6 +949,7 @@ const lib = {
     createSmoothPath,
     createStar,
     createUid,
+    dataLabel,
     degreesToRadians,
     degreesToRadians,
     downloadCsv,

@@ -1,6 +1,17 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { palette, createPolygonPath, shiftHue, opacity, convertColorToHex, makePath, createUid, createCsvContent, downloadCsv } from "../lib";
+import { 
+    convertColorToHex, 
+    createCsvContent, 
+    createPolygonPath, 
+    createUid, 
+    dataLabel,
+    downloadCsv,
+    makePath, 
+    opacity, 
+    palette, 
+    shiftHue, 
+} from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -115,6 +126,8 @@ const datasetCopy = computed(() => {
             name: c.name,
             categoryId: `radar_category_${uid.value}_${i}`,
             color: convertColorToHex(c.color) || palette[i] || palette[i % palette.length],
+            prefix: c.prefix ?? '',
+            suffix: c.suffix ?? ''
         }
     });
 });
@@ -252,8 +265,8 @@ const dataTable = computed(() => {
         return [
             ds.name,
             ds.target,
-            ...ds.values.map(v => {
-                return `${![null, undefined].includes(v) ? v.toFixed(radarConfig.value.table.td.roundingPercentage) : '-'} (${isNaN(v / ds.target) ? '' : (v / ds.target * 100).toFixed(radarConfig.value.table.td.roundingPercentage)}%)`
+            ...ds.values.map((v, i) => {
+                return `${dataLabel({p: datasetCopy.value[i].prefix, v, s: datasetCopy.value[i].suffix, r:radarConfig.value.table.td.roundingValue})} (${isNaN(v / ds.target) ? '' : (v / ds.target * 100).toFixed(radarConfig.value.table.td.roundingPercentage)}%)`
             })
         ]
     });
@@ -290,7 +303,7 @@ function useTooltip(apex, i) {
                 value: apex.values[k] / apex.target * 100,
                 color: datasetCopy.value[k].color,
                 suffix: '%)',
-                prefix: `${apex.values[k].toFixed(radarConfig.value.style.chart.tooltip.roundingValue)} (`,
+                prefix: `${dataLabel({p: datasetCopy.value[k].prefix ?? '',v:apex.values[k],s:datasetCopy.value[k].suffix ?? '', r:radarConfig.value.style.chart.tooltip.roundingValue})} (`,
                 rounding: radarConfig.value.style.chart.tooltip.roundingPercentage
             })
         }

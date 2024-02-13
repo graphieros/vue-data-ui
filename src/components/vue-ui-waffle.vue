@@ -1,6 +1,15 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { palette, shiftHue, opacity, convertColorToHex, createUid, createCsvContent, downloadCsv } from "../lib";
+import { 
+    convertColorToHex,
+    createCsvContent,
+    createUid, 
+    dataLabel,
+    downloadCsv,
+    opacity,
+    palette,
+    shiftHue,
+} from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -242,7 +251,7 @@ function useTooltip(index) {
     html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
     html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" rx="1" fill="${selected.color}" /></svg>`;
     if(waffleConfig.value.style.chart.tooltip.showValue) {
-        html += `<b data-cy="waffle-tooltip-value">${selected.value.toFixed(waffleConfig.value.style.chart.tooltip.roundingValue)}</b>`;
+        html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:waffleConfig.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s: waffleConfig.value.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.value.style.chart.tooltip.roundingValue})}</b>`;
     }
     if(waffleConfig.value.style.chart.tooltip.showPercentage) {
         if(!waffleConfig.value.style.chart.tooltip.showValue) {
@@ -339,7 +348,7 @@ function generateCsv() {
 const dataTable = computed(() => {
     const head = [
         ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
-        Number(total.value.toFixed(waffleConfig.value.table.td.roundingValue)).toLocaleString(),
+        dataLabel({p:waffleConfig.value.style.chart.layout.labels.dataLabels.prefix, v:total.value, s: waffleConfig.value.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.value.table.td.roundingValue}),
         '100%'
     ];
 
@@ -349,7 +358,7 @@ const dataTable = computed(() => {
                 color: h.color,
                 name: h.name
             },
-            table.value.body[i].toFixed(waffleConfig.value.table.td.roundingValue),
+            dataLabel({p:waffleConfig.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s:waffleConfig.value.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.value.table.td.roundingValue }),
             isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(waffleConfig.value.table.td.roundingPercentage) + '%'
         ]
     });
@@ -542,7 +551,7 @@ defineExpose({
                 >
                     <template #item="{ legend }">
                         <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                            {{ legend.name }} : {{ Number(legend.value.toFixed(waffleConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                            {{ legend.name }} : {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue}) }}
                             <span v-if="!segregated.includes(legend.uid)">
                                 ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)
                             </span>
@@ -565,7 +574,7 @@ defineExpose({
         >
             <template #item="{ legend }">
                 <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{ Number(legend.value.toFixed(waffleConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                    {{ legend.name }} : {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue}) }}
                     <span v-if="!segregated.includes(legend.uid)">
                         ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)
                     </span>

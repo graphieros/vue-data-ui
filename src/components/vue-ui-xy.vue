@@ -312,7 +312,7 @@
                                 :font-size="chartConfig.chart.labels.fontSize"
                                 :fill="chartConfig.bar.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? plot.value.toFixed(chartConfig.bar.labels.rounding) : '' }}
+                                {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.bar.labels.rounding}) : '' }}
                             </text>
                         </g>
                     </g>
@@ -331,7 +331,7 @@
                                 :font-size="chartConfig.chart.labels.fontSize"
                                 :fill="chartConfig.plot.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? Number(plot.value.toFixed(chartConfig.plot.labels.rounding)).toLocaleString() : '' }}
+                                {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.plot.labels.rounding}) : '' }}
                             </text>
                             <foreignObject
                                 :data-cy="`xy-plot-tag-start-${i}`"
@@ -376,7 +376,7 @@
                                 :font-size="chartConfig.chart.labels.fontSize"
                                 :fill="chartConfig.line.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? Number(plot.value.toFixed(chartConfig.line.labels.rounding)).toLocaleString() : '' }}
+                                {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.line.labels.rounding}) : '' }}
                             </text>
                             <foreignObject
                                 :data-cy="`xy-line-tag-start-${i}`"
@@ -471,7 +471,7 @@
                             text-anchor="end"
                             :fill="chartConfig.chart.grid.labels.color"
                         >
-                            {{ canShowValue(yLabel.value) ? Number(yLabel.value.toFixed(0)).toLocaleString() : '' }}
+                            {{ canShowValue(yLabel.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: yLabel.value, s: chartConfig.chart.labels.suffix, r: 1}) : '' }}
                         </text>
                     </g>
                 </g>
@@ -560,7 +560,7 @@
                             :data-cy="`xy-time-label-${i}`"
                             v-if="(label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1)) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i)"
                             text-anchor="middle"
-                            :y="drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3"
+                            :y="drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3 + chartConfig.chart.grid.labels.xAxisLabels.yOffset"
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
                             :font-size="chartConfig.chart.grid.labels.xAxisLabels.fontSize"
                             :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
@@ -572,7 +572,7 @@
 
                 <!-- TOOLTIP TRAPS -->
                 <g v-if="chartConfig.chart.tooltip.show">
-                    <g v-for="(trap, i) in maxSeries" :key="`tooltip_trap_${i}`">
+                    <g v-for="(_, i) in maxSeries" :key="`tooltip_trap_${i}`">
                         <rect
                             :data-cy="`xy-tooltip-trap-${i}`"
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
@@ -673,24 +673,25 @@ import pdf from '../pdf';
 import img from "../img";
 import { useMouse } from '../useMouse';
 import { 
-    treeShake, 
-    isSafeValue, 
-    checkNaN, 
-    palette, 
-    shiftHue, 
-    opacity, 
-    convertColorToHex, 
-    convertConfigColors,
     adaptColorToBackground,
     calcLinearProgression,
+    calculateNiceScale,
+    checkNaN, 
+    closestDecimal,
+    convertColorToHex, 
+    convertConfigColors,
+    createCsvContent,
+    createPolygonPath,
     createSmoothPath,
     createStar,
-    createPolygonPath,
     createUid,
-    closestDecimal,
-    createCsvContent,
+    dataLabel,
     downloadCsv,
-    calculateNiceScale
+    isSafeValue, 
+    opacity, 
+    palette, 
+    shiftHue, 
+    treeShake, 
 } from '../lib';
 import mainConfig from "../default_configs.json";
 import DataTable from "../atoms/DataTable.vue";
@@ -1059,7 +1060,7 @@ export default {
                         default:
                             break;
                     }
-                    html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? Number(s.value.toFixed(this.chartConfig.chart.tooltip.roundingValue)).toLocaleString() : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                    html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? this.dataLabel({p:this.chartConfig.chart.labels.prefix, v: s.value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.chart.tooltip.roundingValue}) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
                 }
             });
             return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
@@ -1228,6 +1229,7 @@ export default {
         calcLinearProgression,
         useMouse,
         closestDecimal,
+        dataLabel,
         createArea(plots) {
             const start = { x: plots[0].x, y: this.zero };
             const end = { x: plots.at(-1).x, y: this.zero };
@@ -1436,7 +1438,7 @@ export default {
             this.CTX.font = `${this.chartConfig.chart.labels.fontSize}px ${this.chartFont}`;
             this.CTX.textAlign = "center";
             this.CTX.fillStyle = this.chartConfig.bar.labels.color;
-            this.CTX.fillText(this.canShowValue(value) ? value.toFixed(this.chartConfig.bar.labels.rounding) : '', x + this.calcRectWidth() * 1.1, y + (value > 0 ? this.chartConfig.bar.labels.offsetY : - this.chartConfig.bar.labels.offsetY * 3));
+            this.CTX.fillText(this.canShowValue(value) ? this.dataLabel({p: this.chartConfig.chart.labels.prefix, v: value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.bar.labels.rounding}) : '', x + this.calcRectWidth() * 1.1, y + (value > 0 ? this.chartConfig.bar.labels.offsetY : - this.chartConfig.bar.labels.offsetY * 3));
             this.CTX.restore();
         },
         drawLineXLabels({x, y, value }) {
@@ -1444,7 +1446,7 @@ export default {
             this.CTX.font = `${this.chartConfig.chart.labels.fontSize}px ${this.chartFont}`;
             this.CTX.textAlign = "center";
             this.CTX.fillStyle = this.chartConfig.line.labels.color;
-            this.CTX.fillText(this.canShowValue(value) ? value.toFixed(this.chartConfig.line.labels.rounding) : '', x, y + (value > 0 ? this.chartConfig.line.labels.offsetY : - this.chartConfig.line.labels.offsetY * 3));
+            this.CTX.fillText(this.canShowValue(value) ? this.dataLabel({p: this.chartConfig.chart.labels.prefix, v: value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.line.labels.rounding}): '', x, y + (value > 0 ? this.chartConfig.line.labels.offsetY : - this.chartConfig.line.labels.offsetY * 3));
             this.CTX.restore();
         },
         drawPlotXLabels({x, y, value }) {
@@ -1452,7 +1454,7 @@ export default {
             this.CTX.font = `${this.chartConfig.chart.labels.fontSize}px ${this.chartFont}`;
             this.CTX.textAlign = "center";
             this.CTX.fillStyle = this.chartConfig.plot.labels.color;
-            this.CTX.fillText(this.canShowValue(value) ? value.toFixed(this.chartConfig.plot.labels.rounding) : '', x, y + (value > 0 ? this.chartConfig.plot.labels.offsetY : - this.chartConfig.plot.labels.offsetY * 3));
+            this.CTX.fillText(this.canShowValue(value) ? this.dataLabel({p: this.chartConfig.chart.labels.prefix, v: value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.plot.labels.rounding}) : '', x, y + (value > 0 ? this.chartConfig.plot.labels.offsetY : - this.chartConfig.plot.labels.offsetY * 3));
             this.CTX.restore();
         },
         drawCanvasPlots() {
@@ -1675,7 +1677,7 @@ export default {
                 this.CTX.fillStyle = this.chartConfig.chart.grid.labels.color;
                 this.CTX.textAlign = "right";
                 this.CTX.fillText(
-                    `${this.canShowValue(yLabel.value) ? Number(yLabel.value.toFixed(0)).toLocaleString() : ''}`,
+                    `${this.canShowValue(yLabel.value) ? this.dataLabel({p: this.chartConfig.chart.labels.prefix, v: yLabel.value, s: this.chartConfig.chart.labels.suffix, r: 1}) : ''}`,
                     this.drawingArea.left - 7,
                     yLabel.y + this.chartConfig.chart.labels.fontSize / 3
                 );

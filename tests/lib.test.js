@@ -17,6 +17,7 @@ import {
     createPolygonPath,
     createSmoothPath,
     createStar,
+    dataLabel,
     degreesToRadians,
     hslToRgb,
     interpolateColorHex,
@@ -683,5 +684,26 @@ describe('interpolateColorHex', () => {
         expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 80)).toBe('#cc0033')
         expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 90)).toBe('#e6001a')
         expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 100)).toBe('#ff0000')
+    })
+})
+
+describe('dataLabel', () => {
+    test('returns a formatted dataLabel with defaults', () => {
+        expect(dataLabel({v:1})).toBe('1');
+        expect(dataLabel({v: 1.1})).toBe('1');
+        expect(dataLabel({v: 1.9})).toBe('2');
+    });
+    test('returns a formatted dataLabel with rounding', () => {
+        expect(dataLabel({v: 1, r: 1})).toBe('1');
+        expect(dataLabel({v: 1.1, r: 1})).toBe('1.1');
+        expect(dataLabel({v: 1.96, r: 1})).toBe('2');
+    });
+    test('returns a formatted dataLabel with prefix and suffix', () => {
+        expect(dataLabel({p: '$', v: 1, s: '$'})).toBe('$1$');
+        expect(dataLabel({p:'$', v: 1.1, s:'$', r: 1})).toBe('$1.1$');
+    });
+    test('returns a formatted dataLabel with spaced prefix and suffix', () => {
+        expect(dataLabel({p: '$', v: 1, s: '$', space: true})).toBe('$ 1 $')
+        expect(dataLabel({p: '$', v: 1.1, s: '$', r: 1, space: true})).toBe('$ 1.1 $')
     })
 })

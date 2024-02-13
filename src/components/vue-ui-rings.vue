@@ -1,13 +1,14 @@
 <script setup>
 import { computed, ref, nextTick } from "vue";
 import {
-  palette,
   convertColorToHex,
-  opacity,
-  createUid,
-  shiftHue,
   createCsvContent,
-  downloadCsv
+  createUid,
+  dataLabel,
+  downloadCsv,
+  opacity,
+  palette,
+  shiftHue,
 } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
@@ -195,9 +196,7 @@ function useTooltip(index) {
 
   html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="waffle-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${selected.color}" /></svg>`;
   if (ringsConfig.value.style.chart.tooltip.showValue) {
-    html += `<b data-cy="waffle-tooltip-value">${selected.value.toFixed(
-      ringsConfig.value.style.chart.tooltip.roundingValue
-    )}</b>`;
+    html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:ringsConfig.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s:ringsConfig.value.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.value.style.chart.tooltip.roundingValue})}</b>`;
   }
   if (ringsConfig.value.style.chart.tooltip.showPercentage) {
     if (!ringsConfig.value.style.chart.tooltip.showValue) {
@@ -270,7 +269,7 @@ const table = computed(() => {
 const dataTable = computed(() => {
     const head = [
         ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
-        Number(grandTotal.value.toFixed(ringsConfig.value.table.td.roundingValue)).toLocaleString(),
+        dataLabel({p: ringsConfig.value.style.chart.layout.labels.dataLabels.prefix, v: grandTotal.value, s: ringsConfig.value.style.chart.layout.labels.dataLabels.suffix, r: ringsConfig.value.table.td.roundingValue}),
         '100%'
     ];
 
@@ -280,7 +279,7 @@ const dataTable = computed(() => {
                 color: h.color,
                 name: h.name
             },
-            table.value.body[i].toFixed(ringsConfig.value.table.td.roundingValue),
+            dataLabel({p: ringsConfig.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: ringsConfig.value.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.value.table.td.roundingValue}),
             isNaN(table.value.body[i] / grandTotal.value) ? "-" : (table.value.body[i] / grandTotal.value * 100).toFixed(ringsConfig.value.table.td.roundingPercentage) + '%'
         ]
     });
@@ -499,7 +498,7 @@ defineExpose({
     >
       <template #item="{legend}">
           <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-              {{ legend.name }} : {{ Number(legend.value.toFixed(ringsConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+              {{ legend.name }} : {{ dataLabel({p:ringsConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: ringsConfig.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.style.chart.legend.roundingValue}) }}
               <span v-if="!segregated.includes(legend.uid)">
                   ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(ringsConfig.style.chart.legend.roundingPercentage)}}%)
               </span>

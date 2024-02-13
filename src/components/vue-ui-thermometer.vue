@@ -1,6 +1,12 @@
 <script setup>
 import { ref, computed } from "vue";
-import { palette, convertColorToHex, opacity, createUid } from "../lib.js";
+import { 
+    convertColorToHex, 
+    createUid, 
+    dataLabel,
+    opacity, 
+    palette, 
+} from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -67,7 +73,6 @@ function setPaddingTop() {
 function generateColorRange(startColor, endColor, steps) {
   const colors = [];
 
-  // Parse the start and end colors
   const start = parseColor(startColor);
   const end = parseColor(endColor);
 
@@ -450,7 +455,7 @@ defineExpose({
                 :font-size="thermoConfig.style.chart.label.fontSize"
                 :font-weight="thermoConfig.style.chart.label.bold ? 'bold' : 'normal'"
             >
-                {{ isNaN(dataset.value) ? '' : Number(dataset.value.toFixed(thermoConfig.style.chart.label.rounding)).toLocaleString() }}
+                {{ dataLabel({p: thermoConfig.style.chart.label.prefix, v: dataset.value, s: thermoConfig.style.chart.label.suffix, r: thermoConfig.style.chart.label.rounding}) }}
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>

@@ -30,7 +30,7 @@ describe('<VueUiThermometer />', () => {
       cy.get(`[data-cy="thermometer-datalabel"]`).then(($label) => {
         cy.wrap($label)
           .should('exist')
-          .contains(Number(fixture.dataset.value.toFixed(fixture.config.style.chart.label.rounding)).toLocaleString());
+          .contains(30.8);
 
         cy.wrap($label)
           .invoke('attr', 'fill')
