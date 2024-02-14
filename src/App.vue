@@ -48,6 +48,7 @@ import DigitsTest from "./components/vue-ui-digits.vue";
 import MoleculeTest from './components/vue-ui-molecule.vue';
 import DonutEvolutionTest from "./components/vue-ui-donut-evolution.vue";
 import TableSparklineTest from "./components/vue-ui-table-sparkline.vue";
+import MiniLoaderTest from "./components/vue-ui-mini-loader.vue";
 
 const dataset = ref([
   {
@@ -3831,6 +3832,28 @@ const moodRadarConfig = ref({
     },
   ])
 
+  const miniLoaderConfig = ref({
+    type: "bar",
+    onion: {
+      gutterColor: "#CCCCCC",
+      gutterOpacity: 0.3,
+      gutterBlur: 0.2,
+      trackHueRotate: 360,
+      trackBlur: 2,
+      trackColor: "#42d392"
+    },
+    line: {
+      color: "#42d392",
+      blur: 1,
+      hueRotate: 360
+    },
+    bar: {
+      color: "#42d392",
+      blur: 1,
+      hueRotate: 360
+    }
+  })
+
 </script>
 
 <template>
@@ -3929,6 +3952,24 @@ const moodRadarConfig = ref({
 
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_mini_loader)">
+        <template #title>
+          <!-- <BaseIcon name="chartTable"/> -->
+          VueUiMiniLoader
+        </template>
+        <template #info>
+        </template>
+        <template #dev>
+          <MiniLoaderTest :config="miniLoaderConfig" />
+        </template>
+        <!-- <template #prod>
+          <VueUiTableSparkline :dataset="tableSparklineDataset"/>
+        </template> -->
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_mini_loader }}
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_table_sparkline)">

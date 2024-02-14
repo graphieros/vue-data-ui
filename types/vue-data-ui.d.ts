@@ -5,6 +5,32 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiMiniLoaderConfig = {
+        type?: "line" | "bar" | "onion";
+        onion?: {
+            gutterColor?: string;
+            gutterOpacity?: number;
+            gutterBlur?: number;
+            trackHueRotate?: number;
+            trackBlur?: number;
+            trackColor?: string;
+        };
+        line?: {
+            color?: string;
+            blur?: number;
+            hueRotate?: number;
+        };
+        bar?: {
+            color?: string;
+            blur?: number;
+            hueRotate?: number;
+        }
+    }
+
+    export const VueUiMiniLoader: DefineComponent<{
+        config?: VueUiMiniLoaderConfig;
+    }>
+
     export const Arrow: DefineComponent<{
         markerEnd?: boolean,
         markerSize?: number,

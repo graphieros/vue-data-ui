@@ -3080,5 +3080,26 @@
         "userOptions": {
             "show": true
         }
+    },
+    "vue_ui_mini_loader": {
+        "type": "onion",
+        "onion": {
+            "gutterColor": "#CCCCCC",
+            "gutterOpacity": 0,
+            "gutterBlur": 0,
+            "trackHueRotate": 20,
+            "trackBlur": 5,
+            "trackColor": "#42d392"
+        },
+        "line": {
+            "color": "#42d392",
+            "blur": 1,
+            "hueRotate": 20
+        },
+        "bar": {
+            "color": "#42d392",
+            "blur": 1,
+            "hueRotate": 20
+        }
     }
 }
