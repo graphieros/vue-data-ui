@@ -3964,9 +3964,9 @@ const moodRadarConfig = ref({
         <template #dev>
           <MiniLoaderTest :config="miniLoaderConfig" />
         </template>
-        <!-- <template #prod>
-          <VueUiTableSparkline :dataset="tableSparklineDataset"/>
-        </template> -->
+        <template #prod>
+          <VueUiMiniLoader :config="miniLoaderConfig" />
+        </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_mini_loader }}
         </template>
