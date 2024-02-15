@@ -16,14 +16,20 @@ declare module 'vue-data-ui' {
             trackColor?: string;
         };
         line?: {
-            color?: string;
-            blur?: number;
-            hueRotate?: number;
+            gutterColor?: string;
+            gutterOpacity?: number;
+            gutterBlur?: number;
+            trackHueRotate?: number;
+            trackBlur?: number;
+            trackColor?: string;
         };
         bar?: {
-            color?: string;
-            blur?: number;
-            hueRotate?: number;
+            gutterColor?: string;
+            gutterOpacity?: number;
+            gutterBlur?: number;
+            trackHueRotate?: number;
+            trackBlur?: number;
+            trackColor?: string;
         }
     }
 

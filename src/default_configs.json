@@ -3085,21 +3085,27 @@
         "type": "onion",
         "onion": {
             "gutterColor": "#CCCCCC",
-            "gutterOpacity": 0,
+            "gutterOpacity": 0.3,
             "gutterBlur": 0,
             "trackHueRotate": 20,
-            "trackBlur": 5,
+            "trackBlur": 1,
             "trackColor": "#42d392"
         },
         "line": {
-            "color": "#42d392",
-            "blur": 1,
-            "hueRotate": 20
+            "gutterColor": "#CCCCCC",
+            "gutterOpacity": 0.3,
+            "gutterBlur": 0,
+            "trackHueRotate": 20,
+            "trackBlur": 1,
+            "trackColor": "#42d392"
         },
         "bar": {
-            "color": "#42d392",
-            "blur": 1,
-            "hueRotate": 20
+            "gutterColor": "#CCCCCC",
+            "gutterOpacity": 0.3,
+            "gutterBlur": 0,
+            "trackHueRotate": 20,
+            "trackBlur": 1,
+            "trackColor": "#42d392"
         }
     }
 }

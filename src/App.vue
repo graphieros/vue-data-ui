@@ -3833,24 +3833,30 @@ const moodRadarConfig = ref({
   ])
 
   const miniLoaderConfig = ref({
-    type: "bar",
+    type: "line",
     onion: {
       gutterColor: "#CCCCCC",
       gutterOpacity: 0.3,
       gutterBlur: 0.2,
       trackHueRotate: 360,
-      trackBlur: 2,
+      trackBlur: 1,
       trackColor: "#42d392"
     },
     line: {
-      color: "#42d392",
-      blur: 1,
-      hueRotate: 360
+      gutterColor: "#CCCCCC",
+      gutterOpacity: 0.3,
+      gutterBlur: 0,
+      trackHueRotate: 360,
+      trackBlur: 1,
+      trackColor: "#42d392"
     },
     bar: {
-      color: "#42d392",
-      blur: 1,
-      hueRotate: 360
+      gutterColor: "#CCCCCC",
+      gutterOpacity: 0.3,
+      gutterBlur: 0.2,
+      trackHueRotate: 360,
+      trackBlur: 1,
+      trackColor: "#42d392"
     }
   })
 
