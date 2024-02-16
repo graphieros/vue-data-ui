@@ -39,7 +39,7 @@ import {
     VueUiMolecule,
     VueUiTableSparkline,
     Arrow,
-    VueUiMiniLoader
+    VueUiMiniLoader,
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 

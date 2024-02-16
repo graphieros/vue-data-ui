@@ -36,6 +36,7 @@ import VueUiMolecule from "./components/vue-ui-molecule.vue";
 import VueUiTableSparkline from "./components/vue-ui-table-sparkline.vue";
 import Arrow from "./atoms/Arrow.vue"
 import VueUiMiniLoader from "./components/vue-ui-mini-loader.vue";
+import getVueDataUiConfig from "./getVueDataUiConfig";
 
 export { 
     VueUiXy, 
@@ -75,5 +76,6 @@ export {
     VueUiMolecule,
     VueUiTableSparkline,
     Arrow,
-    VueUiMiniLoader
+    VueUiMiniLoader,
+    getVueDataUiConfig
 };
