@@ -90,11 +90,9 @@ describe('<VueUiRelationCircle />', () => {
 
       cy.get(`[data-cy="user-options-summary"]`).click();
       cy.get(`[data-cy="user-options-pdf"]`).click();
-      cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);
 
       cy.get(`[data-cy="user-options-img"]`).click();
-      cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.png`);
 
       cy.get(`[data-cy="user-options-summary"]`).click();

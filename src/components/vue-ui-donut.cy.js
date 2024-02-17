@@ -10,7 +10,7 @@ describe('<VueUiDonut />', () => {
       }
     })
     cy.fixture('donut.json').as('fixture');
-    cy.viewport(1000, 1100);
+
   });
 
   function updateConfigInFixture(modifiedConfig) {
@@ -20,7 +20,44 @@ describe('<VueUiDonut />', () => {
     });
   }
 
+  it('highlights a series on hover and displays tooltip', () => {
+    cy.viewport(1000, 850);
+    cy.get('@fixture').then((fixture) => {
+      cy.mount(VueUiDonut, {
+        props: {
+          dataset: fixture.dataset,
+          config: fixture.config
+        }
+      });
+
+      const sortedDataset = fixture.dataset.toSorted((a,b) => b.values.reduce((x,y) => x + y, 0) - a.values.reduce((x, y) => x + y, 0))
+
+      cy.get('[data-cy="donut-trap-0"]').trigger('mouseenter', { force: true})
+      cy.get('[data-cy="tooltip"]').should('be.visible').contains(sortedDataset[0].name)
+    })
+  })
+
+  it('segregates series on legend click', () => {
+    cy.viewport(1000, 850);
+    cy.get('@fixture').then((fixture) => {
+      cy.mount(VueUiDonut, {
+        props: {
+          dataset: fixture.dataset,
+          config: fixture.config
+        }
+      });
+
+      const sortedDataset = fixture.dataset.toSorted((a,b) => b.values.reduce((x,y) => x + y, 0) - a.values.reduce((x, y) => x + y, 0))
+
+      cy.get('[data-cy="legend-item-0"]').click()
+      cy.get('[data-cy-donut-trap]').should('have.length', sortedDataset.length - 1)
+      cy.get('[data-cy="legend-item-0"]').click()
+      cy.get('[data-cy-donut-trap]').should('have.length', sortedDataset.length)
+    })
+  })
+
   it('renders with different config attributes', function () {
+    cy.viewport(1000, 1100);
     cy.get('@fixture').then((fixture) => {
       cy.mount(VueUiDonut, {
         props: {
@@ -139,13 +176,10 @@ describe('<VueUiDonut />', () => {
       });
 
       cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
-      cy.wait(5000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
       cy.get(`[data-cy="user-options-xls"]`).click({ force: true});
-      cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.csv`);
       cy.get(`[data-cy="user-options-img"]`).click({ force: true});
-      cy.wait(3000);
       cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
       cy.clearDownloads();
     });

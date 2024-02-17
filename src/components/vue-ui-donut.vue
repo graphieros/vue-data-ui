@@ -459,6 +459,7 @@ defineExpose({
             <path 
                 v-for="(arc, i) in currentDonut"
                 :data-cy="`donut-trap-${i}`"
+                data-cy-donut-trap
                 :d="arc.arcSlice" 
                 :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
                 @mouseenter="useTooltip(arc, i, true)"
@@ -603,7 +604,7 @@ defineExpose({
             @clickMarker="({i}) => segregate(i)"
         >
             <template #item="{legend, index}">
-                <div @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                <div :data-cy="`legend-item-${index}`" @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
                     <span v-if="!segregated.includes(index)">
                         ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)

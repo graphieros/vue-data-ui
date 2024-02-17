@@ -1,6 +1,6 @@
 import VueUiRating from './vue-ui-rating.vue'
 
-describe('<VueUiDonut />', () => {
+describe('<VueUiRating />', () => {
   beforeEach(function () {
     cy.fixture('rating.json').as('fixture');
     cy.viewport(800, 160);
