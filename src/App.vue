@@ -2496,7 +2496,7 @@ const moodRadarConfig = ref({
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_mini_loader)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_mini_loader)">
         <template #title>
           <!-- <BaseIcon name="chartTable"/> -->
           VueUiMiniLoader
@@ -2887,7 +2887,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
         <template #title>
           <BaseIcon name="chartLine" />
           VueUiXy
@@ -3625,7 +3625,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
         <template #title>
           <BaseIcon name="chartHeatmap"/>
           VueUiHeatmap

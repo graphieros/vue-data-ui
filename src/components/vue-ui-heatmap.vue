@@ -103,6 +103,9 @@ const drawingArea = computed(() => {
     }
 });
 
+const sideLegendHeight = computed(() => {
+    return drawingArea.value.height - (heatmapConfig.value.style.layout.padding.top - heatmapConfig.value.style.layout.padding.bottom)
+})
 
 
 const maxValue = computed(() => {
@@ -167,9 +170,12 @@ const mutableDataset = computed(() => {
     })
 });
 
+const hoveredValue = ref(null);
+
 function useTooltip(datapoint) {
     const { value, yAxisName, xAxisName,id } = datapoint;
     hoveredCell.value = id;
+    hoveredValue.value = value;
     isTooltip.value = true;
     let html = "";
 
@@ -177,6 +183,10 @@ function useTooltip(datapoint) {
     html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8;font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : dataLabel({p:heatmapConfig.value.style.layout.dataLabels.prefix, v: value, s: heatmapConfig.value.style.layout.dataLabels.suffix, r:heatmapConfig.value.style.tooltip.roundingValue })}</span></div>`
     tooltipContent.value = `<div style="font-size:${heatmapConfig.value.style.tooltip.fontSize}px">${html}</div>`;
 }
+
+const sideLegendIndicatorY = computed(() => {
+    return drawingArea.value.top + (sideLegendHeight.value * (1 - hoveredValue.value / maxValue.value))
+})
 
 const __to__ = ref(null);
 
@@ -381,7 +391,7 @@ defineExpose({
                         fill="transparent"
                         stroke="none"
                         @mouseover="useTooltip(cell)"
-                        @mouseout="isTooltip = false; hoveredCell = undefined"
+                        @mouseout="isTooltip = false; hoveredCell = undefined; hoveredValue = null"
                     />
                 </g>
                 <g v-if="heatmapConfig.style.layout.dataLabels.yAxis.show">
@@ -430,19 +440,21 @@ defineExpose({
                     :x="drawingArea.right + 36"
                     :y="drawingArea.top"
                     :width="36"
-                    :height="drawingArea.height - 12"
+                    :height="sideLegendHeight"
                     :rx="heatmapConfig.style.legend.scaleBorderRadius"
                     fill="url(#colorScaleVertical)"
                 />
                 <text
                     :x="drawingArea.right + 36 + 18"
-                    :y="drawingArea.bottom + heatmapConfig.style.legend.fontSize * 2"
+                    :y="drawingArea.bottom + heatmapConfig.style.legend.fontSize"
                     text-anchor="middle"
                     :font-size="heatmapConfig.style.legend.fontSize * 2"
                     :fill="heatmapConfig.style.legend.color"
                 >
                     {{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}
                 </text>
+                <line v-if="hoveredValue !== null" :stroke="heatmapConfig.style.backgroundColor" stroke-width="2" :x1="drawingArea.right + 36" :x2="drawingArea.right + 72" :y1="sideLegendIndicatorY" :y2="sideLegendIndicatorY" />
+                <path v-if="hoveredValue !== null" :fill="heatmapConfig.style.color" stroke="none" :d="`M ${drawingArea.right + 36},${sideLegendIndicatorY} ${drawingArea.right + 26},${sideLegendIndicatorY - 8} ${drawingArea.right + 26},${sideLegendIndicatorY + 8}z`" />
             </g>
 
             <!-- LEGEND AS G -->
