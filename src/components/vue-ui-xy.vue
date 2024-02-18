@@ -651,7 +651,15 @@
 
         <!-- DATA TABLE -->
         <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
+        <div style="display: flex; flex-direction:row; gap: 6px; align-items:center; padding-left: 6px" data-html2canvas-ignore>
+            <input type="checkbox" v-model="showSparklineTable">
+            <div @click="showSparklineTable = !showSparklineTable" style="cursor: pointer">
+                <BaseIcon name="chartLine" :size="20" :stroke="chartConfig.chart.color"/>
+            </div>
+        </div>
+            <TableSparkline v-if="showSparklineTable" :dataset="tableSparklineDataset" :config="tableSparklineConfig"/>
             <DataTable 
+                v-else
                 :colNames="dataTable.colNames"
                 :head="dataTable.head"
                 :body="dataTable.body"
@@ -701,6 +709,7 @@ import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Shape from "../atoms/Shape.vue";
 import BaseIcon from '../atoms/BaseIcon.vue';
+import TableSparkline from "./vue-ui-table-sparkline.vue";
 
 const uid = createUid();
 
@@ -726,7 +735,8 @@ export default {
     Title,
     Tooltip,
     UserOptions,
-    BaseIcon
+    BaseIcon,
+    TableSparkline
 },
     data(){
         const uniqueId = uid;
@@ -735,6 +745,8 @@ export default {
             start: 0,
             end: maxX,
         }
+        const showSparklineTable = this.config.table.sparkline || true;
+
         return {
             CTX: null,
             CANVAS: null,
@@ -775,7 +787,8 @@ export default {
             step: 0,
             slicer,
             __to__: null,
-            maxX
+            maxX,
+            showSparklineTable
         }
     },
     computed: {
@@ -836,6 +849,53 @@ export default {
                     color: this.convertColorToHex(datapoint.color ? datapoint.color : this.palette[i]),
                 }
             }).filter(s => !this.segregatedSeries.includes(s.id));
+        },
+        tableSparklineDataset() {
+            return this.relativeDataset.map(ds => {
+                return {
+                    id: ds.id,
+                    name: ds.name,
+                    color: ds.color,
+                    values: ds.absoluteValues.slice(this.slicer.start, this.slicer.end),
+                }
+            })
+        },
+        tableSparklineConfig() {
+            return {
+                responsiveBreakpoint: this.chartConfig.table.responsiveBreakpoint,
+                roundingAverage: this.chartConfig.table.rounding,
+                roundingMedian: this.chartConfig.table.rounding,
+                roundingValues: this.chartConfig.table.rounding,
+                roundingTotal: this.chartConfig.table.rounding,
+                fontFamily: this.chartConfig.chart.fontFamily,
+                colNames: this.chartConfig.chart.grid.labels.xAxisLabels.values,
+                title: {
+                    backgroundColor: this.chartConfig.chart.backgroundColor,
+                    text: this.chartConfig.chart.title.text,
+                    fontSize: this.chartConfig.chart.title.fontSize,
+                    color: this.chartConfig.chart.title.color,
+                    bold: this.chartConfig.chart.title.bold,
+                    subtitle: {
+                        text: this.chartConfig.chart.title.subtitle.text,
+                        color: this.chartConfig.chart.title.subtitle.color ?? '#CCCCCC',
+                        fontSize: this.chartConfig.chart.title.fontSize,
+                        bold: this.chartConfig.chart.title.bold,
+                    }
+                },
+                thead: {
+                    backgroundColor: this.chartConfig.table.th.backgroundColor,
+                    color: this.chartConfig.table.th.color,
+                    outline: this.chartConfig.table.th.outline
+                },
+                tbody: {
+                    backgroundColor: this.chartConfig.table.td.backgroundColor,
+                    color: this.chartConfig.table.td.color,
+                    outline: this.chartConfig.table.td.outline
+                },
+                userOptions: {
+                    show: false
+                }
+            }
         },
         absoluteDataset() {
             return this.safeDataset.map((datapoint, i) => {

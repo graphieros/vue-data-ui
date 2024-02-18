@@ -1879,6 +1879,7 @@ declare module 'vue-data-ui' {
         table?: {
             rounding?: number;
             responsiveBreakpoint?: number;
+            sparkline?: boolean;
             columnNames?: {
                 period?: string;
                 total?: string;
