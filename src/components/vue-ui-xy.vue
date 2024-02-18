@@ -862,11 +862,11 @@ export default {
         },
         tableSparklineConfig() {
             return {
+                showAverage: false,
+                showMedian: false,
+                showTotal: false,
                 responsiveBreakpoint: this.chartConfig.table.responsiveBreakpoint,
-                roundingAverage: this.chartConfig.table.rounding,
-                roundingMedian: this.chartConfig.table.rounding,
                 roundingValues: this.chartConfig.table.rounding,
-                roundingTotal: this.chartConfig.table.rounding,
                 fontFamily: this.chartConfig.chart.fontFamily,
                 colNames: this.chartConfig.chart.grid.labels.xAxisLabels.values,
                 thead: {
