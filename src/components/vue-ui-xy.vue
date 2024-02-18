@@ -869,19 +869,6 @@ export default {
                 roundingTotal: this.chartConfig.table.rounding,
                 fontFamily: this.chartConfig.chart.fontFamily,
                 colNames: this.chartConfig.chart.grid.labels.xAxisLabels.values,
-                title: {
-                    backgroundColor: this.chartConfig.chart.backgroundColor,
-                    text: this.chartConfig.chart.title.text,
-                    fontSize: this.chartConfig.chart.title.fontSize,
-                    color: this.chartConfig.chart.title.color,
-                    bold: this.chartConfig.chart.title.bold,
-                    subtitle: {
-                        text: this.chartConfig.chart.title.subtitle.text,
-                        color: this.chartConfig.chart.title.subtitle.color ?? '#CCCCCC',
-                        fontSize: this.chartConfig.chart.title.fontSize,
-                        bold: this.chartConfig.chart.title.bold,
-                    }
-                },
                 thead: {
                     backgroundColor: this.chartConfig.table.th.backgroundColor,
                     color: this.chartConfig.table.th.color,
