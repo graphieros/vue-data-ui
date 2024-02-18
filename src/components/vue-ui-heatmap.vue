@@ -80,7 +80,7 @@ const maxX = computed(() => {
 
 const svg = computed(() => {
     const height = heatmapConfig.value.style.layout.padding.top + heatmapConfig.value.style.layout.padding.bottom + (props.dataset.length * heatmapConfig.value.style.layout.cells.height) + (mutableConfig.value.inside ? 92 : 0);
-    const width= heatmapConfig.value.style.layout.padding.left + heatmapConfig.value.style.layout.padding.right + (maxX.value * heatmapConfig.value.style.layout.cells.height);
+    const width= heatmapConfig.value.style.layout.padding.left + heatmapConfig.value.style.layout.padding.right + ((maxX.value < props.dataset.length ? props.dataset.length : maxX.value) * heatmapConfig.value.style.layout.cells.height);
 
     return {
         height,
@@ -125,7 +125,7 @@ const average = computed(() => {
 const cellSize = computed(() => {
     return {
         width: (drawingArea.value.width / maxX.value),
-        height: (drawingArea.value.width / maxX.value)
+        height: (drawingArea.value.width / (maxX.value < props.dataset.length ? props.dataset.length : maxX.value))
     }
 });
 
@@ -352,18 +352,18 @@ defineExpose({
                 <g v-for="(cell, j) in serie.temperatures">
                     <rect
                         :x="drawingArea.left + cellSize.width * j"
-                        :y="drawingArea.top + cellSize.width * i"
+                        :y="drawingArea.top + cellSize.height * i"
                         :width="cellSize.width - heatmapConfig.style.layout.cells.spacing"
-                        :height="cellSize.width - heatmapConfig.style.layout.cells.spacing"
+                        :height="cellSize.height - heatmapConfig.style.layout.cells.spacing"
                         :fill="heatmapConfig.style.layout.cells.colors.underlayer"
                         :stroke="heatmapConfig.style.backgroundColor"
                         :stroke-width="heatmapConfig.style.layout.cells.spacing"
                     />
                     <rect
                         :x="drawingArea.left + cellSize.width * j"
-                        :y="drawingArea.top + cellSize.width * i"
+                        :y="drawingArea.top + cellSize.height * i"
                         :width="cellSize.width - heatmapConfig.style.layout.cells.spacing"
-                        :height="cellSize.width - heatmapConfig.style.layout.cells.spacing"
+                        :height="cellSize.height - heatmapConfig.style.layout.cells.spacing"
                         :fill="cell.color"
                         :stroke="hoveredCell && hoveredCell === cell.id ? heatmapConfig.style.layout.cells.selected.color : heatmapConfig.style.backgroundColor"
                         :stroke-width="heatmapConfig.style.layout.cells.spacing"
@@ -375,7 +375,7 @@ defineExpose({
                         :font-weight="heatmapConfig.style.layout.cells.value.bold ? 'bold': 'normal'"
                         :fill="adaptColorToBackground(cell.color)"
                         :x="(drawingArea.left + cellSize.width * j) + (cellSize.width / 2)"
-                        :y="(drawingArea.top + cellSize.width * i) + (cellSize.width / 2) + heatmapConfig.style.layout.cells.value.fontSize / 3"
+                        :y="(drawingArea.top + cellSize.height * i) + (cellSize.height / 2) + heatmapConfig.style.layout.cells.value.fontSize / 3"
                     >
                         {{ Number(cell.value.toFixed(heatmapConfig.style.layout.cells.value.roundingValue)).toLocaleString() }}
                     </text>
@@ -385,9 +385,9 @@ defineExpose({
                     <rect
                         :data-cy="`heatmap-trap-${i}-${j}`"
                         :x="drawingArea.left + cellSize.width * j"
-                        :y="drawingArea.top + cellSize.width * i"
+                        :y="drawingArea.top + cellSize.height * i"
                         :width="cellSize.width"
-                        :height="cellSize.width"
+                        :height="cellSize.height"
                         fill="transparent"
                         stroke="none"
                         @mouseover="useTooltip(cell)"
@@ -399,7 +399,7 @@ defineExpose({
                         :font-size="heatmapConfig.style.layout.dataLabels.yAxis.fontSize"
                         :fill="heatmapConfig.style.layout.dataLabels.yAxis.color"
                         :x="drawingArea.left + heatmapConfig.style.layout.dataLabels.yAxis.offsetX - 6"
-                        :y="drawingArea.top + (cellSize.width * i) + cellSize.width / 2 + heatmapConfig.style.layout.dataLabels.yAxis.fontSize / 3 + heatmapConfig.style.layout.dataLabels.yAxis.offsetY"
+                        :y="drawingArea.top + (cellSize.height * i) + cellSize.height / 2 + heatmapConfig.style.layout.dataLabels.yAxis.fontSize / 3 + heatmapConfig.style.layout.dataLabels.yAxis.offsetY"
                         text-anchor="end"
                         :font-weight="heatmapConfig.style.layout.dataLabels.yAxis.bold ? 'bold' : 'normal'"
                     >

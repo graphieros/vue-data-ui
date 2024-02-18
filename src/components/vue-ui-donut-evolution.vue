@@ -536,6 +536,7 @@ defineExpose({
                     <g v-if="hoveredIndex !== null && hoveredIndex === i">
                         <g v-for="arc in datapoint.donut">
                             <path
+                                :data-cy="`donut_hover_${i}`"
                                 :d="calcNutArrowPath(arc, {x: arc.center.endX, y: arc.center.endY}, 12, 12, { x: datapoint.x, y: datapoint.y}, true)"
                                 :stroke="arc.color"
                                 stroke-width="1"
@@ -548,6 +549,7 @@ defineExpose({
                         <g v-for="(arc, i) in datapoint.donut">
                             <text
                                 :data-cy="`donut-datalabel-value-${i}`"
+                                data-cy-hover-label
                                 :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
                                 :x="calcMarkerOffsetX(arc, true, 3).x"
                                 :y="calcMarkerOffsetY(arc)"
@@ -580,7 +582,8 @@ defineExpose({
                         />
                     </g>
                     <g v-else>
-                        <path 
+                        <path
+                        :data-cy="`arc_${i}`"
                             v-for="(arc, k) in datapoint.donut"
                             :d="arc.arcSlice"
                             :fill="`${arc.color}`"
@@ -629,6 +632,7 @@ defineExpose({
             <rect 
                 v-for="(datapoint, i) in drawableDataset"
                 :data-cy="`trap-${i}`"
+                data-cy-trap
                 :x="padding.left + (i * slit)"
                 :y="padding.top"
                 :width="slit"
@@ -641,7 +645,7 @@ defineExpose({
             />
 
             <!-- DIALOG -->
-            <g v-if="isFixed">
+            <g v-if="isFixed" data-cy-zoom>
                 <rect 
                     :rx="4"
                     :x="padding.left"
@@ -672,7 +676,7 @@ defineExpose({
                     stroke-width="1.5"
                 />
                 <circle
-                    data-cy="quit-dialog"
+                    data-cy-close
                     @click="unfixDatapoint"
                     @keypress.enter="unfixDatapoint"
                     :cx="svg.absoluteWidth - padding.right - svg.width / 40"
@@ -685,6 +689,7 @@ defineExpose({
 
                 <g v-for="arc in fixedDatapoint.donutFocus">
                     <path
+                        data-cy-zoom-donut
                         :d="calcNutArrowPath(arc, {x: svg.centerX, y: svg.centerY}, 12, 12, false, false, 1)"
                         :stroke="arc.color"
                         stroke-width="1"
@@ -764,7 +769,7 @@ defineExpose({
             @clickMarker="({legend}) => segregate(legend.uid)"
         >
             <template #item="{legend, index}">
-                <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ Number(legend.value.toFixed(donutEvolutionConfig.style.chart.legend.roundingValue)).toLocaleString() }}
                     <span v-if="!segregated.includes(legend.uid)">
                         ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(donutEvolutionConfig.style.chart.legend.roundingPercentage)}}%)

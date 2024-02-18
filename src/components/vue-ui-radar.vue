@@ -525,7 +525,8 @@ defineExpose({
             <!-- PLOTS -->
             <g v-for="(d, i) in datasetCopy">
                 <g v-if="!segregated.includes(i)">
-                    <path 
+                    <path
+                        data-cy-radar-path
                         :d="makePath(radar.map(r => r.plots[i]))"
                         :stroke="d.color"
                         :stroke-width="radarConfig.style.chart.layout.dataPolygon.strokeWidth"
@@ -578,7 +579,7 @@ defineExpose({
             @clickMarker="({i}) => segregate(i)"
         >
             <template #item="{ legend, index }">
-                <div @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                <div data-cy-legend-item @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ (legend.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%
                 </div>
             </template>

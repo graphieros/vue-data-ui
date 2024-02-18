@@ -464,7 +464,7 @@ defineExpose({
             @clickMarker="({ legend }) => segregate(legend.id)"
         >
             <template #item="{ legend }">
-                <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                     {{ legend.name }} : {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
                 </div>
             </template>
@@ -601,6 +601,7 @@ defineExpose({
                 <!-- TOOLTIP TRAPS -->
                 <rect 
                     :data-cy="`vertical-bar-trap-${i}`"
+                    data-cy-trap
                     :x="0"
                     :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i) - (verticalBarConfig.style.chart.layout.bars.gap/2)"
                     :width="svg.width"

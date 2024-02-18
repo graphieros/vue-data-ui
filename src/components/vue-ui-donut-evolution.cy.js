@@ -23,34 +23,26 @@ describe('<VueUiDonutEvolution />', () => {
     })
   });
 
-  function updateConfig(modifiedConfig) {
-    cy.get('@fixture').then((fixture) => {
-      const updatedFixture = { ...fixture, config: modifiedConfig };
-      cy.wrap(updatedFixture).as('fixture');
-      cy.mount(VueUiDonutEvolution, {
-        props: {
-          dataset: fixture.dataset,
-          config: modifiedConfig
-        }
-      });
-    });
-  }
+  it('shows zoomed donut on trap click', () => {
+    cy.get('[data-cy-trap]').eq(0).click()
+    cy.get('[data-cy-zoom]').should('be.visible')
+    cy.get('[data-cy-zoom-donut]').should('be.visible')
+    cy.get('[data-cy-close]').should('be.visible').click({ force: true})
+    cy.get('[data-cy-zoom]').should('not.exist')
+  })
 
-  it('renders donuts', () => {
-    for(let i = 0; i < 12; i += 1) {
-      cy.get(`[data-cy="donut-wrapper-${i}"]`).then(($wrapper) => {
-        cy.wrap($wrapper).should('exist')
-      })
-      
-      cy.get(`[data-cy="trap-${i}"]`).then(($trap) => {
-        cy.wrap($trap).trigger('mouseenter', { force: true })
-        cy.wait(150)
-        cy.wrap($trap).trigger('mouseleave')
-        cy.wrap($trap).click();
-        cy.wait(150)
-        cy.get(`[data-cy="quit-dialog"]`).click()
-      })
-    }
+  it('segregates series when selecting legend items', () => {
+    cy.get('[data-cy-legend-item]').eq(0).click()
+    cy.get(`[data-cy="arc_0"]`).should('have.length', 3)
+    cy.get('[data-cy-legend-item]').eq(0).click()
+    cy.get(`[data-cy="arc_0"]`).should('have.length', 4)
+  })
+
+  it('shows donut hovered state', () => {
+    cy.get('[data-cy-trap]').eq(0).trigger('mouseenter')
+    cy.get('[data-cy="donut_hover_0"]').should('have.length', 4)
+    cy.get('[data-cy-trap]').eq(0).trigger('mouseleave')
+    cy.get('[data-cy="donut_hover_0"]').should('not.exist')
   })
 
   it('opens user options and shows table', () => {

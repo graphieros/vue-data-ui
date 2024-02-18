@@ -470,6 +470,7 @@ defineExpose({
         />
         <circle
           :data-cy="`mouse-trap-${i}`"
+          data-cy-trap
           stroke="none"
           :cx="svg.width / 2"
           :cy="
@@ -497,7 +498,7 @@ defineExpose({
       @clickMarker="({legend}) => segregate(legend.uid)"
     >
       <template #item="{legend}">
-          <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+          <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
               {{ legend.name }} : {{ dataLabel({p:ringsConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: ringsConfig.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.style.chart.legend.roundingValue}) }}
               <span v-if="!segregated.includes(legend.uid)">
                   ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(ringsConfig.style.chart.legend.roundingPercentage)}}%)

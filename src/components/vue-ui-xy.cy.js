@@ -14,6 +14,32 @@ describe('<VueUiXy />', () => {
     });
   }
 
+  it('uses the range inputs to zoom', () => {
+    cy.get('@fixture').then((fixture) => {
+      cy.mount(VueUiXy, {
+        props: {
+          dataset: fixture.dataset,
+          config: fixture.config
+        }
+      });
+
+      cy.get('input[type="range"]').eq(0).invoke('val', 11).trigger('change', {force: true }).trigger('input', { force: true });
+      cy.get('[data-cy-trap]').should('have.length', 10);
+      cy.get('[data-cy-zoom-legend]').eq(0).as('legendLeft').contains('11')
+      cy.get('[data-cy-zoom-legend]').eq(1).as('legendRight').contains('20')
+      
+      cy.get('input[type="range"]').eq(1).invoke('val', 12).trigger('change', {force: true }).trigger('input', { force: true });
+      cy.get('[data-cy-trap]').should('have.length', 1);
+      cy.get('@legendLeft').contains('11')
+      cy.get('@legendRight').contains('11')
+
+      cy.get('[data-cy-reset]').click();
+      cy.get('[data-cy-trap]').should('have.length', 21);
+      cy.get('@legendLeft').contains('0')
+      cy.get('@legendRight').contains('20')
+    });
+  })
+
   it('renders with different config attributes', function() {
     cy.get('@fixture').then((fixture) => {
       cy.mount(VueUiXy, {

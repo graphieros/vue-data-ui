@@ -798,8 +798,9 @@ defineExpose({
             <!-- AREAS GIFT WRAPPING -->
             <g v-if="quadrantConfig.style.chart.layout.areas.show">
                 <g v-for="(category, i) in drawableDataset">
-                    <polygon 
+                    <polygon
                         v-if="category.series.length > 2"
+                        data-cy-quadrant-area
                         :fill="quadrantConfig.style.chart.layout.areas.useGradient ? `url(#quadrant_gradient_${uid}_${i})` : `${category.color}${opacity[quadrantConfig.style.chart.layout.areas.opacity]}`"
                         :points="giftWrap(category)"
                     />
@@ -870,7 +871,7 @@ defineExpose({
             @clickMarker="({legend}) => segregate(legend.id)"
         >
             <template #item="{ legend }">
-                <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                     {{ legend.name }} 
                 </div>
             </template>

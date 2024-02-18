@@ -7,6 +7,22 @@ describe('<VueUiQuadrant />', () => {
     cy.viewport(500, 650);
   });
 
+  it('segregates series when selecting legend items', () => {
+    cy.get('@fixture').then((fixture) => {
+      cy.mount(VueUiQuadrant, {
+        props: {
+          dataset: fixture.dataset,
+          config: fixture.config
+        },
+      });
+
+      cy.get('[data-cy-legend-item]').eq(0).click()
+      cy.get('[data-cy-quadrant-area]').should('have.length', 1)
+      cy.get('[data-cy-legend-item]').eq(0).click()
+      cy.get('[data-cy-quadrant-area]').should('have.length', 2)
+    });
+  })
+
   it('renders', () => {
     cy.get('@fixture').then((fixture) => {
       cy.mount(VueUiQuadrant, {

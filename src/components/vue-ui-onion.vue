@@ -397,6 +397,7 @@ defineExpose({
             <!-- TOOLTIP TRAPS -->
             <circle 
                 v-for="(onion, i) in mutableDataset" 
+                data-cy-trap
                 :data-cy="`onion-track-${i}`"
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
@@ -448,7 +449,7 @@ defineExpose({
             <foreignObject 
                 v-if="onionConfig.style.chart.legend.show && mutableConfig.inside && !isPrinting"
                 :x="0"
-                :y="drawableArea.bottom"
+                :y="drawableArea.bottom + onionConfig.style.chart.legend.offsetY"
                 width="100%"
                 :height="svg.height - drawableArea.bottom"
                 style="overflow:visible"
@@ -478,7 +479,7 @@ defineExpose({
             @clickMarker="({legend}) => segregate(legend.id)"
         >
             <template #item="{ legend }">
-                <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ legend.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
 
 

@@ -13,6 +13,22 @@ describe('<VueUiOnion />', () => {
     });
   }
 
+  it('segregates series when selecting legend items', () => {
+    cy.get('@fixture').then((fixture) => {
+      cy.mount(VueUiOnion, {
+        props: {
+          dataset: fixture.dataset,
+          config: fixture.config
+        }
+      });
+
+      cy.get('[data-cy-legend-item]').eq(0).click()
+      cy.get('[data-cy-trap]').should('have.length', 3)
+      cy.get('[data-cy-legend-item]').eq(0).click()
+      cy.get('[data-cy-trap]').should('have.length', 4)
+    });
+  })
+
   it('renders with different config attributes', function () {
     cy.get('@fixture').then((fixture) => {
       cy.mount(VueUiOnion, {

@@ -575,6 +575,7 @@
                     <g v-for="(_, i) in maxSeries" :key="`tooltip_trap_${i}`">
                         <rect
                             :data-cy="`xy-tooltip-trap-${i}`"
+                            data-cy-trap
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
                             :y="drawingArea.top"
                             :height="drawingArea.height"
@@ -593,7 +594,7 @@
         
         <!-- SLICER -->
         <div v-if="chartConfig.chart.zoom.show" class="vue-ui-xy-range-slider-wrapper" data-html2canvas-ignore style="position:relative">
-            <div class="vue-ui-xy-range-slider-label-left">
+            <div class="vue-ui-xy-range-slider-label-left" data-cy-zoom-legend>
                 {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.start] }}
             </div>
             <div class="vue-ui-xy-range-slider">
@@ -602,11 +603,11 @@
                     <input :id="`end_${uniqueId}`" type="range" :style="`border:none !important;accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="maxX" v-model="slicer.end">
 
             </div>
-            <div class="vue-ui-xy-range-slider-label-right">
+            <div class="vue-ui-xy-range-slider-label-right" data-cy-zoom-legend>
                 {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.end-1] }}
             </div>
             <div v-if="slicer.start > 0 || slicer.end < maxX" style="position:absolute;right:0">
-                <button tabindex="0" role="button" class="vue-ui-xy-refresh-button" @click="refreshSlicer">
+                <button data-cy-reset tabindex="0" role="button" class="vue-ui-xy-refresh-button" @click="refreshSlicer">
                     <BaseIcon name="refresh" :stroke="chartConfig.chart.color"/>
                 </button>
             </div>

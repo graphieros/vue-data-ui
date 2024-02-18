@@ -110,3 +110,13 @@ Types are available in the 'vue-data-ui.d.ts' file under the types directory of 
 
 # Slots
 Most Vue Data UI chart components include a #svg slot you can use to introduce customized svg elements (shapes, text, etc).
+
+# Config
+If for some reason you can't access the documentation website and need to get the default config object for a component:
+
+```
+import { getVueDataUiConfig } from "vue-data-ui";
+
+const defaultConfigXy = getVueDataUiConfig("vue_ui_xy");
+
+```

@@ -1117,7 +1117,8 @@
                     "color": "#2D353C",
                     "fontSize": 14,
                     "roundingValue": 0,
-                    "roundingPercentage": 0
+                    "roundingPercentage": 0,
+                    "offsetY": 6
                 }
             }
         },
