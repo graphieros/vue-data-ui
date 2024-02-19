@@ -852,23 +852,25 @@ export default {
         },
         tableSparklineDataset() {
             return this.relativeDataset.map(ds => {
+                const source = ds.absoluteValues.map(s => [undefined, null].includes(s) ? 0 : s);
                 return {
                     id: ds.id,
                     name: ds.name,
                     color: ds.color,
-                    values: ds.absoluteValues.slice(this.slicer.start, this.slicer.end),
+                    values: this.fillArray(this.maxSeries, source)
                 }
             })
         },
         tableSparklineConfig() {
             return {
+
+                responsiveBreakpoint: this.chartConfig.table.responsiveBreakpoint,
+                roundingValues: this.chartConfig.table.rounding,
                 showAverage: false,
                 showMedian: false,
                 showTotal: false,
-                responsiveBreakpoint: this.chartConfig.table.responsiveBreakpoint,
-                roundingValues: this.chartConfig.table.rounding,
                 fontFamily: this.chartConfig.chart.fontFamily,
-                colNames: this.chartConfig.chart.grid.labels.xAxisLabels.values,
+                colNames: this.chartConfig.chart.grid.labels.xAxisLabels.values.slice(0, this.maxSeries),
                 thead: {
                     backgroundColor: this.chartConfig.table.th.backgroundColor,
                     color: this.chartConfig.table.th.color,
@@ -1290,6 +1292,13 @@ export default {
         createStar,
         createPolygonPath,
         /////////////////////////////// CANVAS /////////////////////////////////
+        fillArray(len, source) {
+            let res = Array(len).fill(0);
+            for (let i = 0; i  < source.length && i < len; i += 1) {
+                res[i] = source[i];
+            }
+            return res;
+        },
         refreshSlicer() {
             this.slicer = {
                 start: 0,
