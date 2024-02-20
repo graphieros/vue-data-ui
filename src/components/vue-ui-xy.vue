@@ -745,7 +745,6 @@ export default {
             start: 0,
             end: maxX,
         }
-        const showSparklineTable = this.config.table.sparkline || true;
 
         return {
             CTX: null,
@@ -788,7 +787,7 @@ export default {
             slicer,
             __to__: null,
             maxX,
-            showSparklineTable
+            showSparklineTable: true
         }
     },
     computed: {
