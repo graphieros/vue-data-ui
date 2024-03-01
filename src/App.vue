@@ -431,8 +431,8 @@ const quadrantDataset = ref([
     series: [
       {
         name: "cat2 item1",
-        x: -50,
-        y: -50,
+        x: -60,
+        y: -60,
       },
       {
         name: "cat2 item2",
@@ -925,10 +925,15 @@ const heatmapConfig = ref({
   style: {
     layout: {
       useDiv: true,
+      padding: {
+        bottom: 48,
+      },
       cells: {
         value: {
           show: true,
+          fontSize: 10
         },
+        spacing: 2
       },
       dataLabels: {
         prefix: "$",
@@ -3072,7 +3077,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
         <template #title>
           <BaseIcon name="chartOnion" />
           VueUiOnion
@@ -3625,7 +3630,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
         <template #title>
           <BaseIcon name="chartHeatmap"/>
           VueUiHeatmap

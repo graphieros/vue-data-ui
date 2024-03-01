@@ -278,13 +278,23 @@ const drawableDataset = computed(() => {
 });
 
 function calcX(x) {
-    const ratio = x / axisValues.value.x.max;
-    return svg.value.centerX + ((svg.value.usableWidth / 2) * ratio);
+    if(x >= 0) {
+        const ratio = x / axisValues.value.x.max;
+        return svg.value.centerX + ((svg.value.usableWidth / 2) * ratio);
+    } else {
+        const ratio = Math.abs(x) / Math.abs(axisValues.value.x.min)
+        return svg.value.centerX - ((svg.value.usableWidth / 2) * ratio);
+    }
 }
 
 function calcY(y) {
-    const ratio = y / axisValues.value.y.max;
-    return svg.value.centerY + (1-(svg.value.usableHeight / 2) * ratio);
+    if(y >= 0) {
+        const ratio = y / axisValues.value.y.max;
+        return svg.value.centerY + (1-(svg.value.usableHeight / 2) * ratio);
+    } else {
+        const ratio = Math.abs(y) / Math.abs(axisValues.value.y.min);
+        return svg.value.centerY - (1 - (svg.value.usableHeight / 2) * ratio);
+    }
 }
 
 const table = computed(() => {

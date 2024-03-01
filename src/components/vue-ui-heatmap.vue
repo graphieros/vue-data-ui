@@ -104,7 +104,7 @@ const drawingArea = computed(() => {
 });
 
 const sideLegendHeight = computed(() => {
-    return drawingArea.value.height - (heatmapConfig.value.style.layout.padding.top - heatmapConfig.value.style.layout.padding.bottom)
+    return cellSize.value.height * props.dataset.length
 })
 
 
@@ -351,8 +351,8 @@ defineExpose({
             <g v-for="(serie, i) in mutableDataset">
                 <g v-for="(cell, j) in serie.temperatures">
                     <rect
-                        :x="drawingArea.left + cellSize.width * j"
-                        :y="drawingArea.top + cellSize.height * i"
+                        :x="drawingArea.left + cellSize.width * j + (heatmapConfig.style.layout.cells.spacing / 2)"
+                        :y="drawingArea.top + cellSize.height * i + (heatmapConfig.style.layout.cells.spacing / 2)"
                         :width="cellSize.width - heatmapConfig.style.layout.cells.spacing"
                         :height="cellSize.height - heatmapConfig.style.layout.cells.spacing"
                         :fill="heatmapConfig.style.layout.cells.colors.underlayer"
@@ -360,8 +360,8 @@ defineExpose({
                         :stroke-width="heatmapConfig.style.layout.cells.spacing"
                     />
                     <rect
-                        :x="drawingArea.left + cellSize.width * j"
-                        :y="drawingArea.top + cellSize.height * i"
+                        :x="drawingArea.left + cellSize.width * j + (heatmapConfig.style.layout.cells.spacing / 2)"
+                        :y="drawingArea.top + cellSize.height * i + (heatmapConfig.style.layout.cells.spacing / 2)"
                         :width="cellSize.width - heatmapConfig.style.layout.cells.spacing"
                         :height="cellSize.height - heatmapConfig.style.layout.cells.spacing"
                         :fill="cell.color"
@@ -377,7 +377,7 @@ defineExpose({
                         :x="(drawingArea.left + cellSize.width * j) + (cellSize.width / 2)"
                         :y="(drawingArea.top + cellSize.height * i) + (cellSize.height / 2) + heatmapConfig.style.layout.cells.value.fontSize / 3"
                     >
-                        {{ Number(cell.value.toFixed(heatmapConfig.style.layout.cells.value.roundingValue)).toLocaleString() }}
+                        {{ heatmapConfig.style.layout.dataLabels.prefix }}{{ Number(cell.value.toFixed(heatmapConfig.style.layout.cells.value.roundingValue)).toLocaleString() }}{{ heatmapConfig.style.layout.dataLabels.suffix }}
                     </text>
                 </g>
                 <g v-for="(cell, j) in serie.temperatures">
@@ -429,7 +429,7 @@ defineExpose({
                 </defs>
                 <text
                     :x="drawingArea.right + 36 + 18"
-                    :y="drawingArea.top - heatmapConfig.style.legend.fontSize * 2"
+                    :y="drawingArea.top - heatmapConfig.style.legend.fontSize * 1.5"
                     text-anchor="middle"
                     :font-size="heatmapConfig.style.legend.fontSize * 2"
                     :fill="heatmapConfig.style.legend.color"
@@ -446,7 +446,7 @@ defineExpose({
                 />
                 <text
                     :x="drawingArea.right + 36 + 18"
-                    :y="drawingArea.bottom + heatmapConfig.style.legend.fontSize"
+                    :y="drawingArea.top + sideLegendHeight + heatmapConfig.style.legend.fontSize * 2.5"
                     text-anchor="middle"
                     :font-size="heatmapConfig.style.legend.fontSize * 2"
                     :fill="heatmapConfig.style.legend.color"

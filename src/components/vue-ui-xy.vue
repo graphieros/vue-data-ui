@@ -657,7 +657,7 @@
                 <BaseIcon name="chartLine" :size="20" :stroke="chartConfig.chart.color"/>
             </div>
         </div>
-            <TableSparkline v-if="showSparklineTable" :dataset="tableSparklineDataset" :config="tableSparklineConfig"/>
+            <TableSparkline v-if="showSparklineTable" :key="`sparkline_${segregateStep}`" :dataset="tableSparklineDataset" :config="tableSparklineConfig"/>
             <DataTable 
                 v-else
                 :colNames="dataTable.colNames"
@@ -787,7 +787,8 @@ export default {
             slicer,
             __to__: null,
             maxX,
-            showSparklineTable: true
+            showSparklineTable: true,
+            segregateStep: 0
         }
     },
     computed: {
@@ -1935,6 +1936,7 @@ export default {
             if(this.chartConfig.useCanvas) {
                 this.drawCanvas();
             }
+            this.segregateStep += 1;
         },
         toggleTooltip(show, selectedIndex = null) {
             this.isTooltip = show;
