@@ -68,7 +68,7 @@ function ratioTo(val) {
 </script>
 
 <template>
-    <div style="width:100%">
+    <div :style="`width:100%; font-family:${sparkbarConfig.style.fontFamily};background:${sparkbarConfig.style.backgroundColor}`">
         <template v-for="(bar, i) in drawableDataset">
             <div :style="`display:flex !important;${['left', 'right'].includes(sparkbarConfig.style.labels.name.position) ? 'flex-direction:row !important' : 'flex-direction:column !important'};gap:${sparkbarConfig.style.gap}px !important;${sparkbarConfig.style.labels.name.position === 'right' ? 'row-reverse !important' : ''};align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`">
                 <div :style="`width:${sparkbarConfig.style.labels.name.width};${['right','top'].includes(sparkbarConfig.style.labels.name.position) ? 'text-align:left' : 'text-align:right'};color:${sparkbarConfig.style.labels.name.color};font-size:${sparkbarConfig.style.labels.fontSize}px;font-weight:${sparkbarConfig.style.labels.name.bold ? 'bold' : 'normal'}`">
