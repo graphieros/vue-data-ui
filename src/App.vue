@@ -2401,6 +2401,23 @@ const moodRadarConfig = ref({
     }
   })
 
+  const donutEvolutionConfig = ref({
+    style: {
+      chart: {
+        layout: {
+          grid: {
+            xAxis: {
+              dataLabels: {
+                values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN'],
+                showOnlyFirstAndLast: true
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+
 </script>
 
 <template>
@@ -2656,7 +2673,7 @@ const moodRadarConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
         <template #title>
           <BaseIcon name="chartDonutEvolution"/>
           VueUiDonutEvolution
@@ -2671,6 +2688,7 @@ const moodRadarConfig = ref({
         <template #dev>
           <DonutEvolutionTest
             :dataset="donutEvolutionDataset"
+            :config="donutEvolutionConfig"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.absoluteWidth / 2" :cy="svg.absoluteHeight / 2" :r="30" fill="#FF000033"/>
@@ -2680,6 +2698,7 @@ const moodRadarConfig = ref({
         <template #prod>
           <VueUiDonutEvolution
             :dataset="donutEvolutionDataset"
+            :config="donutEvolutionConfig"
           >
           <template #svg="{ svg }">
             <circle :cx="svg.absoluteWidth / 2" :cy="svg.absoluteHeight / 2" :r="30" fill="#FF000033"/>

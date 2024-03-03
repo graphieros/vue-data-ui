@@ -493,17 +493,19 @@ defineExpose({
 
             <!-- X LABELS -->
             <g v-if="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': isFixed}">
-                <text 
-                    v-for="(_, i) in maxLength"
-                    :x="padding.left + (slit * i) + (slit / 2)"
-                    :y="svg.absoluteHeight - padding.bottom + donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2"
-                    text-anchor="middle"
-                    :font-size="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize"
-                    :fill="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.color"
+                <g v-for="(_, i) in maxLength">
+                    <text
+                        v-if="(donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast"
+                        :x="padding.left + (slit * i) + (slit / 2)"
+                        :y="svg.absoluteHeight - padding.bottom + donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2"
+                        text-anchor="middle"
+                        :font-size="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize"
+                        :fill="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.color"
 
-                >
-                    {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[i] ?? '' }}
-                </text>
+                    >
+                        {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[i] ?? '' }}
+                    </text>
+                </g>
             </g>
             
             <!-- DATAPOINTS -->
@@ -606,7 +608,7 @@ defineExpose({
             <!-- DATALABELS -->
             <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || isFixed}">
                 <text 
-                    v-if="datapoint.subtotal !== null"
+                    v-if="datapoint.subtotal !== null && donutEvolutionConfig.style.chart.layout.dataLabels.show"
                     text-anchor="middle"
                     :x="datapoint.x"
                     :y="hoveredIndex === datapoint.index && datapoint.subtotal ? datapoint.y + donutEvolutionConfig.style.chart.layout.dataLabels.fontSize / 3 : datapoint.y - datapoint.radius - donutEvolutionConfig.style.chart.layout.dataLabels.fontSize + donutEvolutionConfig.style.chart.layout.dataLabels.offsetY"
