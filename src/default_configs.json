@@ -700,6 +700,7 @@
                             }
                         },
                         "plotLabels": {
+                            "showAsTag": false,
                             "show": true,
                             "fontSize": 10,
                             "color": "#2D353C",

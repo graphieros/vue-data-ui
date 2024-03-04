@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from "vue";
-import { palette, createUid, giftWrap, shiftHue, opacity, convertColorToHex, createCsvContent, downloadCsv } from "../lib";
+import { palette, createUid, giftWrap, shiftHue, opacity, convertColorToHex, createCsvContent, downloadCsv, adaptColorToBackground } from "../lib";
 import pdf from "../pdf.js";
 import img from "../img.js";
 import mainConfig from "../default_configs.json";
@@ -818,36 +818,52 @@ defineExpose({
             </g>
 
             <!-- PLOTS -->
-            <g v-for="category in drawableDataset">
-                <Shape
-                    v-for="plot in category.series"
-                    :color="category.color"
-                    :isSelected="hoveredPlotId && plot.uid === hoveredPlotId"
-                    :plot="plot"
-                    :radius="quadrantConfig.style.chart.layout.plots.radius"
-                    :shape="category.shape"
-                    :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
-                    :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                    @mouseover="hoverPlot(category, plot)"
-                    @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
-                    @click="selectPlot(category, plot)"
-                />
-            </g>
-
-            <g v-if="mutableConfig.plotLabels.show">
+            <template v-if="!quadrantConfig.style.chart.layout.labels.plotLabels.showAsTag">
                 <g v-for="category in drawableDataset">
-                    <text 
-                        v-for="plot in category.series" 
-                        :x="plot.x" 
-                        :y="plot.y + quadrantConfig.style.chart.layout.labels.plotLabels.offsetY + quadrantConfig.style.chart.layout.plots.radius" 
-                        text-anchor="middle" 
-                        :font-size="quadrantConfig.style.chart.layout.labels.plotLabels.fontSize"
-                        :fill="quadrantConfig.style.chart.layout.labels.plotLabels.color"
-                    >
-                        {{ plot.name }}
-                    </text>
+                    <Shape
+                        v-for="plot in category.series"
+                        :color="category.color"
+                        :isSelected="hoveredPlotId && plot.uid === hoveredPlotId"
+                        :plot="plot"
+                        :radius="quadrantConfig.style.chart.layout.plots.radius"
+                        :shape="category.shape"
+                        :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
+                        :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
+                        @mouseover="hoverPlot(category, plot)"
+                        @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
+                        @click="selectPlot(category, plot)"
+                    />
                 </g>
-            </g>
+
+                <g v-if="mutableConfig.plotLabels.show">
+                    <g v-for="category in drawableDataset">
+                        <text 
+                            v-for="plot in category.series" 
+                            :x="plot.x" 
+                            :y="plot.y + quadrantConfig.style.chart.layout.labels.plotLabels.offsetY + quadrantConfig.style.chart.layout.plots.radius" 
+                            text-anchor="middle" 
+                            :font-size="quadrantConfig.style.chart.layout.labels.plotLabels.fontSize"
+                            :fill="quadrantConfig.style.chart.layout.labels.plotLabels.color"
+                        >
+                            {{ plot.name }}
+                        </text>
+                    </g>
+                </g>
+            </template>
+
+            <template v-else>
+                <g v-if="mutableConfig.plotLabels.show">
+                    <template v-for="category in drawableDataset">
+                        <foreignObject v-for="plot in category.series" style="overflow: visible;" height="10" width="100" :x="plot.x - 50" :y="plot.y - (quadrantConfig.style.chart.layout.labels.plotLabels.fontSize)" @mouseover="hoverPlot(category, plot)"
+                            @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
+                            @click="selectPlot(category, plot)">
+                            <div :style="`color:${adaptColorToBackground(category.color)};margin: 0 auto; font-size:${quadrantConfig.style.chart.layout.labels.plotLabels.fontSize}px; text-align:center;background:${category.color}; padding: 2px 4px; border-radius: 12px; height: ${quadrantConfig.style.chart.layout.labels.plotLabels.fontSize*1.5}px`">
+                                {{  plot.name }}
+                            </div>
+                        </foreignObject>
+                    </template>
+                </g>
+            </template>
 
             <!-- LEGEND AS G -->
             <foreignObject

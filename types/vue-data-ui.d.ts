@@ -2351,6 +2351,7 @@ declare module 'vue-data-ui' {
                             };
                         };
                         plotLabels?: {
+                            showAsTag?: boolean;
                             show?: boolean;
                             fontSize?: number;
                             color?: string;
