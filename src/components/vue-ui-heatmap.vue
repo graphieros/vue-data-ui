@@ -152,7 +152,7 @@ const mutableDataset = computed(() => {
                         value: v,
                         yAxisName: ds.name,
                         xAxisName: dataLabels.value.xLabels[i],
-                        id: `vue-data-ui-heatmap-cell-${Math.random()}`
+                        id: `vue-data-ui-heatmap-cell-${createUid()}`
                     }
                 } else {
                     return {
@@ -162,7 +162,7 @@ const mutableDataset = computed(() => {
                         value: v,
                         yAxisName: ds.name,
                         xAxisName: dataLabels.value.xLabels[i],
-                        id: `vue-data-ui-heatmap-cell-${Math.random()}`
+                        id: `vue-data-ui-heatmap-cell-${createUid()}`
                     }
                 }
             })
@@ -172,16 +172,33 @@ const mutableDataset = computed(() => {
 
 const hoveredValue = ref(null);
 
-function useTooltip(datapoint) {
+function useTooltip(datapoint, seriesIndex) {
     const { value, yAxisName, xAxisName,id } = datapoint;
     hoveredCell.value = id;
     hoveredValue.value = value;
     isTooltip.value = true;
     let html = "";
 
-    html += `<div data-cy="heatmap-tootlip-name">${yAxisName} ${xAxisName ? `${xAxisName}` : ''}</div>`;
-    html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8;font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : dataLabel({p:heatmapConfig.value.style.layout.dataLabels.prefix, v: value, s: heatmapConfig.value.style.layout.dataLabels.suffix, r:heatmapConfig.value.style.tooltip.roundingValue })}</span></div>`
-    tooltipContent.value = `<div style="font-size:${heatmapConfig.value.style.tooltip.fontSize}px">${html}</div>`;
+    const customFormat = heatmapConfig.value.style.tooltip.customFormat;
+
+    if (customFormat && typeof customFormat({
+            datapoint,
+            seriesIndex,
+            series: mutableDataset.value,
+            config: heatmapConfig.value
+        }) === 'string') {
+        tooltipContent.value = customFormat({
+            datapoint,
+            seriesIndex,
+            series: mutableDataset.value,
+            config: heatmapConfig.value
+        })
+    } else {
+        html += `<div data-cy="heatmap-tootlip-name">${yAxisName} ${xAxisName ? `${xAxisName}` : ''}</div>`;
+        html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8;font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : dataLabel({p:heatmapConfig.value.style.layout.dataLabels.prefix, v: value, s: heatmapConfig.value.style.layout.dataLabels.suffix, r:heatmapConfig.value.style.tooltip.roundingValue })}</span></div>`
+        tooltipContent.value = `<div style="font-size:${heatmapConfig.value.style.tooltip.fontSize}px">${html}</div>`;
+    }
+
 }
 
 const sideLegendIndicatorY = computed(() => {
@@ -390,7 +407,7 @@ defineExpose({
                         :height="cellSize.height"
                         fill="transparent"
                         stroke="none"
-                        @mouseover="useTooltip(cell)"
+                        @mouseover="useTooltip(cell, i)"
                         @mouseout="isTooltip = false; hoveredCell = undefined; hoveredValue = null"
                     />
                 </g>

@@ -184,35 +184,51 @@ const maxHeight = computed(() => {
   return svg.value.height - ringsConfig.value.style.chart.layout.rings.strokeWidth * 2;
 });
 
-function useTooltip(index) {
+function useTooltip(index, datapoint) {
   if (segregated.value.length === props.dataset.length) return;
+
   selectedSerie.value = index;
-
   const selected = convertedDataset.value[index];
+  const customFormat = ringsConfig.value.style.chart.tooltip.customFormat;
 
-  let html = "";
-
-  html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
-
-  html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="waffle-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${selected.color}" /></svg>`;
-  if (ringsConfig.value.style.chart.tooltip.showValue) {
-    html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:ringsConfig.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s:ringsConfig.value.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.value.style.chart.tooltip.roundingValue})}</b>`;
-  }
-  if (ringsConfig.value.style.chart.tooltip.showPercentage) {
-    if (!ringsConfig.value.style.chart.tooltip.showValue) {
-      html += `<b>${((selected.value / grandTotal.value) * 100).toFixed(
-        ringsConfig.value.style.chart.tooltip.roundingPercentage
-      )}%</b></div>`;
-    } else {
-      html += `<span data-cy="waffle-tooltip-percentage">(${(
-        (selected.value / grandTotal.value) *
-        100
-      ).toFixed(
-        ringsConfig.value.style.chart.tooltip.roundingPercentage
-      )}%)</span></div>`;
+  if (customFormat && typeof customFormat({
+      seriesIndex: index,
+      datapoint,
+      series: convertedDataset.value,
+      config: ringsConfig.value
+    }) === 'string') {
+    tooltipContent.value = customFormat({
+      seriesIndex: index,
+      datapoint,
+      series: convertedDataset.value,
+      config: ringsConfig.value
+    })
+  } else {
+    let html = "";
+  
+    html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
+  
+    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="waffle-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${selected.color}" /></svg>`;
+    if (ringsConfig.value.style.chart.tooltip.showValue) {
+      html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:ringsConfig.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s:ringsConfig.value.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.value.style.chart.tooltip.roundingValue})}</b>`;
     }
+    if (ringsConfig.value.style.chart.tooltip.showPercentage) {
+      if (!ringsConfig.value.style.chart.tooltip.showValue) {
+        html += `<b>${((selected.value / grandTotal.value) * 100).toFixed(
+          ringsConfig.value.style.chart.tooltip.roundingPercentage
+        )}%</b></div>`;
+      } else {
+        html += `<span data-cy="waffle-tooltip-percentage">(${(
+          (selected.value / grandTotal.value) *
+          100
+        ).toFixed(
+          ringsConfig.value.style.chart.tooltip.roundingPercentage
+        )}%)</span></div>`;
+      }
+    }
+    tooltipContent.value = html;
   }
-  tooltipContent.value = html;
+  
   isTooltip.value = true;
 }
 
@@ -480,7 +496,7 @@ defineExpose({
           "
           :r="((maxHeight * ring.proportion) / 2) * 0.9"
           fill="transparent"
-          @mouseenter="useTooltip(i)"
+          @mouseenter="useTooltip(i, ring)"
           @mouseleave="
             selectedSerie = null;
             isTooltip = false;

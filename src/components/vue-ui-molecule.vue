@@ -247,15 +247,31 @@ function unzoom(event) {
 }
 
 function createTooltipContent(node) {
-    let html = "";
 
-    html += `<div style="display:flex;align-items:center;gap:3px"><div style="color:${node.color}">⬤</div><div>${node.name}</div></div>`;
-    if(node.details) {
-        html += `<div style="width:100%;border-top:1px solid #e1e5e8;margin-top: 2px">${node.details}</div>`
+    const customFormat = moleculeConfig.value.style.chart.tooltip.customFormat;
+
+    if (customFormat && typeof customFormat({
+            seriesIndex: -1,
+            datapoint: node,
+            series: convertedDataset.value,
+            config: moleculeConfig.value
+        }) === 'string') {
+        tooltipContent.value = customFormat({
+            seriesIndex: -1, // well, ok
+            datapoint: node,
+            series: convertedDataset.value,
+            config: moleculeConfig.value
+        })
+    } else {
+        let html = "";
+    
+        html += `<div style="display:flex;align-items:center;gap:3px"><div style="color:${node.color}">⬤</div><div>${node.name}</div></div>`;
+        if(node.details) {
+            html += `<div style="width:100%;border-top:1px solid #e1e5e8;margin-top: 2px">${node.details}</div>`
+        }
+    
+        tooltipContent.value = `<div style="font-family:inherit">${html}</div>`;
     }
-
-    tooltipContent.value = `<div style="font-family:inherit">${html}</div>`;
-
 }
 
 const hoveredNode = ref(null);

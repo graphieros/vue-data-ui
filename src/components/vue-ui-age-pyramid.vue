@@ -179,23 +179,50 @@ const drawableDataset = computed(() => {
     })
 });
 
-function hoverIndex(index) {
+function useTooltip(index, datapoint) {
     selectedIndex.value = index;
 
-    let html = "";
+    const customFormat = agePyramidConfig.value.style.tooltip.customFormat;
 
-    const selectedSet = drawableDataset.value[index];
-    html += `<div><b>${selectedSet.segment}</b></div>`;
-    html += `<div>${agePyramidConfig.value.translations.age} : ${selectedSet.age}</div>`
-    html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
-    html += `<div style="display:flex; flex-direction:row;gap:12px">`;
-    html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : agePyramidConfig.value.style.layout.bars.left.color}"/></svg><div>${agePyramidConfig.value.translations.female}</div><div><b>${selectedSet.left.value.toLocaleString()}</b></div></div>`;
-    html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : agePyramidConfig.value.style.layout.bars.right.color}"/></svg><div>${agePyramidConfig.value.translations.male}</div><div><b>${selectedSet.right.value.toLocaleString()}</b></div></div>`;
-    html += `</div>`;
-    html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8"><div>${agePyramidConfig.value.translations.total}</div><div><b>${(selectedSet.left.value + selectedSet.right.value).toLocaleString()}</b></div></div>`
-    html += `</div>`;
+    if (customFormat && typeof customFormat({
+            seriesIndex: index,
+            datapoint: {
+                segment: datapoint[0],
+                index: datapoint[1],
+                left: datapoint[2],
+                right: datapoint[3]
+            },
+            series: drawableDataset.value,
+            config: agePyramidConfig.value
+        }) === 'string') {
+        tooltipContent.value = customFormat({
+            seriesIndex: index,
+            datapoint: {
+                segment: datapoint[0],
+                index: datapoint[1],
+                left: datapoint[2],
+                right: datapoint[3]
+            },
+            series: drawableDataset.value,
+            config: agePyramidConfig.value
+        })
+    } else {
+        let html = "";
+    
+        const selectedSet = drawableDataset.value[index];
+        html += `<div><b>${selectedSet.segment}</b></div>`;
+        html += `<div>${agePyramidConfig.value.translations.age} : ${selectedSet.age}</div>`
+        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
+        html += `<div style="display:flex; flex-direction:row;gap:12px">`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : agePyramidConfig.value.style.layout.bars.left.color}"/></svg><div>${agePyramidConfig.value.translations.female}</div><div><b>${selectedSet.left.value.toLocaleString()}</b></div></div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : agePyramidConfig.value.style.layout.bars.right.color}"/></svg><div>${agePyramidConfig.value.translations.male}</div><div><b>${selectedSet.right.value.toLocaleString()}</b></div></div>`;
+        html += `</div>`;
+        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8"><div>${agePyramidConfig.value.translations.total}</div><div><b>${(selectedSet.left.value + selectedSet.right.value).toLocaleString()}</b></div></div>`
+        html += `</div>`;
+    
+        tooltipContent.value = `<div>${html}</div>`;
+    }
 
-    tooltipContent.value = `<div>${html}</div>`;
     isTooltip.value = true;
 }
 
@@ -561,14 +588,14 @@ defineExpose({
             </g>
 
             <!-- TOOLTIP TRAPS -->
-            <g v-for="(_trap, i) in dataset">
+            <g v-for="(datapoint, i) in dataset">
                 <rect
                     :x="drawingArea.left"
                     :y="drawingArea.top + (drawingArea.height / len) * i - agePyramidConfig.style.layout.bars.gap / 2"
                     :width="drawingArea.width"
                     :height="drawingArea.height / len"
                     :fill="selectedIndex !== null && selectedIndex === i ? `${agePyramidConfig.style.highlighter.color}${opacity[agePyramidConfig.style.highlighter.opacity]}` : 'transparent'"
-                    @mouseover="hoverIndex(i)"
+                    @mouseover="useTooltip(i, datapoint)"
                     @mouseleave="selectedIndex = null; isTooltip = false"
                 />
             </g>

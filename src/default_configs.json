@@ -258,7 +258,8 @@
                 "showValue": true,
                 "showPercentage": false,
                 "roundingValue": 0,
-                "roundingPercentage": 0
+                "roundingPercentage": 0,
+                "customFormat": null
             },
             "userOptions": {
                 "show": true,
@@ -430,7 +431,8 @@
                     "showValue": true,
                     "showPercentage": true,
                     "roundingValue": 0,
-                    "roundingPercentage": 0
+                    "roundingPercentage": 0,
+                    "customFormat": null
                 }
             }
         },
@@ -518,7 +520,8 @@
                     "showValue": true,
                     "showPercentage": true,
                     "roundingValue": 0,
-                    "roundingPercentage": 0
+                    "roundingPercentage": 0,
+                    "customFormat": null
                 },
                 "legend": {
                     "show": true,
@@ -618,7 +621,8 @@
                     "showValue": true,
                     "showPercentage": true,
                     "roundingValue": 0,
-                    "roundingPercentage": 0
+                    "roundingPercentage": 0,
+                    "customFormat": null
                 },
                 "legend": {
                     "show": true,
@@ -770,7 +774,9 @@
                     "backgroundColor": "#FFFFFF",
                     "color": "#2D353C",
                     "fontSize": 14,
-                    "roundingValue": 0
+                    "roundingValue": 0,
+                    "customFormat": null,
+                    "showShape": true
                 },
                 "legend": {
                     "show": true,
@@ -1251,7 +1257,8 @@
                     "roundingValue": 0,
                     "roundingPercentage": 0,
                     "prefix":"",
-                    "suffix":""
+                    "suffix":"",
+                    "customFormat": null
                 }
             }
         },
@@ -1676,7 +1683,8 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "fontSize": 14,
-                "roundingValue": 0
+                "roundingValue": 0,
+                "customFormat": null
             }
         },
         "userOptions": {
@@ -1804,7 +1812,9 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "fontSize": 14,
-                "roundingValue": 0
+                "roundingValue": 0,
+                "customFormat": null,
+                "showShape": true
             }
         },
         "userOptions": {
@@ -1934,7 +1944,8 @@
                 "fontSize": 14,
                 "roundingValue": 0,
                 "prefix": "",
-                "suffix": ""
+                "suffix": "",
+                "customFormat": null
             }
         },
         "translations": {
@@ -2058,7 +2069,8 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "fontSize": 14,
-                "roundingValue": 0
+                "roundingValue": 0,
+                "customFormat": null
             }
         },
         "translations": {
@@ -2559,7 +2571,8 @@
                     "showValue": true,
                     "showPercentage": true,
                     "roundingValue": 0,
-                    "roundingPercentage": 0
+                    "roundingPercentage": 0,
+                    "customFormat": null
                 }
             }
         },
@@ -2994,7 +3007,8 @@
                     "show": true,
                     "color": "#2D353C",
                     "backgroundColor": "#FFFFFF",
-                    "fontSize": 14
+                    "fontSize": 14,
+                    "customFormat": null
                 },
                 "zoom": {
                     "speed": 1

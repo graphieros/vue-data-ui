@@ -100,7 +100,7 @@ const immutableSet = computed(() => {
                 name: serie.name,
                 color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
                 value: serie.values.reduce((a,b) => a + b, 0),
-                absoluteValues: serie.values
+                absoluteValues: serie.values,
             }
         })
         .sort((a,b) => b.value - a.value)
@@ -123,7 +123,8 @@ const donutSet = computed(() => {
                 name: serie.name,
                 color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
                 value: serie.values.reduce((a,b) => a + b, 0),
-                absoluteValues: serie.values
+                absoluteValues: serie.values,
+                seriesIndex: i
             }
         })
         .sort((a,b) => b.value - a.value)
@@ -184,24 +185,33 @@ const average = computed(() => {
     return total.value / donutSet.value.length;
 });
 
-function useTooltip(arc, i, showTooltip = true) {
-    isTooltip.value = showTooltip;
-    selectedSerie.value = i;
+function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
+    isTooltip.value = show;
+    selectedSerie.value = relativeIndex;
     let html = "";
 
-    html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${arc.name}</div>`;
-    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${arc.color}"/></svg>`;
-    if(donutConfig.value.style.chart.tooltip.showValue) {
-        html += `<b data-cy="donut-tooltip-value">${ dataLabel({p: donutConfig.value.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: donutConfig.value.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.value.style.chart.tooltip.roundingValue})}</b>`;
-    }
-    if(donutConfig.value.style.chart.tooltip.showPercentage) {
-        if(!donutConfig.value.style.chart.tooltip.showValue) {
-            html += `<b>${(arc.proportion * 100).toFixed(donutConfig.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
-        } else {
-            html += `<span>(${(arc.proportion * 100).toFixed(donutConfig.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+    const customFormat = donutConfig.value.style.chart.tooltip.customFormat;
+
+    if (customFormat && typeof customFormat === 'function' && typeof customFormat({ seriesIndex, datapoint, series: immutableSet.value, config: donutConfig.value }) === 'string') {
+        tooltipContent.value = customFormat({ seriesIndex, datapoint, series: immutableSet.value, config: donutConfig.value })
+    } else {
+        html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
+
+        if(donutConfig.value.style.chart.tooltip.showValue) {
+            html += `<b data-cy="donut-tooltip-value">${ dataLabel({p: donutConfig.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: donutConfig.value.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.value.style.chart.tooltip.roundingValue})}</b>`;
         }
+
+        if(donutConfig.value.style.chart.tooltip.showPercentage) {
+            if(!donutConfig.value.style.chart.tooltip.showValue) {
+                html += `<b>${(datapoint.proportion * 100).toFixed(donutConfig.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+            } else {
+                html += `<span>(${(datapoint.proportion * 100).toFixed(donutConfig.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+            }
+        }
+
+        tooltipContent.value = `<div>${html}</div>`;
     }
-    tooltipContent.value = `<div>${html}</div>`;
 }
 
 const __to__ = ref(null);
@@ -462,7 +472,12 @@ defineExpose({
                 data-cy-donut-trap
                 :d="arc.arcSlice" 
                 :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
-                @mouseenter="useTooltip(arc, i, true)"
+                @mouseenter="useTooltip({
+                    datapoint: arc,
+                    relativeIndex: i,
+                    seriesIndex: arc.seriesIndex,
+                    show: true
+                })"
                 @mouseleave="isTooltip = false; selectedSerie = null"
                 @click="segregate(i)"
             />

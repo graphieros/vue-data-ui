@@ -251,30 +251,49 @@ function getData() {
 
 const selectedBarId = ref(null);
 
-function useTooltip(bar) {
+function useTooltip(bar, seriesIndex) {
     isTooltip.value = true;
     selectedBarId.value = bar.id;
     let html = "";
     const serieName = bar.isChild ? bar.parentName : bar.name;
     const childName = bar.isChild ? bar.name : "";
 
-    html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;text-align:left;">
-            <div style="display:flex;align-items:center;gap:4px;"><svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" fill="${bar.color}"/></svg> ${ serieName }</div>
-            ${childName ? `<div>${childName}</div>` : ''}
-        </div>`;
-    
-    if (verticalBarConfig.value.style.chart.tooltip.showValue) {
-        html += `<div>${verticalBarConfig.value.translations.value} : <b>${verticalBarConfig.value.style.chart.tooltip.prefix}${[undefined, NaN, null].includes(bar.value) ? '-' : bar.value.toFixed(verticalBarConfig.value.style.chart.tooltip.roundingValue)}${verticalBarConfig.value.style.chart.tooltip.suffix}</b></div>`;
-    }    
+    const customFormat = verticalBarConfig.value.style.chart.tooltip.customFormat;
 
-    if(verticalBarConfig.value.style.chart.tooltip.showPercentage) {
-        html += `<div>${verticalBarConfig.value.translations.percentageToTotal} : <b>${isNaN(bar.value / total.value) ? '-' : `${(bar.value / total.value * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
-        if(bar.isChild) {
-            html += `<div>${verticalBarConfig.value.translations.percentageToSerie} : <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+    if (customFormat && typeof customFormat({
+            datapoint: bar,
+            series: immutableDataset.value,
+            config: verticalBarConfig.value,
+            seriesIndex
+        }) === 'string') {
+
+        tooltipContent.value = customFormat({
+            datapoint: bar,
+            series: immutableDataset.value,
+            config: verticalBarConfig.value,
+            seriesIndex
+        })
+
+    } else {
+        html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;text-align:left;">
+                <div style="display:flex;align-items:center;gap:4px;"><svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" fill="${bar.color}"/></svg> ${ serieName }</div>
+                ${childName ? `<div>${childName}</div>` : ''}
+            </div>`;
+        
+        if (verticalBarConfig.value.style.chart.tooltip.showValue) {
+            html += `<div>${verticalBarConfig.value.translations.value} : <b>${verticalBarConfig.value.style.chart.tooltip.prefix}${[undefined, NaN, null].includes(bar.value) ? '-' : bar.value.toFixed(verticalBarConfig.value.style.chart.tooltip.roundingValue)}${verticalBarConfig.value.style.chart.tooltip.suffix}</b></div>`;
+        }    
+    
+        if(verticalBarConfig.value.style.chart.tooltip.showPercentage) {
+            html += `<div>${verticalBarConfig.value.translations.percentageToTotal} : <b>${isNaN(bar.value / total.value) ? '-' : `${(bar.value / total.value * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+            if(bar.isChild) {
+                html += `<div>${verticalBarConfig.value.translations.percentageToSerie} : <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+            }
         }
+    
+        tooltipContent.value = `<div style="text-align:left">${html}</div>`;
     }
 
-    tooltipContent.value = `<div style="text-align:left">${html}</div>`;
 }
 
 const __to__ = ref(null);
@@ -607,7 +626,7 @@ defineExpose({
                     :width="svg.width"
                     :height="verticalBarConfig.style.chart.layout.bars.height + verticalBarConfig.style.chart.layout.bars.gap"
                     :fill="selectedBarId === serie.id ? `${verticalBarConfig.style.chart.layout.highlighter.color}${opacity[verticalBarConfig.style.chart.layout.highlighter.opacity]}` : 'transparent'"
-                    @mouseenter="useTooltip(serie)"
+                    @mouseenter="useTooltip(serie, i)"
                     @mouseleave="hoveredBar = null; isTooltip = false; selectedBarId = null"
                 />
             </g>

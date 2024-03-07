@@ -203,26 +203,43 @@ function getData() {
 const selectedPlotId = ref(undefined);
 const selectedPlot = ref(null);
 
-function hoverPlot(plot) {
+function useTooltip(plot, seriesIndex) {
     selectedPlotId.value = plot.id;
     selectedPlot.value = plot;
     let html = "";
 
-    if (plot.clusterName) {
-        html += `<div style="display:flex;gap:3px;align-items:center">${plot.clusterName}</div>`
+    const customFormat = scatterConfig.value.style.tooltip.customFormat;
+
+    if (customFormat && typeof customFormat({
+            datapoint: plot,
+            seriesIndex,
+            series: drawableDataset.value,
+            config: scatterConfig.value
+        }) === 'string') {
+        tooltipContent.value = customFormat({
+            datapoint: plot,
+            seriesIndex,
+            series: drawableDataset.value,
+            config: scatterConfig.value
+        })
+    } else {
+        if (plot.clusterName) {
+            html += `<div style="display:flex;gap:3px;align-items:center">${plot.clusterName}</div>`
+        }
+    
+        if (plot.v.name) {
+            html += `<div>${plot.v.name}</div>`
+        }
+    
+        html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
+        html += `<div>${scatterConfig.value.style.layout.dataLabels.xAxis.name} : <b>${isNaN(plot.v.x) ? '-' : Number(plot.v.x.toFixed(scatterConfig.value.style.layout.dataLabels.xAxis.roundingValue)).toLocaleString()}</b></div>`;
+        html += `<div>${scatterConfig.value.style.layout.dataLabels.yAxis.name} : <b>${isNaN(plot.v.y) ? '-' : Number(plot.v.y.toFixed(scatterConfig.value.style.layout.dataLabels.yAxis.roundingValue)).toLocaleString()}</b></div>`;
+        html += `${scatterConfig.value.style.layout.plots.deviation.translation} : <b>${Number(plot.deviation.toFixed(scatterConfig.value.style.layout.plots.deviation.roundingValue)).toLocaleString()}</b>`
+        html += `</div>`;
+    
+        tooltipContent.value = `<div>${html}</div>`
     }
 
-    if (plot.v.name) {
-        html += `<div>${plot.v.name}</div>`
-    }
-
-    html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
-    html += `<div>${scatterConfig.value.style.layout.dataLabels.xAxis.name} : <b>${isNaN(plot.v.x) ? '-' : Number(plot.v.x.toFixed(scatterConfig.value.style.layout.dataLabels.xAxis.roundingValue)).toLocaleString()}</b></div>`;
-    html += `<div>${scatterConfig.value.style.layout.dataLabels.yAxis.name} : <b>${isNaN(plot.v.y) ? '-' : Number(plot.v.y.toFixed(scatterConfig.value.style.layout.dataLabels.yAxis.roundingValue)).toLocaleString()}</b></div>`;
-    html += `${scatterConfig.value.style.layout.plots.deviation.translation} : <b>${Number(plot.deviation.toFixed(scatterConfig.value.style.layout.plots.deviation.roundingValue)).toLocaleString()}</b>`
-    html += `</div>`;
-
-    tooltipContent.value = `<div>${html}</div>`
     isTooltip.value = true;
 }
 
@@ -467,7 +484,7 @@ defineExpose({
                         :fill="`${ds.color}${opacity[scatterConfig.style.layout.plots.opacity * 100]}`"
                         :stroke="scatterConfig.style.layout.plots.stroke"
                         :stroke-width="scatterConfig.style.layout.plots.strokeWidth"
-                        @mouseover="hoverPlot(plot)"
+                        @mouseover="useTooltip(plot, i)"
                         @mouseleave="clearHover"
                         :style="`opacity:${scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
                     />
@@ -482,7 +499,7 @@ defineExpose({
                         :color="`${ds.color}${opacity[scatterConfig.style.layout.plots.opacity * 100]}`"
                         :stroke="scatterConfig.style.layout.plots.stroke"
                         :strokeWidth="scatterConfig.style.layout.plots.strokeWidth"
-                        @mouseover="hoverPlot(plot)"
+                        @mouseover="useTooltip(plot, i)"
                         @mouseleave="clearHover"
                         :style="`opacity:${scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
                     />
@@ -641,7 +658,7 @@ defineExpose({
             :parent="scatterChart"
             :content="tooltipContent"
         >
-            <div style="width: 100%; display: flex; align-items:center;justify-content:center;">
+            <div style="width: 100%; display: flex; align-items:center;justify-content:center;" v-if="scatterConfig.style.tooltip.showShape">
                 <svg viewBox="0 0 20 20" height="20" width="20" style="overflow: hidden;background:transparent;">
                     <Shape 
                         :shape="selectedPlot.shape"

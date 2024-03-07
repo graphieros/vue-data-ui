@@ -102,7 +102,8 @@ const datasetCopy = computed(() => {
         return {
             ...s,
             color: convertColorToHex(s.color) || palette[i] || palette[i % palette.length],
-            uid: `serie_${i}`
+            uid: `serie_${i}`,
+            absoluteIndex: i
         }
     });
 });
@@ -125,6 +126,7 @@ const waffleSet = computed(() => {
         .filter((serie, i) => !segregated.value.includes(serie.uid))
         .map((serie, i) => {
             return {
+                absoluteIndex: serie.absoluteIndex,
                 uid: serie.uid,
                 name: serie.name,
                 color: serie.color,
@@ -140,6 +142,7 @@ const immutableSet = computed(() => {
     return datasetCopy.value
         .map((serie, i) => {
             return {
+                absoluteIndex: serie.absoluteIndex,
                 uid: serie.uid,
                 name: serie.name,
                 color: serie.color,
@@ -242,25 +245,33 @@ const total = computed(() => {
 
 function useTooltip(index) {
     if(segregated.value.length === props.dataset.length) return;
+    
     const selected = rects.value[index];
     isTooltip.value = true;
     selectedSerie.value = rects.value[index].serieIndex;
 
-    let html = "";
+    const customFormat = waffleConfig.value.style.chart.tooltip.customFormat;
 
-    html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
-    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" rx="1" fill="${selected.color}" /></svg>`;
-    if(waffleConfig.value.style.chart.tooltip.showValue) {
-        html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:waffleConfig.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s: waffleConfig.value.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.value.style.chart.tooltip.roundingValue})}</b>`;
-    }
-    if(waffleConfig.value.style.chart.tooltip.showPercentage) {
-        if(!waffleConfig.value.style.chart.tooltip.showValue) {
-            html += `<b>${(selected.value / total.value * 100).toFixed(waffleConfig.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
-        } else {
-            html += `<span data-cy="waffle-tooltip-percentage">(${(selected.value / total.value * 100).toFixed(waffleConfig.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+    if(customFormat && typeof customFormat({ seriesIndex: rects.value[index].absoluteIndex, datapoint: selected, series: datasetCopy.value, config: waffleConfig.value}) === 'string') {
+        tooltipContent.value = customFormat({ seriesIndex: rects.value[index].absoluteIndex, datapoint: selected, series: datasetCopy.value, config: waffleConfig.value})
+    } else {
+        let html = "";
+    
+        html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" rx="1" fill="${selected.color}" /></svg>`;
+        if(waffleConfig.value.style.chart.tooltip.showValue) {
+            html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:waffleConfig.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s: waffleConfig.value.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.value.style.chart.tooltip.roundingValue})}</b>`;
         }
+        if(waffleConfig.value.style.chart.tooltip.showPercentage) {
+            if(!waffleConfig.value.style.chart.tooltip.showValue) {
+                html += `<b>${(selected.value / total.value * 100).toFixed(waffleConfig.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+            } else {
+                html += `<span data-cy="waffle-tooltip-percentage">(${(selected.value / total.value * 100).toFixed(waffleConfig.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+            }
+        }
+        tooltipContent.value = html;
     }
-    tooltipContent.value = html;
+
 }
 
 const emit = defineEmits(['selectLegend']);

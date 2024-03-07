@@ -1042,78 +1042,101 @@ export default {
                 }
             });
 
+            
             let html = "";
-
+            
             let sum = selectedSeries.map(s => s.value).filter(s => this.isSafeValue(s) && s !== null).reduce((a,b) => Math.abs(a) + Math.abs(b), 0);
-
+            
             const time = this.timeLabels[this.selectedSerieIndex];
-            if(time) {
-                html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid #e1e5e8; width:100%">${time}</div>`;
-            }
-            selectedSeries.forEach(s => {
-                if(this.isSafeValue(s.value) && s.value !== null) {
-                    let shape = '';
-                    let insideShape = '';
-                    switch (this.icons[s.type]) {
-                        case 'bar':
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" rx="1" stroke="none" height="12" width="12" fill="${s.color}" /></svg>`;
-                            break;
-                        
-                        case 'line':
-                            if(!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
-                                insideShape = `<circle cx="10" cy="8" r="4" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" />`
-                            } else if(s.shape === 'triangle') {
-                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
-                            } else if(s.shape === 'square') {
-                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
-                            } else if(s.shape === 'diamond') {
-                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
-                            } else if(s.shape === 'pentagon') {
-                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
-                            } else if(s.shape === 'hexagon') {
-                                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
-                            } else if(s.shape === 'star') {
-                                insideShape = `<polygon stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 10, y: 8 }, radius: 4})}" />`
-                            }
-                            shape = `<svg viewBox="0 0 20 12" height="14" width="20"><rect rx="3" x="0" y="6" stroke="none" height="4" width="20" fill="${s.color}" />${insideShape}</svg>`;
-                            break;
+            const customFormat = this.chartConfig.chart.tooltip.customFormat;
 
-                        case 'plot':
-                            if (!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
-                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" /></svg>`;
-                                break;
-                            }
-                            if(s.shape === 'star') {
-                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5})}" /></svg>`;
-                                break;
-                            }
-                            if(s.shape === 'triangle') {
-                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                break;
-                            }
-                            if(s.shape === 'square') {
-                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                break;
-                            }
-                            if(s.shape === 'diamond') {
-                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                break;
-                            }
-                            if(s.shape === 'pentagon') {
-                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                break;
-                            }
-                            if(s.shape === 'hexagon') {
-                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                break;
-                            }
-                        default:
-                            break;
-                    }
-                    html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? this.dataLabel({p:this.chartConfig.chart.labels.prefix, v: s.value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.chart.tooltip.roundingValue}) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+            if(customFormat && typeof customFormat({
+                seriesIndex: this.selectedSerieIndex,
+                datapoint: selectedSeries,
+                series: this.absoluteDataset,
+                bars: this.barSet,
+                lines: this.lineSet,
+                plots: this.plotSet,
+                config: this.chartConfig
+            }) === 'string') {
+                return customFormat({
+                    seriesIndex: this.selectedSerieIndex,
+                    datapoint: selectedSeries,
+                    series: this.absoluteDataset,
+                    bars: this.barSet,
+                    lines: this.lineSet,
+                    plots: this.plotSet,
+                    config: this.chartConfig
+                })
+            } else {
+                if(time) {
+                    html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid #e1e5e8; width:100%">${time}</div>`;
                 }
-            });
-            return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
+                selectedSeries.forEach(s => {
+                    if(this.isSafeValue(s.value) && s.value !== null) {
+                        let shape = '';
+                        let insideShape = '';
+                        switch (this.icons[s.type]) {
+                            case 'bar':
+                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" rx="1" stroke="none" height="12" width="12" fill="${s.color}" /></svg>`;
+                                break;
+                            
+                            case 'line':
+                                if(!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
+                                    insideShape = `<circle cx="10" cy="8" r="4" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" />`
+                                } else if(s.shape === 'triangle') {
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                } else if(s.shape === 'square') {
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                } else if(s.shape === 'diamond') {
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                } else if(s.shape === 'pentagon') {
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                } else if(s.shape === 'hexagon') {
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                } else if(s.shape === 'star') {
+                                    insideShape = `<polygon stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 10, y: 8 }, radius: 4})}" />`
+                                }
+                                shape = `<svg viewBox="0 0 20 12" height="14" width="20"><rect rx="3" x="0" y="6" stroke="none" height="4" width="20" fill="${s.color}" />${insideShape}</svg>`;
+                                break;
+    
+                            case 'plot':
+                                if (!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" /></svg>`;
+                                    break;
+                                }
+                                if(s.shape === 'star') {
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5})}" /></svg>`;
+                                    break;
+                                }
+                                if(s.shape === 'triangle') {
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    break;
+                                }
+                                if(s.shape === 'square') {
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    break;
+                                }
+                                if(s.shape === 'diamond') {
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    break;
+                                }
+                                if(s.shape === 'pentagon') {
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    break;
+                                }
+                                if(s.shape === 'hexagon') {
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    break;
+                                }
+                            default:
+                                break;
+                        }
+                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? this.dataLabel({p:this.chartConfig.chart.labels.prefix, v: s.value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.chart.tooltip.roundingValue}) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                    }
+                });
+                return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
+            }            
         },
         svg() {
             return {

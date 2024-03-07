@@ -125,7 +125,7 @@ export function treeShake({ defaultConfig, userConfig }) {
     Object.keys(finalConfig).forEach(key => {
         if (Object.hasOwn(userConfig, key)) {
             const currentVal = userConfig[key]
-            if (typeof currentVal === 'boolean') {
+            if (['boolean', 'function'].includes(typeof currentVal)) {
                 finalConfig[key] = currentVal;
             } else if (["string", "number"].includes(typeof currentVal)) {
                 if (isValidUserValue(currentVal)) {

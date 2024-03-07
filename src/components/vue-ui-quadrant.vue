@@ -416,24 +416,44 @@ function getQuadrantSide(plot) {
 const hoveredPlotId = ref(null);
 const hoveredPlot = ref(null);
 
-function hoverPlot(category, plot) {
+function useTooltip(category, plot, categoryIndex) {
     hoveredPlotId.value = plot.uid;
     hoveredPlot.value = {
         color: category.color,
         shape: category.shape
     }
     isTooltip.value = true;
-    let html = "";
 
-    if(plot.quadrantSide) {
-        html += `<div style="color:${quadrantConfig.value.style.chart.layout.labels.quadrantLabels[plot.quadrantSide].color};font-weight:${quadrantConfig.value.style.chart.layout.labels.quadrantLabels[plot.quadrantSide].bold ? 'bold' : '400'}">${quadrantConfig.value.style.chart.layout.labels.quadrantLabels[plot.quadrantSide].text}</div>`;
+    const customFormat = quadrantConfig.value.style.chart.tooltip.customFormat;
+
+    if (customFormat && typeof customFormat({
+            seriesIndex: categoryIndex,
+            datapoint: plot,
+            series: drawableDataset.value,
+            config: quadrantConfig.value
+        }) === 'string') {
+
+        tooltipContent.value = customFormat({
+            seriesIndex: categoryIndex,
+            datapoint: plot,
+            series: drawableDataset.value,
+            config: quadrantConfig.value
+        })
+
+    } else {
+        let html = "";
+    
+        if(plot.quadrantSide) {
+            html += `<div style="color:${quadrantConfig.value.style.chart.layout.labels.quadrantLabels[plot.quadrantSide].color};font-weight:${quadrantConfig.value.style.chart.layout.labels.quadrantLabels[plot.quadrantSide].bold ? 'bold' : '400'}">${quadrantConfig.value.style.chart.layout.labels.quadrantLabels[plot.quadrantSide].text}</div>`;
+        }
+        html += `<div>${category.name}</div>`;
+        html += `<div style="padding-bottom:6px;border-bottom:1px solid #e1e5e8;margin-bottom:3px">${plot.name}</div>`;
+        html += `<div>${quadrantConfig.value.style.chart.layout.grid.xAxis.name ? quadrantConfig.value.style.chart.layout.grid.xAxis.name : 'x'} : <b>${plot.xValue.toFixed(quadrantConfig.value.style.chart.tooltip.roundingValue)}</b></div>`;  
+        html += `<div>${quadrantConfig.value.style.chart.layout.grid.yAxis.name ? quadrantConfig.value.style.chart.layout.grid.yAxis.name : 'y'} : <b>${plot.yValue.toFixed(quadrantConfig.value.style.chart.tooltip.roundingValue)}</b></div>`;  
+    
+        tooltipContent.value = `<div style="text-align:left;font-size:${quadrantConfig.value.style.chart.tooltip.fontSize}px">${html}</div>`;
     }
-    html += `<div>${category.name}</div>`;
-    html += `<div style="padding-bottom:6px;border-bottom:1px solid #e1e5e8;margin-bottom:3px">${plot.name}</div>`;
-    html += `<div>${quadrantConfig.value.style.chart.layout.grid.xAxis.name ? quadrantConfig.value.style.chart.layout.grid.xAxis.name : 'x'} : <b>${plot.xValue.toFixed(quadrantConfig.value.style.chart.tooltip.roundingValue)}</b></div>`;  
-    html += `<div>${quadrantConfig.value.style.chart.layout.grid.yAxis.name ? quadrantConfig.value.style.chart.layout.grid.yAxis.name : 'y'} : <b>${plot.yValue.toFixed(quadrantConfig.value.style.chart.tooltip.roundingValue)}</b></div>`;  
 
-    tooltipContent.value = `<div style="text-align:left;font-size:${quadrantConfig.value.style.chart.tooltip.fontSize}px">${html}</div>`;
 }
 
 function selectPlot(category, plot) {
@@ -819,7 +839,7 @@ defineExpose({
 
             <!-- PLOTS -->
             <template v-if="!quadrantConfig.style.chart.layout.labels.plotLabels.showAsTag">
-                <g v-for="category in drawableDataset">
+                <g v-for="(category, i) in drawableDataset">
                     <Shape
                         v-for="plot in category.series"
                         :color="category.color"
@@ -829,7 +849,7 @@ defineExpose({
                         :shape="category.shape"
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
-                        @mouseover="hoverPlot(category, plot)"
+                        @mouseover="useTooltip(category, plot, i)"
                         @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
                         @click="selectPlot(category, plot)"
                     />
@@ -853,8 +873,8 @@ defineExpose({
 
             <template v-else>
                 <g v-if="mutableConfig.plotLabels.show">
-                    <template v-for="category in drawableDataset">
-                        <foreignObject v-for="plot in category.series" style="overflow: visible;" height="10" width="100" :x="plot.x - 50" :y="plot.y - (quadrantConfig.style.chart.layout.labels.plotLabels.fontSize)" @mouseover="hoverPlot(category, plot)"
+                    <template v-for="(category, i) in drawableDataset">
+                        <foreignObject v-for="plot in category.series" style="overflow: visible;" height="10" width="100" :x="plot.x - 50" :y="plot.y - (quadrantConfig.style.chart.layout.labels.plotLabels.fontSize)" @mouseover="useTooltip(category, plot, i)"
                             @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
                             @click="selectPlot(category, plot)">
                             <div :style="`color:${adaptColorToBackground(category.color)};margin: 0 auto; font-size:${quadrantConfig.style.chart.layout.labels.plotLabels.fontSize}px; text-align:center;background:${category.color}; padding: 2px 4px; border-radius: 12px; height: ${quadrantConfig.style.chart.layout.labels.plotLabels.fontSize*1.5}px`">
@@ -911,7 +931,7 @@ defineExpose({
             :parent="quadrantChart"
             :content="tooltipContent"
         >
-            <svg height="14" width="14" viewBox="0 0 20 20">
+            <svg height="14" width="14" viewBox="0 0 20 20" v-if="quadrantConfig.style.chart.tooltip.showShape">
                 <Shape
                     :plot="{ x: 10, y: 10 }"
                     :shape="hoveredPlot.shape"

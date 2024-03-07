@@ -183,32 +183,49 @@ const xLabels = computed(() => {
     return datasetBreakdown.value.map(ds => ds.period)
 });
 
-function useTooltip(index) {
+function useTooltip(index, datapoint) {
     hoveredIndex.value = index;
-    if (candlestickConfig.value.style.tooltip.show) {
-        let html = "";
-        const { period, open, high, low, last, volume, isBullish } = drawableDataset.value[index];
-        const { period:tr_period, open:tr_open, high:tr_high, low:tr_low, last:tr_last, volume:tr_volume } = candlestickConfig.value.translations;
 
-        html += `<div data-cy="candlestick-tooltip-period"><svg style="margin-right:6px" viewBox="0 0 12 12" height="12" width="12"><rect x="0" y="0" height="12" width="12" rx="${candlestickConfig.value.style.layout.candle.borderRadius*3}" stroke="${candlestickConfig.value.style.layout.candle.stroke}" stroke-width="${candlestickConfig.value.style.layout.candle.strokeWidth}" 
-            fill="${candlestickConfig.value.style.layout.candle.gradient.show 
-                ? isBullish 
-                    ? `url(#bullish_gradient_${uid.value})` 
-                    : `url(#bearish_gradient_${uid.value})` 
-                : isBullish 
-                    ? candlestickConfig.value.style.layout.candle.colors.bullish 
-                    : candlestickConfig.value.style.layout.candle.colors.bearish}"/></svg>${period}</div>`;
-        html += `${tr_volume} : <b data-cy="candlestick-tooltip-volume">${ isNaN(volume) ? '-' : Number(volume.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()}</b>`;
-        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
-        html += `<div>${tr_open} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(open.value) ? '-' : Number(open.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
-        html += `<div>${tr_high} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(high.value) ? '-' : Number(high.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
-        html += `<div>${tr_low} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(low.value) ? '-' : Number(low.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
-        html += `<div>${tr_last} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(last.value) ? '-' : Number(last.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
-        html += `</div>`;
+    const customFormat = candlestickConfig.value.style.tooltip.customFormat;
 
-        tooltipContent.value = `<div style="text-align:right">${html}</div>`
-        isTooltip.value = true;
+    if (customFormat && typeof customFormat({
+            seriesIndex: index,
+            datapoint,
+            series: drawableDataset.value,
+            config: candlestickConfig.value
+        }) === 'string') {
+        tooltipContent.value = customFormat({
+            seriesIndex: index,
+            datapoint,
+            series: drawableDataset.value,
+            config: candlestickConfig.value
+        })
+    } else {
+        if (candlestickConfig.value.style.tooltip.show) {
+            let html = "";
+            const { period, open, high, low, last, volume, isBullish } = drawableDataset.value[index];
+            const { period:tr_period, open:tr_open, high:tr_high, low:tr_low, last:tr_last, volume:tr_volume } = candlestickConfig.value.translations;
+    
+            html += `<div data-cy="candlestick-tooltip-period"><svg style="margin-right:6px" viewBox="0 0 12 12" height="12" width="12"><rect x="0" y="0" height="12" width="12" rx="${candlestickConfig.value.style.layout.candle.borderRadius*3}" stroke="${candlestickConfig.value.style.layout.candle.stroke}" stroke-width="${candlestickConfig.value.style.layout.candle.strokeWidth}" 
+                fill="${candlestickConfig.value.style.layout.candle.gradient.show 
+                    ? isBullish 
+                        ? `url(#bullish_gradient_${uid.value})` 
+                        : `url(#bearish_gradient_${uid.value})` 
+                    : isBullish 
+                        ? candlestickConfig.value.style.layout.candle.colors.bullish 
+                        : candlestickConfig.value.style.layout.candle.colors.bearish}"/></svg>${period}</div>`;
+            html += `${tr_volume} : <b data-cy="candlestick-tooltip-volume">${ isNaN(volume) ? '-' : Number(volume.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()}</b>`;
+            html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
+            html += `<div>${tr_open} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(open.value) ? '-' : Number(open.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
+            html += `<div>${tr_high} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(high.value) ? '-' : Number(high.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
+            html += `<div>${tr_low} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(low.value) ? '-' : Number(low.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
+            html += `<div>${tr_last} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(last.value) ? '-' : Number(last.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
+            html += `</div>`;
+    
+            tooltipContent.value = `<div style="text-align:right">${html}</div>`
+        }
     }
+    isTooltip.value = true;
 }
 
 const __to__ = ref(null);
@@ -560,14 +577,14 @@ defineExpose({
             <!-- TOOLTIP TRAPS -->
             <g>
                 <rect 
-                    v-for="(_, i) in drawableDataset"
+                    v-for="(rect, i) in drawableDataset"
                     :data-cy="`candlestick-trap-${i}`"
                     :x="drawingArea.left + i * slot"
                     :y="drawingArea.top"
                     :height="drawingArea.height"
                     :width="slot"
                     :fill="hoveredIndex === i ? `${candlestickConfig.style.layout.selector.color}${opacity[candlestickConfig.style.layout.selector.opacity]}` : 'transparent'"
-                    @mouseover="useTooltip(i)"
+                    @mouseover="useTooltip(i,rect)"
                     @mouseleave="hoveredIndex = undefined; isTooltip = false"
                 />
             </g>

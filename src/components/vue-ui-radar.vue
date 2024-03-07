@@ -295,20 +295,39 @@ function useTooltip(apex, i) {
     selectedIndex.value = i;
     isTooltip.value = true;
     let html = "";
-    html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
-    for(let k = 0; k < apex.values.length; k += 1) {
-        if(!segregated.value.includes(k)) {
-            sparkBarData.value.push({
-                name: datasetCopy.value[k].name,
-                value: apex.values[k] / apex.target * 100,
-                color: datasetCopy.value[k].color,
-                suffix: '%)',
-                prefix: `${dataLabel({p: datasetCopy.value[k].prefix ?? '',v:apex.values[k],s:datasetCopy.value[k].suffix ?? '', r:radarConfig.value.style.chart.tooltip.roundingValue})} (`,
-                rounding: radarConfig.value.style.chart.tooltip.roundingPercentage
-            })
+
+    const customFormat = radarConfig.value.style.chart.tooltip.customFormat;
+    console.log({customFormat})
+
+    if (customFormat && typeof customFormat({
+            seriesIndex: i,
+            datapoint: apex,
+            series: { categories: datasetCopy.value, datapoints: seriesCopy.value, radar: radar.value  },
+            config: radarConfig.value
+        }) === 'string') {
+        tooltipContent.value = customFormat({
+            seriesIndex: i,
+            datapoint: apex,
+            series: { categories: datasetCopy.value, datapoints: seriesCopy.value, radar: radar.value  },
+            config: radarConfig.value
+        })
+    } else {
+        html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
+        for(let k = 0; k < apex.values.length; k += 1) {
+            if(!segregated.value.includes(k)) {
+                sparkBarData.value.push({
+                    name: datasetCopy.value[k].name,
+                    value: apex.values[k] / apex.target * 100,
+                    color: datasetCopy.value[k].color,
+                    suffix: '%)',
+                    prefix: `${dataLabel({p: datasetCopy.value[k].prefix ?? '',v:apex.values[k],s:datasetCopy.value[k].suffix ?? '', r:radarConfig.value.style.chart.tooltip.roundingValue})} (`,
+                    rounding: radarConfig.value.style.chart.tooltip.roundingPercentage
+                })
+            }
         }
+        tooltipContent.value = html;
     }
-    tooltipContent.value = html;
+
 }
 
 const __to__ = ref(null);

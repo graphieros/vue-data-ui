@@ -396,8 +396,6 @@ const radarDataset = ref({
   ],
 });
 
-const radarConfig = ref(getVueDataUiConfig('vue_ui_radar'))
-
 const quadrantDataset = ref([
   {
     name: "category 1",
@@ -921,63 +919,6 @@ const weeks = computed(() => {
   return arr;
 });
 
-const heatmapConfig = ref({
-  style: {
-    layout: {
-      useDiv: true,
-      padding: {
-        bottom: 48,
-      },
-      cells: {
-        value: {
-          show: true,
-          fontSize: 10
-        },
-        spacing: 2
-      },
-      dataLabels: {
-        prefix: "$",
-        suffix: "£",
-        yAxis: {
-          fontSize: 24,
-        },
-        xAxis: {
-          fontSize: 24,
-          values: weeks.value,
-        },
-      },
-    },
-    title: {
-      text: "Title",
-      subtitle: {
-        text: "Subtitle",
-      },
-    },
-  },
-});
-
-const scatterConfig = ref({
-  style: {
-    layout: {
-      useDiv: true,
-      dataLabels: {
-        xAxis: {
-          name: "xAxis",
-        },
-        yAxis: {
-          name: "yAxis",
-        },
-      },
-    },
-    title: {
-      text: "Title",
-      subtitle: {
-        text: "Subtitle",
-      },
-    },
-  },
-});
-
 const scat1 = computed(() => {
   const arr = [];
   for (let i = -50; i < 50; i += 1) {
@@ -1016,20 +957,6 @@ const scatterDataset = computed(() => {
   ];
 });
 
-const candlestickConfig = ref({
-  style: {
-    layout: {
-      useDiv: true,
-    },
-    title: {
-      text: "Title",
-      subtitle: {
-        text: "Subtitle",
-      },
-    },
-  },
-});
-
 // date | open | high | low | last | volume
 const candlestickDataset = ref([
   ["2024-01-01", 56, 120, 40, 110, 1250],
@@ -1058,20 +985,6 @@ const barset = ref([
     dataLabels: true,
   },
 ]);
-
-const pyramidConfig = ref({
-  style: {
-    layout: {
-      useDiv: true,
-    },
-    title: {
-      text: "France",
-      subtitle: {
-        text: "2022",
-      },
-    },
-  },
-});
 
 const pyramidDataset = ref([
   ["2022", 0, 330929, 345538],
@@ -1315,15 +1228,6 @@ const dashboardConfig = ref({
 });
 
 const comps = ref([
-  {
-    id: 1,
-    width: 40,
-    height: 30,
-    left: 2,
-    top: 4,
-    component: "VueUiCandlestick",
-    props: { config: candlestickConfig, dataset: candlestickDataset },
-  },
   {
     id: 2,
     width: 20,
@@ -2007,26 +1911,6 @@ const histoDataset = ref([
   },
 ]);
 
-const ringsConfig = ref({
-  style: {
-    chart: {
-      layout: {
-        labels: {
-          dataLabels: {
-            prefix: "$",
-            suffix: "£"
-          }
-        }
-      },
-      title: {
-        text: "Title",
-        subtitle: {
-          text: "Subtitle"
-        }
-      }
-    }
-  }
-});
 const ringsDataset = ref([
   {
     name: "Serie 1",
@@ -2418,6 +2302,157 @@ const moodRadarConfig = ref({
     }
   })
 
+const donutConfig = ref({
+  style: {
+    chart: {
+      tooltip: {
+        customFormat: ({ datapoint, seriesIndex, series , config}) => {
+          console.log({datapoint, seriesIndex, series, config});
+          return `<div style="color:${datapoint.color}">
+              ${datapoint.name}
+            </div>`
+        }
+      }
+    }
+  }
+})
+
+const xyConfig = ref({
+  chart: {
+    tooltip: {
+      customFormat: ({ seriesIndex, datapoint, series,  bars, lines, plots, config }) => {
+        console.log({seriesIndex, datapoint, series, bars, lines, plots, config});
+        return 'TEST'
+      }
+    }
+  }
+})
+
+const waffleConfig = ref({
+  style: {
+    chart: {
+      tooltip: {
+        customFormat: ({seriesIndex, datapoint, series, config}) => {
+          console.log({seriesIndex, datapoint, series, config})
+          return "TEST"
+        }
+      }
+    }
+  }
+})
+
+const radarConfig = ref({
+  style: {
+    chart: {
+      tooltip: {
+        customFormat: ({ seriesIndex, datapoint, series, config }) => {
+          console.log({seriesIndex, datapoint, series, config})
+          return "TEST"
+        }
+      }
+    }
+  }
+})
+
+const quadrantConfig = ref({
+  style: {
+    chart: {
+      tooltip: {
+        showShape: false,
+        customFormat: ({ seriesIndex, datapoint, series, config }) => {
+          console.log({seriesIndex, datapoint, series, config})
+          return datapoint.name
+        }
+      }
+    }
+  }
+})
+
+const verticalBarConfig = ref({
+  style: {
+    chart: {
+      tooltip: {
+        customFormat: ({ seriesIndex, datapoint, series, config }) => {
+          console.log({seriesIndex, datapoint, series, config});
+          return datapoint.name
+        }
+      }
+    }
+  }
+})
+
+const heatmapConfig = ref({
+  style: {
+    tooltip: {
+      customFormat: ({ seriesIndex, datapoint, series, config }) => {
+        console.log({seriesIndex, datapoint, series, config});
+        return "TEST"
+      }
+    }
+  }
+})
+
+const scatterConfig = ref({
+  style: {
+    tooltip: {
+      showShape: false,
+      customFormat: ({ seriesIndex, datapoint, series, config }) => {
+        console.log({ seriesIndex, datapoint, series, config });
+        return "TEST"
+      }
+    }
+  }
+})
+
+const candlestickConfig = ref({
+  style: {
+    tooltip: {
+      customFormat: ({ seriesIndex, datapoint, series, config }) => {
+        console.log({ seriesIndex, datapoint, series, config });
+        return "TEST"
+      }
+    }
+  }
+})
+
+const pyramidConfig = ref({
+  style: {
+    tooltip: {
+      customFormat: ({ seriesIndex, datapoint, series, config }) => {
+        console.log({ seriesIndex, datapoint, series, config });
+        return "TEST"
+      }
+    }
+  }
+})
+
+const ringsConfig = ref({
+  style: {
+    chart: {
+      tooltip: {
+        customFormat: ({ seriesIndex, datapoint, series, config }) => {
+          console.log({ seriesIndex, datapoint, series, config });
+          return "TEST"
+        }
+      }
+    }
+  }
+})
+
+const moleculeConfig = ref({
+  style: {
+    chart: {
+      tooltip: {
+        customFormat: ({ seriesIndex, datapoint, series, config }) => {
+          // seriesIndex will always be -1: hide in docs
+          console.log({ seriesIndex, datapoint, series, config })
+          return "TEST"
+        }
+      }
+    }
+  }
+})
+
 </script>
 
 <template>
@@ -2568,10 +2603,10 @@ const moodRadarConfig = ref({
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <MoleculeTest :dataset="clusterDataset"/>
+          <MoleculeTest :dataset="clusterDataset" :config="moleculeConfig"/>
         </template>
         <template #prod>
-          <VueUiMolecule :dataset="clusterDataset"/>
+          <VueUiMolecule :dataset="clusterDataset" :config="moleculeConfig"/>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_molecule }}
@@ -2927,7 +2962,7 @@ const moodRadarConfig = ref({
         <template #dev>
           <XyTest
             ref="xytest"
-            :config="{ ...config, useCanvas: false }"
+            :config="xyConfig"
             :dataset="dataset2"
             @selectLegend="selectLegendXY"
             @selectX="selectX"
@@ -2940,7 +2975,7 @@ const moodRadarConfig = ref({
         <template #prod>
           <VueUiXy
             ref="xytest"
-            :config="{ ...config, useCanvas: false, useCssAnimation: false }"
+            :config="xyConfig"
             :dataset="dataset2"
             @selectLegend="selectLegendXY"
             @selectX="selectX"
@@ -2993,7 +3028,7 @@ const moodRadarConfig = ref({
           <CandlestickTest 
             ref="candlestick"
             :dataset="candlestickDataset" 
-            :config="{...candlestickConfig, useCssAnimation: false}"
+            :config="candlestickConfig"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3004,7 +3039,7 @@ const moodRadarConfig = ref({
           <VueUiCandlestick
             ref="candlestick"
             :dataset="candlestickDataset"
-            :config="{...candlestickConfig, useCssAnimation: false}"
+            :config="candlestickConfig"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3032,7 +3067,7 @@ const moodRadarConfig = ref({
           <ScatterTest 
             ref="scatter" 
             :dataset="scatterDataset" 
-            :config="{...scatterConfig, useCssAnimation: false}"
+            :config="scatterConfig"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3042,7 +3077,7 @@ const moodRadarConfig = ref({
         <template #prod>
           <VueUiScatter
             ref="scatter"
-            :config="{...scatterConfig, useCssAnimation: false}"
+            :config="scatterConfig"
             :dataset="scatterDataset"
           >
           <template #svg="{ svg }">
@@ -3072,7 +3107,7 @@ const moodRadarConfig = ref({
           <VerticalTest 
             ref="verticaltest"
             :dataset="verticalDataset"
-            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
+            :config="verticalBarConfig"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3082,7 +3117,7 @@ const moodRadarConfig = ref({
         <template #prod>
           <VueUiVerticalBar
             ref="verticaltest"
-            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
+            :config="verticalBarConfig"
             :dataset="verticalDataset"
             @selectLegend="selectVerticalLegend"
           >
@@ -3153,7 +3188,7 @@ const moodRadarConfig = ref({
           <QuadrantTest
             ref="quadranttest"
             :dataset="quadrantDataset"
-            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}},layout:{grid:{xAxis:{name:'xAxis'},yAxis:{name:'yAxis'}}}}}"
+            :config="quadrantConfig"
             @selectPlot="selectPlot"
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
@@ -3167,7 +3202,7 @@ const moodRadarConfig = ref({
           <VueUiQuadrant
             ref="quadranttest"
             :dataset="quadrantDataset"
-            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}},layout:{grid:{xAxis:{name:'xAxis'},yAxis:{name:'yAxis'}}}}}"
+            :config="quadrantConfig"
             @selectPlot="selectPlot"
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
@@ -3198,7 +3233,7 @@ const moodRadarConfig = ref({
           <RadarTest
             ref="radartest"
             :dataset="radarDataset"
-            :config="{...radarConfig, useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
+            :config="radarConfig"
             @selectLegend="selectRadarLegend"
           >
           <template #svg="{ svg }">
@@ -3210,7 +3245,7 @@ const moodRadarConfig = ref({
           <VueUiRadar
             ref="radartest"
             :dataset="radarDataset"
-            :config="{useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}}}"
+            :config="radarConfig"
             @selectLegend="selectRadarLegend"
           >
           <template #svg="{ svg }">
@@ -3240,26 +3275,7 @@ const moodRadarConfig = ref({
           <DonutTest
             ref="donuttest"
             :dataset="donutDataset"
-            :config="{
-              style: {
-                chart: {
-                  layout: {
-                    labels: {
-                      dataLabels: {
-                        prefix: '$',
-                        suffix: '£'
-                      }
-                    }
-                  },
-                  title: {
-                    text: 'Title',
-                    subtitle: {
-                      text: 'Subtitle'
-                    }
-                  }
-                }
-              }
-            }"
+            :config="donutConfig"
             @selectLegend="selectLegendDonut"
           >
             <template #svg="{ svg }">
@@ -3279,18 +3295,7 @@ const moodRadarConfig = ref({
           <VueUiDonut
             ref="donuttest"
             :dataset="donutDataset"
-            :config="{
-              style: {
-                chart: {
-                  title: {
-                    text: 'Title',
-                    subtitle: {
-                      text: 'Subtitle'
-                    }
-                  }
-                }
-              }
-            }"
+            :config="donutConfig"
             @selectLegend="selectLegendDonut"
           >
             <template #svg="{ svg }">
@@ -3468,7 +3473,7 @@ const moodRadarConfig = ref({
           <PyramidTest 
             ref="pyramid" 
             :dataset="pyramidDataset"
-            :config="{style:{title:{text:'Title', subtitle:{text: 'Subtitle'}}}}"
+            :config="pyramidConfig"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3479,7 +3484,7 @@ const moodRadarConfig = ref({
           <VueUiAgePyramid
             ref="pyramid"
             :dataset="pyramidDataset"
-            :config="{style:{title:{text:'Title', subtitle:{text: 'Subtitle'}}}}"
+            :config="pyramidConfig"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3507,7 +3512,7 @@ const moodRadarConfig = ref({
           <WaffleTest
             ref="waffletest"
             :dataset="donutDataset"
-            :config="{useBlurOnHover: true, style:{chart:{layout:{labels:{dataLabels:{prefix: '$', suffix: '£'}}},title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
+            :config="waffleConfig"
             @selectLegend="selectLegendWaffle"
           >
           <template #svg="{ svg }">
@@ -3519,7 +3524,7 @@ const moodRadarConfig = ref({
           <VueUiWaffle
             ref="waffletest"
             :dataset="donutDataset"
-             :config="{useBlurOnHover: true, style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
+             :config="waffleConfig"
             @selectLegend="selectLegendWaffle"
           >
             <template #svg="{ svg }">

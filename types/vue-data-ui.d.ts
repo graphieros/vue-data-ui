@@ -5,6 +5,16 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar, TLine, TPlot> = {
+        seriesIndex?: number;
+        series?: TSeries;
+        datapoint?: TDatapoint;
+        config?: TConfig;
+        bars?: TBar;
+        lines?: TLine;
+        plots?: TPlot;
+    }
+
     export type VueUiMiniLoaderConfig = {
         type?: "line" | "bar" | "onion";
         onion?: {
@@ -159,6 +169,7 @@ declare module 'vue-data-ui' {
                     color?: string;
                     backgroundColor?: string;
                     fontSize?: number;
+                    customFormat?: (params: VueUiTooltipParams<VueUiMoleculeDatapoint, VueUiMoleculeDatapoint[], VueUiMoleculeConfig>) => string;
                 };
                 zoom?: {
                     speed?: number;
@@ -188,6 +199,22 @@ declare module 'vue-data-ui' {
             show?: boolean;
         };
     };
+
+    export type VueUiMoleculeDatapoint = {
+        circleRadius: number;
+        color: string;
+        name: string;
+        details?: string;
+        nodes?: VueUiMoleculeDatapoint;
+        parentNode?: VueUiMoleculeDatapoint;
+        polygonPath: {
+            coordinates: Array<{
+                x: number;
+                y: number;
+            }>
+        },
+        uid: string;
+    }
 
     export const VueUiMolecule: DefineComponent<{
         dataset: VueUiMoleculeDatasetNode[],
@@ -691,6 +718,7 @@ declare module 'vue-data-ui' {
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    customFormat?: (params: VueUiTooltipParams<VueUiRingsDatpoint, VueUiRingsDatapoint[], VueUiRingsConfig>) => string;
                 };
             };
         };
@@ -722,6 +750,16 @@ declare module 'vue-data-ui' {
                 roundingPercentage?: number;
             };
         };
+    };
+
+    export type VueUiRingsDatapoint = {
+        color: string;
+        name: string;
+        percentage: number;
+        proportion: number;
+        strokeWidth: number;
+        uid: string;
+        value: number;
     };
 
     export type VueUiRingsDatasetItem = {
@@ -1282,6 +1320,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 fontSize?: number;
                 roundingValue?: number;
+                customFormat?: (params: VueUiTooltipParams<VueUiAgePyramidDatapoint, VueUiAgePyramidSeries[], VueUiAgePyramidConfig>) => string;
             };
         };
         translations?: {
@@ -1312,6 +1351,30 @@ declare module 'vue-data-ui' {
                 outline?: string;
             };
         };
+    };
+
+    export type VueUiAgePyramidDatapoint = {
+        index: number;
+        left: number;
+        right: number;
+        segment: string;
+    };
+
+    export type VueUiAgePyramidSideData = {
+        color: string;
+        height: number;
+        proportionToMax: number;
+        value: number;
+        width: number;
+        y: number;
+        x: number;
+    };
+
+    export type VueUiAgePyramidSeries = {
+        age: number;
+        left: VueUiAgePyramidSideData;
+        right: VueUiAgePyramidSideData;
+        segment: string;
     };
 
     export const VueUiAgePyramid: DefineComponent<{
@@ -1415,6 +1478,7 @@ declare module 'vue-data-ui' {
                 roundingValue?: number;
                 prefix?: string;
                 suffix?: string;
+                customFormat?: (params: VueUiTooltipParams<VueUiCandlestickDatapoint, VueUiCandlestickDatapoint[], VueUiCandlestickConfig>) => string;
             };
         };
         translations?: {
@@ -1451,6 +1515,16 @@ declare module 'vue-data-ui' {
                 suffix?: string;
             };
         };
+    };
+
+    export type VueUiCandlestickDatapoint = {
+        high: { x: number; y: number; value: number };
+        isBullish: boolean;
+        last: { x: number; y: number; value: numbr };
+        low: { x: number; y: number; value: number };
+        open: { x: number; y: number; value: number };
+        period: string | undefined;
+        volume: number;
     };
 
     export const VueUiCandlestick: DefineComponent<{
@@ -1569,6 +1643,8 @@ declare module 'vue-data-ui' {
                 color?: string;
                 fontSize?: number;
                 roundingValue?: number;
+                showShape?: boolean;
+                customFormat?: (params: VueUiTooltipParams<VueUiScatterDatapoint, VueUiScatterSeries[], VueUiScatterConfig>) => string
             };
         };
         userOptions?: {
@@ -1602,6 +1678,39 @@ declare module 'vue-data-ui' {
                 series?: string;
             };
         };
+    };
+
+    export type VueUiScatterDatapoint = {
+        clusterName: string | undefined;
+        color: string;
+        deviation: number;
+        id: string;
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        v: {
+            x: number;
+            y: number;
+            name: string;
+        }
+        x: number;
+        y: number;
+    };
+
+    export type VueUiScatterSeries = {
+        color: string;
+        correlation: {
+            x1: number;
+            x2: number;
+            y1: number;
+            y2: number;
+            coefficient: number;
+        };
+        id: string;
+        label: { x: number; y: number; };
+        name: string;
+        opacity: number;
+        plots: VueUiScatterDatapoint[];
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        values: Array<{ x: number; y: number; name: string; }>
     };
 
     export const VueUiScatter: DefineComponent<{
@@ -1693,6 +1802,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 fontSize?: number;
                 roundingValue?: number;
+                customFormat?: (params: VueUiTooltipParams<VueUiHeatmapDatapoint, VueUiHeatmapRow[], VueUiHeatmapConfig>) => string;
             };
         };
         userOptions?: {
@@ -1723,6 +1833,22 @@ declare module 'vue-data-ui' {
             };
         };
     };
+
+    export type VueUiHeatmapDatapoint = {
+        color: string;
+        id: string;
+        ratio: number;
+        side: "up" | "down";
+        value: number;
+        xAxisName: string | undefined;
+        yAxisName: string | undefined;
+    };
+
+    export type VueUiHeatmapRow = {
+        name: string;
+        temperatures: VueUiHeatmapDatapoint[];
+        values: number[];
+    }
 
     export type VueUiHeatmapDatasetItem = {
         name: string;
@@ -1829,6 +1955,7 @@ declare module 'vue-data-ui' {
                 showPercentage?: boolean;
                 roundingValue?: number;
                 roundingPercentage?: number;
+                customFormat?: (params: VueUiTooltipParams<VueUiXyDatapointItem[], VueUiXySeries, VueUiXyConfig, VueUiXyDatasetBarItem[], VueUiXyDatasetLineItem[], VueUiXyDatasetPlotItem[]>) => string;
             };
             userOptions?: {
                 show?: boolean;
@@ -1909,6 +2036,57 @@ declare module 'vue-data-ui' {
         dataLabels?: boolean;
         useProgression?: boolean;
     };
+
+    export type VueUiXyDatasetBarItem = {
+        absoluteValues: number[];
+        color: string;
+        id: string;
+        name: string;
+        plots: Array<{ x: number; y: number; value: number }>;
+        series: number[];
+        type: "bar";
+    }
+
+    export type VueUiXyDatasetLineItem = {
+        absoluteValues: number[];
+        area: string;
+        color: string;
+        curve: string;
+        dataLabels: boolean;
+        id: string;
+        name: string;
+        plots: Array<{ x: number; y: number; value: number }>;
+        series: number[];
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        type: "line";
+        useArea: boolean;
+        useProgression: boolean;
+        smooth?: boolean;
+        useTag?: boolean;
+    }
+
+    export type VueUiXyDatasetPlotItem = {
+        absoluteValues: number[];
+        color: string;
+        id: string;
+        name: string;
+        plots: Array<{ x: number; y: number; value: number }>;
+        series: number[];
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        type: "plot";
+        useTag?: boolean;
+        useProgression?: boolean;
+    }
+
+    export type VueUiXySeries = Array<VueUiXyDatasetBarItem | VueUiXyDatasetLineItem | VueUiXyDatasetPlotItem>;
+
+    export type VueUiXyDatapointItem = {
+        color: string;
+        name: string;
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        type: "bar" | "line" | "plot";
+        value: number;
+    }
 
     export const VueUiXy: DefineComponent<{
         config?: VueUiXyConfig;
@@ -2020,6 +2198,7 @@ declare module 'vue-data-ui' {
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    customFormat?: (params: VueUiTooltipParams<VueUiDonutDatapoint, VueUiDonutSeriesItem[], VueUiDonutConfig>) => string;
                 };
             };
         };
@@ -2064,6 +2243,29 @@ declare module 'vue-data-ui' {
         color?: string;
         values: number[];
     };
+
+    export type VueUiDonutDatapoint = {
+        absoluteValues: number[];
+        arcSlice: string;
+        center: { startX: number; startY: number; endX: number; endY: number; path: string };
+        color: string;
+        cx: number;
+        cy: number;
+        endX: number;
+        endY: number;
+        name: string;
+        path: string;
+        proportion: number;
+        ratio: number;
+        seriesIndex: number;
+        startX: number;
+        startY: number;
+        value: number;
+    };
+
+    export type VueUiDonutSeriesItem = VueUiDonutDatasetItem & {
+        absoluteValues: number[];
+    }
 
     export const VueUiDonut: DefineComponent<{
         config?: VueUiDonutConfig,
@@ -2120,6 +2322,7 @@ declare module 'vue-data-ui' {
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    customFormat?: (params: VueUiTooltipParams<VueUiWaffleDatapoint, VueUiWaffleSerieItem[], VueUiWaffleConfig>) => string;
                 };
                 legend?: {
                     show?: boolean;
@@ -2162,6 +2365,28 @@ declare module 'vue-data-ui' {
             };
         };
     };
+
+    export type VueUiWaffleDatapoint = {
+        absoluteIndex: number;
+        absoluteValues: number[];
+        color: string;
+        name: string;
+        proportion: number;
+        rects: number[];
+        serieIndex: number;
+        start: number;
+        uid: string;
+        value: number;
+    }
+
+    export type VueUiWaffleSerieItem = {
+        absoluteIndex: number;
+        color: string;
+        name: string;
+        shape: "circle" | "triangle" | "rect" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        uid: string;
+        values: number[]
+    }
 
     export type VueUiWaffleDatasetItem = {
         name: string;
@@ -2232,6 +2457,7 @@ declare module 'vue-data-ui' {
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    customFormat?: (params: VueUiTooltipParams<VueUiRadarDatapoint, VueUiRadarSeries, VueUiRadarConfig>) => string;
                 };
                 legend?: {
                     show?: boolean;
@@ -2273,6 +2499,39 @@ declare module 'vue-data-ui' {
             datapoint?: string;
         };
     };
+
+    export type VueUiRadarDatapoint = {
+        color: string;
+        name: string;
+        plots: Array<{ x: number; y: number }>;
+        serieId: string;
+        target: number;
+        values: number[];
+        x: number;
+        y: number;
+    }
+
+    export type VueUiRadarCategory = {
+        categoryId: string;
+        color: string;
+        name: string;
+        prefix?: string;
+        suffix?: string;
+    }
+
+    export type VueUiRadarDatapointItem = {
+        color: string;
+        name: string;
+        serieId: string;
+        target?: number;
+        values: number[]
+    }
+
+    export type VueUiRadarSeries = {
+        categories: VueUiRadarCategory[];
+        datapoints: VueUiRadarDatapointItem[];
+        radar: VueUiRadarDatapoint[]
+    }
 
     export type VueUiRadarDatasetCategoryItem = {
         name: string;
@@ -2422,6 +2681,8 @@ declare module 'vue-data-ui' {
                     color?: string;
                     fontSize?: number;
                     roundingValue?: number;
+                    customFormat?: (params: VueUiTooltipParams<VueUiQuadrantDatapoint, VueUiQuadrantSerie[], VueUiQuadrantConfig>) => string;
+                    showShape?: boolean;
                 };
                 legend?: {
                     show?: boolean;
@@ -2461,6 +2722,27 @@ declare module 'vue-data-ui' {
             item?: string;
             side?: string;
         };
+    };
+
+    export type VueUiQuadrantDatapoint = {
+        categoryName: string;
+        color: string;
+        name: string;
+        quadrantSide: string;
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        uid: string;
+        x: number;
+        xValue: number;
+        y: number;
+        yValue: number;
+    };
+
+    export type VueUiQuadrantSerie = {
+        color: string;
+        id: string;
+        name: string;
+        series: VueUiQuadrantDatapoint[];
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
     };
 
     export const VueUiQuadrant: DefineComponent<{
@@ -2975,6 +3257,7 @@ declare module 'vue-data-ui' {
                     roundingPercentage?: number;
                     prefix?: string;
                     suffix?: string;
+                    customFormat?: (params: VueUiTooltipParams<VueUiVerticalBarDatapoint, VueUiVerticalBarSerie[], VueUiVerticalBarConfig>) => string;
                 };
             };
         };
@@ -3012,6 +3295,34 @@ declare module 'vue-data-ui' {
             percentageToTotal?: string;
             percentageToSerie?: string;
         };
+    };
+
+    export type VueUiVerticalBarDatapoint = {
+        children?: Array<any>;
+        childIndex?: number;
+        hasChildren?: boolean;
+        color: string;
+        id: string;
+        isChild: boolean;
+        isFirstChild: boolean;
+        isLastChild: boolean;
+        name: string;
+        parentId?: string;
+        parentName?: string;
+        parentValue?: number;
+        value: number;
+    };
+
+    export type VueUiVerticalBarSerie = {
+        children: VueUiVerticalBarDatapoint[];
+        color: string;
+        hasChildren: boolean;
+        is: string;
+        isChild: boolean;
+        name: string;
+        opacity: number;
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        value: number;
     };
 
     export const VueUiVerticalBar: DefineComponent<{
