@@ -615,7 +615,7 @@ defineExpose({
             :color="candlestickConfig.style.tooltip.color"
             :parent="candlestickChart"
             :content="tooltipContent"
-            :isCustom="!!candlestickConfig.style.tooltip.customFormat"
+            :isCustom="candlestickConfig.style.tooltip.customFormat && typeof candlestickConfig.style.tooltip.customFormat === 'function'"
         />
 
         <!-- DATA TABLE -->

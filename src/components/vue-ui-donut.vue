@@ -638,7 +638,7 @@ defineExpose({
             :color="donutConfig.style.chart.tooltip.color"
             :parent="donutChart"
             :content="tooltipContent"
-            :isCustom="!!donutConfig.style.chart.tooltip.customFormat"
+            :isCustom="donutConfig.style.chart.tooltip.customFormat && typeof donutConfig.style.chart.tooltip.customFormat === 'function'"
         />
 
         <!-- DATA TABLE -->

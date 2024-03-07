@@ -647,7 +647,7 @@
             :color="chartConfig.chart.tooltip.color"
             :parent="$refs.chart"
             :content="tooltipContent"
-            :isCustom="!!chartConfig.chart.tooltip.customFormat"
+            :isCustom="chartConfig.chart.tooltip.customFormat && typeof chartConfig.chart.tooltip.customFormat === 'function'"
         />
 
         <!-- DATA TABLE -->

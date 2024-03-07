@@ -930,7 +930,7 @@ defineExpose({
             :color="quadrantConfig.style.chart.tooltip.color"
             :parent="quadrantChart"
             :content="tooltipContent"
-            :isCustom="!!quadrantConfig.style.chart.tooltip.customFormat"
+            :isCustom="quadrantConfig.style.chart.tooltip.customFormat && typeof quadrantConfig.style.chart.tooltip.customFormat === 'function'"
         >
             <svg height="14" width="14" viewBox="0 0 20 20" v-if="quadrantConfig.style.chart.tooltip.showShape">
                 <Shape

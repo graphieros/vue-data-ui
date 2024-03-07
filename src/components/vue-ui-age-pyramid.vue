@@ -610,7 +610,7 @@ defineExpose({
             :color="agePyramidConfig.style.tooltip.color"
             :parent="agePyramid"
             :content="tooltipContent"
-            :isCustom="!!agePyramidConfig.style.tooltip.customFormat"
+            :isCustom="agePyramidConfig.style.tooltip.customFormat && typeof agePyramidConfig.style.tooltip.customFormat === 'function'"
         />
 
         <!-- DATA TABLE -->

@@ -603,7 +603,7 @@ defineExpose({
             :color="waffleConfig.style.chart.tooltip.color"
             :parent="waffleChart"
             :content="tooltipContent"
-            :isCustom="!!waffleConfig.style.chart.tooltip.customFormat"
+            :isCustom="waffleConfig.style.chart.tooltip.customFormat && typeof waffleConfig.style.chart.tooltip.customFormat === 'function'"
         />
 
         <!-- DATA TABLE -->

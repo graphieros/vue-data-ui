@@ -610,7 +610,7 @@ defineExpose({
             :color="radarConfig.style.chart.tooltip.color"
             :parent="radarChart"
             :content="tooltipContent"
-            :isCustom="!!radarConfig.style.chart.tooltip.customFormat"
+            :isCustom="radarConfig.style.chart.tooltip.customFormat && typeof radarConfig.style.chart.tooltip.customFormat === 'function'"
         >
             <template #content-after>
                 <div style="max-width: 200px;margin:0 auto">
