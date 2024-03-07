@@ -297,7 +297,6 @@ function useTooltip(apex, i) {
     let html = "";
 
     const customFormat = radarConfig.value.style.chart.tooltip.customFormat;
-    console.log({customFormat})
 
     if (customFormat && typeof customFormat === 'function' && typeof customFormat({
             seriesIndex: i,
@@ -611,6 +610,7 @@ defineExpose({
             :color="radarConfig.style.chart.tooltip.color"
             :parent="radarChart"
             :content="tooltipContent"
+            :isCustom="!!radarConfig.style.chart.tooltip.customFormat"
         >
             <template #content-after>
                 <div style="max-width: 200px;margin:0 auto">

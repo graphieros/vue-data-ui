@@ -24,6 +24,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    isCustom: {
+        type: Boolean,
+        default: false,
+    }
 });
 
 const tooltip = ref(null)
@@ -44,9 +48,9 @@ const position = computed(() => {
     <div
         ref="tooltip"
         data-cy="tooltip"
-        class="vue-data-ui-tooltip"
+        :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
         v-if="show"
-        :style="`top:${position.top}px;left:${position.left}px;background:${props.backgroundColor};color:${props.color};max-width:${props.maxWidth}`"
+        :style="`top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${props.backgroundColor};color:${props.color};max-width:${props.maxWidth}`}`"
     >
         <slot/>
         <div v-html="content"/>
@@ -62,5 +66,12 @@ const position = computed(() => {
     position: fixed;
     padding:12px;
     z-index:2;
+}
+</style>
+
+<style>
+.vue-data-ui-custom-tooltip {
+    position: fixed;
+    z-index: 2;
 }
 </style>

@@ -555,6 +555,7 @@ defineExpose({
             :color="moleculeConfig.style.chart.tooltip.color"
             :parent="moleculeChart"
             :content="tooltipContent"
+            :isCustom="!!moleculeConfig.style.chart.tooltip.customFormat"
         />
         <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
             <DataTable

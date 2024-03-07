@@ -676,6 +676,7 @@ defineExpose({
             :color="verticalBarConfig.style.chart.tooltip.color"
             :parent="verticalBarChart"
             :content="tooltipContent"
+            :isCustom="!!verticalBarConfig.style.chart.tooltip.customFormat"
         />
 
         <!-- DATA TABLE -->

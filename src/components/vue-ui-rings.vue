@@ -537,6 +537,7 @@ defineExpose({
       :color="ringsConfig.style.chart.tooltip.color"
       :parent="ringsChart"
       :content="tooltipContent"
+      :isCustom="!!ringsConfig.style.chart.tooltip.customFormat"
     />
 
     <!-- DATA TABLE -->

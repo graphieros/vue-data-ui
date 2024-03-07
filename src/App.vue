@@ -3773,5 +3773,11 @@ const moleculeConfig = ref({
 .btn--orange:hover {
     background: linear-gradient(to top left, #ff6400, #ff6400AA);
 }
+</style>
+
+<style>
+.vue-data-ui-custom-tooltip {
+  background: red;
+}
 
 </style>

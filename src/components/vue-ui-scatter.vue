@@ -657,6 +657,7 @@ defineExpose({
             :color="scatterConfig.style.tooltip.color"
             :parent="scatterChart"
             :content="tooltipContent"
+            :isCustom="!!scatterConfig.style.tooltip.customFormat"
         >
             <div style="width: 100%; display: flex; align-items:center;justify-content:center;" v-if="scatterConfig.style.tooltip.showShape">
                 <svg viewBox="0 0 20 20" height="20" width="20" style="overflow: hidden;background:transparent;">

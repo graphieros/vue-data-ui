@@ -529,6 +529,7 @@ defineExpose({
             :color="heatmapConfig.style.tooltip.color"
             :parent="heatmapChart"
             :content="tooltipContent"
+            :isCustom="!!heatmapConfig.style.tooltip.customFormat"
         />
         
         <!-- DATA TABLE -->
