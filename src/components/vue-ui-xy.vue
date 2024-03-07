@@ -1050,7 +1050,7 @@ export default {
             const time = this.timeLabels[this.selectedSerieIndex];
             const customFormat = this.chartConfig.chart.tooltip.customFormat;
 
-            if(customFormat && typeof customFormat({
+            if(customFormat && typeof customFormat === 'function' && typeof customFormat({
                 seriesIndex: this.selectedSerieIndex,
                 datapoint: selectedSeries,
                 series: this.absoluteDataset,

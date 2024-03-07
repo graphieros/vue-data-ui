@@ -181,7 +181,7 @@ function useTooltip(datapoint, seriesIndex) {
 
     const customFormat = heatmapConfig.value.style.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat({
+    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
             datapoint,
             seriesIndex,
             series: mutableDataset.value,

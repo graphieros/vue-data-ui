@@ -210,7 +210,7 @@ function useTooltip(plot, seriesIndex) {
 
     const customFormat = scatterConfig.value.style.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat({
+    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
             datapoint: plot,
             seriesIndex,
             series: drawableDataset.value,

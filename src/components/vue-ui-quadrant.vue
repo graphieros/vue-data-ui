@@ -426,7 +426,7 @@ function useTooltip(category, plot, categoryIndex) {
 
     const customFormat = quadrantConfig.value.style.chart.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat({
+    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
             seriesIndex: categoryIndex,
             datapoint: plot,
             series: drawableDataset.value,

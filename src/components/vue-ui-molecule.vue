@@ -250,7 +250,7 @@ function createTooltipContent(node) {
 
     const customFormat = moleculeConfig.value.style.chart.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat({
+    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
             seriesIndex: -1,
             datapoint: node,
             series: convertedDataset.value,

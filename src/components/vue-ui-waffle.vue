@@ -252,7 +252,7 @@ function useTooltip(index) {
 
     const customFormat = waffleConfig.value.style.chart.tooltip.customFormat;
 
-    if(customFormat && typeof customFormat({ seriesIndex: rects.value[index].absoluteIndex, datapoint: selected, series: datasetCopy.value, config: waffleConfig.value}) === 'string') {
+    if(customFormat && typeof customFormat === 'function' && typeof customFormat({ seriesIndex: rects.value[index].absoluteIndex, datapoint: selected, series: datasetCopy.value, config: waffleConfig.value}) === 'string') {
         tooltipContent.value = customFormat({ seriesIndex: rects.value[index].absoluteIndex, datapoint: selected, series: datasetCopy.value, config: waffleConfig.value})
     } else {
         let html = "";

@@ -191,7 +191,7 @@ function useTooltip(index, datapoint) {
   const selected = convertedDataset.value[index];
   const customFormat = ringsConfig.value.style.chart.tooltip.customFormat;
 
-  if (customFormat && typeof customFormat({
+  if (customFormat && typeof customFormat === 'function' && typeof customFormat({
       seriesIndex: index,
       datapoint,
       series: convertedDataset.value,

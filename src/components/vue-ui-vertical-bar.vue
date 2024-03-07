@@ -260,7 +260,7 @@ function useTooltip(bar, seriesIndex) {
 
     const customFormat = verticalBarConfig.value.style.chart.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat({
+    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
             datapoint: bar,
             series: immutableDataset.value,
             config: verticalBarConfig.value,

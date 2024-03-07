@@ -184,7 +184,7 @@ function useTooltip(index, datapoint) {
 
     const customFormat = agePyramidConfig.value.style.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat({
+    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
             seriesIndex: index,
             datapoint: {
                 segment: datapoint[0],

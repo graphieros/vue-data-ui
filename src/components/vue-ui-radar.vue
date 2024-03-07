@@ -299,7 +299,7 @@ function useTooltip(apex, i) {
     const customFormat = radarConfig.value.style.chart.tooltip.customFormat;
     console.log({customFormat})
 
-    if (customFormat && typeof customFormat({
+    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
             seriesIndex: i,
             datapoint: apex,
             series: { categories: datasetCopy.value, datapoints: seriesCopy.value, radar: radar.value  },
