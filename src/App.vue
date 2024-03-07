@@ -2319,12 +2319,12 @@ const donutConfig = ref({
 
 const xyConfig = ref({
   chart: {
-    tooltip: {
-      customFormat: ({ seriesIndex, datapoint, series,  bars, lines, plots, config }) => {
-        console.log({seriesIndex, datapoint, series, bars, lines, plots, config});
-        return 'TEST'
-      }
-    }
+    // tooltip: {
+    //   customFormat: ({ seriesIndex, datapoint, series,  bars, lines, plots, config }) => {
+    //     console.log({seriesIndex, datapoint, series, bars, lines, plots, config});
+    //     return 'TEST'
+    //   }
+    // }
   }
 })
 

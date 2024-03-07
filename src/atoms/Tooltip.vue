@@ -50,7 +50,7 @@ const position = computed(() => {
         data-cy="tooltip"
         :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
         v-if="show"
-        :style="`top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${props.backgroundColor};color:${props.color};max-width:${props.maxWidth}`}`"
+        :style="`top:${position.top}px;left:${position.left}px;${props.isCustom ? '' : `background:${props.backgroundColor};color:${props.color};max-width:${props.maxWidth}`}`"
     >
         <slot/>
         <div v-html="content"/>
@@ -58,7 +58,7 @@ const position = computed(() => {
     </div>
 </template>
 
-<style scoped>
+<style>
 .vue-data-ui-tooltip {
     border: 1px solid #e1e5e8;
     border-radius: 4px;
@@ -67,9 +67,6 @@ const position = computed(() => {
     padding:12px;
     z-index:2;
 }
-</style>
-
-<style>
 .vue-data-ui-custom-tooltip {
     position: fixed;
     z-index: 2;
