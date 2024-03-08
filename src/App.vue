@@ -824,73 +824,96 @@ const ratingDataset = ref({
 
 const ratingConfig = ref(getVueDataUiConfig('vue_ui_rating'));
 
-const sparklineConfig = ref(getVueDataUiConfig('vue_ui_sparkline'));
+const sparklineConfig = ref({
+  type: 'line',
+  style: {
+    backgroundColor: "#CCCCCC"
+  }
+})
+const sparklineConfig2 = ref({
+  type: 'bar',
+  style: {
+    backgroundColor: "#CCCCCC"
+  }
+})
 
 const sparklineDataset = ref([
-  {
-    period: "period1",
-    value: 0,
-  },
   {
     period: "period2",
     value: 1,
   },
   {
-    period: "period3",
+    period: "period2",
     value: 2,
   },
   {
-    period: "period4",
+    period: "period2",
     value: 3,
   },
   {
-    period: "period5",
-    value: 4,
+    period: "period2",
+    value: 8,
   },
   {
-    period: "period6",
-    value: 5,
+    period: "period2",
+    value: 13,
   },
   {
-    period: "period6",
-    value: 6,
+    period: "period2",
+    value: 21,
   },
   {
-    period: "period8",
-    value: 7,
+    period: "period2",
+    value: 34,
   },
   {
-    period: "period9",
-    value: -7,
+    period: "period2",
+    value: 55,
   },
   {
-    period: "period10",
-    value: -6,
+    period: "period2",
+    value: 89,
   },
   {
-    period: "period11",
-    value: -5,
+    period: "period2",
+    value: 134,
   },
   {
-    period: "period12",
-    value: -4,
+    period: "period2",
+    value: 134,
   },
   {
-    period: "period13",
-    value: -3,
+    period: "period2",
+    value: 134,
   },
   {
-    period: "period14",
+    period: "period2",
+    value: 134,
+  },
+  {
+    period: "period2",
+    value: 134,
+  },
+  {
+    period: "period2",
+    value: 134,
+  },
+  {
+    period: "period2",
+    value: 134,
+  },
+
+]);
+const sparklineDataset2 = ref([
+  {
+    period: "period2",
     value: -2,
   },
   {
-    period: "period15",
-    value: -1,
+    period: "period2",
+    value: 2,
   },
-  {
-    period: "period16",
-    value: 0,
-  }
+
 ]);
 
 const heatmapDataset = computed(() => {
@@ -2944,9 +2967,27 @@ function selectHistoDatapoint({ datapoint, index }) {
             :dataset="sparklineDataset"
             @selectDatapoint="selectSparklineDatapoint"
           >
-          <template #svg="{ svg }">
-              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
-            </template>
+          </SparklineTest>
+          <SparklineTest
+             ref="sparkline"
+            :config="sparklineConfig"
+            :dataset="sparklineDataset2"
+            @selectDatapoint="selectSparklineDatapoint"
+          >
+          </SparklineTest>
+          <SparklineTest
+             ref="sparkline"
+            :config="sparklineConfig2"
+            :dataset="sparklineDataset"
+            @selectDatapoint="selectSparklineDatapoint"
+          >
+          </SparklineTest>
+          <SparklineTest
+             ref="sparkline"
+            :config="sparklineConfig2"
+            :dataset="sparklineDataset2"
+            @selectDatapoint="selectSparklineDatapoint"
+          >
           </SparklineTest>
         </template>
         <template #prod>

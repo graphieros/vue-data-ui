@@ -50,6 +50,8 @@ const svg = ref({
 
 const emits = defineEmits(['hoverIndex', 'selectDatapoint'])
 
+const bottomPadding = ref(6)
+
 const drawingArea = computed(() => {
     const topPadding = 12;
     return {
@@ -70,10 +72,10 @@ const max = computed(() => {
     return Math.max(...props.dataset.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value))
 });
 
-const bottomPadding = ref(6)
 
 const absoluteMin = computed(() => {
-    return Math.abs(min.value);
+    const num = min.value >= 0 ? 0 : min.value
+    return Math.abs(num);
 });
 
 const absoluteMax = computed(() => {
@@ -81,7 +83,7 @@ const absoluteMax = computed(() => {
 });
 
 const absoluteZero = computed(() => {
-    return drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteMin.value + bottomPadding.value))
+    return drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteMin.value))
 })
 
 function ratioToMax(v) {
@@ -98,11 +100,11 @@ const mutableDataset = computed(() => {
             period: s.period,
             plotValue: absoluteValue + absoluteMin.value,
             toMax: ratioToMax(absoluteValue + absoluteMin.value),
-            x: drawingArea.value.start + (i * (drawingArea.value.width / len.value)),
-            y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteValue + bottomPadding.value + absoluteMin.value)),
-            id: `plot_${uid}_${i}`,
+            x: drawingArea.value.start + (i * ((drawingArea.value.width / (len.value + 1)) > 30 ? 30 : (drawingArea.value.width / (len.value + 1)))),
+            y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteValue + absoluteMin.value)),
+            id: `plot_${uid.value}_${i}`,
             color: isBar.value ? sparklineConfig.value.style.bar.color : sparklineConfig.value.style.area.useGradient ? shiftHue(sparklineConfig.value.style.line.color, 0.05 * ( 1 - (i / len.value))) : sparklineConfig.value.style.line.color,
-            width: drawingArea.value.width / len.value
+            width: (drawingArea.value.width / (len.value + 1)) > 30 ? 30 : (drawingArea.value.width / (len.value + 1))
         }
     })
 });
@@ -282,10 +284,10 @@ function selectDatapoint(datapoint, index) {
             <rect
                 v-for="(plot, i) in mutableDataset"
                 :data-cy="`sparkline-mouse-trap-${i}`"
-                :x="plot.x - (drawingArea.width / len / 2)"
+                :x="plot.x - ((drawingArea.width / (len + 1) > 30 ? 30 : drawingArea.width / (len + 1)) / 2)"
                 :y="drawingArea.top - 6"
                 :height="drawingArea.height + 6"
-                :width="(drawingArea.width / len)"
+                :width="(drawingArea.width / (len + 1) > 30 ? 30: drawingArea.width / (len + 1))"
                 fill="transparent"
                 @mouseenter="selectPlot(plot, i)"
                 @mouseleave="unselectPlot"
