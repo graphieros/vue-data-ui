@@ -63,6 +63,12 @@ const drawableDataset = computed(() => {
     return datapoints;
 })
 
+const emits = defineEmits(['selectDatapoint'])
+
+function selectDatapoint(datapoint, index) {
+    emits('selectDatapoint', { datapoint, index })
+}
+
 </script>
 
 <template>
@@ -101,6 +107,7 @@ const drawableDataset = computed(() => {
                 <rect :x="0" :y="0" :height="svg.height" :width="svg.width" :fill="stackConfig.style.bar.gradient.underlayerColor"/>
                 <rect 
                     v-for="(rect, i) in drawableDataset" :key="`stack_${i}`"
+                    @click="() => selectDatapoint(rect, i)"
                     :x="rect.start"
                     :y="0"
                     :width="rect.width"
@@ -113,7 +120,7 @@ const drawableDataset = computed(() => {
         </svg>
         <div v-if="stackConfig.style.legend.show" data-cy="sparkstackbar-legend" :style="`background:${stackConfig.style.backgroundColor};display:flex;flex-wrap:wrap;column-gap:12px;width:calc(100% - 12px);margin:0 auto;margin:${stackConfig.style.legend.margin}; padding: 0 6px;justify-content:${stackConfig.style.legend.textAlign === 'left' ? 'flex-start' : stackConfig.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`">
             <div v-for=" (rect, i) in drawableDataset" :style="`font-size:${stackConfig.style.legend.fontSize}px`">
-                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;justify-content:center">
+                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;justify-content:center" >
                     <svg :height="`${stackConfig.style.legend.fontSize}px`" :width="`${stackConfig.style.legend.fontSize}px`" viewBox="0 0 10 10">
                         <circle :cx="5" :cy="5" :r="5" :fill="rect.color"/>
                     </svg>

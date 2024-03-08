@@ -850,6 +850,19 @@ declare module 'vue-data-ui' {
         valueLabel?: string;
         timeLabel?: string;
         intensity?: number & { 0: 0; 1: 1 };
+        gradient?: string;
+        height?: number;
+        proportion?: number;
+        stroke?: string;
+        textAnchor?: number;
+        timeLabel?: string;
+        trapX?: number;
+        unitWidth?: number;
+        value?: number;
+        valueLabel?: string;
+        width?: number;
+        x?: number;
+        y?: number;
     }
 
     export const VueUiSparkHistogram: DefineComponent<{
@@ -913,6 +926,11 @@ declare module 'vue-data-ui' {
         name: string;
         value: number;
         color?: string;
+        proportion?: number;
+        proportionLabel?: string;
+        start?: number;
+        value?: number;
+        width?: number;
     }
 
     export const VueUiSparkstackbar: DefineComponent<{
@@ -3333,6 +3351,13 @@ declare module 'vue-data-ui' {
     export type VueUiSparklineDatasetItem = {
         period: string;
         value: number;
+        absoluteValue?: number;
+        id?: string;
+        plotValue?: number;
+        toMax?: number;
+        width?: number;
+        x?: number;
+        y?: number;
     };
 
     export type VueUiSparklineConfig = {

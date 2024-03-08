@@ -96,6 +96,12 @@ const computedDataset = computed(() => {
 
 const selectedIndex = ref(null);
 
+const emits = defineEmits(['selectDatapoint'])
+
+function selectDatapoint(datapoint, index) {
+    emits('selectDatapoint', { datapoint, index })
+}
+
 </script>
 
 <template>
@@ -200,6 +206,7 @@ const selectedIndex = ref(null);
                     :stroke-width="selectedIndex !== null && selectedIndex === i ? histoConfig.style.selector.strokeWidth : 0"
                     :rx="histoConfig.style.selector.borderRadius"
                     :stroke-dasharray="histoConfig.style.selector.strokeDasharray"
+                    @click="() => selectDatapoint(rect, i)"
                 />
             </g>
 

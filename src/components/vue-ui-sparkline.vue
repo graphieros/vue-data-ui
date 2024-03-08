@@ -48,7 +48,7 @@ const svg = ref({
     width: 500,
 });
 
-const emits = defineEmits(['hoverIndex'])
+const emits = defineEmits(['hoverIndex', 'selectDatapoint'])
 
 const drawingArea = computed(() => {
     const topPadding = 12;
@@ -147,6 +147,9 @@ const isBar = computed(() => {
     return sparklineConfig.value.type && sparklineConfig.value.type === 'bar';
 });
 
+function selectDatapoint(datapoint, index) {
+    emits('selectDatapoint', { datapoint, index })
+}
 </script>
 
 <template>
@@ -286,6 +289,7 @@ const isBar = computed(() => {
                 fill="transparent"
                 @mouseenter="selectPlot(plot, i)"
                 @mouseleave="unselectPlot"
+                @click="() => selectDatapoint(plot, i)"
             />
             <slot name="svg" :svg="svg"/>
         </svg>

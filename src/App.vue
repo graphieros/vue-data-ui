@@ -2453,6 +2453,22 @@ const moleculeConfig = ref({
   }
 })
 
+function selectSparklineDatapoint({ datapoint, index }) {
+  console.log({datapoint, index })
+}
+
+function selectSparkbarDatapoint({ datapoint, index }) {
+  console.log({ datapoint, index })
+}
+
+function selectStackbarDatapoint({ datapoint, index }) {
+  console.log({ datapoint, index })
+}
+
+function selectHistoDatapoint({ datapoint, index }) {
+  console.log({ datapoint, index })
+}
+
 </script>
 
 <template>
@@ -2923,8 +2939,10 @@ const moleculeConfig = ref({
         </template>
         <template #dev>
           <SparklineTest
+             ref="sparkline"
             :config="sparklineConfig"
             :dataset="sparklineDataset"
+            @selectDatapoint="selectSparklineDatapoint"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -2935,6 +2953,7 @@ const moleculeConfig = ref({
           <VueUiSparkline
             :config="sparklineConfig"
             :dataset="sparklineDataset"
+            @selectDatapoint="selectSparklineDatapoint"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -2999,12 +3018,14 @@ const moleculeConfig = ref({
           <HistoTest 
             :dataset="histoDataset" 
             :config="histoConfig"
+            @selectDatapoint="selectHistoDatapoint"
           />
         </template>
         <template #prod>
           <VueUiSparkHistogram
              :dataset="histoDataset" 
              :config="histoConfig"
+             @selectDatapoint="selectHistoDatapoint"
           />
         </template>
         <template #config>
@@ -3316,11 +3337,13 @@ const moleculeConfig = ref({
         <template #dev>
           <StackTest 
             :dataset="stackDataset"
+            @selectDatapoint="selectStackbarDatapoint"
           />
         </template>
         <template #prod>
           <VueUiSparkStackbar  
             :dataset="stackDataset"
+            @selectDatapoint="selectStackbarDatapoint"
           />
         </template>
         <template #config>
@@ -3641,12 +3664,14 @@ const moleculeConfig = ref({
           <SparkbarTest
             :config="sparkbarConfig"
             :dataset="sparkbarDataset"
+            @selectDatapoint="selectSparkbarDatapoint"
           />
         </template>
         <template #prod>
           <VueUiSparkbar
             :config="sparkbarConfig"
             :dataset="sparkbarDataset"
+            @selectDatapoint="selectSparkbarDatapoint"
           />
         </template>
         <template #config>
