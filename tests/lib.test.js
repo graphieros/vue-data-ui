@@ -1,5 +1,6 @@
 import { expect, test, describe } from "vitest";
 import {
+    abbreviate,
     adaptColorToBackground,
     addVector,
     calcLinearProgression,
@@ -705,5 +706,33 @@ describe('dataLabel', () => {
     test('returns a formatted dataLabel with spaced prefix and suffix', () => {
         expect(dataLabel({p: '$', v: 1, s: '$', space: true})).toBe('$ 1 $')
         expect(dataLabel({p: '$', v: 1.1, s: '$', r: 1, space: true})).toBe('$ 1.1 $')
+    })
+})
+
+describe('abbreviate', () => {
+    test('returns an empty string for a falsy value', () => {
+        expect(abbreviate({ source: null})).toBe('')
+        expect(abbreviate({ source: undefined })).toBe('')
+    })
+    test('returns 0 for 0', () => {
+        expect(abbreviate({source: 0})).toBe('0')
+    })
+    test('returns abbreviated first 3 letters', () => {
+        expect(abbreviate({ source: 'some long label'})).toBe('SLL')
+        expect(abbreviate({ source: 'some even longer label'})).toBe('SEL')
+    })
+    test('returns abbreviated letters with custom max len', () => {
+        expect(abbreviate({ source: 'some even longer label', length: 4})).toBe('SELL')
+        expect(abbreviate({ source: 'some even longer label', length: 10})).toBe('SELL')
+        expect(abbreviate({ source: 'some 1 2 3', length: 10})).toBe('S123')
+        expect(abbreviate({ source: '1 2 3 4 5', length: 5})).toBe('12345')
+    })
+    test('returns first letters of unique word', () => {
+        expect(abbreviate({ source: 'unique'})).toBe('UNI')
+        expect(abbreviate({ source: 'un'})).toBe('UN')
+        expect(abbreviate({ source: 'u'})).toBe('U')
+    })
+    test('returns first letters of unique word with custom max len', () => {
+        expect(abbreviate({ source: 'paradoxical', length: 7})).toBe('PARADOX')
     })
 })

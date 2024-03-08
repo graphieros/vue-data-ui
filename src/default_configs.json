@@ -280,6 +280,15 @@
                 "offsetY": -6,
                 "rounding": 0,
                 "color": "#2D353C"
+            },
+            "serieName": {
+                "show": false,
+                "offsetY": -6,
+                "useAbbreviation": true,
+                "abbreviationSize": 3,
+                "useSerieColor": true,
+                "color": "#2D353C",
+                "bold": false
             }
         },
         "line": {

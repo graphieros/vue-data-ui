@@ -1995,6 +1995,15 @@ declare module 'vue-data-ui' {
                 rounding?: number;
                 color?: string;
             };
+            serieName?: {
+                abbreviationSize?: boolean;
+                bold?: boolean;
+                color?: string;
+                offsetY?: boolean;
+                show?: boolean;
+                useAbbreviation?: boolean;
+                useSerieColor?: boolean;
+            };
         };
         line?: {
             radius?: number;

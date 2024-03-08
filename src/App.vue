@@ -53,11 +53,34 @@ import { getVueDataUiConfig } from "vue-data-ui";
 
 const dataset = ref([
   {
-    name: "Series 1",
-    series: [200, 100, 125, 230, 120, 100, 90, 50, 12, 25, 100, 154, 155],
-    type: "line",
+    name: "Serie 1",
+    series: [200],
+    type: "bar",
+    dataLabels: true
+  },
+  {
+    name: "Some long name",
+    series: [100],
+    type: "bar",
+    dataLabels: true
+  },
+  {
+    name: "Some even longer name",
+    series: [150],
+    type: "bar",
+  },
+  {
+    name: "Weird serie name",
+    series: [90],
+    type: "bar",
+  },
+  {
+    name: "Another weird long name",
+    series: [120],
+    type: "bar",
   },
 ]);
+
 const dataset2 = ref([
     {
         name: "Series 1",
@@ -2342,13 +2365,30 @@ const donutConfig = ref({
 
 const xyConfig = ref({
   chart: {
-    tooltip: {
-      customFormat: ({ seriesIndex, datapoint, series,  bars, lines, plots, config }) => {
-        console.log({seriesIndex, datapoint, series, bars, lines, plots, config});
-        return 'TEST'
-      }
-    }
-  }
+    labels: {
+      fontSize: 30
+    },
+    // tooltip: {
+    //   customFormat: ({ seriesIndex, datapoint, series,  bars, lines, plots, config }) => {
+    //     console.log({seriesIndex, datapoint, series, bars, lines, plots, config});
+    //     return 'TEST'
+    //   }
+    // }
+  },
+  bar: {
+      labels: {
+        show: false,
+      },
+      serieName: {
+          show: true,
+          offsetY: -6,
+          useAbbreviation: true,
+          abbreviationSize: 4,
+          useSerieColor: true,
+          color: "#FF0000",
+          bold: true
+        }
+    },
 })
 
 const waffleConfig = ref({
@@ -2747,7 +2787,7 @@ function selectHistoDatapoint({ datapoint, index }) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut_evolution)">
         <template #title>
           <BaseIcon name="chartDonutEvolution"/>
           VueUiDonutEvolution
@@ -3006,7 +3046,7 @@ function selectHistoDatapoint({ datapoint, index }) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
         <template #title>
           <BaseIcon name="chartLine" />
           VueUiXy
@@ -3027,9 +3067,11 @@ function selectHistoDatapoint({ datapoint, index }) {
             @selectLegend="selectLegendXY"
             @selectX="selectX"
           >
-          <template #svg="{ svg }">
-              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
-            </template>
+          </XyTest>
+          <XyTest
+            :config="xyConfig"
+            :dataset="dataset"
+          >
           </XyTest>
         </template>
         <template #prod>
@@ -3044,6 +3086,10 @@ function selectHistoDatapoint({ datapoint, index }) {
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
           </VueUiXy>
+          <VueUiXy
+            :config="xyConfig"
+            :dataset="dataset"
+          />
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_xy }}
@@ -3193,7 +3239,7 @@ function selectHistoDatapoint({ datapoint, index }) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
         <template #title>
           <BaseIcon name="chartOnion" />
           VueUiOnion

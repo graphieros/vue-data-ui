@@ -690,7 +690,7 @@ export function findArcMidpoint(pathElement) {
 export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false, arcSize = 0) {
     const { x, y } = findArcMidpoint(arc.path)
 
-    const { x:endX, y:endY } = offsetFromCenterPoint({
+    const { x: endX, y: endY } = offsetFromCenterPoint({
         initX: x,
         initY: y,
         offset: arcSize,
@@ -735,7 +735,7 @@ export function sumByAttribute(arr, attr) {
 export function makePath(plots, closed = true) {
     let path = "";
     plots.forEach(plot => {
-        path += `${plot.x},${plot.y } `
+        path += `${plot.x},${plot.y} `
     })
     return `M${path}${closed ? 'Z' : ''}`;
 }
@@ -925,11 +925,34 @@ export function interpolateColorHex(minColor, maxColor, minValue, maxValue, valu
  * @property {boolean=} space  - space between elements
  * @type {DataLabel}
  */
-export function dataLabel({p = '', v, s = '', r = 0, space = false}) {
-    return `${p ?? ''}${space ? ' ': ''}${[undefined, null].includes(v) ? '-' : Number(Number(v).toFixed(r).toLocaleString())}${space ? ' ' : ''}${s ?? ''}`
+export function dataLabel({ p = '', v, s = '', r = 0, space = false }) {
+    return `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : Number(Number(v).toFixed(r).toLocaleString())}${space ? ' ' : ''}${s ?? ''}`
+}
+
+export function abbreviate({ source, length = 3 }) {
+    if (!source && source !== 0) {
+        return ''
+    }
+    source = String(source);
+    const sourceSplit = source.length > 1 ? source.split(' ') : [source];
+    if(sourceSplit.length === 1 && sourceSplit[0].length === 1) {
+        return String(source).toUpperCase()
+    }
+    if (sourceSplit.length === 1) {
+        return source.slice(0, length).toUpperCase()
+    } else {
+        const result = [];
+        sourceSplit.forEach((chunk, i) => {
+            if (i < length) {
+                result.push(chunk.slice(0, 1))
+            }
+        })
+        return result.join().replaceAll(',', '').toUpperCase();
+    }
 }
 
 const lib = {
+    abbreviate,
     adaptColorToBackground,
     addVector,
     calcLinearProgression,

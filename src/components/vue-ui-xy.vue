@@ -300,12 +300,12 @@
                 </g>
 
                 <!-- X LABELS BAR -->
-                <g v-if="chartConfig.bar.labels.show && mutableConfig.dataLabels.show">
+                <g v-if="(chartConfig.bar.labels.show || chartConfig.bar.serieName.show) && mutableConfig.dataLabels.show">
                     <g v-for="(serie, i) in barSet" :key="`xLabel_bar_${i}`" :class="`xLabel_bar_${i}`">
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_bar_${i}_${j}`">
                             <text
                                 :data-cy="`xy-bar-label-x-${i}-${j}`"
-                                v-if="!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
+                                v-if="(!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && chartConfig.bar.labels.show"
                                 :x="plot.x + calcRectWidth() * 1.1"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.labels.offsetY : - chartConfig.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
@@ -313,6 +313,17 @@
                                 :fill="chartConfig.bar.labels.color"
                             >
                                 {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.bar.labels.rounding}) : '' }}
+                            </text>
+                            <text 
+                                v-if="chartConfig.bar.serieName.show"
+                                :x="plot.x + calcRectWidth() * 1.1"
+                                :y="plot.y + (plot.value > 0 ? chartConfig.bar.serieName.offsetY : - chartConfig.bar.serieName.offsetY * 3)"
+                                text-anchor="middle"
+                                :font-size="chartConfig.chart.labels.fontSize"
+                                :fill="chartConfig.bar.serieName.useSerieColor ? serie.color : chartConfig.bar.serieName.color"
+                                :font-weight="chartConfig.bar.serieName.bold ? 'bold' : 'normal'"
+                            >
+                                {{ chartConfig.bar.serieName.useAbbreviation ? abbreviate({ source: serie.name, length: chartConfig.bar.serieName.abbreviationSize}) : serie.name }}
                             </text>
                         </g>
                     </g>
@@ -593,14 +604,14 @@
         </svg>
         
         <!-- SLICER -->
-        <div v-if="chartConfig.chart.zoom.show" class="vue-ui-xy-range-slider-wrapper" data-html2canvas-ignore style="position:relative">
+        <div v-if="chartConfig.chart.zoom.show && maxX > 6" class="vue-ui-xy-range-slider-wrapper" data-html2canvas-ignore style="position:relative">
             <div class="vue-ui-xy-range-slider-label-left" data-cy-zoom-legend>
                 {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.start] }}
             </div>
             <div class="vue-ui-xy-range-slider">
-                <div class="vue-ui-xy-slider-track" :id="`vue-ui-slider-track_${uniqueId}`"></div>
-                    <input data-cy="xy-range-start" :id="`start_${uniqueId}`" type="range" :style="`border:none !important;accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="maxX" v-model="slicer.start">
-                    <input :id="`end_${uniqueId}`" type="range" :style="`border:none !important;accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="maxX" v-model="slicer.end">
+                <div class="vue-ui-xy-slider-track" :id="`vue-ui-slider-track_${sliderId}`"></div>
+                    <input data-cy="xy-range-start" :id="`start_${sliderId}`" type="range" :style="`border:none !important;accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="maxX" v-model="slicer.start">
+                    <input :id="`end_${sliderId}`" type="range" :style="`border:none !important;accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="maxX" v-model="slicer.end">
 
             </div>
             <div class="vue-ui-xy-range-slider-label-right" data-cy-zoom-legend>
@@ -683,6 +694,7 @@ import pdf from '../pdf';
 import img from "../img";
 import { useMouse } from '../useMouse';
 import { 
+    abbreviate,
     adaptColorToBackground,
     calcLinearProgression,
     calculateNiceScale,
@@ -712,7 +724,7 @@ import Shape from "../atoms/Shape.vue";
 import BaseIcon from '../atoms/BaseIcon.vue';
 import TableSparkline from "./vue-ui-table-sparkline.vue";
 
-const uid = createUid();
+const sliderId = createUid();
 
 export default {
     name: "vue-ui-xy",
@@ -740,7 +752,6 @@ export default {
     TableSparkline
 },
     data(){
-        const uniqueId = uid;
         const maxX = Math.max(...this.dataset.map(datapoint => datapoint.series.length));
         const slicer = {
             start: 0,
@@ -783,13 +794,14 @@ export default {
             selectedSerieIndex: null,
             selectedRowIndex: null,
             segregatedSeries: [],
-            uniqueId,
+            uniqueId: createUid(),
             step: 0,
             slicer,
             __to__: null,
             maxX,
             showSparklineTable: true,
-            segregateStep: 0
+            segregateStep: 0,
+            sliderId
         }
     },
     computed: {
@@ -837,6 +849,7 @@ export default {
                     series: datapoint.series.map(d => {
                         return this.isSafeValue(d) ? d : null
                     }).slice(this.slicer.start, this.slicer.end),
+                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.palette[i]),
                     id: `uniqueId_${i}`
                 }
             });
@@ -847,7 +860,6 @@ export default {
                     ...datapoint,
                     series: datapoint.series.map(plot => plot + this.relativeZero),
                     absoluteValues: datapoint.series,
-                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.palette[i]),
                 }
             }).filter(s => !this.segregatedSeries.includes(s.id));
         },
@@ -893,7 +905,6 @@ export default {
                     ...datapoint,
                     series: datapoint.series.map(plot => plot + this.relativeZero),
                     absoluteValues: datapoint.series,
-                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.palette[i]),
                 }
             })
         },
@@ -907,7 +918,7 @@ export default {
                             y: this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(plot)),
                             value: datapoint.absoluteValues[j],
                         }
-                    })
+                    }),
                 }
             })
         },
@@ -1225,11 +1236,11 @@ export default {
 
         if (this.chartConfig.chart.zoom.show) {
             const vm = this;
-            const sliderOne = document.getElementById(`start_${this.uniqueId}`);
-            const sliderTwo = document.getElementById(`end_${this.uniqueId}`);
+            const sliderOne = document.getElementById(`start_${this.sliderId}`);
+            const sliderTwo = document.getElementById(`end_${this.sliderId}`);
     
             let minGap = 0;
-            const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.uniqueId}`);
+            const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.sliderId}`);
     
             sliderOne.addEventListener("input", slideOne);
             sliderTwo.addEventListener("input", slideTwo);
@@ -1287,6 +1298,7 @@ export default {
         }
     },
     methods: {
+        abbreviate,
         calculateNiceScale,
         checkNaN,
         createSmoothPath,
@@ -1328,7 +1340,7 @@ export default {
                 start: 0,
                 end: Math.max(...this.dataset.map(datapoint => datapoint.series.length))
             }
-            const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.uniqueId}`);
+            const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.sliderId}`);
             sliderTrack.style.background = `linear-gradient(to right, #dadae5 0% , #858585 100% , #858585 0%, #dadae5 100%)`;
         },
         createCanvasArea(plots) {
