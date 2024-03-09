@@ -965,28 +965,84 @@ const weeks = computed(() => {
   return arr;
 });
 
-const scat1 = computed(() => {
-  const arr = [];
-  for (let i = -50; i < 50; i += 1) {
-    arr.push({
-      x: Math.random() * i + 12,
-      y: (Math.random() * i) / 20,
-      name: `plot_${i}_cluster_1`,
-    });
+// const scat1 = computed(() => {
+//   const arr = [];
+//   for (let i = 0; i < 50; i += 1) {
+//     arr.push({
+//       x: Math.random() * i + 12,
+//       y: (Math.random() * i) / 20,
+//       name: `plot_${i}_cluster_1`,
+//     });
+//   }
+//   return arr;
+// });
+// const scat2 = computed(() => {
+//   const arr = [];
+//   for (let i = 0; i < 50; i += 1) {
+//     arr.push({
+//       x: (Math.random() * i) / 10,
+//       y: (Math.random() * i) / 10,
+//       name: `plot_${i}_cluster_2`,
+//     });
+//   }
+//   return arr;
+// });
+
+const scat1 = ref([
+  {
+    x: 1,
+    y: 2,
+    name: '1'
+  },
+  {
+    x: 0.3,
+    y: 1.6,
+    name: '1'
+  },
+  {
+    x: 3,
+    y: 2.1,
+    name: '1'
+  },
+  {
+    x: 3,
+    y: 2.2,
+    name: '1'
+  },
+  {
+    x: 1.3,
+    y: 1.2,
+    name: '1'
   }
-  return arr;
-});
-const scat2 = computed(() => {
-  const arr = [];
-  for (let i = -50; i < 50; i += 1) {
-    arr.push({
-      x: (Math.random() * i) / 10,
-      y: (Math.random() * i) / 10,
-      name: `plot_${i}_cluster_2`,
-    });
+])
+
+const scat2 = ref([
+  {
+    x: 1,
+    y: 2,
+    name: '1'
+  },
+  {
+    x: 0.3,
+    y: 1.6,
+    name: '1'
+  },
+  {
+    x: 3,
+    y: 2.1,
+    name: '1'
+  },
+  {
+    x: 3,
+    y: 20.2,
+    name: '1'
+  },
+  {
+    x: 1.3,
+    y: -20.2,
+    name: '1'
   }
-  return arr;
-});
+])
 
 const scatterDataset = computed(() => {
   return [
@@ -3046,7 +3102,7 @@ function selectHistoDatapoint({ datapoint, index }) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
         <template #title>
           <BaseIcon name="chartLine" />
           VueUiXy
@@ -3159,7 +3215,7 @@ function selectHistoDatapoint({ datapoint, index }) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter

@@ -86,7 +86,7 @@ const extremes = computed(() => {
     const xMax = Math.max(...datasetWithId.value.filter(el => !segregated.value.includes(el.id)).flatMap(ds => ds.values.map(v => v.x)));
     const yMin = Math.min(...datasetWithId.value.filter(el => !segregated.value.includes(el.id)).flatMap(ds => ds.values.map(v => v.y)));
     const yMax = Math.max(...datasetWithId.value.filter(el => !segregated.value.includes(el.id)).flatMap(ds => ds.values.map(v => v.y)));
-    return { xMin, xMax, yMin, yMax };
+    return { xMin: xMin >= 0 ? 0 : xMin, xMax, yMin: yMin >= 0 ? 0 : yMin, yMax };
 });
 
 const zero = computed(() => {
