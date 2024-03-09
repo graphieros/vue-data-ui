@@ -929,6 +929,13 @@ export function dataLabel({ p = '', v, s = '', r = 0, space = false }) {
     return `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : Number(Number(v).toFixed(r).toLocaleString())}${space ? ' ' : ''}${s ?? ''}`
 }
 
+/**
+ * @typedef Abbreviation
+ * @type {object}
+ * @property {(number|string)} source - The string to abbreviate
+ * @property {number=} length - The size of the abbreviation
+ * @type {Abbreviation}
+ */
 export function abbreviate({ source, length = 3 }) {
     if (!source && source !== 0) {
         return ''

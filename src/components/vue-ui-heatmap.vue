@@ -81,9 +81,11 @@ const maxX = computed(() => {
 const svg = computed(() => {
     const height = heatmapConfig.value.style.layout.padding.top + heatmapConfig.value.style.layout.padding.bottom + (props.dataset.length * heatmapConfig.value.style.layout.cells.height) + (mutableConfig.value.inside ? 92 : 0);
     const width= heatmapConfig.value.style.layout.padding.left + heatmapConfig.value.style.layout.padding.right + ((maxX.value < props.dataset.length ? props.dataset.length : maxX.value) * heatmapConfig.value.style.layout.cells.height);
+    const heightWithLegend = height + (heatmapConfig.value.style.legend.show ? (heatmapConfig.value.style.legend.position === 'right' ? 0 : ((heatmapConfig.value.style.layout.cells.height * 2))) : 0)
 
     return {
         height,
+        heightWithLegend,
         width
     }
 });
@@ -203,6 +205,10 @@ function useTooltip(datapoint, seriesIndex) {
 
 const sideLegendIndicatorY = computed(() => {
     return drawingArea.value.top + (sideLegendHeight.value * (1 - hoveredValue.value / maxValue.value))
+})
+
+const bottomLegendIndicatorX = computed(() => {
+    return drawingArea.value.left + ((svg.value.width - drawingArea.value.left - heatmapConfig.value.style.layout.padding.right) * (hoveredValue.value / maxValue.value))
 })
 
 const __to__ = ref(null);
@@ -337,7 +343,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
+        <svg  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.heightWithLegend}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
             <!-- TITLE AS G -->
             <g v-if="heatmapConfig.style.title.text && mutableConfig.inside && !isPrinting">
                 <text
@@ -437,6 +443,7 @@ defineExpose({
                 </text>
             </g>
 
+            <!-- LEGEND RIGHT -->
             <g v-if="heatmapConfig.style.legend.show && legendPosition === 'right'">
                 <defs>
                     <linearGradient id="colorScaleVertical" x2="0%" y2="100%" >
@@ -474,53 +481,44 @@ defineExpose({
                 <path v-if="hoveredValue !== null" :fill="heatmapConfig.style.color" stroke="none" :d="`M ${drawingArea.right + 36},${sideLegendIndicatorY} ${drawingArea.right + 26},${sideLegendIndicatorY - 8} ${drawingArea.right + 26},${sideLegendIndicatorY + 8}z`" />
             </g>
 
-            <!-- LEGEND AS G -->
-            <foreignObject 
-                v-if="heatmapConfig.style.legend.show && mutableConfig.inside && !isPrinting"
-                :x="0"
-                :y="svg.height / 2 + 150"
-                width="100%"
-                height="100"
-                style="overflow:visible"
-            >
-                <div class="vue-ui-heatmap-legend" :style="`color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize*2}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" >
-                    <span data-cy="heatmap-legend-foreignObject-min" style="text-align:right">{{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
-                    <svg viewBox="0 0 120 12" style="width: 25%">
-                        <rect v-for="(_,i) in 12"
-                            :x="i * 12"
-                            :y="0"
-                            :height="12"
-                            :width="12"
-                            :fill="heatmapConfig.style.layout.cells.colors.underlayer"
-                        />
-                        <rect v-for="(_,i) in 12"
-                            :x="i * 12"
-                            :y="0"
-                            :height="12"
-                            :width="12"
-                            :fill="i < 5 ? `${heatmapConfig.style.layout.cells.colors.cold}${opacity[Math.round((1-(i / 5)) * 100)]}` : `${heatmapConfig.style.layout.cells.colors.hot}${opacity[Math.round((((i-5) / 5)) * 100)]}`"
-                        />
-                    </svg>
-                    <span data-cy="heatmap-legend-foreignObject-max" style="text-align:left">{{ Number(maxValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
-                </div>
-            </foreignObject>
-            <slot name="svg" :svg="svg"/>
-        </svg>
-
-        <!-- LEGEND AS DIV -->
-        <div v-if="heatmapConfig.style.legend.show && heatmapConfig.style.legend.position === 'bottom' && (!mutableConfig.inside || isPrinting)" class="vue-ui-heatmap-legend" :style="`background:${heatmapConfig.style.legend.backgroundColor};color:${heatmapConfig.style.legend.color};font-size:${heatmapConfig.style.legend.fontSize}px;padding-bottom:12px;font-weight:${heatmapConfig.style.legend.bold ? 'bold' : ''};display:flex; flex-direction:row;gap:3px;align-items:center;justify-content:center;font-weight:${heatmapConfig.style.legend.bold ? 'bold':'normal'}`" >
-            <span data-cy="heatmap-legend-min" style="text-align:right">{{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
-            <svg viewBox="0 0 132 12" style="width: 300px">
+            <!-- LEGEND BOTTOM -->
+            <g v-if="heatmapConfig.style.legend.show && legendPosition === 'bottom'">
                 <defs>
-                    <linearGradient id="colorScale" x1="0%" y1="0%" x2="100%" y2="0%" >
+                    <linearGradient id="colorScaleHorizontal" x1="0%" x2="100%" y1="0%" y2="0%">
                         <stop offset="0%" :stop-color="heatmapConfig.style.layout.cells.colors.cold"/>
                         <stop offset="100%" :stop-color="heatmapConfig.style.layout.cells.colors.hot"/>
                     </linearGradient>
                 </defs>
-                <rect x="0" y="0" height="12" width="132" fill="url(#colorScale)"/>
-            </svg>
-            <span data-cy="heatmap-legend-max" style="text-align:left">{{ Number(maxValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}</span>
-        </div>
+                <rect
+                    :x="drawingArea.left"
+                    :y="drawingArea.bottom + heatmapConfig.style.layout.cells.height"
+                    :width="svg.width - drawingArea.left - heatmapConfig.style.layout.padding.right"
+                    :height="heatmapConfig.style.layout.cells.height"
+                    :rx="heatmapConfig.style.layout.cells.height / 2"
+                    fill="url(#colorScaleHorizontal)"
+                />
+                <text
+                    :x="drawingArea.left"
+                    :y="drawingArea.bottom + heatmapConfig.style.layout.cells.height * 2 + heatmapConfig.style.legend.fontSize * 2"
+                    text-anchor="start"
+                    :font-size="heatmapConfig.style.legend.fontSize * 2"
+                >
+                    {{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}
+                </text>
+                <text
+                    :x="drawingArea.right"
+                    :y="drawingArea.bottom + heatmapConfig.style.layout.cells.height * 2 + heatmapConfig.style.legend.fontSize * 2"
+                    text-anchor="end"
+                    :font-size="heatmapConfig.style.legend.fontSize * 2"
+                >
+                    {{ Number(maxValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}
+                </text>
+                <line v-if="hoveredValue !== null" :stroke="heatmapConfig.style.backgroundColor" stroke-width="2" :x1="bottomLegendIndicatorX" :x2="bottomLegendIndicatorX" :y1="drawingArea.bottom + heatmapConfig.style.layout.cells.height" :y2="drawingArea.bottom + heatmapConfig.style.layout.cells.height * 2" />
+                <path v-if="hoveredValue !== null" :fill="heatmapConfig.style.color" stroke="none" :d="`M ${bottomLegendIndicatorX},${drawingArea.bottom + heatmapConfig.style.layout.cells.height} ${bottomLegendIndicatorX - 12},${drawingArea.bottom + heatmapConfig.style.layout.cells.height - 20} ${bottomLegendIndicatorX + 12},${drawingArea.bottom + heatmapConfig.style.layout.cells.height - 20}z`" />
+            </g>
+
+            <slot name="svg" :svg="svg"/>
+        </svg>
 
         <!-- TOOLTIP -->
         <Tooltip

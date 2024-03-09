@@ -2507,6 +2507,10 @@ const heatmapConfig = ref({
         console.log({seriesIndex, datapoint, series, config});
         return "TEST"
       }
+    },
+    legend: {
+      show: true,
+      position: 'bottom'
     }
   }
 })
@@ -3215,7 +3219,7 @@ function selectHistoDatapoint({ datapoint, index }) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter
@@ -3822,7 +3826,7 @@ function selectHistoDatapoint({ datapoint, index }) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
         <template #title>
           <BaseIcon name="chartHeatmap"/>
           VueUiHeatmap
