@@ -1241,9 +1241,11 @@ export default {
     
             let minGap = 0;
             const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.sliderId}`);
-    
-            sliderOne.addEventListener("input", slideOne);
-            sliderTwo.addEventListener("input", slideTwo);
+
+            if(sliderOne && sliderTwo) {
+                sliderOne.addEventListener("input", slideOne);
+                sliderTwo.addEventListener("input", slideTwo);
+            }
     
             function slideOne(){
                 if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
