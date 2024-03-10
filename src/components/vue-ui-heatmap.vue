@@ -502,6 +502,7 @@ defineExpose({
                     :y="drawingArea.bottom + heatmapConfig.style.layout.cells.height * 2 + heatmapConfig.style.legend.fontSize * 2"
                     text-anchor="start"
                     :font-size="heatmapConfig.style.legend.fontSize * 2"
+                    :fill="heatmapConfig.style.legend.color"
                 >
                     {{ Number(minValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}
                 </text>
@@ -510,6 +511,7 @@ defineExpose({
                     :y="drawingArea.bottom + heatmapConfig.style.layout.cells.height * 2 + heatmapConfig.style.legend.fontSize * 2"
                     text-anchor="end"
                     :font-size="heatmapConfig.style.legend.fontSize * 2"
+                    :fill="heatmapConfig.style.legend.color"
                 >
                     {{ Number(maxValue.toFixed(heatmapConfig.style.legend.roundingValue)).toLocaleString() }}
                 </text>
