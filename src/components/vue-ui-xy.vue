@@ -1245,36 +1245,37 @@ export default {
             if(sliderOne && sliderTwo) {
                 sliderOne.addEventListener("input", slideOne);
                 sliderTwo.addEventListener("input", slideTwo);
+                
+                function slideOne(){
+                    if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+                        sliderOne.value = parseInt(sliderTwo.value) - minGap;
+                    }
+                    fillColor();
+                    if (vm.chartConfig.useCanvas) {
+                        vm.drawCanvas();
+                    }
+                }
+                function slideTwo(){
+                    if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+                        sliderTwo.value = parseInt(sliderOne.value) + minGap;
+                    }
+                    fillColor();
+                    fillColor();
+                    if (vm.chartConfig.useCanvas) {
+                        vm.drawCanvas();
+                    }
+                }
+                const dataset = this.dataset;
+                function fillColor(){
+                    let percent1 = (sliderOne.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
+                    let percent2 = (sliderTwo.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
+                    sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
+                }
+        
+                slideOne();
+                slideTwo();
             }
     
-            function slideOne(){
-                if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-                    sliderOne.value = parseInt(sliderTwo.value) - minGap;
-                }
-                fillColor();
-                if (vm.chartConfig.useCanvas) {
-                    vm.drawCanvas();
-                }
-            }
-            function slideTwo(){
-                if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-                    sliderTwo.value = parseInt(sliderOne.value) + minGap;
-                }
-                fillColor();
-                fillColor();
-                if (vm.chartConfig.useCanvas) {
-                    vm.drawCanvas();
-                }
-            }
-            const dataset = this.dataset;
-            function fillColor(){
-                let percent1 = (sliderOne.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
-                let percent2 = (sliderTwo.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
-                sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
-            }
-    
-            slideOne();
-            slideTwo();
         }
 
         if (this.chartConfig.useCanvas) {
