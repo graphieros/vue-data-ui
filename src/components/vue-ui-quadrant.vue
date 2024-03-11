@@ -1,6 +1,18 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from "vue";
-import { palette, createUid, giftWrap, shiftHue, opacity, convertColorToHex, createCsvContent, downloadCsv, adaptColorToBackground } from "../lib";
+import { 
+    adaptColorToBackground,
+    convertColorToHex, 
+    createCsvContent, 
+    createUid, 
+    downloadCsv, 
+    functionReturnsString,
+    isFunction,
+    giftWrap, 
+    opacity, 
+    palette, 
+    shiftHue, 
+} from "../lib";
 import pdf from "../pdf.js";
 import img from "../img.js";
 import mainConfig from "../default_configs.json";
@@ -426,20 +438,18 @@ function useTooltip(category, plot, categoryIndex) {
 
     const customFormat = quadrantConfig.value.style.chart.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             seriesIndex: categoryIndex,
             datapoint: plot,
             series: drawableDataset.value,
             config: quadrantConfig.value
-        }) === 'string') {
-
+        }))) {
         tooltipContent.value = customFormat({
             seriesIndex: categoryIndex,
             datapoint: plot,
             series: drawableDataset.value,
             config: quadrantConfig.value
         })
-
     } else {
         let html = "";
     

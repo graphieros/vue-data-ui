@@ -1,6 +1,17 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { canShowValue, closestDecimal, shiftHue, opacity, createUid, createCsvContent, downloadCsv, calculateNiceScale } from "../lib";
+import { 
+    calculateNiceScale, 
+    canShowValue, 
+    closestDecimal, 
+    createCsvContent, 
+    createUid, 
+    downloadCsv,
+    functionReturnsString,
+    isFunction, 
+    opacity, 
+    shiftHue, 
+} from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
 import img from "../img";
@@ -188,12 +199,12 @@ function useTooltip(index, datapoint) {
 
     const customFormat = candlestickConfig.value.style.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             seriesIndex: index,
             datapoint,
             series: drawableDataset.value,
             config: candlestickConfig.value
-        }) === 'string') {
+        }))) {
         tooltipContent.value = customFormat({
             seriesIndex: index,
             datapoint,

@@ -1,13 +1,15 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 import {
     convertColorToHex,
-    palette,
-    opacity,
-    shiftHue,
-    createUid,
     createCsvContent,
-    downloadCsv
+    createUid,
+    downloadCsv,
+    functionReturnsString,
+    isFunction,
+    opacity,
+    palette,
+    shiftHue,
 } from "../lib.js";
 import pdf from "../pdf.js";
 import img from "../img.js";
@@ -260,20 +262,18 @@ function useTooltip(bar, seriesIndex) {
 
     const customFormat = verticalBarConfig.value.style.chart.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint: bar,
             series: immutableDataset.value,
             config: verticalBarConfig.value,
             seriesIndex
-        }) === 'string') {
-
+        }))) {
         tooltipContent.value = customFormat({
             datapoint: bar,
             series: immutableDataset.value,
             config: verticalBarConfig.value,
             seriesIndex
         })
-
     } else {
         html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;text-align:left;">
                 <div style="display:flex;align-items:center;gap:4px;"><svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" fill="${bar.color}"/></svg> ${ serieName }</div>

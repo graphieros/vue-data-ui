@@ -2410,8 +2410,8 @@ const donutConfig = ref({
       tooltip: {
         customFormat: ({ datapoint, seriesIndex, series , config}) => {
           console.log({datapoint, seriesIndex, series, config});
-          return `<div style="color:${datapoint.color}">
-              ${datapoint.name}
+          return `<div style="background:${datapoint.color}33;color:${datapoint.color};padding:12px">
+              ${datapoint.name} : ${datapoint.value}
             </div>`
         }
       }
@@ -2424,12 +2424,12 @@ const xyConfig = ref({
     labels: {
       fontSize: 30
     },
-    // tooltip: {
-    //   customFormat: ({ seriesIndex, datapoint, series,  bars, lines, plots, config }) => {
-    //     console.log({seriesIndex, datapoint, series, bars, lines, plots, config});
-    //     return 'TEST'
-    //   }
-    // }
+    tooltip: {
+      customFormat: ({ seriesIndex, datapoint, series,  bars, lines, plots, config }) => {
+        console.log({seriesIndex, datapoint, series, bars, lines, plots, config});
+        return 'TEST'
+      }
+    }
   },
   bar: {
       labels: {
@@ -2544,6 +2544,13 @@ const pyramidConfig = ref({
       customFormat: ({ seriesIndex, datapoint, series, config }) => {
         console.log({ seriesIndex, datapoint, series, config });
         return "TEST"
+      }
+    },
+    layout: {
+      dataLabels: {
+        sideTitles: {
+          offsetY: -20
+        }
       }
     }
   }
@@ -3948,8 +3955,5 @@ function selectHistoDatapoint({ datapoint, index }) {
 </style>
 
 <style>
-.vue-data-ui-custom-tooltip {
-  background: red;
-}
 
 </style>

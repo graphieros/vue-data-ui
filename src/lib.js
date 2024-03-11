@@ -958,6 +958,14 @@ export function abbreviate({ source, length = 3 }) {
     }
 }
 
+export function isFunction(func) {
+    return !!func && typeof func === 'function';
+}
+
+export function functionReturnsString(func) {
+    return typeof func.apply(null, arguments) === 'string';
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -985,8 +993,10 @@ const lib = {
     downloadCsv,
     giftWrap,
     interpolateColorHex,
+    isFunction,
     isSafeValue,
     isValidUserValue,
+    functionReturnsString,
     lightenHexColor,
     makeDonut,
     makePath,

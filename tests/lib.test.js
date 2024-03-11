@@ -20,8 +20,10 @@ import {
     createStar,
     dataLabel,
     degreesToRadians,
+    functionReturnsString,
     hslToRgb,
     interpolateColorHex,
+    isFunction,
     isSafeValue,
     isValidUserValue,
     makeDonut,
@@ -734,5 +736,54 @@ describe('abbreviate', () => {
     })
     test('returns first letters of unique word with custom max len', () => {
         expect(abbreviate({ source: 'paradoxical', length: 7})).toBe('PARADOX')
+    })
+})
+
+const batch = [
+    "",
+    null,
+    'NaN',
+    () => () => 'test',
+    () => null,
+    () => undefined,
+    () => ({ key: 'val'}),
+    () => 'GOOD'
+]
+
+describe('isFunction', () => {
+    test('returns false for an empty string', () => {
+        expect(isFunction(batch[0])).toBe(false);
+    })
+    test('returns false for null', () => {
+        expect(isFunction(batch[1])).toBe(false)
+    })
+    test('returns false for NaN', () => {
+        expect(isFunction(batch[2])).toBe(false)
+    })
+    test('returns true for a callback', () => {
+        expect(isFunction(batch[3])).toBe(true)
+    })
+    test('returns true for other funcs', () => {
+        expect(isFunction(batch[4])).toBe(true);
+        expect(isFunction(batch[5])).toBe(true);
+        expect(isFunction(batch[6])).toBe(true)
+    })
+})
+
+describe('functionReturnsString', () => {
+    test('returns true for an empty string', () => {
+        expect(functionReturnsString(() => '')).toBe(true)
+    })
+    test('returns true for any string', () => {
+        expect(functionReturnsString(() => '<div style="color:red;">yey</div>')).toBe(true)
+    })
+    test('returns false for other return types', () => {
+        expect(functionReturnsString(() => () => 'wut')).toBe(false)
+        expect(functionReturnsString(() => null)).toBe(false)
+        expect(functionReturnsString(() => undefined)).toBe(false)
+        expect(functionReturnsString(() => ['yey', 'wut'])).toBe(false)
+        expect(functionReturnsString(() => ({ key: 'value'}))).toBe(false)
+        expect(functionReturnsString(() => 0)).toBe(false)
+        expect(functionReturnsString(() => 123)).toBe(false)
     })
 })

@@ -8,7 +8,9 @@ import {
     createCsvContent, 
     createUid, 
     dataLabel,
-    downloadCsv, 
+    downloadCsv,
+    functionReturnsString,
+    isFunction, 
     makeDonut, 
     opacity, 
     palette, 
@@ -192,8 +194,18 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
 
     const customFormat = donutConfig.value.style.chart.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat === 'function' && typeof customFormat({ seriesIndex, datapoint, series: immutableSet.value, config: donutConfig.value }) === 'string') {
-        tooltipContent.value = customFormat({ seriesIndex, datapoint, series: immutableSet.value, config: donutConfig.value })
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
+        seriesIndex,
+        datapoint,
+        series: immutableSet.value,
+        config: donutConfig.value
+    }, () => tooltipContent))) {
+        tooltipContent.value = customFormat({
+            seriesIndex,
+            datapoint,
+            series: immutableSet.value,
+            config: donutConfig.value
+        })
     } else {
         html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;

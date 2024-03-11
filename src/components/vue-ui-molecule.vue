@@ -1,6 +1,15 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { lightenHexColor, palette, createUid, createCsvContent, downloadCsv, createPolygonPath } from '../lib';
+import { 
+    createCsvContent, 
+    createPolygonPath, 
+    createUid, 
+    downloadCsv,
+    functionReturnsString,
+    isFunction, 
+    lightenHexColor, 
+    palette, 
+} from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -250,12 +259,12 @@ function createTooltipContent(node) {
 
     const customFormat = moleculeConfig.value.style.chart.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             seriesIndex: -1,
             datapoint: node,
             series: convertedDataset.value,
             config: moleculeConfig.value
-        }) === 'string') {
+        }))) {
         tooltipContent.value = customFormat({
             seriesIndex: -1, // well, ok
             datapoint: node,

@@ -2018,7 +2018,8 @@
                         "fontSize": 18,
                         "color": "#2D353C",
                         "useSideColor": true,
-                        "bold": false
+                        "bold": false,
+                        "offsetY": 0
                     },
                     "xAxis": {
                         "show": true,

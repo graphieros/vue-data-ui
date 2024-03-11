@@ -1,6 +1,14 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
-import { palette, opacity, createUid, createCsvContent, downloadCsv } from '../lib';
+import { 
+    createCsvContent, 
+    createUid, 
+    downloadCsv,
+    functionReturnsString,
+    isFunction, 
+    opacity, 
+    palette, 
+} from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -210,12 +218,12 @@ function useTooltip(plot, seriesIndex) {
 
     const customFormat = scatterConfig.value.style.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint: plot,
             seriesIndex,
             series: drawableDataset.value,
             config: scatterConfig.value
-        }) === 'string') {
+        }))) {
         tooltipContent.value = customFormat({
             datapoint: plot,
             seriesIndex,

@@ -709,6 +709,8 @@ import {
     createUid,
     dataLabel,
     downloadCsv,
+    functionReturnsString,
+    isFunction,
     isSafeValue, 
     opacity, 
     palette, 
@@ -1062,7 +1064,7 @@ export default {
             const time = this.timeLabels[this.selectedSerieIndex];
             const customFormat = this.chartConfig.chart.tooltip.customFormat;
 
-            if(customFormat && typeof customFormat === 'function' && typeof customFormat({
+            if(this.isFunction(customFormat) && this.functionReturnsString(() => customFormat({
                 seriesIndex: this.selectedSerieIndex,
                 datapoint: selectedSeries,
                 series: this.absoluteDataset,
@@ -1070,7 +1072,7 @@ export default {
                 lines: this.lineSet,
                 plots: this.plotSet,
                 config: this.chartConfig
-            }) === 'string') {
+            }))) {
                 return customFormat({
                     seriesIndex: this.selectedSerieIndex,
                     datapoint: selectedSeries,
@@ -1319,6 +1321,8 @@ export default {
         useMouse,
         closestDecimal,
         dataLabel,
+        isFunction,
+        functionReturnsString,
         createArea(plots) {
             const start = { x: plots[0].x, y: this.zero };
             const end = { x: plots.at(-1).x, y: this.zero };

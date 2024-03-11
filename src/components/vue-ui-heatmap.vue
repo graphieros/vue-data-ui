@@ -5,7 +5,9 @@ import {
     createCsvContent, 
     createUid, 
     dataLabel,
-    downloadCsv, 
+    downloadCsv,
+    functionReturnsString,
+    isFunction,
     interpolateColorHex, 
     opacity, 
 } from "../lib";
@@ -183,12 +185,12 @@ function useTooltip(datapoint, seriesIndex) {
 
     const customFormat = heatmapConfig.value.style.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint,
             seriesIndex,
             series: mutableDataset.value,
             config: heatmapConfig.value
-        }) === 'string') {
+        }))) {
         tooltipContent.value = customFormat({
             datapoint,
             seriesIndex,
@@ -200,7 +202,6 @@ function useTooltip(datapoint, seriesIndex) {
         html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8;font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : dataLabel({p:heatmapConfig.value.style.layout.dataLabels.prefix, v: value, s: heatmapConfig.value.style.layout.dataLabels.suffix, r:heatmapConfig.value.style.tooltip.roundingValue })}</span></div>`
         tooltipContent.value = `<div style="font-size:${heatmapConfig.value.style.tooltip.fontSize}px">${html}</div>`;
     }
-
 }
 
 const sideLegendIndicatorY = computed(() => {

@@ -7,6 +7,8 @@ import {
     createUid, 
     dataLabel,
     downloadCsv,
+    functionReturnsString,
+    isFunction,
     makePath, 
     opacity, 
     palette, 
@@ -298,12 +300,12 @@ function useTooltip(apex, i) {
 
     const customFormat = radarConfig.value.style.chart.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             seriesIndex: i,
             datapoint: apex,
             series: { categories: datasetCopy.value, datapoints: seriesCopy.value, radar: radar.value  },
             config: radarConfig.value
-        }) === 'string') {
+        }))) {
         tooltipContent.value = customFormat({
             seriesIndex: i,
             datapoint: apex,

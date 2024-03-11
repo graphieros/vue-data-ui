@@ -6,6 +6,8 @@ import {
   createUid,
   dataLabel,
   downloadCsv,
+  functionReturnsString,
+  isFunction,
   opacity,
   palette,
   shiftHue,
@@ -191,12 +193,12 @@ function useTooltip(index, datapoint) {
   const selected = convertedDataset.value[index];
   const customFormat = ringsConfig.value.style.chart.tooltip.customFormat;
 
-  if (customFormat && typeof customFormat === 'function' && typeof customFormat({
+  if (isFunction(customFormat) && functionReturnsString(() => customFormat({
       seriesIndex: index,
       datapoint,
       series: convertedDataset.value,
       config: ringsConfig.value
-    }) === 'string') {
+    }))) {
     tooltipContent.value = customFormat({
       seriesIndex: index,
       datapoint,

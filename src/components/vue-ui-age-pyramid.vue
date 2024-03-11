@@ -1,6 +1,14 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { opacity, shiftHue, createUid, createCsvContent, downloadCsv } from '../lib';
+import { 
+    createCsvContent, 
+    createUid, 
+    downloadCsv,
+    functionReturnsString,
+    isFunction, 
+    opacity, 
+    shiftHue, 
+} from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -184,7 +192,7 @@ function useTooltip(index, datapoint) {
 
     const customFormat = agePyramidConfig.value.style.tooltip.customFormat;
 
-    if (customFormat && typeof customFormat === 'function' && typeof customFormat({
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             seriesIndex: index,
             datapoint: {
                 segment: datapoint[0],
@@ -194,7 +202,7 @@ function useTooltip(index, datapoint) {
             },
             series: drawableDataset.value,
             config: agePyramidConfig.value
-        }) === 'string') {
+        }))) {
         tooltipContent.value = customFormat({
             seriesIndex: index,
             datapoint: {
@@ -475,7 +483,7 @@ defineExpose({
                 <g v-if="agePyramidConfig.style.layout.dataLabels.sideTitles.show">
                     <text
                         :x="drawingArea.left"
-                        :y="drawingArea.top"
+                        :y="drawingArea.top + agePyramidConfig.style.layout.dataLabels.sideTitles.offsetY"
                         :fill="agePyramidConfig.style.layout.dataLabels.sideTitles.useSideColor ? agePyramidConfig.style.layout.bars.left.color : agePyramidConfig.style.layout.dataLabels.sideTitles.color"
                         :font-size="agePyramidConfig.style.layout.dataLabels.sideTitles.fontSize"
                         text-anchor="start"
@@ -485,7 +493,7 @@ defineExpose({
                     </text>
                     <text
                         :x="drawingArea.right"
-                        :y="drawingArea.top"
+                        :y="drawingArea.top + agePyramidConfig.style.layout.dataLabels.sideTitles.offsetY"
                         :fill="agePyramidConfig.style.layout.dataLabels.sideTitles.useSideColor ? agePyramidConfig.style.layout.bars.right.color : agePyramidConfig.style.layout.dataLabels.sideTitles.color"
                         :font-size="agePyramidConfig.style.layout.dataLabels.sideTitles.fontSize"
                         text-anchor="end"
