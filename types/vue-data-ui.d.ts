@@ -1278,6 +1278,7 @@ declare module 'vue-data-ui' {
                         color?: string;
                         useSideColor?: boolean;
                         bold?: boolean;
+                        offsetY?: number;
                     };
                     xAxis?: {
                         show?: boolean;
@@ -3137,6 +3138,17 @@ declare module 'vue-data-ui' {
                     roundingValue?: number;
                     roundingPercentage?: number;
                 };
+                tooltip?: {
+                    show?: boolean;
+                    color?: string;
+                    backgroundColor?: string;
+                    fontSize?: number;
+                    showValue?: boolean;
+                    showPercentage?: boolean;
+                    roundingValue?: number;
+                    roundingPercentage?: number;
+                    customFormat?: (params: VueUiTooltipParams<VueUiOnionDatapoint, VueUiOnionSeriesItem[], VueUiOnionConfig>) => string;
+                };
             };
         };
         userOptions?: {
@@ -3168,6 +3180,43 @@ declare module 'vue-data-ui' {
             };
         };
     };
+
+    export type VueUiOnionDatapoint = {
+        absoluteIndex: number;
+        color: string;
+        id: string;
+        labelY: number;
+        name: string;
+        opacity: number;
+        path: {
+            active: string;
+            bgDashArray: string;
+            bgDashOffset: number;
+            dashArray: string;
+            dashOffset: number;
+            fullOffset: number;
+        };
+        percentage: number;
+        prefix: string;
+        radius: number;
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        suffix: string;
+        value: number;
+    }
+
+    export type VueUiOnionSeriesItem = {
+        absoluteIndex: number;
+        color: string;
+        id: string;
+        name: string;
+        opacity: number;
+        percentage: number;
+        prefix: string;
+        shape: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star" | null;
+        suffix: string;
+        value: number;
+    }
+
 
     export const VueUiOnion: DefineComponent<{
         config?: VueUiOnionConfig,

@@ -199,7 +199,7 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
         datapoint,
         series: immutableSet.value,
         config: donutConfig.value
-    }, () => tooltipContent))) {
+    }))) {
         tooltipContent.value = customFormat({
             seriesIndex,
             datapoint,
@@ -650,7 +650,7 @@ defineExpose({
             :color="donutConfig.style.chart.tooltip.color"
             :parent="donutChart"
             :content="tooltipContent"
-            :isCustom="donutConfig.style.chart.tooltip.customFormat && typeof donutConfig.style.chart.tooltip.customFormat === 'function'"
+            :isCustom="isFunction(donutConfig.style.chart.tooltip.customFormat)"
         />
 
         <!-- DATA TABLE -->

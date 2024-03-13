@@ -338,7 +338,11 @@ const dataTable = computed(() => {
 
     const body = drawableDataset.value.map(ds => {
         return [
-            `<span style="color:${ds.color}">⬤</span> ${ds.name}`,
+            {
+                shape: ds.shape,
+                content: ds.name,
+                color: ds.color
+            },
             Number((ds.correlation.coefficient ?? 0).toFixed(scatterConfig.value.table.td.roundingValue)).toLocaleString(),
             ds.plots.length.toLocaleString(),
             Number((ds.plots.map(p => p.v.x ?? 0).reduce((a,b) => a + b , 0) / ds.plots.length).toFixed(scatterConfig.value.table.td.roundingAverage)).toLocaleString(),
@@ -693,7 +697,10 @@ defineExpose({
                     {{ th }}
                 </template>
                 <template #td="{ td }">
-                    <div v-html="td"/>
+                    <div v-if="td.shape">
+                        <span>{{ td.content }}</span>
+                    </div>
+                    <div v-else v-html="td"/>
                 </template>
             </DataTable>
         </div>

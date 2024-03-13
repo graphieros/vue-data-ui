@@ -1136,6 +1136,17 @@
                     "roundingValue": 0,
                     "roundingPercentage": 0,
                     "offsetY": 6
+                },
+                "tooltip": {
+                    "show": true,
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0,
+                    "customFormat": null
                 }
             }
         },

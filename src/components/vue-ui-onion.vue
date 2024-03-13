@@ -2,11 +2,14 @@
 import { ref, computed, nextTick } from "vue";
 import { 
     convertColorToHex, 
-    palette, 
-    opacity, 
-    createUid, 
     createCsvContent, 
-    downloadCsv 
+    createUid,
+    dataLabel,
+    downloadCsv,
+    functionReturnsString,
+    isFunction,
+    opacity, 
+    palette, 
 } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
@@ -16,6 +19,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Legend from "../atoms/Legend.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const props = defineProps({
     config: {
@@ -41,6 +45,8 @@ const isPrinting = ref(false);
 const onionChart = ref(null);
 const details = ref(null);
 const step = ref(0);
+const isTooltip = ref(false);
+const tooltipContent = ref("");
 
 const onionConfig = computed(() => {
     return useNestedProp({
@@ -93,7 +99,8 @@ const immutableDataset = computed(() => {
             color: convertColorToHex(onion.color) || palette[i],
             id,
             shape: 'circle',
-            opacity: segregated.value.includes(id) ? 0.5 : 1
+            opacity: segregated.value.includes(id) ? 0.5 : 1,
+            absoluteIndex: i
         }
     })
 });
@@ -262,6 +269,35 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+function useTooltip({ datapoint, seriesIndex, show = true }) {
+    const absoluteIndex = datapoint.absoluteIndex;
+    selectedSerie.value = seriesIndex;
+    isTooltip.value = show;
+
+    let html = "";
+
+    const customFormat = onionConfig.value.style.chart.tooltip.customFormat;
+
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
+        seriesIndex: absoluteIndex,
+        datapoint,
+        series: immutableDataset.value,
+        config: onionConfig.value
+    }))) {
+        tooltipContent.value = customFormat({
+            seriesIndex: absoluteIndex,
+            datapoint,
+            series: immutableDataset.value,
+            config: onionConfig.value
+        })
+    } else {
+        html += `<div style="width: 100%; border-bottom: 1px solid #ccc; padding-bottom: 6px;margin-bottom:3px;display:flex;flex-direction:row;gap:3px;align-items:center"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg><span></span>${datapoint.name}</span></div>`;
+        html += `<div style="width:100%;text-align:left;"><b>${dataLabel({p: '', v: datapoint.percentage, s: '%', r: onionConfig.value.style.chart.tooltip.roundingPercentage})}</b> (${dataLabel({ p: datapoint.prefix, v: datapoint.value, s: datapoint.suffix, r: onionConfig.value.style.chart.tooltip.roundingValue })})</div>`
+
+        tooltipContent.value = `<div>${html}</div>`
+    }
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -410,8 +446,12 @@ defineExpose({
                 stroke-linecap="round"
                 class="vue-ui-onion-path"
                 style="transform:rotate(-90deg);transform-origin: 50% 50%"
-                @mouseenter="selectedSerie = i"
-                @mouseleave="selectedSerie = undefined"
+                @mouseenter="useTooltip({
+                    datapoint: onion,
+                    show: true,
+                    seriesIndex: i,
+                })"
+                @mouseleave="selectedSerie = undefined; isTooltip = false"
             />
 
 
@@ -486,6 +526,16 @@ defineExpose({
                 </div>
             </template>
         </Legend>
+
+        <!-- TOOLTIP -->
+        <Tooltip
+            :show="onionConfig.style.chart.tooltip.show && isTooltip"
+            :backgroundColor="onionConfig.style.chart.tooltip.backgroundColor"
+            :color="onionConfig.style.chart.tooltip.color"
+            :parent="onionChart"
+            :content="tooltipContent"
+            :isCustom="isFunction(onionConfig.style.chart.tooltip.customFormat)"
+        />
 
         <!-- DATA TABLE -->
         <div class="vue-ui-onion-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">

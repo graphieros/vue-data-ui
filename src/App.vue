@@ -2583,6 +2583,19 @@ const moleculeConfig = ref({
   }
 })
 
+const onionConfig = ref({
+  style: {
+    chart: {
+      tooltip: {
+        customFormat: ({ seriesIndex, datapoint, series, config }) => {
+          console.log({ seriesIndex, datapoint, series, config })
+          return 'TEST'
+        }
+      }
+    }
+  }
+})
+
 function selectSparklineDatapoint({ datapoint, index }) {
   console.log({datapoint, index })
 }
@@ -3320,7 +3333,7 @@ function selectHistoDatapoint({ datapoint, index }) {
         </template>
         <template #dev>
           <OnionTest
-            :config="{ useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}} }"
+            :config="onionConfig"
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
           >
@@ -3332,7 +3345,7 @@ function selectHistoDatapoint({ datapoint, index }) {
         <template #prod>
           <VueUiOnion
             ref="oniontest"
-            :config="{ useCssAnimation: false, style: { chart: { title: { text: 'Title', subtitle: { text: 'Subtitle'}}}} }"
+            :config="onionConfig"
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
           >
