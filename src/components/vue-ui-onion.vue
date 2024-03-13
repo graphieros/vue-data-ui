@@ -430,6 +430,21 @@ defineExpose({
                 style="transform:rotate(-90deg);transform-origin: 50% 50%"
             />
 
+
+
+            <!-- GRADIENT -->
+            <g v-if="onionConfig.style.chart.useGradient">            
+                <circle 
+                    v-for="onion in mutableDataset" 
+                    :cx="drawableArea.centerX" 
+                    :cy="drawableArea.centerY" 
+                    :r="onion.radius * 1.1" 
+                    stroke="none" 
+                    :fill="`url(#onion_gradient_${uid})`"
+                    style="transform:rotate(-90deg);transform-origin: 50% 50%"
+                />
+            </g>
+            
             <!-- TOOLTIP TRAPS -->
             <circle 
                 v-for="(onion, i) in mutableDataset" 
@@ -453,20 +468,6 @@ defineExpose({
                 })"
                 @mouseleave="selectedSerie = undefined; isTooltip = false"
             />
-
-
-            <!-- GRADIENT -->
-            <g v-if="onionConfig.style.chart.useGradient">            
-                <circle 
-                    v-for="onion in mutableDataset" 
-                    :cx="drawableArea.centerX" 
-                    :cy="drawableArea.centerY" 
-                    :r="onion.radius * 1.1" 
-                    stroke="none" 
-                    :fill="`url(#onion_gradient_${uid})`"
-                    style="transform:rotate(-90deg);transform-origin: 50% 50%"
-                />
-            </g>
 
             <!-- LABELS -->
             <g v-if="onionConfig.style.chart.layout.labels.show">
