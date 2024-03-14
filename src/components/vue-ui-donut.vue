@@ -76,7 +76,7 @@ const svg = computed(() => {
     }
 });
 
-const emit = defineEmits(['selectLegend'])
+const emit = defineEmits(['selectLegend', 'selectDatapoint'])
 
 const segregated = ref([]);
 
@@ -340,6 +340,10 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+function selectDatapoint(datapoint, index) {
+    emit('selectDatapoint', { datapoint, index })
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -491,7 +495,7 @@ defineExpose({
                     show: true
                 })"
                 @mouseleave="isTooltip = false; selectedSerie = null"
-                @click="segregate(i)"
+                @click="selectDatapoint(arc, i)"
             />
 
             <circle 
@@ -560,6 +564,7 @@ defineExpose({
                     :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize * 0.8"
                     font-family="Arial"
                     :class="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? '' : 'vue-ui-donut-blur'"
+                    @click="selectDatapoint(arc, i)"
                 >
                     ⬤
                 </text>
@@ -572,6 +577,7 @@ defineExpose({
                     :fill="donutConfig.style.chart.layout.labels.percentage.color"
                     :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize"
                     :style="`font-weight:${donutConfig.style.chart.layout.labels.percentage.bold ? 'bold': ''}`"
+                    @click="selectDatapoint(arc, i)"
                 >
                     {{ displayArcPercentage(arc, currentDonut)  }} {{ donutConfig.style.chart.layout.labels.value.show ? `(${dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, rounding: donutConfig.style.chart.layout.labels.value.rounding})})` : '' }}
                 </text>
@@ -584,6 +590,7 @@ defineExpose({
                     :fill="donutConfig.style.chart.layout.labels.name.color"
                     :font-size="donutConfig.style.chart.layout.labels.name.fontSize"
                     :style="`font-weight:${donutConfig.style.chart.layout.labels.name.bold ? 'bold': ''}`"
+                    @click="selectDatapoint(arc, i)"
                 >
                     {{ arc.name}}
                 </text>
