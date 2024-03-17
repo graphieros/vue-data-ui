@@ -64,6 +64,7 @@ function handleClick(legend, i) {
     align-items:center;
     gap: 6px;
     cursor: pointer;
-    height: 24px;
+    height: fit-content;
+    text-align: left;
 }
 </style>

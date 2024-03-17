@@ -603,12 +603,12 @@ defineExpose({
                 <template #item="{ legend, index }">
                     <div :data-cy="`legend-item-${index}`" @click="segregate(legend, index)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
-                    <span v-if="!segregated.includes(legend.id)">
+                    <template v-if="!segregated.includes(legend.id)">
                         ({{ isNaN(legend.value / legend.total) ? '-' : dataLabel({ v: legend.value / legend.total * 100, s: '%', r: donutConfig.style.chart.legend.roundingPercentage }) }})
-                    </span>
-                    <span v-else>
+                    </template>
+                    <template v-else>
                         ( - % )
-                    </span>
+                    </template>
                 </div>
                 </template>
             </Legend>
