@@ -480,6 +480,102 @@
             }
         }
     },
+    "vue_ui_nested_donuts": {
+        "useCssAnimation": true,
+        "useBlurOnHover": true,
+        "userOptions": {
+            "show": true
+        },
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "useGradient": true,
+                "gradientIntensity": 40,
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "layout": {
+                    "labels": {
+                        "dataLabels": {
+                            "show": true,
+                            "prefix": "",
+                            "suffix": "",
+                            "hideUnderValue": 3,
+                            "fontSize": 14,
+                            "offsetX": 4,
+                            "offsetY": 12,
+                            "useSerieColor": false,
+                            "color": "#2D353C",
+                            "showValue": true,
+                            "showPercentage": true,
+                            "boldValue": false,
+                            "boldPercentage": true,
+                            "roundingValue": 0,
+                            "roundingPercentage": 0
+                        }
+                    },
+                    "donut": {
+                        "strokeWidth": 200,
+                        "borderWidth": 2,
+                        "spacingRatio": 0.5
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "show": true,
+                    "fontSize": 16,
+                    "bold": false,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "tooltip": {
+                    "show": true,
+                    "showAllItemsAtIndex": true,
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0,
+                    "customFormat": null
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "responsiveBreakpoint": 400,
+            "columnNames": {
+                "series": "Series",
+                "value": "Value",
+                "percentage": "Percentage"
+            },
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "none"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
+        }
+    },
     "vue_ui_waffle": {
         "useBlurOnHover": true,
         "style": {

@@ -37,6 +37,7 @@ import VueUiTableSparkline from "./components/vue-ui-table-sparkline.vue";
 import Arrow from "./atoms/Arrow.vue"
 import VueUiMiniLoader from "./components/vue-ui-mini-loader.vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
+import VueUiNestedDonuts from "./components/vue-ui-nested-donuts.vue";
 
 export { 
     VueUiXy, 
@@ -77,5 +78,6 @@ export {
     VueUiTableSparkline,
     Arrow,
     VueUiMiniLoader,
-    getVueDataUiConfig
+    getVueDataUiConfig,
+    VueUiNestedDonuts
 };

@@ -49,6 +49,7 @@ import MoleculeTest from './components/vue-ui-molecule.vue';
 import DonutEvolutionTest from "./components/vue-ui-donut-evolution.vue";
 import TableSparklineTest from "./components/vue-ui-table-sparkline.vue";
 import MiniLoaderTest from "./components/vue-ui-mini-loader.vue";
+import NestedDonutsTest from "./components/vue-ui-nested-donuts.vue";
 import { getVueDataUiConfig } from "vue-data-ui";
 
 const dataset = ref([
@@ -2612,6 +2613,90 @@ function selectHistoDatapoint({ datapoint, index }) {
   console.log({ datapoint, index })
 }
 
+const nestedDonutsConfig = ref({
+  style: {
+    chart: {
+      tooltip: {
+        customFormat: ({ datapoint, seriesIndex, series, config }) => {
+          console.log({ datapoint, seriesIndex, series, config })
+          return 'TEST'
+        }
+      }
+    }
+  }
+})
+
+const nestedDonutsDataset = ref([
+  {
+    name: "Donut 1",
+    series: [
+      {
+        name: "Serie 1",
+        values: [3]
+      },
+      {
+        name: "Serie 2",
+        values: [1]
+      },
+      {
+        name: "Serie 3",
+        values: [2]
+      },
+    ],
+  },
+  {
+    name: "Donut 2",
+    series: [
+      {
+        name: "Serie 1",
+        values: [4],
+      },
+      {
+        name: "Serie 2",
+        values: [5.3]
+      },
+      {
+        name: "Serie 3",
+        values: [2.5]
+      },
+    ],
+  },
+  // {
+  //   name: "Donut 3",
+  //   series: [
+  //     {
+  //       name: "Serie 1",
+  //       values: [4]
+  //     },
+  //     {
+  //       name: "Serie 2",
+  //       values: [1]
+  //     },
+  //     {
+  //       name: "Serie 3",
+  //       values: [2]
+  //     },
+  //   ],
+  // },
+  // {
+  //   name: "Donut 4",
+  //   series: [
+  //     {
+  //       name: "Serie 1",
+  //       values: [4]
+  //     },
+  //     {
+  //       name: "Serie 2",
+  //       values: [1]
+  //     },
+  //     {
+  //       name: "Serie 3",
+  //       values: [2]
+  //     },
+  //   ],
+  // },
+])
+
 </script>
 
 <template>
@@ -2707,9 +2792,28 @@ function selectHistoDatapoint({ datapoint, index }) {
           <BaseIcon name="circleExclamation" stroke="#42d392" />
           <BaseIcon name="circleQuestion" stroke="#42d392" />
           <BaseIcon name="refresh" stroke="#42d392" />
+          <BaseIcon name="chartNestedDonuts" stroke="#42d392" />
 
         </div>
       </template>
+      </Box>
+
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">
+        <template #title>
+          <BaseIcon name="chartNestedDonuts"/>
+          VueUiNestedDonuts
+        </template>
+        <template #info>
+        </template>
+        <template #dev>
+          <NestedDonutsTest :dataset="nestedDonutsDataset" :config="nestedDonutsConfig" />
+        </template>
+        <template #prod>
+          <VueUiNestedDonuts :dataset="nestedDonutsDataset" :config="nestedDonutsConfig"/>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_nested_donuts }}
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_mini_loader)">

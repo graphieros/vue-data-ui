@@ -40,6 +40,7 @@ import {
     VueUiTableSparkline,
     Arrow,
     VueUiMiniLoader,
+    VueUiNestedDonuts
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -82,4 +83,5 @@ app.component("VueUiMolecule", VueUiMolecule);
 app.component("VueUiTableSparkline", VueUiTableSparkline);
 app.component("Arrow", Arrow);
 app.component("VueUiMiniLoader", VueUiMiniLoader);
+app.component("VueUiNestedDonuts", VueUiNestedDonuts);
 app.mount('#app');
