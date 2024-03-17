@@ -119,7 +119,7 @@ const immutableDataset = computed(() => {
     })
 })
 
-const donutSize = computed(() => defaultConfig.value.style.chart.layout.donut.strokeWidth)
+const donutSize = computed(() => donutConfig.value.style.chart.layout.donut.strokeWidth)
 
 const mutableDataset = computed(() => {
     return [...immutableDataset.value].map((ds, i) => {
