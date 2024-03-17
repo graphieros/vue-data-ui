@@ -86,12 +86,10 @@ function segregate(legend) {
     } else {
         segregated.value.push(legend.id)
     }
-    console.log(legend)
     emit('selectLegend', legend)
 }
 
 function selectDatapoint({ datapoint, index }) {
-    console.log({ datapoint, index })
     emit('selectDatapoint', { datapoint, index })
 }
 
