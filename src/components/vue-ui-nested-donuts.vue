@@ -157,6 +157,29 @@ const mutableDataset = computed(() => {
     })
 })
 
+const gradientSets = computed(() => {
+    return [...immutableDataset.value].map((ds, i)  => {
+        const sizeRatio = i * donutSize.value / immutableDataset.value.length;
+
+        return {
+            sizeRatio,
+            donut: makeDonut(
+                { series: [{ value: 1}] },
+                svg.value.width / 2,
+                svg.value.height / 2,
+                donutSize.value - sizeRatio,
+                donutSize.value - sizeRatio,
+                1.99999,
+                2,
+                1,
+                360,
+                105.25,
+                donutSize.value / immutableDataset.value.length * donutConfig.value.style.chart.layout.donut.spacingRatio
+            )[0]
+        }
+    })
+})
+
 const selectedDonut = ref(null);
 const selectedDatapoint = ref(null);
 const selectedDatapointIndex = ref(null);
@@ -472,6 +495,25 @@ defineExpose({
                         :class="blurClass(arc, j)"
                         :stroke="donutConfig.style.chart.backgroundColor"
                         :stroke-width="donutConfig.style.chart.layout.donut.borderWidth"
+                    />
+                </g>
+            </g>
+
+            <!-- GRADIENTS -->
+            <defs>
+                <radialGradient v-for="(gradient, i) in gradientSets" :id="`radial_${uid}_${i}`" cx="50%" cy="50%" r="50%" :fr="30 - (1 * (i+1)) + '%'">
+                    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+                    <stop :offset="70 - (20 * i) + '%'" stop-color="#FFFFFF" :stop-opacity="donutConfig.style.chart.gradientIntensity / 100"/>
+                    <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+                </radialGradient>
+            </defs>
+            <g v-if="donutConfig.style.chart.useGradient">
+                <g v-for="(gradient, i) in gradientSets">
+                    <path
+                        :d="gradient.donut.arcSlice"
+                        :fill="`url(#radial_${uid}_${i})`"
+                        stroke="transparent"
+                        stroke-width="0"
                     />
                 </g>
             </g>

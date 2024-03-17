@@ -6,15 +6,14 @@
     <a href="https://vue-data-ui.graphieros.com/"><img src="https://vue-data-ui.graphieros.com/vue-data-ui-showcase.png"></a>
 </p>
 
-
-
 # vue-data-ui
+
 ![npm](https://img.shields.io/npm/v/vue-data-ui)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-37-green)
+![Static Badge](https://img.shields.io/badge/components-38-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -23,6 +22,7 @@ A user-empowering data visualization Vue components library.
 Available components:
 
 ## Charts
+
 - [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
 - [VueUiDonut](https://vue-data-ui.graphieros.com/docs#vue-ui-donut)
 - [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
@@ -44,26 +44,31 @@ Available components:
 - [VueUiDonutEvolution](https://vue-data-ui.graphieros.com/docs#vue-ui-donut-evolution)
 - [VueUiMoodRadar](https://vue-data-ui.graphieros.com/docs#vue-ui-mood-radar)
 - [VueUiMolecule](https://vue-data-ui.graphieros.com/docs#vue-ui-molecule)
-
+- [VueUiNestedDonuts](https://vue-data-ui.graphieros.com/docs#vue-ui-nested-donuts)
 
 ## Mini charts
+
 - [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
 - [VueUiSparkbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkbar)
 - [VueUiSparkstackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
 - [VueUiSparkHistogram](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkhistogram)
 
 ## 3d
+
 - [VueUi3dBar](https://vue-data-ui.graphieros.com/docs#vue-ui-3d-bar)
 
 ## Tables
+
 - [VueUiTableSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-table-sparkline)
 - [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
 
 ## Rating
+
 - [VueUiRating](https://vue-data-ui.graphieros.com/docs#vue-ui-rating)
 - [VueUiSmiley](https://vue-data-ui.graphieros.com/docs#vue-ui-smiley)
 
 ## Utilities
+
 - [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)
 - [VueUiSkeleton](https://vue-data-ui.graphieros.com/docs#vue-ui-skeleton)
 - [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
@@ -73,6 +78,7 @@ Available components:
 - [VueUiMiniLoader](https://vue-data-ui.graphieros.com/docs#vue-ui-mini-loader)
 
 # Installation
+
 ```
 npm i vue-data-ui
 ```
@@ -103,12 +109,15 @@ Or you can import just what you need in your files:
 ```
 
 ## Typescript
+
 Types are available in the 'vue-data-ui.d.ts' file under the types directory of the package.
 
 ## Nuxt
+
 [This repo contains a boilerplate implementation of the vue-data-ui package in Nuxt](https://github.com/graphieros/vue-data-ui-nuxt)
 
 # Customizable tooltips
+
 Charts with tooltips have a config option to customize tooltip contents:
 
 ```
@@ -120,9 +129,11 @@ customFormat: ({ seriesIndex, datapoint, series, config }) => {
 ```
 
 # Slots
+
 Most Vue Data UI chart components include a #svg slot you can use to introduce customized svg elements (shapes, text, etc).
 
 # Config
+
 If for some reason you can't access the documentation website and need to get the default config object for a component:
 
 ```
