@@ -510,7 +510,12 @@
                             "boldValue": false,
                             "boldPercentage": true,
                             "roundingValue": 0,
-                            "roundingPercentage": 0
+                            "roundingPercentage": 0,
+                            "showDonutName": true,
+                            "boldDonutName": true,
+                            "donutNameAbbreviation": true,
+                            "donutNameMaxAbbreviationSize": 3,
+                            "donutNameOffsetY": 0
                         }
                     },
                     "donut": {

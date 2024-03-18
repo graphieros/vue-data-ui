@@ -245,7 +245,7 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
                     }
                 }
         }
-        tooltipContent.value = `<div>${html}</div>`;
+        tooltipContent.value = `<div style="font-size:${donutConfig.value.style.chart.tooltip.fontSize}px">${html}</div>`;
     }
     isTooltip.value = true;
 }
@@ -513,6 +513,23 @@ defineExpose({
                         stroke="transparent"
                         stroke-width="0"
                     />
+                </g>
+            </g>
+
+            <g v-if="donutConfig.style.chart.layout.labels.dataLabels.showDonutName">
+                <g v-for="(item, i) in mutableDataset">
+                    <g v-for="(arc, j) in item.donut">    
+                        <text
+                            v-if="j === 0"
+                            :x="svg.width / 2"
+                            :y="arc.startY - donutConfig.style.chart.layout.labels.dataLabels.fontSize + donutConfig.style.chart.layout.labels.dataLabels.donutNameOffsetY"
+                            text-anchor="middle"
+                            :font-size="donutConfig.style.chart.layout.labels.dataLabels.fontSize"
+                            :font-weight="donutConfig.style.chart.layout.labels.dataLabels.boldDonutName ? 'bold': 'normal'"
+                        >
+                            {{ donutConfig.style.chart.layout.labels.dataLabels.donutNameAbbreviation ? abbreviate({ source: item.name, length: donutConfig.style.chart.layout.labels.dataLabels.donutNameMaxAbbreviationSize }) : item.name }}
+                        </text>
+                    </g>
                 </g>
             </g>
 

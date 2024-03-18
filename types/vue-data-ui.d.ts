@@ -2336,6 +2336,11 @@ declare module 'vue-data-ui' {
                             showValue?: boolean;
                             suffix?: string;
                             useSerieColor?: boolean;
+                            showDonutName?: boolean;
+                            boldDonutName?: boolean;
+                            donutNameAbbreviation?: boolean;
+                            donutNameOffsetY?: number;
+                            donutNameMaxAbbreviationSize?: number;
                         };
                     };
                     donut?: {

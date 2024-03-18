@@ -2616,11 +2616,14 @@ function selectHistoDatapoint({ datapoint, index }) {
 const nestedDonutsConfig = ref({
   style: {
     chart: {
-      backgroundColor: '#1A1A1A',
-      tooltip: {
-        customFormat: ({ datapoint, seriesIndex, series, config }) => {
-          console.log({ datapoint, seriesIndex, series, config })
-          return 'TEST'
+      layout: {
+        labels: {
+          dataLabels: {
+            showDonutName: true,
+            boldDonutName: true,
+            donutNameAbbreviation: false,
+            donutNameOffsetY: 0
+          }
         }
       }
     }
