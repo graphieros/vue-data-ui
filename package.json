@@ -79,6 +79,7 @@
     "sass": "^1.57.1",
     "vite": "^4.4.5",
     "vitest": "^0.34.1",
-    "vue": "^3.3.4"
+    "vue": "^3.3.4",
+    "vue-data-ui": "file:../vue-data-ui"
   }
 }
