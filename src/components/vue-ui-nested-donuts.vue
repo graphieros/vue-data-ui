@@ -526,6 +526,7 @@ defineExpose({
                             text-anchor="middle"
                             :font-size="donutConfig.style.chart.layout.labels.dataLabels.fontSize"
                             :font-weight="donutConfig.style.chart.layout.labels.dataLabels.boldDonutName ? 'bold': 'normal'"
+                            :fill="donutConfig.style.chart.layout.labels.dataLabels.color"
                         >
                             {{ donutConfig.style.chart.layout.labels.dataLabels.donutNameAbbreviation ? abbreviate({ source: item.name, length: donutConfig.style.chart.layout.labels.dataLabels.donutNameMaxAbbreviationSize }) : item.name }}
                         </text>
