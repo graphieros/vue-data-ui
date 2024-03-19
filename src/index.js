@@ -38,6 +38,7 @@ import Arrow from "./atoms/Arrow.vue"
 import VueUiMiniLoader from "./components/vue-ui-mini-loader.vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
 import VueUiNestedDonuts from "./components/vue-ui-nested-donuts.vue";
+import VueUiSparkgauge from './components/vue-ui-sparkgauge.vue';
 
 export { 
     VueUiXy, 
@@ -79,5 +80,6 @@ export {
     Arrow,
     VueUiMiniLoader,
     getVueDataUiConfig,
-    VueUiNestedDonuts
+    VueUiNestedDonuts,
+    VueUiSparkgauge
 };

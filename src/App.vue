@@ -51,6 +51,7 @@ import TableSparklineTest from "./components/vue-ui-table-sparkline.vue";
 import MiniLoaderTest from "./components/vue-ui-mini-loader.vue";
 import NestedDonutsTest from "./components/vue-ui-nested-donuts.vue";
 import { getVueDataUiConfig } from "vue-data-ui";
+import SparkGaugeTest from "./components/vue-ui-sparkgauge.vue";
 
 const dataset = ref([
   {
@@ -2725,6 +2726,15 @@ const nestedDonutsDataset = ref([
   // },
 ])
 
+const sparkGaugeDataset = ref({
+  value: 10,
+  min: -10,
+  max: 10,
+  title: "Some KPI with a long name"
+})
+
+const sparkGaugeConfig = ref({})
+
 </script>
 
 <template>
@@ -2824,6 +2834,24 @@ const nestedDonutsDataset = ref([
 
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkgauge)">
+        <template #title>
+          <BaseIcon name="chartGauge"/>
+          VueUiSparkgauge
+        </template>
+        <template #info>
+        </template>
+        <template #dev>
+          <SparkGaugeTest :dataset="sparkGaugeDataset" :config="sparkGaugeConfig" />
+        </template>
+        <template #prod>
+          <VueUiSparkgauge :dataset="sparkGaugeDataset" :config="sparkGaugeConfig" />
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_sparkgauge }}
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">

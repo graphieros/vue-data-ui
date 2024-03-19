@@ -563,7 +563,7 @@ defineExpose({
                     :x="position.x + waffleConfig.style.chart.layout.labels.captions.offsetX"
                     :y="position.y + waffleConfig.style.chart.layout.labels.captions.offsetY"
                     :height="absoluteRectDimension"
-                    :width="absoluteRectDimension * 3"
+                    :width="absoluteRectDimension * waffleConfig.style.chart.layout.grid.size"
                 >
                     <div class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${waffleConfig.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
                         <span v-if="waffleConfig.style.chart.layout.labels.captions.showSerieName">

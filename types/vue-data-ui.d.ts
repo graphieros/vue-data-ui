@@ -15,6 +15,62 @@ declare module 'vue-data-ui' {
         plots?: TPlot;
     }
 
+    export type VueUiSparkgaugeDataset = {
+        value: number;
+        min: number;
+        max: number;
+        title?: string;
+    }
+
+    export type VueUiSparkgaugeConfig = {
+        style?: {
+            fontFamily?: string;
+            background?: string;
+            height?: number;
+            basePosition?: number;
+            animation?: {
+                show?: boolean;
+                speedMs?: number;
+            };
+            title?: {
+                show?: boolean;
+                fontSize?: number;
+                position?: "top" | "bottom",
+                textAlign?: "center" | "left" | "right",
+                bold?: boolean;
+                color?: string;
+            };
+            dataLabel?: {
+                fontSize?: number;
+                autoColor?: boolean;
+                color?: string;
+                offsetY?: number;
+                bold?: boolean;
+                rounding?: number;
+                prefix?: string;
+                suffix?: string;
+            };
+            colors?: {
+                min?: string;
+                max?: string;
+            };
+            track?: {
+                autoColor?: boolean;
+                color?: string;
+                strokeLinecap?: "round" | "square" | "butt";
+            };
+            gutter?: {
+                color?: string;
+                strokeLinecap?: "round" | "square" | "butt"
+            };
+        };
+    };
+
+    export const VueUiSparkgauge: DefineComponent<{
+        dataset: VueUiSparkgaugeDataset,
+        config?: VueUiSparkgaugeConfig
+    }>
+
     export type VueUiMiniLoaderConfig = {
         type?: "line" | "bar" | "onion";
         onion?: {
@@ -2432,7 +2488,7 @@ declare module 'vue-data-ui' {
         arcOf: string;
         arcOfId: string;
         arcSlice: string;
-        center: { startX: number; startY: number; path: string; endX: number; endY: number};
+        center: { startX: number; startY: number; path: string; endX: number; endY: number };
         color: string;
         cx: number;
         cy: number;

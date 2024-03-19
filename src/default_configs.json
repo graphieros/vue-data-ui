@@ -3259,5 +3259,48 @@
             "trackBlur": 1,
             "trackColor": "#42d392"
         }
+    },
+    "vue_ui_sparkgauge": {
+        "style": {
+            "fontFamily": "inherit",
+            "background": "#FFFFFF",
+            "height": 84,
+            "basePosition": 72,
+            "animation": {
+                "show": true,
+                "speedMs": 150 
+            },
+            "title": {
+                "show": true,
+                "fontSize": 12,
+                "position": "top",
+                "textAlign": "center",
+                "bold": false,
+                "color": "#2D353C"
+            },
+            "dataLabel": {
+                "fontSize": 20,
+                "autoColor": true,
+                "color":"#2D353C",
+                "offsetY": 0,
+                "bold": true,
+                "rounding": 0,
+                "prefix": "",
+                "suffix": ""
+            },
+            "colors": {
+                "min": "#FF0000",
+                "max": "#00FF00"
+            },
+            "track": {
+                "autoColor": true,
+                "color": "#5f8bee",
+                "strokeLinecap": "round"
+            },
+            "gutter": {
+                "color": "#E1E5E8",
+                "strokeLinecap": "round"
+            }
+        }
     }
 }
