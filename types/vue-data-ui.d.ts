@@ -2468,6 +2468,19 @@ declare module 'vue-data-ui' {
                             prefix?: string;
                             suffix?: string;
                         };
+                        captions?: {
+                            show?: boolean;
+                            showSerieName?: boolean;
+                            serieNameAbbreviation?: boolean;
+                            serieNameMaxAbbreviationSize?: number;
+                            fontSize?: number;
+                            showValue?: boolean;
+                            showPercentage?: boolean;
+                            roundingValue?: number;
+                            roundingPercentage?: number;
+                            offsetX?: number;
+                            offsetY?: number;
+                        };
                     };
                     grid?: {
                         size?: number;

@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
 import { 
+    abbreviate,
+    adaptColorToBackground,
     convertColorToHex,
     createCsvContent,
     createUid, 
@@ -60,6 +62,8 @@ const mutableConfig = ref({
     inside: !waffleConfig.value.style.chart.layout.useDiv,
     showTable: waffleConfig.value.table.show
 })
+
+const captions = computed(() => waffleConfig.style.chart.layout.labels.captions)
 
 const svg = computed(() => {
     const height = mutableConfig.value.inside ? 704 : 512;
@@ -187,13 +191,21 @@ const rects = computed(() => {
     return cumulatedSet.value.flatMap((serie, s) => {
         return serie.rects.map((rect, i) => {
             return {
+                isFirst: i === 0,
+                isLongEnough: rect.length > 2,
                 name: serie.name,
                 color: serie.color,
                 value: serie.value,
                 serieIndex: s,
+                absoluteStartIndex: i < 3,
                 ...serie
             }
         })
+    }).map((s, i) => {
+        return {
+            ...s,
+            isAbsoluteFirst: i % waffleConfig.value.style.chart.layout.grid.size === 0,
+        }
     })
 });
 
@@ -202,6 +214,8 @@ const positions = computed(() => {
     for(let i = 0; i < waffleConfig.value.style.chart.layout.grid.size; i += 1) {
         for(let j = 0; j < waffleConfig.value.style.chart.layout.grid.size; j += 1) {
             grid.push({
+                isStartOfLine: j === 0,
+                position: waffleConfig.value.style.chart.layout.grid.vertical ? i : j,
                 x: (waffleConfig.value.style.chart.layout.grid.vertical ? i : j) * (rectDimension.value + waffleConfig.value.style.chart.layout.grid.spaceBetween),
                 y: (waffleConfig.value.style.chart.layout.grid.vertical ? j : i) * (rectDimension.value + waffleConfig.value.style.chart.layout.grid.spaceBetween) + drawingArea.value.top,
             })
@@ -543,6 +557,30 @@ defineExpose({
                 :stroke="waffleConfig.style.chart.layout.rect.stroke"
                 :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
             />
+            <template v-for="(position, i) in positions">
+                <foreignObject
+                    v-if="!waffleConfig.style.chart.layout.grid.vertical && waffleConfig.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < waffleConfig.style.chart.layout.grid.size - 3) || (rects[i].isAbsoluteFirst && i % waffleConfig.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
+                    :x="position.x + waffleConfig.style.chart.layout.labels.captions.offsetX"
+                    :y="position.y + waffleConfig.style.chart.layout.labels.captions.offsetY"
+                    :height="absoluteRectDimension"
+                    :width="absoluteRectDimension * 3"
+                >
+                    <div class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${waffleConfig.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
+                        <span v-if="waffleConfig.style.chart.layout.labels.captions.showSerieName">
+                            {{ waffleConfig.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects[i].name, length: waffleConfig.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects[i].name }} :
+                        </span>
+                        <span v-if="waffleConfig.style.chart.layout.labels.captions.showPercentage">
+                            {{ dataLabel({ v: rects[i].proportion, s: '%', r: waffleConfig.style.chart.layout.labels.captions.roundingPercentage }) }}
+                        </span>
+                        <span v-if="waffleConfig.style.chart.layout.labels.captions.showPercentage && waffleConfig.style.chart.layout.labels.captions.showValue">
+                            ({{ dataLabel({ p: waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: rects[i].value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.style.chart.layout.labels.captions.roundingValue }) }})
+                        </span>
+                        <span v-if="!waffleConfig.style.chart.layout.labels.captions.showPercentage && waffleConfig.style.chart.layout.labels.captions.showValue">
+                            {{ dataLabel({ p: waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: rects[i].value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.style.chart.layout.labels.captions.roundingValue }) }}
+                        </span>
+                    </div>
+                </foreignObject>
+            </template>
             <rect
                 v-for="(position, i) in positions"
                 :data-cy="`waffle-rect-${i}`"

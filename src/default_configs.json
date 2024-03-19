@@ -593,10 +593,23 @@
                         "dataLabels": {
                             "prefix": "",
                             "suffix": ""
+                        },
+                        "captions": {
+                            "show": false,
+                            "showSerieName": false,
+                            "serieNameAbbreviation": true,
+                            "serieNameMaxAbbreviationSize": 3,
+                            "fontSize": 12,
+                            "showValue": true,
+                            "showPercentage": true,
+                            "roundingValue": 0,
+                            "roundingPercentage": 0,
+                            "offsetX": 0,
+                            "offsetY": 0
                         }
                     },
                     "grid": {
-                        "size": 20,
+                        "size": 10,
                         "spaceBetween": 2,
                         "vertical": false
                     },

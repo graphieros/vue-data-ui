@@ -2451,6 +2451,30 @@ const xyConfig = ref({
 const waffleConfig = ref({
   style: {
     chart: {
+      layout: {
+        grid: {
+          vertical: false
+        },
+        labels: {
+          dataLabels: {
+            prefix: "$",
+            suffix: "€"
+          },
+          captions: {
+            "show": true,
+            "showSerieName": true,
+            "serieNameAbbreviation": true,
+            "serieNameMaxAbbreviationSize": 3,
+            "fontSize": 20,
+            "showValue": true,
+            "showPercentage": true,
+            "roundingValue": 0,
+            "roundingPercentage": 0,
+            "offsetX": 0,
+            "offsetY": 0
+          }
+        }
+      },
       tooltip: {
         customFormat: ({seriesIndex, datapoint, series, config}) => {
           console.log({seriesIndex, datapoint, series, config})
