@@ -106,7 +106,7 @@ const trackColor = computed(() => {
 <template>
 <div :style="`font-family:${sparkgaugeConfig.style.fontFamily};width: 100%; background:${sparkgaugeConfig.style.background}`">
     <!-- TITLE TOP -->
-    <div v-if="sparkgaugeConfig.style.title.show && nameLabel && sparkgaugeConfig.style.title.position === 'top'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${sparkgaugeConfig.style.title.fontSize}px;text-align:${sparkgaugeConfig.style.title.textAlign};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};©`">
+    <div v-if="sparkgaugeConfig.style.title.show && nameLabel && sparkgaugeConfig.style.title.position === 'top'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${sparkgaugeConfig.style.title.fontSize}px;text-align:${sparkgaugeConfig.style.title.textAlign};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};color:${sparkgaugeConfig.style.title.color}`">
         {{ nameLabel }}
     </div>
     <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:${sparkgaugeConfig.style.background}; width:100%;`">
@@ -144,7 +144,7 @@ const trackColor = computed(() => {
         </text>
     </svg>
     <!-- TITLE BOTTOM -->
-    <div v-if="sparkgaugeConfig.style.title.show && nameLabel && sparkgaugeConfig.style.title.position === 'bottom'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${sparkgaugeConfig.style.title.fontSize}px;text-align:${sparkgaugeConfig.style.title.textAlign};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'}`">
+    <div v-if="sparkgaugeConfig.style.title.show && nameLabel && sparkgaugeConfig.style.title.position === 'bottom'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${sparkgaugeConfig.style.title.fontSize}px;text-align:${sparkgaugeConfig.style.title.textAlign};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};color:${sparkgaugeConfig.style.title.color}`">
         {{ nameLabel }}
     </div>
 </div>
