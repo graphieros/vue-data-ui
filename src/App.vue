@@ -2727,7 +2727,7 @@ const nestedDonutsDataset = ref([
 ])
 
 const sparkGaugeDataset = ref({
-  value: 10,
+  value: 0,
   min: -10,
   max: 10,
   title: "Some KPI with a long name"

@@ -36,8 +36,6 @@ const svg = computed(() => {
     }
 })
 
-console.log(svg.value)
-
 const bounds = computed(() => {
     const min = props.dataset.min ?? 0;
     const max = props.dataset.max ?? 0;
@@ -50,6 +48,16 @@ const bounds = computed(() => {
 })
 
 const currentScore = ref(sparkgaugeConfig.value.style.animation.show ? bounds.value.min : props.dataset.value);
+
+const controlScore = computed(() => {
+    if (currentScore.value > bounds.value.max) {
+        return bounds.value.max;
+    } else if (currentScore.value < bounds.value.min) {
+        return bounds.value.min;
+    } else {
+        return currentScore.value;
+    }
+})
 
 const animationTick = computed(() => {
     return bounds.value.diff / sparkgaugeConfig.value.style.animation.speedMs;
@@ -75,10 +83,11 @@ const nameLabel = computed(() => {
 })
 
 const valueRatio = computed(() => {
+
     if(currentScore.value >= 0) {
-        return (currentScore.value - bounds.value.min) / bounds.value.diff
+        return (controlScore.value - bounds.value.min) / bounds.value.diff
     } else {
-        return (Math.abs(bounds.value.min) - Math.abs(currentScore.value)) / bounds.value.diff
+        return (Math.abs(bounds.value.min) - Math.abs(controlScore.value)) / bounds.value.diff
     }
 })
 
