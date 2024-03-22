@@ -192,7 +192,7 @@ const dataTable = computed(() => {
         return [
             `<span style="color:${ds.color}">⬤</span> ${ds.name}`,
             `${Number(ds.percentage ?? 0).toFixed(onionConfig.value.table.td.roundingPercentage).toLocaleString()}%`,
-            `${ds.prefix}${![null, undefined].includes(ds.value) ? (ds.value.toFixed(onionConfig.value.table.td.roundingValue)).toLocaleString() : '-'}${ds.suffix}`
+            `${ds.prefix}${![null, undefined, NaN, 'NaN'].includes(ds.value) ? (ds.value.toFixed(onionConfig.value.table.td.roundingValue)).toLocaleString() : '-'}${ds.suffix}`
         ]
     })
 
