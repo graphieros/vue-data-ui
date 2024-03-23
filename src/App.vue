@@ -756,28 +756,24 @@ const onionDataset = ref([
   {
     name: "Serie 1",
     percentage: 90,
-    value: 1200,
     prefix: "",
     suffix: "",
   },
   {
     name: "Serie 2",
     percentage: 50,
-    value: 1000,
     prefix: "",
     suffix: "",
   },
   {
     name: "Serie 3",
     percentage: 75,
-    value: 500,
     prefix: "",
     suffix: "",
   },
   {
     name: "Serie 4",
     percentage: 10,
-    value: 200,
     prefix: "",
     suffix: "",
   },
@@ -2516,6 +2512,15 @@ const quadrantConfig = ref({
 const verticalBarConfig = ref({
   style: {
     chart: {
+      layout: {
+        bars: {
+          dataLabels: {
+            value: {
+              prefix: '$'
+            }
+          }
+        }
+      },
       tooltip: {
         customFormat: ({ seriesIndex, datapoint, series, config }) => {
           console.log({seriesIndex, datapoint, series, config});
@@ -2836,7 +2841,7 @@ const sparkGaugeConfig = ref({})
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkgauge)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkgauge)">
         <template #title>
           <BaseIcon name="chartGauge"/>
           VueUiSparkgauge
@@ -3438,7 +3443,7 @@ const sparkGaugeConfig = ref({})
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_vertical_bar)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_vertical_bar)">
         <template #title>
           <BaseIcon name="chartVerticalBar" />
           VueUiVerticalBar
@@ -4006,7 +4011,7 @@ const sparkGaugeConfig = ref({})
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_heatmap)">
         <template #title>
           <BaseIcon name="chartHeatmap"/>
           VueUiHeatmap

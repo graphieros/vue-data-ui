@@ -614,7 +614,7 @@ defineExpose({
                     :font-weight="verticalBarConfig.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                     text-anchor="start"
                 >
-                    {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.show ? getParentData(serie, i).value : '' }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.show ? `(${getParentData(serie, i).percentageToTotal})` : '' }}
+                {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.prefix }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.show ? getParentData(serie, i).value : '' }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.show ? `(${getParentData(serie, i).percentageToTotal})` : '' }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.suffix }}
                 </text>
 
                 <!-- TOOLTIP TRAPS -->
