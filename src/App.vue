@@ -52,6 +52,8 @@ import MiniLoaderTest from "./components/vue-ui-mini-loader.vue";
 import NestedDonutsTest from "./components/vue-ui-nested-donuts.vue";
 import { getVueDataUiConfig } from "vue-data-ui";
 import SparkGaugeTest from "./components/vue-ui-sparkgauge.vue";
+import VueDataUiTest from "./components/vue-data-ui.vue";
+import VueDataUi from "./components/vue-data-ui.vue";
 
 const dataset = ref([
   {
@@ -2117,7 +2119,9 @@ const screenshotTest = ref(null)
 const screenshotProd = ref(null)
 
 function shootScreenTest() {
-  screenshotTest.value.shoot();
+  if(screenshotTest.value && screenshotTest.value.shoot) {
+    screenshotTest.value.shoot();
+  }
 }
 function shootScreenProd() {
   screenshotProd.value.shoot();
@@ -2740,6 +2744,24 @@ const sparkGaugeDataset = ref({
 
 const sparkGaugeConfig = ref({})
 
+const universal = ref(null)
+
+onMounted(() => {
+  if(universal.value) {
+    setTimeout(() => {
+      // universal.value.generateImage()
+    }, 3000)
+  }
+})
+
+function testEmit1(data) {
+  console.log({data})
+}
+
+function testEmit2(data) {
+  console.log({data})
+}
+
 </script>
 
 <template>
@@ -2849,10 +2871,10 @@ const sparkGaugeConfig = ref({})
         <template #info>
         </template>
         <template #dev>
-          <SparkGaugeTest :dataset="sparkGaugeDataset" :config="sparkGaugeConfig" />
+          <VueDataUiTest component="VueUiSparkgauge" :dataset="sparkGaugeDataset" :config="sparkGaugeConfig" />
         </template>
         <template #prod>
-          <VueUiSparkgauge :dataset="sparkGaugeDataset" :config="sparkGaugeConfig" />
+          <VueDataUi component="VueUiSparkgauge" :dataset="sparkGaugeDataset" :config="sparkGaugeConfig" />
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_sparkgauge }}
@@ -2867,10 +2889,10 @@ const sparkGaugeConfig = ref({})
         <template #info>
         </template>
         <template #dev>
-          <NestedDonutsTest :dataset="nestedDonutsDataset" :config="nestedDonutsConfig" />
+          <VueDataUiTest component="VueUiNestedDonuts" :dataset="nestedDonutsDataset" :config="nestedDonutsConfig" />
         </template>
         <template #prod>
-          <VueUiNestedDonuts :dataset="nestedDonutsDataset" :config="nestedDonutsConfig"/>
+          <VueDataUi component="VueUiNestedDonuts" :dataset="nestedDonutsDataset" :config="nestedDonutsConfig"/>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_nested_donuts }}
@@ -2879,16 +2901,16 @@ const sparkGaugeConfig = ref({})
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_mini_loader)">
         <template #title>
-          <!-- <BaseIcon name="chartTable"/> -->
+          <BaseIcon name="chartWheel"/>
           VueUiMiniLoader
         </template>
         <template #info>
         </template>
         <template #dev>
-          <MiniLoaderTest :config="miniLoaderConfig" />
+          <VueDataUiTest component="VueUiMiniLoader" :config="miniLoaderConfig" />
         </template>
         <template #prod>
-          <VueUiMiniLoader :config="miniLoaderConfig" />
+          <VueDataUi component="VueUiMiniLoader" :config="miniLoaderConfig" />
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_mini_loader }}
@@ -2903,10 +2925,10 @@ const sparkGaugeConfig = ref({})
         <template #info>
         </template>
         <template #dev>
-          <TableSparklineTest :dataset="tableSparklineDataset"/>
+          <VueDataUiTest component="VueUiTableSparkline" :dataset="tableSparklineDataset"/>
         </template>
         <template #prod>
-          <VueUiTableSparkline :dataset="tableSparklineDataset"/>
+          <VueDataUi component="VueUiTableSparkline" :dataset="tableSparklineDataset"/>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_table_sparkline }}
@@ -2927,10 +2949,10 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <MoleculeTest :dataset="clusterDataset" :config="moleculeConfig"/>
+          <VueDataUiTest component="VueUiMolecule" :dataset="clusterDataset" :config="moleculeConfig"/>
         </template>
         <template #prod>
-          <VueUiMolecule :dataset="clusterDataset" :config="moleculeConfig"/>
+          <VueDataUi component="VueUiMolecule" :dataset="clusterDataset" :config="moleculeConfig"/>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_molecule }}
@@ -2950,18 +2972,18 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <MoodRadarTest :dataset="moodRadarDataset" :config="moodRadarConfig">
+          <VueDataUiTest component="VueUiMoodRadar" :dataset="moodRadarDataset" :config="moodRadarConfig">
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </MoodRadarTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiMoodRadar :dataset="moodRadarDataset" :config="moodRadarConfig">
+          <VueDataUi component="VueUiMoodRadar" :dataset="moodRadarDataset" :config="moodRadarConfig">
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiMoodRadar>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_mood_radar }}
@@ -2975,10 +2997,10 @@ const sparkGaugeConfig = ref({})
           VueUiDigits
         </template>
         <template #dev>
-          <DigitsTest :dataset="299792458" :config="{ backgroundColor: '#1A1A1A', digits: { color: '#42d392', skeletonColor: '#2A2A2A'}}"/>
+          <VueDataUiTest component="VueUiDigits" :dataset="299792458" :config="{ backgroundColor: '#1A1A1A', digits: { color: '#42d392', skeletonColor: '#2A2A2A'}}"/>
         </template>
         <template #prod>
-          <VueUiDigits :dataset="299792458" :config="{ backgroundColor: '#1A1A1A', digits: { color: '#42d392', skeletonColor: '#2A2A2A'}}"/>
+          <VueDataUi component="VueUiDigits" :dataset="299792458" :config="{ backgroundColor: '#1A1A1A', digits: { color: '#42d392', skeletonColor: '#2A2A2A'}}"/>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_digits }}
@@ -2996,18 +3018,18 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <Bar3dTest :dataset="bar3dDataset">
+          <VueDataUiTest component="VueUi3dBar" :dataset="bar3dDataset">
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </Bar3dTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUi3dBar :dataset="bar3dDataset">
+          <VueDataUi component="VueUi3dBar" :dataset="bar3dDataset">
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUi3dBar>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_3d_bar }}
@@ -3020,11 +3042,11 @@ const sparkGaugeConfig = ref({})
         VueUiScreenshot
         </template>
         <template #dev>
-          <ScreenshotTest ref="screenshotTest"/>
+          <VueDataUiTest component="VueUiScreenshot" ref="screenshotTest"/>
           <button class="btn--orange" @click="shootScreenTest">SCREENSHOT</button>
         </template>
         <template #prod>
-          <VueUiScreenshot ref="screenshotProd"/>
+          <VueDataUi component="VueUiScreenshot" ref="screenshotProd"/>
           <button class="btn--green" @click="shootScreenProd">SCREENSHOT</button>
         </template>
         <template #config>
@@ -3045,24 +3067,25 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <DonutEvolutionTest
+          <VueDataUiTest
+            component="VueUiDonutEvolution"
             :dataset="donutEvolutionDataset"
             :config="donutEvolutionConfig"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.absoluteWidth / 2" :cy="svg.absoluteHeight / 2" :r="30" fill="#FF000033"/>
             </template>
-          </DonutEvolutionTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiDonutEvolution
+          <VueDataUi component="VueUiDonutEvolution"
             :dataset="donutEvolutionDataset"
             :config="donutEvolutionConfig"
           >
           <template #svg="{ svg }">
             <circle :cx="svg.absoluteWidth / 2" :cy="svg.absoluteHeight / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiDonutEvolution>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_donut_evolution }}
@@ -3080,22 +3103,24 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <TireTest
+          <VueDataUiTest
+            component="VueUiTiremarks"
             :dataset="tiremarksDataset"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </TireTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiTiremarks
+          <VueDataUi
+            component="VueUiTiremarks"
             :dataset="tiremarksDataset"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiTiremarks>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_tiremarks }}
@@ -3113,12 +3138,14 @@ const sparkGaugeConfig = ref({})
           </select>
         </template>
         <template #dev>
-          <SkeletonTest
+          <VueDataUiTest
+            component="VueUiSkeleton"
             :config="{ type: skeletonChoice, style: { rating: { useSmiley: true, filled: true } } }"
           />
         </template>
         <template #prod>
-          <VueUiSkeleton
+          <VueDataUi
+            component="VueUiSkeleton"
             :config="{ type: skeletonChoice, style: { rating: { useSmiley: true, filled: true } } }"
           />
         </template>
@@ -3138,7 +3165,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <WheelTest
+          <VueDataUiTest
+            component="VueUiWheel"
             ref="rings"
             :dataset="wheelDataset"
             :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
@@ -3146,10 +3174,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </WheelTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiWheel
+          <VueDataUi
+            component="VueUiWheel"
             ref="rings"
             :dataset="wheelDataset"
             :config="{style:{chart:{title:{text:'Title',subtitle:{text:'Subtitle'}}}}}"
@@ -3157,7 +3186,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiWheel>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_wheel }}
@@ -3177,7 +3206,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <RingsTest
+          <VueDataUiTest
+            component="VueUiRings"
             ref="rings"
             :dataset="ringsDataset"
             :config="ringsConfig"
@@ -3185,10 +3215,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </RingsTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-            <VueUiRings 
+            <VueDataUi
+              component="VueUiRings" 
               ref="rings" 
               :dataset="ringsDataset" 
               :config="ringsConfig"
@@ -3196,7 +3227,7 @@ const sparkGaugeConfig = ref({})
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-            </VueUiRings>
+            </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_rings }}
@@ -3214,7 +3245,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <RelationTest
+          <VueDataUiTest
+            component="VueUiRelationCircle"
             ref="relation"
             :dataset="relationDataset"
             :config="relationConfig"
@@ -3222,10 +3254,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </RelationTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-            <VueUiRelationCircle 
+            <VueDataUi
+              component="VueUiRelationCircle" 
               ref="relation" 
               :dataset="relationDataset" 
               :config="relationConfig"
@@ -3233,7 +3266,7 @@ const sparkGaugeConfig = ref({})
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-            </VueUiRelationCircle>
+            </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_relation_circle }}
@@ -3246,37 +3279,42 @@ const sparkGaugeConfig = ref({})
           VueUiSparkline
         </template>
         <template #dev>
-          <SparklineTest
+          <VueDataUiTest
+            component="VueUiSparkline"
              ref="sparkline"
             :config="sparklineConfig"
             :dataset="sparklineDataset"
             @selectDatapoint="selectSparklineDatapoint"
           >
-          </SparklineTest>
-          <SparklineTest
+          </VueDataUiTest>
+          <VueDataUiTest
+            component="VueUiSparkline"
              ref="sparkline"
             :config="sparklineConfig"
             :dataset="sparklineDataset2"
             @selectDatapoint="selectSparklineDatapoint"
           >
-          </SparklineTest>
-          <SparklineTest
+          </VueDataUiTest>
+          <VueDataUiTest
+            component="VueUiSparkline"
              ref="sparkline"
             :config="sparklineConfig2"
             :dataset="sparklineDataset"
             @selectDatapoint="selectSparklineDatapoint"
           >
-          </SparklineTest>
-          <SparklineTest
+          </VueDataUiTest>
+          <VueDataUiTest
+            component="VueUiSparkline"
              ref="sparkline"
             :config="sparklineConfig2"
             :dataset="sparklineDataset2"
             @selectDatapoint="selectSparklineDatapoint"
           >
-          </SparklineTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiSparkline
+          <VueDataUi
+            component="VueUiSparkline"
             :config="sparklineConfig"
             :dataset="sparklineDataset"
             @selectDatapoint="selectSparklineDatapoint"
@@ -3284,7 +3322,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiSparkline>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_sparkline }}
@@ -3305,22 +3343,25 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <XyTest
+          <VueDataUiTest
+            component="VueUiXy"
             ref="xytest"
             :config="xyConfig"
             :dataset="dataset2"
             @selectLegend="selectLegendXY"
             @selectX="selectX"
           >
-          </XyTest>
-          <XyTest
+          </VueDataUiTest>
+          <VueDataUiTest
+            component="VueUiXy"
             :config="xyConfig"
             :dataset="dataset"
           >
-          </XyTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiXy
+          <VueDataUi
+            component="VueUiXy"
             ref="xytest"
             :config="xyConfig"
             :dataset="dataset2"
@@ -3330,8 +3371,9 @@ const sparkGaugeConfig = ref({})
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiXy>
-          <VueUiXy
+          </VueDataUi>
+          <VueDataUi
+            component="VueUiXy"
             :config="xyConfig"
             :dataset="dataset"
           />
@@ -3347,14 +3389,16 @@ const sparkGaugeConfig = ref({})
           VueUiSparkHistogram
         </template>
         <template #dev>
-          <HistoTest 
+          <VueDataUiTest
+            component="VueUiSparkHistogram" 
             :dataset="histoDataset" 
             :config="histoConfig"
             @selectDatapoint="selectHistoDatapoint"
           />
         </template>
         <template #prod>
-          <VueUiSparkHistogram
+          <VueDataUi
+              component="VueUiSparkHistogram"
              :dataset="histoDataset" 
              :config="histoConfig"
              @selectDatapoint="selectHistoDatapoint"
@@ -3368,7 +3412,7 @@ const sparkGaugeConfig = ref({})
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_candlestick)">
         <template #title>
           <BaseIcon name="chartCandlestick" />
-          VueUiCandleStick
+          VueUiCandlestick
         </template>
         <template #info>
           <BaseIcon name="chartTable" stroke="#5f8bee"/>
@@ -3378,7 +3422,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <CandlestickTest 
+          <VueDataUiTest
+            component="VueUiCandlestick"
             ref="candlestick"
             :dataset="candlestickDataset" 
             :config="candlestickConfig"
@@ -3386,10 +3431,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </CandlestickTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiCandlestick
+          <VueDataUi
+            component="VueUiCandlestick"
             ref="candlestick"
             :dataset="candlestickDataset"
             :config="candlestickConfig"
@@ -3397,7 +3443,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiCandlestick>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_candlestick }}
@@ -3417,7 +3463,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <ScatterTest 
+          <VueDataUiTest
+            component="VueUiScatter" 
             ref="scatter" 
             :dataset="scatterDataset" 
             :config="scatterConfig"
@@ -3425,10 +3472,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </ScatterTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiScatter
+          <VueDataUi
+            component="VueUiScatter"
             ref="scatter"
             :config="scatterConfig"
             :dataset="scatterDataset"
@@ -3436,7 +3484,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiScatter>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_scatter }}
@@ -3457,7 +3505,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <VerticalTest 
+          <VueDataUiTest
+            component="VueUiVerticalBar" 
             ref="verticaltest"
             :dataset="verticalDataset"
             :config="verticalBarConfig"
@@ -3465,10 +3514,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VerticalTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiVerticalBar
+          <VueDataUi
+            component="VueUiVerticalBar"
             ref="verticaltest"
             :config="verticalBarConfig"
             :dataset="verticalDataset"
@@ -3477,7 +3527,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiVerticalBar>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_vertical_bar }}
@@ -3497,7 +3547,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <OnionTest
+          <VueDataUiTest
+            component="VueUiOnion"
             :config="onionConfig"
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
@@ -3505,10 +3556,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </OnionTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiOnion
+          <VueDataUi
+            component="VueUiOnion"
             ref="oniontest"
             :config="onionConfig"
             :dataset="onionDataset"
@@ -3517,7 +3569,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiOnion>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_onion }}
@@ -3538,7 +3590,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <QuadrantTest
+          <VueDataUiTest
+            component="VueUiQuadrant"
             ref="quadranttest"
             :dataset="quadrantDataset"
             :config="quadrantConfig"
@@ -3549,10 +3602,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </QuadrantTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiQuadrant
+          <VueDataUi
+            component="VueUiQuadrant"
             ref="quadranttest"
             :dataset="quadrantDataset"
             :config="quadrantConfig"
@@ -3563,7 +3617,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiQuadrant>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_quadrant }}
@@ -3583,7 +3637,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <RadarTest
+          <VueDataUiTest
+          component="VueUiRadar"
             ref="radartest"
             :dataset="radarDataset"
             :config="radarConfig"
@@ -3592,10 +3647,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </RadarTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiRadar
+          <VueDataUi
+            component="VueUiRadar"
             ref="radartest"
             :dataset="radarDataset"
             :config="radarConfig"
@@ -3604,7 +3660,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiRadar>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_radar }}
@@ -3625,7 +3681,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <DonutTest
+          <VueDataUiTest
+            component="VueUiDonut"
             ref="donuttest"
             :dataset="donutDataset"
             :config="donutConfig"
@@ -3642,10 +3699,11 @@ const sparkGaugeConfig = ref({})
                 :strokeWidth="2"
               />
             </template>
-          </DonutTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiDonut
+          <VueDataUi
+            component="VueUiDonut"
             ref="donuttest"
             :dataset="donutDataset"
             :config="donutConfig"
@@ -3654,7 +3712,7 @@ const sparkGaugeConfig = ref({})
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiDonut>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_donut }}
@@ -3667,13 +3725,15 @@ const sparkGaugeConfig = ref({})
           VueUiSparkStackbar
         </template>
         <template #dev>
-          <StackTest 
+          <VueDataUiTest
+            component="VueUiSparkStackbar" 
             :dataset="stackDataset"
             @selectDatapoint="selectStackbarDatapoint"
           />
         </template>
         <template #prod>
-          <VueUiSparkStackbar  
+          <VueDataUi
+            component="VueUiSparkStackbar"  
             :dataset="stackDataset"
             @selectDatapoint="selectStackbarDatapoint"
           />
@@ -3689,7 +3749,8 @@ const sparkGaugeConfig = ref({})
           VueUiThermometer
         </template>
         <template #dev>
-          <ThermoTest 
+          <VueDataUiTest
+            component="VueUiThermometer" 
             ref="thermo" 
             :dataset="thermoDataset" 
             :config="thermoConfig" 
@@ -3697,10 +3758,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </ThermoTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiThermometer 
+          <VueDataUi
+            component="VueUiThermometer" 
             ref="thermo" 
             :dataset="thermoDataset" 
             :config="thermoConfig" 
@@ -3708,7 +3770,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiThermometer>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_thermometer }}
@@ -3721,21 +3783,25 @@ const sparkGaugeConfig = ref({})
           VueUiSmiley
         </template>
         <template #dev>
-          <SmileyTest 
+          <VueDataUiTest
+            component="VueUiSmiley" 
             :dataset="ratingDataset" 
             :config="smileyConfig" 
           />
-          <SmileyTest
+          <VueDataUiTest
+            component="VueUiSmiley"
             :dataset="ratingDataset" 
             :config="{...smileyConfig, readonly: true}" 
           />
         </template>
         <template #prod>
-          <VueUiSmiley
+          <VueDataUi
+            component="VueUiSmiley"
             :dataset="ratingDataset"
             :config="smileyConfig"
           />
-          <VueUiSmiley
+          <VueDataUi
+            component="VueUiSmiley"
             :dataset="ratingDataset"
             :config="{...smileyConfig, readonly: true}" 
           />
@@ -3751,14 +3817,16 @@ const sparkGaugeConfig = ref({})
           VueUiRating
         </template>
         <template #dev>
-          <RatingTest
+          <VueDataUiTest
+            component="VueUiRating"
             ref="ratingtest"
             :config="ratingConfig"
             :dataset="ratingDataset"
           />
         </template>
         <template #prod>
-          <VueUiRating
+          <VueDataUi
+            component="VueUiRating"
             ref="ratingtest"
             :config="ratingConfig"
             :dataset="ratingDataset"
@@ -3782,7 +3850,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <ChestnutTest
+          <VueDataUiTest
+            component="VueUiChestnut"
             ref="chestnuttest"
             :dataset="chestnutDataset"
             @selectRoot="selectRoot"
@@ -3792,10 +3861,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </ChestnutTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiChestnut
+          <VueDataUi
+            component="VueUiChestnut"
             ref="chestnuttest"
             :dataset="chestnutDataset"
             @selectRoot="selectRoot"
@@ -3805,7 +3875,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiChestnut>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_chestnut }}
@@ -3825,7 +3895,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <PyramidTest 
+          <VueDataUiTest 
+            component="VueUiAgePyramid"
             ref="pyramid" 
             :dataset="pyramidDataset"
             :config="pyramidConfig"
@@ -3833,10 +3904,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </PyramidTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiAgePyramid
+          <VueDataUi
+            component="VueUiAgePyramid"
             ref="pyramid"
             :dataset="pyramidDataset"
             :config="pyramidConfig"
@@ -3844,7 +3916,7 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiAgePyramid>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_age_pyramid }}
@@ -3864,7 +3936,8 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <WaffleTest
+          <VueDataUiTest
+            component="VueUiWaffle"
             ref="waffletest"
             :dataset="donutDataset"
             :config="waffleConfig"
@@ -3873,10 +3946,11 @@ const sparkGaugeConfig = ref({})
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </WaffleTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiWaffle
+          <VueDataUi
+            component="VueUiWaffle"
             ref="waffletest"
             :dataset="donutDataset"
              :config="waffleConfig"
@@ -3885,7 +3959,7 @@ const sparkGaugeConfig = ref({})
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiWaffle>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_waffle }}
@@ -3898,7 +3972,7 @@ const sparkGaugeConfig = ref({})
           VueUiAnnotator
         </template>
         <template #dev>
-          <AnnotatorTest
+          <VueDataUiTest component="VueUiAnnotator"
             @saveAnnotations="saveAnnotations"
             :dataset="{
               shapes,
@@ -3918,10 +3992,11 @@ const sparkGaugeConfig = ref({})
                 </div>
               </template>
             </DashboardTest>
-          </AnnotatorTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiAnnotator
+          <VueDataUi
+            component="VueUiAnnotator"
             @saveAnnotations="saveAnnotations"
             :dataset="{
               shapes,
@@ -3929,7 +4004,8 @@ const sparkGaugeConfig = ref({})
             }"
             @toggleOpenState="toggleOpenState"
           >
-            <DashboardTest
+            <VueDataUi
+              component="VueUiDashboard"
               ref="dash"
               :dataset="comps"
               @change="testchange"
@@ -3940,8 +4016,8 @@ const sparkGaugeConfig = ref({})
                   <component :is="item.component" v-bind="item.props"></component>
                 </div>
               </template>
-            </DashboardTest>
-          </VueUiAnnotator>
+            </VueDataUi>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_annotator }}
@@ -3955,7 +4031,8 @@ const sparkGaugeConfig = ref({})
           VueUiDashboard
         </template>
         <template #dev>
-          <DashboardTest
+          <VueDataUiTest
+            component="VueUiDashboard"
             ref="dash"
             :dataset="comps"
             @change="testchange"
@@ -3966,10 +4043,11 @@ const sparkGaugeConfig = ref({})
                 <component :is="item.component" v-bind="item.props"></component>
               </div>
             </template>
-          </DashboardTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiDashboard
+          <VueDataUi
+            component="VueUiDashboard"
             ref="dash"
             :dataset="comps"
             @change="testchange"
@@ -3980,7 +4058,7 @@ const sparkGaugeConfig = ref({})
                 <component :is="item.component" v-bind="item.props"></component>
               </div>
             </template>
-          </VueUiDashboard>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_dashboard }}
@@ -3993,14 +4071,16 @@ const sparkGaugeConfig = ref({})
           VueUiSparkbar
         </template>
         <template #dev>
-          <SparkbarTest
+          <VueDataUiTest
+            component="VueUiSparkbar"
             :config="sparkbarConfig"
             :dataset="sparkbarDataset"
             @selectDatapoint="selectSparkbarDatapoint"
           />
         </template>
         <template #prod>
-          <VueUiSparkbar
+          <VueDataUi
+            component="VueUiSparkbar"
             :config="sparkbarConfig"
             :dataset="sparkbarDataset"
             @selectDatapoint="selectSparkbarDatapoint"
@@ -4024,26 +4104,28 @@ const sparkGaugeConfig = ref({})
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <HeatmapTest
+          <VueDataUiTest
+            component="VueUiHeatmap"
             ref="heatmaptest"
             :config="heatmapConfig"
             :dataset="heatmapDataset"
           >
           <template #svg="{ svg }">
-              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="60" fill="#FF0000"/>
             </template>
-          </HeatmapTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiHeatmap
+          <VueDataUi
+            component="VueUiHeatmap"
             ref="heatmaptest"
             :config="heatmapConfig"
             :dataset="heatmapDataset"
           >
           <template #svg="{ svg }">
-              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="60" fill="#FF0000"/>
             </template>
-          </VueUiHeatmap>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_heatmap }}
@@ -4056,24 +4138,26 @@ const sparkGaugeConfig = ref({})
           VueUiGauge
         </template>
         <template #dev>
-          <GaugeTest 
+          <VueDataUiTest
+            component="VueUiGauge" 
             ref="gaugetest" 
             :dataset="gaugeDataset" 
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </GaugeTest>
+          </VueDataUiTest>
         </template>
         <template #prod>
-          <VueUiGauge
+          <VueDataUi
+            component="VueUiGauge"
             ref="gaugetest"
             :dataset="gaugeDataset"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueUiGauge>
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_gauge }}
@@ -4086,12 +4170,14 @@ const sparkGaugeConfig = ref({})
           VueUiTable
         </template>
         <template #dev>
-          <TableTest 
+          <VueDataUiTest
+            component="VueUiTable" 
             :dataset="tableTestDataset" 
           />
         </template>
         <template #prod>
-          <VueUiTable 
+          <VueDataUi
+            component="VueUiTable" 
             :dataset="tableTestDataset" 
           />
         </template>

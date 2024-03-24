@@ -41,7 +41,8 @@ import {
     Arrow,
     VueUiMiniLoader,
     VueUiNestedDonuts,
-    VueUiSparkgauge
+    VueUiSparkgauge,
+    VueDataUi
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -86,4 +87,5 @@ app.component("Arrow", Arrow);
 app.component("VueUiMiniLoader", VueUiMiniLoader);
 app.component("VueUiNestedDonuts", VueUiNestedDonuts);
 app.component("VueUiSparkgauge", VueUiSparkgauge);
+app.component("VueDataUi", VueDataUi);
 app.mount('#app');

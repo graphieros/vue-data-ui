@@ -5,6 +5,11 @@ declare module 'vue-data-ui' {
         [key: string]: unknown;
     }
 
+    export const VueDataUi: DefineComponent<{
+        dataset?: VueUi3dBarDataset | VueUiAgePyramidDataset | VueUiAnnotatorDataset | Array<Array<string | number>> | VueUiChestnutDatasetRoot[] | VueUiDashboardElement[] | number | VueUiDonutEvolutionDatasetItem[] | VueUiDonutDatasetItem[] | VueUiGaugeDataset | VueUiHeatmapDatasetItem[] | VueUiMoleculeDatasetNode[] | VueUiMoodRadarDataset | VueUiNestedDonutsDatasetItem[] | VueUiOnionDatasetItem[] | VueUiQuadrantDatasetItem[] | VueUiRadarDataset | VueUiRatingDataset | VueUiRelationCircleDatasetItem[] | VueUiRingsDatasetItem[] | VueUiScatterDatasetItem[] | VueUiSparkbarDatasetItem[] | VueUiSparkgaugeDataset | VueUiSparkHistogramDatasetItem[] | VueUiSparklineDatasetItem[] | VueUiSparkStackBarDatasetItem[] | VueUiTableSparklineDatasetItem[] | VueUiTableDataset | VueUiThermometerDataset | VueUiTiremarksDataset | VueUiVerticalBarDatasetItem[] | VueUiWaffleDatasetItem[] | VueUiWheelDataset | VueUiXyDatasetItem[],
+        config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackBarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig
+    }>
+
     export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar, TLine, TPlot> = {
         seriesIndex?: number;
         series?: TSeries;
@@ -650,8 +655,8 @@ declare module 'vue-data-ui' {
     }
 
     export const VueUiTiremarks: DefineComponent<{
-        config?: VueUiTiremarksConfig;
-        dataset: VueUiTiremarksDataset;
+        config?: VueUiTiremarksConfig,
+        dataset: VueUiTiremarksDataset
     }>;
 
     export type VueUiWheelConfig = {
@@ -714,8 +719,8 @@ declare module 'vue-data-ui' {
     }
 
     export const VueUiWheel: DefineComponent<{
-        dataset: VueUiWheelDataset;
-        config?: VueUiWheelConfig;
+        dataset: VueUiWheelDataset,
+        config?: VueUiWheelConfig
     }>;
 
     export type VueUiRingsConfig = {
@@ -1301,8 +1306,8 @@ declare module 'vue-data-ui' {
     };
 
     export const VueUiSparkbar: DefineComponent<{
-        config?: VueUiSparkbarConfig;
-        dataset: VueUiSparkbarDatasetItem[];
+        config?: VueUiSparkbarConfig,
+        dataset: VueUiSparkbarDatasetItem[]
     }>;
 
     export type VueUiAgePyramidDataset = Array<Array<string | number>>;
@@ -2173,8 +2178,9 @@ declare module 'vue-data-ui' {
     }
 
     export const VueUiXy: DefineComponent<{
-        config?: VueUiXyConfig;
-        dataset: VueUiXyDatasetItem[];
+        component: "VueUi3dBar" | "VueUiAgePyramid" | "VueUiAnnotator" | "VueUiCandlestick" | "VueUiChestnut" | "VueUiDashboard" | "VueUiDigits" | "VueUiDonutEvolution" | "VueUiDonut" | "VueUiGauge" | "VueUiHeatmap" | "VueUiMiniLoader" | "VueUiMolecule" | "VueUiMoodRadar" | "VueUiNestedDonuts" | "VueUiOnion" | "VueUiQuadrant" | "VueUiRadar" | "VueUiRating" | "VueUiRelationCircle" | "VueUiRings" | "VueUiScatter" | "VueUiScreenshot" | "VueUiSkeleton" | "VueUiSmiley" | "VueUiSparkbar" | "VueUiSparkgauge" | "VueUiSparkHistogram" | "VueUiSparkline" | "VueUiSparkStackbar" | "VueUiTableSparkline" | "VueUiTable" | "VueUiThermometer" | "VueUiTiremarks" | "VueUiVerticalBar" | "VueUiWaffle" | "VueUiWheel" | "VueUiXy",
+        config?: VueUiXyConfig
+        dataset: VueUiXyDatasetItem[]
     }>
 
     export type VueUiDonutConfig = {

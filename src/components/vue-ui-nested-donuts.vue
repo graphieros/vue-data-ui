@@ -592,7 +592,7 @@ defineExpose({
                     />
                 </g>
             </g>
-            
+            <slot name="svg" :svg="svg"></slot>
         </svg>
 
          <!-- TOOLTIP -->

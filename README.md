@@ -109,6 +109,32 @@ Or you can import just what you need in your files:
 </script>
 ```
 
+Since v.2.0.38, you can also use the "VueDataUi" universal component, just specifying which component you are using:
+
+```
+<script setup>
+import { ref } from "vue";
+import { VueDataUi } from "vue-data-ui";
+// Include the css;
+import "vue-data-ui/style.css";
+
+const config = ref({...});
+const dataset = ref([...]);
+
+</script>
+
+<template>
+
+  <VueDataUi
+    component="VueUiXy"
+    :config="config"
+    :dataset="dataset"
+  />
+
+</template>
+
+```
+
 ## Typescript
 
 Types are available in the 'vue-data-ui.d.ts' file under the types directory of the package.

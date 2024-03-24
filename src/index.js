@@ -39,6 +39,7 @@ import VueUiMiniLoader from "./components/vue-ui-mini-loader.vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
 import VueUiNestedDonuts from "./components/vue-ui-nested-donuts.vue";
 import VueUiSparkgauge from './components/vue-ui-sparkgauge.vue';
+import VueDataUi from "./components/vue-data-ui.vue";
 
 export { 
     VueUiXy, 
@@ -81,5 +82,6 @@ export {
     VueUiMiniLoader,
     getVueDataUiConfig,
     VueUiNestedDonuts,
-    VueUiSparkgauge
+    VueUiSparkgauge,
+    VueDataUi
 };
