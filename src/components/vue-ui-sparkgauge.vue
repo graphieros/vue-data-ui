@@ -19,6 +19,7 @@ const props = defineProps({
     }
 })
 
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkgauge);
 
 const sparkgaugeConfig = computed(() => {
@@ -119,6 +120,12 @@ const trackColor = computed(() => {
         {{ nameLabel }}
     </div>
     <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:${sparkgaugeConfig.style.background}; width:100%;`">
+        <defs>
+            <linearGradient :id="`gradient_${ uid}`" x1="-10%" y1="100%" x2="110%" y2="100%">
+                <stop offset="0%" :stop-color="sparkgaugeConfig.style.colors.min"/>
+                <stop offset="100%" :stop-color="sparkgaugeConfig.style.colors.max"/>
+            </linearGradient>
+        </defs>
         <!-- GUTTER -->
         <path
             :d="`M${10} ${svg.base} A 1 1 0 1 1 ${118} ${svg.base}`"
@@ -131,7 +138,7 @@ const trackColor = computed(() => {
         <path
             v-if="valueRatio !== 0"
             :d="`M${10} ${svg.base} A 1 1 0 1 1 ${118} ${svg.base}`"
-            :stroke="trackColor"
+            :stroke="sparkgaugeConfig.style.colors.showGradient ? `url(#gradient_${uid})` : trackColor"
             :stroke-width="8"
             :stroke-linecap="sparkgaugeConfig.style.track.strokeLinecap"
             fill="none"

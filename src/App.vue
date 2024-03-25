@@ -2742,7 +2742,15 @@ const sparkGaugeDataset = ref({
   title: "Some KPI with a long name"
 })
 
-const sparkGaugeConfig = ref({})
+const sparkGaugeConfig = ref({
+  style: {
+    colors: {
+      min: "#FF0000",
+      max: "#00FF00",
+      showGradient: true
+    }
+  }
+})
 
 const universal = ref(null)
 
@@ -2863,7 +2871,7 @@ function testEmit2(data) {
       </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkgauge)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkgauge)">
         <template #title>
           <BaseIcon name="chartGauge"/>
           VueUiSparkgauge

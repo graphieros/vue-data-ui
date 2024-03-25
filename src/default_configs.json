@@ -3290,7 +3290,8 @@
             },
             "colors": {
                 "min": "#FF0000",
-                "max": "#00FF00"
+                "max": "#00FF00",
+                "showGradient": true
             },
             "track": {
                 "autoColor": true,

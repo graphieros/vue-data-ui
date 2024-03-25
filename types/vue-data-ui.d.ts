@@ -10,7 +10,7 @@ declare module 'vue-data-ui' {
         config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackBarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig
     }>
 
-    export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar, TLine, TPlot> = {
+    export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar=any, TLine=any, TPlot=any> = {
         seriesIndex?: number;
         series?: TSeries;
         datapoint?: TDatapoint;
@@ -58,6 +58,7 @@ declare module 'vue-data-ui' {
             colors?: {
                 min?: string;
                 max?: string;
+                showGradient?: boolean;
             };
             track?: {
                 autoColor?: boolean;
@@ -105,7 +106,7 @@ declare module 'vue-data-ui' {
     }
 
     export const VueUiMiniLoader: DefineComponent<{
-        config?: VueUiMiniLoaderConfig;
+        config?: VueUiMiniLoaderConfig
     }>
 
     export const Arrow: DefineComponent<{
@@ -471,11 +472,11 @@ declare module 'vue-data-ui' {
     export type VueUiIconName = "annotator" | "chart3bar" | "chartAgePyramid" | "chartBar" | "chartCandlestick" | "chartChestnut" | "chartDonut" | "chartDonutEvolution" | "chartGauge" | "chartHeatmap" | "chartLine" | "chartMoodbar" | "chartOnion" | "chartQuadrant" | "chartRadar" | "chartRelationCircle" | "chartRings" | "chartScatter" | "chartSparkHistogram" | "chartSparkStackbar" | "chartTable" | "chartThermometer" | "chartTiremarks" | "chartVerticalBar" | "chartWaffle" | "chartWheel" | "close" | "dashboard" | "digit0" | "digit1" | "digit2" | "digit3" | "digit4" | "digit5" | "digit6" | "digit7" | "digit8" | "digit9" | "excel" | "image" | "labelClose" | "labelOpen" | "menu" | "moodFlat" | "moodHappy" | "moodNeutral" | "moodSad" | "pdf" | "screenshot" | "skeleton" | "smiley" | "sort" | "spin" | "star" | "tableClose" | "tableOpen" | "chartNestedDonuts";
 
     export const VueUiIcon: DefineComponent<{
-        name: VueUiIconName;
-        stroke?: string;
-        strokeWidth?: number;
-        size?: number;
-        isSpin?: boolean;
+        name: VueUiIconName,
+        stroke?: string,
+        strokeWidth?: number,
+        size?: number,
+        isSpin?: boolean
     }>;
 
     export type VueUiDonutEvolutionConfig = {
@@ -779,7 +780,7 @@ declare module 'vue-data-ui' {
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
-                    customFormat?: (params: VueUiTooltipParams<VueUiRingsDatpoint, VueUiRingsDatapoint[], VueUiRingsConfig>) => string;
+                    customFormat?: (params: VueUiTooltipParams<VueUiRingsDatapoint, VueUiRingsDatapoint[], VueUiRingsConfig>) => string;
                 };
             };
         };
@@ -907,9 +908,6 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSparkHistogramDatasetItem = {
-        value: number;
-        valueLabel?: string;
-        timeLabel?: string;
         intensity?: number & { 0: 0; 1: 1 };
         gradient?: string;
         height?: number;
@@ -985,7 +983,6 @@ declare module 'vue-data-ui' {
 
     export type VueUiSparkStackBarDatasetItem = {
         name: string;
-        value: number;
         color?: string;
         proportion?: number;
         proportionLabel?: string;
@@ -1217,8 +1214,8 @@ declare module 'vue-data-ui' {
     export type VueUiAnnotatorDataset = VueUiUnknownObj;
 
     export const VueUiAnnotator: DefineComponent<{
-        config?: VueUiAnnotatorConfig;
-        dataset: VueUiAnnotatorDataset;
+        config?: VueUiAnnotatorConfig,
+        dataset: VueUiAnnotatorDataset
     }>
 
     export type VueUiDashboardConfig = {
@@ -1255,8 +1252,8 @@ declare module 'vue-data-ui' {
     }
 
     export const VueUiDashboard: DefineComponent<{
-        config?: VueUiDashboardConfig;
-        dataset: VueUiDashboardElement[];
+        config?: VueUiDashboardConfig,
+        dataset: VueUiDashboardElement[]
     }>;
 
     export type VueUiSparkbarDatasetItem = {
@@ -1600,7 +1597,7 @@ declare module 'vue-data-ui' {
     export type VueUiCandlestickDatapoint = {
         high: { x: number; y: number; value: number };
         isBullish: boolean;
-        last: { x: number; y: number; value: numbr };
+        last: { x: number; y: number; value: number };
         low: { x: number; y: number; value: number };
         open: { x: number; y: number; value: number };
         period: string | undefined;
@@ -2179,7 +2176,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiXy: DefineComponent<{
         component: "VueUi3dBar" | "VueUiAgePyramid" | "VueUiAnnotator" | "VueUiCandlestick" | "VueUiChestnut" | "VueUiDashboard" | "VueUiDigits" | "VueUiDonutEvolution" | "VueUiDonut" | "VueUiGauge" | "VueUiHeatmap" | "VueUiMiniLoader" | "VueUiMolecule" | "VueUiMoodRadar" | "VueUiNestedDonuts" | "VueUiOnion" | "VueUiQuadrant" | "VueUiRadar" | "VueUiRating" | "VueUiRelationCircle" | "VueUiRings" | "VueUiScatter" | "VueUiScreenshot" | "VueUiSkeleton" | "VueUiSmiley" | "VueUiSparkbar" | "VueUiSparkgauge" | "VueUiSparkHistogram" | "VueUiSparkline" | "VueUiSparkStackbar" | "VueUiTableSparkline" | "VueUiTable" | "VueUiThermometer" | "VueUiTiremarks" | "VueUiVerticalBar" | "VueUiWaffle" | "VueUiWheel" | "VueUiXy",
-        config?: VueUiXyConfig
+        config?: VueUiXyConfig,
         dataset: VueUiXyDatasetItem[]
     }>
 
