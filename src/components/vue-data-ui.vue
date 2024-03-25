@@ -316,7 +316,7 @@ defineExpose({
 <template>
     <div v-if="isError" style="width:100%; display: flex; gap:6px; align-items:center; color:#FF0000">
         <div style="width:36px">
-            <BaseIcon name="chartDonut" stroke="#FF0000" />
+            <BaseIcon name="moodFlat" stroke="#FF0000" />
         </div>
         The provided component "{{ component }}" does not exist
     </div>

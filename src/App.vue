@@ -2866,12 +2866,14 @@ function testEmit2(data) {
           <BaseIcon name="circleQuestion" stroke="#42d392" />
           <BaseIcon name="refresh" stroke="#42d392" />
           <BaseIcon name="chartNestedDonuts" stroke="#42d392" />
+          <BaseIcon name="chartSparkbar" stroke="#42d392" />
+          <BaseIcon name="chartSparkline" stroke="#42d392" />
 
         </div>
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkgauge)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkgauge)">
         <template #title>
           <BaseIcon name="chartGauge"/>
           VueUiSparkgauge
@@ -3283,7 +3285,7 @@ function testEmit2(data) {
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
         <template #title>
-          <BaseIcon name="chartLine" />
+          <BaseIcon name="chartSparkline" />
           VueUiSparkline
         </template>
         <template #dev>
@@ -4075,7 +4077,7 @@ function testEmit2(data) {
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkbar)">
         <template #title>
-          <BaseIcon name="chartVerticalBar"/>
+          <BaseIcon name="chartSparkbar"/>
           VueUiSparkbar
         </template>
         <template #dev>
