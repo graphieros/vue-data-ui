@@ -662,6 +662,8 @@ defineExpose({
             </template>
         </Legend>
 
+        <slot name="legend" v-bind:legend="datasetWithId"></slot>
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="scatterConfig.style.tooltip.show && isTooltip"

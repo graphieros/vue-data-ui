@@ -605,6 +605,8 @@ defineExpose({
             </template>
         </Legend>
 
+        <slot name="legend" v-bind:legend="legendSet"></slot>
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="radarConfig.style.chart.tooltip.show && isTooltip"

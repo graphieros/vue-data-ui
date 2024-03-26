@@ -968,6 +968,7 @@ defineExpose({
         </g>
         <slot name="svg" :svg="svg"/>
         </svg>
+        <slot name="legend" v-bind:legend="mutableDataset"></slot>
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-chestnut-table">        
             <div v-if="mutableConfig.showTable">

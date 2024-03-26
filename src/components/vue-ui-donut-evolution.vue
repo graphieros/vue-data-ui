@@ -783,6 +783,8 @@ defineExpose({
             </template>
         </Legend>
 
+        <slot name="legend" v-bind:legend="convertedDataset"></slot>
+
         <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
             <DataTable
                 :colNames="table.colNames"

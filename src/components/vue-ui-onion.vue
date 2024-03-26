@@ -528,6 +528,8 @@ defineExpose({
             </template>
         </Legend>
 
+        <slot name="legend" v-bind:legend="immutableDataset"></slot>
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="onionConfig.style.chart.tooltip.show && isTooltip"

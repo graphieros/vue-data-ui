@@ -157,7 +157,52 @@ customFormat: ({ seriesIndex, datapoint, series, config }) => {
 
 # Slots
 
+## #svg slot
+
 Most Vue Data UI chart components include a #svg slot you can use to introduce customized svg elements (shapes, text, etc).
+
+```
+<VueUiXy :dataset="dataset" :config="config">
+  <template #svg="{ svg }">
+    <foreignObject x="100" y="0" height="100" width="150">
+      <div>
+        This is a custom caption
+      </div>
+    </foreignObject>
+  </template>
+</VueUiXy>
+
+```
+
+The svg slot also works when using the VueDataUi universal component, if the component it wraps supports it.
+
+## #legend slot (since v.2.0.41)
+
+All charts expose a #legend slot except for:
+
+- VueUiWheel
+- VueUiTiremarks
+- VueUiHeatmap
+- VueUiRelationCircle
+- VueUiThermometer
+- VueUiSparkline
+- VueUiSparkbar
+- VueUiSparkStackbar
+- VueUiSparkgauge
+- VueUiSparkHistogram
+
+The legend slot also works when using the VueDataUi universal component, if the component it wraps supports it.
+It is recommended to set the show legend config attribute to false, to hide the default legend.
+
+```
+<VueUiDonut :config="config" :dataset="dataset">
+  <template #legend="{ legend }">
+    <div v-for="item in legend">
+      {{ legend.name }}
+    </div>
+  </template>
+</VueUiDonut>
+```
 
 # Config
 

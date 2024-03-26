@@ -933,6 +933,8 @@ defineExpose({
             </template>
         </Legend>
 
+        <slot name="legend" v-bind:legend="datasetReference"></slot>
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="quadrantConfig.style.chart.tooltip.show && isTooltip"

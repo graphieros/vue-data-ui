@@ -235,7 +235,6 @@ defineExpose({
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>
-    
     </div>
 </template>
 

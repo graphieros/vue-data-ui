@@ -619,6 +619,8 @@ defineExpose({
             </div>
         </div>
 
+        <slot name="legend" v-bind:legend="drawableDataset"></slot>
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="candlestickConfig.style.tooltip.show && isTooltip"

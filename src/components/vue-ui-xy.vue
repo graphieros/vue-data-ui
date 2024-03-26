@@ -651,6 +651,8 @@
             </div>
         </div>
 
+        <slot name="legend" v-bind:legend="absoluteDataset"/>
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="chartConfig.chart.tooltip.show && isTooltip"

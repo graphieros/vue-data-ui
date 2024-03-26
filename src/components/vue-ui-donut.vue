@@ -147,6 +147,7 @@ const legendSet = computed(() => {
         .map((el, i) => {
             return {
                 ...el,
+                proportion: el.value / props.dataset.map(m => m.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
                 opacity: segregated.value.includes(i) ? 0.5 : 1
             }
         })
@@ -649,6 +650,8 @@ defineExpose({
                 </div>
             </template>
         </Legend>
+
+        <slot name="legend" v-bind:legend="legendSet" />
 
         <!-- TOOLTIP -->
         <Tooltip

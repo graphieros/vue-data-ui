@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, nextTick } from "vue";
+import { computed, ref, onMounted } from "vue";
 
 import VueUi3dBar from "./vue-ui-3d-bar.vue";
 import VueUiAgePyramid from "./vue-ui-age-pyramid.vue";
@@ -340,6 +340,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
+        </template>
     </VueUiAgePyramid>
 
     <VueUiAnnotator 
@@ -361,6 +364,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
+        </template>
     </VueUiCandlestick>
 
     <VueUiChestnut 
@@ -374,6 +380,9 @@ defineExpose({
     >
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
+        </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
         </template>
     </VueUiChestnut>
 
@@ -406,6 +415,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
+        </template>
     </VueUiDonutEvolution>
 
     <VueUiDonut 
@@ -419,6 +431,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend" />
+        </template>
     </VueUiDonut>
 
     <VueUiGauge 
@@ -429,6 +444,9 @@ defineExpose({
     >
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
+        </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
         </template>
     </VueUiGauge>
 
@@ -470,6 +488,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
+        </template>
     </VueUiMoodRadar>
 
     <VueUiNestedDonuts 
@@ -483,6 +504,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
+        </template>
     </VueUiNestedDonuts>
 
     <VueUiOnion 
@@ -494,6 +518,9 @@ defineExpose({
     >
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
+        </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
         </template>
     </VueUiOnion>
 
@@ -509,6 +536,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
+        </template>
     </VueUiQuadrant>
 
     <VueUiRadar 
@@ -520,6 +550,9 @@ defineExpose({
     >
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
+        </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
         </template>
     </VueUiRadar>
 
@@ -552,6 +585,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
+        </template>
     </VueUiRings>
 
     <VueUiScatter 
@@ -562,6 +598,9 @@ defineExpose({
     >
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
+        </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
         </template>
     </VueUiScatter>
 
@@ -675,6 +714,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
+        </template>
     </VueUiVerticalBar>
 
     <VueUiWaffle 
@@ -686,6 +728,9 @@ defineExpose({
     >
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
+        </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
         </template>
     </VueUiWaffle>
 
@@ -710,6 +755,9 @@ defineExpose({
     >
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
+        </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
         </template>
     </VueUiXy>
 </template>

@@ -632,6 +632,8 @@ defineExpose({
             </Legend>
         </div>
 
+        <slot name="legend" v-bind:legend="legendSets"></slot>
+
         <!-- DATA TABLE -->
         <DataTable
             v-if="mutableConfig.showTable"

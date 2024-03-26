@@ -669,6 +669,8 @@ defineExpose({
             </template>
         </Legend>
 
+        <slot name="legend" v-bind:legend="immutableDataset"></slot>
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="verticalBarConfig.style.chart.tooltip.show && isTooltip && segregated.length < props.dataset.length"

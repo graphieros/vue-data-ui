@@ -441,6 +441,8 @@ defineExpose({
             </template>
         </Legend>
 
+        <slot name="legend" v-bind:legend="convertedDataset"></slot>
+
         <!-- DATA TABLE -->
         <DataTable
             v-if="mutableConfig.showTable"

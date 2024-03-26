@@ -484,6 +484,7 @@ defineExpose({
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>
+        <slot name="legend" v-bind:legend="mutableDataset"></slot>
     </div>
 </template>
 

@@ -2899,7 +2899,11 @@ function testEmit2(data) {
         <template #info>
         </template>
         <template #dev>
-          <VueDataUiTest component="VueUiNestedDonuts" :dataset="nestedDonutsDataset" :config="nestedDonutsConfig" />
+          <VueDataUiTest component="VueUiNestedDonuts" :dataset="nestedDonutsDataset" :config="nestedDonutsConfig">
+            <template #legend="{ legend }">
+              {{ legend }}
+            </template>
+          </VueDataUiTest>
         </template>
         <template #prod>
           <VueDataUi component="VueUiNestedDonuts" :dataset="nestedDonutsDataset" :config="nestedDonutsConfig"/>
@@ -2985,6 +2989,9 @@ function testEmit2(data) {
           <VueDataUiTest component="VueUiMoodRadar" :dataset="moodRadarDataset" :config="moodRadarConfig">
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3082,8 +3089,11 @@ function testEmit2(data) {
             :dataset="donutEvolutionDataset"
             :config="donutEvolutionConfig"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.absoluteWidth / 2" :cy="svg.absoluteHeight / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3222,8 +3232,11 @@ function testEmit2(data) {
             :dataset="ringsDataset"
             :config="ringsConfig"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3361,6 +3374,11 @@ function testEmit2(data) {
             @selectLegend="selectLegendXY"
             @selectX="selectX"
           >
+          <template #legend="{ legend }">
+            <div v-for="item in legend">
+              {{ item.name }} {{ item.color }}
+            </div>
+          </template>
           </VueDataUiTest>
           <VueDataUiTest
             component="VueUiXy"
@@ -3380,6 +3398,9 @@ function testEmit2(data) {
           >
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUi>
           <VueDataUi
@@ -3438,8 +3459,11 @@ function testEmit2(data) {
             :dataset="candlestickDataset" 
             :config="candlestickConfig"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3479,8 +3503,11 @@ function testEmit2(data) {
             :dataset="scatterDataset" 
             :config="scatterConfig"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3521,8 +3548,11 @@ function testEmit2(data) {
             :dataset="verticalDataset"
             :config="verticalBarConfig"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3563,8 +3593,11 @@ function testEmit2(data) {
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3609,8 +3642,11 @@ function testEmit2(data) {
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3654,8 +3690,11 @@ function testEmit2(data) {
             :config="radarConfig"
             @selectLegend="selectRadarLegend"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3708,6 +3747,11 @@ function testEmit2(data) {
                 :pointerSize="10"
                 :strokeWidth="2"
               />
+            </template>
+            <template #legend="{legend}">
+              <div v-for="item in legend">
+                {{ item.name }} {{ item.color }} {{ item.value }} {{  item.proportion }}
+              </div>
             </template>
           </VueDataUiTest>
         </template>
@@ -3868,8 +3912,11 @@ function testEmit2(data) {
             @selectBranch="selectBranch"
             @selectNut="selectNut"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3911,8 +3958,11 @@ function testEmit2(data) {
             :dataset="pyramidDataset"
             :config="pyramidConfig"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3953,8 +4003,13 @@ function testEmit2(data) {
             :config="waffleConfig"
             @selectLegend="selectLegendWaffle"
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              <div v-for="item in legend">
+                {{ legend }}
+              </div>
             </template>
           </VueDataUiTest>
         </template>
@@ -4153,8 +4208,11 @@ function testEmit2(data) {
             ref="gaugetest" 
             :dataset="gaugeDataset" 
           >
-          <template #svg="{ svg }">
+            <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
+            </template>
+            <template #legend="{ legend }">
+              {{ legend }}
             </template>
           </VueDataUiTest>
         </template>

@@ -110,6 +110,7 @@ const datasetCopy = computed(() => {
             color:
           color || convertColorToHex(color) || palette[i] || palette[i % palette.length],
           value: subTotal,
+          proportion: subTotal / props.dataset.map(ds => ds.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
             uid: createUid()
         }
     })
@@ -527,6 +528,8 @@ defineExpose({
           </div>
       </template>
     </Legend>
+
+    <slot name="legend" v-bind:legend="datasetCopy"></slot>
 
     <!-- TOOLTIP -->
     <Tooltip

@@ -611,6 +611,8 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <slot name="legend" v-bind:legend="drawableDataset"></slot>
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="agePyramidConfig.style.tooltip.show && isTooltip"
