@@ -6,9 +6,11 @@ import {
     createUid, 
     dataLabel,
     downloadCsv,
+    error,
     functionReturnsString,
     isFunction,
-    interpolateColorHex, 
+    interpolateColorHex,
+    objectIsEmpty,
     opacity, 
 } from "../lib";
 import mainConfig from "../default_configs.json";
@@ -34,8 +36,14 @@ const props = defineProps({
     }
 });
 
-const uid = ref(createUid());
+if(objectIsEmpty(props.dataset)) {
+    error({
+        componentName: 'VueUiHeatmap',
+        type: 'dataset'
+    })
+}
 
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_heatmap);
 
 const isImaging = ref(false);
@@ -77,7 +85,7 @@ function observeTable() {
 onMounted(observeTable)
 
 const maxX = computed(() => {
-    return Math.max(...props.dataset.flatMap(el => el.values.length));
+    return Math.max(...props.dataset.flatMap(el => (el.values || []).length));
 });
 
 const svg = computed(() => {
@@ -144,10 +152,21 @@ const dataLabels = computed(() => {
 
 
 const mutableDataset = computed(() => {
+    props.dataset.forEach((ds, i) => {
+        if ([null, undefined].includes(ds.values)) {
+            error({
+                componentName: 'VueUiHeatmap',
+                type: 'datasetSerieAttribute',
+                property: 'values',
+                index: i
+            })
+        }
+    })
+
     return props.dataset.map(ds => {
         return {
             ...ds,
-            temperatures: ds.values.map((v, i) => {
+            temperatures: (ds.values || []).map((v, i) => {
                 if (v >= average.value) {
                     return {
                         side: "up",

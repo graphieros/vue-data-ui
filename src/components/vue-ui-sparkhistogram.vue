@@ -1,6 +1,12 @@
 <script setup>
-import { ref, computed } from "vue";
-import { shiftHue, opacity, createUid } from "../lib";
+import { ref, computed, onMounted } from "vue";
+import { 
+    createUid,
+    error,
+    objectIsEmpty,
+    opacity, 
+    shiftHue, 
+} from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import Shape from "../atoms/Shape.vue";
@@ -19,6 +25,26 @@ const props = defineProps({
         }
     }
 });
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiSparkHistogram',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            if([undefined].includes(ds.value)) {
+                error({
+                    componentName: 'VueUiSparkHistogram',
+                    type: 'datasetSerieAttribute',
+                    property: 'value (number)',
+                    index: i
+                })
+            }
+        })
+    }
+})
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkhistogram);
@@ -54,7 +80,7 @@ const drawingArea = computed(() => {
 });
 
 const maxVal = computed(() => {
-    return Math.max(...props.dataset.map(ds => Math.abs(ds.value)))
+    return Math.max(...props.dataset.map(ds => Math.abs(ds.value || 0)))
 });
 
 function toMax(val) {
@@ -63,7 +89,7 @@ function toMax(val) {
 
 const computedDataset = computed(() => {
     return props.dataset.map((dp,i) => {
-        const proportion = toMax(dp.value);
+        const proportion = toMax(dp.value || 0);
         const height = drawingArea.value.drawingHeight * proportion;
         const unitWidth = drawingArea.value.drawingWidth / props.dataset.length;
         const gap = unitWidth * (histoConfig.value.style.bars.gap / 100)

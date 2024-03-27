@@ -1,6 +1,14 @@
 <script setup>
-import { ref, computed } from "vue";
-import { shiftHue, opacity, palette, convertColorToHex, createUid } from "../lib";
+import { ref, computed, onMounted } from "vue";
+import { 
+    convertColorToHex, 
+    createUid,
+    error,
+    objectIsEmpty,
+    opacity, 
+    palette, 
+    shiftHue, 
+} from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -18,6 +26,15 @@ const props = defineProps({
         }
     }
 });
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiSparkbar',
+            type: 'dataset'
+        })
+    }
+})
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkbar);
@@ -39,9 +56,29 @@ const max = computed(() => {
 });
 
 const drawableDataset = computed(() => {
+    props.dataset.forEach((ds, i) => {
+        if([null, undefined].includes(ds.name)) {
+            error({
+                componentName: 'VueUiSparkbar',
+                type: 'datasetSerieAttribute',
+                property: 'name',
+                index: i
+            })
+        }
+        if([undefined].includes(ds.value)) {
+            error({
+                componentName: 'VueUiSparkbar',
+                type: 'datasetSerieAttribute',
+                property: 'value',
+                index: i
+            })
+        }
+    })
+
     return props.dataset.map((d, i) => {
         return {
             ...d,
+            value: d.value || 0,
             color: convertColorToHex(d.color) || palette[i] || palette[i % palette.length]
         }
     })

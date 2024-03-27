@@ -1,6 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { createStar, shiftHue, createUid } from "../lib.js";
+import { 
+    createStar, 
+    createUid,
+    error,
+    objectIsEmpty,
+    shiftHue, 
+} from "../lib.js";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -73,6 +79,13 @@ function calculateAverageRating(source) {
 }
 
 onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiRating',
+            type: 'dataset'
+        })
+    }
+
     for (let i = ratingConfig.value.from; i <= ratingConfig.value.to; i += 1) {
         units.value.push(i);
     }

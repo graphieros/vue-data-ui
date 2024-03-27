@@ -1,4 +1,4 @@
-import { expect, test, describe } from "vitest";
+import { expect, test, describe, assert } from "vitest";
 import {
     abbreviate,
     adaptColorToBackground,
@@ -20,6 +20,7 @@ import {
     createStar,
     dataLabel,
     degreesToRadians,
+    error,
     functionReturnsString,
     hslToRgb,
     interpolateColorHex,
@@ -30,6 +31,7 @@ import {
     makePath,
     matrixTimes,
     niceNum,
+    objectIsEmpty,
     rotateMatrix,
     shiftHue,
     sumByAttribute,
@@ -787,3 +789,72 @@ describe('functionReturnsString', () => {
         expect(functionReturnsString(() => 123)).toBe(false)
     })
 })
+
+describe('objectIsEmpty', () => {
+    test('returns true for an empty object', () => {
+        expect(objectIsEmpty({})).toBe(true)
+    })
+    test('returns false for a non empty object', () => {
+        expect(objectIsEmpty({ bar: 'foo' })).toBe(false)
+    })
+    test('returns true for an empty array', () => {
+        expect(objectIsEmpty([])).toBe(true)
+    })
+    test('returns false for a non empty array', () => {
+        expect(objectIsEmpty([0])).toBe(false)
+    })
+})
+
+describe('error', () => {
+    test('throws an error for missing dataset', () => {
+        try {
+            error({
+                componentName: 'VueUiXy',
+                type: 'dataset'
+            });
+            fail('Error was not thrown');
+        } catch (error) {
+            expect(error.message).toBe('\n\n> VueUiXy is missing the dataset prop.\n');
+        }
+    });
+
+    test('throws an error for missing dataset object required attribute', () => {
+        try {
+            error({
+                componentName: 'VueUiXy',
+                type: 'datasetAttribute',
+                property: 'name'
+            });
+            fail('Error was not thrown');
+        } catch (error) {
+            expect(error.message).toBe('\n\n> VueUiXy dataset is missing the name attribute.\n')
+        }
+    })
+
+    test('throws an error for missing datasetItem required attribute', () => {
+        try {
+            error({
+                componentName: 'VueUiXy',
+                type: 'datasetSerieAttribute',
+                property: 'name',
+                index: 0
+            });
+            fail('Error was not thrown');
+        } catch (error) {
+            expect(error.message).toBe('\n\n> VueUiXy dataset  item at index 0 is missing the name attribute.\n')
+        }
+    })
+
+    test('throws an error for an empty dataset array item', () => {
+        try {
+            error({
+                componentName: 'VueUiXy',
+                type: 'datasetAttributeEmpty',
+                property: 'series'
+            });
+            fail('Error was not thrown');
+        } catch (error) {
+            expect(error.message).toBe('\n\n> VueUiXy dataset series attribute cannot be empty.\n')
+        }
+    })
+});

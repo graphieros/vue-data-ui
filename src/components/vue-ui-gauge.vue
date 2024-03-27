@@ -1,6 +1,16 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { palette, rotateMatrix, addVector, matrixTimes, opacity, convertColorToHex, createUid } from "../lib.js";
+import { 
+    addVector, 
+    convertColorToHex, 
+    createUid,
+    error,
+    matrixTimes,
+    objectIsEmpty,
+    opacity, 
+    palette, 
+    rotateMatrix, 
+} from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -43,6 +53,36 @@ const mutableConfig = ref({
 });
 
 const mutableDataset = computed(() => {
+
+    if (objectIsEmpty(props.dataset.series)) {
+        error({
+            componentName: 'VueUiGauge',
+            type: 'datasetAttributeEmpty',
+            property: 'series'
+        })
+    } else {
+        props.dataset.series.forEach((serie, i) => {
+            if ([null, undefined].includes(serie.from)) {
+                error({
+                    componentName: 'VueUiGauge',
+                    type: 'datasetSerieAttribute',
+                    property: 'from (number)',
+                    index: i,
+                    key: 'series'
+                })
+            }
+            if ([null, undefined].includes(serie.to)) {
+                error({
+                    componentName: 'VueUiGauge',
+                    type: 'datasetSerieAttribute',
+                    property: 'to (number)',
+                    index: i,
+                    key: 'series'
+                })
+            }
+        })
+    }
+
     const arr = [];
     props.dataset.series.forEach(serie => {
         arr.push(serie.from);
@@ -100,11 +140,32 @@ const ratingColor = computed(() => {
 });
 
 onMounted(() => {
-    // throw error if ! props.dataset.value
+    if (objectIsEmpty(props.dataset)) {
+        error({
+            componentNae: 'VueUiGauge',
+            type: 'dataset'
+        })
+    } else {
+        if ([null, undefined].includes(props.dataset.value)) {
+            error({
+                componentName: 'VueUiGauge',
+                type: 'datasetAttribute',
+                property: 'value (number)'
+            })
+        }
+        if ([null, undefined].includes(props.dataset.series)) {
+            error({
+                componentName: 'VueUiGauge',
+                type: 'datasetAttribute',
+                property: 'series'
+            })
+        }
+    }
+
     const arr = [];
     mutableDataset.value.series.forEach(serie => {
-        arr.push(serie.from);
-        arr.push(serie.to);
+        arr.push(serie.from || 0);
+        arr.push(serie.to || 0);
     });
     max.value = Math.max(...arr);
     min.value = Math.min(...arr);

@@ -717,7 +717,9 @@ import {
     opacity, 
     palette, 
     shiftHue, 
-    treeShake, 
+    treeShake,
+    error,
+    objectIsEmpty,
 } from '../lib';
 import mainConfig from "../default_configs.json";
 import DataTable from "../atoms/DataTable.vue";
@@ -756,6 +758,16 @@ export default {
     TableSparkline
 },
     data(){
+        this.dataset.forEach((ds, i) => {
+            if([null, undefined].includes(ds.series)) {
+                this.error({
+                    componentName: 'VueUiXy',
+                    type: 'datasetSerieAttribute',
+                    property: 'series (number[])',
+                    index: i
+                })
+            }
+        })
         const maxX = Math.max(...this.dataset.map(datapoint => datapoint.series.length));
         const slicer = {
             start: 0,
@@ -1200,6 +1212,24 @@ export default {
         }
     },
     mounted() {
+        if(this.objectIsEmpty(this.dataset)) {
+            this.error({
+                componentName: 'VueUiXy',
+                type: 'dataset'
+            })
+        } else {
+            this.dataset.forEach((ds, i) => {
+                if([null, undefined].includes(ds.name)) {
+                    this.error({
+                        componentName: 'VueUiXy',
+                        type: 'datasetSerieAttribute',
+                        property: 'name (string)',
+                        index: i
+                    })
+                }
+            })
+        }
+
         const that = this;
         const yLabel = document.getElementById("yAxisLabel");
         if(yLabel) {
@@ -1325,6 +1355,8 @@ export default {
         dataLabel,
         isFunction,
         functionReturnsString,
+        error,
+        objectIsEmpty,
         createArea(plots) {
             const start = { x: plots[0].x, y: this.zero };
             const end = { x: plots.at(-1).x, y: this.zero };

@@ -1,0 +1,6 @@
+{
+    "dataset": "#COMP# is missing the dataset prop.",
+    "datasetAttribute": "#COMP# dataset is missing the #ATTR# attribute.",
+    "datasetAttributeEmpty": "#COMP# dataset #ATTR# attribute cannot be empty.",
+    "datasetSerieAttribute": "#COMP# dataset #KEY# item at index #INDX# is missing the #ATTR# attribute."
+}

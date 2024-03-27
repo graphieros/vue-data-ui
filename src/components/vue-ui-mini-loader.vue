@@ -1,9 +1,5 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
-import { 
-    createUid, 
-    palette, 
-} from '../lib';
+import { ref, computed } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import mainConfig from "../default_configs.json";
 
@@ -14,15 +10,7 @@ const props = defineProps({
             return {}
         }
     },
-    dataset: {
-        type: Array,
-        default() {
-            return []
-        }
-    },
 });
-
-const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_mini_loader);
 

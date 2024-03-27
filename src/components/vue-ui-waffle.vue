@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, onMounted } from "vue";
 import { 
     abbreviate,
     adaptColorToBackground,
@@ -8,8 +8,10 @@ import {
     createUid, 
     dataLabel,
     downloadCsv,
+    error,
     functionReturnsString,
     isFunction,
+    objectIsEmpty,
     opacity,
     palette,
     shiftHue,
@@ -38,6 +40,27 @@ const props = defineProps({
         }
     },
 });
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiWaffle',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            if([null, undefined].includes(ds.name)) {
+                error({
+                    componentName: 'VueUiWaffle',
+                    type: 'datasetSerieAttribute',
+                    property: 'name (string)',
+                    index: i
+                })
+            }
+        })
+    }
+})
+
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_waffle);
@@ -128,6 +151,16 @@ const immutableProportions = computed(() => {
 });
 
 const waffleSet = computed(() => {
+    props.dataset.forEach((ds, i) => {
+        if([null, undefined].includes(ds.values)) {
+            error({
+                componentName: 'VueUiWaffle',
+                type: 'datasetSerieAttribute',
+                property: 'values (number[])',
+                index: i
+            });
+        }
+    })
     return datasetCopy.value
         .filter((serie, i) => !segregated.value.includes(serie.uid))
         .map((serie, i) => {

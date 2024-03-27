@@ -9,10 +9,12 @@ import {
     createCsvContent, 
     createUid, 
     dataLabel,
+    error,
     downloadCsv,
     functionReturnsString,
     isFunction, 
     makeDonut, 
+    objectIsEmpty,
     opacity, 
     palette, 
 } from '../lib';
@@ -38,6 +40,15 @@ const props = defineProps({
         default() {
             return []
         }
+    }
+})
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiNestedDonuts',
+            type: 'dataset'
+        })
     }
 })
 
@@ -96,10 +107,50 @@ function selectDatapoint({ datapoint, index }) {
 const segregated = ref([]);
 
 const immutableDataset = computed(() => {
+    props.dataset.forEach((ds,i) => {
+        if([null, undefined].includes(ds.name)) {
+            error({
+                componentName: 'VueUiNestedDonuts',
+                type: 'datasetSerieAttribute',
+                property: 'name',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds.series)) {
+            error({
+                componentName: 'VueUiNestedDonuts',
+                type: 'datasetSerieAttribute',
+                property: 'series',
+                index: i
+            })
+        } else {
+            ds.series.forEach((serie, j) => {
+                if([null, undefined].includes(serie.name)) {
+                    error({
+                        componentName: 'VueUiNestedDonuts',
+                        type: 'datasetSerieAttribute',
+                        property: 'name',
+                        index: j,
+                        key: 'serie'
+                    })
+                }
+                if([null, undefined].includes(serie.values)) {
+                    error({
+                        componentName: 'VueUiNestedDonuts',
+                        type: 'datasetSerieAttribute',
+                        property: 'values',
+                        index: j,
+                        key: 'serie'
+                    })
+                }
+            })
+        }
+    })
+
     return props.dataset.map((ds, i) => {
         return {
             ...ds,
-            total: ds.series.filter(s => !segregated.value.includes(s.id)).map(s => s.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
+            total: ds.series.filter(s => !segregated.value.includes(s.id)).map(s => (s.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
             datasetIndex: i,
             id: `${uid.value}_${i}`,
             series: ds.series.map((serie, j) => {
@@ -111,8 +162,8 @@ const immutableDataset = computed(() => {
                     seriesIndex: j,
                     datasetIndex: i,
                     color: convertColorToHex(serie.color) || palette[j] || palette[i % palette.length],
-                    value: serie.values.reduce((a, b) => a + b, 0),
-                    absoluteValues: serie.values
+                    value: (serie.values || []).reduce((a, b) => a + b, 0),
+                    absoluteValues: serie.values || []
                 }
             })
         }

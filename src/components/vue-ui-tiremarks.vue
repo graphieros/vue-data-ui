@@ -4,9 +4,14 @@ import pdf from "../pdf";
 import img from "../img";
 import { useNestedProp } from "../useNestedProp";
 import mainConfig from "../default_configs.json";
-import { shiftHue, createUid } from "../lib";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import { 
+    createUid,
+    error,
+    objectIsEmpty, 
+    shiftHue, 
+} from "../lib";
 
 const props = defineProps({
     config: {
@@ -42,6 +47,13 @@ const tiremarksConfig = computed(() => {
 const activeValue = ref(tiremarksConfig.value.style.chart.animation.use ? 0 : props.dataset.percentage);
 
 onMounted(() => {
+    if (objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiTiremarks',
+            type: 'dataset'
+        })
+    }
+
     let acceleration = 0;
     let speed = tiremarksConfig.value.style.chart.animation.speed;
     let incr = (0.005) * tiremarksConfig.value.style.chart.animation.acceleration;

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
-import { createUid, dataLabel, interpolateColorHex } from "../lib";
+import { createUid, dataLabel, interpolateColorHex, objectIsEmpty, error } from "../lib";
 
 const props = defineProps({
     config: {
@@ -15,6 +15,37 @@ const props = defineProps({
         type: Object,
         default(){
             return {}
+        }
+    }
+})
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: "VueUiSparkgauge",
+            type: 'dataset'
+        })
+    } else {
+        if([null, undefined].includes(props.dataset.min)) {
+            error({
+                componentName: 'VueUiSparkgauge',
+                type: 'datasetAttribute',
+                property: 'min'
+            })
+        }
+        if([null, undefined].includes(props.dataset.max)) {
+            error({
+                componentName: 'VueUiSparkgauge',
+                type: 'datasetAttribute',
+                property: 'max'
+            })
+        }
+        if([null, undefined].includes(props.dataset.value)) {
+            error({
+                componentName: 'VueUiSparkgauge',
+                type: 'datasetAttribute',
+                property: 'value'
+            })
         }
     }
 })

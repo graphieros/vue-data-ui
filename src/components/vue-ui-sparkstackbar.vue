@@ -1,6 +1,14 @@
 <script setup>
-import { ref, computed } from "vue";
-import { shiftHue, opacity, palette, convertColorToHex, createUid } from "../lib";
+import { ref, computed, onMounted } from "vue";
+import { 
+    convertColorToHex, 
+    createUid,
+    error,
+    objectIsEmpty,
+    opacity, 
+    palette, 
+    shiftHue, 
+} from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -16,6 +24,34 @@ const props = defineProps({
         default() {
             return [];
         }
+    }
+})
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiSparkStackbar',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            if([null, undefined].includes(ds.name)) {
+                error({
+                    componentName: 'VueUiSparkStackbar',
+                    type: 'datasetSerieAttribute',
+                    property: 'name',
+                    index: i
+                })
+            }
+            if([undefined].includes(ds.value)) {
+                error({
+                    componentName: 'VueUiSparkStackbar',
+                    type: 'datasetSerieAttribute',
+                    property: 'value',
+                    index: i
+                })
+            }
+        })
     }
 })
 
@@ -35,17 +71,18 @@ const svg = ref({
 });
 
 const total = computed(() => {
-    return props.dataset.map(d => d.value).reduce((a, b) => a + b, 0);
+    return props.dataset.map(d => d.value || 0).reduce((a, b) => a + b, 0);
 });
 
 const computedDataset = computed(() => {
     return props.dataset.map((d, i) => {
         return {
             ...d,
+            value: d.value || 0,
             color: convertColorToHex(d.color) || palette[i] || palette[i % palette.length],
-            proportion: d.value / total.value,
-            width: d.value / total.value * svg.value.width,
-            proportionLabel: `${Number((d.value / total.value * 100).toFixed(stackConfig.value.style.legend.percentage.rounding)).toLocaleString()}%`,
+            proportion: (d.value || 0) / total.value,
+            width: (d.value || 0) / total.value * svg.value.width,
+            proportionLabel: `${Number(((d.value || 0) / total.value * 100).toFixed(stackConfig.value.style.legend.percentage.rounding)).toLocaleString()}%`,
         }
     });
 });

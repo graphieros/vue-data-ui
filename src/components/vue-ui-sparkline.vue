@@ -1,9 +1,11 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import {
     createSmoothPath,
     createUid,
     dataLabel as dl,
+    error,
+    objectIsEmpty,
     opacity,
     shiftHue,
 } from "../lib";
@@ -32,6 +34,34 @@ const props = defineProps({
         default: undefined
     }
 });
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiSparkline',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            if([null, undefined].includes(ds.period)) {
+                error({
+                    componentName: 'VueUiSparkline',
+                    type: 'datasetSerieAttribute',
+                    property: 'name',
+                    index: i
+                })
+            }
+            if([undefined].includes(ds.value)) {
+                error({
+                    componentName: 'VueUiSparkline',
+                    type: 'datasetSerieAttribute',
+                    property: 'value',
+                    index: i
+                })
+            }
+        })
+    }
+})
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkline);
@@ -66,10 +96,10 @@ const drawingArea = computed(() => {
 });
 
 const min = computed(() => {
-    return Math.min(...props.dataset.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value))
+    return Math.min(...props.dataset.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
 });
 const max = computed(() => {
-    return Math.max(...props.dataset.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value))
+    return Math.max(...props.dataset.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
 });
 
 
@@ -94,7 +124,7 @@ const len = computed(() => props.dataset.length - 1);
 
 const mutableDataset = computed(() => {
     return props.dataset.map((s, i) => {
-        const absoluteValue = isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value;
+        const absoluteValue = isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : (s.value || 0);
         return {
             absoluteValue,
             period: s.period,
@@ -184,7 +214,7 @@ function selectDatapoint(datapoint, index) {
             </defs>
 
             <!-- AREA -->
-            <g v-if="sparklineConfig.style.area.show && !isBar">
+            <g v-if="sparklineConfig.style.area.show && !isBar && mutableDataset[0]">
                 <path
                     data-cy="sparkline-smooth-area"
                     v-if="sparklineConfig.style.line.smooth"

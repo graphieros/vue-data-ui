@@ -1,13 +1,15 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, onMounted } from "vue";
 import { 
     convertColorToHex, 
     createCsvContent, 
     createUid,
     dataLabel,
     downloadCsv,
+    error,
     functionReturnsString,
     isFunction,
+    objectIsEmpty,
     opacity, 
     palette, 
 } from "../lib.js";
@@ -36,8 +38,16 @@ const props = defineProps({
     }
 });
 
-const uid = ref(createUid());
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiOnion',
+            type: 'dataset'
+        })
+    }
+})
 
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_onion);
 
 const isImaging = ref(false);
@@ -92,10 +102,31 @@ const drawableArea = computed(() => {
 
 
 const immutableDataset = computed(() => {
+
+    props.dataset.forEach((ds, i) => {
+        if([null, undefined].includes(ds.name)){
+            error({
+                componentName: 'VueUiOnion',
+                type: 'datasetSerieAttribute',
+                property: 'name',
+                index: i
+            })
+        }
+        if([undefined].includes(ds.percentage)) {
+            error({
+                componentName: 'VueUiOnion',
+                type: 'datasetSerieAttribute',
+                property: 'percentage',
+                index: i
+            })
+        }
+    })
+
     return props.dataset.map((onion, i) => {
         const id = `onion_serie_${i}_${uid.value}`;
         return {
             ...onion,
+            percentage: onion.percentage || 0,
             color: convertColorToHex(onion.color) || palette[i],
             id,
             shape: 'circle',
@@ -136,10 +167,11 @@ const mutableDataset = computed(() => {
             const radius = (((drawableArea.value.maxRadius - onionSkin.value.track) / mutableCount.value) / 2) * (1+i);
             const labelY = (drawableArea.value.centerY) - ((drawableArea.value.centerY - drawableArea.value.top - onionConfig.value.style.chart.layout.labels.fontSize) / mutableCount.value * (i + 1));
             return {
+                percentage: onion.percentage || 0,
                 ...onion,
                 labelY,
                 radius,
-                path: peelOnion(radius, onion.percentage)
+                path: peelOnion(radius, onion.percentage || 0)
             }
         });
 });
@@ -481,7 +513,7 @@ defineExpose({
                         :fill="onionConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie === i ? onion.color:  onionConfig.style.chart.layout.labels.color"
                         :font-weight="onionConfig.style.chart.layout.labels.bold ? 'bold' : 'normal'"
                     >
-                        {{ onion.name }} {{ onionConfig.style.chart.layout.labels.percentage.show ? ` : ${onion.percentage.toFixed(onionConfig.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !onionConfig.style.chart.layout.labels.percentage.show && onionConfig.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""}` : '' }` : `${onionConfig.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""})` : '' : ''}` }}
+                        {{ onion.name }} {{ onionConfig.style.chart.layout.labels.percentage.show ? ` : ${(onion.percentage || 0).toFixed(onionConfig.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !onionConfig.style.chart.layout.labels.percentage.show && onionConfig.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""}` : '' }` : `${onionConfig.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""})` : '' : ''}` }}
                     </text>
                 </g>
             </g>
@@ -502,7 +534,7 @@ defineExpose({
                 >
                     <template #item="{ legend }">
                         <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                            {{ legend.name }} : {{ legend.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
+                            {{ legend.name }} : {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
 
 
                         </div>
@@ -521,9 +553,7 @@ defineExpose({
         >
             <template #item="{ legend }">
                 <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{ legend.percentage.toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
-
-
+                    {{ legend.name }} : {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
                 </div>
             </template>
         </Legend>

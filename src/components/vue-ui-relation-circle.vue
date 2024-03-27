@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { palette, createUid } from "../lib.js";
+import { palette, createUid, error, objectIsEmpty } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -77,6 +77,48 @@ const radiusOffset = computed(() => {
 })
 
 onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiRelationCircle',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            if([null, undefined].includes(ds.id)) {
+                error({
+                    componentName: 'VueUiRelationCircle',
+                    type: 'datasetSerieAttribute',
+                    property: 'id',
+                    index: i
+                })
+            }
+            if([null, undefined].includes(ds.label)) {
+                error({
+                    componentName: 'VueUiRelationCircle',
+                    type: 'datasetSerieAttribute',
+                    property: 'label',
+                    index: i
+                })
+            }
+            if([null, undefined].includes(ds.relations)) {
+                error({
+                    componentName: 'VueUiRelationCircle',
+                    type: 'datasetSerieAttribute',
+                    property: 'relations',
+                    index: i
+                })
+            }
+            if([null, undefined].includes(ds.weights)) {
+                error({
+                    componentName: 'VueUiRelationCircle',
+                    type: 'datasetSerieAttribute',
+                    property: 'weights',
+                    index: i
+                })
+            }
+        })
+    }
+
     createPlots();
     createRelations();
     const chart = document.getElementById(`relation_circle_${uid.value}`);

@@ -1,11 +1,13 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, onMounted } from "vue";
 import { 
     createCsvContent, 
     createUid, 
     downloadCsv,
+    error,
     functionReturnsString,
-    isFunction, 
+    isFunction,
+    objectIsEmpty,
     opacity, 
     shiftHue, 
 } from '../lib';
@@ -33,8 +35,16 @@ const props = defineProps({
     },
 });
 
-const uid = ref(createUid());
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiAgePyramid',
+            type: 'dataset'
+        })
+    }
+})
 
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_age_pyramid);
 
 const isImaging = ref(false);

@@ -2,7 +2,15 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
-import { calcMedian, convertColorToHex, createCsvContent, createUid, downloadCsv, palette } from "../lib";
+import { calcMedian, 
+    convertColorToHex, 
+    createCsvContent, 
+    createUid, 
+    downloadCsv,
+    error,
+    objectIsEmpty,
+    palette,
+} from "../lib";
 import SparkLine from "./vue-ui-sparkline.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -44,6 +52,13 @@ const breakpoint = computed(() => {
 });
 
 onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiTableSparkline',
+            type: 'dataset'
+        })
+    }
+
     const observer = new ResizeObserver((entries) => {
         entries.forEach((entry) => {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
@@ -55,11 +70,31 @@ onMounted(() => {
 });
 
 const computedDataset = computed(() => {
+    props.dataset.forEach((ds, i) => {
+        if([null, undefined].includes(ds.name)) {
+            error({
+                componentName: 'VueUiTableSparkline',
+                type: 'datasetSerieAttribute',
+                property: 'name',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds.values)) {
+            error({
+                componentName: 'VueUiTableSparkline',
+                type: 'datasetSerieAttribute',
+                property: 'values',
+                index: i
+            })
+        }
+    })
+
     return props.dataset.map((ds, i) => {
-        const cleanValues = ds.values.map((v) => (isNaN(v) ? 0 : v ?? 0));
+        const cleanValues = (ds.values || []).map((v) => (isNaN(v) ? 0 : v ?? 0));
         const sum = cleanValues.reduce((a, b) => a + b, 0);
         return {
             ...ds,
+            values: ds.values || [],
             color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length],
             sum,
             average: sum / cleanValues.length,
@@ -67,7 +102,7 @@ const computedDataset = computed(() => {
             sparklineDataset: cleanValues.map((v, i) => {
                 return {
                     period: tableConfig.value.colNames[i] || `col ${i}`,
-                    value: v,
+                    value: v || 0,
                 };
             }),
         };
@@ -75,8 +110,8 @@ const computedDataset = computed(() => {
 });
 
 function addOrdersAttribute(dataset) {
-    const combinedValues = dataset[0].values.map((_, index) =>
-        dataset.map((series) => series.values[index])
+    const combinedValues = (dataset[0].values || []).map((_, index) =>
+        dataset.map((series) => (series.values[index] || []))
     );
 
     const orders = combinedValues.map((values) =>
@@ -88,6 +123,7 @@ function addOrdersAttribute(dataset) {
 
     const result = dataset.map((series, index) => ({
         ...series,
+        values: series.values || [],
         orders: orders[index],
     }));
 
@@ -115,7 +151,7 @@ function restoreOrder() {
 function orderDatasetByIndex(index) {
     isSorting.value = true;
     currentSortingIndex.value = index;
-    const combinedValues = datasetWithOrders.value.map(series => series.values[index]);
+    const combinedValues = datasetWithOrders.value.map(series => (series.values[index] || []));
     const sortOrder = sortIndex.value === index ? 1 : -1;
     currentSortOrder.value = sortOrder;
     if(index === sortIndex.value) {
@@ -135,7 +171,7 @@ function orderDatasetByIndex(index) {
 }
 
 const maxSeriesLength = computed(() => {
-    return Math.max(...props.dataset.map(ds => ds.values.length))
+    return Math.max(...props.dataset.map(ds => (ds.values || []).length))
 })
 
 const colNames = computed(() => {

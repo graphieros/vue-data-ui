@@ -4,8 +4,10 @@ import {
     createCsvContent, 
     createUid, 
     downloadCsv,
+    error,
     functionReturnsString,
-    isFunction, 
+    isFunction,
+    objectIsEmpty,
     opacity, 
     palette, 
 } from '../lib';
@@ -36,7 +38,6 @@ const props = defineProps({
 });
 
 const uid = ref(createUid());
-
 const defaultConfig = ref(mainConfig.vue_ui_scatter);
 
 const isImaging = ref(false);
@@ -48,6 +49,13 @@ const tooltipContent = ref("");
 const step = ref(0);
 
 onMounted(() => {
+    if(objectIsEmpty(props.dataset)){
+        error({
+            componentName: 'VueUiScatter',
+            type: 'dataset'
+        })
+    }
+
     const xLabel = document.getElementById(`vue-ui-scatter-xAxis-label-${uid.value}`);
         if(xLabel) {
             const bboxY = xLabel.getBBox();
@@ -90,6 +98,55 @@ const drawingArea = computed(() => {
 });
 
 const extremes = computed(() => {
+    props.dataset.forEach((ds, i) => {
+        if([null, undefined].includes(ds.name)){
+            error({
+                componentName: 'VueUiScatter',
+                type: 'datasetSerieAttribute',
+                property: 'name',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds.values)){
+            error({
+                componentName: 'VueUiScatter',
+                type: 'datasetSerieAttribute',
+                property: 'values',
+                index: i
+            })
+        } else {
+            ds.values.forEach((dp, j) => {
+                if([null, undefined].includes(dp.x)){
+                    error({
+                        componentName: 'VueUiScatter',
+                        type: 'datasetSerieAttribute',
+                        property: 'x',
+                        key: `value (index ${i})`,
+                        index: j
+                    })
+                }
+                if([null, undefined].includes(dp.y)){
+                    error({
+                        componentName: 'VueUiScatter',
+                        type: 'datasetSerieAttribute',
+                        property: 'y',
+                        key: `value (index ${i})`,
+                        index: j
+                    })
+                }
+                if([null, undefined].includes(dp.name)){
+                    error({
+                        componentName: 'VueUiScatter',
+                        type: 'datasetSerieAttribute',
+                        property: 'name',
+                        key: `value (index ${i})`,
+                        index: j
+                    })
+                }
+            })
+        }
+    })
+
     const xMin = Math.min(...datasetWithId.value.filter(el => !segregated.value.includes(el.id)).flatMap(ds => ds.values.map(v => v.x)));
     const xMax = Math.max(...datasetWithId.value.filter(el => !segregated.value.includes(el.id)).flatMap(ds => ds.values.map(v => v.x)));
     const yMin = Math.min(...datasetWithId.value.filter(el => !segregated.value.includes(el.id)).flatMap(ds => ds.values.map(v => v.y)));

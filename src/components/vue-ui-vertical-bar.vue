@@ -5,8 +5,10 @@ import {
     createCsvContent,
     createUid,
     downloadCsv,
+    error,
     functionReturnsString,
     isFunction,
+    objectIsEmpty,
     opacity,
     palette,
     shiftHue,
@@ -36,7 +38,6 @@ const props = defineProps({
 });
 
 const uid = ref(createUid());
-
 const defaultConfig = ref(mainConfig.vue_ui_vertical_bar);
 
 const isImaging = ref(false);
@@ -65,6 +66,13 @@ const breakpoint = computed(() => {
 })
 
 onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiVerticalBar',
+            type: 'dataset'
+        })
+    }
+
     barCount.value = props.dataset.flatMap(serie => {
         if(serie.children && serie.children.length > 0) {
             return serie.children.length;
@@ -97,16 +105,42 @@ const isSortDown = computed(() => {
 })
 
 const immutableDataset = computed(() => {
+
+    props.dataset.forEach((ds, i) => {
+        if (ds.children) {
+            if (objectIsEmpty(ds.children)){
+                error({
+                    componentName: 'VueUiVerticalBar',
+                    type: 'datasetAttributeEmpty',
+                    property: `children (index ${i})`
+                })
+            } else {
+                ds.children.forEach((child, j) => {
+                    if ([null, undefined].includes(child.name)) {
+                        error({
+                            componentName: 'VueUiVerticalBar',
+                            type: 'datasetSerieAttribute',
+                            property: `name`,
+                            key: 'children',
+                            index: j
+                        })
+                    }
+                })
+            }
+        }
+    })
+
     return props.dataset
-        .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
         .map((serie, i) => {
-            const id = `vertical_parent_${i}_${uid.value}`; 
+            const id = `vertical_parent_${i}_${uid.value}`;
+        const hasChildren = !!serie.children && serie.children.length > 0;
         return {
             ...serie,
             id,
             shape: 'square',
             opacity: segregated.value.includes(id) ? 0.5 : 1,
-            hasChildren: !!serie.children && serie.children.length > 0,
+            value: hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : (serie.value || 0),
+            hasChildren,
             isChild: false,
             color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
             children: !serie.children || !serie.children.length ? [] : serie.children
@@ -114,6 +148,7 @@ const immutableDataset = computed(() => {
                 .map((c, j) => {
                     return {
                         ...c,
+                        value: c.value || 0,
                         isChild: true,
                         parentId: id,
                         parentName: serie.name,
@@ -131,7 +166,7 @@ const immutableDataset = computed(() => {
                     }
                 })
         }
-    })
+    }).toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
 });
 
 const legendConfig = computed(() => {

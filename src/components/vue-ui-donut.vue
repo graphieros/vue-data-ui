@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, onMounted } from "vue";
 import { 
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
@@ -9,9 +9,11 @@ import {
     createUid, 
     dataLabel,
     downloadCsv,
+    error,
     functionReturnsString,
     isFunction, 
-    makeDonut, 
+    makeDonut,
+    objectIsEmpty, 
     opacity, 
     palette, 
 } from '../lib';
@@ -39,6 +41,26 @@ const props = defineProps({
         }
     },
 });
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiDonut',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            if([null, undefined].includes(ds.name)) {
+                error({
+                    componentName: 'VueUiDonut',
+                    type: 'datasetSerieAttribute',
+                    property: 'name (string)',
+                    index: i
+                })
+            }
+        })
+    }
+})
 
 const uid = ref(createUid());
 
@@ -119,6 +141,16 @@ function getData() {
 }
 
 const donutSet = computed(() => {
+    props.dataset.forEach((ds, i) => {
+        if([null, undefined].includes(ds.values)) {
+            error({
+                componentName: 'VueUiDonut',
+                type: 'datasetSerieAttribute',
+                property: 'values (number[])',
+                index: i
+            });
+        }
+    })
     return props.dataset
         .map((serie, i) => {
             return {

@@ -1,6 +1,11 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { convertColorToHex, createUid } from '../lib';
+import { 
+    convertColorToHex, 
+    createUid,
+    error,
+    objectIsEmpty 
+} from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -67,6 +72,13 @@ const box = computed(() => {
 const activeValue = ref(barConfig.value.style.chart.animation.use ? 0 : props.dataset.percentage);
 
 onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUi3dBar',
+            type: 'dataset'
+        })
+    }
+
     let acceleration = 0;
     let speed = barConfig.value.style.chart.animation.speed;
     let incr = (0.005) * barConfig.value.style.chart.animation.acceleration;

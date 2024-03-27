@@ -3,12 +3,13 @@ import { ref, computed, onMounted, nextTick } from "vue";
 import { 
     calculateNiceScale, 
     canShowValue, 
-    closestDecimal, 
     createCsvContent, 
     createUid, 
     downloadCsv,
+    error,
     functionReturnsString,
-    isFunction, 
+    isFunction,
+    objectIsEmpty,
     opacity, 
     shiftHue, 
 } from "../lib";
@@ -49,6 +50,13 @@ const hoveredIndex = ref(undefined);
 const step = ref(0);
 
 onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiCandlestick',
+            type: 'dataset'
+        })
+    }
+
     const sliderOne = document.getElementById(`start_${uid.value}`);
     const sliderTwo = document.getElementById(`end_${uid.value}`);
     let minGap = 0;
@@ -122,6 +130,58 @@ const mutableDataset = computed(() => {
 });
 
 const datasetBreakdown = computed(() => {
+
+    props.dataset.forEach((ds, i) => {
+        if([null, undefined].includes(ds[0])){
+            error({
+                componentName: 'VueUiCandlestick',
+                type: 'datasetAttribute',
+                property: 'period (index 0)',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds[1])){
+            error({
+                componentName: 'VueUiCandlestick',
+                type: 'datasetAttribute',
+                property: 'open (index 1)',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds[2])){
+            error({
+                componentName: 'VueUiCandlestick',
+                type: 'datasetAttribute',
+                property: 'high (index 2)',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds[3])){
+            error({
+                componentName: 'VueUiCandlestick',
+                type: 'datasetAttribute',
+                property: 'low (index 3)',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds[4])){
+            error({
+                componentName: 'VueUiCandlestick',
+                type: 'datasetAttribute',
+                property: 'last (index 4)',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds[5])){
+            error({
+                componentName: 'VueUiCandlestick',
+                type: 'datasetAttribute',
+                property: 'volume (index 5)',
+                index: i
+            })
+        }
+    })
+
     return mutableDataset.value.map(ds => {
         return {
             period: ds[0],

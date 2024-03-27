@@ -1,13 +1,15 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, onMounted } from "vue";
 import { 
     createCsvContent, 
     createPolygonPath, 
     createUid, 
     downloadCsv,
+    error,
     functionReturnsString,
     isFunction, 
     lightenHexColor, 
+    objectIsEmpty,
     palette, 
 } from '../lib';
 import pdf from "../pdf";
@@ -37,6 +39,15 @@ const props = defineProps({
         }
     },
 });
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)){
+        error({
+            componentName: 'VueUiMolecule',
+            type: 'dataset'
+        })
+    }
+})
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_molecule);

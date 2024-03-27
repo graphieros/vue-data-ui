@@ -1,9 +1,11 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { 
     convertColorToHex, 
     createUid, 
     dataLabel,
+    error,
+    objectIsEmpty,
     opacity, 
     palette, 
 } from "../lib.js";
@@ -28,6 +30,37 @@ const props = defineProps({
         }
     }
 });
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiThermometer',
+            type: 'dataset'
+        })
+    } else {
+        if([null, undefined].includes(props.dataset.value)) {
+            error({
+                componentName: 'VueUiThermometer',
+                type: 'datasetAttribute',
+                property: 'value'
+            })
+        }
+        if([null, undefined].includes(props.dataset.from)) {
+            error({
+                componentName: 'VueUiThermometer',
+                type: 'datasetAttribute',
+                property: 'from'
+            })
+        }
+        if([null, undefined].includes(props.dataset.to)) {
+            error({
+                componentName: 'VueUiThermometer',
+                type: 'datasetAttribute',
+                property: 'to'
+            })
+        }
+    }
+})
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_thermometer);

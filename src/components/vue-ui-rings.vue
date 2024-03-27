@@ -1,13 +1,15 @@
 <script setup>
-import { computed, ref, nextTick } from "vue";
+import { computed, ref, nextTick, onMounted } from "vue";
 import {
   convertColorToHex,
   createCsvContent,
   createUid,
   dataLabel,
   downloadCsv,
+  error,
   functionReturnsString,
   isFunction,
+  objectIsEmpty,
   opacity,
   palette,
   shiftHue,
@@ -37,8 +39,35 @@ const props = defineProps({
   },
 });
 
-const uid = ref(createUid());
+onMounted(() => {
+  if(objectIsEmpty(props.dataset)) {
+    error({
+      componentName: 'VueUiRings',
+      type: 'dataset'
+    })
+  } else {
+    props.dataset.forEach((ds, i) => {
+      if([null, undefined].includes(ds.name)){
+        error({
+          componentName: 'VueUiRings',
+          type: 'datasetSerieAttribute',
+          property: 'name',
+          index: i
+        })
+      }
+      if([null, undefined].includes(ds.values)){
+        error({
+          componentName: 'VueUiRings',
+          type: 'datasetSerieAttribute',
+          property: 'values',
+          index: i
+        })
+      }
+    })
+  }
+})
 
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_rings);
 
 const isPrinting = ref(false);
@@ -103,14 +132,13 @@ function proportionToMax(val) {
 
 const datasetCopy = computed(() => {
     return props.dataset.map(({ values, name, color = null }, i) => {
-        const subTotal = values.reduce((a, b) => a + b, 0);
-
+        const subTotal = (values || []).reduce((a, b) => a + b, 0);
         return {
             name,
             color:
           color || convertColorToHex(color) || palette[i] || palette[i % palette.length],
           value: subTotal,
-          proportion: subTotal / props.dataset.map(ds => ds.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
+          proportion: subTotal / props.dataset.map(ds => (ds.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
             uid: createUid()
         }
     })

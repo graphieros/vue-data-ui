@@ -1,3 +1,5 @@
+import errors from "./errors.json";
+
 export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult = 2, arcAmpl = 1.45, degrees = 360, rotation = 105.25, size = 0) {
     let { series } = item;
     if (!series || item.base === 0)
@@ -966,6 +968,17 @@ export function functionReturnsString(func) {
     return typeof func.apply(null, arguments) === 'string';
 }
 
+export function objectIsEmpty(obj) {
+    if(Array.isArray(obj)) {
+        return obj.length === 0
+    }
+    return Object.keys(obj).length === 0
+}
+
+export function error({ componentName, type, property='', index='', key='' }) {
+    throw new Error(`\n\n> ${errors[type].replace('#COMP#', componentName).replace('#ATTR#', property).replace('#INDX#', index).replace('#KEY#', key)}\n`)
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -991,6 +1004,7 @@ const lib = {
     degreesToRadians,
     degreesToRadians,
     downloadCsv,
+    error,
     giftWrap,
     interpolateColorHex,
     isFunction,
@@ -1001,6 +1015,7 @@ const lib = {
     makeDonut,
     makePath,
     matrixTimes,
+    objectIsEmpty,
     opacity,
     palette,
     rotateMatrix,

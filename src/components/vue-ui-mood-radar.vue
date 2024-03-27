@@ -1,6 +1,16 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
-import { createPolygonPath, shiftHue, opacity, makePath, createUid, createCsvContent, downloadCsv } from "../lib";
+import { ref, computed, nextTick, onMounted } from "vue";
+import { 
+    createCsvContent, 
+    createPolygonPath, 
+    createUid, 
+    downloadCsv,
+    error,
+    makePath,
+    objectIsEmpty, 
+    opacity, 
+    shiftHue, 
+} from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -26,8 +36,16 @@ const props = defineProps({
     },
 });
 
-const uid = ref(createUid());
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiMoodRadar',
+            type: 'dataset'
+        })
+    }
+})
 
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_mood_radar);
 
 const isImaging = ref(false);
@@ -96,6 +114,16 @@ const convertedDataset = computed(() => {
 });
 
 const radar = computed(() => {
+    ['1', '2', '3', '4', '5'].forEach(rating => {
+        if([null, undefined].includes(props.dataset[rating])){
+            error({
+                componentName: 'VueUiMoodRadar',
+                type: 'datasetAttribute',
+                property: rating
+            })
+        }
+    })
+
     return outerPolygon.value.coordinates.map((c, i) => {
         const plots = plot({
             centerX: svg.value.width / 2,

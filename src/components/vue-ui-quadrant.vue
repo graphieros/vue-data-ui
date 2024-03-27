@@ -5,10 +5,12 @@ import {
     convertColorToHex, 
     createCsvContent, 
     createUid, 
-    downloadCsv, 
+    downloadCsv,
+    error,
     functionReturnsString,
     isFunction,
-    giftWrap, 
+    giftWrap,
+    objectIsEmpty,
     opacity, 
     palette, 
     shiftHue, 
@@ -40,9 +42,7 @@ const props = defineProps({
 });
 
 const uid = ref(createUid());
-
 const emit = defineEmits(['selectPlot', 'selectSide', 'selectLegend']);
-
 const defaultConfig = ref(mainConfig.vue_ui_quadrant);
 
 const isImaging = ref(false);
@@ -54,6 +54,43 @@ const tooltipContent = ref("");
 const step = ref(0);
 
 onMounted(() => {
+    if (objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiQuadrant',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            if ([null, undefined].includes(ds.name)){
+                error({
+                    componentName: 'VueUiQuadrant',
+                    type: 'datasetSerieAttribute',
+                    property: 'name',
+                    index: i
+                })
+            }
+            if([null, undefined].includes(ds.series)) {
+                error({
+                    componentName: 'VueUiQuadrant',
+                    type: 'datasetSerieAttribute',
+                    property: 'series',
+                    index: i
+                })
+            } else {
+                ds.series.forEach((serie, j) => {
+                    if ([null, undefined].includes(serie.name)) {
+                        error({
+                            componentName: 'VueUiQuadrant',
+                            type: 'datasetSerieAttribute',
+                            property: 'name',
+                            key: 'series',
+                            index: j
+                        })
+                    }
+                })
+            }
+        })
+    }
     positionAxisLabels();
 });
 
@@ -266,6 +303,28 @@ const datasetReference = computed(() => {
 });
 
 const drawableDataset = computed(() => {
+    props.dataset.forEach((ds,i) => {
+        ds.series.forEach((serie,j) => {
+            if ([null, undefined].includes(serie.x)) {
+                error({
+                    componentName: 'VueUiQuadrant',
+                    type: 'datasetSerieAttribute',
+                    property: 'x',
+                    key: 'series',
+                    index: j
+                })
+            }
+            if ([null, undefined].includes(serie.y)) {
+                error({
+                    componentName: 'VueUiQuadrant',
+                    type: 'datasetSerieAttribute',
+                    property: 'y',
+                    key: 'series',
+                    index: j
+                })
+            }
+        })
+    })
     return mutableDataset.value.map((category, i) => {
         return {
             ...category,

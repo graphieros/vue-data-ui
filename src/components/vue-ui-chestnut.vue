@@ -1,6 +1,21 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, palette, opacity, shiftHue, adaptColorToBackground, makeDonut, convertColorToHex, createUid, createCsvContent, downloadCsv } from "../lib";
+import { 
+    adaptColorToBackground, 
+    calcMarkerOffsetX, 
+    calcMarkerOffsetY, 
+    calcNutArrowPath, 
+    convertColorToHex, 
+    createCsvContent, 
+    createUid, 
+    downloadCsv,
+    error,
+    makeDonut,
+    objectIsEmpty, 
+    opacity, 
+    palette, 
+    shiftHue, 
+} from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -80,6 +95,38 @@ const treeTotal = computed(() => {
 })
 
 const mutableDataset = computed(() => {
+
+    props.dataset.forEach((ds, i) => {
+        if ([null, undefined].includes(ds.name)) {
+            error({
+                componentName: 'VueUiChestnut',
+                type: 'datasetSerieAttribute',
+                property: 'name (string)',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds.branches)) {
+            error({
+                componentName: 'VueUiChestnut',
+                type: 'datasetSerieAttribute',
+                property: 'branches',
+                index: i
+            })
+        } else {
+            ds.branches.forEach((branch, j) => {
+                if([null, undefined].includes(branch.name)) {
+                    error({
+                        componentName: 'VueUiChestnut',
+                        type: 'datasetSerieAttribute',
+                        property: 'name',
+                        index: j,
+                        key: `branch (at index ${i})`
+                    })
+                }
+            })
+        }
+    })
+
     return props.dataset.map((root, i) => {
         const rootTotal = root.branches.map(branch => branch.value).reduce((a, b) => a + b);
         return {
@@ -303,6 +350,13 @@ function observeTable() {
 }
 
 onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiChestnut',
+            type: 'dataset'
+        })
+    }
+
     const height = totalBranches.value * (svg.value.branchSize + svg.value.gap) + svg.value.padding.top + svg.value.padding.bottom;
     svg.value.height = height;
     observeTable()

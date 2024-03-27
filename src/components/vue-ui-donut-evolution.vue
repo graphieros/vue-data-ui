@@ -1,6 +1,22 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
-import { calcMarkerOffsetX, calcMarkerOffsetY, calcNutArrowPath, canShowValue, closestDecimal, makeDonut, palette, convertColorToHex, opacity, createUid, sumByAttribute, createCsvContent, downloadCsv, calculateNiceScale } from '../lib';
+import { ref, computed, nextTick, onMounted } from "vue";
+import { 
+    calcMarkerOffsetX, 
+    calcMarkerOffsetY, 
+    calcNutArrowPath, 
+    calculateNiceScale,
+    canShowValue, 
+    convertColorToHex, 
+    createCsvContent, 
+    createUid, 
+    downloadCsv,
+    error,
+    makeDonut,
+    objectIsEmpty, 
+    opacity, 
+    palette, 
+    sumByAttribute, 
+} from '../lib';
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -25,8 +41,16 @@ const props = defineProps({
     },
 });
 
-const uid = ref(createUid());
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiDonutEvolution',
+            type: 'dataset'
+        })
+    }
+})
 
+const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_donut_evolution);
 
 const isPrinting = ref(false);
@@ -77,11 +101,31 @@ const svg = computed(() => {
 })
 
 const convertedDataset = computed(() => {
+    props.dataset.forEach((ds, i) => {
+        if([null, undefined].includes(ds.name)){
+            error({
+                componentName: 'VueUiDonutEvolution',
+                type: 'datasetSerieAttribute',
+                property: 'name',
+                index: i
+            })
+        }
+        if([null, undefined].includes(ds.values)){
+            error({
+                componentName: 'VueUiDonutEvolution',
+                type: 'datasetSerieAttribute',
+                property: 'values',
+                index: i
+            })
+        }
+    })
+    
     return props.dataset.map((ds, i) => {
         return {
             ...ds,
+            values: ds.values || [],
             color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length],
-            length: ds.values.length,
+            length: (ds.values || []).length,
             uid: createUid(),
         }
     })

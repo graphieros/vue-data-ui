@@ -6,7 +6,12 @@ import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
-import { shiftHue, createUid } from "../lib";
+import { 
+    createUid,
+    error,
+    objectIsEmpty,
+    shiftHue, 
+} from "../lib";
 
 const props = defineProps({
     config: {
@@ -64,6 +69,13 @@ function calcTickStart(angle, distance = 1) {
 const activeValue = ref(wheelConfig.value.style.chart.animation.use ? 0 : props.dataset.percentage);
 
 onMounted(() => {
+    if (objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiWheel',
+            type: 'dataset'
+        })
+    }
+
     let acceleration = 0;
     let speed = wheelConfig.value.style.chart.animation.speed;
     let incr = (0.005) * wheelConfig.value.style.chart.animation.acceleration;

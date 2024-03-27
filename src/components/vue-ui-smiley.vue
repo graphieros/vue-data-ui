@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from "vue";
-import { shiftHue } from "../lib";
+import { ref, computed, onMounted } from "vue";
+import { error, objectIsEmpty, shiftHue } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -18,6 +18,15 @@ const props = defineProps({
     },
   },
 });
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiSmiley',
+            type: 'dataset'
+        })
+    }
+})
 
 const defaultConfig = ref(mainConfig.vue_ui_smiley);
 const isTooltip = ref(false);
