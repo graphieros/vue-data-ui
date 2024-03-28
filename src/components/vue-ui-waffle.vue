@@ -340,7 +340,9 @@ function segregate(uid) {
     if(segregated.value.includes(uid)) {
         segregated.value = segregated.value.filter(s => s !== uid);
     }else {
-        segregated.value.push(uid);
+        if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
+            segregated.value.push(uid);
+        }
     }
     emit('selectLegend', waffleSet.value.map(w => {
         return {
@@ -593,7 +595,7 @@ defineExpose({
             />
             <template v-for="(position, i) in positions">
                 <foreignObject
-                    v-if="!waffleConfig.style.chart.layout.grid.vertical && waffleConfig.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < waffleConfig.style.chart.layout.grid.size - 3) || (rects[i].isAbsoluteFirst && i % waffleConfig.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
+                    v-if="!waffleConfig.style.chart.layout.grid.vertical && waffleConfig.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < waffleConfig.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % waffleConfig.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
                     :x="position.x + waffleConfig.style.chart.layout.labels.captions.offsetX"
                     :y="position.y + waffleConfig.style.chart.layout.labels.captions.offsetY"
                     :height="absoluteRectDimension"

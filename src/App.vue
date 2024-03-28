@@ -374,7 +374,7 @@ const waffleDataset = [
   {
     name: "serie 2",
     color: "",
-    values: [2],
+    values: [2.2],
     shape: "diamond"
   },
   {
