@@ -1,4 +1,4 @@
-import { expect, test, describe, assert } from "vitest";
+import { expect, test, describe, vi, afterAll, beforeEach } from "vitest";
 import {
     abbreviate,
     adaptColorToBackground,
@@ -806,16 +806,36 @@ describe('objectIsEmpty', () => {
 })
 
 describe('error', () => {
+    const consoleMock = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    afterAll(() => {
+        consoleMock.mockReset()
+    })
+    
+    beforeEach(() => {
+        consoleMock.mockReset()
+    })
+
     test('throws an error for missing dataset', () => {
         try {
             error({
                 componentName: 'VueUiXy',
-                type: 'dataset'
+                type: 'dataset',
+                warn: false
             });
             fail('Error was not thrown');
         } catch (error) {
-            expect(error.message).toBe('\n\n> VueUiXy is missing the dataset prop.\n');
+            expect(error.message).toBe('\n> VueUiXy is missing the dataset prop.\n');
         }
+    });
+
+    test('logs a warning for missing dataset', () => {
+        error({
+            componentName: 'VueUiXy',
+            type: 'dataset',
+        });
+        expect(consoleMock).toHaveBeenCalledOnce();
+        expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy is missing the dataset prop.\n');
     });
 
     test('throws an error for missing dataset object required attribute', () => {
@@ -823,13 +843,25 @@ describe('error', () => {
             error({
                 componentName: 'VueUiXy',
                 type: 'datasetAttribute',
-                property: 'name'
+                property: 'name',
+                warn: false
             });
             fail('Error was not thrown');
         } catch (error) {
-            expect(error.message).toBe('\n\n> VueUiXy dataset is missing the name attribute.\n')
+            expect(error.message).toBe('\n> VueUiXy dataset is missing the name attribute.\n')
         }
     })
+
+    test('logs a warning for missing dataset object required attribute', () => {
+        error({
+            componentName: 'VueUiXy',
+            type: 'datasetAttribute',
+            property: 'name',
+        });
+        expect(consoleMock).toHaveBeenCalledOnce();
+        expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy dataset is missing the name attribute.\n');
+    })
+
 
     test('throws an error for missing datasetItem required attribute', () => {
         try {
@@ -837,12 +869,24 @@ describe('error', () => {
                 componentName: 'VueUiXy',
                 type: 'datasetSerieAttribute',
                 property: 'name',
-                index: 0
+                index: 0,
+                warn: false
             });
             fail('Error was not thrown');
         } catch (error) {
-            expect(error.message).toBe('\n\n> VueUiXy dataset  item at index 0 is missing the name attribute.\n')
+            expect(error.message).toBe('\n> VueUiXy dataset  item at index 0 is missing the name attribute.\n')
         }
+    })
+
+    test('logs a warning for missing datasetItem required attribute', () => {
+        error({
+            componentName: 'VueUiXy',
+            type: 'datasetSerieAttribute',
+            property: 'name',
+            index: 0,
+        });
+        expect(consoleMock).toHaveBeenCalledOnce();
+        expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy dataset  item at index 0 is missing the name attribute.\n');
     })
 
     test('throws an error for an empty dataset array item', () => {
@@ -850,11 +894,22 @@ describe('error', () => {
             error({
                 componentName: 'VueUiXy',
                 type: 'datasetAttributeEmpty',
-                property: 'series'
+                property: 'series',
+                warn: false
             });
             fail('Error was not thrown');
         } catch (error) {
-            expect(error.message).toBe('\n\n> VueUiXy dataset series attribute cannot be empty.\n')
+            expect(error.message).toBe('\n> VueUiXy dataset series attribute cannot be empty.\n')
         }
+    })
+
+    test('logs a warning for an empty dataset array item', () => {
+        error({
+            componentName: 'VueUiXy',
+            type: 'datasetAttributeEmpty',
+            property: 'series',
+        });
+        expect(consoleMock).toHaveBeenCalledOnce();
+        expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy dataset series attribute cannot be empty.\n');
     })
 });
