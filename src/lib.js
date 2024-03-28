@@ -975,8 +975,13 @@ export function objectIsEmpty(obj) {
     return Object.keys(obj).length === 0
 }
 
-export function error({ componentName, type, property='', index='', key='' }) {
-    throw new Error(`\n\n> ${errors[type].replace('#COMP#', componentName).replace('#ATTR#', property).replace('#INDX#', index).replace('#KEY#', key)}\n`)
+export function error({ componentName, type, property='', index='', key='', warn = true }) {
+    const message = `\n> ${errors[type].replace('#COMP#', componentName).replace('#ATTR#', property).replace('#INDX#', index).replace('#KEY#', key)}\n`;
+    if (warn) {
+        console.warn(message)
+    } else {
+        throw new Error(message)
+    }
 }
 
 const lib = {
