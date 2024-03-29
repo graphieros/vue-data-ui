@@ -17,11 +17,13 @@ import {
     createArc,
     createPolygonPath,
     createSmoothPath,
+    createSpiralPath,
     createStar,
     dataLabel,
     degreesToRadians,
     error,
     functionReturnsString,
+    generateSpiralCoordinates,
     hslToRgb,
     interpolateColorHex,
     isFunction,
@@ -694,50 +696,50 @@ describe('interpolateColorHex', () => {
 
 describe('dataLabel', () => {
     test('returns a formatted dataLabel with defaults', () => {
-        expect(dataLabel({v:1})).toBe('1');
-        expect(dataLabel({v: 1.1})).toBe('1');
-        expect(dataLabel({v: 1.9})).toBe('2');
+        expect(dataLabel({ v: 1 })).toBe('1');
+        expect(dataLabel({ v: 1.1 })).toBe('1');
+        expect(dataLabel({ v: 1.9 })).toBe('2');
     });
     test('returns a formatted dataLabel with rounding', () => {
-        expect(dataLabel({v: 1, r: 1})).toBe('1');
-        expect(dataLabel({v: 1.1, r: 1})).toBe('1.1');
-        expect(dataLabel({v: 1.96, r: 1})).toBe('2');
+        expect(dataLabel({ v: 1, r: 1 })).toBe('1');
+        expect(dataLabel({ v: 1.1, r: 1 })).toBe('1.1');
+        expect(dataLabel({ v: 1.96, r: 1 })).toBe('2');
     });
     test('returns a formatted dataLabel with prefix and suffix', () => {
-        expect(dataLabel({p: '$', v: 1, s: '$'})).toBe('$1$');
-        expect(dataLabel({p:'$', v: 1.1, s:'$', r: 1})).toBe('$1.1$');
+        expect(dataLabel({ p: '$', v: 1, s: '$' })).toBe('$1$');
+        expect(dataLabel({ p: '$', v: 1.1, s: '$', r: 1 })).toBe('$1.1$');
     });
     test('returns a formatted dataLabel with spaced prefix and suffix', () => {
-        expect(dataLabel({p: '$', v: 1, s: '$', space: true})).toBe('$ 1 $')
-        expect(dataLabel({p: '$', v: 1.1, s: '$', r: 1, space: true})).toBe('$ 1.1 $')
+        expect(dataLabel({ p: '$', v: 1, s: '$', space: true })).toBe('$ 1 $')
+        expect(dataLabel({ p: '$', v: 1.1, s: '$', r: 1, space: true })).toBe('$ 1.1 $')
     })
 })
 
 describe('abbreviate', () => {
     test('returns an empty string for a falsy value', () => {
-        expect(abbreviate({ source: null})).toBe('')
+        expect(abbreviate({ source: null })).toBe('')
         expect(abbreviate({ source: undefined })).toBe('')
     })
     test('returns 0 for 0', () => {
-        expect(abbreviate({source: 0})).toBe('0')
+        expect(abbreviate({ source: 0 })).toBe('0')
     })
     test('returns abbreviated first 3 letters', () => {
-        expect(abbreviate({ source: 'some long label'})).toBe('SLL')
-        expect(abbreviate({ source: 'some even longer label'})).toBe('SEL')
+        expect(abbreviate({ source: 'some long label' })).toBe('SLL')
+        expect(abbreviate({ source: 'some even longer label' })).toBe('SEL')
     })
     test('returns abbreviated letters with custom max len', () => {
-        expect(abbreviate({ source: 'some even longer label', length: 4})).toBe('SELL')
-        expect(abbreviate({ source: 'some even longer label', length: 10})).toBe('SELL')
-        expect(abbreviate({ source: 'some 1 2 3', length: 10})).toBe('S123')
-        expect(abbreviate({ source: '1 2 3 4 5', length: 5})).toBe('12345')
+        expect(abbreviate({ source: 'some even longer label', length: 4 })).toBe('SELL')
+        expect(abbreviate({ source: 'some even longer label', length: 10 })).toBe('SELL')
+        expect(abbreviate({ source: 'some 1 2 3', length: 10 })).toBe('S123')
+        expect(abbreviate({ source: '1 2 3 4 5', length: 5 })).toBe('12345')
     })
     test('returns first letters of unique word', () => {
-        expect(abbreviate({ source: 'unique'})).toBe('UNI')
-        expect(abbreviate({ source: 'un'})).toBe('UN')
-        expect(abbreviate({ source: 'u'})).toBe('U')
+        expect(abbreviate({ source: 'unique' })).toBe('UNI')
+        expect(abbreviate({ source: 'un' })).toBe('UN')
+        expect(abbreviate({ source: 'u' })).toBe('U')
     })
     test('returns first letters of unique word with custom max len', () => {
-        expect(abbreviate({ source: 'paradoxical', length: 7})).toBe('PARADOX')
+        expect(abbreviate({ source: 'paradoxical', length: 7 })).toBe('PARADOX')
     })
 })
 
@@ -748,7 +750,7 @@ const batch = [
     () => () => 'test',
     () => null,
     () => undefined,
-    () => ({ key: 'val'}),
+    () => ({ key: 'val' }),
     () => 'GOOD'
 ]
 
@@ -784,7 +786,7 @@ describe('functionReturnsString', () => {
         expect(functionReturnsString(() => null)).toBe(false)
         expect(functionReturnsString(() => undefined)).toBe(false)
         expect(functionReturnsString(() => ['yey', 'wut'])).toBe(false)
-        expect(functionReturnsString(() => ({ key: 'value'}))).toBe(false)
+        expect(functionReturnsString(() => ({ key: 'value' }))).toBe(false)
         expect(functionReturnsString(() => 0)).toBe(false)
         expect(functionReturnsString(() => 123)).toBe(false)
     })
@@ -811,7 +813,7 @@ describe('error', () => {
     afterAll(() => {
         consoleMock.mockReset()
     })
-    
+
     beforeEach(() => {
         consoleMock.mockReset()
     })
@@ -913,3 +915,63 @@ describe('error', () => {
         expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy dataset series attribute cannot be empty.\n');
     })
 });
+
+describe('generateSpiralCoordinates and createSpiralPath', () => {
+    const config = {
+        points: 10,
+        a: 6,
+        b: 6,
+        angleStep: 0.07,
+        startX: 100,
+        startY: 100
+    }
+
+    test('creates spiral coordinates', () => {
+        expect(generateSpiralCoordinates(config)).toStrictEqual([
+            {
+                "x": 106,
+                "y": 100,
+            },
+            {
+                "x": 105.98823880146043,
+                "y": 100.41986271599637,
+            },
+            {
+                "x": 105.95294091739129,
+                "y": 100.83889971489363,
+            },
+            {
+                "x": 105.89406418634849,
+                "y": 101.25627524802653,
+            },
+            {
+                "x": 105.81154067768276,
+                "y": 101.67113366109314,
+            },
+            {
+                "x": 105.70528017147856,
+                "y": 102.08258983358068,
+            },
+            {
+                "x": 105.5751749753165,
+                "y": 102.48972008470925,
+            },
+            {
+                "x": 105.4211060232721,
+                "y": 102.89155369447688,
+            },
+            {
+                "x": 105.24295018776878,
+                "y": 103.28706518252609,
+            },
+            {
+                "x": 105.04058872070237,
+                "y": 103.67516748031,
+            },
+        ])
+    })
+
+    test('creates a spiral path', () => {
+        expect(createSpiralPath(config)).toStrictEqual('M106 100 C105.99411940073021 100.20993135799819, 105.97058985942586 100.629381215445, 105.92350255186989 101.04758748146008 C105.92350255186989 101.04758748146008, 105.85280243201562 101.46370445455983, 105.75841042458066 101.8768617473369 C105.75841042458066 101.8768617473369, 105.64022757339754 102.28615495914497, 105.4981404992943 102.69063688959307 C105.4981404992943 102.69063688959307, 105.33202810552044 103.08930943850149, 105.14176945423557 103.48111633141804')
+    })
+})

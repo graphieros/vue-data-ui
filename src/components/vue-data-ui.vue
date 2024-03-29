@@ -10,6 +10,7 @@ import VueUiDashboard from "./vue-ui-dashboard.vue";
 import VueUiDigits from "./vue-ui-digits.vue";
 import VueUiDonutEvolution from "./vue-ui-donut-evolution.vue";
 import VueUiDonut from "./vue-ui-donut.vue";
+import VueUiGalaxy from './vue-ui-galaxy.vue';
 import VueUiGauge from "./vue-ui-gauge.vue";
 import VueUiHeatmap from "./vue-ui-heatmap.vue";
 import VueUiMiniLoader from "./vue-ui-mini-loader.vue";
@@ -48,7 +49,7 @@ const props = defineProps({
 })
 
 const isError = computed(() => {
-    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiHeatmap", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy"].includes(props.component)
+    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy"].includes(props.component)
 });
 
 const vue_ui_3d_bar = ref(null);
@@ -60,6 +61,7 @@ const vue_ui_dashboard = ref(null);
 const vue_ui_digits = ref(null);
 const vue_ui_donut_evolution = ref(null);
 const vue_ui_donut = ref(null);
+const vue_ui_galaxy = ref(null);
 const vue_ui_gauge = ref(null);
 const vue_ui_heatmap = ref(null);
 const vue_ui_mini_loader = ref(null);
@@ -164,6 +166,13 @@ onMounted(() => {
         generatePdf.value = vue_ui_donut.value.generatePdf;
         generateCsv.value = vue_ui_donut.value.generateCsv;
         generateImage.value = vue_ui_donut.value.generateImage;
+    }
+    
+    if(vue_ui_galaxy.value) {
+        getData.value = vue_ui_galaxy.value.getData;
+        generatePdf.value = vue_ui_galaxy.value.generatePdf;
+        generateCsv.value = vue_ui_galaxy.value.generateCsv;
+        generateImage.value = vue_ui_galaxy.value.generateImage;
     }
 
     if(vue_ui_gauge.value) {
@@ -435,6 +444,22 @@ defineExpose({
             <slot name="legend" v-bind:legend="legend" />
         </template>
     </VueUiDonut>
+
+    <VueUiGalaxy
+        v-if="component === 'VueUiGalaxy'"
+        :config="config"
+        :dataset="dataset"
+        @selectLegend="(d) => emit('selectLegend', d)" 
+        @selectDatapoint="({datapoint, index}) => emit('selectDatapoint', { datapoint, index })" 
+        ref="vue_ui_galaxy" 
+    >
+        <template #svg="{ svg }">
+            <slot name="svg" :svg="svg"></slot>
+        </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend" />
+        </template>
+    </VueUiGalaxy>
 
     <VueUiGauge 
         v-if="component === 'VueUiGauge'" 

@@ -13,7 +13,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-39-green)
+![Static Badge](https://img.shields.io/badge/components-40-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -23,36 +23,37 @@ Available components:
 
 ## Charts
 
-- [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
-- [VueUiDonut](https://vue-data-ui.graphieros.com/docs#vue-ui-donut)
-- [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
-- [VueUiRadar](https://vue-data-ui.graphieros.com/docs#vue-ui-radar)
-- [VueUiQuadrant](https://vue-data-ui.graphieros.com/docs#vue-ui-quadrant)
-- [VueUiGauge](https://vue-data-ui.graphieros.com/docs#vue-ui-gauge)
-- [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
-- [VueUiOnion](https://vue-data-ui.graphieros.com/docs#vue-ui-onion)
-- [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
-- [VueUiHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-heatmap)
-- [VueUiScatter](https://vue-data-ui.graphieros.com/docs#vue-ui-scatter)
-- [VueUiCandlestick](https://vue-data-ui.graphieros.com/docs#vue-ui-candlestick)
 - [VueUiAgePyramid](https://vue-data-ui.graphieros.com/docs#vue-ui-age-pyramid)
-- [VueUiRelationCircle](https://vue-data-ui.graphieros.com/docs#vue-ui-relation-circle)
-- [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
-- [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
-- [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
-- [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
+- [VueUiCandlestick](https://vue-data-ui.graphieros.com/docs#vue-ui-candlestick)
+- [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
 - [VueUiDonutEvolution](https://vue-data-ui.graphieros.com/docs#vue-ui-donut-evolution)
-- [VueUiMoodRadar](https://vue-data-ui.graphieros.com/docs#vue-ui-mood-radar)
+- [VueUiDonut](https://vue-data-ui.graphieros.com/docs#vue-ui-donut)
+- [VueUiGalaxy](https://vue-data-ui.graphieros.com/docs#vue-ui-galaxy)
+- [VueUiGauge](https://vue-data-ui.graphieros.com/docs#vue-ui-gauge)
+- [VueUiHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-heatmap)
 - [VueUiMolecule](https://vue-data-ui.graphieros.com/docs#vue-ui-molecule)
+- [VueUiMoodRadar](https://vue-data-ui.graphieros.com/docs#vue-ui-mood-radar)
 - [VueUiNestedDonuts](https://vue-data-ui.graphieros.com/docs#vue-ui-nested-donuts)
+- [VueUiOnion](https://vue-data-ui.graphieros.com/docs#vue-ui-onion)
+- [VueUiQuadrant](https://vue-data-ui.graphieros.com/docs#vue-ui-quadrant)
+- [VueUiRadar](https://vue-data-ui.graphieros.com/docs#vue-ui-radar)
+- [VueUiRelationCircle](https://vue-data-ui.graphieros.com/docs#vue-ui-relation-circle)
+- [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
+- [VueUiScatter](https://vue-data-ui.graphieros.com/docs#vue-ui-scatter)
+- [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
+- [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
+- [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
+- [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
+- [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
+- [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
 
 ## Mini charts
 
-- [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
-- [VueUiSparkbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkbar)
-- [VueUiSparkstackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
 - [VueUiSparkHistogram](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkhistogram)
+- [VueUiSparkbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkbar)
 - [VueUiSparkgauge](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkgauge)
+- [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
+- [VueUiSparkstackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
 
 ## 3d
 
@@ -60,8 +61,8 @@ Available components:
 
 ## Tables
 
-- [VueUiTableSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-table-sparkline)
 - [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
+- [VueUiTableSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-table-sparkline)
 
 ## Rating
 
@@ -70,13 +71,13 @@ Available components:
 
 ## Utilities
 
+- [VueUiAnnotator](https://vue-data-ui.graphieros.com/docs#vue-ui-annotator)
+- [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
+- [VueUiDigits](https://vue-data-ui.graphieros.com/docs#vue-ui-digits)
+- [VueUiIcon](https://vue-data-ui.graphieros.com/docs#vue-ui-icon)
+- [VueUiMiniLoader](https://vue-data-ui.graphieros.com/docs#vue-ui-mini-loader)
 - [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)
 - [VueUiSkeleton](https://vue-data-ui.graphieros.com/docs#vue-ui-skeleton)
-- [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
-- [VueUiAnnotator](https://vue-data-ui.graphieros.com/docs#vue-ui-annotator)
-- [VueUiIcon](https://vue-data-ui.graphieros.com/docs#vue-ui-icon)
-- [VueUiDigits](https://vue-data-ui.graphieros.com/docs#vue-ui-digits)
-- [VueUiMiniLoader](https://vue-data-ui.graphieros.com/docs#vue-ui-mini-loader)
 
 # Installation
 

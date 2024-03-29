@@ -584,7 +584,6 @@ defineExpose({
                 {{ donutConfig.style.chart.layout.labels.hollow.average.value.prefix }} {{ isNaN(average.toFixed(donutConfig.style.chart.layout.labels.hollow.average.value.rounding)) ? "-" : Number(average.toFixed(donutConfig.style.chart.layout.labels.hollow.average.value.rounding)).toLocaleString() }} {{ donutConfig.style.chart.layout.labels.hollow.average.value.suffix }}
             </text>
 
-
             <!-- DATALABELS -->
             <g v-for="(arc, i) in currentDonut">
                 <text
@@ -625,11 +624,9 @@ defineExpose({
                     :style="`font-weight:${donutConfig.style.chart.layout.labels.name.bold ? 'bold': ''}`"
                     @click="selectDatapoint(arc, i)"
                 >
-                    {{ arc.name}}
+                    {{ arc.name }}
                 </text>
             </g>
-
-
 
             <!-- LEGEND AS G -->
             <foreignObject 
@@ -645,7 +642,7 @@ defineExpose({
                     :config="legendConfig"
                     @clickMarker="({i}) => segregate(i)"
                 >
-                    <template #item="{legend, index}">
+                    <template #item="{ legend, index }">
                         <div @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                             {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
                             <span v-if="!segregated.includes(index)">
@@ -670,7 +667,7 @@ defineExpose({
             :config="legendConfig"
             @clickMarker="({i}) => segregate(i)"
         >
-            <template #item="{legend, index}">
+            <template #item="{ legend, index }">
                 <div :data-cy="`legend-item-${index}`" @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
                     <span v-if="!segregated.includes(index)">

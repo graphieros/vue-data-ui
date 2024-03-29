@@ -3303,5 +3303,82 @@
                 "strokeLinecap": "round"
             }
         }
+    },
+    "vue_ui_galaxy": {
+        "useCssAnimation": true,
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "layout": {
+                    "arcs": {
+                        "strokeWidth": 6,
+                        "borderWidth": 2
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "show": true
+                        }
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "show": true,
+                    "fontSize": 16,
+                    "bold": false,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "tooltip": {
+                    "show": true,
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "fontSize": 14,
+                    "showValue": true,
+                    "showPercentage": true,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0,
+                    "customFormat": null
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "responsiveBreakpoint": 300,
+            "columnNames": {
+                "series": "Series",
+                "value": "Value",
+                "percentage": "Percentage"
+            },
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "none"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
+        },
+        "userOptions": {
+            "show": true
+        }
     }
 }

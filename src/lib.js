@@ -944,7 +944,7 @@ export function abbreviate({ source, length = 3 }) {
     }
     source = String(source);
     const sourceSplit = source.length > 1 ? source.split(' ') : [source];
-    if(sourceSplit.length === 1 && sourceSplit[0].length === 1) {
+    if (sourceSplit.length === 1 && sourceSplit[0].length === 1) {
         return String(source).toUpperCase()
     }
     if (sourceSplit.length === 1) {
@@ -969,19 +969,55 @@ export function functionReturnsString(func) {
 }
 
 export function objectIsEmpty(obj) {
-    if(Array.isArray(obj)) {
+    if (Array.isArray(obj)) {
         return obj.length === 0
     }
     return Object.keys(obj).length === 0
 }
 
-export function error({ componentName, type, property='', index='', key='', warn = true }) {
+export function error({ componentName, type, property = '', index = '', key = '', warn = true }) {
     const message = `\n> ${errors[type].replace('#COMP#', componentName).replace('#ATTR#', property).replace('#INDX#', index).replace('#KEY#', key)}\n`;
     if (warn) {
         console.warn(message)
     } else {
         throw new Error(message)
     }
+}
+
+export function generateSpiralCoordinates({ points, a, b, angleStep, startX, startY }) {
+    const coordinates = [];
+
+    for (let i = 0; i < points; i++) {
+        const theta = angleStep * i;
+        const r = a + b * theta; // i * 0.007 for gradual slope increase, should be a var
+        const x = r * Math.cos(theta) + startX;
+        const y = r * Math.sin(theta) + startY;
+        coordinates.push({ x, y });
+    }
+
+    return coordinates;
+}
+
+export function createSpiralPath({ points, a, b, angleStep, startX, startY }) {
+    const coordinates = generateSpiralCoordinates({ points, a: a || 6, b: b || 6, angleStep: angleStep || 0.07, startX, startY });
+    let path = `M${coordinates[0].x} ${coordinates[0].y}`;
+
+    for (let i = 1; i < coordinates.length - 2; i += 2) {
+        const p0 = coordinates[i - 1];
+        const p1 = coordinates[i];
+        const p2 = coordinates[i + 1];
+        const p3 = coordinates[i + 2];
+
+        const xc1 = (p0.x + p1.x) / 2;
+        const yc1 = (p0.y + p1.y) / 2;
+        const xc2 = (p1.x + p2.x) / 2;
+        const yc2 = (p1.y + p2.y) / 2;
+        const xc3 = (p2.x + p3.x) / 2;
+        const yc3 = (p2.y + p3.y) / 2;
+
+        path += ` C${xc1} ${yc1}, ${xc2} ${yc2}, ${xc3} ${yc3}`;
+    }
+    return path;
 }
 
 const lib = {
@@ -1003,6 +1039,7 @@ const lib = {
     createCsvContent,
     createPolygonPath,
     createSmoothPath,
+    createSpiralPath,
     createStar,
     createUid,
     dataLabel,
@@ -1010,6 +1047,7 @@ const lib = {
     degreesToRadians,
     downloadCsv,
     error,
+    generateSpiralCoordinates,
     giftWrap,
     interpolateColorHex,
     isFunction,

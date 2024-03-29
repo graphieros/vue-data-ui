@@ -54,6 +54,7 @@ import { getVueDataUiConfig } from "vue-data-ui";
 import SparkGaugeTest from "./components/vue-ui-sparkgauge.vue";
 import VueDataUiTest from "./components/vue-data-ui.vue";
 import VueDataUi from "./components/vue-data-ui.vue";
+import GalaxyTest from "./components/vue-ui-galaxy.vue";
 
 const dataset = ref([
   {
@@ -2797,6 +2798,58 @@ function testEmit2(data) {
   console.log({data})
 }
 
+const galaxyDataset = ref([
+{
+    name: "serie 1",
+    color: "",
+    values: [255],
+    shape: "star"
+  },
+  {
+    name: "serie 2",
+    color: "",
+    values: [129],
+    shape: "diamond"
+  },
+  {
+    name: "serie 3",
+    color: "",
+    values: [21],
+    shape: "triangle"
+  },
+  {
+    name: "serie 4",
+    color: "",
+    values: [19],
+    shape: "hexagon"
+  },
+]);
+
+const galaxyConfig = ref({
+  style: {
+    chart: {
+      layout: {
+        arcs: {
+          strokeWidth: 6,
+          borderWidth: 2
+        }
+      },
+      title: {
+        text: "Title",
+        subtitle: {
+          text: "Subtitle"
+        }
+      },
+      tooltip: {
+        customFormat: ({ datapoint, series, config, seriesIndex }) => {
+          console.log({ datapoint, series})
+          return datapoint.name
+        }
+      }
+    }
+  }
+})
+
 </script>
 
 <template>
@@ -2822,6 +2875,7 @@ function testEmit2(data) {
       <template #misc>
         <div style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%">        
           <BaseIcon name="pdf" />
+          <BaseIcon name="csv"/>
           <BaseIcon name="image" />
           <BaseIcon name="excel" />
           <BaseIcon name="tableOpen" />
@@ -2895,9 +2949,27 @@ function testEmit2(data) {
           <BaseIcon name="chartNestedDonuts" stroke="#42d392" />
           <BaseIcon name="chartSparkbar" stroke="#42d392" />
           <BaseIcon name="chartSparkline" stroke="#42d392" />
-
+          <BaseIcon name="legend" stroke="#42d392" />
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_galaxy)">
+        <template #title>
+          <BaseIcon name="chartGalaxy"/>
+          VueUiGalaxy
+        </template>
+        <template #info>
+        </template>
+        <template #dev>
+          <GalaxyTest :dataset="galaxyDataset" :config="galaxyConfig" />
+        </template>
+        <template #prod>
+          <VueDataUi component="VueUiGalaxy" :dataset="galaxyDataset" :config="galaxyConfig" />
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_galaxy }}
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkgauge)">
