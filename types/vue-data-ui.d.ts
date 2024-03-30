@@ -24,6 +24,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiGalaxyConfig = {
         useCssAnimation?: boolean;
+        useBlurOnHover?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -33,6 +34,12 @@ declare module 'vue-data-ui' {
                     arcs?: {
                         strokeWidth?: number;
                         borderWidth?: number;
+                        offsetX?: number;
+                        offsetY?: number;
+                        hoverEffect?: {
+                            show?: boolean;
+                            multiplicator?: number;
+                        }
                     };
                     labels?: {
                         dataLabels?: {

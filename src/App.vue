@@ -2826,12 +2826,17 @@ const galaxyDataset = ref([
 ]);
 
 const galaxyConfig = ref({
+  useBlurOnHover: true,
   style: {
     chart: {
       layout: {
         arcs: {
-          strokeWidth: 6,
-          borderWidth: 2
+          // strokeWidth: 6,
+          // borderWidth: 2
+          hoverEffect: {
+            show: true,
+            multiplicator: 1.1
+          }
         }
       },
       title: {

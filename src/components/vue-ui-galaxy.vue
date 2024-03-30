@@ -75,7 +75,7 @@ const mutableConfig = ref({
 });
 
 const svg = ref({
-    height: 160, // or 250 if non fibo
+    height: 180, // or 250 if non fibo
     width: 250
 })
 
@@ -127,10 +127,6 @@ const total = computed(() => {
     return immutableSet.value.filter((ds) => !segregated.value.includes(ds.id)).map(ds => ds.value).reduce((a, b) => a + b, 0);
 });
 
-const maxVal = computed(() => {
-    return Math.max(...immutableSet.value.filter(ds => !segregated.value.includes(ds.id)).map(ds => ds.value));
-});
-
 const maxPath = ref(190);
 
 const segregatedSet = computed(() => {
@@ -166,13 +162,11 @@ const galaxySet = computed(() => {
             proportion: serie.value / total.value,
             path: createSpiralPath({
                 points: points,
-                startX: 115,
-                startY: 90
+                startX: 115 + galaxyConfig.value.style.chart.layout.arcs.offsetX,
+                startY: 90 + galaxyConfig.value.style.chart.layout.arcs.offsetY
             })
         })
     }
-
-    console.log(res)
 
     return res        
         .filter((_, i) => !segregated.value.includes(_.id))
@@ -419,16 +413,18 @@ defineExpose({
                     :d="datapoint.path"
                     fill="none"
                     :stroke="galaxyConfig.style.chart.backgroundColor"
-                    :stroke-width="(galaxyConfig.style.chart.layout.arcs.strokeWidth + galaxyConfig.style.chart.layout.arcs.borderWidth) * (selectedSerie === datapoint.id ? 1.3 : 1)"
+                    :stroke-width="(galaxyConfig.style.chart.layout.arcs.strokeWidth + galaxyConfig.style.chart.layout.arcs.borderWidth) * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
                     stroke-linecap="round"
+                    
                 />
                 <path
                     v-if="datapoint.value"
                     :d="datapoint.path"
                     fill="none"
                     :stroke="datapoint.color"
-                    :stroke-width="galaxyConfig.style.chart.layout.arcs.strokeWidth * (selectedSerie === datapoint.id ? 1.3 : 1)"
+                    :stroke-width="galaxyConfig.style.chart.layout.arcs.strokeWidth * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
                     stroke-linecap="round"
+                    :class="`${selectedSerie && selectedSerie !== datapoint.id && galaxyConfig.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
                 />
             </g>
 

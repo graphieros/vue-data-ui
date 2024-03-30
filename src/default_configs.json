@@ -3306,6 +3306,7 @@
     },
     "vue_ui_galaxy": {
         "useCssAnimation": true,
+        "useBlurOnHover": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -3313,8 +3314,14 @@
                 "color":"#2D353C",
                 "layout": {
                     "arcs": {
-                        "strokeWidth": 6,
-                        "borderWidth": 2
+                        "strokeWidth": 24,
+                        "borderWidth": 12,
+                        "offsetX": 0,
+                        "offsetY": 0,
+                        "hoverEffect": {
+                            "show": true,
+                            "multiplicator": 1.1
+                        }
                     },
                     "labels": {
                         "dataLabels": {
