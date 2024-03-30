@@ -414,8 +414,7 @@ defineExpose({
                     fill="none"
                     :stroke="galaxyConfig.style.chart.backgroundColor"
                     :stroke-width="(galaxyConfig.style.chart.layout.arcs.strokeWidth + galaxyConfig.style.chart.layout.arcs.borderWidth) * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
-                    stroke-linecap="round"
-                    
+                    stroke-linecap="round"                    
                 />
                 <path
                     v-if="datapoint.value"
@@ -425,6 +424,16 @@ defineExpose({
                     :stroke-width="galaxyConfig.style.chart.layout.arcs.strokeWidth * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
                     stroke-linecap="round"
                     :class="`${selectedSerie && selectedSerie !== datapoint.id && galaxyConfig.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                />
+                <path
+                    v-if="datapoint.value && galaxyConfig.style.chart.layout.arcs.gradient.show"
+                    :d="datapoint.path"
+                    fill="none"
+                    :stroke="galaxyConfig.style.chart.layout.arcs.gradient.color"
+                    :stroke-width="(galaxyConfig.style.chart.layout.arcs.strokeWidth / 2) * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
+                    stroke-linecap="round"
+                    :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && galaxyConfig.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                    :style="`filter: blur(5px) opacity(${galaxyConfig.style.chart.layout.arcs.gradient.intensity}%)`"
                 />
             </g>
 

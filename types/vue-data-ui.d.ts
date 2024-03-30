@@ -39,11 +39,11 @@ declare module 'vue-data-ui' {
                         hoverEffect?: {
                             show?: boolean;
                             multiplicator?: number;
-                        }
-                    };
-                    labels?: {
-                        dataLabels?: {
+                        };
+                        gradient?: {
                             show?: boolean;
+                            intensity?: number;
+                            color?: string;
                         };
                     };
                 };
