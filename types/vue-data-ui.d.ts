@@ -46,6 +46,12 @@ declare module 'vue-data-ui' {
                             color?: string;
                         };
                     };
+                    labels?: {
+                        dataLabels?: {
+                            prefix?: string;
+                            suffix?: string;
+                        };
+                    };
                 };
                 legend?: {
                     backgroundColor?: string;

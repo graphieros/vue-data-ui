@@ -3327,6 +3327,12 @@
                             "intensity": 30,
                             "color": "#FFFFFF"
                         }
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "prefix": "",
+                            "suffix": ""
+                        }
                     }
                 },
                 "legend": {
