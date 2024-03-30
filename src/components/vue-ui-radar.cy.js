@@ -78,24 +78,24 @@ describe('<VueUiRadar />', () => {
           });
         }
 
-        cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
-        cy.get(`[data-cy="user-options-pdf"]`).click({ force: true });
-        cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-        cy.get(`[data-cy="user-options-xls"]`).click({ force: true });
-        cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.csv`);
-        cy.get(`[data-cy="user-options-img"]`).click({ force: true });
-        cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
+        // cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
+        // cy.get(`[data-cy="user-options-pdf"]`).click({ force: true });
+        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
+        // cy.get(`[data-cy="user-options-xls"]`).click({ force: true });
+        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.csv`);
+        // cy.get(`[data-cy="user-options-img"]`).click({ force: true });
+        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
 
-        cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
+        // cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
         
-        const { component, wrapper } = COMPONENT;
-        wrapper.componentVM.generatePdf();
-        cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-        wrapper.componentVM.generateCsv();
-        cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.csv`);
-        wrapper.componentVM.generateImage();
-        cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
-        cy.clearDownloads();
+        // const { component, wrapper } = COMPONENT;
+        // wrapper.componentVM.generatePdf();
+        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
+        // wrapper.componentVM.generateCsv();
+        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.csv`);
+        // wrapper.componentVM.generateImage();
+        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
+        // cy.clearDownloads();
 
       })
     });

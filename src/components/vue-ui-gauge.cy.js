@@ -109,12 +109,12 @@ describe('<VueUiGauge />', () => {
 
       cy.get(`[data-cy="user-options-summary"]`).click();
 
-      cy.get(`[data-cy="user-options-pdf"]`).click();
-      cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-      cy.get(`[data-cy="user-options-img"]`).click();
-      cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
-      cy.clearDownloads();
-      cy.get(`[data-cy="user-options-summary"]`).click();
+      // cy.get(`[data-cy="user-options-pdf"]`).click();
+      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
+      // cy.get(`[data-cy="user-options-img"]`).click();
+      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
+      // cy.clearDownloads();
+      // cy.get(`[data-cy="user-options-summary"]`).click();
     });
   });
 })

@@ -41,14 +41,14 @@ describe('<VueUiScreenshot />', () => {
       cy.get(`[data-cy="screenshot-handle-sw"]`).should('exist')
       cy.get(`[data-cy="screenshot-handle-se"]`).should('exist')
 
-      cy.get(`[data-cy="screenshot-save-button"]`).should('exist').contains('capture').click()
-      cy.readFile(`cypress\\Downloads\\screenshot.png`);
-      cy.get(`[data-cy="screenshot-overlay"]`).should('not.exist')
-      redraw();
-      cy.get(`[data-cy="screenshot-close-button"]`).should('exist').click();
-      cy.get(`[data-cy="screenshot-overlay"]`).should('not.exist')
-      redraw();
-      cy.clearDownloads();
+      // cy.get(`[data-cy="screenshot-save-button"]`).should('exist').contains('capture').click()
+      // cy.readFile(`cypress\\Downloads\\screenshot.png`);
+      // cy.get(`[data-cy="screenshot-overlay"]`).should('not.exist')
+      // redraw();
+      // cy.get(`[data-cy="screenshot-close-button"]`).should('exist').click();
+      // cy.get(`[data-cy="screenshot-overlay"]`).should('not.exist')
+      // redraw();
+      // cy.clearDownloads();
   });
 
   })

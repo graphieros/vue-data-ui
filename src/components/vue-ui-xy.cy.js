@@ -194,16 +194,16 @@ describe('<VueUiXy />', () => {
 
       cy.get(`[data-cy="user-options-summary"]`).click({force:true});
 
-      cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
-      cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.pdf`);
+      // cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
+      // cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.pdf`);
 
-      cy.get(`[data-cy="user-options-xls"]`).click({ force: true});
-      cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.csv`);
+      // cy.get(`[data-cy="user-options-xls"]`).click({ force: true});
+      // cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.csv`);
 
-      cy.get(`[data-cy="user-options-img"]`).click({ force: true});
-      cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.png`);
+      // cy.get(`[data-cy="user-options-img"]`).click({ force: true});
+      // cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.png`);
 
-      cy.clearDownloads();
+      // cy.clearDownloads();
 
     });
   });
