@@ -51,7 +51,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div :class="`vue-ui-kpi ${kpiConfig.layoutClass}`" :style="`${kpiConfig.layoutCss}`">
+    <div :class="`vue-ui-kpi ${kpiConfig.layoutClass}`" :style="`background:${kpiConfig.backgroundColor}; ${kpiConfig.layoutCss}`">
         <div :class="`vue-ui-kpi-title ${kpiConfig.titleClass}`" :style="`font-family: ${kpiConfig.fontFamily}; font-size:${kpiConfig.titleFontSize}px; color:${kpiConfig.titleColor}; font-weight:${kpiConfig.titleBold ? 'bold' : 'normal'}; ${kpiConfig.titleCss}`">
             <slot name="title" :comment="dataset"></slot>
             {{ kpiConfig.title }}
