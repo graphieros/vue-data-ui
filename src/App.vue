@@ -54,6 +54,7 @@ import { getVueDataUiConfig } from "vue-data-ui";
 import SparkGaugeTest from "./components/vue-ui-sparkgauge.vue";
 import VueDataUiTest from "./components/vue-data-ui.vue";
 import VueDataUi from "./components/vue-data-ui.vue";
+import VueUiKpiTest from "./components/vue-ui-kpi.vue";
 import GalaxyTest from "./components/vue-ui-galaxy.vue";
 
 const dataset = ref([
@@ -2855,6 +2856,34 @@ const galaxyConfig = ref({
   }
 })
 
+const kpiDataset = ref(1000);
+
+const kpiConfig = ref(
+  {
+    animationFrames: 60,
+    animationValueStart: 0,
+    backgroundColor: "#FFFFFF",
+    fontFamily: "inherit",
+    layoutClass: "",
+    layoutCss: "",
+    prefix: "",
+    suffix: "",
+    title: "Some kpi",
+    titleBold: true,
+    titleColor: "#CCCCCC",
+    titleClass: "",
+    titleCss: "",
+    titleFontSize: 16,
+    useAnimation: true,
+    valueBold: true,
+    valueColor: "#6376DD",
+    valueClass: "",
+    valueCss: "font-variant-numeric: tabular-nums;",
+    valueFontSize: 32,
+    valueRounding: 0
+  }
+)
+
 </script>
 
 <template>
@@ -2957,6 +2986,44 @@ const galaxyConfig = ref({
           <BaseIcon name="legend" stroke="#42d392" />
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_kpi)">
+        <template #title>
+          <!-- <BaseIcon name="chartGalaxy"/> -->
+          VueUiKpi
+        </template>
+        <template #info>
+        </template>
+        <template #dev>
+          <VueUiKpiTest :dataset="kpiDataset" :config="kpiConfig">
+            <!-- <template #comment-before="{ comment }">
+              {{ comment }}
+            </template>
+            <template #comment-after="{ comment }">
+              {{ comment }}
+            </template> -->
+          </VueUiKpiTest>
+        </template>
+        <template #prod>
+          <VueDataUi component="VueUiKpi" :dataset="kpiDataset" :config="kpiConfig">
+            <template #title="{ comment }">
+              TITLE SLOT {{ comment }}
+            </template>
+            <template #value="{ comment }">
+              VALUE SLOT {{ comment }}
+            </template>
+            <template #comment-before="{ comment }">
+              COMMENT BEFORE SLOT {{ comment }}
+            </template>
+            <template #comment-after="{ comment }">
+              COMMENT AFTER SLOT {{ comment }}
+            </template>
+          </VueDataUi>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_kpi }}
+        </template>
       </Box>
 
       <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_galaxy)">

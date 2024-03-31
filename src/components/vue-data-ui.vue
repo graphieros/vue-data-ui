@@ -12,6 +12,7 @@ import VueUiDonutEvolution from "./vue-ui-donut-evolution.vue";
 import VueUiDonut from "./vue-ui-donut.vue";
 import VueUiGalaxy from './vue-ui-galaxy.vue';
 import VueUiGauge from "./vue-ui-gauge.vue";
+import VueUiKpi from "./vue-ui-kpi.vue";
 import VueUiHeatmap from "./vue-ui-heatmap.vue";
 import VueUiMiniLoader from "./vue-ui-mini-loader.vue";
 import VueUiMolecule from "./vue-ui-molecule.vue";
@@ -49,7 +50,7 @@ const props = defineProps({
 })
 
 const isError = computed(() => {
-    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy"].includes(props.component)
+    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiKpi", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy"].includes(props.component)
 });
 
 const vue_ui_3d_bar = ref(null);
@@ -91,6 +92,7 @@ const vue_ui_vertical_bar = ref(null);
 const vue_ui_waffle = ref(null);
 const vue_ui_wheel = ref(null);
 const vue_ui_xy = ref(null);
+const vue_ui_kpi = ref(null);
 
 const emit = defineEmits([
     'selectLegend',
@@ -122,7 +124,7 @@ const recalculateHeight = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
-        throw new Error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n. VueUi3dBar\n. VueUiAgePyramid\n. VueUiAnnotator\n. VueUiCandlestick\n. VueUiChestnut\n. VueUiDashboard\n. VueUiDigits\n. VueUiDonutEvolution\n. VueUiDonut\n. VueUiGauge\n. VueUiHeatmap\n. VueUiMiniLoadar\n. VueUiMolecule\n. VueUiMoodRadar\n. VueUiNestedDonuts\n. VueUiOnion\n. VueUiQuadrant\n. VueUiRadar\n. VueUiRating\n. VueUiRelationCircle\n. VueUiRings\n. VueUiScatter\n. VueUiScreenshot\n. VueUiSkeleton\n. VueUiSmiley\n. VueUiSparkbar\n. VueUiSparkgauge\n. VueUiSparkHistogram\n. VueUiSparkline\n. VueUiSparkStackbar\n. VueUiTableSparkline\n. VueUiTable\n. VueUiThermometer\n. VueUiTiremarks\n. VueUiVerticalBar\n. VueUiWaffle\n. VueUiWheel\n. VueUiXy\n\n`)
+        throw new Error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n. VueUi3dBar\n. VueUiAgePyramid\n. VueUiAnnotator\n. VueUiCandlestick\n. VueUiChestnut\n. VueUiDashboard\n. VueUiDigits\n. VueUiDonutEvolution\n. VueUiDonut\n. VueUiGauge\n. VueUiHeatmap\n. VueUiMiniLoadar\n. VueUiKpi\n. VueUiMolecule\n. VueUiMoodRadar\n. VueUiNestedDonuts\n. VueUiOnion\n. VueUiQuadrant\n. VueUiRadar\n. VueUiRating\n. VueUiRelationCircle\n. VueUiRings\n. VueUiScatter\n. VueUiScreenshot\n. VueUiSkeleton\n. VueUiSmiley\n. VueUiSparkbar\n. VueUiSparkgauge\n. VueUiSparkHistogram\n. VueUiSparkline\n. VueUiSparkStackbar\n. VueUiTableSparkline\n. VueUiTable\n. VueUiThermometer\n. VueUiTiremarks\n. VueUiVerticalBar\n. VueUiWaffle\n. VueUiWheel\n. VueUiXy\n\n`)
     }
 
     if(vue_ui_3d_bar.value) {
@@ -485,6 +487,27 @@ defineExpose({
             <slot name="svg" :svg="svg"></slot>
         </template>
     </VueUiHeatmap>
+
+    <VueUiKpi
+        v-if="component === 'VueUiKpi'"
+        :config="config"
+        :dataset="dataset"
+        ref="vue_ui_kpi"
+    >
+        <template #title="{ comment }">
+            <slot name="title" :comment="comment"></slot>
+        </template>
+        <template #value="{ comment }">
+            <slot name="value" :comment="comment"></slot>
+        </template>
+        <template #comment-before="{ comment }">
+            <slot name="comment-before" :comment="comment"></slot>
+        </template>
+        <template #comment-after="{ comment }">
+            <slot name="comment-after" :comment="comment"></slot>
+        </template>
+
+    </VueUiKpi>
     
     <VueUiMiniLoader 
         v-if="component === 'VueUiMiniLoader'" 

@@ -41,6 +41,7 @@ import VueUiNestedDonuts from "./components/vue-ui-nested-donuts.vue";
 import VueUiSparkgauge from './components/vue-ui-sparkgauge.vue';
 import VueDataUi from "./components/vue-data-ui.vue";
 import VueUiGalaxy from "./components/vue-ui-galaxy.vue";
+import VueUiKpi from "./components/vue-ui-kpi.vue";
 
 export { 
     VueUiXy, 
@@ -85,5 +86,6 @@ export {
     VueUiNestedDonuts,
     VueUiSparkgauge,
     VueDataUi,
-    VueUiGalaxy
+    VueUiGalaxy,
+    VueUiKpi
 };

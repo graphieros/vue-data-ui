@@ -3393,5 +3393,28 @@
         "userOptions": {
             "show": true
         }
+    },
+    "vue_ui_kpi": {
+        "animationFrames": 60,
+        "animationValueStart": 0,
+        "backgroundColor": "#FFFFFF",
+        "fontFamily": "inherit",
+        "layoutClass": "",
+        "layoutCss": "",
+        "prefix": "",
+        "suffix": "",
+        "title": "",
+        "titleBold": true,
+        "titleColor": "#2D353C",
+        "titleClass": "",
+        "titleCss": "",
+        "titleFontSize": 16,
+        "useAnimation": true,
+        "valueBold": true,
+        "valueColor": "#6376DD",
+        "valueClass": "",
+        "valueCss": "",
+        "valueFontSize": 32,
+        "valueRounding": 0
     }
 }
