@@ -593,6 +593,8 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
+
 .vue-ui-rings *{
     transition: unset;
 }
@@ -638,15 +640,5 @@ defineExpose({
     opacity: 1;
     transform: scale(1, 1);
   }
-}
-.vue-data-ui-fullscreen--on {
-    height: 80% !important;
-    margin: 0 auto !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: auto;
 }
 </style>

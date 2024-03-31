@@ -1138,6 +1138,8 @@ defineExpose({
 </template>
 
 <style scoped lang="scss">
+@import "../vue-data-ui.css";
+
 .vue-ui-chestnut *{
     transition: unset;
 }
@@ -1195,15 +1197,6 @@ defineExpose({
         transform: scale(1,1);
         opacity: 1;
     }
-}
-.vue-data-ui-fullscreen--on {
-    height: 100% !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: auto;
 }
 
 .vue-ui-chestnut-table {

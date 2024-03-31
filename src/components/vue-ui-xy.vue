@@ -2071,6 +2071,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
+@import "../vue-data-ui.css";
 .vue-ui-xy *{
     transition: unset;
 }
@@ -2126,17 +2127,6 @@ path, line, rect {
 }
 .vue-ui-xy svg rect {
     transition: all 0.11s ease-in-out;
-}
-.vue-ui-xy-table-wrapper {
-    width: 100%;
-    max-height: 300px;
-    overflow: auto;
-    margin-top: 24px;
-    position: relative;
-}
-.vue-ui-xy-table-wrapper-printing {
-    max-height: unset;
-    height: fit-content;
 }
 
 .vue-ui-xy-range-slider-wrapper {
@@ -2237,20 +2227,6 @@ input[type="range"]:active::-webkit-slider-thumb{
 canvas {
     width: 100%;
     object-fit: contain;
-}
-
-.vue-ui-dna * {
-    animation: none !important;
-}
-
-.vue-data-ui-fullscreen--on {
-    height: 80% !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: scroll;
 }
 
 .vue-ui-xy-refresh-button {

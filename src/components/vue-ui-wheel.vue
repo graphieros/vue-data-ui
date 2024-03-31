@@ -251,6 +251,7 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
 .vue-ui-wheel *{
     transition: unset;
 }
@@ -273,12 +274,5 @@ defineExpose({
     100% {
         stroke-width: 5;
     }
-}
-.vue-data-ui-fullscreen--on {
-    height: 90% !important;
-    margin: 0 auto !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
 }
 </style>

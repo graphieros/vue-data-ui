@@ -355,6 +355,7 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
 .vue-ui-tiremarks * {
     transition: unset;
 }
@@ -376,11 +377,5 @@ defineExpose({
         stroke-width: initial;
         transform: scale(1,1);
     }
-}
-.vue-data-ui-fullscreen--on {
-    height: 100% !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
 }
 </style>

@@ -712,6 +712,7 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
 .vue-ui-donut *{
     transition: unset;
 }
@@ -748,22 +749,8 @@ path {
     width:100%;
 }
 
-.vue-ui-dna * {
-    animation: none !important;
-}
-
 .vue-ui-donut-blur {
     filter: blur(3px) opacity(50%) grayscale(100%);
     transition: all 0.15s ease-in-out;
-}
-.vue-data-ui-fullscreen--on {
-    height: 80% !important;
-    margin: 0 auto !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: auto;
 }
 </style>

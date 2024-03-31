@@ -496,6 +496,8 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
+
 .vue-ui-thermometer {
     position: relative;
 }
@@ -548,14 +550,5 @@ text.vue-ui-thermometer-temperature-value {
     100% {
         height: v-bind(cssTemp);
     }
-}
-.vue-data-ui-fullscreen--on {
-    height: 90% !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: auto;
 }
 </style>

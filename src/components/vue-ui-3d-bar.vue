@@ -280,17 +280,13 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
+
 .vue-ui-3d-bar *{
     transition: unset;
 }
 .vue-ui-3d-bar {
     user-select: none;
     position: relative;
-}
-.vue-data-ui-fullscreen--on {
-    height: 100% !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
 }
 </style>

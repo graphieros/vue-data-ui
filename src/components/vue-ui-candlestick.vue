@@ -712,6 +712,8 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
+
 .vue-ui-candlestick *{
     transition: unset;
 }
@@ -850,19 +852,5 @@ input[type="range"]::-ms-thumb{
 input[type="range"]:active::-webkit-slider-thumb{
     background-color: #CCCCCC;
     border: 3px solid #858585;
-}
-
-.vue-ui-dna * {
-    animation: none !important;
-}
-.vue-data-ui-fullscreen--on {
-    height: 80% !important;
-    margin: 0 auto !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: auto;
 }
 </style>

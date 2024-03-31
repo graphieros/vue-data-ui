@@ -1,0 +1,15 @@
+/* COMMON SELECTORS */
+
+.vue-ui-dna * {
+    animation: none !important;
+}
+
+.vue-data-ui-fullscreen--on {
+    height: 90%;
+}
+.vue-data-ui-fullscreen--off {
+    max-width: 100%;
+}
+.vue-data-ui-wrapper-fullscreen {
+    overflow: scroll;
+}

@@ -80,7 +80,6 @@ const barBlur = computed(() => `blur(${loaderConfig.value.bar.trackBlur}px) hue-
 </template>
 
 <style scoped>
-
 path.onion-animated {
     stroke-dasharray: 0;
     stroke-dashoffset: 0;

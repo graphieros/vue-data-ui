@@ -856,6 +856,8 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
+
 .vue-ui-donut-evolution *{
     transition: unset;
     transition: opacity 0.5s ease-in-out;
@@ -894,15 +896,5 @@ defineExpose({
         transform: scale(1,1);
         opacity: 1;
     }
-}
-.vue-data-ui-fullscreen--on {
-    height: 80% !important;
-    margin: 0 auto !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: auto;
 }
 </style>

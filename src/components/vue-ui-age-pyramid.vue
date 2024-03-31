@@ -655,6 +655,8 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
+
 .vue-ui-age-pyramid *{
     transition: unset;
 }
@@ -698,16 +700,5 @@ defineExpose({
     padding:12px;
     z-index:1;
     font-variant-numeric: tabular-nums;
-}
-
-.vue-data-ui-fullscreen--on {
-    height: 90% !important;
-    margin: 0 auto !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: auto;
 }
 </style>

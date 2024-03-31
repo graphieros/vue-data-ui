@@ -588,6 +588,8 @@ defineExpose({
 </template>
 
 <style scoped lang="scss">
+@import "../vue-data-ui.css";
+
 .vue-ui-heatmap *{
     transition: unset;
 }
@@ -638,15 +640,6 @@ defineExpose({
     overflow: auto;
     margin-top: 24px;
     position: relative;
-}
-.vue-data-ui-fullscreen--on {
-    height: 80% !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: auto;
 }
 
 .vue-ui-data-table thead {

@@ -767,6 +767,8 @@ defineExpose({
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
+
 .vue-ui-scatter *{
     transition: unset;
 }
@@ -828,20 +830,5 @@ path, line, circle {
     top:0;
     font-weight: 400;
     user-select: none;
-}
-
-.vue-ui-dna * {
-    animation: none !important;
-}
-
-.vue-data-ui-fullscreen--on {
-    height: 80% !important;
-    margin: 0 auto !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
-}
-.vue-data-ui-wrapper-fullscreen {
-    overflow: auto;
 }
 </style>

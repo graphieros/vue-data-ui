@@ -465,6 +465,8 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
+@import "../vue-data-ui.css";
+
 .vue-ui-relation-circle {
     position: relative;
 }
@@ -487,11 +489,5 @@ line.vue-ui-relation-circle-selected {
     to {
         stroke-dashoffset: v-bind(radiusOffset);
     }
-}
-.vue-data-ui-fullscreen--on {
-    height: 100% !important;
-}
-.vue-data-ui-fullscreen--off {
-    max-width: 100%;
 }
 </style>
