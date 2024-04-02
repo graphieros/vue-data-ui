@@ -74,6 +74,10 @@ const mutableConfig = ref({
     showTable: galaxyConfig.value.table.show,
 });
 
+const innerGradientIntensity = computed(() => {
+    return `${galaxyConfig.value.style.chart.layout.arcs.gradient.intensity}%`;
+})
+
 const svg = ref({
     height: 180, // or 250 if non fibo
     width: 250
@@ -433,7 +437,8 @@ defineExpose({
                     :stroke-width="(galaxyConfig.style.chart.layout.arcs.strokeWidth / 2) * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
                     stroke-linecap="round"
                     :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && galaxyConfig.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
-                    :style="`filter: blur(5px) opacity(${galaxyConfig.style.chart.layout.arcs.gradient.intensity}%)`"
+                    :style="`filter: blur(5px) opacity(${galaxyConfig.style.chart.layout.arcs.gradient.intensity}%);transform: translate(0,0)`"
+                    class="inner-gradient"
                 />
             </g>
 

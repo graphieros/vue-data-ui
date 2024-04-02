@@ -1077,6 +1077,10 @@ declare module 'vue-data-ui' {
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
+            animation?: {
+                show?: boolean;
+                animationFrames?: number;
+            };
             bar?: {
                 gradient?: {
                     show?: boolean;
@@ -1413,6 +1417,10 @@ declare module 'vue-data-ui' {
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
+            animation?: {
+                show?: boolean;
+                animationFrames?: number;
+            };
             layout?: {
                 independant?: boolean;
                 percentage?: boolean;
@@ -3793,6 +3801,10 @@ declare module 'vue-data-ui' {
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
+            animation?: {
+                show?: boolean;
+                animationFrames?: number;
+            };
             sparkline?: {
                 color?: string;
                 strokeWidth?: number;

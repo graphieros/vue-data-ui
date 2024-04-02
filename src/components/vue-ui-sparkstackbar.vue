@@ -27,6 +27,23 @@ const props = defineProps({
     }
 })
 
+const uid = ref(createUid());
+const defaultConfig = ref(mainConfig.vue_ui_sparkstackbar);
+
+const stackConfig = computed(() => {
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
+    });
+});
+
+const safeDatasetCopy = ref(props.dataset.map(d => {
+    return {
+        ...d,
+        value: stackConfig.value.style.animation.show ? 0 : d.value || 0
+    }
+}));
+
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
         error({
@@ -53,16 +70,34 @@ onMounted(() => {
             }
         })
     }
-})
 
-const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_sparkstackbar);
+    if (stackConfig.value.style.animation.show) {
+        const chunks = stackConfig.value.style.animation.animationFrames;
+        const chunkSet = props.dataset.map((d, i) => d.value / chunks);
+        const total = props.dataset.map(d => d.value || 0).reduce((a, b) => a + b, 0);
+        let start = 0;
 
-const stackConfig = computed(() => {
-    return useNestedProp({
-        userConfig: props.config,
-        defaultConfig: defaultConfig.value
-    });
+        function animate() {
+            start += (total / chunks);
+            if (start < total) {
+                safeDatasetCopy.value = safeDatasetCopy.value.map((d, i) => {
+                    return {
+                        ...d,
+                        value: d.value += chunkSet[i]
+                    }
+                });
+                requestAnimationFrame(animate)
+            } else {
+                safeDatasetCopy.value = props.dataset.map(d => {
+                    return {
+                        ...d,
+                        value: d.value || 0
+                    }
+                })
+            }
+        }
+        animate()
+    }
 });
 
 const svg = ref({
@@ -75,7 +110,7 @@ const total = computed(() => {
 });
 
 const computedDataset = computed(() => {
-    return props.dataset.map((d, i) => {
+    return safeDatasetCopy.value.map((d, i) => {
         return {
             ...d,
             value: d.value || 0,

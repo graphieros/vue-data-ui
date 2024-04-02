@@ -2519,10 +2519,10 @@ const radarConfig = ref({
   style: {
     chart: {
       tooltip: {
-        customFormat: ({ seriesIndex, datapoint, series, config }) => {
-          console.log({seriesIndex, datapoint, series, config})
-          return "TEST"
-        }
+        // customFormat: ({ seriesIndex, datapoint, series, config }) => {
+        //   console.log({seriesIndex, datapoint, series, config})
+        //   return "TEST"
+        // }
       }
     }
   }
@@ -2988,7 +2988,7 @@ const kpiConfig = ref(
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_kpi)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_kpi)">
         <template #title>
           <!-- <BaseIcon name="chartGalaxy"/> -->
           VueUiKpi
@@ -3026,7 +3026,7 @@ const kpiConfig = ref(
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_galaxy)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_galaxy)">
         <template #title>
           <BaseIcon name="chartGalaxy"/>
           VueUiGalaxy
@@ -3459,7 +3459,7 @@ const kpiConfig = ref(
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
         <template #title>
           <BaseIcon name="chartSparkline" />
           VueUiSparkline
@@ -4265,7 +4265,7 @@ const kpiConfig = ref(
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkbar)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkbar)">
         <template #title>
           <BaseIcon name="chartSparkbar"/>
           VueUiSparkbar

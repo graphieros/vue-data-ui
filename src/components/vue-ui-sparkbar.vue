@@ -27,15 +27,6 @@ const props = defineProps({
     }
 });
 
-onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiSparkbar',
-            type: 'dataset'
-        })
-    }
-})
-
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkbar);
 
@@ -45,6 +36,51 @@ const sparkbarConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const safeDatasetCopy = ref(props.dataset.map(d => {
+    return {
+        ...d,
+        value: sparkbarConfig.value.style.animation.show ? 0 : d.value || 0
+    }
+}));
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiSparkbar',
+            type: 'dataset'
+        })
+    }
+
+    if (sparkbarConfig.value.style.animation.show) {
+        const chunks = sparkbarConfig.value.style.animation.animationFrames;
+        const chunkSet = props.dataset.map((d, i) => d.value / chunks);
+        const total = props.dataset.map(d => d.value || 0).reduce((a, b) => a + b, 0);
+        let start = 0;
+
+        function animate() {
+            start += (total / chunks);
+            if (start < total) {
+                safeDatasetCopy.value = safeDatasetCopy.value.map((d, i) => {
+                    return {
+                        ...d,
+                        value: d.value += chunkSet[i]
+                    }
+                });
+                requestAnimationFrame(animate)
+            } else {
+                safeDatasetCopy.value = props.dataset.map(d => {
+                    return {
+                        ...d,
+                        value: d.value || 0
+                    }
+                })
+            }
+        }
+        animate()
+    }
+})
+
 
 const svg = ref({
     width: 500,
@@ -75,7 +111,7 @@ const drawableDataset = computed(() => {
         }
     })
 
-    return props.dataset.map((d, i) => {
+    return safeDatasetCopy.value.map((d, i) => {
         return {
             ...d,
             value: d.value || 0,

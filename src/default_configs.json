@@ -1681,6 +1681,10 @@
     "vue_ui_sparkline": {
         "type": "line",
         "style": {
+            "animation": {
+                "show": true,
+                "animationFrames": 60
+            },
             "backgroundColor":"#FFFFFF",
             "fontFamily": "inherit",
             "line": {
@@ -2242,6 +2246,10 @@
         "style": {
             "backgroundColor": "#FFFFFF",
             "fontFamily": "inherit",
+            "animation": {
+                "show": true,
+                "animationFrames": 60
+            },
             "layout": {
                 "independant": true,
                 "percentage": true,
@@ -2533,6 +2541,10 @@
         "style": {
             "backgroundColor": "#FFFFFF",
             "fontFamily": "inherit",
+            "animation": {
+                "show": true,
+                "animationFrames": 60
+            },
             "bar": {
                 "gradient": {
                     "show": true,

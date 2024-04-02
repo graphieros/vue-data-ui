@@ -35,6 +35,30 @@ const props = defineProps({
     }
 });
 
+const uid = ref(createUid());
+const defaultConfig = ref(mainConfig.vue_ui_sparkline);
+
+const sparklineConfig = computed(() => {
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
+    });
+});
+
+const safeDatasetCopy = ref(props.dataset.map(d => {
+    if (sparklineConfig.value.style.animation.show) {
+        return {
+            ...d,
+            value: null
+        }
+    } else {
+        return {
+            ...d,
+            value: ![undefined].includes(d.value) ? d.value : null
+        }
+    }
+}))
+
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
         error({
@@ -61,17 +85,27 @@ onMounted(() => {
             }
         })
     }
+
+    if (sparklineConfig.value.style.animation.show) {
+        safeDatasetCopy.value = [];
+        const chunks = sparklineConfig.value.style.animation.animationFrames;
+        let start = 0;
+
+        function animate() {
+            if (start < props.dataset.length) {
+                safeDatasetCopy.value.push(props.dataset[start])
+                setTimeout(() => {
+                    requestAnimationFrame(animate)
+                }, chunks)
+            } else {
+                safeDatasetCopy.value = props.dataset
+            }
+            start += 1;
+        }
+        animate()
+    }
+
 })
-
-const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_sparkline);
-
-const sparklineConfig = computed(() => {
-    return useNestedProp({
-        userConfig: props.config,
-        defaultConfig: defaultConfig.value
-    });
-});
 
 const svg = ref({
     height: 80,
@@ -96,10 +130,10 @@ const drawingArea = computed(() => {
 });
 
 const min = computed(() => {
-    return Math.min(...props.dataset.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
+    return Math.min(...safeDatasetCopy.value.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
 });
 const max = computed(() => {
-    return Math.max(...props.dataset.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
+    return Math.max(...safeDatasetCopy.value.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
 });
 
 
@@ -123,7 +157,7 @@ function ratioToMax(v) {
 const len = computed(() => props.dataset.length - 1);
 
 const mutableDataset = computed(() => {
-    return props.dataset.map((s, i) => {
+    return safeDatasetCopy.value.map((s, i) => {
         const absoluteValue = isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : (s.value || 0);
         return {
             absoluteValue,
