@@ -86,9 +86,9 @@ onMounted(() => {
         })
     }
 
-    if (sparklineConfig.value.style.animation.show) {
+    if (sparklineConfig.value.style.animation.show && props.dataset.length > 1) {
         safeDatasetCopy.value = [];
-        const chunks = sparklineConfig.value.style.animation.animationFrames;
+        const chunks = sparklineConfig.value.style.animation.animationFrames / props.dataset.length;
         let start = 0;
 
         function animate() {

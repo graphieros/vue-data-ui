@@ -965,6 +965,46 @@ const sparklineDataset2 = ref([
     period: "period2",
     value: 2,
   },
+  {
+    period: "period2",
+    value: 6,
+  },
+  {
+    period: "period2",
+    value: 3,
+  },
+  {
+    period: "period2",
+    value: 1,
+  },
+  {
+    period: "period2",
+    value: 5,
+  },
+  {
+    period: "period2",
+    value: 2,
+  },
+  {
+    period: "period2",
+    value: 8,
+  },
+  {
+    period: "period2",
+    value: 9,
+  },
+  {
+    period: "period2",
+    value: 3,
+  },
+  {
+    period: "period2",
+    value: 5,
+  },
+  {
+    period: "period2",
+    value: 2,
+  },
 
 ]);
 
@@ -1905,7 +1945,7 @@ const histoConfig = ref({
                 }
             },
             "bars": {
-              "shape": "star",
+              "shape": "square",
                 "strokeWidth": 0,
                 "colors": {
                     "positive": "#3366cc",
@@ -3100,7 +3140,7 @@ const kpiConfig = ref(
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_table_sparkline)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_table_sparkline)">
         <template #title>
           <BaseIcon name="chartTable"/>
           VueUiTableSparkline
@@ -3459,7 +3499,7 @@ const kpiConfig = ref(
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
         <template #title>
           <BaseIcon name="chartSparkline" />
           VueUiSparkline
@@ -3570,7 +3610,7 @@ const kpiConfig = ref(
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkhistogram)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkhistogram)">
         <template #title>
           <BaseIcon name="chartSparkHistogram" />
           VueUiSparkHistogram

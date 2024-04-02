@@ -82,6 +82,10 @@ const sparkBarConfig = computed(() => {
     return {
         style: {
             backgroundColor: radarConfig.value.style.chart.tooltip.backgroundColor,
+            animation: {
+                show: radarConfig.value.style.chart.tooltip.animation.show,
+                animationFrames: radarConfig.value.style.chart.tooltip.animation.animationFrames
+            },
             labels: {
                 fontSize: radarConfig.value.style.chart.tooltip.fontSize,
                 name: {

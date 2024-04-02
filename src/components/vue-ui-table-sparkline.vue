@@ -434,6 +434,10 @@ defineExpose({
                                 type: tableConfig.sparkline.type,
                                 style: {
                                     backgroundColor: tableConfig.tbody.backgroundColor,
+                                    animation: {
+                                        show: tableConfig.sparkline.animation.show,
+                                        animationFrames: tableConfig.sparkline.animation.animationFrames
+                                    },
                                     line: {
                                         color: tr.color,
                                         smooth: tableConfig.sparkline.smooth,

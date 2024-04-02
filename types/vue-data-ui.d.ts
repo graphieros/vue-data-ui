@@ -291,6 +291,10 @@ declare module 'vue-data-ui' {
             strokeWidth?: number;
             type?: "line" | "bar",
             smooth?: boolean;
+            animation?: {
+                show?: boolean;
+                animationFrames?: number;
+            };
         };
         translations?: {
             serie?: string;
@@ -983,6 +987,10 @@ declare module 'vue-data-ui' {
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
+            animation?: {
+                show?: boolean;
+                speedMs?: number;
+            };
             layout?: {
                 height?: number;
                 width?: number;
@@ -2863,6 +2871,10 @@ declare module 'vue-data-ui' {
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    animation?: {
+                        show?: boolean;
+                        animationFrames?: number;
+                    };
                     customFormat?: (params: VueUiTooltipParams<VueUiRadarDatapoint, VueUiRadarSeries, VueUiRadarConfig>) => string;
                 };
                 legend?: {

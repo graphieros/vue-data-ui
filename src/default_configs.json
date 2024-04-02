@@ -745,7 +745,11 @@
                     "showPercentage": true,
                     "roundingValue": 0,
                     "roundingPercentage": 0,
-                    "customFormat": null
+                    "customFormat": null,
+                    "animation": {
+                        "show": true,
+                        "animationFrames": 60
+                    }
                 },
                 "legend": {
                     "show": true,
@@ -1683,7 +1687,7 @@
         "style": {
             "animation": {
                 "show": true,
-                "animationFrames": 60
+                "animationFrames": 360
             },
             "backgroundColor":"#FFFFFF",
             "fontFamily": "inherit",
@@ -2596,6 +2600,10 @@
         "style": {
             "backgroundColor":"#FFFFFF",
             "fontFamily":"inherit",
+            "animation": {
+                "show": true,
+                "speedMs": 500
+            },
             "layout": {
                 "height": 96,
                 "width": 640,
@@ -3202,7 +3210,11 @@
             "showArea": true,
             "strokeWidth": 3,
             "type": "line",
-            "smooth": true
+            "smooth": true,
+            "animation": {
+                "show": true,
+                "animationFrames": 360
+            }
         },
         "translations": {
             "serie": "Serie",

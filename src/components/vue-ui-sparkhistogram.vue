@@ -128,6 +128,10 @@ function selectDatapoint(datapoint, index) {
     emits('selectDatapoint', { datapoint, index })
 }
 
+const animation = computed(() => {
+    return `${histoConfig.value.style.animation.speedMs}ms`
+})
+
 </script>
 
 <template>
@@ -166,15 +170,17 @@ function selectDatapoint(datapoint, index) {
                     :stroke="rect.stroke"
                     :stroke-width="histoConfig.style.bars.strokeWidth"
                     :rx="`${histoConfig.style.bars.borderRadius * rect.proportion / 12}%`"
+                    :class="{'vue-ui-sparkhistogram-shape' : histoConfig.style.animation.show }"
                 />
             </g>
-            <g v-else>
+            <g v-else>                
                 <Shape 
                     v-for="(rect, i) in computedDataset"
                     :plot="{ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }"
                     :color="histoConfig.style.bars.colors.gradient.show ? rect.gradient : rect.color"
                     :shape="histoConfig.style.bars.shape"
                     :radius="rect.height * 0.4"
+                    :class="{'vue-ui-sparkhistogram-shape' : histoConfig.style.animation.show }"
                 />
             </g>
 
@@ -239,3 +245,26 @@ function selectDatapoint(datapoint, index) {
         </svg>
     </div>
 </template>
+
+<style scoped>
+.vue-ui-sparkhistogram-shape {
+    animation: expand v-bind(animation) ease-in forwards;
+    transform-origin: center;
+    transform: scale(1, 0);
+}
+
+@keyframes expand {
+    80% {
+        transform: scale(1, 1.1);
+    }
+    90% {
+        transform: scale(1, 0.95);
+    }
+    95% {
+        transform: scale(1, 1.03);
+    }
+    100% {
+        transform: scale(1, 1);
+    }
+}
+</style>
