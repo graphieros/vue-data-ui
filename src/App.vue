@@ -3074,7 +3074,14 @@ const kpiConfig = ref(
         <template #info>
         </template>
         <template #dev>
-          <GalaxyTest :dataset="galaxyDataset" :config="galaxyConfig" />
+          <GalaxyTest :dataset="galaxyDataset" :config="galaxyConfig">
+            <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
+          </GalaxyTest>
         </template>
         <template #prod>
           <VueDataUi component="VueUiGalaxy" :dataset="galaxyDataset" :config="galaxyConfig" />

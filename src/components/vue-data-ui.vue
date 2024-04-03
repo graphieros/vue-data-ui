@@ -473,6 +473,12 @@ defineExpose({
         @selectDatapoint="({datapoint, index}) => emit('selectDatapoint', { datapoint, index })" 
         ref="vue_ui_galaxy" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>

@@ -182,16 +182,16 @@ The svg slot also works when using the VueDataUi universal component, if the com
 
 All charts expose a #legend slot except for:
 
-- VueUiWheel
-- VueUiTiremarks
 - VueUiHeatmap
 - VueUiRelationCircle
-- VueUiThermometer
-- VueUiSparkline
-- VueUiSparkbar
-- VueUiSparkStackbar
-- VueUiSparkgauge
 - VueUiSparkHistogram
+- VueUiSparkStackbar
+- VueUiSparkbar
+- VueUiSparkgauge
+- VueUiSparkline
+- VueUiThermometer
+- VueUiTiremarks
+- VueUiWheel
 
 The legend slot also works when using the VueDataUi universal component, if the component it wraps supports it.
 It is recommended to set the show legend config attribute to false, to hide the default legend.
@@ -217,6 +217,7 @@ The following charts bear these slots:
 - VueUiAgePyramid
 - VueUiCandlestick
 - VueUiDonut
+- VueUiGalaxy
 - VueUiHeatmap
 - VueUiMolecule
 - VueUiNestedDonuts
