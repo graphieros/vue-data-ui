@@ -661,7 +661,14 @@
             :parent="$refs.chart"
             :content="tooltipContent"
             :isCustom="chartConfig.chart.tooltip.customFormat && typeof chartConfig.chart.tooltip.customFormat === 'function'"
-        />
+            >
+                <template #tooltip-before>
+                    <slot name="tooltip-before"></slot>
+                </template>
+                <template #tooltip-after>
+                    <slot name="tooltip-after"></slot>
+                </template>
+            </Tooltip>
 
         <!-- DATA TABLE -->
         <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">

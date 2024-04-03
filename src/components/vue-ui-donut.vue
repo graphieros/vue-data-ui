@@ -690,7 +690,14 @@ defineExpose({
             :parent="donutChart"
             :content="tooltipContent"
             :isCustom="isFunction(donutConfig.style.chart.tooltip.customFormat)"
-        />
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after"></slot>
+            </template>
+        </Tooltip>
 
         <!-- DATA TABLE -->
         <DataTable

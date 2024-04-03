@@ -568,7 +568,14 @@ defineExpose({
             :parent="onionChart"
             :content="tooltipContent"
             :isCustom="isFunction(onionConfig.style.chart.tooltip.customFormat)"
-        />
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after"></slot>
+            </template>
+        </Tooltip>
 
         <!-- DATA TABLE -->
         <div class="vue-ui-onion-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">

@@ -1003,6 +1003,9 @@ defineExpose({
             :content="tooltipContent"
             :isCustom="quadrantConfig.style.chart.tooltip.customFormat && typeof quadrantConfig.style.chart.tooltip.customFormat === 'function'"
         >
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>
+            </template>
             <svg height="14" width="14" viewBox="0 0 20 20" v-if="quadrantConfig.style.chart.tooltip.showShape">
                 <Shape
                     :plot="{ x: 10, y: 10 }"
@@ -1013,6 +1016,9 @@ defineExpose({
                     :stroke-width="quadrantConfig.style.chart.layout.plots.outlineWidth"
                 />
             </svg>
+            <template #tooltip-after>
+                <slot name="tooltip-after"></slot>
+            </template>
         </Tooltip>
 
         <!-- DATA TABLE -->

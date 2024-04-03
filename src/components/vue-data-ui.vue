@@ -348,6 +348,12 @@ defineExpose({
         :dataset="dataset" 
         ref="vue_ui_age_pyramid" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -372,6 +378,12 @@ defineExpose({
         :dataset="dataset" 
         ref="vue_ui_candlestick" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -439,6 +451,12 @@ defineExpose({
         @selectDatapoint="({datapoint, index}) => emit('selectDatapoint', { datapoint, index })" 
         ref="vue_ui_donut" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -483,6 +501,12 @@ defineExpose({
         :dataset="dataset" 
         ref="vue_ui_heatmap" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -522,6 +546,12 @@ defineExpose({
         :dataset="dataset" 
         ref="vue_ui_molecule" 
     >
+         <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -549,6 +579,12 @@ defineExpose({
         @selectDatapoint="({ datapoint, index}) => emit('selectDapoint', { datapoint, index })" 
         ref="vue_ui_nested_donuts" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -564,6 +600,12 @@ defineExpose({
         @selectLegend="(d) => emit('selectLegend', d)" 
         ref="vue_ui_onion" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -581,6 +623,12 @@ defineExpose({
         @selectLegend="(d) => emit('selectLegend', d)" 
         ref="vue_ui_quadrant" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -596,6 +644,12 @@ defineExpose({
         @selectLegend="(d) => emit('selectLegend', d)" 
         ref="vue_ui_radar" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -630,6 +684,12 @@ defineExpose({
         @selectLegend="(d) => emit('selectLegend', d)" 
         ref="vue_ui_rings" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -644,6 +704,12 @@ defineExpose({
         :dataset="dataset" 
         ref="vue_ui_scatter" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -759,6 +825,12 @@ defineExpose({
         @selectLegend="(d) => emit('selectLegend', d)" 
         ref="vue_ui_vertical_bar" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -774,6 +846,12 @@ defineExpose({
         @selectLegend="(d) => emit('selectLegend', d)" 
         ref="vue_ui_waffle" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
@@ -801,6 +879,12 @@ defineExpose({
         @selectLegend="(d) => emit('selectLegend', d)" 
         ref="vue_ui_xy" 
     >
+        <template #tooltip-before>
+            <slot name="tooltip-before"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after"></slot>
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>

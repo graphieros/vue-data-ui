@@ -576,7 +576,15 @@ defineExpose({
             :parent="moleculeChart"
             :content="tooltipContent"
             :isCustom="moleculeConfig.style.chart.tooltip.customFormat && typeof moleculeConfig.style.chart.tooltip.customFormat === 'function'"
-        />
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after"></slot>
+            </template>
+        </Tooltip>
+        
         <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
             <DataTable
                 :colNames="dataTable.colNames"

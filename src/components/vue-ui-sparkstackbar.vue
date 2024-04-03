@@ -176,7 +176,7 @@ function selectDatapoint(datapoint, index) {
             </clipPath>
         </defs>
             <g clip-path="url(#stackPill)">
-                <rect :x="0" :y="0" :height="svg.height" :width="svg.width" :fill="stackConfig.style.bar.gradient.underlayerColor"/>
+                <rect :x="0" :y="0" :height="svg.height" :width="drawableDataset.map(ds => ds.width).reduce((a, b) => a + b, 0)" :fill="stackConfig.style.bar.gradient.underlayerColor"/>
                 <rect 
                     v-for="(rect, i) in drawableDataset" :key="`stack_${i}`"
                     @click="() => selectDatapoint(rect, i)"

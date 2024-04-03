@@ -631,7 +631,14 @@ defineExpose({
             :parent="agePyramid"
             :content="tooltipContent"
             :isCustom="agePyramidConfig.style.tooltip.customFormat && typeof agePyramidConfig.style.tooltip.customFormat === 'function'"
-        />
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after"></slot>
+            </template>
+        </Tooltip>
 
         <!-- DATA TABLE -->
         <div  :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">

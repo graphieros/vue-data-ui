@@ -714,7 +714,14 @@ defineExpose({
             :parent="verticalBarChart"
             :content="tooltipContent"
             :isCustom="verticalBarConfig.style.chart.tooltip.customFormat && typeof verticalBarConfig.style.chart.tooltip.customFormat === 'function'"
-        />
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>    
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after"></slot>    
+            </template>
+        </Tooltip>
 
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-vertical-bar-table">        

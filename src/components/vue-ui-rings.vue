@@ -571,7 +571,14 @@ defineExpose({
       :parent="ringsChart"
       :content="tooltipContent"
       :isCustom="ringsConfig.style.chart.tooltip.customFormat && typeof ringsConfig.style.chart.tooltip.customFormat === 'function'"
-    />
+    >
+      <template #tooltip-before>
+        <slot name="tooltip-before"></slot>
+      </template>
+      <template #tooltip-after>
+        <slot name="tooltip-after"></slot>
+      </template>
+    </Tooltip>
 
     <!-- DATA TABLE -->
     <DataTable

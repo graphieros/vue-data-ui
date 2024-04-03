@@ -550,7 +550,14 @@ defineExpose({
             :parent="heatmapChart"
             :content="tooltipContent"
             :isCustom="heatmapConfig.style.tooltip.customFormat && typeof heatmapConfig.style.tooltip.customFormat === 'function'"
-        />
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after"></slot>
+            </template>
+        </Tooltip>
         
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-heatmap-table">

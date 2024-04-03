@@ -4,7 +4,6 @@ import {
     abbreviate,
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
-    calcNutArrowPath, 
     convertColorToHex, 
     createCsvContent, 
     createUid, 
@@ -15,7 +14,6 @@ import {
     isFunction, 
     makeDonut, 
     objectIsEmpty,
-    opacity, 
     palette, 
 } from '../lib';
 import pdf from "../pdf";
@@ -654,7 +652,14 @@ defineExpose({
             :parent="nestedDonutsChart"
             :content="tooltipContent"
             :isCustom="isFunction(donutConfig.style.chart.tooltip.customFormat)"
-        />
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after"></slot>
+            </template>
+        </Tooltip>
 
         <!-- LEGENDS -->
         <div v-if="donutConfig.style.chart.legend.show" :class="{ 'vue-ui-nested-donuts-legend' : legendSets.length > 1 }">

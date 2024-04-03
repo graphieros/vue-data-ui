@@ -52,9 +52,10 @@ const position = computed(() => {
         v-if="show"
         :style="`top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${backgroundColor};color:${color};max-width:${maxWidth}`}`"
     >
+        <slot name="tooltip-before"/>
         <slot/>
         <div v-html="content"/>
-        <slot name="content-after"/>
+        <slot name="tooltip-after"/>
     </div>
 </template>
 

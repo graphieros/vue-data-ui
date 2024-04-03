@@ -111,7 +111,7 @@ Or you can import just what you need in your files:
 </script>
 ```
 
-Since v.2.0.38, you can also use the "VueDataUi" universal component, just specifying which component you are using:
+Since v.2.0.38, you can also use the "VueDataUi" universal component, just specifying which component you are using. You can of course use the slots provided, if the target component has them.
 
 ```
 <script setup>
@@ -205,6 +205,46 @@ It is recommended to set the show legend config attribute to false, to hide the 
   </template>
 </VueUiDonut>
 ```
+
+## Tooltip #tooltip-before & #tooltip-after slots
+
+Since v.2.0.57, it is possible to further customize tooltip contents with #tooltip-before and #tooltip-after slots.
+It is that easy to include an image, another chart or any other content into your tooltips.
+These slots do not expose any data, as you can create your own custom data content using the config option tooltip.customFormat.
+
+The following charts bear these slots:
+
+- VueUiAgePyramid
+- VueUiCandlestick
+- VueUiDonut
+- VueUiHeatmap
+- VueUiMolecule
+- VueUiNestedDonuts
+- VueUiOnion
+- VueUiQuadrant
+- VueUiRadar
+- VueUiRings
+- VueUiScatter
+- VueUiVerticalBar
+- VueUiXy
+- VueUiwaffle
+
+```
+<VueUiDonut :config="config" :dataset="dataset">
+  <template #tooltip-before">
+    <div>
+      This content shows first
+    </div>
+  </template>
+  <template #tooltip-after">
+    <div>
+      This content shows last
+    </div>
+  </template>
+</VueUiDonut>
+```
+
+The #tooltip-before & #tooltip-after slots also works when using the VueDataUi universal component, if the component it wraps supports them.
 
 # Config
 

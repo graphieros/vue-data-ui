@@ -12,9 +12,12 @@ describe('<Tooltip />', () => {
         default: {
           render: () => 'Default slot'
         },
-        ['content-after']: {
+        ['tooltip-before']: {
+          render: () => 'Slot before'
+        },
+        ['tooltip-after']: {
           render: () => 'Slot after'
-        }
+        },
       }
     })
   })
@@ -22,6 +25,7 @@ describe('<Tooltip />', () => {
   it('renders all contents', () => {
     cy.contains('Default slot')
     cy.contains('Content')
+    cy.contains('Slot before')
     cy.contains('Slot after')
   })
 

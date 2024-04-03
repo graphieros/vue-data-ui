@@ -730,6 +730,9 @@ defineExpose({
             :content="tooltipContent"
             :isCustom="scatterConfig.style.tooltip.customFormat && typeof scatterConfig.style.tooltip.customFormat === 'function'"
         >
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>
+            </template>
             <div style="width: 100%; display: flex; align-items:center;justify-content:center;" v-if="scatterConfig.style.tooltip.showShape">
                 <svg viewBox="0 0 20 20" height="20" width="20" style="overflow: hidden;background:transparent;">
                     <Shape 
@@ -740,6 +743,9 @@ defineExpose({
                     />
                 </svg>
             </div>
+            <template #tooltip-after>
+                <slot name="tooltip-after"></slot>
+            </template>
         </Tooltip>
 
         <!-- DATA TABLE -->

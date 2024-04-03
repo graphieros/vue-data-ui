@@ -2479,12 +2479,12 @@ const donutConfig = ref({
   style: {
     chart: {
       tooltip: {
-        customFormat: ({ datapoint, seriesIndex, series , config}) => {
-          console.log({datapoint, seriesIndex, series, config});
-          return `<div style="background:${datapoint.color}33;color:${datapoint.color};padding:12px">
-              ${datapoint.name} : ${datapoint.value}
-            </div>`
-        }
+        // customFormat: ({ datapoint, seriesIndex, series , config}) => {
+        //   console.log({datapoint, seriesIndex, series, config});
+        //   return `<div style="background:${datapoint.color}33;color:${datapoint.color};padding:12px">
+        //       ${datapoint.name} : ${datapoint.value}
+        //     </div>`
+        // }
       }
     }
   }
@@ -3111,8 +3111,14 @@ const kpiConfig = ref(
         </template>
         <template #dev>
           <VueDataUiTest component="VueUiNestedDonuts" :dataset="nestedDonutsDataset" :config="nestedDonutsConfig">
-            
+            <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
           </VueDataUiTest>
+            
         </template>
         <template #prod>
           <VueDataUi component="VueUiNestedDonuts" :dataset="nestedDonutsDataset" :config="nestedDonutsConfig"/>
@@ -3172,7 +3178,14 @@ const kpiConfig = ref(
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <VueDataUiTest component="VueUiMolecule" :dataset="clusterDataset" :config="moleculeConfig"/>
+          <VueDataUiTest component="VueUiMolecule" :dataset="clusterDataset" :config="moleculeConfig">
+            <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
+          </VueDataUiTest>
         </template>
         <template #prod>
           <VueDataUi component="VueUiMolecule" :dataset="clusterDataset" :config="moleculeConfig"/>
@@ -3437,6 +3450,12 @@ const kpiConfig = ref(
             :dataset="ringsDataset"
             :config="ringsConfig"
           >
+          <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -3577,6 +3596,12 @@ const kpiConfig = ref(
             @selectLegend="selectLegendXY"
             @selectX="selectX"
           >
+            <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
           </VueDataUiTest>
           <VueDataUiTest
             component="VueUiXy"
@@ -3655,6 +3680,12 @@ const kpiConfig = ref(
             :dataset="candlestickDataset" 
             :config="candlestickConfig"
           >
+            <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -3697,6 +3728,12 @@ const kpiConfig = ref(
             :dataset="scatterDataset" 
             :config="scatterConfig"
           >
+          <template #tooltip-before>
+            BEFORE
+          </template>
+          <template #tooltip-after>
+            AFTER
+          </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -3740,6 +3777,12 @@ const kpiConfig = ref(
             :dataset="verticalDataset"
             :config="verticalBarConfig"
           >
+            <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -3783,6 +3826,12 @@ const kpiConfig = ref(
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
           >
+            <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -3830,6 +3879,12 @@ const kpiConfig = ref(
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
           >
+          <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -3876,6 +3931,12 @@ const kpiConfig = ref(
             :config="radarConfig"
             @selectLegend="selectRadarLegend"
           >
+          <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -3921,6 +3982,12 @@ const kpiConfig = ref(
             :config="donutConfig"
             @selectLegend="selectLegendDonut"
           >
+          <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
               <Arrow
@@ -3957,7 +4024,7 @@ const kpiConfig = ref(
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
         <template #title>
           <BaseIcon name="chartSparkStackbar" />
           VueUiSparkStackbar
@@ -4140,6 +4207,12 @@ const kpiConfig = ref(
             :dataset="pyramidDataset"
             :config="pyramidConfig"
           >
+            <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -4183,6 +4256,12 @@ const kpiConfig = ref(
             :config="waffleConfig"
             @selectLegend="selectLegendWaffle"
           >
+          <template #tooltip-before>
+              BEFORE
+            </template>
+            <template #tooltip-after>
+              AFTER
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -4305,7 +4384,7 @@ const kpiConfig = ref(
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkbar)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkbar)">
         <template #title>
           <BaseIcon name="chartSparkbar"/>
           VueUiSparkbar
@@ -4350,6 +4429,12 @@ const kpiConfig = ref(
             :config="heatmapConfig"
             :dataset="heatmapDataset"
           >
+          <template #tooltip-before>
+            BEFORE
+          </template>
+          <template #tooltip-after>
+            BEFORE
+          </template>
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="60" fill="#FF0000"/>
             </template>

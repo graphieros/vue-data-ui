@@ -688,10 +688,14 @@ defineExpose({
             :content="tooltipContent"
             :isCustom="radarConfig.style.chart.tooltip.customFormat && typeof radarConfig.style.chart.tooltip.customFormat === 'function'"
         >
-            <template #content-after>
+            <template #tooltip-before>
+                <slot name="tooltip-before"></slot>
+            </template>
+            <template #tooltip-after>
                 <div style="max-width: 200px;margin:0 auto">
                     <SparkBar :dataset="sparkBarData" :config="sparkBarConfig"/>
                 </div>
+                <slot name="tooltip-after"></slot>
             </template>
         </Tooltip>
 
