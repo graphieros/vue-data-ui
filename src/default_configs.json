@@ -1685,6 +1685,7 @@
     "vue_ui_sparkline": {
         "type": "line",
         "style": {
+            "chartWidth": 290,
             "animation": {
                 "show": true,
                 "animationFrames": 360
@@ -1717,7 +1718,10 @@
                 "strokeDasharray": 3
             },
             "dataLabel": {
+                "show": true,
                 "position": "left",
+                "offsetX": 0,
+                "offsetY": 0,
                 "fontSize": 20,
                 "bold": true,
                 "color": "#2D353C",

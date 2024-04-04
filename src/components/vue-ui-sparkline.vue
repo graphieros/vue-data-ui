@@ -123,8 +123,8 @@ const drawingArea = computed(() => {
         left: 0,
         right: svg.value.width,
         bottom: svg.value.height - 3,
-        start: props.showInfo && sparklineConfig.value.style.dataLabel.position === 'left' ? 210 : 0,
-        width: props.showInfo ? 290 : svg.value.width,
+        start: props.showInfo && sparklineConfig.value.style.dataLabel.show && sparklineConfig.value.style.dataLabel.position === 'left' ? svg.value.width - sparklineConfig.value.style.chartWidth : 30,
+        width: props.showInfo && sparklineConfig.value.style.dataLabel.show ? sparklineConfig.value.style.chartWidth : svg.value.width - 30,
         height: svg.value.height - topPadding
     }
 });
@@ -333,10 +333,10 @@ function selectDatapoint(datapoint, index) {
 
             <!-- DATALABEL -->
             <text
-                v-if="showInfo"
+                v-if="showInfo && sparklineConfig.style.dataLabel.show"
                 data-cy="sparkline-datalabel"
-                :x="sparklineConfig.style.dataLabel.position === 'left' ? 12 : drawingArea.width + 12"
-                :y="svg.height / 2 + sparklineConfig.style.dataLabel.fontSize / 2.5"
+                :x="sparklineConfig.style.dataLabel.position === 'left' ? 12 + sparklineConfig.style.dataLabel.offsetX : drawingArea.width + 12 + sparklineConfig.style.dataLabel.offsetX"
+                :y="svg.height / 2 + sparklineConfig.style.dataLabel.fontSize / 2.5 + sparklineConfig.style.dataLabel.offsetY"
                 :font-size="sparklineConfig.style.dataLabel.fontSize"
                 :font-weight="sparklineConfig.style.dataLabel.bold ? 'bold' : 'normal'"
                 :fill="sparklineConfig.style.dataLabel.color"

@@ -3813,6 +3813,7 @@ declare module 'vue-data-ui' {
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
+            chartWidth?: number;
             animation?: {
                 show?: boolean;
                 animationFrames?: number;
@@ -3847,7 +3848,10 @@ declare module 'vue-data-ui' {
                 strokeDasharray?: number;
             };
             dataLabel?: {
+                show?: boolean;
                 position?: "left" | "right";
+                offsetX?: number;
+                offsetY?: number;
                 fontSize?: number;
                 bold?: boolean;
                 color?: string;

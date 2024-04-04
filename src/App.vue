@@ -3525,7 +3525,7 @@ const kpiConfig = ref(
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
         <template #title>
           <BaseIcon name="chartSparkline" />
           VueUiSparkline
