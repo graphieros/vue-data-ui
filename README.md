@@ -209,8 +209,18 @@ It is recommended to set the show legend config attribute to false, to hide the 
 ## Tooltip #tooltip-before & #tooltip-after slots
 
 Since v.2.0.57, it is possible to further customize tooltip contents with #tooltip-before and #tooltip-after slots.
-It is that easy to include an image, another chart or any other content into your tooltips.
-These slots do not expose any data, as you can create your own custom data content using the config option tooltip.customFormat.
+It is that easy to include an image, another chart or any other content into your tooltips. It's an alternative to the config option tooltip.customFormat, in case richer tooltip content is needed.
+
+Both slots expose the following object:
+
+```
+{
+  datapoint,
+  seriesIndex,
+  series,
+  config,
+}
+```
 
 The following charts bear these slots:
 
@@ -227,17 +237,29 @@ The following charts bear these slots:
 - VueUiRings
 - VueUiScatter
 - VueUiVerticalBar
-- VueUiXy
+- VueUiXy \*
 - VueUiwaffle
 
+\* VueUiXy slots specifically expose the following additional attributes:
+
 ```
+
+{
+...,
+bars,
+lines,
+plots
+}
+
+```
+
 <VueUiDonut :config="config" :dataset="dataset">
-  <template #tooltip-before">
+  <template #tooltip-before={ datapoint, seriesIndex, dataset, config }">
     <div>
       This content shows first
     </div>
   </template>
-  <template #tooltip-after">
+  <template #tooltip-after={ datapoint, seriesIndex, dataset, config }">
     <div>
       This content shows last
     </div>

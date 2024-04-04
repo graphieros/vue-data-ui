@@ -230,11 +230,19 @@ const gradientSets = computed(() => {
 const selectedDonut = ref(null);
 const selectedDatapoint = ref(null);
 const selectedDatapointIndex = ref(null);
+const dataTooltipSlot = ref(null);
 
 function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
     selectedDonut.value = datapoint.arcOfId;
     selectedDatapoint.value = datapoint.id;
     selectedDatapointIndex.value = seriesIndex;
+
+    dataTooltipSlot.value = {
+        datapoint,
+        seriesIndex,
+        series: mutableDataset.value,
+        config: donutConfig.value
+    }
 
     const customFormat = donutConfig.value.style.chart.tooltip.customFormat;
 
@@ -654,10 +662,10 @@ defineExpose({
             :isCustom="isFunction(donutConfig.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 

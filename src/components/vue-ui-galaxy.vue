@@ -183,7 +183,17 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
+
+    dataTooltipSlot.value = {
+        datapoint,
+        seriesIndex,
+        series: immutableSet.value,
+        config: galaxyConfig.value
+    }
+
     isTooltip.value = show;
     selectedSerie.value = datapoint.id;
     let html = "";
@@ -496,10 +506,10 @@ defineExpose({
             :isCustom="isFunction(galaxyConfig.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 

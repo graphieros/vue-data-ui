@@ -288,7 +288,16 @@ function getData() {
 
 const selectedBarId = ref(null);
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip(bar, seriesIndex) {
+    dataTooltipSlot.value = {
+        datapoint: bar,
+        seriesIndex,
+        series: immutableDataset.value,
+        config: verticalBarConfig.value
+    }
+
     isTooltip.value = true;
     selectedBarId.value = bar.id;
     let html = "";
@@ -716,10 +725,10 @@ defineExpose({
             :isCustom="verticalBarConfig.style.chart.tooltip.customFormat && typeof verticalBarConfig.style.chart.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>    
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>  
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>    
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot> 
             </template>
         </Tooltip>
 

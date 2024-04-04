@@ -254,8 +254,17 @@ const xLabels = computed(() => {
     return datasetBreakdown.value.map(ds => ds.period)
 });
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip(index, datapoint) {
     hoveredIndex.value = index;
+
+    dataTooltipSlot.value = {
+        datapoint,
+        seriesIndex: index,
+        series: drawableDataset.value,
+        config: candlestickConfig.value
+    }
 
     const customFormat = candlestickConfig.value.style.tooltip.customFormat;
 
@@ -691,10 +700,10 @@ defineExpose({
             :isCustom="candlestickConfig.style.tooltip.customFormat && typeof candlestickConfig.style.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 

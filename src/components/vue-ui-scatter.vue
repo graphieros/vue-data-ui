@@ -267,11 +267,19 @@ function getData() {
 
 const selectedPlotId = ref(undefined);
 const selectedPlot = ref(null);
+const dataTooltipSlot = ref(null);
 
 function useTooltip(plot, seriesIndex) {
     selectedPlotId.value = plot.id;
     selectedPlot.value = plot;
     let html = "";
+
+    dataTooltipSlot.value = {
+        datapoint: plot,
+        seriesIndex,
+        series: drawableDataset.value,
+        config: scatterConfig.value
+    }
 
     const customFormat = scatterConfig.value.style.tooltip.customFormat;
 
@@ -731,7 +739,7 @@ defineExpose({
             :isCustom="scatterConfig.style.tooltip.customFormat && typeof scatterConfig.style.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <div style="width: 100%; display: flex; align-items:center;justify-content:center;" v-if="scatterConfig.style.tooltip.showShape">
                 <svg viewBox="0 0 20 20" height="20" width="20" style="overflow: hidden;background:transparent;">
@@ -744,7 +752,7 @@ defineExpose({
                 </svg>
             </div>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 

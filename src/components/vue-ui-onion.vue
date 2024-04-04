@@ -301,9 +301,19 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip({ datapoint, seriesIndex, show = true }) {
     const absoluteIndex = datapoint.absoluteIndex;
     selectedSerie.value = seriesIndex;
+
+    dataTooltipSlot.value = {
+        datapoint,
+        seriesIndex: absoluteIndex,
+        series: immutableDataset.value,
+        config: onionConfig.value
+    }
+
     isTooltip.value = show;
 
     let html = "";
@@ -570,10 +580,10 @@ defineExpose({
             :isCustom="isFunction(onionConfig.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 

@@ -2495,12 +2495,12 @@ const xyConfig = ref({
     labels: {
       fontSize: 30
     },
-    tooltip: {
-      customFormat: ({ seriesIndex, datapoint, series,  bars, lines, plots, config }) => {
-        console.log({seriesIndex, datapoint, series, bars, lines, plots, config});
-        return 'TEST'
-      }
-    }
+    // tooltip: {
+    //   customFormat: ({ seriesIndex, datapoint, series,  bars, lines, plots, config }) => {
+    //     console.log({seriesIndex, datapoint, series, bars, lines, plots, config});
+    //     return 'TEST'
+    //   }
+    // }
   },
   bar: {
       labels: {
@@ -3075,11 +3075,11 @@ const kpiConfig = ref(
         </template>
         <template #dev>
           <GalaxyTest :dataset="galaxyDataset" :config="galaxyConfig">
-            <template #tooltip-before>
-              BEFORE
+            <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ datapoint.name }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
           </GalaxyTest>
         </template>
@@ -3118,11 +3118,11 @@ const kpiConfig = ref(
         </template>
         <template #dev>
           <VueDataUiTest component="VueUiNestedDonuts" :dataset="nestedDonutsDataset" :config="nestedDonutsConfig">
-            <template #tooltip-before>
-              BEFORE
+            <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ datapoint.name }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
           </VueDataUiTest>
             
@@ -3186,11 +3186,11 @@ const kpiConfig = ref(
         </template>
         <template #dev>
           <VueDataUiTest component="VueUiMolecule" :dataset="clusterDataset" :config="moleculeConfig">
-            <template #tooltip-before>
-              BEFORE
+            <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ datapoint.name }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
           </VueDataUiTest>
         </template>
@@ -3457,11 +3457,11 @@ const kpiConfig = ref(
             :dataset="ringsDataset"
             :config="ringsConfig"
           >
-          <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3603,11 +3603,11 @@ const kpiConfig = ref(
             @selectLegend="selectLegendXY"
             @selectX="selectX"
           >
-            <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
           </VueDataUiTest>
           <VueDataUiTest
@@ -3687,11 +3687,11 @@ const kpiConfig = ref(
             :dataset="candlestickDataset" 
             :config="candlestickConfig"
           >
-            <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3735,12 +3735,12 @@ const kpiConfig = ref(
             :dataset="scatterDataset" 
             :config="scatterConfig"
           >
-          <template #tooltip-before>
-            BEFORE
-          </template>
-          <template #tooltip-after>
-            AFTER
-          </template>
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+            </template>
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -3784,11 +3784,12 @@ const kpiConfig = ref(
             :dataset="verticalDataset"
             :config="verticalBarConfig"
           >
-            <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+              {{ datapoint.name }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3833,11 +3834,12 @@ const kpiConfig = ref(
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
           >
-            <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+              {{ datapoint.name }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3886,11 +3888,12 @@ const kpiConfig = ref(
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
           >
-          <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+              {{ datapoint.name }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3938,11 +3941,12 @@ const kpiConfig = ref(
             :config="radarConfig"
             @selectLegend="selectRadarLegend"
           >
-          <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+              {{ datapoint.name }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -3989,11 +3993,13 @@ const kpiConfig = ref(
             :config="donutConfig"
             @selectLegend="selectLegendDonut"
           >
-          <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+              {{ datapoint.name }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+              {{ datapoint.name }}
             </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -4214,11 +4220,11 @@ const kpiConfig = ref(
             :dataset="pyramidDataset"
             :config="pyramidConfig"
           >
-            <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -4263,11 +4269,11 @@ const kpiConfig = ref(
             :config="waffleConfig"
             @selectLegend="selectLegendWaffle"
           >
-          <template #tooltip-before>
-              BEFORE
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
-            <template #tooltip-after>
-              AFTER
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
             </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -4436,12 +4442,12 @@ const kpiConfig = ref(
             :config="heatmapConfig"
             :dataset="heatmapDataset"
           >
-          <template #tooltip-before>
-            BEFORE
-          </template>
-          <template #tooltip-after>
-            BEFORE
-          </template>
+          <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+            </template>
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+            </template>
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="60" fill="#FF0000"/>
             </template>

@@ -215,8 +215,17 @@ const maxHeight = computed(() => {
   return svg.value.height - ringsConfig.value.style.chart.layout.rings.strokeWidth * 2;
 });
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip(index, datapoint) {
   if (segregated.value.length === props.dataset.length) return;
+
+  dataTooltipSlot.value = {
+    datapoint,
+    seriesIndex: index,
+    series: convertedDataset.value,
+    config: ringsConfig.value
+  }
 
   selectedSerie.value = index;
   const selected = convertedDataset.value[index];
@@ -572,12 +581,12 @@ defineExpose({
       :content="tooltipContent"
       :isCustom="ringsConfig.style.chart.tooltip.customFormat && typeof ringsConfig.style.chart.tooltip.customFormat === 'function'"
     >
-      <template #tooltip-before>
-        <slot name="tooltip-before"></slot>
-      </template>
-      <template #tooltip-after>
-        <slot name="tooltip-after"></slot>
-      </template>
+        <template #tooltip-before>
+            <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+        </template>
+        <template #tooltip-after>
+            <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+        </template>
     </Tooltip>
 
     <!-- DATA TABLE -->

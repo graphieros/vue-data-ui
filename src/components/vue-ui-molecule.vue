@@ -266,7 +266,16 @@ function unzoom(event) {
     }
 }
 
+const dataTooltipSlot = ref(null);
+
 function createTooltipContent(node) {
+
+    dataTooltipSlot.value = {
+        datapoint: node,
+        seriesIndex: -1,
+        series: convertedDataset.value,
+        config: moleculeConfig.value
+    }
 
     const customFormat = moleculeConfig.value.style.chart.tooltip.customFormat;
 
@@ -578,10 +587,10 @@ defineExpose({
             :isCustom="moleculeConfig.style.chart.tooltip.customFormat && typeof moleculeConfig.style.chart.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
         

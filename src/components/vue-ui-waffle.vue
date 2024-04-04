@@ -293,10 +293,20 @@ const total = computed(() => {
     return waffleSet.value.map(s => s.value).reduce((a,b) => a + b, 0);
 });
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip(index) {
     if(segregated.value.length === props.dataset.length) return;
     
     const selected = rects.value[index];
+
+    dataTooltipSlot.value = {
+        datapoint: selected,
+        seriesIndex: selected.absoluteIndex,
+        series: datasetCopy.value,
+        config: waffleConfig.value
+    }
+    
     isTooltip.value = true;
     selectedSerie.value = rects.value[index].serieIndex;
 
@@ -692,10 +702,10 @@ defineExpose({
             :isCustom="waffleConfig.style.chart.tooltip.customFormat && typeof waffleConfig.style.chart.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>    
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 

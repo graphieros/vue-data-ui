@@ -197,8 +197,17 @@ const drawableDataset = computed(() => {
     })
 });
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip(index, datapoint) {
     selectedIndex.value = index;
+
+    dataTooltipSlot.value = {
+        datapoint,
+        seriesIndex: index,
+        series: drawableDataset.value,
+        config: agePyramidConfig.value
+    }
 
     const customFormat = agePyramidConfig.value.style.tooltip.customFormat;
 
@@ -633,10 +642,10 @@ defineExpose({
             :isCustom="agePyramidConfig.style.tooltip.customFormat && typeof agePyramidConfig.style.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 

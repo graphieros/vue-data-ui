@@ -663,10 +663,10 @@
             :isCustom="chartConfig.chart.tooltip.customFormat && typeof chartConfig.chart.tooltip.customFormat === 'function'"
             >
                 <template #tooltip-before>
-                    <slot name="tooltip-before"></slot>
+                    <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
                 </template>
                 <template #tooltip-after>
-                    <slot name="tooltip-after"></slot>
+                    <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
                 </template>
             </Tooltip>
 
@@ -1066,8 +1066,19 @@ export default {
 
             return { head, body, config, colNames}
         },
-        tooltipContent() {
-            const selectedSeries = this.relativeDataset.map(datapoint => {
+        dataTooltipSlot() {
+            return {
+                datapoint: this.selectedSeries,
+                seriesIndex: this.selectedSerieIndex,
+                series: this.absoluteDataset,
+                bars: this.barSet,
+                lines: this.lineSet,
+                plots: this.plotSet,
+                config: this.chartConfig 
+            }
+        },
+        selectedSeries() {
+            return this.relativeDataset.map(datapoint => {
                 return {
                     shape: datapoint.shape || null,
                     name: datapoint.name,
@@ -1076,18 +1087,18 @@ export default {
                     value: datapoint.absoluteValues.find((_s,i) => i === this.selectedSerieIndex)
                 }
             });
-
-            
+        },  
+        tooltipContent() {            
             let html = "";
             
-            let sum = selectedSeries.map(s => s.value).filter(s => this.isSafeValue(s) && s !== null).reduce((a,b) => Math.abs(a) + Math.abs(b), 0);
+            let sum = this.selectedSeries.map(s => s.value).filter(s => this.isSafeValue(s) && s !== null).reduce((a,b) => Math.abs(a) + Math.abs(b), 0);
             
             const time = this.timeLabels[this.selectedSerieIndex];
             const customFormat = this.chartConfig.chart.tooltip.customFormat;
 
             if(this.isFunction(customFormat) && this.functionReturnsString(() => customFormat({
                 seriesIndex: this.selectedSerieIndex,
-                datapoint: selectedSeries,
+                datapoint: this.selectedSeries,
                 series: this.absoluteDataset,
                 bars: this.barSet,
                 lines: this.lineSet,
@@ -1096,7 +1107,7 @@ export default {
             }))) {
                 return customFormat({
                     seriesIndex: this.selectedSerieIndex,
-                    datapoint: selectedSeries,
+                    datapoint: this.selectedSeries,
                     series: this.absoluteDataset,
                     bars: this.barSet,
                     lines: this.lineSet,
@@ -1107,7 +1118,7 @@ export default {
                 if(time) {
                     html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid #e1e5e8; width:100%">${time}</div>`;
                 }
-                selectedSeries.forEach(s => {
+                this.selectedSeries.forEach(s => {
                     if(this.isSafeValue(s.value) && s.value !== null) {
                         let shape = '';
                         let insideShape = '';

@@ -486,6 +486,7 @@ function getQuadrantSide(plot) {
 
 const hoveredPlotId = ref(null);
 const hoveredPlot = ref(null);
+const dataTooltipSlot = ref(null);
 
 function useTooltip(category, plot, categoryIndex) {
     hoveredPlotId.value = plot.uid;
@@ -493,6 +494,14 @@ function useTooltip(category, plot, categoryIndex) {
         color: category.color,
         shape: category.shape
     }
+
+    dataTooltipSlot.value = {
+        datapoint: plot,
+        seriesIndex: categoryIndex,
+        series: drawableDataset.value,
+        config: quadrantConfig.value
+    }
+
     isTooltip.value = true;
 
     const customFormat = quadrantConfig.value.style.chart.tooltip.customFormat;
@@ -1004,7 +1013,7 @@ defineExpose({
             :isCustom="quadrantConfig.style.chart.tooltip.customFormat && typeof quadrantConfig.style.chart.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <svg height="14" width="14" viewBox="0 0 20 20" v-if="quadrantConfig.style.chart.tooltip.showShape">
                 <Shape
@@ -1017,7 +1026,7 @@ defineExpose({
                 />
             </svg>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 

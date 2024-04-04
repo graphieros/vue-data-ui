@@ -195,10 +195,20 @@ const mutableDataset = computed(() => {
 
 const hoveredValue = ref(null);
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip(datapoint, seriesIndex) {
     const { value, yAxisName, xAxisName,id } = datapoint;
     hoveredCell.value = id;
     hoveredValue.value = value;
+
+    dataTooltipSlot.value = {
+        datapoint,
+        seriesIndex,
+        series: mutableDataset.value,
+        config: heatmapConfig.value
+    }
+
     isTooltip.value = true;
     let html = "";
 
@@ -552,10 +562,10 @@ defineExpose({
             :isCustom="heatmapConfig.style.tooltip.customFormat && typeof heatmapConfig.style.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
         

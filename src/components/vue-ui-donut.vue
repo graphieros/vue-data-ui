@@ -220,7 +220,10 @@ const average = computed(() => {
     return total.value / donutSet.value.length;
 });
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
+    dataTooltipSlot.value = { datapoint, seriesIndex, config: donutConfig.value, series: immutableSet.value};
     isTooltip.value = show;
     selectedSerie.value = relativeIndex;
     let html = "";
@@ -692,10 +695,10 @@ defineExpose({
             :isCustom="isFunction(donutConfig.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 

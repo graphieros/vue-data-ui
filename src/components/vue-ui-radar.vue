@@ -364,11 +364,24 @@ const dataTable = computed(() => {
 const selectedIndex = ref(null);
 const sparkBarData = ref([]);
 
+const dataTooltipSlot = ref(null);
+
 function useTooltip(apex, i) {
     sparkBarData.value = [];
     selectedIndex.value = i;
     isTooltip.value = true;
     let html = "";
+
+    dataTooltipSlot.value = {
+        datapoint: apex,
+        seriesIndex: i,
+        series: {
+            categories: datasetCopy.value,
+            datapoints: seriesCopy.value,
+            radar: radar.value
+        },
+        config: radarConfig.value
+    }
 
     const customFormat = radarConfig.value.style.chart.tooltip.customFormat;
 
@@ -689,13 +702,13 @@ defineExpose({
             :isCustom="radarConfig.style.chart.tooltip.customFormat && typeof radarConfig.style.chart.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before"></slot>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
                 <div style="max-width: 200px;margin:0 auto">
                     <SparkBar :dataset="sparkBarData" :config="sparkBarConfig"/>
                 </div>
-                <slot name="tooltip-after"></slot>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
 
