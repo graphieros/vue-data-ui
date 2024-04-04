@@ -245,14 +245,15 @@ The following charts bear these slots:
 ```
 
 {
-...,
-bars,
-lines,
-plots
+  ...,
+  bars,
+  lines,
+  plots
 }
 
 ```
 
+```
 <VueUiDonut :config="config" :dataset="dataset">
   <template #tooltip-before={ datapoint, seriesIndex, dataset, config }">
     <div>
