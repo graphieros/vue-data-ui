@@ -4271,11 +4271,38 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution";
+        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution" | "tiremarks" | "molecule" | "relationCircle" | "thermometer" | "sparkbar" | "sparkStackbar" | "sparkHistogram" | "bar3d" | "galaxy";
         style?: {
             backgroundColor?: string;
             color?: string;
             animated?: boolean;
+            galaxy?: {
+                color?: string;
+            };
+            bar3d?: {
+                color?: string;
+            };
+            sparkHistogram?: {
+                color?: string;
+            };
+            sparkStackbar?: {
+                color?: string;
+            };
+            sparkbar?: {
+                color?: string;
+            };
+            thermometer?: {
+                color?: string;
+            };
+            relationCircle?: {
+                color?: string;
+            };
+            molecule?: {
+                color?: string;
+            };
+            tiremarks?: {
+                color?: string;
+            };
             line?: {
                 axis?: {
                     show?: boolean;

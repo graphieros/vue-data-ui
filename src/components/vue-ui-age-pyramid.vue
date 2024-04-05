@@ -19,6 +19,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -34,6 +35,10 @@ const props = defineProps({
         }
     },
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length
+})
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -386,7 +391,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="agePyramidConfig.userOptions.show"
+            v-if="agePyramidConfig.userOptions.show && isDataset"
             :backgroundColor="agePyramidConfig.style.backgroundColor"
             :color="agePyramidConfig.style.color"
             :isImaging="isImaging"
@@ -406,8 +411,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" >
-
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" >
             <defs>
                 <linearGradient 
                     :id="`age_pyramid_left_${uid}`"
@@ -630,6 +634,19 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'pyramid',
+                style: {
+                    backgroundColor: agePyramidConfig.style.backgroundColor,
+                    pyramid: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
+
         <slot name="legend" v-bind:legend="drawableDataset"></slot>
 
         <!-- TOOLTIP -->
@@ -650,7 +667,7 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <div  :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div  :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable && isDataset">
             <DataTable
                 :colNames="dataTable.colNames"
                 :head="dataTable.head"

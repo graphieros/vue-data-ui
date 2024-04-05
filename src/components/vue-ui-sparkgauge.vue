@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import { createUid, dataLabel, interpolateColorHex, objectIsEmpty, error } from "../lib";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -17,7 +18,11 @@ const props = defineProps({
             return {}
         }
     }
-})
+});
+
+const isDataset = computed(() => {
+    return !!props.dataset && Object.keys(props.dataset).length;
+});
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -150,7 +155,7 @@ const trackColor = computed(() => {
     <div v-if="sparkgaugeConfig.style.title.show && nameLabel && sparkgaugeConfig.style.title.position === 'top'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${sparkgaugeConfig.style.title.fontSize}px;text-align:${sparkgaugeConfig.style.title.textAlign};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};color:${sparkgaugeConfig.style.title.color}`">
         {{ nameLabel }}
     </div>
-    <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:${sparkgaugeConfig.style.background}; width:100%;`">
+    <svg v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:${sparkgaugeConfig.style.background}; width:100%;`">
         <defs>
             <linearGradient :id="`gradient_${ uid}`" x1="-10%" y1="100%" x2="110%" y2="100%">
                 <stop offset="0%" :stop-color="sparkgaugeConfig.style.colors.min"/>
@@ -190,6 +195,20 @@ const trackColor = computed(() => {
             {{ dataLabel({ p: sparkgaugeConfig.style.dataLabel.prefix, v: currentScore, s: sparkgaugeConfig.style.dataLabel.suffix, r: sparkgaugeConfig.style.dataLabel.rounding }) }}
         </text>
     </svg>
+
+    <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'gauge',
+                style: {
+                    backgroundColor: sparkgaugeConfig.style.background,
+                    gauge: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
+
     <!-- TITLE BOTTOM -->
     <div v-if="sparkgaugeConfig.style.title.show && nameLabel && sparkgaugeConfig.style.title.position === 'bottom'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${sparkgaugeConfig.style.title.fontSize}px;text-align:${sparkgaugeConfig.style.title.textAlign};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};color:${sparkgaugeConfig.style.title.color}`">
         {{ nameLabel }}

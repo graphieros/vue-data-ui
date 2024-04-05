@@ -1558,6 +1558,33 @@
             "color":"#2D353C",
             "maxHeight":500,
             "animated": true,
+            "galaxy": {
+                "color": "#E1E5E8"
+            },
+            "bar3d": {
+                "color": "#E1E5E8"
+            },
+            "sparkHistogram": {
+                "color": "#E1E5E8"
+            },
+            "sparkStackbar": {
+                "color": "#E1E5E8"
+            },
+            "sparkbar": {
+                "color": "#E1E5E8"
+            },
+            "thermometer": {
+               "color": "#E1E5E8"   
+            },
+            "relationCircle": {
+                "color": "#e1e5e8"
+            },
+            "molecule": {
+                "color": "#E1E5E8"
+            },
+            "tiremarks": {
+                "color": "#E1E5E8"
+            },
             "chestnut": {
                 "color": "#E1E5E8"
             },

@@ -12,6 +12,7 @@ import mainConfig from "../default_configs.json";
 import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -27,6 +28,10 @@ const props = defineProps({
         }
     },
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && Object.keys(props.dataset).length;
+})
 
 const uid = ref(createUid());
 
@@ -198,7 +203,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
-            v-if="barConfig.userOptions.show"
+            v-if="barConfig.userOptions.show && isDataset"
             :backgroundColor="barConfig.style.chart.backgroundColor"
             :color="barConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -214,7 +219,7 @@ defineExpose({
             @generateImage="generateImage"
         />
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="3d-bar-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${barConfig.style.chart.backgroundColor};color:${barConfig.style.chart.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="3d-bar-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${barConfig.style.chart.backgroundColor};color:${barConfig.style.chart.color}`">
 
             <!-- DEFS -->
             <defs>
@@ -276,6 +281,20 @@ defineExpose({
 
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'bar3d',
+                style: {
+                    backgroundColor: barConfig.style.chart.backgroundColor,
+                    bar3d: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
+
     </div>
 </template>
 

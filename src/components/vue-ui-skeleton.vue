@@ -285,6 +285,100 @@ const ticks = computed(() => {
 
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
+        <!-- GALAXY -->
+        <template v-if="type === 'galaxy'">
+            <svg data-cy="skeleton-relation-circle" width="100%" viewBox="0.5 0 20 20" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path fill="none" :stroke="skeletonConfig.style.galaxy.color" stroke-width="2" stroke-linecap="round" d="M 7 11 A 1 1 0 0 0 11 11 M 14 11 A 1 1 0 0 0 7 11 M 3 11 A 1 1 0 0 0 14 11 M 18 11 A 1 1 0 0 0 3 11 M 16.4 16 C 17 15 18 13 18 11" />
+            </svg>
+        </template>
+
+        <!-- 3D BAR -->
+        <template v-if="type === 'bar3d'">
+            <svg data-cy="skeleton-relation-circle" width="100%" viewBox="2 0 16 20" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path fill="none" :stroke="skeletonConfig.style.bar3d.color" stroke-width="0.2" d="M10 1 6 3 6 17 10 19 14 17 14 3 10 1M6 3 10 5 14 3M10 5 10 19" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </template>
+
+        <!-- SPARK HISTOGRAM-->
+        <template v-if="type === 'sparkHistogram'">
+            <svg data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 100 20" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <rect x="3" y="8" height="4" width="6" rx="1.5" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="11" y="6" height="8" width="6" rx="2" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="19" y="7" height="6" width="6" rx="2" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="27" y="6" height="8" width="6" rx="2" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="35" y="8" height="4" width="6" rx="1.5" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="43" y="7" height="6" width="6" rx="2" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="51" y="8.5" height="3" width="6" rx="1.5" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="59" y="7" height="6" width="6" rx="2" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="67" y="6" height="8" width="6" rx="2" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="75" y="7" height="6" width="6" rx="2" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="83" y="7" height="6" width="6" rx="2" :fill="skeletonConfig.style.sparkHistogram.color"/>
+                <rect x="91" y="8" height="4" width="6" rx="1.5" :fill="skeletonConfig.style.sparkHistogram.color"/>
+            </svg>
+        </template>
+
+        <!-- SPARKBAR -->
+        <template v-if="type === 'sparkbar'">
+            <svg data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 500 200" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <line x1="12" x2="488" y1="50" y2="50" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkbar.color" opacity="0.5"/> 
+                <line x1="12" x2="400" y1="50" y2="50" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkbar.color" opacity="1"/>
+
+                <line x1="12" x2="488" y1="100" y2="100" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkbar.color" opacity="0.5"/> 
+                <line x1="12" x2="350" y1="100" y2="100" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkbar.color" opacity="1"/>
+
+                <line x1="12" x2="488" y1="150" y2="150" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkbar.color" opacity="0.5"/> 
+                <line x1="12" x2="235" y1="150" y2="150" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkbar.color" opacity="1"/>
+            </svg>
+        </template>
+
+        <!-- SPARK STACKBAR -->
+        <template v-if="type === 'sparkStackbar'">
+            <svg data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 500 64" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <line x1="12" x2="488" y1="32" y2="32" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkStackbar.color" opacity="0.5"/> 
+                <line x1="12" x2="380" y1="32" y2="32" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkStackbar.color" opacity="0.6"/> 
+                <line x1="12" x2="200" y1="32" y2="32" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkStackbar.color" opacity="0.8"/> 
+                <line x1="12" x2="120" y1="32" y2="32" stroke-width="16" stroke-linecap="round" :stroke="skeletonConfig.style.sparkStackbar.color" opacity="1"/> 
+            </svg>
+        </template>
+
+        <!-- THERMOMETER -->
+        <template v-if="type === 'thermometer'">
+            <svg data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 20 20" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path fill="none" :stroke="skeletonConfig.style.thermometer.color" stroke-width="0.2" stroke-linecap="round" d="M 13 4 A 1 1 0 0 0 7 4 L 7 16 A 1 1 0 0 0 13 16 L 13 4 M 7 15 L 8 15 M 7 12 L 8 12 M 7 9 L 8 9 M 7 6 L 8 6 M 12 15 L 13 15 M 12 12 L 13 12 M 12 9 L 13 9 M 12 6 L 13 6 " /><path :stroke="skeletonConfig.style.thermometer.color" stroke-width="1" style="opacity: 0.6" d="M 10 17 L 10 12 " stroke-linecap="round" /><path stroke-linecap="round" :stroke="skeletonConfig.style.thermometer.color" stroke-width="1" opacity="M 10 17 L 10 9" /><path stroke-linecap="round" :stroke="skeletonConfig.style.thermometer.color" stroke-width="1" opacity="0.3" d="M 10 17 L 10 6" /><path stroke-linecap="round" :stroke="skeletonConfig.style.thermometer.color" stroke-width="1" style="opacity: 0.1" d="M 10 17 L 10 3" />
+            </svg>
+        </template>
+
+        <!-- RELATION CIRCLE -->
+        <template v-if="type === 'relationCircle'">
+            <svg data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 20 20" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path fill="none" :stroke="skeletonConfig.style.relationCircle.color" stroke-width="0.2" stroke-linecap="round" d="M1 10A1 1 0 0019 10 1 1 0 001 10M1 10C7 11 9 13 10 19M10 19C10 11 8 7 6 2M10 19C10 11 12 7 14 2M10 19C11 13 12 11 19 10" />
+            </svg>
+        </template>
+
+        <!-- MOLECULE -->
+        <template v-if="type === 'molecule'">
+            <svg data-cy="skeleton-molecule" width="100%" viewBox="0 0 100 100" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <circle cx="50" cy="50" r="6" stroke-width="2" fill="none" :stroke="skeletonConfig.style.molecule.color" />
+                <circle cx="20" cy="50" r="3" stroke-width="1.6" fill="none" :stroke="skeletonConfig.style.molecule.color" />
+                <circle cx="80" cy="50" r="3" stroke-width="1.6" fill="none" :stroke="skeletonConfig.style.molecule.color" />
+                <circle cx="50" cy="20" r="3" stroke-width="1.6" fill="none" :stroke="skeletonConfig.style.molecule.color" />
+                <circle cx="50" cy="80" r="3" stroke-width="1.6" fill="none" :stroke="skeletonConfig.style.molecule.color" />
+                <line x1="50" x2="50" y1="23" y2="45" stroke-width="1" :stroke="skeletonConfig.style.molecule.color"/>
+                <line x1="50" x2="50" y1="77" y2="55" stroke-width="1" :stroke="skeletonConfig.style.molecule.color"/>
+                <line x1="23" x2="45" y1="50" y2="50" stroke-width="1" :stroke="skeletonConfig.style.molecule.color"/>
+                <line x1="77" x2="55" y1="50" y2="50" stroke-width="1" :stroke="skeletonConfig.style.molecule.color"/>
+            </svg>
+        </template>
+
+        <!-- TIREMARKS -->
+        <template v-if="type === 'tiremarks'">
+            <svg data-cy="skeleton-tiremarks" width="100%" viewBox="0 0 312 56" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g v-for="n in 100">
+                    <line :x1="10 + (n * 2.9)" :y1="6" :x2="10 + (n * 2.9)" :y2="50" :stroke="skeletonConfig.style.tiremarks.color" :style="n > 80 ? 'opacity: 0.5' : ''" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </template>
+
         <!-- TYPE PYRAMID -->
         <template v-if="type === 'pyramid'">
             <svg data-cy="skeleton-pyramid" width="100%" viewBox="0 0 105 80" :style="`background:${skeletonConfig.style.backgroundColor}`">
@@ -294,6 +388,7 @@ const ticks = computed(() => {
                 </g>
             </svg>
         </template>
+
         <!-- TYPE RINGS -->
         <template v-if="type === 'rings'">
             <svg data-cy="skeleton-rings" width="100%" viewBox="0 0 400 400" :style="`background:${skeletonConfig.style.backgroundColor}`">

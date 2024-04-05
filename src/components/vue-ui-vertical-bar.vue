@@ -21,6 +21,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -36,6 +37,10 @@ const props = defineProps({
         }
     }
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+})
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_vertical_bar);
@@ -495,7 +500,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="verticalBarConfig.userOptions.show"
+            v-if="verticalBarConfig.userOptions.show && isDataset"
             :backgroundColor="verticalBarConfig.style.chart.backgroundColor"
             :color="verticalBarConfig.style.chart.color"
             :isImaging="isImaging"
@@ -534,7 +539,7 @@ defineExpose({
         </Legend>
 
         <!-- CHART -->
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" >
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" >
 
             <!-- defs -->
             <linearGradient
@@ -699,6 +704,22 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'verticalBar',
+                style: {
+                    backgroundColor: verticalBarConfig.style.chart.backgroundColor,
+                    verticalBar: {
+                        axis: {
+                            color: '#CCCCCC'
+                        },
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
+
          <!-- LEGEND AS DIV : BOTTOM -->
          <Legend
             v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'bottom'"
@@ -734,7 +755,7 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-vertical-bar-table">        
-            <div :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+            <div :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable && isDataset">
                 <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">
                     <table class="vue-ui-data-table">
                         <caption :style="{backgroundColor: verticalBarConfig.table.th.backgroundColor, color: verticalBarConfig.table.th.color, outline: verticalBarConfig.table.th.outline }" class="vue-ui-data-table__caption">

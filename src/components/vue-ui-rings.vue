@@ -23,6 +23,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
   config: {
@@ -37,6 +38,10 @@ const props = defineProps({
       return [];
     },
   },
+});
+
+const isDataset = computed(() => {
+  return !!props.dataset && props.dataset.length;
 });
 
 onMounted(() => {
@@ -437,7 +442,7 @@ defineExpose({
     <UserOptions
         ref="details"
         :key="`user_options_${step}`"
-        v-if="ringsConfig.userOptions.show"
+        v-if="ringsConfig.userOptions.show && isDataset"
         :backgroundColor="ringsConfig.style.chart.backgroundColor"
         :color="ringsConfig.style.chart.color"
         :isPrinting="isPrinting"
@@ -459,6 +464,7 @@ defineExpose({
     <!-- CHART -->
 
     <svg
+      v-if="isDataset"
       :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
       data-cy="rings-svg"
       :viewBox="`0 0 ${svg.width} ${svg.height}`"
@@ -546,6 +552,19 @@ defineExpose({
       <slot name="svg" :svg="svg"/>
     </svg>
 
+    <Skeleton
+      v-if="!isDataset"
+      :config="{
+        type: 'rings',
+        style: {
+          backgroundColor: ringsConfig.style.chart.backgroundColor,
+          rings: {
+            color: '#CCCCCC'
+          }
+        }
+      }"
+    />
+
     <!-- LEGEND AS DIV -->
     <Legend
       v-if="ringsConfig.style.chart.legend.show"
@@ -591,7 +610,7 @@ defineExpose({
 
     <!-- DATA TABLE -->
     <DataTable
-            v-if="mutableConfig.showTable"
+            v-if="mutableConfig.showTable && isDataset"
             :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"

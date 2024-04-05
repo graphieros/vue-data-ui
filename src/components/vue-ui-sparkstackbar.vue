@@ -11,6 +11,7 @@ import {
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -25,7 +26,11 @@ const props = defineProps({
             return [];
         }
     }
-})
+});
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+});
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkstackbar);
@@ -156,7 +161,7 @@ function selectDatapoint(datapoint, index) {
             
         </div>
         <!-- CHART -->
-        <svg width="100%" :viewBox="`0 0 ${svg.width} ${svg.height}`">
+        <svg v-if="isDataset" width="100%" :viewBox="`0 0 ${svg.width} ${svg.height}`">
         <defs>
             <linearGradient v-for="(rect, i) in drawableDataset" :key="`stack_gradient_${i}`" gradientTransform="rotate(90)" :id="`stack_gradient_${i}_${uid}`">
                 <stop offset="0%" :stop-color="rect.color"/>
@@ -190,6 +195,20 @@ function selectDatapoint(datapoint, index) {
                 />
             </g>
         </svg>
+
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'sparkStackbar',
+                style: {
+                    backgroundColor: stackConfig.style.backgroundColor,
+                    sparkStackbar: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
+
         <div v-if="stackConfig.style.legend.show" data-cy="sparkstackbar-legend" :style="`background:${stackConfig.style.backgroundColor};display:flex;flex-wrap:wrap;column-gap:12px;width:calc(100% - 12px);margin:0 auto;margin:${stackConfig.style.legend.margin}; padding: 0 6px;justify-content:${stackConfig.style.legend.textAlign === 'left' ? 'flex-start' : stackConfig.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`">
             <div v-for=" (rect, i) in drawableDataset" :style="`font-size:${stackConfig.style.legend.fontSize}px`">
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px;justify-content:center" >

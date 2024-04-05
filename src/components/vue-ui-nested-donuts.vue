@@ -25,6 +25,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -39,7 +40,11 @@ const props = defineProps({
             return []
         }
     }
-})
+});
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+});
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -48,7 +53,7 @@ onMounted(() => {
             type: 'dataset'
         })
     }
-})
+});
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_nested_donuts);
@@ -518,7 +523,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="donutConfig.userOptions.show"
+            v-if="donutConfig.userOptions.show && isDataset"
             :backgroundColor="donutConfig.style.chart.backgroundColor"
             :color="donutConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -539,7 +544,7 @@ defineExpose({
             @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
         />
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             <!-- NESTED DONUTS -->
             <g v-for="(item, i) in mutableDataset">
                 <g v-for="(arc, j) in item.donut">
@@ -652,6 +657,19 @@ defineExpose({
             <slot name="svg" :svg="svg"></slot>
         </svg>
 
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'donut',
+                style: {
+                    backgroundColor: donutConfig.style.chart.backgroundColor,
+                    donut: {
+                        color: '#CCCCCC',
+                    }
+                }
+            }"
+        />
+
          <!-- TOOLTIP -->
          <Tooltip
             :show="donutConfig.style.chart.tooltip.show && isTooltip"
@@ -700,7 +718,7 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <DataTable
-            v-if="mutableConfig.showTable"
+            v-if="mutableConfig.showTable && isDataset"
             :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"

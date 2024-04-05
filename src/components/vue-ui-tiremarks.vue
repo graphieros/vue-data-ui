@@ -12,6 +12,7 @@ import {
     objectIsEmpty, 
     shiftHue, 
 } from "../lib";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -27,6 +28,10 @@ const props = defineProps({
         }
     },
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && Object.keys(props.dataset).length;
+})
 
 const uid = ref(createUid());
 
@@ -77,10 +82,6 @@ const isVertical = computed(() => {
     return tiremarksConfig.value.style.chart.layout.display === 'vertical';
 });
 
-const hasGradient = computed(() => {
-    return tiremarksConfig.value.style.chart.layout.ticks.gradient.show;
-});
-
 const padding = computed(() => {
     
     const paddingRef = {
@@ -105,8 +106,7 @@ const padding = computed(() => {
             right: tiremarksConfig.value.style.chart.percentage.horizontalPosition === 'right' ? paddingRef.right : 10,
         }
     }
-})
-
+});
 
 // This should return a total for x and another for y
 const totalPadding = computed(() => {
@@ -297,7 +297,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="tiremarksConfig.userOptions.show"
+            v-if="tiremarksConfig.userOptions.show && isDataset"
             :backgroundColor="tiremarksConfig.style.chart.backgroundColor"
             :color="tiremarksConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -314,7 +314,7 @@ defineExpose({
             @generateImage="generateImage"
         />
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${tiremarksConfig.style.chart.backgroundColor};color:${tiremarksConfig.style.chart.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${tiremarksConfig.style.chart.backgroundColor};color:${tiremarksConfig.style.chart.color}`">
             <g v-if="tiremarksConfig.style.chart.layout.curved">
                 <path
                     v-for="(tick, i) in ticks"
@@ -351,6 +351,20 @@ defineExpose({
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'tiremarks',
+                style: {
+                    backgroundColor: tiremarksConfig.style.chart.backgroundColor,
+                    tiremarks: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
+
     </div>
 </template>
 

@@ -21,6 +21,7 @@ import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -36,6 +37,10 @@ const props = defineProps({
         }
     }
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+})
 
 const uid = ref(createUid());
 
@@ -91,6 +96,9 @@ const drawableArea = computed(() => {
 });
 
 const treeTotal = computed(() => {
+    if(!isDataset.value) {
+        return 0
+    }
     return props.dataset.flatMap(root => root.branches.map(branch => branch.value)).reduce((a,b) => a + b);
 })
 
@@ -478,7 +486,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="chestnutConfig.userOptions.show"
+            v-if="chestnutConfig.userOptions.show && isDataset"
             :backgroundColor="chestnutConfig.style.chart.backgroundColor"
             :color="chestnutConfig.style.chart.color"
             :isImaging="isImaging"
@@ -497,7 +505,7 @@ defineExpose({
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
        />
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
+        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
 
             <!-- TITLE AS G -->
             <g v-if="!selectedNut">
@@ -1022,10 +1030,23 @@ defineExpose({
         </g>
         <slot name="svg" :svg="svg"/>
         </svg>
+
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'chestnut',
+                style: {
+                    backgroundColor: chestnutConfig.style.chart.backgroundColor,
+                    chestnut: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
         <slot name="legend" v-bind:legend="mutableDataset"></slot>
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-chestnut-table">        
-            <div v-if="mutableConfig.showTable">
+            <div v-if="mutableConfig.showTable && isDataset">
                 <div style="width: 100%" :class="{'vue-ui-responsive': isResponsive}">
                     <table data-cy="chestnut-table" class="vue-ui-data-table">
                         <caption :style="{backgroundColor: chestnutConfig.table.th.backgroundColor, color: chestnutConfig.table.th.color, outline: chestnutConfig.table.th.outline }" class="vue-ui-data-table__caption">

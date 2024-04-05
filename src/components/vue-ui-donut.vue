@@ -26,6 +26,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -41,6 +42,10 @@ const props = defineProps({
         }
     },
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length
+})
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -417,7 +422,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="donutConfig.userOptions.show"
+            v-if="donutConfig.userOptions.show && isDataset"
             :backgroundColor="donutConfig.style.chart.backgroundColor"
             :color="donutConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -438,7 +443,7 @@ defineExpose({
             @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
         />
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             
             <!-- DEFS -->
             <defs>
@@ -662,6 +667,20 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'donut',
+                style: {
+                    backgroundColor: donutConfig.style.chart.backgroundColor,
+                    donut: {
+                        color: '#CCCCCC',
+                        strokeWidth: donutConfig.style.chart.layout.donut.strokeWidth * 0.8
+                    }
+                }
+            }"
+        />
+
         <!-- LEGEND AS DIV -->
 
         <Legend
@@ -704,7 +723,7 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <DataTable
-            v-if="mutableConfig.showTable"
+            v-if="mutableConfig.showTable && isDataset"
             :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"

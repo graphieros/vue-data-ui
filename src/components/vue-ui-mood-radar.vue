@@ -20,6 +20,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Legend from "../atoms/Legend.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -35,6 +36,10 @@ const props = defineProps({
         },
     },
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && Object.keys(props.dataset).length;
+})
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -114,6 +119,10 @@ const convertedDataset = computed(() => {
 });
 
 const radar = computed(() => {
+    if(!isDataset.value) {
+        return []
+    }
+
     ['1', '2', '3', '4', '5'].forEach(rating => {
         if([null, undefined].includes(props.dataset[rating])){
             error({
@@ -314,7 +323,7 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
-            v-if="radarConfig.userOptions.show"
+            v-if="radarConfig.userOptions.show && isDataset"
             :backgroundColor="radarConfig.style.chart.backgroundColor"
             :color="radarConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -332,7 +341,7 @@ defineExpose({
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />
 
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`"
+        <svg v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"
         :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`">
             <!-- DEFS -->
@@ -439,6 +448,24 @@ defineExpose({
                 <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'radar',
+                style: {
+                    backgroundColor: radarConfig.style.chart.backgroundColor,
+                    radar: {
+                        grid: {
+                            color: '#CCCCCC'
+                        },
+                        shapes: {
+                            color: '#CCCCCC'
+                        }
+                    }
+                }
+            }"
+        />
+
         <!-- LEGEND AS DIV -->
         <Legend v-if="radarConfig.style.chart.legend.show" :legendSet="convertedDataset" :config="legendConfig"
             style="display: flex; row-gap: 6px">
@@ -473,7 +500,7 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <DataTable
-            v-if="mutableConfig.showTable"
+            v-if="mutableConfig.showTable && isDataset"
             :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"

@@ -12,6 +12,7 @@ import {
     objectIsEmpty,
     shiftHue, 
 } from "../lib";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -27,6 +28,10 @@ const props = defineProps({
         }
     },
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && Object.keys(props.dataset).length
+})
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_wheel);
@@ -66,7 +71,7 @@ function calcTickStart(angle, distance = 1) {
     }
 }
 
-const activeValue = ref(wheelConfig.value.style.chart.animation.use ? 0 : props.dataset.percentage);
+const activeValue = ref(wheelConfig.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
 
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
@@ -82,10 +87,10 @@ onMounted(() => {
     function animate() {
         activeValue.value += speed + acceleration;
         acceleration += incr;
-        if(activeValue.value < props.dataset.percentage) {
+        if(activeValue.value < (props.dataset.percentage || 0)) {
             requestAnimationFrame(animate)
         } else {
-            activeValue.value = props.dataset.percentage
+            activeValue.value = (props.dataset.percentage || 0)
         }
     }
 
@@ -195,7 +200,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="wheelConfig.userOptions.show"
+            v-if="wheelConfig.userOptions.show && isDataset"
             :backgroundColor="wheelConfig.style.chart.backgroundColor"
             :color="wheelConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -212,7 +217,7 @@ defineExpose({
             @generateImage="generateImage"
         />
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="wheel-svg" :viewBox="`0 0 ${svg.size} ${svg.size}`" :style="`max-width:100%;overflow:visible;background:${wheelConfig.style.chart.backgroundColor};color:${wheelConfig.style.chart.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="wheel-svg" :viewBox="`0 0 ${svg.size} ${svg.size}`" :style="`max-width:100%;overflow:visible;background:${wheelConfig.style.chart.backgroundColor};color:${wheelConfig.style.chart.color}`">
             <line 
                 v-for="(tick, i) in ticks"
                 :x1="tick.x1"
@@ -247,6 +252,19 @@ defineExpose({
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'wheel',
+                style: {
+                    backgroundColor: wheelConfig.style.chart.backgroundColor,
+                    wheel: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
     </div>
 </template>
 

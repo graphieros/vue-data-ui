@@ -21,6 +21,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -36,6 +37,10 @@ const props = defineProps({
         }
     }
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+})
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_candlestick);
@@ -444,7 +449,7 @@ defineExpose({
          <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="candlestickConfig.userOptions.show"
+            v-if="candlestickConfig.userOptions.show && isDataset"
             :backgroundColor="candlestickConfig.style.backgroundColor"
             :color="candlestickConfig.style.color"
             :isImaging="isImaging"
@@ -464,7 +469,7 @@ defineExpose({
          />
          
         <!-- CHART -->
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
             <g v-if="drawableDataset.length > 0">
                 <!-- DEFS -->
             <defs>
@@ -672,8 +677,26 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'candlesticks',
+                style: {
+                    backgroundColor: candlestickConfig.style.backgroundColor,
+                    candlesticks: {
+                        axis: {
+                            color: '#CCCCCC'
+                        },
+                        candle: {
+                            color: '#CCCCCC'
+                        }
+                    }
+                }
+            }"
+        />
+
         <!-- SLICER -->
-        <div v-if="candlestickConfig.style.zoom.show" class="vue-ui-candlestick-range-slider-wrapper" data-html2canvas-ignore>
+        <div v-if="candlestickConfig.style.zoom.show && isDataset" class="vue-ui-candlestick-range-slider-wrapper" data-html2canvas-ignore>
             <div class="vue-ui-candlestick-range-slider-label-left">
                 {{ dataset[slicer.start] ? dataset[slicer.start][0] : dataset[0][0] }}
             </div>
@@ -708,7 +731,7 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
+        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable && isDataset">
             <DataTable
                 :colNames="dataTable.colNames"
                 :head="dataTable.head"

@@ -10,6 +10,7 @@ import {
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import Shape from "../atoms/Shape.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -24,6 +25,10 @@ const props = defineProps({
             return [];
         }
     }
+});
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
 });
 
 onMounted(() => {
@@ -146,7 +151,7 @@ const animation = computed(() => {
             </div>    
         </div>
 
-        <svg data-cy="sparkhistogram-svg" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" style="overflow: visible">
+        <svg v-if="isDataset" data-cy="sparkhistogram-svg" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" style="overflow: visible">
             <defs>
                 <radialGradient v-for="(posGrad, i) in computedDataset" :id="`gradient_positive_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
                     <stop offset="0%" :stop-color="`${shiftHue(histoConfig.style.bars.colors.positive, 0.05)}${opacity[posGrad.intensity]}`"/>
@@ -243,6 +248,19 @@ const animation = computed(() => {
             </g>
 
         </svg>
+
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'sparkHistogram',
+                style: {
+                    backgroundColor: histoConfig.style.backgroundColor,
+                    sparkHistogram: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
     </div>
 </template>
 

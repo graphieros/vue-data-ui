@@ -827,7 +827,7 @@ describe('error', () => {
             });
             fail('Error was not thrown');
         } catch (error) {
-            expect(error.message).toBe('\n> VueUiXy is missing the dataset prop.\n');
+            expect(error.message).toBe('\n> VueUiXy dataset prop is either missing, undefined or empty.\n');
         }
     });
 
@@ -837,7 +837,7 @@ describe('error', () => {
             type: 'dataset',
         });
         expect(consoleMock).toHaveBeenCalledOnce();
-        expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy is missing the dataset prop.\n');
+        expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy dataset prop is either missing, undefined or empty.\n');
     });
 
     test('throws an error for missing dataset object required attribute', () => {

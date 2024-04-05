@@ -22,6 +22,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Legend from "../atoms/Legend.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -37,6 +38,10 @@ const props = defineProps({
         }
     }
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+})
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -382,7 +387,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options${step}`"
-            v-if="onionConfig.userOptions.show"
+            v-if="onionConfig.userOptions.show && isDataset"
             :backgroundColor="onionConfig.style.chart.backgroundColor"
             :color="onionConfig.style.chart.color"
             :isImaging="isImaging"
@@ -402,7 +407,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
 
             <defs>
                 <radialGradient :id="`onion_gradient_${uid}`">
@@ -554,6 +559,19 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'onion',
+                style: {
+                    backgroundColor: onionConfig.style.chart.backgroundColor,
+                    onion: {
+                        color: onionConfig.style.chart.layout.gutter.color
+                    }
+                }
+            }"
+        />
+
         <!-- LEGEND AS DIV -->
         <Legend
             v-if="onionConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
@@ -588,7 +606,7 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <div class="vue-ui-onion-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div class="vue-ui-onion-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable && isDataset">
             <DataTable
                 :colNames="dataTable.colNames"
                 :head="dataTable.head"

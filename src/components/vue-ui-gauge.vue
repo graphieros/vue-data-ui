@@ -16,6 +16,7 @@ import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config:{
@@ -31,6 +32,11 @@ const props = defineProps({
         }
     }
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && Object.keys(props.dataset).length;
+})
+
 const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_gauge);
@@ -54,12 +60,13 @@ const mutableConfig = ref({
 
 const mutableDataset = computed(() => {
 
-    if (objectIsEmpty(props.dataset.series)) {
+    if (!isDataset.value || objectIsEmpty(props.dataset.series)) {
         error({
             componentName: 'VueUiGauge',
             type: 'datasetAttributeEmpty',
             property: 'series'
-        })
+        });
+        return []
     } else {
         props.dataset.series.forEach((serie, i) => {
             if ([null, undefined].includes(serie.from)) {
@@ -161,9 +168,8 @@ onMounted(() => {
             })
         }
     }
-
     const arr = [];
-    mutableDataset.value.series.forEach(serie => {
+    (mutableDataset.value.series || []).forEach(serie => {
         arr.push(serie.from || 0);
         arr.push(serie.to || 0);
     });
@@ -368,7 +374,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="gaugeConfig.userOptions.show"
+            v-if="gaugeConfig.userOptions.show && isDataset"
             :backgroundColor="gaugeConfig.style.chart.backgroundColor"
             :color="gaugeConfig.style.chart.color"
             :isImaging="isImaging"
@@ -386,7 +392,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:hidden !important;background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">
+        <svg v-if="isDataset"  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:hidden !important;background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">
 
             <defs>
                 <radialGradient :id="`gradient_${uid}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -545,6 +551,19 @@ defineExpose({
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'gauge',
+                style: {
+                    backgroundColor: gaugeConfig.style.chart.backgroundColor,
+                    gauge: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
         <slot name="legend" v-bind:legend="mutableDataset"></slot>
     </div>
 </template>

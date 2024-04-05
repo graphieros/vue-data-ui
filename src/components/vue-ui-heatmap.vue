@@ -11,7 +11,6 @@ import {
     isFunction,
     interpolateColorHex,
     objectIsEmpty,
-    opacity, 
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
@@ -20,6 +19,7 @@ import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -35,6 +35,10 @@ const props = defineProps({
         }
     }
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+})
 
 if(objectIsEmpty(props.dataset)) {
     error({
@@ -353,7 +357,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="heatmapConfig.userOptions.show"
+            v-if="heatmapConfig.userOptions.show && isDataset"
             :backgroundColor="heatmapConfig.style.backgroundColor"
             :color="heatmapConfig.style.color"
             :isImaging="isImaging"
@@ -373,7 +377,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.heightWithLegend}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.heightWithLegend}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
             <!-- TITLE AS G -->
             <g v-if="heatmapConfig.style.title.text && mutableConfig.inside && !isPrinting">
                 <text
@@ -552,6 +556,19 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'heatmap',
+                style: {
+                    backgroundColor: heatmapConfig.style.backgroundColor,
+                    heatmap: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="heatmapConfig.style.tooltip.show && isTooltip"
@@ -571,7 +588,7 @@ defineExpose({
         
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-heatmap-table">
-            <div :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable" :class="{'vue-ui-responsive' : isResponsive}">
+            <div :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable && isDataset" :class="{'vue-ui-responsive' : isResponsive}">
                 <table class="vue-ui-data-table">
                     <caption :style="`backgroundColor:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline}`">
                         {{ heatmapConfig.style.title.text }} <span v-if="heatmapConfig.style.title.subtitle.text">{{  heatmapConfig.style.title.subtitle.text }}</span>

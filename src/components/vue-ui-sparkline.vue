@@ -11,6 +11,7 @@ import {
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -33,6 +34,10 @@ const props = defineProps({
         type: Number,
         default: undefined
     }
+});
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
 });
 
 const uid = ref(createUid());
@@ -198,6 +203,9 @@ function unselectPlot() {
 }
 
 const dataLabel = computed(() => {
+    if(!isDataset.value) {
+        return 0
+    }
     if (sparklineConfig.value.style.dataLabel.valueType === 'latest') {
         return mutableDataset.value[mutableDataset.value.length -1].absoluteValue;
     } else if(sparklineConfig.value.style.dataLabel.valueType === 'sum') {
@@ -227,7 +235,7 @@ function selectDatapoint(datapoint, index) {
             </span>
         </div>
         <!-- CHART -->
-        <svg data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${sparklineConfig.style.backgroundColor};overflow:visible`">
+        <svg v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${sparklineConfig.style.backgroundColor};overflow:visible`">
             <!-- DEFS -->
             <defs>
                 <linearGradient
@@ -359,6 +367,19 @@ function selectDatapoint(datapoint, index) {
             />
             <slot name="svg" :svg="svg"/>
         </svg>
+        
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'sparkline',
+                style: {
+                    backgroundColor: sparklineConfig.style.backgroundColor,
+                    sparkline: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
     </div>
 </template>
 

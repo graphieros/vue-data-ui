@@ -7,6 +7,7 @@ import mainConfig from "../default_configs.json";
 import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     dataset: {
@@ -21,6 +22,10 @@ const props = defineProps({
             return {}
         }
     }
+});
+
+const isDataset = computed(() => {
+    return !!props.dataset && Object.keys(props.dataset).length;
 });
 
 const uid = ref(createUid());
@@ -343,7 +348,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="relationConfig.userOptions.show"
+            v-if="relationConfig.userOptions.show && isDataset"
             :hasXls="false"
             :hasImg="true"
             :backgroundColor="relationConfig.style.backgroundColor"
@@ -361,11 +366,12 @@ defineExpose({
         />
 
         <svg
+            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`0 0 ${size} ${size}`"
             class="relation-circle"
             width="100%"
-            style="user-select:none"
+            :style="`user-select:none; background:${relationConfig.style.backgroundColor}`"
         >
             <!-- TITLE AS G -->
             <g v-if="relationConfig.style.title.text && !relationConfig.style.title.useDiv">
@@ -461,6 +467,20 @@ defineExpose({
             />
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'relationCircle',
+                style: {
+                    backgroundColor: relationConfig.style.backgroundColor,
+                    relationCircle: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
+
     </div>
 </template>
 

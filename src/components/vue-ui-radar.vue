@@ -26,6 +26,7 @@ import Tooltip from "../atoms/Tooltip.vue";
 import SparkBar from "./vue-ui-sparkbar.vue";
 import Legend from "../atoms/Legend.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -41,6 +42,10 @@ const props = defineProps({
         }
     }
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && Object.keys(props.dataset).length
+})
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -143,7 +148,8 @@ const datasetCopy = computed(() => {
             componentName: 'VueUiRadar',
             type: 'datasetAttribute',
             property: 'categories ({ name: string; prefix?: string; suffix?: string}[])'
-        })
+        });
+        return []
     } else {
         props.dataset.categories.forEach((cat, i) => {
             if ([null, undefined].includes(cat.name)) {
@@ -207,6 +213,9 @@ const datasetCopy = computed(() => {
 });
 
 const seriesCopy = computed(() => {
+    if (!isDataset.value) {
+        return []
+    }
     return props.dataset.series
         .map((s, i) => {
             return {
@@ -519,7 +528,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="radarConfig.userOptions.show"
+            v-if="radarConfig.userOptions.show && isDataset"
             :backgroundColor="radarConfig.style.chart.backgroundColor"
             :color="radarConfig.style.chart.color"
             :isImaging="isImaging"
@@ -539,7 +548,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`" >
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`" >
 
             <!-- DEFS -->
             <defs>
@@ -676,6 +685,24 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'radar',
+                style: {
+                    backgroundColor: radarConfig.style.chart.backgroundColor,
+                    radar: {
+                        grid: {
+                            color: radarConfig.style.chart.layout.outerPolygon.stroke
+                        },
+                        shapes: {
+                            color: radarConfig.style.chart.layout.outerPolygon.stroke
+                        }
+                    }
+                }
+            }"
+        />
+
         <!-- LEGEND AS DIV -->
         <Legend
             v-if="radarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
@@ -713,7 +740,7 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <div  class="vue-ui-radar-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div  class="vue-ui-radar-table" :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable && isDataset">
             <DataTable
                 :colNames="dataTable.colNames"
                 :head="dataTable.head"

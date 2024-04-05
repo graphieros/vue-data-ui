@@ -26,7 +26,7 @@
         <UserOptions
             ref="defails"
             :key="`user_options_${step}`"
-            v-if="chartConfig.chart.userOptions.show"
+            v-if="chartConfig.chart.userOptions.show && isDataset"
             :backgroundColor="chartConfig.chart.backgroundColor"
             :color="chartConfig.chart.color"
             :isPrinting="isPrinting"
@@ -47,10 +47,10 @@
             @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
         />
         
-        <canvas ref="vueUiXyCanvas" v-if="chartConfig.useCanvas" :height="chartConfig.chart.height" :width="chartConfig.chart.width" @mouseover="isInsideCanvas = true" @mouseleave="resetCanvas">
+        <canvas ref="vueUiXyCanvas" v-if="chartConfig.useCanvas && isDataset" :height="chartConfig.chart.height" :width="chartConfig.chart.width" @mouseover="isInsideCanvas = true" @mouseleave="resetCanvas">
         </canvas>
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" v-else width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
+        <svg v-if="isDataset && !chartConfig.useCanvas" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
@@ -602,6 +602,25 @@
 
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'line',
+                style: {
+                    backgroundColor: chartConfig.chart.backgroundColor,
+                    line: {
+                        axis: {
+                            color: chartConfig.chart.grid.stroke,
+                        },
+                        path: {
+                            color: chartConfig.chart.grid.stroke,
+                            strokeWidth: 0.5
+                        }
+                    }
+                }
+            }"
+        />
         
         <!-- SLICER -->
         <div v-if="chartConfig.chart.zoom.show && maxX > 6" class="vue-ui-xy-range-slider-wrapper" data-html2canvas-ignore style="position:relative">
@@ -671,7 +690,7 @@
             </Tooltip>
 
         <!-- DATA TABLE -->
-        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
+        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable && isDataset">
         <div style="display: flex; flex-direction:row; gap: 6px; align-items:center; padding-left: 6px" data-html2canvas-ignore>
             <input type="checkbox" v-model="showSparklineTable">
             <div @click="showSparklineTable = !showSparklineTable" style="cursor: pointer">
@@ -736,6 +755,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Shape from "../atoms/Shape.vue";
 import BaseIcon from '../atoms/BaseIcon.vue';
 import TableSparkline from "./vue-ui-table-sparkline.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const sliderId = createUid();
 
@@ -762,7 +782,8 @@ export default {
     Tooltip,
     UserOptions,
     BaseIcon,
-    TableSparkline
+    TableSparkline,
+    Skeleton
 },
     data(){
         this.dataset.forEach((ds, i) => {
@@ -828,6 +849,9 @@ export default {
         }
     },
     computed: {
+        isDataset() {
+            return !!this.dataset && this.dataset.length;
+        },
         chartFont() {
             const wrapper = document.getElementById(`vue-ui-xy_${this.uniqueId}`);
             return window.getComputedStyle(wrapper, null).getPropertyValue("font-family");

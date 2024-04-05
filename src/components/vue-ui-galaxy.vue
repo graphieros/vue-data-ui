@@ -22,6 +22,7 @@ import DataTable from "../atoms/DataTable.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import pdf from "../pdf";
 import img from "../img";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -36,6 +37,10 @@ const props = defineProps({
             return []
         }
     },
+});
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
 });
 
 onMounted(() => {
@@ -399,7 +404,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="galaxyConfig.userOptions.show"
+            v-if="galaxyConfig.userOptions.show && isDataset"
             :backgroundColor="galaxyConfig.style.chart.backgroundColor"
             :color="galaxyConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -418,7 +423,7 @@ defineExpose({
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="galaxy-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${galaxyConfig.style.chart.backgroundColor};color:${galaxyConfig.style.chart.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="galaxy-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${galaxyConfig.style.chart.backgroundColor};color:${galaxyConfig.style.chart.color}`">
             
             <!-- PATHS -->
             <g v-for="datapoint in galaxySet">
@@ -472,6 +477,19 @@ defineExpose({
             </g>
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'galaxy',
+                style: {
+                    backgroundColor: galaxyConfig.style.chart.backgroundColor,
+                    galaxy: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
 
         <!-- LEGEND AS DIV -->
 

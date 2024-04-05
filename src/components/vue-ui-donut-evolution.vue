@@ -25,6 +25,7 @@ import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -40,6 +41,10 @@ const props = defineProps({
         }
     },
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+})
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -463,7 +468,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="donutEvolutionConfig.userOptions.show"
+            v-if="donutEvolutionConfig.userOptions.show && isDataset"
             :backgroundColor="donutEvolutionConfig.style.chart.backgroundColor"
             :color="donutEvolutionConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -483,7 +488,7 @@ defineExpose({
         />
 
         
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-evolution-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${donutEvolutionConfig.style.chart.backgroundColor};color:${donutEvolutionConfig.style.chart.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-evolution-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${donutEvolutionConfig.style.chart.backgroundColor};color:${donutEvolutionConfig.style.chart.color}`">
 
             <defs>
                 <linearGradient :id="`hover_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -808,6 +813,24 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'donutEvolution',
+                style: {
+                    backgroundColor: donutEvolutionConfig.style.chart.backgroundColor,
+                    donutEvolution: {
+                        axis: {
+                            color: '#CCCCCC'
+                        },
+                        donuts: {
+                            color: '#CCCCCC'
+                        }
+                    }
+                }
+            }"
+        />
+
         <Legend
             v-if="donutEvolutionConfig.style.chart.legend.show"
             :legendSet="legendSet"
@@ -829,7 +852,7 @@ defineExpose({
 
         <slot name="legend" v-bind:legend="convertedDataset"></slot>
 
-        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
+        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable && isDataset">
             <DataTable
                 :colNames="table.colNames"
                 :head="table.head" 

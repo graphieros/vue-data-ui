@@ -21,6 +21,7 @@ import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
 import Shape from "../atoms/Shape.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -36,6 +37,10 @@ const props = defineProps({
         }
     },
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+})
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_scatter);
@@ -476,7 +481,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="scatterConfig.userOptions.show"
+            v-if="scatterConfig.userOptions.show && isDataset"
             :backgroundColor="scatterConfig.style.backgroundColor"
             :color="scatterConfig.style.color"
             :isImaging="isImaging"
@@ -496,7 +501,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
 
             <!-- TITLE AS G -->
             <g v-if="scatterConfig.style.title.text && mutableConfig.inside && !isPrinting">
@@ -713,6 +718,25 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'quadrant',
+                style: {
+                    backgroundColor: scatterConfig.style.backgroundColor,
+                    quadrant: {
+                        grid: {
+                            color: scatterConfig.style.layout.axis.stroke
+                        },
+                        plots: {
+                            color: scatterConfig.style.layout.axis.stroke,
+                            radius: 1
+                        }
+                    }
+                }
+            }"
+        />
+
         <!-- LEGEND AS DIV -->
         <Legend
             v-if="scatterConfig.style.legend.show && (!mutableConfig.inside || isPrinting)"
@@ -757,7 +781,7 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable">
+        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable && isDataset">
             <DataTable
                 :colNames="dataTable.colNames"
                 :head="dataTable.head"

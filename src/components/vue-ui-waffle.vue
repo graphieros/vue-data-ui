@@ -25,6 +25,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -40,6 +41,10 @@ const props = defineProps({
         }
     },
 });
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length
+})
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -521,7 +526,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="waffleConfig.userOptions.show"
+            v-if="waffleConfig.userOptions.show && isDataset"
             :backgroundColor="waffleConfig.style.chart.backgroundColor"
             :color="waffleConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -541,7 +546,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="waffle-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="waffle-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >
 
             <!-- DEFS -->
             <defs>
@@ -670,6 +675,19 @@ defineExpose({
             <slot name="svg" :svg="svg"/>
         </svg>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'waffle',
+                style: {
+                    backgroundColor: waffleConfig.style.chart.backgroundColor,
+                    waffle: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
+
         <!-- LEGEND AS DIV -->
         <Legend
             v-if="waffleConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
@@ -711,7 +729,7 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <DataTable
-            v-if="mutableConfig.showTable"
+            v-if="mutableConfig.showTable && isDataset"
             :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"

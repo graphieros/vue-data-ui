@@ -15,6 +15,7 @@ import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     dataset: {
@@ -29,6 +30,10 @@ const props = defineProps({
             return {}
         }
     }
+});
+
+const isDataset = computed(() => {
+    return !!props.dataset && Object.keys(props.dataset).length;
 });
 
 onMounted(() => {
@@ -296,7 +301,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="thermoConfig.userOptions.show"
+            v-if="thermoConfig.userOptions.show && isDataset"
             :backgroundColor="thermoConfig.style.chart.backgroundColor"
             :color="thermoConfig.style.chart.color"
             :isImaging="isImaging"
@@ -313,7 +318,7 @@ defineExpose({
             :hasXls="false"
         />
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" :style="`background:${thermoConfig.style.chart.backgroundColor}`">
             <defs>
                 <clipPath id="vueUiPill" clipPathUnits="objectBoundingBox">
                     <rect 
@@ -492,6 +497,19 @@ defineExpose({
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'thermometer',
+                style: {
+                    backgroundColor: thermoConfig.style.chart.backgroundColor,
+                    thermometer: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
     </div>
 </template>
 

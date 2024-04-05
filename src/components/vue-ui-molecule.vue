@@ -24,6 +24,7 @@ import RecursiveCircles from "../atoms/RecursiveCircles.vue";
 import RecursiveLinks from "../atoms/RecursiveLinks.vue";
 import RecursiveLabels from "../atoms/RecursiveLabels.vue";
 import BaseDirectionPad from "../atoms/BaseDirectionPad.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -38,6 +39,10 @@ const props = defineProps({
             return []
         }
     },
+});
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
 });
 
 onMounted(() => {
@@ -511,7 +516,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="moleculeConfig.userOptions.show"
+            v-if="moleculeConfig.userOptions.show && isDataset"
             :backgroundColor="moleculeConfig.style.chart.backgroundColor"
             :color="moleculeConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -531,7 +536,7 @@ defineExpose({
             @toggleLabels="mutableConfig.showDataLabels = !mutableConfig.showDataLabels"
         />
 
-        <svg data-cy="cluster-svg" :viewBox="dynamicViewBox"
+        <svg v-if="isDataset" data-cy="cluster-svg" :viewBox="dynamicViewBox"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`overflow: hidden; background:${moleculeConfig.style.chart.backgroundColor};color:${moleculeConfig.style.chart.color}`" @click="unzoom($event)">
 
@@ -576,6 +581,19 @@ defineExpose({
             @moveTop="move('top')"
             @moveBottom="move('bottom')"
             @reset="restoreViewBox(); isZoom = false"
+        />
+
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'molecule',
+                style: {
+                    backgroundColor: moleculeConfig.style.chart.backgroundColor,
+                    molecule: {
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
         />
 
         <Tooltip
