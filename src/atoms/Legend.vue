@@ -13,6 +13,10 @@ const props = defineProps({
         default() {
             return {}
         }
+    },
+    id: {
+        type: String,
+        default: ''
     }
 })
 
@@ -26,6 +30,7 @@ function handleClick(legend, i) {
 
 <template>
     <div
+        :id="id"
         :data-cy="config.cy"
         class="vue-data-ui-legend"
         :style="`background:${config.backgroundColor};font-size:${config.fontSize}px;color:${config.color};padding-bottom:${config.paddingBottom}px;font-weight:${config.fontWeight}`"

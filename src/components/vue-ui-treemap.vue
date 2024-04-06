@@ -572,9 +572,10 @@ defineExpose({
 
         <!-- LEGEND & LEGEND SLOT -->
         <Legend
-            v-if="treemapConfig.style.chart.legend.show"
+            v-if="treemapConfig.style.chart.legend.show && !isZoom"
             :legendSet="legendSet"
             :config="legendConfig"
+            :id="`treemap_legend_${uid}`"
             @clickMarker="({legend}) => segregate(legend)"
         >
             <template #item="{ legend, index }">
