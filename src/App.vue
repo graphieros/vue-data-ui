@@ -3139,6 +3139,9 @@ function treemapSelect(data) {
       </template>
       </Box>
 
+      <TreemapTest :dataset="treemapDataset" :config="treemapConfig" @selectLegend="treemapSelect" @selectDatapoint="treemapSelect">
+          </TreemapTest>
+
       <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_treemap)">
         <template #title>
           <BaseIcon name="chartTreemap"/>
@@ -3148,17 +3151,6 @@ function treemapSelect(data) {
         </template>
         <template #dev>
           <TreemapTest :dataset="treemapDataset" :config="treemapConfig" @selectLegend="treemapSelect" @selectDatapoint="treemapSelect">
-            <template #rect="{ rect, shouldShow, fontSize, isZoom, textColor }">
-              <div v-if="shouldShow" :style="`font-size:${fontSize}px;color:${textColor}`">
-                {{ rect.color }} {{  isZoom }}
-              </div>
-            </template>
-            <!-- <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
-              {{ datapoint.name }}
-            </template>
-            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
-              {{ seriesIndex }}
-            </template> -->
           </TreemapTest>
         </template>
         <template #prod>

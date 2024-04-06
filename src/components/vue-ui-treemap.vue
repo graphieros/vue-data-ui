@@ -657,10 +657,13 @@ defineExpose({
 .vue-ui-treemap-zoom-info {
     pointer-events: none;
     position: absolute;
-    top: calc(50% + 30px);
+    top: 50%;
     left: 50%;
+    height: 100%;
+    width:100%;
+    display: flex;
+    align-items:center;
+    justify-content:center;
     transform: translate(-50%, -50%);
-}
-.vue-data-ui-legend {
 }
 </style>
