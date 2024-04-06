@@ -40,10 +40,11 @@ import {
     VueUiTableSparkline,
     VueUiThermometer,
     VueUiTiremarks,
+    VueUiTreemap,
     VueUiVerticalBar,
     VueUiWaffle, 
     VueUiWheel,
-    VueUiXy, 
+    VueUiXy,
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -86,6 +87,7 @@ app.component("VueUiTable", VueUiTable);
 app.component("VueUiTableSparkline", VueUiTableSparkline);
 app.component("VueUiThermometer", VueUiThermometer);
 app.component("VueUiTiremarks", VueUiTiremarks);
+app.component("VueUiTreemap", VueUiTreemap);
 app.component("VueUiVerticalBar", VueUiVerticalBar);
 app.component("VueUiWaffle", VueUiWaffle);
 app.component("VueUiWheel", VueUiWheel);

@@ -20,6 +20,139 @@ declare module 'vue-data-ui' {
         plots?: TPlot;
     }
 
+    export type VueUiTreemapDatasetItem = {
+        name: string;
+        value: number;
+        children?: VueUiTreemapDatasetItem[];
+        color?: string;
+    };
+
+    export type VueUiTreemapConfig = {
+        userOptions?: {
+            show?: boolean;
+        };
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                height?: number;
+                width?: number;
+                padding?: {
+                    top?: number;
+                    left?: number;
+                    bottom?: number;
+                    right?: number;
+                };
+                layout?: {
+                    sorted?: boolean;
+                    rects?: {
+                        stroke?: string;
+                        strokeWidth?: number;
+                        borderRadius?: number;
+                        colorRatio?: number;
+                        gradient?: {
+                            show?: boolean;
+                            intensity?: number;
+                        };
+                        selected?: {
+                            stroke?: string;
+                            strokeWidth?: number;
+                            unselectedOpacity?: number;
+                        };
+                    };
+                    labels?: {
+                        showDefaultLabels?: boolean;
+                        fontSize?: number;
+                        minFontSize?: number;
+                        hideUnderProportion?: number;
+                        prefix?: string;
+                        suffix?: string;
+                        rounding?: number;
+                    };
+                };
+                legend?: {
+                    backgroundColor?: string;
+                    color?: string;
+                    show?: boolean;
+                    fontSize?: number;
+                    bold?: boolean;
+                    roundingValue?: number;
+                    roundingPercentage?: number;
+                };
+                title?: {
+                    text?: string;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                    subtitle?: {
+                        color?: string;
+                        text?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                    };
+                };
+                tooltip?: {
+                    show?: boolean;
+                    color?: string;
+                    backgroundColor?: string;
+                    fontSize?: number;
+                    roundingValue?: number;
+                    customFormat?: (params: VueUiTooltipParams<VueUiTreemapDatapoint, VueUiTreemapSeriesItem[], VueUiTreemapConfig>) => string;
+                };
+            };
+        };
+        table?: {
+            show?: boolean;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                series?: string;
+                value?: string;
+                percentage?: string;
+            };
+            th?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+            };
+            td?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+                roundingValue?: number;
+                roundingPercentage?: number;
+            };
+        };
+    };
+
+    export type VueUiTreemapDatapoint = {
+        children?: VueUiTreemapDatapoint[];
+        color: string;
+        id: string;
+        name: string;
+        normalizedValue: number;
+        parentName?: string;
+        proportion: number;
+        value: number;
+        x0: number;
+        x1: number;
+        y0: number;
+        y1: number;
+    };
+
+    export type VueUiTreemapSeriesItem = {
+        children?: VueUiTreemapSeriesItem[];
+        color?: string;
+        id?: string;
+        name?: string;
+        value?: string;
+    }
+
+    export const VueUiTreemap: DefineComponent<{
+        config?: VueUiTreemapConfig,
+        dataset: VueUiTreemapDatasetItem[]
+    }>;
+
     export type VueUiKpiConfig = {
         animationFrames?: number;
         animationValueStart?: number;
@@ -4271,11 +4404,14 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution" | "tiremarks" | "molecule" | "relationCircle" | "thermometer" | "sparkbar" | "sparkStackbar" | "sparkHistogram" | "bar3d" | "galaxy";
+        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution" | "tiremarks" | "molecule" | "relationCircle" | "thermometer" | "sparkbar" | "sparkStackbar" | "sparkHistogram" | "bar3d" | "galaxy" | "treemap";
         style?: {
             backgroundColor?: string;
             color?: string;
             animated?: boolean;
+            treemap?: {
+                color?: string;
+            };
             galaxy?: {
                 color?: string;
             };
@@ -4428,9 +4564,9 @@ declare module 'vue-data-ui' {
         config?: VueUiSkeletonConfig
     }>;
 
-    export type VueDataUiConfig = VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutConfig | VueUiDonutEvolutionConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkHistogramConfig | VueUiSparkStackBarConfig | VueUiSparkbarConfig | VueUiSparklineConfig | VueUiTableConfig | VueUiTableSparklineConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiNestedDonutsConfig | VueUiGalaxyConfig | VueUiKpiConfig;
+    export type VueDataUiConfig = VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutConfig | VueUiDonutEvolutionConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkHistogramConfig | VueUiSparkStackBarConfig | VueUiSparkbarConfig | VueUiSparklineConfig | VueUiTableConfig | VueUiTableSparklineConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiNestedDonutsConfig | VueUiGalaxyConfig | VueUiKpiConfig | VueUiTreemapConfig;
 
-    export type VueDataUiConfigKey = "vue_ui_3d_bar" | "vue_ui_age_pyramid" | "vue_ui_annotator" | "vue_ui_candlestick" | "vue_ui_chestnut" | "vue_ui_dashboard" | "vue_ui_digits" | "vue_ui_donut" | "vue_ui_donut_evolution" | "vue_ui_gauge" | "vue_ui_heatmap" | "vue_ui_mini_loader" | "vue_ui_molecule" | "vue_ui_mood_radar" | "vue_ui_onion" | "vue_ui_quadrant" | "vue_ui_radar" | "vue_ui_rating" | "vue_ui_relation_circle" | "vue_ui_rings" | "vue_ui_scatter" | "vue_ui_screenshot" | "vue_ui_skeleton" | "vue_ui_smiley" | "vue_ui_sparkhistogram" | "vue_ui_sparkstackbar" | "vue_ui_sparkbar" | "vue_ui_sparkline" | "vue_ui_table" | "vue_ui_table_sparkline" | "vue_ui_thermometer" | "vue_ui_tiremarks" | "vue_ui_vertical_bar" | "vue_ui_waffle" | "vue_ui_wheel" | "vue_ui_xy" | "vue_ui_nested_donuts" | "vue_ui_galaxy" | "vue_ui_kpi";
+    export type VueDataUiConfigKey = "vue_ui_3d_bar" | "vue_ui_age_pyramid" | "vue_ui_annotator" | "vue_ui_candlestick" | "vue_ui_chestnut" | "vue_ui_dashboard" | "vue_ui_digits" | "vue_ui_donut" | "vue_ui_donut_evolution" | "vue_ui_gauge" | "vue_ui_heatmap" | "vue_ui_mini_loader" | "vue_ui_molecule" | "vue_ui_mood_radar" | "vue_ui_onion" | "vue_ui_quadrant" | "vue_ui_radar" | "vue_ui_rating" | "vue_ui_relation_circle" | "vue_ui_rings" | "vue_ui_scatter" | "vue_ui_screenshot" | "vue_ui_skeleton" | "vue_ui_smiley" | "vue_ui_sparkhistogram" | "vue_ui_sparkstackbar" | "vue_ui_sparkbar" | "vue_ui_sparkline" | "vue_ui_table" | "vue_ui_table_sparkline" | "vue_ui_thermometer" | "vue_ui_tiremarks" | "vue_ui_vertical_bar" | "vue_ui_waffle" | "vue_ui_wheel" | "vue_ui_xy" | "vue_ui_nested_donuts" | "vue_ui_galaxy" | "vue_ui_kpi" | "vue_ui_treemap";
 
     export const getVueDataUiConfig: () => VueDataUiConfig;
 }

@@ -764,7 +764,8 @@ export function createCsvContent(rows) {
 
 export function lightenHexColor(hexColor, percentLighter) {
     if (!/^#([0-9A-F]{3}){1,2}$/i.test(hexColor)) {
-        throw new Error('Invalid hex color format');
+        console.warn('lightenHexColor : Invalid hex color format');
+        return "#000000"
     }
 
     let color = hexColor.replace('#', '');

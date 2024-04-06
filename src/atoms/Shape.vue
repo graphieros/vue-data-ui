@@ -41,7 +41,7 @@ function getPolygonConfigFromName(name){
         },
         square: {
             points: 4,
-            rotation: 0.8
+            rotation: 0.783
         },
         diamond: {
             points: 4,

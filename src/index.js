@@ -42,6 +42,7 @@ import VueUiSparkgauge from './components/vue-ui-sparkgauge.vue';
 import VueDataUi from "./components/vue-data-ui.vue";
 import VueUiGalaxy from "./components/vue-ui-galaxy.vue";
 import VueUiKpi from "./components/vue-ui-kpi.vue";
+import VueUiTreemap from "./components/vue-ui-treemap.vue";
 
 export { 
     VueUiXy, 
@@ -87,5 +88,6 @@ export {
     VueUiSparkgauge,
     VueDataUi,
     VueUiGalaxy,
-    VueUiKpi
+    VueUiKpi,
+    VueUiTreemap
 };

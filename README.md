@@ -13,7 +13,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-41-green)
+![Static Badge](https://img.shields.io/badge/components-42-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -42,6 +42,7 @@ Available components:
 - [VueUiScatter](https://vue-data-ui.graphieros.com/docs#vue-ui-scatter)
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
 - [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
+- [VueUiTreemap](https://vue-data-ui.graphieros.com/docs#vue-ui-treemap)
 - [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
 - [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
 - [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
@@ -236,6 +237,7 @@ The following charts bear these slots:
 - VueUiRadar
 - VueUiRings
 - VueUiScatter
+- VueUiTreemap
 - VueUiVerticalBar
 - VueUiXy \*
 - VueUiwaffle

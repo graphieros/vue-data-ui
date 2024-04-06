@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, onMounted } from "vue";
 
+import BaseIcon from "../atoms/BaseIcon.vue";
 import VueUi3dBar from "./vue-ui-3d-bar.vue";
 import VueUiAgePyramid from "./vue-ui-age-pyramid.vue";
 import VueUiAnnotator from "./vue-ui-annotator.vue";
@@ -8,12 +9,12 @@ import VueUiCandlestick from "./vue-ui-candlestick.vue";
 import VueUiChestnut from "./vue-ui-chestnut.vue";
 import VueUiDashboard from "./vue-ui-dashboard.vue";
 import VueUiDigits from "./vue-ui-digits.vue";
-import VueUiDonutEvolution from "./vue-ui-donut-evolution.vue";
 import VueUiDonut from "./vue-ui-donut.vue";
+import VueUiDonutEvolution from "./vue-ui-donut-evolution.vue";
 import VueUiGalaxy from './vue-ui-galaxy.vue';
 import VueUiGauge from "./vue-ui-gauge.vue";
-import VueUiKpi from "./vue-ui-kpi.vue";
 import VueUiHeatmap from "./vue-ui-heatmap.vue";
+import VueUiKpi from "./vue-ui-kpi.vue";
 import VueUiMiniLoader from "./vue-ui-mini-loader.vue";
 import VueUiMolecule from "./vue-ui-molecule.vue";
 import VueUiMoodRadar from "./vue-ui-mood-radar.vue";
@@ -28,20 +29,20 @@ import VueUiScatter from "./vue-ui-scatter.vue";
 import VueUiScreenshot from "./vue-ui-screenshot.vue";
 import VueUiSkeleton from "./vue-ui-skeleton.vue";
 import VueUiSmiley from "./vue-ui-smiley.vue";
+import VueUiSparkHistogram from "./vue-ui-sparkhistogram.vue";
+import VueUiSparkStackbar from "./vue-ui-sparkstackbar.vue";
 import VueUiSparkbar from "./vue-ui-sparkbar.vue";
 import VueUiSparkgauge from "./vue-ui-sparkgauge.vue";
-import VueUiSparkHistogram from "./vue-ui-sparkhistogram.vue";
 import VueUiSparkline from "./vue-ui-sparkline.vue";
-import VueUiSparkStackbar from "./vue-ui-sparkstackbar.vue";
-import VueUiTableSparkline from "./vue-ui-table-sparkline.vue";
 import VueUiTable from "./vue-ui-table.vue";
+import VueUiTableSparkline from "./vue-ui-table-sparkline.vue";
 import VueUiThermometer from "./vue-ui-thermometer.vue";
 import VueUiTiremarks from "./vue-ui-tiremarks.vue";
+import VueUiTreemap from "./vue-ui-treemap.vue";
 import VueUiVerticalBar from "./vue-ui-vertical-bar.vue";
 import VueUiWaffle from "./vue-ui-waffle.vue";
 import VueUiWheel from "./vue-ui-wheel.vue";
 import VueUiXy from "./vue-ui-xy.vue";
-import BaseIcon from "../atoms/BaseIcon.vue";
 
 const props = defineProps({
     component: { type: String },
@@ -50,7 +51,7 @@ const props = defineProps({
 })
 
 const isError = computed(() => {
-    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiKpi", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy"].includes(props.component)
+    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiKpi", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy", "VueUiTreemap"].includes(props.component)
 });
 
 const vue_ui_3d_bar = ref(null);
@@ -60,11 +61,12 @@ const vue_ui_candlestick = ref(null);
 const vue_ui_chestnut = ref(null);
 const vue_ui_dashboard = ref(null);
 const vue_ui_digits = ref(null);
-const vue_ui_donut_evolution = ref(null);
 const vue_ui_donut = ref(null);
+const vue_ui_donut_evolution = ref(null);
 const vue_ui_galaxy = ref(null);
 const vue_ui_gauge = ref(null);
 const vue_ui_heatmap = ref(null);
+const vue_ui_kpi = ref(null);
 const vue_ui_mini_loader = ref(null);
 const vue_ui_molecule = ref(null);
 const vue_ui_mood_radar = ref(null);
@@ -84,15 +86,15 @@ const vue_ui_sparkgauge = ref(null);
 const vue_ui_sparkhistogram = ref(null);
 const vue_ui_sparkline = ref(null);
 const vue_ui_sparkstackbar = ref(null);
-const vue_ui_table_sparkline = ref(null);
 const vue_ui_table = ref(null);
+const vue_ui_table_sparkline = ref(null);
 const vue_ui_thermometer = ref(null);
 const vue_ui_tiremarks = ref(null);
+const vue_ui_treemap = ref(null);
 const vue_ui_vertical_bar = ref(null);
 const vue_ui_waffle = ref(null);
 const vue_ui_wheel = ref(null);
 const vue_ui_xy = ref(null);
-const vue_ui_kpi = ref(null);
 
 const emit = defineEmits([
     'selectLegend',
@@ -279,6 +281,13 @@ onMounted(() => {
     if(vue_ui_tiremarks.value) {
         generatePdf.value = vue_ui_tiremarks.value.generatePdf;
         generateImage.value = vue_ui_tiremarks.value.generateImage;
+    }
+
+    if(vue_ui_treemap.value) {
+        getData.value = vue_ui_treemap.value.getData;
+        generatePdf.value = vue_ui_treemap.value.generatePdf;
+        generateCsv.value = vue_ui_treemap.value.generateCsv;
+        generateImage.value = vue_ui_treemap.value.generateImage;
     }
 
     if(vue_ui_vertical_bar.value) {
@@ -823,6 +832,29 @@ defineExpose({
             <slot name="svg" :svg="svg"></slot>
         </template>
     </VueUiTiremarks>
+
+    <VueUiTreemap
+        v-if="component === 'VueUiTreemap'"
+        :config="config"
+        :dataset="dataset"
+        ref="vue_ui_treemap"
+    >
+        <template #rect="{ rect, shouldShow, fontSize, isZoom, textColor }">
+            <slot name="rect" v-bind="{ rect, shouldShow, fontSize, isZoom, textColor}"/>
+        </template>
+        <template #tooltip-before="{ datapoint, seriesIndex, dataset, config }">
+            <slot name="tooltip-before" v-bind="{datapoint, seriesIndex, dataset, config }"></slot>
+        </template>
+        <template #tooltip-after="{ datapoint, seriesIndex, dataset, config }">
+            <slot name="tooltip-after" v-bind="{ datapoint, seriesIndex, dataset, config }"></slot>
+        </template>
+        <template #svg="{ svg }">
+            <slot name="svg" :svg="svg"></slot>
+        </template>
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"></slot>
+        </template>
+    </VueUiTreemap>
 
     <VueUiVerticalBar 
         v-if="component === 'VueUiVerticalBar'" 

@@ -56,6 +56,7 @@ import VueDataUiTest from "./components/vue-data-ui.vue";
 import VueDataUi from "./components/vue-data-ui.vue";
 import VueUiKpiTest from "./components/vue-ui-kpi.vue";
 import GalaxyTest from "./components/vue-ui-galaxy.vue";
+import TreemapTest from "./components/vue-ui-treemap.vue";
 
 const dataset = ref([
   {
@@ -2156,7 +2157,8 @@ const skeletonOptions = ref([
   'pyramid',
   'rings',
   'wheel',
-  'donutEvolution'
+  'donutEvolution',
+  'treemap'
 ]);
 
 const skeletonChoice = ref('donutEvolution')
@@ -2924,6 +2926,112 @@ const kpiConfig = ref(
   }
 )
 
+const treemapDataset = ref(
+  [
+    {
+      name: "Parent 1",
+      value: 100,
+      children: [
+        {
+          name: "P1 C1",
+          value: 80,
+        },
+        {
+          name: 'P1 C2',
+          value: 20
+        },
+        {
+          name: 'P1 C3',
+          value: 10,
+        },
+      ]
+    },
+    {
+      name: "Parent 2",
+      value: 100,
+      children: [
+        {
+          name: "P2 C1",
+          value: 80,
+        },
+        {
+          name: 'P2 C2',
+          value: 20
+        },
+        {
+          name: 'P2 C3',
+          value: 10,
+        },
+      ]
+    },
+    {
+      name: "Parent 3",
+      value: 75,
+      children: [
+        {
+          name: "P3 C1",
+          value: 5,
+        },
+        {
+          name: 'P3 C2',
+          value: 3
+        },
+        {
+          name: 'P3 C3',
+          value: 2
+        },
+        {
+          name: 'P3 C4',
+          value: 1
+        },
+        {
+          name: 'P3 C5',
+          value: 1
+        },
+        {
+          name: 'P3 C6',
+          value: 0.5
+        },
+        {
+          name: 'P3 C7',
+          value: 0.2
+        },
+        {
+          name: 'P3 C8',
+          value: 0.05,
+          children: [
+            {
+              name: 'P3 C8 CC1',
+              value: 0.025,
+            },
+            {
+              name: 'P3 C8 CC2',
+              value: 0.025,
+            },
+          ]
+        },
+      ]
+    },
+  ]
+)
+
+const treemapConfig = ref({
+  style: {
+    chart: {
+      // tooltip: {
+      //   customFormat: ({datapoint, seriesIndex, series}) => {
+      //     console.log({datapoint, seriesIndex, series})
+      //     return datapoint.name
+      //   }
+      // }
+    }
+  }
+})
+
+function treemapSelect(data) {
+  console.log(data)
+}
+
 </script>
 
 <template>
@@ -3024,8 +3132,41 @@ const kpiConfig = ref(
           <BaseIcon name="chartSparkbar" stroke="#42d392" />
           <BaseIcon name="chartSparkline" stroke="#42d392" />
           <BaseIcon name="legend" stroke="#42d392" />
+          <BaseIcon name="zoomPlus" stroke="#42d392" />
+          <BaseIcon name="zoomMinus" stroke="#42d392" />
+          <BaseIcon name="chartTreemap" stroke="#42d392" />
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_treemap)">
+        <template #title>
+          <BaseIcon name="chartTreemap"/>
+          VueUiTreemap
+        </template>
+        <template #info>
+        </template>
+        <template #dev>
+          <TreemapTest :dataset="treemapDataset" :config="treemapConfig" @selectLegend="treemapSelect" @selectDatapoint="treemapSelect">
+            <template #rect="{ rect, shouldShow, fontSize, isZoom, textColor }">
+              <div v-if="shouldShow" :style="`font-size:${fontSize}px;color:${textColor}`">
+                {{ rect.color }} {{  isZoom }}
+              </div>
+            </template>
+            <!-- <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
+              {{ datapoint.name }}
+            </template>
+            <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
+              {{ seriesIndex }}
+            </template> -->
+          </TreemapTest>
+        </template>
+        <template #prod>
+          <VueDataUi component="VueUiTreemap" :dataset="treemapDataset" :config="treemapConfig" />
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_treemap }}
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_kpi)">

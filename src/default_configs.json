@@ -1558,6 +1558,9 @@
             "color":"#2D353C",
             "maxHeight":500,
             "animated": true,
+            "treemap": {
+                "color": "#E1E5E8"
+            },
             "galaxy": {
                 "color": "#E1E5E8"
             },
@@ -3471,5 +3474,102 @@
         "valueCss": "",
         "valueFontSize": 32,
         "valueRounding": 0
+    },
+    "vue_ui_treemap": {
+        "userOptions": {
+            "show": true
+        },
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "height": 500,
+                "width": 800,
+                "padding": {
+                    "top": 0,
+                    "left": 6,
+                    "bottom": 12,
+                    "right": 6
+                },
+                "layout": {
+                    "sorted": true,
+                    "rects": {
+                        "stroke": "#FFFFFF",
+                        "strokeWidth": 1,
+                        "borderRadius": 0,
+                        "colorRatio": 0.3,
+                        "gradient": {
+                            "show": true,
+                            "intensity":  30
+                        },
+                        "selected": {
+                            "stroke": "#FFFFFF",
+                            "strokeWidth": 1,
+                            "unselectedOpacity": 0.6
+                        }
+                    },
+                    "labels": {
+                        "showDefaultLabels": true,
+                        "fontSize": 24,
+                        "minFontSize": 10,
+                        "hideUnderProportion": 0.03,
+                        "prefix": "Value: ",
+                        "suffix": "",
+                        "rounding": 0
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "show": true,
+                    "fontSize": 16,
+                    "bold": false,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "tooltip": {
+                    "show": true,
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "fontSize": 14,
+                    "roundingValue": 1,
+                    "customFormat": null
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "responsiveBreakpoint": 300,
+            "columnNames": {
+                "series": "Series",
+                "value": "Value",
+                "percentage": "Percentage"
+            },
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "none"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
+        }
     }
 }

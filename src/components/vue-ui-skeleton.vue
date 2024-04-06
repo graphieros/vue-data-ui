@@ -285,6 +285,13 @@ const ticks = computed(() => {
 
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
+        <!-- TREEMAP -->
+        <template v-if="type === 'treemap'">
+            <svg data-cy="skeleton-treemap" width="100%" viewBox="0 0 30 21" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path fill="none" :stroke="skeletonConfig.style.treemap.color" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round" d="M 1 1 L 29 1 L 29 20 L 1 20 Z M 10 1 L 10 20 M 1 13 L 10 13 M 22 11 L 22 20 M 10 11 L 22 11 M 22 11 L 29 11 M 7 13 L 7 20 M 17 11 L 17 20 M 22 15 L 29 15 M 26 15 L 26 20 M 20 1 L 20 11" />
+            </svg>
+        </template>
+
         <!-- GALAXY -->
         <template v-if="type === 'galaxy'">
             <svg data-cy="skeleton-relation-circle" width="100%" viewBox="0.5 0 20 20" :style="`background:${skeletonConfig.style.backgroundColor}`">
