@@ -595,7 +595,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="treemapConfig.style.chart.tooltip.show && isTooltip"
+            :show="treemapConfig.style.chart.tooltip.show && isTooltip && !isZoom"
             :backgroundColor="treemapConfig.style.chart.tooltip.backgroundColor"
             :color="treemapConfig.style.chart.tooltip.color"
             :parent="treemapChart"
@@ -657,13 +657,12 @@ defineExpose({
 .vue-ui-treemap-zoom-info {
     pointer-events: none;
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 0;
+    left: 0;
     height: 100%;
     width:100%;
     display: flex;
     align-items:center;
     justify-content:center;
-    transform: translate(-50%, -50%);
 }
 </style>
