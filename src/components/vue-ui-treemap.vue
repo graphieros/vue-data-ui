@@ -534,7 +534,7 @@ defineExpose({
 
         <div v-if="isZoom" class="vue-ui-treemap-zoom-info">
             <div v-if="treemapConfig.style.chart.layout.labels.showDefaultLabels">            
-                <span :style="`width:100%;`">
+                <span :style="`width:100%; color: ${adaptColorToBackground(selectedRect.color)}`">
                     {{ selectedRect.name }}
                 </span><br>
                 <span :style="`width:100%; color: ${adaptColorToBackground(selectedRect.color)}`">
