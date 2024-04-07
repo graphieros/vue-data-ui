@@ -3148,7 +3148,6 @@ function treemapSelect(data) {
         </template>
         <template #dev>
           <TreemapTest :dataset="treemapDataset" :config="treemapConfig" @selectLegend="treemapSelect" @selectDatapoint="treemapSelect">
-
           </TreemapTest>
         </template>
         <template #prod>

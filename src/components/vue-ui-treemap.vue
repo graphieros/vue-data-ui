@@ -341,11 +341,11 @@ function useTooltip({ datapoint, seriesIndex }) {
     } else {
         let html = '';
 
-        html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div data-cy="treemap-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
 
-        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="donut-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" fill="${datapoint.color}"/></svg>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="treemap-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-        html += `<b data-cy="donut-tooltip-value">${ dataLabel({p: treemapConfig.value.style.chart.layout.labels.prefix, v: datapoint.value, s: treemapConfig.value.style.chart.layout.labels.suffix, r: treemapConfig.value.style.chart.tooltip.roundingValue})}</b>`;
+        html += `<b data-cy="treemap-tooltip-value">${ dataLabel({p: treemapConfig.value.style.chart.layout.labels.prefix, v: datapoint.value, s: treemapConfig.value.style.chart.layout.labels.suffix, r: treemapConfig.value.style.chart.tooltip.roundingValue})}</b>`;
 
         tooltipContent.value = `<div>${html}</div>`;
     }
@@ -374,7 +374,7 @@ function generateCsv() {
         const tableXls = [[treemapConfig.value.style.chart.title.text],[treemapConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: treemapConfig.value.style.chart.title.text || "vue-ui-donut" })
+        downloadCsv({ csvContent, title: treemapConfig.value.style.chart.title.text || "vue-ui-treemap" })
     });
 }
 
@@ -443,19 +443,20 @@ defineExpose({
         :class="`vue-ui-treemap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${treemapConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
         :style="`font-family:${treemapConfig.style.fontFamily};width:100%; text-align:center;${!treemapConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${treemapConfig.style.chart.backgroundColor}`"
         :id="`treemap_${uid}`">
+        
         <!-- TITLE -->
         <div v-if="treemapConfig.style.chart.title.text" :style="`width:100%;background:${treemapConfig.style.chart.backgroundColor};padding-bottom:6px`">
             <Title
                 :config="{
                     title: {
-                        cy: 'donut-div-title',
+                        cy: 'treemap-div-title',
                         text: treemapConfig.style.chart.title.text,
                         color: treemapConfig.style.chart.title.color,
                         fontSize: treemapConfig.style.chart.title.fontSize,
                         bold: treemapConfig.style.chart.title.bold
                     },
                     subtitle: {
-                        cy: 'donut-div-subtitle',
+                        cy: 'treemap-div-subtitle',
                         text: treemapConfig.style.chart.title.subtitle.text,
                         color: treemapConfig.style.chart.title.subtitle.color,
                         fontSize: treemapConfig.style.chart.title.subtitle.fontSize,
