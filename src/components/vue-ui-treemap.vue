@@ -601,7 +601,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="treemapConfig.style.chart.tooltip.show && isTooltip && !isZoom"
+            :show="treemapConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="treemapConfig.style.chart.tooltip.backgroundColor"
             :color="treemapConfig.style.chart.tooltip.color"
             :parent="treemapChart"
