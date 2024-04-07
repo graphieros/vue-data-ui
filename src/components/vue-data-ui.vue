@@ -848,8 +848,8 @@ defineExpose({
         <template #tooltip-after="{ datapoint, seriesIndex, dataset, config }">
             <slot name="tooltip-after" v-bind="{ datapoint, seriesIndex, dataset, config }"></slot>
         </template>
-        <template #svg="{ svg }">
-            <slot name="svg" :svg="svg"></slot>
+        <template #svg="{ svg, isZoom, rect, config }">
+            <slot name="svg" v-bind="{ svg, isZoom, rect, config }"></slot>
         </template>
         <template #legend="{ legend }">
             <slot name="legend" v-bind:legend="legend"></slot>

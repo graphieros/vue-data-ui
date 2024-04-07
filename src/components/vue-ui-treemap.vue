@@ -359,7 +359,8 @@ const dataTable = computed(() => {
         return [
             {
                 color: h.color,
-                name: h.name
+                name: h.name,
+                shape: 'square'
             },
             label,
             isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(treemapConfig.value.table.td.roundingPercentage) + '%'
@@ -377,7 +378,7 @@ const dataTable = computed(() => {
             color:treemapConfig.value.table.td.color,
             outline:treemapConfig.value.table.td.outline
         },
-        breakpoint:treemapConfig.value.table.responsiveBreakpoint
+        breakpoint:treemapConfig.value.table.responsiveBreakpoint,
     }
 
     const colNames = [
@@ -502,7 +503,7 @@ defineExpose({
                         <div style="width: 100%; height: 100%" class="vue-ui-treemap-cell">
                             <div
                                 class="vue-ui-treemap-cell-default"
-                                v-if="treemapConfig.style.chart.layout.labels.showDefaultLabels && (rect.proportion > treemapConfig.style.chart.layout.labels.hideUnderProportion || isZoom)" :style="`width:calc(100% - ${calcFontSize(rect) / 1.5}px);text-align:left;line-height:${calcFontSize(rect)}px;padding:${calcFontSize(rect) / 3}px; color:${adaptColorToBackground(rect.color)}`"
+                                v-if="treemapConfig.style.chart.layout.labels.showDefaultLabels && (rect.proportion > treemapConfig.style.chart.layout.labels.hideUnderProportion || isZoom)" :style="`width:calc(100% - ${calcFontSize(rect) / 1.5}px);text-align:left;line-height:${calcFontSize(rect) < 14 ? 14 : calcFontSize(rect)}px;padding:${calcFontSize(rect) / 3}px; color:${adaptColorToBackground(rect.color)}`"
                             >
                                 <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
                                     {{ rect.name }}
@@ -552,7 +553,7 @@ defineExpose({
                     <div style="width: 100%; height: 100%" class="vue-ui-treemap-cell">
                         <div
                             class="vue-ui-treemap-cell-default"
-                            v-if="treemapConfig.style.chart.layout.labels.showDefaultLabels" :style="`width:calc(100% - ${treemapConfig.style.chart.layout.labels.fontSize/ 1.5}px);text-align:left;line-height:${treemapConfig.style.chart.layout.labels.fontSize}px;padding:${treemapConfig.style.chart.layout.labels.fontSize / 3}px; color:${adaptColorToBackground(selectedRect.color)}`"
+                            v-if="treemapConfig.style.chart.layout.labels.showDefaultLabels" :style="`width:calc(100% - ${treemapConfig.style.chart.layout.labels.fontSize/ 1.5}px);text-align:left;padding:${treemapConfig.style.chart.layout.labels.fontSize / 3}px; color:${adaptColorToBackground(selectedRect.color)}`"
                         >
                             <span :style="`width:100%;`">
                                 {{ selectedRect.name }}
@@ -578,7 +579,7 @@ defineExpose({
                     </div>
                 </foreignObject>
             </g>
-            <slot name="svg" :svg="svg"/>
+            <slot name="svg" v-bind="{ svg, isZoom, rect: selectedRect, config: treemapConfig }"/>
         </svg>
 
         <Skeleton 
