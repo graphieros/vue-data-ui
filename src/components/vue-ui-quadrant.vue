@@ -57,6 +57,7 @@ const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const step = ref(0);
+const isZoom = ref(false);
 
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
@@ -214,6 +215,70 @@ const svg = computed(() => {
         padding
     }
 });
+
+const mutableSvg = ref({
+    ...JSON.parse(JSON.stringify(svg.value)),
+    startX: 0,
+    startY: 0
+});
+
+const selectedSide = ref(null);
+
+function selectQuadrantSide(side) {
+    if(isZoom.value && selectedSide.value === side) {
+        mutableSvg.value.startX = 0;
+        mutableSvg.value.startY = 0;
+        mutableSvg.value.width = svg.value.width;
+        mutableSvg.value.height = svg.value.height;
+        selectedSide.value = null;
+        isZoom.value = false;
+    } else  {
+        selectedSide.value = side;
+        switch (side) {
+            case 'TL':
+                mutableSvg.value.startX = 0;
+                mutableSvg.value.startY = 0;
+                mutableSvg.value.width = svg.value.width / 2 + svg.value.left;
+                mutableSvg.value.height = svg.value.height / 2 + svg.value.top;
+            break;
+            
+            case 'TR':
+                mutableSvg.value.startX = svg.value.width / 2 - svg.value.left;
+                mutableSvg.value.startY = 0;
+                mutableSvg.value.width = svg.value.width / 2 + svg.value.left;
+                mutableSvg.value.height = svg.value.height / 2 + svg.value.top;
+            break;
+
+            case 'BR':
+                mutableSvg.value.startX = svg.value.width / 2 - svg.value.left;
+                mutableSvg.value.startY = svg.value.height / 2 - svg.value.top;
+                mutableSvg.value.width = svg.value.width / 2 + svg.value.left;
+                mutableSvg.value.height = svg.value.height / 2 + svg.value.top;
+            break;
+
+            case 'BL':
+                mutableSvg.value.startX = 0;
+                mutableSvg.value.startY = svg.value.height / 2 - svg.value.top;
+                mutableSvg.value.width = svg.value.width / 2 + svg.value.left;
+                mutableSvg.value.height = svg.value.height / 2 + svg.value.top;
+            break;
+        
+            default:
+                mutableSvg.value.startX = 0;
+                mutableSvg.value.startY = 0;
+                mutableSvg.value.width = svg.value.width;
+                mutableSvg.value.height = svg.value.height;
+            break;
+        }
+        isZoom.value = true
+    }
+    // if(isZoom.value && selectedSide.value === side) {
+    //     selectedSide.value = null;
+    //     isZoom.value = false;
+    // } else {
+    //     isZoom.value = true;
+    // }
+}
 
 const graduations = computed(() => {
     const grads = quadrantConfig.value.style.chart.layout.grid.graduations.steps;
@@ -569,6 +634,99 @@ function selectSide(side) {
     emit("selectSide", sideEmit);
 }
 
+const miniMap = computed(() => {
+    return {
+        TL: {
+            tl: {
+                x: svg.value.left + svg.value.usableWidth / 4 - 20,
+                y: 0,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tl.color
+            },
+            tr: {
+                x: svg.value.left + svg.value.usableWidth / 4 ,
+                y: 0,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tr.color
+            },
+            br: {
+                x: svg.value.left + svg.value.usableWidth / 4 ,
+                y: 20,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.br.color
+            },
+            bl: {
+                x: svg.value.left + svg.value.usableWidth / 4 - 20,
+                y: 20,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.color
+            },
+        },
+        TR: {
+            tl: {
+                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
+                y: 0,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tl.color
+            },
+            tr: {
+                x:  svg.value.centerX + svg.value.usableWidth / 4,
+                y: 0,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tr.color
+            },
+            br: {
+                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
+                y: 20,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.br.color
+            },
+            bl: {
+                x: svg.value.centerX + svg.value.usableWidth / 4,
+                y: 20,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.color
+            },
+        },
+        BR: {
+            tl: {
+                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
+                y: svg.value.centerY - 48,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tl.color
+            },
+            tr: {
+                x: svg.value.centerX + svg.value.usableWidth / 4,
+                y: svg.value.centerY - 48,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tr.color
+            },
+            br: {
+                x: svg.value.centerX + svg.value.usableWidth / 4,
+                y: svg.value.centerY - 28,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.br.color
+            },
+            bl: {
+                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
+                y: svg.value.centerY - 28,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.color
+            },
+        },
+        BL: {
+            tl: {
+                x: svg.value.left + svg.value.usableWidth / 4 - 20,
+                y: svg.value.centerY - 48,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tl.color
+            },
+            tr: {
+                x: svg.value.left + svg.value.usableWidth / 4,
+                y: svg.value.centerY - 48,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tr.color
+            },
+            br: {
+                x: svg.value.left + svg.value.usableWidth / 4,
+                y: svg.value.centerY - 28,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.br.color
+            },
+            bl: {
+                x: svg.value.left + svg.value.usableWidth / 4 - 20,
+                y: svg.value.centerY - 28,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.color
+            },
+        },
+    }
+})
+
 function getData() {
     return drawableDataset.value.map(ds => {
         return {
@@ -702,7 +860,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`"  :id="`svg_${uid}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`" :style="`max-width:100%;overflow:${isZoom ? 'hidden' : 'visible'};background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`"  :id="`svg_${uid}`">
             
             <!-- DEFS -->
             <defs>
@@ -784,7 +942,7 @@ defineExpose({
             </g>
 
             <!-- QUADRANT LABELS -->
-            <g v-if="quadrantConfig.style.chart.layout.labels.quadrantLabels.show">            
+            <g v-if="quadrantConfig.style.chart.layout.labels.quadrantLabels.show && !isZoom">            
                 <!-- TL -->
                 <text
                     data-cy="quadrant-label-tl"
@@ -920,6 +1078,46 @@ defineExpose({
                 </g>
             </g>
 
+            <!-- SIDE TRAPS -->
+            <g>
+                <rect
+                    @click="selectQuadrantSide('TL')"
+                    :x="svg.left"
+                    :y="svg.top"
+                    :width="svg.usableWidth / 2"
+                    :height="svg.usableHeight / 2"
+                    fill="transparent"
+                    :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+                />
+                <rect
+                    @click="selectQuadrantSide('TR')"
+                    :x="svg.centerX"
+                    :y="svg.top"
+                    :width="svg.usableWidth / 2"
+                    :height="svg.usableHeight / 2"
+                    fill="transparent"
+                    :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+                />
+                <rect
+                    @click="selectQuadrantSide('BR')"
+                    :x="svg.centerX"
+                    :y="svg.centerY"
+                    :width="svg.usableWidth / 2"
+                    :height="svg.usableHeight / 2"
+                    fill="transparent"
+                    :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+                />
+                <rect
+                    @click="selectQuadrantSide('BL')"
+                    :x="svg.left"
+                    :y="svg.centerY"
+                    :width="svg.usableWidth / 2"
+                    :height="svg.usableHeight / 2"
+                    fill="transparent"
+                    :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+                />
+            </g>
+
             <!-- PLOTS -->
             <template v-if="!quadrantConfig.style.chart.layout.labels.plotLabels.showAsTag">
                 <g v-for="(category, i) in drawableDataset">
@@ -928,7 +1126,7 @@ defineExpose({
                         :color="category.color"
                         :isSelected="hoveredPlotId && plot.uid === hoveredPlotId"
                         :plot="plot"
-                        :radius="quadrantConfig.style.chart.layout.plots.radius"
+                        :radius="quadrantConfig.style.chart.layout.plots.radius / (isZoom ? 1.5 : 1)"
                         :shape="category.shape"
                         :stroke="quadrantConfig.style.chart.layout.plots.outline ? quadrantConfig.style.chart.layout.plots.outlineColor : 'none'"
                         :strokeWidth="quadrantConfig.style.chart.layout.plots.outlineWidth"
@@ -945,7 +1143,7 @@ defineExpose({
                             :x="plot.x" 
                             :y="plot.y + quadrantConfig.style.chart.layout.labels.plotLabels.offsetY + quadrantConfig.style.chart.layout.plots.radius" 
                             text-anchor="middle" 
-                            :font-size="quadrantConfig.style.chart.layout.labels.plotLabels.fontSize"
+                            :font-size="quadrantConfig.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1)"
                             :fill="quadrantConfig.style.chart.layout.labels.plotLabels.color"
                         >
                             {{ plot.name }}
@@ -968,6 +1166,34 @@ defineExpose({
                 </g>
             </template>
 
+            <!-- HIDDEN AREAS ON ZOOM -->
+            <g v-if="isZoom">
+                <polygon 
+                    v-if="selectedSide === 'TL'"
+                    :points="`${svg.left},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.top} ${svg.right},${svg.top} ${svg.right},${svg.bottom} ${svg.left},${svg.bottom} ${svg.left},${svg.centerY}`"
+                    :fill="quadrantConfig.style.chart.backgroundColor"
+                    style="opacity:0.95"
+                />
+                <polygon 
+                    v-if="selectedSide === 'TR'"
+                    :points="`${svg.left},${svg.top} ${svg.centerX},${svg.top} ${svg.centerX},${svg.centerY} ${svg.right},${svg.centerY} ${svg.right},${svg.bottom} ${svg.left},${svg.bottom} ${svg.left},${svg.top}`"
+                    :fill="quadrantConfig.style.chart.backgroundColor"
+                    style="opacity:0.95"
+                />
+                <polygon 
+                    v-if="selectedSide === 'BR'"
+                    :points="`${svg.left},${svg.top} ${svg.right},${svg.top} ${svg.right},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.bottom} ${svg.left},${svg.bottom} ${svg.left},${svg.top}`"
+                    :fill="quadrantConfig.style.chart.backgroundColor"
+                    style="opacity:0.95"
+                />
+                <polygon 
+                    v-if="selectedSide === 'BL'"
+                    :points="`${svg.left},${svg.top} ${svg.right},${svg.top} ${svg.right},${svg.bottom} ${svg.centerX},${svg.bottom} ${svg.centerX},${svg.centerY} ${svg.left},${svg.centerY} ${svg.left},${svg.top}`"
+                    :fill="quadrantConfig.style.chart.backgroundColor"
+                    style="opacity:0.95"
+                />
+            </g>
+
             <!-- LEGEND AS G -->
             <foreignObject
                 v-if="quadrantConfig.style.chart.legend.show && mutableConfig.inside && !isPrinting"
@@ -989,8 +1215,53 @@ defineExpose({
                     </template>
                 </Legend>
             </foreignObject>
+
+            <!-- MINI MAP -->
+            <g v-if="isZoom && selectedSide">
+                <rect
+                    :x="miniMap[selectedSide].tl.x"
+                    :y="miniMap[selectedSide].tl.y"
+                    height="20"
+                    width="20"
+                    :fill="miniMap[selectedSide].tl.color"
+                    :style="`cursor: pointer; opacity: ${selectedSide === 'TL' ? 1 : 0.3}`"
+                    @click="selectQuadrantSide('TL')"
+                    :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TL'}"
+                />
+                <rect
+                    :x="miniMap[selectedSide].tr.x"
+                    :y="miniMap[selectedSide].tr.y"
+                    height="20"
+                    width="20"
+                    :fill="miniMap[selectedSide].tr.color"
+                    :style="`cursor: pointer; opacity: ${selectedSide === 'TR' ? 1 : 0.3}`"
+                    @click="selectQuadrantSide('TR')"
+                    :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TR'}"
+                />
+                <rect
+                    :x="miniMap[selectedSide].br.x"
+                    :y="miniMap[selectedSide].br.y"
+                    height="20"
+                    width="20"
+                    :fill="miniMap[selectedSide].br.color"
+                    :style="`cursor: pointer; opacity: ${selectedSide === 'BR' ? 1 : 0.3}`"
+                    @click="selectQuadrantSide('BR')"
+                    :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'BR'}"
+                />
+                <rect
+                    :x="miniMap[selectedSide].bl.x"
+                    :y="miniMap[selectedSide].bl.y"
+                    height="20"
+                    width="20"
+                    :fill="miniMap[selectedSide].bl.color"
+                    :style="`cursor: pointer; opacity: ${selectedSide === 'BL' ? 1 : 0.3}`"
+                    @click="selectQuadrantSide('BL')"
+                    :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'BL'}"
+                />
+            </g>
             <slot name="svg" :svg="svg"/>
         </svg>
+        {{ selectedSide }}
 
         <Skeleton 
             v-if="!isDataset"
@@ -1110,5 +1381,19 @@ path, line, rect, circle, polygon {
     justify-content: center;
     text-align:center;
     width:100%;
+}
+
+.vue-ui-quadrant-mini-map-cell,
+.vue-ui-quadrant-mini-map-cell-selectable {
+    animation: none !important;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.vue-ui-quadrant-mini-map-cell:hover {
+    stroke: white;
+    stroke-width: 1px;
+}
+.vue-ui-quadrant-mini-map-cell-selectable:hover {
+    opacity: 0.5 !important;
 }
 </style>

@@ -2573,6 +2573,30 @@ const radarConfig = ref({
 const quadrantConfig = ref({
   style: {
     chart: {
+      title: {
+        text: "Title",
+        subtitle: {
+          text: "Subtitle"
+        }
+      },
+      layout: {
+        labels: {
+          quadrantLabels: {
+            tl: {
+              text: 'TOP LEFT'
+            },
+            tr: {
+              text: 'TOP RIGHT'
+            },
+            br: {
+              text: 'BOTTOM RIGHT'
+            },
+            bl: {
+              text: 'BOTTOM LEFT'
+            }
+          }
+        }
+      },
       tooltip: {
         showShape: false,
         customFormat: ({ seriesIndex, datapoint, series, config }) => {
