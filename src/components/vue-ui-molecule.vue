@@ -605,10 +605,10 @@ defineExpose({
             :isCustom="moleculeConfig.style.chart.tooltip.customFormat && typeof moleculeConfig.style.chart.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+                <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+                <slot name="tooltip-after" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>
         </Tooltip>
         
@@ -620,10 +620,10 @@ defineExpose({
                 :config="dataTable.config"
                 :title="`${moleculeConfig.style.chart.title.text}${moleculeConfig.style.chart.title.subtitle.text ? ` : ${moleculeConfig.style.chart.title.subtitle.text}` : ''}`"
             >
-                <template #th="{th}">
+                <template #th="{ th }">
                     <div v-html="th" style="display:flex;align-items:center"></div>
                 </template>
-                <template #td="{td}">
+                <template #td="{ td }">
                     {{ td.name || td }}
                 </template>
             </DataTable>

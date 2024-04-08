@@ -3325,7 +3325,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
         <template #title>
           <BaseIcon name="chartCluster"/>
           VueUiMolecule
@@ -4019,7 +4019,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
         <template #title>
           <BaseIcon name="chartQuadrant" />
           VueUiQuadrant

@@ -8,7 +8,7 @@
                     :fill="color"
                     :font-size="node.circleRadius"
                     text-anchor="middle"
-                    style="opacity:0.8"
+                    style="opacity:0.8; pointer-events: none;"
                 >
                     {{ node.name }}
                 </text>
