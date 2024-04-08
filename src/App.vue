@@ -3163,7 +3163,7 @@ function treemapSelect(data) {
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_treemap)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_treemap)">
         <template #title>
           <BaseIcon name="chartTreemap"/>
           VueUiTreemap
@@ -3307,7 +3307,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_table_sparkline)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_table_sparkline)">
         <template #title>
           <BaseIcon name="chartTable"/>
           VueUiTableSparkline
@@ -3679,7 +3679,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkline)">
         <template #title>
           <BaseIcon name="chartSparkline" />
           VueUiSparkline
@@ -3796,7 +3796,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkhistogram)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkhistogram)">
         <template #title>
           <BaseIcon name="chartSparkHistogram" />
           VueUiSparkHistogram
@@ -3918,7 +3918,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_vertical_bar)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_vertical_bar)">
         <template #title>
           <BaseIcon name="chartVerticalBar" />
           VueUiVerticalBar
@@ -4019,7 +4019,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
         <template #title>
           <BaseIcon name="chartQuadrant" />
           VueUiQuadrant
@@ -4191,7 +4191,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
         <template #title>
           <BaseIcon name="chartSparkStackbar" />
           VueUiSparkStackbar

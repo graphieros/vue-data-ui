@@ -657,6 +657,10 @@ const miniMap = computed(() => {
                 y: 20,
                 fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.color
             },
+            crosshairs: {
+                horizontal: `M ${svg.value.left + svg.value.usableWidth / 4 - 20},${20} ${svg.value.left + svg.value.usableWidth / 4 + 20},${20}`,
+                vertical: `M ${svg.value.left + svg.value.usableWidth / 4},${0} ${svg.value.left + svg.value.usableWidth / 4},${40}`
+            }
         },
         TR: {
             tl: {
@@ -670,15 +674,19 @@ const miniMap = computed(() => {
                 fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tr.color
             },
             br: {
-                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
+                x: svg.value.centerX + svg.value.usableWidth / 4,
                 y: 20,
                 fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.br.color
             },
             bl: {
-                x: svg.value.centerX + svg.value.usableWidth / 4,
+                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
                 y: 20,
                 fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.color
             },
+            crosshairs: {
+                horizontal: `M ${svg.value.centerX + svg.value.usableWidth / 4 - 20},${20} ${svg.value.centerX+ svg.value.usableWidth / 4 + 20},${20}`,
+                vertical: `M ${svg.value.centerX + svg.value.usableWidth / 4},${0} ${svg.value.centerX + svg.value.usableWidth / 4},${40}`
+            }
         },
         BR: {
             tl: {
@@ -701,6 +709,10 @@ const miniMap = computed(() => {
                 y: svg.value.centerY - 28,
                 fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.color
             },
+            crosshairs: {
+                horizontal: `M ${svg.value.centerX + svg.value.usableWidth / 4 - 20},${svg.value.centerY - 28} ${svg.value.centerX + svg.value.usableWidth / 4 + 20},${svg.value.centerY - 28}`,
+                vertical: `M ${svg.value.centerX + svg.value.usableWidth / 4},${svg.value.centerY - 48} ${svg.value.centerX + svg.value.usableWidth / 4},${svg.value.centerY - 8}`
+            }
         },
         BL: {
             tl: {
@@ -723,6 +735,10 @@ const miniMap = computed(() => {
                 y: svg.value.centerY - 28,
                 fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.color
             },
+            crosshairs: {
+                horizontal: `M ${svg.value.left + svg.value.usableWidth / 4 - 20},${svg.value.centerY - 28} ${svg.value.left + svg.value.usableWidth / 4 + 20},${svg.value.centerY - 28}`,
+                vertical: `M ${svg.value.left + svg.value.usableWidth / 4},${svg.value.centerY - 48} ${svg.value.left + svg.value.usableWidth / 4},${svg.value.centerY - 8}`
+            }
         },
     }
 })
@@ -1224,7 +1240,7 @@ defineExpose({
                     height="20"
                     width="20"
                     :fill="miniMap[selectedSide].tl.fill"
-                    :style="`cursor: pointer; opacity: ${selectedSide === 'TL' ? 1 : 0.3}`"
+                    :style="`cursor: pointer; opacity: ${selectedSide === 'TL' ? 1 : 0.2}`"
                     @click="selectQuadrantSide('TL')"
                     :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TL'}"
                 />
@@ -1234,7 +1250,7 @@ defineExpose({
                     height="20"
                     width="20"
                     :fill="miniMap[selectedSide].tr.fill"
-                    :style="`cursor: pointer; opacity: ${selectedSide === 'TR' ? 1 : 0.3}`"
+                    :style="`cursor: pointer; opacity: ${selectedSide === 'TR' ? 1 : 0.2}`"
                     @click="selectQuadrantSide('TR')"
                     :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TR'}"
                 />
@@ -1244,7 +1260,7 @@ defineExpose({
                     height="20"
                     width="20"
                     :fill="miniMap[selectedSide].br.fill"
-                    :style="`cursor: pointer; opacity: ${selectedSide === 'BR' ? 1 : 0.3}`"
+                    :style="`cursor: pointer; opacity: ${selectedSide === 'BR' ? 1 : 0.2}`"
                     @click="selectQuadrantSide('BR')"
                     :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'BR'}"
                 />
@@ -1254,9 +1270,21 @@ defineExpose({
                     height="20"
                     width="20"
                     :fill="miniMap[selectedSide].bl.fill"
-                    :style="`cursor: pointer; opacity: ${selectedSide === 'BL' ? 1 : 0.3}`"
+                    :style="`cursor: pointer; opacity: ${selectedSide === 'BL' ? 1 : 0.2}`"
                     @click="selectQuadrantSide('BL')"
                     :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'BL'}"
+                />
+                <path
+                    class="vue-ui-quadrant-minimap-crosshairs"
+                    :stroke="quadrantConfig.style.chart.backgroundColor" 
+                    :stroke-width="1"
+                    :d="miniMap[selectedSide].crosshairs.horizontal"
+                />
+                <path
+                    class="vue-ui-quadrant-minimap-crosshairs"
+                    :stroke="quadrantConfig.style.chart.backgroundColor" 
+                    :stroke-width="1"
+                    :d="miniMap[selectedSide].crosshairs.vertical"
                 />
             </g>
             <slot name="svg" :svg="svg"/>
@@ -1384,7 +1412,8 @@ path, line, rect, circle, polygon {
 }
 
 .vue-ui-quadrant-mini-map-cell,
-.vue-ui-quadrant-mini-map-cell-selectable {
+.vue-ui-quadrant-mini-map-cell-selectable,
+.vue-ui-quadrant-minimap-crosshairs {
     animation: none !important;
     transition: opacity 0.15s ease-in-out;
 }
