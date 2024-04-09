@@ -3117,7 +3117,8 @@
                 "bar": {
                     "color": "#5f8bee",
                     "stroke": "#5f8bee",
-                    "strokeWidth": 0.7
+                    "strokeWidth": 0.7,
+                    "shadeColor": "#2D353C"
                 },
                 "box": {
                     "stroke": "#CCCCCC",
@@ -3145,6 +3146,17 @@
                         "bold": false
                     }
                 },
+                "legend": {
+                    "showDefault": true,
+                    "fontSize": 10,
+                    "color": "#2D353C",
+                    "bold": false,
+                    "roundingValue": 0,
+                    "roundingPercentage": 0,
+                    "prefix": "",
+                    "suffix": "",
+                    "hideUnderPercentage": 3
+                },
                 "dataLabel": {
                     "show": true,
                     "bold": true,
@@ -3156,6 +3168,27 @@
         },
         "userOptions": {
             "show": true
+        },
+        "table": {
+            "show": false,
+            "responsiveBreakpoint": 300,
+            "columnNames": {
+                "series": "Series",
+                "value": "Value",
+                "percentage": "Percentage"
+            },
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "none"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none",
+                "roundingValue": 0,
+                "roundingPercentage": 0
+            }
         }
     },
     "vue_ui_digits": {

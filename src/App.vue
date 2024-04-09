@@ -2289,7 +2289,37 @@ const moodRadarConfig = ref({
     })
 
   const bar3dDataset = ref({
-    percentage: 66
+    percentage: 66,
+    series: [
+      {
+        name: 'Serie 1 with a long name',
+        value: 120
+      },
+      {
+        name: 'Serie 2',
+        value: 67
+      },
+      {
+        name: 'Serie 3',
+        value: 115
+      },
+      {
+        name: 'Serie 4',
+        value: 25
+      },
+      {
+        name: 'Serie 4',
+        value: 25
+      },
+      {
+        name: 'Serie 5',
+        value: 6
+      },
+      {
+        name: 'Serie 6',
+        value: 6
+      },
+    ]
   })
 
   const clusterDataset = ref([
@@ -3056,6 +3086,26 @@ function treemapSelect(data) {
   console.log(data)
 }
 
+const bar3dConfig = ref({
+  style: {
+    shape: 'bar',
+    chart: {
+      backgroundColor: '#1A1A1A',
+      color: '#CCCCCC',
+      title: {
+        text: "Title",
+        subtitle: {
+          text: "Subtitle"
+        }
+      }
+    }
+  }
+})
+
+function selectBar(bar) {
+  console.log(bar)
+}
+
 </script>
 
 <template>
@@ -3405,7 +3455,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_3d_bar)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_3d_bar)">
         <template #title>
           <BaseIcon name="chart3dBar"/>
         VueUi3dBar
@@ -3416,17 +3466,11 @@ function treemapSelect(data) {
           <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
-          <VueDataUiTest component="VueUi3dBar" :dataset="bar3dDataset">
-            <template #svg="{ svg }">
-              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
-            </template>
+          <VueDataUiTest @selectDatapoint="selectBar" component="VueUi3dBar" :dataset="bar3dDataset" :config="bar3dConfig">
           </VueDataUiTest>
         </template>
         <template #prod>
           <VueDataUi component="VueUi3dBar" :dataset="bar3dDataset">
-            <template #svg="{ svg }">
-              <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
-            </template>
           </VueDataUi>
         </template>
         <template #config>
@@ -4126,7 +4170,7 @@ function treemapSelect(data) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
         <template #title>
           <BaseIcon name="chartDonut" />
           VueUiDonut

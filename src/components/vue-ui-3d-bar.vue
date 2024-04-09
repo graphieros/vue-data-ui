@@ -1,10 +1,16 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { 
     convertColorToHex, 
+    createCsvContent,
     createUid,
+    darkenHexColor,
+    dataLabel,
+    downloadCsv,
     error,
-    objectIsEmpty 
+    lightenHexColor,
+    objectIsEmpty, 
+palette
 } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
@@ -13,6 +19,7 @@ import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import DataTable from "../atoms/DataTable.vue";
 
 const props = defineProps({
     config: {
@@ -29,6 +36,8 @@ const props = defineProps({
     },
 });
 
+const emits = defineEmits(['selectDatapoint'])
+
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
 })
@@ -40,7 +49,7 @@ const defaultConfig = ref(mainConfig.vue_ui_3d_bar);
 const isPrinting = ref(false);
 const isImaging = ref(false);
 const details = ref(null);
-const bar3dChart = ref(null)
+const bar3dChart = ref(null);
 
 const barConfig = computed(() => {
     return useNestedProp({
@@ -49,10 +58,19 @@ const barConfig = computed(() => {
     });
 });
 
+const mutableConfig = ref({
+    showTable: barConfig.value.table.show
+})
+
+const hasStack = computed(() => {
+    return props.dataset.series && props.dataset.series.length;
+});
+
 const svg = computed(() => {
     return {
         height: barConfig.value.style.chart.box.dimensions.height,
         width: barConfig.value.style.chart.box.dimensions.width,
+        absoluteWidth: barConfig.value.style.chart.box.dimensions.width * (hasStack.value ? 2 : 1 ),
         top: barConfig.value.style.chart.box.dimensions.top,
         bottom: barConfig.value.style.chart.box.dimensions.bottom,
         left: barConfig.value.style.chart.box.dimensions.left,
@@ -60,6 +78,32 @@ const svg = computed(() => {
         perspective: barConfig.value.style.chart.box.dimensions.perspective
     }
 });
+
+const stack = computed(() => {
+    if(hasStack.value) {
+        const total = props.dataset.series.map(s => s.value || 0).reduce((a, b) => a + b, 0);
+        const formatted = props.dataset.series.map((ds, i) => {
+            return {
+                ...ds,
+                id: createUid(),
+                proportion: (ds.value || 0) / total,
+                color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length]
+            }
+        })
+        .sort((a, b) => b.value - a.value)
+        const res = [];
+        let start = 0;
+        for(let i = 0; i < formatted.length; i += 1) {
+            res.push({
+                ...formatted[i],
+                fill: createFill(start, formatted[i].proportion)
+            });
+            start += formatted[i].proportion
+        }
+        return res
+    }
+    return null
+})
 
 const box = computed(() => {
     return {
@@ -103,26 +147,70 @@ onMounted(() => {
     }
 })
 
+function createFill(startProportion, proportion) {
+    const height = svg.value.height - svg.value.bottom - svg.value.top - (svg.value.perspective * 2);
+    const { width: W, height: H, bottom: B, right: R, left: L,  perspective: P} = svg.value;
+    const relativeB = B + height * startProportion;
+
+    return {
+        sidePointer: {
+            x: W - R,
+            y: H - relativeB - P - (height * proportion /2),
+            topY: H - relativeB - P - height * proportion,
+            height: height * proportion
+        },
+        right: `M${W / 2},${H - relativeB} ${W / 2},${H - relativeB - height * proportion} ${W - R},${H - relativeB - P - height * proportion} ${W - R},${H - relativeB - P}Z`,
+        left: `M${W / 2},${H - relativeB} ${W / 2},${H - relativeB - height * proportion} ${L}, ${H - relativeB - P - height * proportion} ${L},${H - relativeB - P}Z`,
+        liningTop: `M${L},${H - relativeB - P - height * proportion} ${W / 2},${H - relativeB - height * proportion} ${W - R},${H - relativeB - P - height * proportion}`,
+        liningTopShade: `M${L},${H - relativeB - P - height * proportion -0.5} ${W / 2},${H - relativeB - height * proportion - 0.5} ${W - R},${H - relativeB - P - height * proportion - 0.5}`,
+        top: `M${W / 2},${H - relativeB - height * proportion} ${L},${H - relativeB - P - height * proportion} ${W / 2},${H - relativeB - (P * 2) - (height * proportion)} ${W - R},${H - relativeB - P - height * proportion} Z`,
+        tubeTop: `M${L},${H - relativeB - height * proportion - P} C ${L},${H - relativeB - height * proportion - (P *2.5)} ${W - R},${H - relativeB - height * proportion - (P * 2.5)} ${W - R},${H - relativeB - height * proportion - P} C ${W - R},${H - relativeB - height * proportion + P /2} ${L},${H - relativeB - height * proportion + P / 2} ${L},${H - relativeB - height * proportion - P}`,
+        bottomTubeTop: `M ${W - R - 0.5},${H - relativeB - P} C ${W - R - 0.5},${H - relativeB + P/2} ${L},${H - relativeB + P/2} ${L + 0.5},${H - relativeB - P}`,
+        tubeBody: `M
+        ${L},${H - relativeB - height * proportion - P} 
+        C ${L},${H - relativeB - height * proportion + P / 2} 
+        ${W - R},${H - relativeB - height * proportion + P /2} 
+        ${W - R},${H - relativeB - height * proportion - P} 
+        L${W - R},${H - relativeB - P}
+        C 
+        ${W - R},${H - relativeB + P/2}
+        ${L},${H - relativeB + P/2}
+        ${L},${H - relativeB - P}Z`
+    }
+}
+
 const fill = computed(() => {
     const proportion = activeValue.value / 100;
     const height = svg.value.height - svg.value.bottom - svg.value.top - (svg.value.perspective * 2);
+    const { width: W, height: H, bottom: B, right: R, left: L,  perspective: P} = svg.value;
+
+    const startProportion = 0;
+    const relativeB = B + height * startProportion;
+
     return {
-        right: `M${svg.value.width / 2},${svg.value.height - svg.value.bottom} ${svg.value.width / 2},${svg.value.height - svg.value.bottom - height * proportion} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective}Z`,
-        left: `M${svg.value.width / 2},${svg.value.height - svg.value.bottom} ${svg.value.width / 2},${svg.value.height - svg.value.bottom - height * proportion} ${svg.value.left}, ${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective}Z`,
-        top: `M${svg.value.width / 2},${svg.value.height - svg.value.bottom - height * proportion} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} ${svg.value.width / 2},${svg.value.height - svg.value.bottom - (svg.value.perspective * 2) - (height * proportion)} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective - height * proportion} Z`,
-        tubeTop: `M${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective} C ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion - (svg.value.perspective *2.5)} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion - (svg.value.perspective * 2.5)} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective} C ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion + svg.value.perspective /2} ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion + svg.value.perspective / 2} ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective}`,
+        right: `M${W / 2},${H - relativeB} ${W / 2},${H - relativeB - height * proportion} ${W - R},${H - relativeB - P - height * proportion} ${W - R},${H - relativeB - P}Z`,
+        left: `M${W / 2},${H - relativeB} ${W / 2},${H - relativeB - height * proportion} ${L}, ${H - relativeB - P - height * proportion} ${L},${H - relativeB - P}Z`,
+        top: `M${W / 2},${H - relativeB - height * proportion} ${L},${H - relativeB - P - height * proportion} ${W / 2},${H - relativeB - (P * 2) - (height * proportion)} ${W - R},${H - relativeB - P - height * proportion} Z`,
+        tubeTop: `M${L},${H - relativeB - height * proportion - P} C ${L},${H - relativeB - height * proportion - (P *2.5)} ${W - R},${H - relativeB - height * proportion - (P * 2.5)} ${W - R},${H - relativeB - height * proportion - P} C ${W - R},${H - relativeB - height * proportion + P /2} ${L},${H - relativeB - height * proportion + P / 2} ${L},${H - relativeB - height * proportion - P}`,
         tubeBody: `M
-        ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective} 
-        C ${svg.value.left},${svg.value.height - svg.value.bottom - height * proportion + svg.value.perspective / 2} 
-        ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion + svg.value.perspective /2} 
-        ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - height * proportion - svg.value.perspective} 
-        L${svg.value.width - svg.value.right},${svg.value.height - svg.value.perspective * 1.5}
+        ${L},${H - relativeB - height * proportion - P} 
+        C ${L},${H - relativeB - height * proportion + P / 2} 
+        ${W - R},${H - relativeB - height * proportion + P /2} 
+        ${W - R},${H - relativeB - height * proportion - P} 
+        L${W - R},${H - P * 1.5}
         C 
-        ${svg.value.width - svg.value.right},${svg.value.height}
-        ${svg.value.left},${svg.value.height}
-        ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective}Z`
+        ${W - R},${H}
+        ${L},${H}
+        ${L},${H - relativeB - P}Z`
     }
-})
+});
+
+const selectedSerie = ref(null);
+
+function useTooltip(bar) {
+    selectedSerie.value = bar.id;
+    //
+}
 
 const __to__ = ref(null);
 
@@ -167,9 +255,101 @@ function toggleFullscreen(state) {
     isFullscreen.value = state;
 }
 
+function getData() {
+    if(hasStack.value) {
+        return stack.value
+    } else {
+        return props.dataset.percentage
+    }
+}
+
+const table = computed(() => {
+    if(!hasStack.value) {
+        return null
+    } else {
+        const head = stack.value.map(ds => {
+            return {
+                name: ds.name,
+                color: ds.color
+            }
+        });
+        const body = stack.value.map(ds => ds.value);
+        return { head, body }
+    }
+});
+
+function generateCsv() {
+    if(!hasStack.value) {
+        console.warn('VueUi3dBar : CSV download is only available in stack mode (providing dataset.series instead of dataset.percentage)');
+        return;
+    }
+    nextTick(() => {
+        const total = stack.value.map(ds => ds.value).reduce((a, b) => a + b, 0);
+        const labels = table.value.head.map((h,i) => {
+            return [[
+                h.name
+            ],[table.value.body[i]], [isNaN(table.value.body[i] / total) ? '-' : table.value.body[i] / total * 100]]
+        });
+        const tableXls = [[barConfig.value.style.chart.title.text],[barConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: barConfig.value.style.chart.title.text || "vue-ui-3d-bar" })
+    });
+}
+
+const dataTable = computed(() => {
+    const total = stack.value.map(ds => ds.value).reduce((a, b) => a + b, 0);
+    const head = [
+        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`, dataLabel({p: barConfig.value.style.chart.legend.prefix, v: total, s: barConfig.value.style.chart.legend.suffix, r: barConfig.value.table.td.roundingValue}),
+        '100%'
+    ];
+
+    const body = table.value.head.map((h,i) => {
+        const label = dataLabel({p: barConfig.value.style.chart.legend.prefix, v: table.value.body[i], s: barConfig.value.style.chart.legend.suffix, r: barConfig.value.table.td.roundingValue});
+        return [
+            {
+                color: h.color,
+                name: h.name
+            },
+            label,
+            isNaN(table.value.body[i] / total) ? "-" : (table.value.body[i] / total * 100).toFixed(barConfig.value.table.td.roundingPercentage) + '%'
+        ]
+    });
+
+    const config = {
+        th: {
+            backgroundColor: barConfig.value.table.th.backgroundColor,
+            color: barConfig.value.table.th.color,
+            outline: barConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: barConfig.value.table.td.backgroundColor,
+            color: barConfig.value.table.td.color,
+            outline: barConfig.value.table.td.outline
+        },
+        breakpoint: barConfig.value.table.responsiveBreakpoint,
+        shape: barConfig.value.style.shape === 'tube' ? 'circle' : 'square'
+    }
+
+    const colNames = [
+        barConfig.value.table.columnNames.series,
+        barConfig.value.table.columnNames.value,
+        barConfig.value.table.columnNames.percentage
+    ]
+
+    return {
+        colNames,
+        head,
+        body,
+        config
+    }
+});
+
 defineExpose({
+    generateCsv,
     generatePdf,
-    generateImage
+    generateImage,
+    getData
 });
 
 
@@ -212,14 +392,17 @@ defineExpose({
             :uid="uid"
             hasImg
             hasFullscreen
+            :hasTable="!!hasStack"
             :chartElement="bar3dChart"
             @toggleFullscreen="toggleFullscreen"
-            :hasXls="false"
+            :hasXls="!!hasStack"
             @generatePdf="generatePdf"
+            @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />
 
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="3d-bar-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${barConfig.style.chart.backgroundColor};color:${barConfig.style.chart.color}`">
+        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="3d-bar-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${barConfig.style.chart.backgroundColor};color:${barConfig.style.chart.color}`">
 
             <!-- DEFS -->
             <defs>
@@ -242,8 +425,28 @@ defineExpose({
                 </linearGradient>
             </defs>
 
+            <defs v-if="hasStack">
+                <radialGradient v-for="bar in stack" :id="`grad_top_${bar.id}`">
+                    <stop offset="0%" :stop-color="`${lightenHexColor(bar.color, 0.5)}DD`" />
+                    <stop offset="100%" :stop-color="`${bar.color}`" />
+                </radialGradient>
+                <linearGradient v-for="bar in stack" :id="`grad_left_${bar.id}`">
+                    <stop offset="0%" :stop-color="`${bar.color}DD`" />
+                    <stop offset="100%" :stop-color="`${darkenHexColor(bar.color, 0.5)}FF`" />
+                </linearGradient>
+                <linearGradient v-for="bar in stack" :id="`grad_right_${bar.id}`">
+                    <!-- <stop offset="0%" :stop-color="`${bar.color}DD`" /> -->
+                    <stop offset="2%" :stop-color="`${lightenHexColor(bar.color, 0.5)}FF`" />
+                    <stop offset="100%" :stop-color="`${bar.color}DD`" />
+                </linearGradient>
+                <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" :id="`vertical_line_${uid}`">
+                    <stop offset="0%" stop-color="#FFFFFF"/>
+                    <stop offset="100%" stop-color="#FFFFFF33"/>
+                </linearGradient>
+            </defs>
+
             <text
-                v-if="barConfig.style.chart.dataLabel.show"
+                v-if="barConfig.style.chart.dataLabel.show && ![null, undefined].includes(props.dataset.percentage) && [null, undefined].includes(props.dataset.series)"
                 :x="svg.width / 2"
                 :y="svg.top - barConfig.style.chart.dataLabel.fontSize / 2"
                 :font-size="barConfig.style.chart.dataLabel.fontSize"
@@ -257,26 +460,90 @@ defineExpose({
 
             <g v-if="!barConfig.style.shape || barConfig.style.shape === 'bar'">            
                 <!-- BOX SKELETON -->
-                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.right" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.left" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.side" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.topSides" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <g v-if="!hasStack">
+                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.right" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.left" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.side" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.topSides" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                </g>
 
                 <!-- FILL BOX -->
-                <path :d="fill.right" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_right${uid})`"/>
-                <path :d="fill.left" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_left${uid})`"/>
-                <path :d="fill.top" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
+                <g v-if="!hasStack">
+                    <path :d="fill.right" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_right${uid})`"/>
+                    <path :d="fill.left" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_left${uid})`"/>
+                    <path :d="fill.top" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
+                </g>
+                
+                <g v-if="hasStack">
+                    <g v-for="(bar, i) in stack" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack" @click="emits('selectDatapoint', bar)">
+                        <path :d="bar.fill.right" :fill="`url(#grad_right_${bar.id})`" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null"/>
+                        <path :d="bar.fill.left" :fill="`url(#grad_left_${bar.id})`" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null"/>
+                        <path :d="bar.fill.top" :fill="`url(#grad_top_${bar.id})`" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null"/>
+                        <path :d="bar.fill.liningTop" stroke="#FFFFFF" stroke-width="0.5" stroke-linecap="round" fill="none" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" />
+                        
+                        <path :d="`M ${svg.width / 2},${(svg.perspective * 2) + svg.top} ${svg.width / 2},${svg.height - svg.bottom}`" :stroke="`#FFFFFF`" stroke-width="0.5" stroke-linecap="round"/> 
+                    </g>
+                    <g v-for="(bar, i) in stack">
+                        <path v-if="i !== stack.length - 1" :d="bar.fill.liningTopShade" :stroke="barConfig.style.chart.bar.shadeColor" stroke-width="0.5" stroke-linecap="round" fill="none" style="pointer-events: none;" />
+                    </g>
+                    <!-- LEGEND -->
+                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > barConfig.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
+                        <path :stroke="barConfig.style.chart.color" stroke-dasharray="1" stroke-width="0.5" stroke-linecap="round" :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x + 20},${bar.fill.sidePointer.y}`"/>
+                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor"/>
+                        <foreignObject :x="bar.fill.sidePointer.x + 24" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
+                            <div v-if="barConfig.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${barConfig.style.chart.legend.fontSize}px; position: absolute; top:50%; left: 0; transform: translateY(-50%); text-align:left; line-height: ${barConfig.style.chart.legend.fontSize}px; color:${barConfig.style.chart.legend.color}`">
+                                {{ bar.name }} : {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
+                            </div>
+                            <slot name="legend" v-bind="{ datapoint: bar, config: barConfig, dataset: stack}"/>
+                        </foreignObject>
+                    </g>
+                </g>
             </g>
 
             <g v-if="barConfig.style.shape === 'tube'">
-                <!-- TUBE SKELETON -->
-                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeTop" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeLeft" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeRight" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeBottom" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                <!-- FILL TUBE -->
-                <path :d="fill.tubeTop" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
-                <path :d="fill.tubeBody" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body${uid})`"/>
+                <g v-if="!hasStack">
+                    <!-- TUBE SKELETON -->
+                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeTop" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeLeft" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeRight" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeBottom" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <!-- FILL TUBE -->
+                    <path :d="fill.tubeTop" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
+                    <path :d="fill.tubeBody" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body${uid})`"/>
+                </g>
+
+                <g v-if="hasStack">
+                    <g v-for="(bar, i) in stack" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack" @click="emits('selectDatapoint', bar)">
+                        <defs>
+                            <radialGradient :id="`gradient_tube_top_${bar.id}`" fx="10%" cy="55%">
+                                <stop offset="0%" :stop-color="`${lightenHexColor(bar.color, 0.5)}DD`" />
+
+                                <stop offset="100%" :stop-color="`${darkenHexColor(bar.color, 0.1)}DD`" />
+                            </radialGradient>
+                            <linearGradient :id="`gradient_tube_body_${bar.id}`" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" :stop-color="`${bar.color}`"/>
+                                <stop offset="10%" :stop-color="`${darkenHexColor(bar.color, 0.7)}FF`"/>
+                                <stop offset="25%" :stop-color="`${darkenHexColor(bar.color, 0.5)}FF`"/>
+                                <stop offset="75%" :stop-color="`${bar.color}DD`"/>
+                                <stop offset="100%" :stop-color="`${lightenHexColor(bar.color, 0.7)}FF`"/>
+                            </linearGradient>
+                        </defs>
+                        <path @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :d="bar.fill.tubeBody" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body_${bar.id})`"/>
+                        <path @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :d="bar.fill.bottomTubeTop" stroke="#000000" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" fill="none" v-if="i > 0"/>
+                        <path @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :d="bar.fill.tubeTop" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_top_${bar.id})`"/>
+                    </g>
+                    <!-- LEGEND -->
+                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > barConfig.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
+                        <path :stroke="barConfig.style.chart.color" stroke-dasharray="1" stroke-width="0.5" stroke-linecap="round" :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x + 20},${bar.fill.sidePointer.y}`"/>
+                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="selectedSerie === bar.id ? 3 : 2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor"/>
+                        <foreignObject :x="bar.fill.sidePointer.x + 24" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
+                            <div v-if="barConfig.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${barConfig.style.chart.legend.fontSize}px; position: absolute; top:50%; left: 0; transform: translateY(-50%); text-align:left; line-height: ${barConfig.style.chart.legend.fontSize}px; color:${barConfig.style.chart.legend.color}`">
+                                {{ bar.name }} : {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
+                            </div>
+                            <slot name="legend" v-bind="{ datapoint: bar, config: barConfig, dataset: stack}"/>
+                        </foreignObject>
+                    </g>
+                </g>
             </g>
 
             <slot name="svg" :svg="svg"/>
@@ -294,7 +561,23 @@ defineExpose({
                 }
             }"
         />
-
+        
+        <!-- DATA TABLE -->
+        <DataTable
+            v-if="mutableConfig.showTable && hasStack"
+            :colNames="dataTable.colNames"
+            :head="dataTable.head" 
+            :body="dataTable.body"
+            :config="dataTable.config"
+            :title="`${barConfig.style.chart.title.text}${barConfig.style.chart.title.subtitle.text ? ` : ${barConfig.style.chart.title.subtitle.text}` : ''}`"
+        >
+            <template #th="{ th }">
+                <div v-html="th" style="display:flex;align-items:center"></div>
+            </template>
+            <template #td="{ td }">
+                {{ td.name || td }}
+            </template>
+        </DataTable>
     </div>
 </template>
 
@@ -307,5 +590,8 @@ defineExpose({
 .vue-ui-3d-bar {
     user-select: none;
     position: relative;
+}
+.vue-ui-3d-bar-stack {
+    transition: opacity 0.2s ease-in-out;
 }
 </style>

@@ -345,7 +345,11 @@ defineExpose({
         v-if="component === 'VueUi3dBar'" 
         :config="config" 
         :dataset="dataset" ref="vue_ui_3d_bar" 
+        @selectDatapoint="(datapoint) => emit('selectDatapoint', datapoint)"
     >
+        <template #legend="{ datapoint, config, dataset }">
+            <slot name="legend" v-bind:legend="{ datapoint, config, dataset }" />
+        </template>
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>

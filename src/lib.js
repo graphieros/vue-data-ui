@@ -786,6 +786,31 @@ export function lightenHexColor(hexColor, percentLighter) {
     return lighterHex;
 }
 
+export function darkenHexColor(hexColor, percentDarker) {
+    if (!/^#([0-9A-F]{3}){1,2}$/i.test(hexColor)) {
+        console.warn('darkenHexColor: Invalid hex color format');
+        return "#000000";
+    }
+
+    let color = hexColor.replace('#', '');
+    if (color.length === 3) {
+        color = color.split('').map(c => c + c).join('');
+    }
+
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+
+    const newR = Math.max(0, r - r * percentDarker);
+    const newG = Math.max(0, g - g * percentDarker);
+    const newB = Math.max(0, b - b * percentDarker);
+
+    const darkerHex = `#${Math.round(newR).toString(16).padStart(2, '0')}${Math.round(newG).toString(16).padStart(2, '0')}${Math.round(newB).toString(16).padStart(2, '0')}`;
+
+    return darkerHex;
+}
+
+
 export function niceNum(range, round) {
     const exponent = Math.floor(Math.log10(range));
     const fraction = range / Math.pow(10, exponent);
@@ -1043,6 +1068,7 @@ const lib = {
     createSpiralPath,
     createStar,
     createUid,
+    darkenHexColor,
     dataLabel,
     degreesToRadians,
     degreesToRadians,

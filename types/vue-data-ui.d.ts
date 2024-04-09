@@ -599,6 +599,7 @@ declare module 'vue-data-ui' {
                     color?: string;
                     stroke?: string;
                     strokeWidth?: number;
+                    shadeColor?: string;
                 };
                 box?: {
                     stroke?: string;
@@ -626,6 +627,18 @@ declare module 'vue-data-ui' {
                         bold?: boolean;
                     };
                 };
+                legend?: {
+                    backgroundColor?: string;
+                    color?: string;
+                    show?: boolean;
+                    fontSize?: number;
+                    bold?: boolean;
+                    roundingValue?: number;
+                    roundingPercentage?: number;
+                    prefix?: string;
+                    suffix?: string;
+                    hideUnderPercentage?: number;
+                };
                 dataLabel?: {
                     show?: boolean;
                     bold?: boolean;
@@ -637,7 +650,28 @@ declare module 'vue-data-ui' {
         };
         userOptions?: {
             show?: boolean;
-        }
+        };
+        table?: {
+            show?: boolean;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                series?: string;
+                value?: string;
+                percentage?: string;
+            },
+            th?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+            };
+            td?: {
+                backgroundColor?: string;
+                color?: string;
+                outline?: string;
+                roundingValue?: number;
+                roundingPercentage?: number;
+            };
+        };
     };
 
     export const VueUi3dBar: DefineComponent<{
