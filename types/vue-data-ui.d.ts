@@ -580,7 +580,12 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUi3dBarDataset = {
-        percentage: number;
+        percentage?: number;
+        series?: Array<{
+            name: string;
+            value: number;
+            color?: string;
+        }>
     };
 
     export type VueUi3dBarConfig = {
