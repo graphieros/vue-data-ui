@@ -159,6 +159,8 @@ function createFill(startProportion, proportion) {
             topY: H - relativeB - P - height * proportion,
             height: height * proportion
         },
+        apexBottom: {y: H - relativeB, x: W / 2},
+        apexTop: {y: H - relativeB - height * proportion, x: W / 2},
         right: `M${W / 2},${H - relativeB} ${W / 2},${H - relativeB - height * proportion} ${W - R},${H - relativeB - P - height * proportion} ${W - R},${H - relativeB - P}Z`,
         left: `M${W / 2},${H - relativeB} ${W / 2},${H - relativeB - height * proportion} ${L}, ${H - relativeB - P - height * proportion} ${L},${H - relativeB - P}Z`,
         liningTop: `M${L},${H - relativeB - P - height * proportion} ${W / 2},${H - relativeB - height * proportion} ${W - R},${H - relativeB - P - height * proportion}`,
@@ -481,7 +483,7 @@ defineExpose({
                         <path :d="bar.fill.top" :fill="`url(#grad_top_${bar.id})`" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null"/>
                         <path :d="bar.fill.liningTop" stroke="#FFFFFF" stroke-width="0.5" stroke-linecap="round" fill="none" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" />
                         
-                        <path :d="`M ${svg.width / 2},${(svg.perspective * 2) + svg.top} ${svg.width / 2},${svg.height - svg.bottom}`" :stroke="`#FFFFFF`" stroke-width="0.5" stroke-linecap="round"/> 
+                        <path :d="`M ${bar.fill.apexTop.x},${bar.fill.apexTop.y} ${bar.fill.apexBottom.x},${bar.fill.apexBottom.y}`" :stroke="`#FFFFFF`" stroke-width="0.5" stroke-linecap="round"/> 
                     </g>
                     <g v-for="(bar, i) in stack">
                         <path v-if="i !== stack.length - 1" :d="bar.fill.liningTopShade" :stroke="barConfig.style.chart.bar.shadeColor" stroke-width="0.5" stroke-linecap="round" fill="none" style="pointer-events: none;" />
