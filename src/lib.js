@@ -689,7 +689,7 @@ export function findArcMidpoint(pathElement) {
     return { x, y };
 }
 
-export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false, arcSize = 0) {
+export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false, arcSize = 0, flatLen = 12) {
     const { x, y } = findArcMidpoint(arc.path)
 
     const { x: endX, y: endY } = offsetFromCenterPoint({
@@ -704,11 +704,11 @@ export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBo
     const end = ` ${center ? center.x : endX},${center ? center.y : endY}`;
     let mid = "";
     if (x > arc.cx) {
-        mid = `${calcMarkerOffsetX(arc).x - 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
+        mid = `${calcMarkerOffsetX(arc).x - flatLen},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
     } else if (x < arc.cx) {
-        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
+        mid = `${calcMarkerOffsetX(arc).x + flatLen},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
     } else {
-        mid = `${calcMarkerOffsetX(arc).x + 12},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
+        mid = `${calcMarkerOffsetX(arc).x + flatLen},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
     }
     return `M${hideStart ? '' : start}${mid}${end}${toCenter ? `,${toCenter.x} ${toCenter.y}` : ''}`;
 }

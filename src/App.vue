@@ -1035,84 +1035,84 @@ const weeks = computed(() => {
   return arr;
 });
 
-// const scat1 = computed(() => {
-//   const arr = [];
-//   for (let i = 0; i < 50; i += 1) {
-//     arr.push({
-//       x: Math.random() * i + 12,
-//       y: (Math.random() * i) / 20,
-//       name: `plot_${i}_cluster_1`,
-//     });
-//   }
-//   return arr;
-// });
-// const scat2 = computed(() => {
-//   const arr = [];
-//   for (let i = 0; i < 50; i += 1) {
-//     arr.push({
-//       x: (Math.random() * i) / 10,
-//       y: (Math.random() * i) / 10,
-//       name: `plot_${i}_cluster_2`,
-//     });
-//   }
-//   return arr;
-// });
-
-const scat1 = ref([
-  {
-    x: 1,
-    y: 2,
-    name: '1'
-  },
-  {
-    x: 0.3,
-    y: 1.6,
-    name: '1'
-  },
-  {
-    x: 3,
-    y: 2.1,
-    name: '1'
-  },
-  {
-    x: 3,
-    y: 2.2,
-    name: '1'
-  },
-  {
-    x: 1.3,
-    y: 1.2,
-    name: '1'
+const scat1 = computed(() => {
+  const arr = [];
+  for (let i = 0; i < 50; i += 1) {
+    arr.push({
+      x: Math.random() * i + 12,
+      y: (Math.random() * i) / 20,
+      name: `plot_${i}_cluster_1`,
+    });
   }
-])
-
-const scat2 = ref([
-  {
-    x: 1,
-    y: 2,
-    name: '1'
-  },
-  {
-    x: 0.3,
-    y: 1.6,
-    name: '1'
-  },
-  {
-    x: 3,
-    y: 2.1,
-    name: '1'
-  },
-  {
-    x: 3,
-    y: 20.2,
-    name: '1'
-  },
-  {
-    x: 1.3,
-    y: -20.2,
-    name: '1'
+  return arr;
+});
+const scat2 = computed(() => {
+  const arr = [];
+  for (let i = 0; i < 50; i += 1) {
+    arr.push({
+      x: (Math.random() * i) / 2,
+      y: (Math.random() * i) / 10,
+      name: `plot_${i}_cluster_2`,
+    });
   }
-])
+  return arr;
+});
+
+// const scat1 = ref([
+//   {
+//     x: 1,
+//     y: 2,
+//     name: '1'
+//   },
+//   {
+//     x: 0.3,
+//     y: 1.6,
+//     name: '1'
+//   },
+//   {
+//     x: 3,
+//     y: 2.1,
+//     name: '1'
+//   },
+//   {
+//     x: 3,
+//     y: 2.2,
+//     name: '1'
+//   },
+//   {
+//     x: 1.3,
+//     y: 1.2,
+//     name: '1'
+//   }
+// ])
+
+// const scat2 = ref([
+//   {
+//     x: 1,
+//     y: 2,
+//     name: '1'
+//   },
+//   {
+//     x: 0.3,
+//     y: 1.6,
+//     name: '1'
+//   },
+//   {
+//     x: 3,
+//     y: 2.1,
+//     name: '1'
+//   },
+//   {
+//     x: 3,
+//     y: 20.2,
+//     name: '1'
+//   },
+//   {
+//     x: 1.3,
+//     y: -20.2,
+//     name: '1'
+//   }
+// ])
 
 const scatterDataset = computed(() => {
   return [
@@ -2293,31 +2293,137 @@ const moodRadarConfig = ref({
     series: [
       {
         name: 'Serie 1 with a long name',
-        value: 120
+        value: 120,
+        breakdown: [
+          {
+            name: 'Sub serie 1',
+            value: 80
+          },
+          {
+            name: 'Sub serie 2',
+            value: 20
+          },
+          {
+            name: 'Sub serie 3',
+            value: 20
+          },
+          {
+            name: 'Sub serie 4',
+            value: 8
+          },
+          {
+            name: 'Sub serie 5',
+            value: 12
+          },
+        ]
       },
       {
         name: 'Serie 2',
-        value: 67
+        value: 67,
+        breakdown: [
+          {
+            name: 'Sub serie 1',
+            value: 20
+          },
+          {
+            name: 'Sub serie 2',
+            value: 30
+          },
+          {
+            name: 'Sub serie 3',
+            value: 17
+          }
+        ]
       },
       {
         name: 'Serie 3',
-        value: 115
+        value: 115,
+        breakdown: [
+          {
+            name: 'Sub serie 1',
+            value: 100
+          },
+          {
+            name: 'Sub serie 2',
+            value: 7
+          },
+          {
+            name: 'Sub serie 3',
+            value: 8
+          }
+        ]
       },
       {
         name: 'Serie 4',
-        value: 25
+        value: 25,
+        breakdown: [
+          {
+            name: 'Sub serie 1',
+            value: 10
+          },
+          {
+            name: 'Sub serie 2',
+            value: 10
+          },
+          {
+            name: 'Sub serie 3',
+            value: 5
+          }
+        ]
       },
       {
         name: 'Serie 4',
-        value: 25
+        value: 25,
+        breakdown: [
+          {
+            name: 'Sub serie 1',
+            value: 6
+          },
+          {
+            name: 'Sub serie 2',
+            value: 9
+          },
+          {
+            name: 'Sub serie 3',
+            value: 10
+          }
+        ]
       },
       {
         name: 'Serie 5',
-        value: 6
+        value: 6,
+        breakdown: [
+          {
+            name: 'Sub serie 1',
+            value: 3
+          },
+          {
+            name: 'Sub serie 2',
+            value: 2
+          },
+          {
+            name: 'Sub serie 3',
+            value: 1
+          }
+        ]
       },
       {
         name: 'Serie 6',
-        value: 6
+        value: 6,
+        breakdown: [
+          {
+            name: 'Sub serie 1',
+            value: 1
+          },
+          {
+            name: 'Sub serie 2',
+            value: 1
+          },
+          {
+            name: 'Sub serie 3',
+            value: 4
+          }
+        ]
       },
     ]
   })
@@ -3090,8 +3196,8 @@ const bar3dConfig = ref({
   style: {
     shape: 'bar',
     chart: {
-      backgroundColor: '#1A1A1A',
-      color: '#CCCCCC',
+      // backgroundColor: '#1A1A1A',
+      // color: '#CCCCCC',
       title: {
         text: "Title",
         subtitle: {
@@ -3219,6 +3325,11 @@ function selectBar(bar) {
           VueUiTreemap
         </template>
         <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <TreemapTest :dataset="treemapDataset" :config="treemapConfig" @selectLegend="treemapSelect" @selectDatapoint="treemapSelect">
@@ -3276,6 +3387,11 @@ function selectBar(bar) {
           VueUiGalaxy
         </template>
         <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <GalaxyTest :dataset="galaxyDataset" :config="galaxyConfig">
@@ -3319,6 +3435,12 @@ function selectBar(bar) {
           VueUiNestedDonuts
         </template>
         <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="labelOpen" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <VueDataUiTest component="VueUiNestedDonuts" :dataset="nestedDonutsDataset" :config="nestedDonutsConfig">
@@ -3363,6 +3485,10 @@ function selectBar(bar) {
           VueUiTableSparkline
         </template>
         <template #info>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <VueDataUiTest component="VueUiTableSparkline" :dataset="tableSparklineDataset"/>
@@ -3375,7 +3501,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
         <template #title>
           <BaseIcon name="chartCluster"/>
           VueUiMolecule
@@ -4170,7 +4296,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
         <template #title>
           <BaseIcon name="chartDonut" />
           VueUiDonut
@@ -4263,6 +4389,11 @@ function selectBar(bar) {
         <template #title>
           <BaseIcon name="chartThermometer"/>
           VueUiThermometer
+        </template>
+        <template #info>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <VueDataUiTest
@@ -4672,6 +4803,11 @@ function selectBar(bar) {
         <template #title>
           <BaseIcon name="chartGauge"/>
           VueUiGauge
+        </template>
+        <template #info>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <VueDataUiTest

@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import { 
+import {
+    calcMarkerOffsetX,
+    calcMarkerOffsetY,
+    calcNutArrowPath,
     convertColorToHex, 
     createCsvContent,
     createUid,
@@ -9,6 +12,7 @@ import {
     downloadCsv,
     error,
     lightenHexColor,
+    makeDonut,
     objectIsEmpty, 
 palette
 } from '../lib';
@@ -50,6 +54,7 @@ const isPrinting = ref(false);
 const isImaging = ref(false);
 const details = ref(null);
 const bar3dChart = ref(null);
+const selectionIsFixed = ref(false);
 
 const barConfig = computed(() => {
     return useNestedProp({
@@ -87,7 +92,8 @@ const stack = computed(() => {
                 ...ds,
                 id: createUid(),
                 proportion: (ds.value || 0) / total,
-                color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length]
+                color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length],
+                breakdown: ds.breakdown ? ds.breakdown.sort((a,b) => b.value - a.value) : null
             }
         })
         .sort((a, b) => b.value - a.value)
@@ -96,7 +102,7 @@ const stack = computed(() => {
         for(let i = 0; i < formatted.length; i += 1) {
             res.push({
                 ...formatted[i],
-                fill: createFill(start, formatted[i].proportion)
+                fill: createFill(start, formatted[i].proportion, formatted[i].breakdown, formatted[i].color)
             });
             start += formatted[i].proportion
         }
@@ -147,12 +153,57 @@ onMounted(() => {
     }
 })
 
-function createFill(startProportion, proportion) {
+function createFill(startProportion, proportion, breakdown, color) {
     const height = svg.value.height - svg.value.bottom - svg.value.top - (svg.value.perspective * 2);
     const { width: W, height: H, bottom: B, right: R, left: L,  perspective: P} = svg.value;
     const relativeB = B + height * startProportion;
+    const midY = H - relativeB - P - (height * proportion / 2);
+    const donutPosition = midY > svg.value.height / 2 ? 'top' : 'bottom';
+    const donutOffset = 64;
+
+    const hasBreakdown = !!breakdown;
+    let donut = null;
+    let miniDonut = null;
+    if (hasBreakdown) {
+        breakdown = breakdown
+            .map((ds, i) => {
+            return {
+                ...ds,
+                value: ds.value || 0,
+                color: lightenHexColor(color, i / (breakdown.length))
+            }
+        });
+        donut = makeDonut(
+            { series: breakdown },
+            W + svg.value.absoluteWidth / 4 - 14,
+            donutPosition === 'top' ? midY - donutOffset : midY + donutOffset,
+            28,
+            28,
+            1.99999,
+            2,
+            1,
+            360,
+            105.25,
+            14
+        );
+        miniDonut = makeDonut(
+            { series: breakdown },
+            W - R + 20,
+            H - relativeB - P - (height * proportion /2),
+            6,
+            6,
+            1.99999,
+            2,
+            1,
+            360,
+            105.25,
+            6
+        )
+    }
 
     return {
+        donut,
+        miniDonut,
         sidePointer: {
             x: W - R,
             y: H - relativeB - P - (height * proportion /2),
@@ -209,9 +260,41 @@ const fill = computed(() => {
 
 const selectedSerie = ref(null);
 
-function useTooltip(bar) {
-    selectedSerie.value = bar.id;
-    //
+function selectSerie(bar, fix = false) {
+    emits('selectDatapoint', bar)
+    if(!fix) {
+        selectedSerie.value = bar.id;
+    }
+    if(fix && selectionIsFixed.value) {
+        selectionIsFixed.value = false;
+    }
+    if(fix && !selectionIsFixed.value) {
+        selectionIsFixed.value = true;
+    }
+}
+
+function unselectSerie() {
+    if(selectionIsFixed.value) {
+        return
+    } else {
+        selectedSerie.value = null
+    }
+}
+
+
+function displayArcPercentage(arc, stepBreakdown, numOnly = false) {
+    const total = props.dataset.series.map(s => s.value || 0).reduce((a, b) => a + b, 0);
+    const absoluteP =  isNaN(arc.value / total) ? 0 : ((arc.value / total) * 100);
+    const p = isNaN(arc.value / sumValues(stepBreakdown)) ? 0 : ((arc.value / sumValues(stepBreakdown)) * 100);
+    if(numOnly) {
+        return p
+    } else {
+        return absoluteP.toFixed(0) + "%";
+    }
+}
+
+function sumValues(source) {
+    return [...source].map(s => s.value).reduce((a, b) => a + b, 0);
 }
 
 const __to__ = ref(null);
@@ -269,13 +352,28 @@ const table = computed(() => {
     if(!hasStack.value) {
         return null
     } else {
-        const head = stack.value.map(ds => {
-            return {
-                name: ds.name,
-                color: ds.color
+        const head = stack.value.flatMap(ds => {
+            if(ds.breakdown && ds.breakdown.length) {
+                return [{ name: ds.name, color: ds.color },...ds.breakdown.map((b, i) => {
+                    return {
+                        name: b.name,
+                        color: lightenHexColor(ds.color, i / ds.breakdown.length)
+                    }
+                })]
+            } else {
+                return {
+                    name: ds.name,
+                    color: ds.color
+                }
             }
         });
-        const body = stack.value.map(ds => ds.value);
+        const body = stack.value.flatMap(ds => {
+            if(ds.breakdown && ds.breakdown.length) {
+                return [ds.value, ...ds.breakdown.map(b => b.value)]
+            } else {
+                return ds.value
+            }
+        });
         return { head, body }
     }
 });
@@ -459,6 +557,12 @@ defineExpose({
                 {{Number((isNaN(activeValue) ? 0 : activeValue).toFixed(barConfig.style.chart.dataLabel.rounding)).toLocaleString() }} %
             </text>
             
+            <!-- FIX KILLER -->
+            <g v-if="selectionIsFixed" @click="selectionIsFixed = false; selectedSerie = null" data-html2canvas-ignore style="cursor:pointer">
+                <rect :x="svg.width / 2 - 6" :y="svg.top - 20" :height="12" :width="12" fill="transparent"/>
+                <path :d="`M${svg.width / 2 - 6},${svg.top - 20} ${svg.width / 2 + 6},${svg.top - 9}`" :stroke="barConfig.style.chart.color" stroke-linecap="round" stroke-width="1"/>
+                <path :d="`M${svg.width / 2 + 6},${svg.top - 20} ${svg.width / 2 - 6},${svg.top - 9}`" :stroke="barConfig.style.chart.color" stroke-linecap="round" stroke-width="1"/>
+            </g>
 
             <g v-if="!barConfig.style.shape || barConfig.style.shape === 'bar'">            
                 <!-- BOX SKELETON -->
@@ -477,11 +581,11 @@ defineExpose({
                 </g>
                 
                 <g v-if="hasStack">
-                    <g v-for="(bar, i) in stack" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack" @click="emits('selectDatapoint', bar)">
-                        <path :d="bar.fill.right" :fill="`url(#grad_right_${bar.id})`" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null"/>
-                        <path :d="bar.fill.left" :fill="`url(#grad_left_${bar.id})`" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null"/>
-                        <path :d="bar.fill.top" :fill="`url(#grad_top_${bar.id})`" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null"/>
-                        <path :d="bar.fill.liningTop" stroke="#FFFFFF" stroke-width="0.5" stroke-linecap="round" fill="none" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" />
+                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack">
+                        <path :d="bar.fill.right" :fill="`url(#grad_right_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie"/>
+                        <path :d="bar.fill.left" :fill="`url(#grad_left_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie"/>
+                        <path :d="bar.fill.top" :fill="`url(#grad_top_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie"/>
+                        <path :d="bar.fill.liningTop" stroke="#FFFFFF" stroke-width="0.5" stroke-linecap="round" fill="none" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie" />
                         
                         <path :d="`M ${bar.fill.apexTop.x},${bar.fill.apexTop.y} ${bar.fill.apexBottom.x},${bar.fill.apexBottom.y}`" :stroke="`#FFFFFF`" stroke-width="0.5" stroke-linecap="round"/> 
                     </g>
@@ -490,14 +594,90 @@ defineExpose({
                     </g>
                     <!-- LEGEND -->
                     <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > barConfig.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
+
                         <path :stroke="barConfig.style.chart.color" stroke-dasharray="1" stroke-width="0.5" stroke-linecap="round" :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x + 20},${bar.fill.sidePointer.y}`"/>
-                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor"/>
-                        <foreignObject :x="bar.fill.sidePointer.x + 24" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
+                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
+                        <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
                             <div v-if="barConfig.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${barConfig.style.chart.legend.fontSize}px; position: absolute; top:50%; left: 0; transform: translateY(-50%); text-align:left; line-height: ${barConfig.style.chart.legend.fontSize}px; color:${barConfig.style.chart.legend.color}`">
                                 {{ bar.name }} : {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
                             </div>
                             <slot name="legend" v-bind="{ datapoint: bar, config: barConfig, dataset: stack}"/>
                         </foreignObject>
+
+                        <!-- BREAKDOWN DONUT -->
+                        <g v-if="bar.fill.donut && selectedSerie === bar.id">  
+                            <!-- DONUT LABEL CONNECTOR -->
+                            <g v-for="(arc, j) in bar.fill.donut">                            
+                                <path
+                                    v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6"
+                                    :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 0.5)"
+                                    :stroke="arc.color"
+                                    class="vue-ui-donut-arc-path"
+                                    stroke-width="0.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    fill="none"
+                                />
+                            </g>
+   
+                            <path 
+                                v-for="(arc, j) in bar.fill.donut"
+                                class="vue-ui-donut-arc-path"
+                                :data-cy="`donut-arc-${j}`"
+                                :d="arc.arcSlice" 
+                                :fill="`${arc.color}`"
+                                :stroke="barConfig.style.chart.backgroundColor"
+                                :stroke-width="1"
+                            />
+
+                            <!-- DONUT HOLLOW -->
+                            <defs>
+                                <radialGradient :id="`hollow_gradient_${uid}`">
+                                    <stop offset="0%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
+                                    <stop offset="77%" :stop-color="'#FFFFFF' + '20'" />
+                                    <stop offset="100%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
+                                </radialGradient>
+                            </defs>
+                            <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="28" :fill="`url(#hollow_gradient_${uid})`"/>
+                            <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="14" :fill="barConfig.style.chart.backgroundColor"/>
+
+                            <!-- DONUT DATALABELS -->
+                            <g v-for="(arc, i) in bar.fill.donut">
+                                <g v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6">                                
+                                    <text
+                                        :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
+                                        :x="calcMarkerOffsetX(arc, true, 2).x"
+                                        :y="calcMarkerOffsetY(arc, 12, 12)"
+                                        :fill="barConfig.style.chart.legend.color"
+                                        :font-size="barConfig.style.chart.legend.fontSize / 1.5"
+                                    >
+                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ dataLabel({p: barConfig.style.chart.legend.prefix, v: arc.value, s: barConfig.style.chart.legend.suffix, rounding: barConfig.style.chart.legend.roundingValue}) }})
+                                    </text>
+                                    <text
+                                        :text-anchor="calcMarkerOffsetX(arc).anchor"
+                                        :x="calcMarkerOffsetX(arc, true, 2).x"
+                                        :y="calcMarkerOffsetY(arc, 12, 12) + barConfig.style.chart.legend.fontSize / 1.5"
+                                        :fill="barConfig.style.chart.legend.color"
+                                        :font-size="barConfig.style.chart.legend.fontSize / 1.5"
+                                    >
+                                        {{ arc.name }}
+                                    </text>
+                                </g>
+                            </g>
+                        </g>
+
+                        <!-- BREAKDOWN MINI DONUT -->
+                        <g v-if="bar.fill.miniDonut && !selectedSerie">  
+                            <path 
+                                v-for="(arc, j) in bar.fill.miniDonut"
+                                class="vue-ui-donut-arc-path"
+                                :data-cy="`donut-arc-${j}`"
+                                :d="arc.arcSlice" 
+                                :fill="`${arc.color}`"
+                                :stroke="barConfig.style.chart.backgroundColor"
+                                :stroke-width="0.5"
+                            />
+                        </g>
                     </g>
                 </g>
             </g>
@@ -515,7 +695,7 @@ defineExpose({
                 </g>
 
                 <g v-if="hasStack">
-                    <g v-for="(bar, i) in stack" @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack" @click="emits('selectDatapoint', bar)">
+                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack" @click="emits('selectDatapoint', bar)">
                         <defs>
                             <radialGradient :id="`gradient_tube_top_${bar.id}`" fx="10%" cy="55%">
                                 <stop offset="0%" :stop-color="`${lightenHexColor(bar.color, 0.5)}DD`" />
@@ -530,20 +710,95 @@ defineExpose({
                                 <stop offset="100%" :stop-color="`${lightenHexColor(bar.color, 0.7)}FF`"/>
                             </linearGradient>
                         </defs>
-                        <path @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :d="bar.fill.tubeBody" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body_${bar.id})`"/>
-                        <path @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :d="bar.fill.bottomTubeTop" stroke="#000000" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" fill="none" v-if="i > 0"/>
-                        <path @mouseenter="useTooltip(bar)" @mouseout="selectedSerie = null" :d="bar.fill.tubeTop" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_top_${bar.id})`"/>
+                        <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie" :d="bar.fill.tubeBody" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body_${bar.id})`"/>
+                        <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie" :d="bar.fill.bottomTubeTop" stroke="#000000" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" fill="none" v-if="i > 0"/>
+                        <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie" :d="bar.fill.tubeTop" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_top_${bar.id})`"/>
                     </g>
                     <!-- LEGEND -->
                     <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > barConfig.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
                         <path :stroke="barConfig.style.chart.color" stroke-dasharray="1" stroke-width="0.5" stroke-linecap="round" :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x + 20},${bar.fill.sidePointer.y}`"/>
-                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="selectedSerie === bar.id ? 3 : 2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor"/>
-                        <foreignObject :x="bar.fill.sidePointer.x + 24" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
+                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
+                        <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
                             <div v-if="barConfig.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${barConfig.style.chart.legend.fontSize}px; position: absolute; top:50%; left: 0; transform: translateY(-50%); text-align:left; line-height: ${barConfig.style.chart.legend.fontSize}px; color:${barConfig.style.chart.legend.color}`">
                                 {{ bar.name }} : {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
                             </div>
                             <slot name="legend" v-bind="{ datapoint: bar, config: barConfig, dataset: stack}"/>
                         </foreignObject>
+
+                        <!-- BREAKDOWN DONUT -->
+                        <g v-if="bar.fill.donut && selectedSerie === bar.id">  
+                            <!-- DONUT LABEL CONNECTOR -->
+                            <g v-for="(arc, j) in bar.fill.donut">                            
+                                <path
+                                    v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6"
+                                    :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 0.5)"
+                                    :stroke="arc.color"
+                                    class="vue-ui-donut-arc-path"
+                                    stroke-width="0.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    fill="none"
+                                />
+                            </g>
+   
+                            <path 
+                                v-for="(arc, j) in bar.fill.donut"
+                                class="vue-ui-donut-arc-path"
+                                :data-cy="`donut-arc-${j}`"
+                                :d="arc.arcSlice" 
+                                :fill="`${arc.color}`"
+                                :stroke="barConfig.style.chart.backgroundColor"
+                                :stroke-width="1"
+                            />
+
+                            <!-- DONUT HOLLOW -->
+                            <defs>
+                                <radialGradient :id="`hollow_gradient_${uid}`">
+                                    <stop offset="0%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
+                                    <stop offset="77%" :stop-color="'#FFFFFF' + '20'" />
+                                    <stop offset="100%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
+                                </radialGradient>
+                            </defs>
+                            <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="28" :fill="`url(#hollow_gradient_${uid})`"/>
+                            <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="14" :fill="barConfig.style.chart.backgroundColor"/>
+
+                            <!-- DONUT DATALABELS -->
+                            <g v-for="(arc, i) in bar.fill.donut">
+                                <g v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6">                                
+                                    <text
+                                        :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
+                                        :x="calcMarkerOffsetX(arc, true, 2).x"
+                                        :y="calcMarkerOffsetY(arc, 12, 12)"
+                                        :fill="barConfig.style.chart.legend.color"
+                                        :font-size="barConfig.style.chart.legend.fontSize / 1.5"
+                                    >
+                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ dataLabel({p: barConfig.style.chart.legend.prefix, v: arc.value, s: barConfig.style.chart.legend.suffix, rounding: barConfig.style.chart.legend.roundingValue}) }})
+                                    </text>
+                                    <text
+                                        :text-anchor="calcMarkerOffsetX(arc).anchor"
+                                        :x="calcMarkerOffsetX(arc, true, 2).x"
+                                        :y="calcMarkerOffsetY(arc, 12, 12) + barConfig.style.chart.legend.fontSize / 1.5"
+                                        :fill="barConfig.style.chart.legend.color"
+                                        :font-size="barConfig.style.chart.legend.fontSize / 1.5"
+                                    >
+                                        {{ arc.name }}
+                                    </text>
+                                </g>
+                            </g>
+                        </g>
+
+                        <!-- BREAKDOWN MINI DONUT -->
+                        <g v-if="bar.fill.miniDonut && !selectedSerie">  
+                            <path 
+                                v-for="(arc, j) in bar.fill.miniDonut"
+                                class="vue-ui-donut-arc-path"
+                                :data-cy="`donut-arc-${j}`"
+                                :d="arc.arcSlice" 
+                                :fill="`${arc.color}`"
+                                :stroke="barConfig.style.chart.backgroundColor"
+                                :stroke-width="0.5"
+                            />
+                        </g>
                     </g>
                 </g>
             </g>
@@ -595,5 +850,24 @@ defineExpose({
 }
 .vue-ui-3d-bar-stack {
     transition: opacity 0.2s ease-in-out;
+}
+.vue-ui-donut-arc-path {
+    animation: donut 0.5s ease-in-out;
+    transform-origin: center;
+}
+
+@keyframes donut {
+    0% {
+        transform: scale(0.9,0.9);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.02,1.02);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1,1);
+        opacity: 1;
+    }
 }
 </style>
