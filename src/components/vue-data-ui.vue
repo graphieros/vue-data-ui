@@ -888,6 +888,9 @@ defineExpose({
         @selectLegend="(d) => emit('selectLegend', d)" 
         ref="vue_ui_waffle" 
     >
+        <template #cell="{ cell, isSelected }">
+            <slot name="cell" v-bind="{ cell, isSelected }"/>
+        </template>
         <template #tooltip-before="{ datapoint, seriesIndex, dataset, config }">
             <slot name="tooltip-before" v-bind="{datapoint, seriesIndex, dataset, config }"></slot>
         </template>

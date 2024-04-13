@@ -2657,6 +2657,7 @@ const xyConfig = ref({
 })
 
 const waffleConfig = ref({
+  useCustomCells: true,
   style: {
     chart: {
       layout: {
@@ -3581,7 +3582,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_3d_bar)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_3d_bar)">
         <template #title>
           <BaseIcon name="chart3dBar"/>
         VueUi3dBar
@@ -4578,7 +4579,7 @@ function selectBar(bar) {
         </template>
       </Box>
       
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_waffle)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_waffle)">
         <template #title>
           <BaseIcon name="chartWaffle"/>
           VueUiWaffle
@@ -4598,15 +4599,21 @@ function selectBar(bar) {
             :config="waffleConfig"
             @selectLegend="selectLegendWaffle"
           >
+          <template #cell="{ cell, isSelected }">
+            
+            <div :style="`width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:${isSelected ? 1 : 0.3}`">
+              <BaseIcon name="smiley" :stroke="cell.color" :size="30" />
+            </div>
+          </template>
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
             </template>
             <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
             </template>
-            <template #svg="{ svg }">
+            <!-- <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
-            </template>
+            </template> -->
           </VueDataUiTest>
         </template>
         <template #prod>
@@ -4617,6 +4624,11 @@ function selectBar(bar) {
              :config="waffleConfig"
             @selectLegend="selectLegendWaffle"
           >
+          <template #cell="{ cell }">
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">
+              <BaseIcon name="chartWaffle" :stroke="cell.color" :size="30" />
+            </div>
+          </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>

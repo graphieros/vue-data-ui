@@ -583,6 +583,7 @@
     },
     "vue_ui_waffle": {
         "useBlurOnHover": true,
+        "useCustomCells": false,
         "style": {
             "fontFamily": "inherit",
             "chart": {

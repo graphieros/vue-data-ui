@@ -584,30 +584,48 @@ defineExpose({
             </g>
 
             <!-- RECTS -->
-            <rect
-                v-for="(position, i) in positions"
-                :data-cy="`waffle-rect-underlayer-${i}`"
-                :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
-                :x="position.x"
-                :y="position.y"
-                :height="rectDimension"
-                :width="rectDimension"
-                fill="white"
-                :stroke="waffleConfig.style.chart.layout.rect.stroke"
-                :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
-            />
-            <rect
-                v-for="(position, i) in positions"
-                :class="{'vue-ui-waffle-blur': waffleConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && rects[i].serieIndex !== selectedSerie}"
-                :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
-                :x="position.x"
-                :y="position.y"
-                :height="rectDimension"
-                :width="rectDimension"
-                :fill="waffleConfig.style.chart.layout.rect.useGradient && waffleConfig.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
-                :stroke="waffleConfig.style.chart.layout.rect.stroke"
-                :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
-            />
+            <!-- CUSTOM CELLS SLOTS -->
+            <template v-if="waffleConfig.useCustomCells">
+                <foreignObject 
+                    v-for="(position, i) in positions"
+                    :x="position.x"
+                    :y="position.y"
+                    :height="rectDimension"
+                    :width="rectDimension"
+                    class="vue-ui-waffle-custom-cell-foreignObject"
+                >
+                    <slot name="cell" v-bind="{ cell: {...position, color: rects[i].color}, isSelected: [null, undefined].includes(selectedSerie) ? true : rects[i].serieIndex === selectedSerie }"/>
+                </foreignObject>
+            </template> 
+
+            <template v-else>
+                <rect
+                    v-for="(position, i) in positions"
+                    :data-cy="`waffle-rect-underlayer-${i}`"
+                    :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
+                    :x="position.x"
+                    :y="position.y"
+                    :height="rectDimension"
+                    :width="rectDimension"
+                    fill="white"
+                    :stroke="waffleConfig.style.chart.layout.rect.stroke"
+                    :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
+                />
+                <rect
+                    v-for="(position, i) in positions"
+                    :class="{'vue-ui-waffle-blur': waffleConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && rects[i].serieIndex !== selectedSerie}"
+                    :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
+                    :x="position.x"
+                    :y="position.y"
+                    :height="rectDimension"
+                    :width="rectDimension"
+                    :fill="waffleConfig.style.chart.layout.rect.useGradient && waffleConfig.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
+                    :stroke="waffleConfig.style.chart.layout.rect.stroke"
+                    :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
+                />
+            </template>
+
+            <!-- DATA LABELS -->
             <template v-for="(position, i) in positions">
                 <foreignObject
                     v-if="!waffleConfig.style.chart.layout.grid.vertical && waffleConfig.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < waffleConfig.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % waffleConfig.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
@@ -632,6 +650,7 @@ defineExpose({
                     </div>
                 </foreignObject>
             </template>
+    
             <rect
                 v-for="(position, i) in positions"
                 :data-cy="`waffle-rect-${i}`"

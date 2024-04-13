@@ -2847,6 +2847,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiWaffleConfig = {
         useBlurOnHover?: boolean;
+        useCustomCells?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
