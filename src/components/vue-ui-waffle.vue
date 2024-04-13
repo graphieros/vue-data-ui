@@ -594,7 +594,7 @@ defineExpose({
                     :width="rectDimension"
                     class="vue-ui-waffle-custom-cell-foreignObject"
                 >
-                    <slot name="cell" v-bind="{ cell: {...position, color: rects[i].color}, isSelected: [null, undefined].includes(selectedSerie) ? true : rects[i].serieIndex === selectedSerie }"/>
+                    <slot name="cell" v-bind="{ cell: {...position, color: rects[i].color, ...rects[i]}, isSelected: [null, undefined].includes(selectedSerie) ? true : rects[i].serieIndex === selectedSerie }"/>
                 </foreignObject>
             </template> 
 
