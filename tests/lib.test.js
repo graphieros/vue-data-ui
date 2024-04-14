@@ -38,7 +38,10 @@ import {
     shiftHue,
     sumByAttribute,
     treeShake,
+    mergePointsByProximity
 } from "../src/lib"
+
+import fixtures from "./fixtures.json";
 
 describe('degreesToRadians', () => {
     test('converts degrees to radians', () => {

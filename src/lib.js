@@ -1046,6 +1046,64 @@ export function createSpiralPath({ points, a, b, angleStep, startX, startY }) {
     return path;
 }
 
+export function calculateDistance(point1, point2) {
+    return Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
+}
+
+export function areCirclesOverlapping(circle1, circle2, threshold) {
+    const distance = Math.sqrt((circle2.x - circle1.x) ** 2 + (circle2.y - circle1.y) ** 2);
+    return distance < threshold;
+}
+
+export function calculateAverageDistance(points) {
+    if (points.length < 2) return 0;
+
+    let totalDistance = 0;
+    let count = 0;
+
+    for (let i = 0; i < points.length; i += 1) {
+        for (let j = i + 1; j < points.length; j += 1) {
+            totalDistance += calculateDistance(points[i], points[j]);
+            count += 1;
+        }
+    }
+    return totalDistance / count;
+}
+
+export function mergePointsByProximity(points, threshold = 0.15) {
+    const clusters = [];
+    const visited = new Array(points.length).fill(false);
+
+    points.forEach((point, index) => {
+        if (!visited[index]) {
+            const cluster = [];
+            const stack = [point];
+            visited[index] = true;
+
+            while (stack.length > 0) {
+                const currentPoint = stack.pop();
+                cluster.push(currentPoint);
+                points.forEach((otherPoint, otherIndex) => {
+                    if (!visited[otherIndex] && areCirclesOverlapping(currentPoint, otherPoint, threshold)) {
+                        stack.push(otherPoint);
+                        visited[otherIndex] = true;
+                    }
+                });
+            }
+
+            clusters.push(cluster);
+        }
+    });
+
+    const result = clusters.map(cluster => {
+        const averageX = cluster.reduce((acc, p) => acc + p.x, 0) / cluster.length;
+        const averageY = cluster.reduce((acc, p) => acc + p.y, 0) / cluster.length;
+        return { x: averageX, y: averageY };
+    });
+
+    return result
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -1085,6 +1143,7 @@ const lib = {
     makeDonut,
     makePath,
     matrixTimes,
+    mergePointsByProximity,
     objectIsEmpty,
     opacity,
     palette,

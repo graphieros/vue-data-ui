@@ -3316,6 +3316,16 @@ function selectBar(bar) {
           <BaseIcon name="zoomPlus" stroke="#42d392" />
           <BaseIcon name="zoomMinus" stroke="#42d392" />
           <BaseIcon name="chartTreemap" stroke="#42d392" />
+          <BaseIcon name="kpi" stroke="#42d392" />
+          <BaseIcon name="kpiBox" stroke="#42d392" />
+          <BaseIcon name="tooltip" stroke="#42d392" />
+          <BaseIcon name="vueDataUi" stroke="#42d392" />
+          <BaseIcon name="ratio" stroke="#42d392" />
+          <BaseIcon name="func" stroke="#42d392" />
+          <BaseIcon name="settings" stroke="#42d392" />
+          <BaseIcon name="trendUp" stroke="#42d392" />
+          <BaseIcon name="trendDown" stroke="#42d392" />
+          <BaseIcon name="clipBoard" stroke="#42d392" />
         </div>
       </template>
       </Box>
@@ -3346,7 +3356,7 @@ function selectBar(bar) {
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_kpi)">
         <template #title>
-          <!-- <BaseIcon name="chartGalaxy"/> -->
+          <BaseIcon name="kpi"/>
           VueUiKpi
         </template>
         <template #info>
