@@ -1946,6 +1946,7 @@ declare module 'vue-data-ui' {
         x: number;
         y: number;
         shape?: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star";
+        weight?: number;
     }
 
     export type VueUiScatterDatasetItem = {
@@ -2099,6 +2100,7 @@ declare module 'vue-data-ui' {
             x: number;
             y: number;
             name: string;
+            weight?: number;
         }
         x: number;
         y: number;
