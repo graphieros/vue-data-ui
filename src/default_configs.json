@@ -1206,7 +1206,7 @@
             "chart": {
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
-                "useGradient": false,
+                "useGradient": true,
                 "gradientIntensity": 20,
                 "layout": {
                     "useDiv": true,

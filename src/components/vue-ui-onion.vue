@@ -409,13 +409,13 @@ defineExpose({
         <!-- CHART -->
         <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
 
-            <defs>
+            <!-- <defs>
                 <radialGradient :id="`onion_gradient_${uid}`">
                     <stop offset="0%" :stop-color="`${convertColorToHex(onionConfig.style.chart.backgroundColor)}00`" />
                     <stop offset="90%" :stop-color="'#FFFFFF' + opacity[onionConfig.style.chart.gradientIntensity]" />
                     <stop offset="100%" :stop-color="`${convertColorToHex(onionConfig.style.chart.backgroundColor)}00`" />
                 </radialGradient>
-            </defs>
+            </defs> -->
 
             <!-- TITLE AS G -->
             <g v-if="onionConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
@@ -477,18 +477,26 @@ defineExpose({
                 style="transform:rotate(-90deg);transform-origin: 50% 50%"
             />
 
-
-
             <!-- GRADIENT -->
-            <g v-if="onionConfig.style.chart.useGradient">            
-                <circle 
-                    v-for="onion in mutableDataset" 
+            <defs>
+                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / onionConfig.style.chart.gradientIntensity" />
+                </filter>
+            </defs>
+
+            <g :filter="`url(#blur_${uid})`" v-if="onionConfig.style.chart.useGradient">
+                <circle
+                    v-for="(onion, i) in mutableDataset" 
                     :cx="drawableArea.centerX" 
                     :cy="drawableArea.centerY" 
-                    :r="onion.radius * 1.1" 
-                    stroke="none" 
-                    :fill="`url(#onion_gradient_${uid})`"
-                    style="transform:rotate(-90deg);transform-origin: 50% 50%"
+                    :r="onion.radius" 
+                    :stroke="`white`" 
+                    :stroke-width="onionSkin.track / 3" 
+                    fill="none"
+                    stroke-linecap="round"
+                    :stroke-dasharray="onion.path.dashArray"
+                    :stroke-dashoffset="onion.path.dashOffset"
+                    style="transform:rotate(-90deg);transform-origin: 50% 50%;"
                 />
             </g>
             

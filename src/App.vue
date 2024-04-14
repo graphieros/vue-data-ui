@@ -4052,7 +4052,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter
@@ -4151,7 +4151,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
         <template #title>
           <BaseIcon name="chartOnion" />
           VueUiOnion
