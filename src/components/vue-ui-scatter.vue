@@ -174,7 +174,7 @@ const datasetWithId = computed(() => {
             id,
             color: ds.color ? ds.color : (palette[i] || palette[i % palette.length]),
             opacity: segregated.value.includes(id) ? 0.5: 1,
-            shape: ds.shape ?? 'circle'
+            shape: ds.shape ?? 'circle',
         }
     })
 })
@@ -204,7 +204,8 @@ const mutableDataset = computed(() => {
                     },
                     clusterName: ds.name,
                     color: ds.color ? ds.color : (palette[i] || palette[i % palette.length]),
-                    id: `plot_${uid.value}_${Math.random()}`
+                    id: `plot_${uid.value}_${Math.random()}`,
+                    weight: v.weight ?? scatterConfig.value.style.layout.plots.radius
                 }
             }),
         }
@@ -562,7 +563,7 @@ defineExpose({
                         :data-cy="`scatter-plot-${i}-${j}`"
                         :cx="plot.x"
                         :cy="plot.y"
-                        :r="selectedPlotId && selectedPlotId === plot.id ? scatterConfig.style.layout.plots.radius * 2 : scatterConfig.style.layout.plots.radius"
+                        :r="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
                         :fill="`${ds.color}${opacity[scatterConfig.style.layout.plots.opacity * 100]}`"
                         :stroke="scatterConfig.style.layout.plots.stroke"
                         :stroke-width="scatterConfig.style.layout.plots.strokeWidth"
@@ -576,7 +577,7 @@ defineExpose({
                         v-for="(plot, j) in ds.plots"
                         :data-cy="`scatter-plot-${i}-${j}`"
                         :plot="{x: plot.x, y: plot.y }"
-                        :radius="selectedPlotId && selectedPlotId === plot.id ? scatterConfig.style.layout.plots.radius * 2 : scatterConfig.style.layout.plots.radius"
+                        :radius="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
                         :shape="ds.shape"
                         :color="`${ds.color}${opacity[scatterConfig.style.layout.plots.opacity * 100]}`"
                         :stroke="scatterConfig.style.layout.plots.stroke"

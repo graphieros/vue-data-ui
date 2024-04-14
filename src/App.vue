@@ -1037,11 +1037,12 @@ const weeks = computed(() => {
 
 const scat1 = computed(() => {
   const arr = [];
-  for (let i = 0; i < 50; i += 1) {
+  for (let i = 0; i < 200; i += 1) {
     arr.push({
       x: Math.random() * i + 12,
       y: (Math.random() * i) / 20,
       name: `plot_${i}_cluster_1`,
+      weight: Math.random() * 10
     });
   }
   return arr;
@@ -1121,11 +1122,11 @@ const scatterDataset = computed(() => {
       values: scat1.value,
       shape: "star"
     },
-    {
-      name: "Cluster 2",
-      values: scat2.value,
-      shape: "diamond"
-    },
+    // {
+    //   name: "Cluster 2",
+    //   values: scat2.value,
+    //   shape: "diamond"
+    // },
   ];
 });
 
@@ -4051,7 +4052,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter
@@ -4589,7 +4590,7 @@ function selectBar(bar) {
         </template>
       </Box>
       
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_waffle)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_waffle)">
         <template #title>
           <BaseIcon name="chartWaffle"/>
           VueUiWaffle
