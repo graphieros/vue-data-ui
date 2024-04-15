@@ -402,6 +402,13 @@ defineExpose({
                 </radialGradient>
             </defs>
 
+            <defs>
+                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / gaugeConfig.style.chart.layout.track.gradientIntensity"/>
+                    <feColorMatrix type="saturate" values="0" />
+                </filter>
+            </defs>
+
             <!-- TITLE AS G -->
             <g v-if="gaugeConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
                 <text
@@ -452,12 +459,19 @@ defineExpose({
                 stroke-linecap="round"
                 :stroke-width="(svg.width / 16) * gaugeConfig.style.chart.layout.track.size"
             />
-            
+
             <!-- GRADIENT -->
-            <g v-if="gaugeConfig.style.chart.layout.track.useGradient">
-                <circle :cx="svg.width / 2" :cy="svg.height * 0.69" r="225" :fill="`url(#gradient_${uid})`" stroke="none"/>
-                <circle :cx="svg.width / 2" :cy="svg.height * 0.69 + 4" :r="188 * 1 / gaugeConfig.style.chart.layout.track.size" :fill="gaugeConfig.style.chart.backgroundColor" stroke="none"/>
-                <rect :x="0" :y="svg.height * 0.69" :width="svg.width" :height="svg.height - svg.height * 0.69" :fill="gaugeConfig.style.chart.backgroundColor" stroke="none"/>
+            <g v-if="gaugeConfig.style.chart.layout.track.useGradient">                
+                <path 
+                    v-for="(arc, i) in makeDonut(mutableDataset, svg.width / 2, svg.height * 0.7, svg.width / 2.5, svg.width / 2.5)" 
+                    :key="`arc_${i}`"
+                    :d="arc.path"
+                    fill="none"
+                    :stroke="'white'"
+                    stroke-linecap="round"
+                    :stroke-width="(svg.width / 64) * gaugeConfig.style.chart.layout.track.size"
+                    :filter="`url(#blur_${uid})`"
+                />
             </g>
 
             <!-- STEP MARKERS -->
@@ -526,6 +540,18 @@ defineExpose({
                 :stroke="gaugeConfig.style.chart.layout.pointer.useRatingColor ? ratingColor : gaugeConfig.style.chart.layout.pointer.color"
                 stroke-linecap="round"
                 :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth * 0.7"
+            />
+            <line
+                data-cy="gauge-pointer"
+                v-if="!isNaN(pointer.x2) && gaugeConfig.style.chart.layout.track.useGradient"
+                :x1="pointer.x1"
+                :y1="pointer.y1"
+                :x2="pointer.x2"
+                :y2="pointer.y2"
+                :stroke="'white'"
+                stroke-linecap="round"
+                :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth * 0.3"
+                :filter="`url(#blur_${uid})`"
             />
             <circle
                 data-cy="gauge-pointer-circle"

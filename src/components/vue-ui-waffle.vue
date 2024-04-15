@@ -594,7 +594,7 @@ defineExpose({
             <!-- RECTS -->
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="5" :id="`blur_std_${uid}`" />
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="5" />
                     <feColorMatrix type="saturate" values="0" />
                 </filter>
             </defs>

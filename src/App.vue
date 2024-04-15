@@ -4823,7 +4823,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_gauge)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_gauge)">
         <template #title>
           <BaseIcon name="chartGauge"/>
           VueUiGauge
