@@ -2658,7 +2658,8 @@ const xyConfig = ref({
 })
 
 const waffleConfig = ref({
-  useCustomCells: true,
+  useCustomCells: false,
+  useBlurOnHover: true,
   style: {
     chart: {
       layout: {
@@ -3441,7 +3442,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">
         <template #title>
           <BaseIcon name="chartNestedDonuts"/>
           VueUiNestedDonuts
@@ -4151,7 +4152,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
         <template #title>
           <BaseIcon name="chartOnion" />
           VueUiOnion
@@ -4610,12 +4611,12 @@ function selectBar(bar) {
             :config="waffleConfig"
             @selectLegend="selectLegendWaffle"
           >
-          <template #cell="{ cell, isSelected }">
+          <!-- <template #cell="{ cell, isSelected }">
             
             <div :style="`width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:${isSelected ? 1 : 0.3}`">
               <BaseIcon name="smiley" :stroke="cell.color" :size="30" />
             </div>
-          </template>
+          </template> -->
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
             </template>

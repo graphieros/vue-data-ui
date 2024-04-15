@@ -316,7 +316,7 @@ function isArcBigEnough(arc) {
     return arc.proportion * 100 > donutConfig.value.style.chart.layout.labels.dataLabels.hideUnderValue;
 }
 
-function blurClass(arc, index) {
+function getBlurFilter(arc, index) {
     if (!donutConfig.value.useBlurOnHover) {
         return '';
     }
@@ -324,7 +324,7 @@ function blurClass(arc, index) {
         if ([null, undefined].includes(selectedDatapointIndex.value) || selectedDatapointIndex.value === index) {
             return ''
         } else {
-            return 'vue-ui-nested-donuts-blur'
+            return `url(#blur_${uid.value})`;
         }
     }
     if (!donutConfig.value.style.chart.tooltip.showAllItemsAtIndex || segregated.value.length) {
@@ -334,7 +334,7 @@ function blurClass(arc, index) {
         if(selectedDatapoint.value === arc.id) {
             return ''
         } else {
-            return 'vue-ui-nested-donuts-blur'
+            return `url(#blur_${uid.value})`;
         }
     }
 }
@@ -552,9 +552,9 @@ defineExpose({
                         class="vue-ui-donut-arc-path"
                         :d="arc.arcSlice" 
                         :fill="`${arc.color}CC`"
-                        :class="blurClass(arc, j)"
                         :stroke="donutConfig.style.chart.backgroundColor"
                         :stroke-width="donutConfig.style.chart.layout.donut.borderWidth"
+                        :filter="getBlurFilter(arc, j)"
                     />
                 </g>
             </g>
@@ -567,6 +567,14 @@ defineExpose({
                     <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
                 </radialGradient>
             </defs>
+
+            <defs>
+                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="5" :id="`blur_std_${uid}`" />
+                    <feColorMatrix type="saturate" values="0" />
+                </filter>
+            </defs>
+
             <g v-if="donutConfig.style.chart.useGradient">
                 <g v-for="(gradient, i) in gradientSets">
                     <path
@@ -599,7 +607,7 @@ defineExpose({
             <!-- DATALABELS -->
             <g v-if="donutConfig.style.chart.layout.labels.dataLabels.show">
                 <g v-for="(item, i) in mutableDataset">
-                    <g v-for="(arc, j) in item.donut">
+                    <g v-for="(arc, j) in item.donut" :filter="getBlurFilter(arc, j)">
                         <text
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && donutConfig.style.chart.layout.labels.dataLabels.showPercentage"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
@@ -764,11 +772,6 @@ path {
         transform: scale(1,1);
         opacity: 1;
     }
-}
-
-.vue-ui-nested-donuts-blur {
-    filter: blur(3px) opacity(50%) grayscale(100%);
-    transition: all 0.15s ease-in-out;
 }
 
 .vue-ui-nested-donuts-legend {

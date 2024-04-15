@@ -267,6 +267,14 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
     }
 }
 
+function getBlurFilter(index) {
+    if (donutConfig.value.useBlurOnHover && ![null, undefined].includes(selectedSerie.value) && selectedSerie.value !== index) {
+        return `url(#blur_${uid.value})`;
+      } else {
+        return '';
+      }
+}
+
 const __to__ = ref(null);
 
 function showSpinnerPdf() {
@@ -482,6 +490,13 @@ defineExpose({
             </g>
 
             <!-- LABEL CONNECTOR -->
+            <defs>
+                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="5" :id="`blur_std_${uid}`" />
+                    <feColorMatrix type="saturate" values="0" />
+                </filter>
+            </defs>
+
             <g v-for="(arc, i) in currentDonut">
                 <path
                     v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
@@ -491,7 +506,7 @@ defineExpose({
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     fill="none"
-                    :class="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? '' : 'vue-ui-donut-blur'"
+                    :filter="getBlurFilter(i)"
                 />
             </g>
 
@@ -507,9 +522,9 @@ defineExpose({
                 :data-cy="`donut-arc-${i}`"
                 :d="arc.arcSlice" 
                 :fill="`${arc.color}CC`"
-                :class="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? '' : 'vue-ui-donut-blur'"
                 :stroke="donutConfig.style.chart.backgroundColor"
                 :stroke-width="donutConfig.style.chart.layout.donut.borderWidth"
+                :filter="getBlurFilter(i)"
             />
 
             <!-- HOLLOW -->
@@ -593,7 +608,7 @@ defineExpose({
             </text>
 
             <!-- DATALABELS -->
-            <g v-for="(arc, i) in currentDonut">
+            <g v-for="(arc, i) in currentDonut" :filter="getBlurFilter(i)">
                 <text
                     :data-cy="`donut-datalabel-value-${i}`"
                     v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
@@ -603,7 +618,7 @@ defineExpose({
                     :fill="arc.color"
                     :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize * 0.8"
                     font-family="Arial"
-                    :class="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? '' : 'vue-ui-donut-blur'"
+                    :filter="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? ``: `url(#blur_${uid})`"
                     @click="selectDatapoint(arc, i)"
                 >
                     ⬤
@@ -778,8 +793,4 @@ path {
     width:100%;
 }
 
-.vue-ui-donut-blur {
-    filter: blur(3px) opacity(50%) grayscale(100%);
-    transition: all 0.15s ease-in-out;
-}
 </style>

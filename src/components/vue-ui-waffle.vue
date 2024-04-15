@@ -380,6 +380,14 @@ const table = computed(() => {
     return { head, body };
 });
 
+function getBlurFilter(index) {
+    if (waffleConfig.value.useBlurOnHover && ![null, undefined].includes(selectedSerie.value) && selectedSerie.value !== index) {
+        return `url(#blur_${uid.value})`;
+      } else {
+        return '';
+      }
+}
+
 const __to__ = ref(null);
 
 function showSpinnerPdf() {
@@ -584,6 +592,12 @@ defineExpose({
             </g>
 
             <!-- RECTS -->
+            <defs>
+                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="5" :id="`blur_std_${uid}`" />
+                    <feColorMatrix type="saturate" values="0" />
+                </filter>
+            </defs>
             <!-- CUSTOM CELLS SLOTS -->
             <template v-if="waffleConfig.useCustomCells">
                 <foreignObject 
@@ -610,10 +624,10 @@ defineExpose({
                     fill="white"
                     :stroke="waffleConfig.style.chart.layout.rect.stroke"
                     :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
+                    :filter="getBlurFilter(rects[i].serieIndex)"
                 />
                 <rect
                     v-for="(position, i) in positions"
-                    :class="{'vue-ui-waffle-blur': waffleConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && rects[i].serieIndex !== selectedSerie}"
                     :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
                     :x="position.x"
                     :y="position.y"
@@ -622,6 +636,7 @@ defineExpose({
                     :fill="waffleConfig.style.chart.layout.rect.useGradient && waffleConfig.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
                     :stroke="waffleConfig.style.chart.layout.rect.stroke"
                     :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
+                    :filter="getBlurFilter(rects[i].serieIndex)"
                 />
             </template>
 
@@ -633,6 +648,7 @@ defineExpose({
                     :y="position.y + waffleConfig.style.chart.layout.labels.captions.offsetY"
                     :height="absoluteRectDimension"
                     :width="absoluteRectDimension * waffleConfig.style.chart.layout.grid.size"
+                    :filter="getBlurFilter(rects[i].serieIndex)"
                 >
                     <div class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${waffleConfig.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
                         <span v-if="waffleConfig.style.chart.layout.labels.captions.showSerieName">
@@ -783,10 +799,5 @@ defineExpose({
     justify-content: center;
     text-align:center;
     width:100%;
-}
-
-.vue-ui-waffle-blur {
-    filter: blur(3px) opacity(50%) grayscale(100%);
-    transition: all 0.15s ease-in-out;
 }
 </style>
