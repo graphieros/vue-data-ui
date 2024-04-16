@@ -1042,7 +1042,6 @@ const scat1 = computed(() => {
       x: Math.random() * i + 12,
       y: (Math.random() * i) / 20,
       name: `plot_${i}_cluster_1`,
-      weight: Math.random() * 10
     });
   }
   return arr;
@@ -1122,11 +1121,11 @@ const scatterDataset = computed(() => {
       values: scat1.value,
       shape: "star"
     },
-    // {
-    //   name: "Cluster 2",
-    //   values: scat2.value,
-    //   shape: "diamond"
-    // },
+    {
+      name: "Cluster 2",
+      values: scat2.value,
+      shape: "diamond"
+    },
   ];
 });
 
@@ -2786,13 +2785,21 @@ const heatmapConfig = ref({
 
 const scatterConfig = ref({
   style: {
-    tooltip: {
-      showShape: false,
-      customFormat: ({ seriesIndex, datapoint, series, config }) => {
-        console.log({ seriesIndex, datapoint, series, config });
-        return "TEST"
+    layout: {
+      plots: {
+        giftWrap: {
+          show: true,
+          strokeDasharray: 10
+        }
       }
     }
+    // tooltip: {
+    //   showShape: false,
+    //   customFormat: ({ seriesIndex, datapoint, series, config }) => {
+    //     console.log({ seriesIndex, datapoint, series, config });
+    //     return "TEST"
+    //   }
+    // }
   }
 })
 
@@ -3442,7 +3449,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">
         <template #title>
           <BaseIcon name="chartNestedDonuts"/>
           VueUiNestedDonuts
@@ -4053,7 +4060,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter
@@ -4823,7 +4830,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_gauge)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_gauge)">
         <template #title>
           <BaseIcon name="chartGauge"/>
           VueUiGauge

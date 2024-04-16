@@ -1926,6 +1926,12 @@
                     "deviation": {
                         "translation": "deviation",
                         "roundingValue": 1
+                    },
+                    "giftWrap": {
+                        "show": false,
+                        "strokeWidth": 1,
+                        "strokeDasharray": 0,
+                        "fillOpacity": 0.2
                     }
                 },
                 "correlation": {

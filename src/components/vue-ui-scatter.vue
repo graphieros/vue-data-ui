@@ -6,6 +6,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    giftWrap,
     isFunction,
     objectIsEmpty,
     opacity, 
@@ -553,6 +554,22 @@ defineExpose({
                     :stroke-width="scatterConfig.style.layout.axis.strokeWidth"
                     stroke-linecap="round"
                 />
+            </g>
+
+            <!-- GIFT WRAP -->
+            <g v-if="scatterConfig.style.layout.plots.giftWrap.show">
+                <g v-for="(ds, i) in drawableDataset">
+                    <polygon 
+                        v-if="ds.plots.length > 2"
+                        :points="giftWrap({series: ds.plots})"
+                        :fill="`${ds.color}${opacity[scatterConfig.style.layout.plots.giftWrap.fillOpacity * 100]}`"
+                        :stroke-width="scatterConfig.style.layout.plots.giftWrap.strokeWidth"
+                        :stroke-dasharray="scatterConfig.style.layout.plots.giftWrap.strokeDasharray"
+                        :stroke="ds.color"
+                        stroke-linejoin="round"
+                        stroke-linecap="round"
+                    />
+                </g>
             </g>
 
             <!-- PLOTS -->

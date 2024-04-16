@@ -1990,6 +1990,12 @@ declare module 'vue-data-ui' {
                         translation?: string;
                         roundingValue?: number;
                     };
+                    giftWrap?: {
+                        show?: boolean;
+                        strokeWidth?: number;
+                        strokeDasharray?: number;
+                        fillOpacity?: number;
+                    };
                 };
                 correlation?: {
                     show?: boolean;
