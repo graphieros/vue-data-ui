@@ -3286,7 +3286,6 @@ function selectBar(bar) {
           <BaseIcon name="moodSurprised" stroke="#42d392" />
           <BaseIcon name="moodWink" stroke="#42d392" />
           <BaseIcon name="moodLaughing" stroke="#42d392" />
-          <BaseIcon name="star" stroke="#42d392" />
           <BaseIcon name="chartChestnut" stroke="#42d392" />
           <BaseIcon name="chartAgePyramid" stroke="#42d392" />
           <BaseIcon name="chartWaffle" stroke="#42d392" />
@@ -3335,6 +3334,24 @@ function selectBar(bar) {
           <BaseIcon name="trendUp" stroke="#42d392" />
           <BaseIcon name="trendDown" stroke="#42d392" />
           <BaseIcon name="clipBoard" stroke="#42d392" />
+          <BaseIcon name="clipboardLine" stroke="#42d392" />
+          <BaseIcon name="clipboardDonut" stroke="#42d392" />
+          <BaseIcon name="clipboardBar" stroke="#42d392" />
+          <BaseIcon name="clipboardVariable" stroke="#42d392" />
+          <BaseIcon name="triangle" stroke="#42d392" />
+          <BaseIcon name="triangleFill" stroke="#42d392" />
+          <BaseIcon name="square" stroke="#42d392" />
+          <BaseIcon name="squareFill" stroke="#42d392" />
+          <BaseIcon name="diamond" stroke="#42d392" />
+          <BaseIcon name="diamondFill" stroke="#42d392" />
+          <BaseIcon name="pentagon" stroke="#42d392" />
+          <BaseIcon name="pentagonFill" stroke="#42d392" />
+          <BaseIcon name="hexagon" stroke="#42d392" />
+          <BaseIcon name="hexagonFill" stroke="#42d392" />
+          <BaseIcon name="circle" stroke="#42d392" />
+          <BaseIcon name="circleFill" stroke="#42d392" />
+          <BaseIcon name="star" stroke="#42d392" />
+          <BaseIcon name="starFill" stroke="#42d392" />
         </div>
       </template>
       </Box>
