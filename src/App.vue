@@ -3352,6 +3352,12 @@ function selectBar(bar) {
           <BaseIcon name="circleFill" stroke="#42d392" />
           <BaseIcon name="star" stroke="#42d392" />
           <BaseIcon name="starFill" stroke="#42d392" />
+          <BaseIcon name="numbers" stroke="#42d392" />
+          <BaseIcon name="sigma" stroke="#42d392" />
+          <BaseIcon name="mu" stroke="#42d392" />
+          <BaseIcon name="lambda" stroke="#42d392" />
+          <BaseIcon name="people" stroke="#42d392" />
+          <BaseIcon name="copy" stroke="#42d392" />
         </div>
       </template>
       </Box>
