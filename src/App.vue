@@ -4404,7 +4404,7 @@ function selectBar(bar) {
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
         <template #title>
           <BaseIcon name="chartSparkStackbar" />
           VueUiSparkStackbar
