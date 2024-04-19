@@ -13,7 +13,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-42-green)
+![Static Badge](https://img.shields.io/badge/components-43-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -62,8 +62,9 @@ Available components:
 
 ## Tables
 
-- [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
+- [VueUiTableHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-table-heatmap)
 - [VueUiTableSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-table-sparkline)
+- [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
 
 ## Rating
 

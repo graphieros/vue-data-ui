@@ -43,6 +43,7 @@ import VueUiVerticalBar from "./vue-ui-vertical-bar.vue";
 import VueUiWaffle from "./vue-ui-waffle.vue";
 import VueUiWheel from "./vue-ui-wheel.vue";
 import VueUiXy from "./vue-ui-xy.vue";
+import VueUiTableHeatmap from "./vue-ui-table-heatmap.vue";
 
 const props = defineProps({
     component: { type: String },
@@ -51,7 +52,7 @@ const props = defineProps({
 })
 
 const isError = computed(() => {
-    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiKpi", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy", "VueUiTreemap"].includes(props.component)
+    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiKpi", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy", "VueUiTreemap", "VueUiTableHeatmap"].includes(props.component)
 });
 
 const vue_ui_3d_bar = ref(null);
@@ -95,6 +96,7 @@ const vue_ui_vertical_bar = ref(null);
 const vue_ui_waffle = ref(null);
 const vue_ui_wheel = ref(null);
 const vue_ui_xy = ref(null);
+const vue_ui_table_heatmap = ref(null);
 
 const emit = defineEmits([
     'selectLegend',
@@ -126,12 +128,18 @@ const recalculateHeight = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
-        throw new Error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n. VueUi3dBar\n. VueUiAgePyramid\n. VueUiAnnotator\n. VueUiCandlestick\n. VueUiChestnut\n. VueUiDashboard\n. VueUiDigits\n. VueUiDonutEvolution\n. VueUiDonut\n. VueUiGauge\n. VueUiHeatmap\n. VueUiMiniLoadar\n. VueUiKpi\n. VueUiMolecule\n. VueUiMoodRadar\n. VueUiNestedDonuts\n. VueUiOnion\n. VueUiQuadrant\n. VueUiRadar\n. VueUiRating\n. VueUiRelationCircle\n. VueUiRings\n. VueUiScatter\n. VueUiScreenshot\n. VueUiSkeleton\n. VueUiSmiley\n. VueUiSparkbar\n. VueUiSparkgauge\n. VueUiSparkHistogram\n. VueUiSparkline\n. VueUiSparkStackbar\n. VueUiTableSparkline\n. VueUiTable\n. VueUiThermometer\n. VueUiTiremarks\n. VueUiVerticalBar\n. VueUiWaffle\n. VueUiWheel\n. VueUiXy\n\n`)
+        throw new Error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n. VueUi3dBar\n. VueUiAgePyramid\n. VueUiAnnotator\n. VueUiCandlestick\n. VueUiChestnut\n. VueUiDashboard\n. VueUiDigits\n. VueUiDonutEvolution\n. VueUiDonut\n. VueUiGauge\n. VueUiHeatmap\n. VueUiMiniLoadar\n. VueUiKpi\n. VueUiMolecule\n. VueUiMoodRadar\n. VueUiNestedDonuts\n. VueUiOnion\n. VueUiQuadrant\n. VueUiRadar\n. VueUiRating\n. VueUiRelationCircle\n. VueUiRings\n. VueUiScatter\n. VueUiScreenshot\n. VueUiSkeleton\n. VueUiSmiley\n. VueUiSparkbar\n. VueUiSparkgauge\n. VueUiSparkHistogram\n. VueUiSparkline\n. VueUiSparkStackbar\n. VueUiTableHeatmap\n. VueUiTableSparkline\n. VueUiTable\n. VueUiThermometer\n. VueUiTiremarks\n. VueUiVerticalBar\n. VueUiWaffle\n. VueUiWheel\n. VueUiXy\n\n`)
+    }
+
+    if(vue_ui_table_heatmap.value) {
+        generatePdf.value = vue_ui_table_heatmap.value.generatePdf;
+        generateCsv.value = vue_ui_table_heatmap.value.generateCsv;
+        generateImage.value = vue_ui_table_heatmap.value.generateImage;
     }
 
     if(vue_ui_3d_bar.value) {
         generatePdf.value = vue_ui_3d_bar.value.generatePdf;
-        generateImage.value = vue_ui_3d_bar.generateImage;
+        generateImage.value = vue_ui_3d_bar.value.generateImage;
     }
 
     if(vue_ui_age_pyramid.value) {
@@ -340,6 +348,35 @@ defineExpose({
         </div>
         The provided component "{{ component }}" does not exist
     </div>
+
+    <VueUiTableHeatmap 
+        v-if="component === 'VueUiTableHeatmap'"
+        ref="vue_ui_table_heatmap"
+        :config="config"
+        :dataset="dataset"
+    >
+        <template #caption>
+            <slot name="caption"/>
+        </template>
+        <template #head="{ value, rowIndex, type }">
+            <slot name="head" v-bind="{ value, rowIndex, type }"/>
+        </template>
+        <template #rowTitle="{ value, rowIndex, colIndex, type, isResponsive }">
+            <slot name="rowTitle" v-bind="{ value, rowIndex, colIndex, type, isResponsive }"/>
+        </template>
+        <template #cell="{ value, rowIndex, colIndex, type, color, textColor, isResponsive }">
+            <slot name="cell" v-bind="{ value, rowIndex, colIndex, type, color, textColor, isResponsive }"/>
+        </template>
+        <template #sum="{ value, rowIndex, isResponsive }">
+            <slot name="sum" v-bind="{ value, rowIndex, isResponsive }"/>
+        </template>
+        <template #average="{ value, rowIndex, isResponsive }">
+            <slot name="average" v-bind="{ value, rowIndex, isResponsive }"/>
+        </template>
+        <template #median="{ value, rowIndex, isResponsive }">
+            <slot name="median" v-bind="{ value, rowIndex, isResponsive }"/>
+        </template>
+    </VueUiTableHeatmap>
 
     <VueUi3dBar
         v-if="component === 'VueUi3dBar'" 

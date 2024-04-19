@@ -1129,7 +1129,6 @@ const lib = {
     darkenHexColor,
     dataLabel,
     degreesToRadians,
-    degreesToRadians,
     downloadCsv,
     error,
     generateSpiralCoordinates,

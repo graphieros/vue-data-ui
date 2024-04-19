@@ -57,6 +57,7 @@ import VueDataUi from "./components/vue-data-ui.vue";
 import VueUiKpiTest from "./components/vue-ui-kpi.vue";
 import GalaxyTest from "./components/vue-ui-galaxy.vue";
 import TreemapTest from "./components/vue-ui-treemap.vue";
+import TableHeatmapTest from "./components/vue-ui-table-heatmap.vue";
 
 const dataset = ref([
   {
@@ -3222,6 +3223,17 @@ function selectBar(bar) {
   console.log(bar)
 }
 
+const tableHeatmapDataset = ref([
+  {
+    name: "Serie 1",
+    values: [-100, "test", 0, 100, 150, 50, 25]
+  },
+  {
+    name: "Serie 2",
+    values: [20, 30, 50, 100, 44, "test"]
+  }
+])
+
 </script>
 
 <template>
@@ -3360,6 +3372,89 @@ function selectBar(bar) {
           <BaseIcon name="copy" stroke="#42d392" />
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_table_heatmap)">
+        <template #title>
+          <!-- <BaseIcon name="chartTreemap"/> -->
+          VueUiTableHeatmap
+        </template>
+        <template #info>
+          <!-- <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/> -->
+        </template>
+        <template #dev>
+          <TableHeatmapTest :dataset="tableHeatmapDataset">
+            <template #caption>
+              <div style="width: 100%; background: red">
+                TITLE
+              </div>
+            </template>
+
+            <template #head="{ value, rowIndex, type}">
+              {{ value }}
+            </template>
+
+            <template #rowTitle="{ value, rowIndex, colIndex, type, isResponsive }">
+              <div :style="`height: 40px; display: flex; align-items:center; justify-content: flex-end; padding: 0 6px;font-weight:${isResponsive ? 'bold' : 'normal'}`">
+                {{ value }}
+              </div>
+            </template>         
+            <template #cell="{ value, rowIndex, colIndex, type, color, textColor }">
+              <div :style="`height: 40px; display: flex; align-items:center; justify-content: flex-end; padding: 0 6px;background:${color};color:${textColor}`">
+                {{ value }}
+              </div>
+            </template>
+            <template #sum="{ value }">
+              {{  value  }}
+            </template>     
+            <template #average="{ value }">
+              {{  value  }}
+            </template>     
+            <template #median="{ value }">
+              {{  value  }}
+            </template>     
+          </TableHeatmapTest>
+        </template>
+        <template #prod>
+          <VueDataUi component="VueUiTableHeatmap" :dataset="tableHeatmapDataset">
+            <template #caption>
+              <div style="width: 100%; background: red">
+                TITLE
+              </div>
+            </template>
+
+            <template #head="{ value, rowIndex, type}">
+              {{ value }}
+            </template>
+
+            <template #rowTitle="{ value, rowIndex, colIndex, type, isResponsive }">
+              <div :style="`height: 40px; display: flex; align-items:center; justify-content: flex-end; padding: 0 6px;font-weight:${isResponsive ? 'bold' : 'normal'}`">
+                {{ value }}
+              </div>
+            </template>         
+            <template #cell="{ value, rowIndex, colIndex, type, color, textColor }">
+              <div :style="`height: 40px; display: flex; align-items:center; justify-content: flex-end; padding: 0 6px;background:${color};color:${textColor}`">
+                {{ value }}
+              </div>
+            </template>
+            <template #sum="{ value }">
+              {{  value  }}
+            </template>     
+            <template #average="{ value }">
+              {{  value  }}
+            </template>     
+            <template #median="{ value }">
+              {{  value  }}
+            </template>  
+          </VueDataUi>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_table_heatmap }}
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_treemap)">

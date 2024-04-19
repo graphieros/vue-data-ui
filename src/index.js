@@ -43,6 +43,7 @@ import VueDataUi from "./components/vue-data-ui.vue";
 import VueUiGalaxy from "./components/vue-ui-galaxy.vue";
 import VueUiKpi from "./components/vue-ui-kpi.vue";
 import VueUiTreemap from "./components/vue-ui-treemap.vue";
+import VueUiTableHeatmap from "./components/vue-ui-table-heatmap.vue";
 
 export { 
     VueUiXy, 
@@ -89,5 +90,6 @@ export {
     VueDataUi,
     VueUiGalaxy,
     VueUiKpi,
-    VueUiTreemap
+    VueUiTreemap,
+    VueUiTableHeatmap
 };

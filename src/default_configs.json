@@ -3611,5 +3611,31 @@
                 "roundingPercentage": 0
             }
         }
+    },
+    "vue_ui_table_heatmap": {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "color":"#2D353C",
+            "fontFamily": "inherit",
+            "heatmapColors": {
+                "useIndividualScale": false,
+                "min": "#FFFFFF",
+                "max": "#5f8bee"
+            }
+        },
+        "table": {
+            "responsiveBreakpoint": 300,
+            "borderWidth": 1,
+            "showSum": false,
+            "showAverage": false,
+            "showMedian": false,
+            "head": {
+                "backgroundColor": "#FFFFFF",
+                "values": ["Series", "JAN", "FEB", "MAR", "APR", "MAY", "JUL"]
+            }
+        },
+        "userOptions": {
+            "show": true
+        }
     }
 }
