@@ -242,13 +242,13 @@ defineExpose({
                         <slot v-if="j === 0" name="rowTitle" v-bind="{ value: cell, rowIndex: i, colIndex: j, type: typeof cell, isResponsive}"></slot>
                         <slot v-if="j > 0" name="cell" v-bind="{ value: cell, rowIndex: i, colIndex: j, type: typeof cell, isResponsive, color: row.colors[j], textColor: adaptColorToBackground(row.colors[j]) }"></slot>
                     </td>
-                    <td v-if="tableConfig.table.showSum">
+                    <td role="cell" data-cell="sum" v-if="tableConfig.table.showSum">
                         <slot name="sum" v-bind="{ value: row.sum, rowIndex: i, isResponsive }"></slot>
                     </td>
-                    <td v-if="tableConfig.table.showAverage">
+                    <td role="cell" data-cell="average" v-if="tableConfig.table.showAverage">
                         <slot name="average" v-bind="{ value: row.average, rowIndex: i, isResponsive }"></slot>
                     </td>
-                    <td v-if="tableConfig.table.showMedian">
+                    <td role="cell" data-cell="median" v-if="tableConfig.table.showMedian">
                         <slot name="median" v-bind="{ value: row.median, rowIndex: i, isResponsive }"></slot>
                     </td>
                 </tr>
