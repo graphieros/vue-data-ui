@@ -42,10 +42,11 @@ const stackConfig = computed(() => {
     });
 });
 
-const safeDatasetCopy = ref(props.dataset.map(d => {
+const safeDatasetCopy = ref(props.dataset.map((d, i ) => {
     return {
         ...d,
         value: stackConfig.value.style.animation.show ? 0 : d.value || 0,
+        color: d.color ? convertColorToHex(d.color) : palette[i] || palette[i % palette.length]
     }
 }));
 
@@ -89,7 +90,7 @@ onMounted(() => {
                     return {
                         ...d,
                         value: d.value += chunkSet[i],
-                        color: convertColorToHex(d.color) || palette[i] || palette[i % palette.length],
+                        color: d.color ? convertColorToHex(d.color) : palette[i] || palette[i % palette.length]
                     }
                 });
                 requestAnimationFrame(animate)
@@ -98,8 +99,8 @@ onMounted(() => {
                     return {
                         ...d,
                         value: d.value || 0,
+                        color: d.color ? convertColorToHex(d.color) : palette[i] || palette[i % palette.length],
                         id: createUid(),
-                        color: convertColorToHex(d.color) || palette[i] || palette[i % palette.length],
                     }
                 })
             }

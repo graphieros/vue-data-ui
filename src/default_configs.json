@@ -3631,7 +3631,7 @@
             "showMedian": false,
             "head": {
                 "backgroundColor": "#FFFFFF",
-                "values": ["Series", "JAN", "FEB", "MAR", "APR", "MAY", "JUL"]
+                "values": []
             }
         },
         "userOptions": {

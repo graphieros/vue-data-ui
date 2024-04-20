@@ -1918,17 +1918,14 @@ const stackDataset = ref([
   {
     name: "Vue",
     value: 258,
-    color: ""
   },
   {
     name: "Javascript",
     value: 36,
-    color: ""
   },
   {
     name: "Other",
     value: 16,
-    color: ""
   },
 ]);
 
@@ -3226,7 +3223,7 @@ function selectBar(bar) {
 const tableHeatmapDataset = ref([
   {
     name: "Serie 1",
-    values: [-100, "test", 0, 100, 150, 50, 25]
+    values: [-100, "test", 0, 100, 150, 50, 25, 10, 20, 30, 10, 20, 30, 10]
   },
   {
     name: "Serie 2",

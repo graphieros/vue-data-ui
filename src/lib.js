@@ -277,6 +277,7 @@ export function hslToRgb(h, s, l) {
 }
 
 export function shiftHue(hexColor, shiftAmount) {
+
     const hexToRgb = (hex) => ({
         r: parseInt(hex.substring(1, 3), 16),
         g: parseInt(hex.substring(3, 5), 16),
@@ -335,7 +336,7 @@ export function shiftHue(hexColor, shiftAmount) {
         };
     };
 
-    const rgbColor = hexToRgb(hexColor);
+    const rgbColor = hexToRgb(hexColor || "#000000");
     const hslColor = rgbToHsl(rgbColor);
     hslColor.h += shiftAmount;
     hslColor.h = (hslColor.h + 1) % 1;

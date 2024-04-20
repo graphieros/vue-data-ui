@@ -200,7 +200,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tableContainer" :style="`width:100%; container-type: inline-size;padding-top:${tableConfig.userOptions.show ? '36px' : ''}`" :class="{ 'vue-ui-responsive' : isResponsive }" :id="`table_heatmap_${uid}`">
+    <div ref="tableContainer" :style="`width:100%; overflow-x:auto; container-type: inline-size;padding-top:${tableConfig.userOptions.show ? '36px' : ''}`" :class="{ 'vue-ui-responsive' : isResponsive }" :id="`table_heatmap_${uid}`">
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
