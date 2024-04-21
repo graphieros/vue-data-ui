@@ -3404,13 +3404,13 @@ const tableHeatmapDataset = ref([
           <BaseIcon name="fullscreen" stroke="#5f8bee"/> -->
         </template>
         <template #dev>
-          <AccordionTest>
+          <AccordionTest :config="{ open: true}">
             <template #arrow>
               <BaseIcon name="arrowRight"/>
             </template>
-            <template #title>
+            <template #title="{ isOpen }">
               <div style="font-size: 16px; font-weight: bold">
-                TITLE
+                TITLE {{ isOpen }}
               </div>
             </template>
             <template #content>
@@ -3423,9 +3423,9 @@ const tableHeatmapDataset = ref([
             <template #arrow>
               <BaseIcon name="arrowRight"/>
             </template>
-            <template #title>
+            <template #title="{ isOpen }">
               <div style="font-size: 16px; font-weight: bold">
-                TITLE
+                TITLE {{ isOpen }}
               </div>
             </template>
             <template #content>

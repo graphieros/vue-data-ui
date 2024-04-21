@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import { useNestedProp } from "../useNestedProp";
 import mainConfig from "../default_configs.json";
+import { createUid } from "../lib";
 
 const props = defineProps({
     config: {
@@ -22,22 +23,38 @@ const accordionConfig = computed(() => {
     });
 });
 
+const isOpen = ref(props.config.open);
+const uid = ref(createUid())
+const details = ref(null);
+const init = ref(0)
+
+onMounted(() => {
+    details.value.open = accordionConfig.value.open;
+})
+
+function toggleDetails() {
+    if(init.value > 0 || !accordionConfig.value.open) {
+        isOpen.value = !isOpen.value;
+    }
+    init.value += 1;
+}
+
 </script>
 
 <template>
-    <details>
+    <details :id="`details_${uid}`" ref="details" @toggle="toggleDetails">
         <summary>
             <div class="vue-ui-accordion-head" :style="`background:${accordionConfig.head.backgroundColor};padding:${accordionConfig.head.padding};`">
                 <div class="vue-ui-accordion-arrow">
-                    <slot name="arrow" v-if="accordionConfig.head.useArrowSlot" v-bind="{ backgroundColor: accordionConfig.head.backgroundColor, color: accordionConfig.head.color, iconColor: accordionConfig.head.iconColor }" />
+                    <slot name="arrow" v-if="accordionConfig.head.useArrowSlot" v-bind="{ backgroundColor: accordionConfig.head.backgroundColor, color: accordionConfig.head.color, iconColor: accordionConfig.head.iconColor, isOpen }" />
                     <BaseIcon name="arrowRight" v-else :stroke="accordionConfig.head.iconColor" />
                 </div>
-                <slot name="title" v-bind="{ color: accordionConfig.head.color }"/>
+                <slot name="title" v-bind="{ color: accordionConfig.head.color, isOpen }"/>
             </div>
         </summary>
     </details>
     <div class="vue-ui-accordion-content" :style="`background:${accordionConfig.body.backgroundColor};color:${accordionConfig.body.color}`">
-        <slot name="content" v-bind="{ backgroundColor: accordionConfig.body.backgroundColor, color: accordionConfig.body.color }"/>
+        <slot name="content" v-bind="{ backgroundColor: accordionConfig.body.backgroundColor, color: accordionConfig.body.color, isOpen }"/>
     </div>
 </template>
 

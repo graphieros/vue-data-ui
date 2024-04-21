@@ -351,14 +351,14 @@ defineExpose({
     </div>
 
     <VueUiAccordion v-if="component === 'VueUiAccordion'" :config="config">
-        <template #arrow="{ backgroundColor, color, iconColor }">
-            <slot name="arrow" v-bind="{ backgroundColor, color, iconColor }"/>
+        <template #arrow="{ backgroundColor, color, iconColor, isOpen }">
+            <slot name="arrow" v-bind="{ backgroundColor, color, iconColor, isOpen }"/>
         </template>
-        <template #title="{ color }">
-            <slot name="title" v-bind="{ color }"/>
+        <template #title="{ color, isOpen }">
+            <slot name="title" v-bind="{ color, isOpen }"/>
         </template>
-        <template #content="{ backgroundColor, color }">
-            <slot name="content" v-bind="{ backgroundColor, color }"/>
+        <template #content="{ backgroundColor, color, isOpen }">
+            <slot name="content" v-bind="{ backgroundColor, color, isOpen }"/>
         </template>
     </VueUiAccordion>
 

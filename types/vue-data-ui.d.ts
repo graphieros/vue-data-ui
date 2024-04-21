@@ -4650,6 +4650,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiAccordionConfig = {
+        open?: boolean;
         head?: {
             useArrowSlot?: boolean;
             backgroundColor?: string;

@@ -3639,6 +3639,7 @@
         }
     },
     "vue_ui_accordion": {
+        "open": false,
         "head": {
             "useArrowSlot": false,
             "backgroundColor": "#FFFFFF",
