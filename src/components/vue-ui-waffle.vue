@@ -10,6 +10,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    getMissingDatasetAttributes,
     isFunction,
     objectIsEmpty,
     opacity,
@@ -54,17 +55,20 @@ onMounted(() => {
         })
     } else {
         props.dataset.forEach((ds, i) => {
-            if([null, undefined].includes(ds.name)) {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['name', 'values']
+            }).forEach(attr => {
                 error({
                     componentName: 'VueUiWaffle',
                     type: 'datasetSerieAttribute',
-                    property: 'name (string)',
+                    property: attr,
                     index: i
-                })
-            }
-        })
+                });
+            });
+        });
     }
-})
+});
 
 
 const uid = ref(createUid());
@@ -145,13 +149,13 @@ const datasetCopy = computed(() => {
 const proportions = computed(() => {
     const numbers = datasetCopy.value
         .filter((serie,i) => !segregated.value.includes(serie.uid))
-        .map((serie, i) => serie.values.reduce((a,b) => a + b, 0));
+        .map((serie, i) => (serie.values || []).reduce((a,b) => a + b, 0));
     return calculateProportions(numbers);
 });
 
 const immutableProportions = computed(() => {
     const numbers = datasetCopy.value
-        .map((serie, i) => serie.values.reduce((a,b) => a + b));
+        .map((serie, i) => (serie.values || []).reduce((a,b) => a + b));
     return calculateProportions(numbers);
 });
 
@@ -174,8 +178,8 @@ const waffleSet = computed(() => {
                 uid: serie.uid,
                 name: serie.name,
                 color: serie.color,
-                value: serie.values.reduce((a,b) => a + b, 0),
-                absoluteValues: serie.values,
+                value: (serie.values || []).reduce((a,b) => a + b, 0),
+                absoluteValues: serie.values || [],
                 proportion: proportions.value[i] * Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)
             }
         })
@@ -190,8 +194,8 @@ const immutableSet = computed(() => {
                 uid: serie.uid,
                 name: serie.name,
                 color: serie.color,
-                value: serie.values.reduce((a,b) => a + b, 0),
-                absoluteValues: serie.values,
+                value: (serie.values || []).reduce((a,b) => a + b, 0),
+                absoluteValues: serie.values || [],
                 proportion: immutableProportions.value[i] * Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)
             }
         })
@@ -268,7 +272,7 @@ const legendSet = computed(() => {
             return {
                 name: serie.name,
                 color: serie.color || palette[i] || palette[i % palette.length],
-                value: serie.values.reduce((a,b) => a + b, 0),
+                value: (serie.values || []).reduce((a,b) => a + b, 0),
                 uid: serie.uid,
                 shape: 'square'
             }
@@ -277,7 +281,7 @@ const legendSet = computed(() => {
         .map((el, i) => {
             return {
                 ...el,
-                proportion: el.value / datasetCopy.value.map(ds => ds.values.reduce((a,b) => a + b, 0)).reduce((a, b) => a + b, 0),
+                proportion: el.value / datasetCopy.value.map(ds => (ds.values || []).reduce((a,b) => a + b, 0)).reduce((a, b) => a + b, 0),
                 opacity: segregated.value.includes(el.uid) ? 0.5 : 1
             }
         })

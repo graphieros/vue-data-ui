@@ -11,6 +11,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    getMissingDatasetAttributes,
     isFunction, 
     makeDonut,
     objectIsEmpty, 
@@ -43,8 +44,13 @@ const props = defineProps({
     },
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length
+const isDataset = computed({
+    get() {
+        return !!props.dataset && props.dataset.length
+    },
+    set(bool) {
+        return bool
+    }
 })
 
 onMounted(() => {
@@ -55,14 +61,18 @@ onMounted(() => {
         })
     } else {
         props.dataset.forEach((ds, i) => {
-            if([null, undefined].includes(ds.name)) {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['name', 'values']
+            }).forEach(attr => {
+                isDataset.value = false;
                 error({
                     componentName: 'VueUiDonut',
                     type: 'datasetSerieAttribute',
-                    property: 'name (string)',
+                    property: attr,
                     index: i
                 })
-            }
+            })
         })
     }
 })
@@ -148,12 +158,10 @@ function getData() {
 const donutSet = computed(() => {
     props.dataset.forEach((ds, i) => {
         if([null, undefined].includes(ds.values)) {
-            error({
-                componentName: 'VueUiDonut',
-                type: 'datasetSerieAttribute',
-                property: 'values (number[])',
-                index: i
-            });
+            return {
+                ...ds,
+                values: []
+            }
         }
     })
     return props.dataset
@@ -161,8 +169,8 @@ const donutSet = computed(() => {
             return {
                 name: serie.name,
                 color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
-                value: serie.values.reduce((a,b) => a + b, 0),
-                absoluteValues: serie.values,
+                value: (serie.values || []).reduce((a,b) => a + b, 0),
+                absoluteValues: serie.values || [],
                 seriesIndex: i
             }
         })
@@ -176,7 +184,7 @@ const legendSet = computed(() => {
             return {
                 name: serie.name,
                 color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
-                value: serie.values.reduce((a,b) => a + b, 0),
+                value: (serie.values || []).reduce((a,b) => a + b, 0),
                 shape: 'circle',
             }
         })
@@ -184,7 +192,7 @@ const legendSet = computed(() => {
         .map((el, i) => {
             return {
                 ...el,
-                proportion: el.value / props.dataset.map(m => m.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
+                proportion: el.value / props.dataset.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
                 opacity: segregated.value.includes(i) ? 0.5 : 1
             }
         })

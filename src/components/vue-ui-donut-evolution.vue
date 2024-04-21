@@ -11,6 +11,7 @@ import {
     createUid, 
     downloadCsv,
     error,
+    getMissingDatasetAttributes,
     makeDonut,
     objectIsEmpty, 
     opacity, 
@@ -52,6 +53,22 @@ onMounted(() => {
             componentName: 'VueUiDonutEvolution',
             type: 'dataset'
         })
+    } else {
+        if(props.dataset.length) {
+            props.dataset.forEach((ds, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: ds,
+                    requiredAttributes: ['name', 'values']
+                }).forEach(attr => {
+                    error({
+                        componentName: 'VueUiDonutEvolution',
+                        type: 'datasetSerieAttribute',
+                        property: attr,
+                        index: i
+                    })
+                })
+            })
+        }
     }
 })
 

@@ -528,6 +528,25 @@ const gaugeDataset = ref({
   ],
 });
 
+const gaugeDatasetTest = ref({
+  base: 0,
+  value: 4.2,
+  series: [
+    {
+      from: 0,
+      to: 3,
+    },
+    {
+      from: 3,
+      to: 4,
+    },
+    {
+      from: 4,
+      to: 5,
+    },
+  ],
+});
+
 const chestnutDataset = ref([
   {
     name: "Root1",
@@ -3204,7 +3223,7 @@ const bar3dConfig = ref({
   style: {
     shape: 'bar',
     chart: {
-      // backgroundColor: '#1A1A1A',
+      backgroundColor: '#1A1A1A',
       // color: '#CCCCCC',
       title: {
         text: "Title",
@@ -4479,7 +4498,7 @@ const tableHeatmapDataset = ref([
           </VueDataUiTest>
         </template>
         <template #prod>
-          <VueDataUi
+          <!-- <VueDataUi
             component="VueUiDonut"
             ref="donuttest"
             :dataset="donutDataset"
@@ -4489,7 +4508,7 @@ const tableHeatmapDataset = ref([
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueDataUi>
+          </VueDataUi> -->
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_donut }}
@@ -4959,7 +4978,7 @@ const tableHeatmapDataset = ref([
           <VueDataUiTest
             component="VueUiGauge" 
             ref="gaugetest" 
-            :dataset="gaugeDataset" 
+            :dataset="gaugeDatasetTest" 
           >
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
@@ -4971,7 +4990,7 @@ const tableHeatmapDataset = ref([
           <VueDataUi
             component="VueUiGauge"
             ref="gaugetest"
-            :dataset="gaugeDataset"
+            :dataset="gaugeDatasetTest"
           >
           <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>

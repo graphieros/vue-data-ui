@@ -10,6 +10,9 @@ describe('useNestedProp', () => {
                 someDefaultObject: {
                     defaultAttr: 'default'
                 }
+            },
+            attr2: {
+                color: '#000000'
             }
         }
 
@@ -17,6 +20,9 @@ describe('useNestedProp', () => {
             attr1: {
                 color: "rgb(0,0,0)",
                 value: 1
+            },
+            attr2: {
+                color: 'red'
             }
         }
 
@@ -26,7 +32,10 @@ describe('useNestedProp', () => {
                 value: 1,
                 someDefaultObject: {
                     defaultAttr: "default"
-                }
+                },
+            },
+            attr2: {
+                color: "#FF0000"
             }
         })
     })

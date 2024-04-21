@@ -6,6 +6,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    getMissingDatasetAttributes,
     giftWrap,
     isFunction,
     objectIsEmpty,
@@ -105,53 +106,33 @@ const drawingArea = computed(() => {
 
 const extremes = computed(() => {
     props.dataset.forEach((ds, i) => {
-        if([null, undefined].includes(ds.name)){
+        getMissingDatasetAttributes({
+            datasetObject: ds,
+            requiredAttributes: ['values']
+        }).forEach(attr => {
             error({
                 componentName: 'VueUiScatter',
                 type: 'datasetSerieAttribute',
-                property: 'name',
+                property: attr,
                 index: i
+            });
+        })
+        if(ds.values) {
+            ds.values.forEach((v, j) => {
+                getMissingDatasetAttributes({
+                    datasetObject: v,
+                    requiredAttributes: ['x', 'y']
+                }).forEach(attr => {
+                    error({
+                        componentName: 'VueUiScatter',
+                        type: 'datasetSerieAttribute',
+                        property: `values.${attr}`,
+                        index: `${i} - ${j}`
+                    });
+                });
             })
         }
-        if([null, undefined].includes(ds.values)){
-            error({
-                componentName: 'VueUiScatter',
-                type: 'datasetSerieAttribute',
-                property: 'values',
-                index: i
-            })
-        } else {
-            ds.values.forEach((dp, j) => {
-                if([null, undefined].includes(dp.x)){
-                    error({
-                        componentName: 'VueUiScatter',
-                        type: 'datasetSerieAttribute',
-                        property: 'x',
-                        key: `value (index ${i})`,
-                        index: j
-                    })
-                }
-                if([null, undefined].includes(dp.y)){
-                    error({
-                        componentName: 'VueUiScatter',
-                        type: 'datasetSerieAttribute',
-                        property: 'y',
-                        key: `value (index ${i})`,
-                        index: j
-                    })
-                }
-                if([null, undefined].includes(dp.name)){
-                    error({
-                        componentName: 'VueUiScatter',
-                        type: 'datasetSerieAttribute',
-                        property: 'name',
-                        key: `value (index ${i})`,
-                        index: j
-                    })
-                }
-            })
-        }
-    })
+    });
 
     const xMin = Math.min(...datasetWithId.value.filter(el => !segregated.value.includes(el.id)).flatMap(ds => ds.values.map(v => v.x)));
     const xMax = Math.max(...datasetWithId.value.filter(el => !segregated.value.includes(el.id)).flatMap(ds => ds.values.map(v => v.x)));

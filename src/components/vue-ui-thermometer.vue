@@ -5,6 +5,7 @@ import {
     createUid, 
     dataLabel,
     error,
+    getMissingDatasetAttributes,
     objectIsEmpty,
     opacity, 
     palette, 
@@ -43,29 +44,18 @@ onMounted(() => {
             type: 'dataset'
         })
     } else {
-        if([null, undefined].includes(props.dataset.value)) {
+        getMissingDatasetAttributes({
+            datasetObject: props.dataset,
+            requiredAttributes: ['value', 'from', 'to']
+        }).forEach(attr => {
             error({
                 componentName: 'VueUiThermometer',
                 type: 'datasetAttribute',
-                property: 'value'
-            })
-        }
-        if([null, undefined].includes(props.dataset.from)) {
-            error({
-                componentName: 'VueUiThermometer',
-                type: 'datasetAttribute',
-                property: 'from'
-            })
-        }
-        if([null, undefined].includes(props.dataset.to)) {
-            error({
-                componentName: 'VueUiThermometer',
-                type: 'datasetAttribute',
-                property: 'to'
-            })
-        }
+                property: attr,
+            });
+        });
     }
-})
+});
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_thermometer);

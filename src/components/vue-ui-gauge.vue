@@ -5,6 +5,7 @@ import {
     convertColorToHex, 
     createUid,
     error,
+    getMissingDatasetAttributes,
     matrixTimes,
     objectIsEmpty,
     opacity, 
@@ -60,49 +61,31 @@ const mutableConfig = ref({
 
 const mutableDataset = computed(() => {
 
-    if (!isDataset.value || objectIsEmpty(props.dataset.series)) {
-        error({
-            componentName: 'VueUiGauge',
-            type: 'datasetAttributeEmpty',
-            property: 'series'
-        });
-        return []
-    } else {
-        props.dataset.series.forEach((serie, i) => {
-            if ([null, undefined].includes(serie.from)) {
-                error({
-                    componentName: 'VueUiGauge',
-                    type: 'datasetSerieAttribute',
-                    property: 'from (number)',
-                    index: i,
-                    key: 'series'
-                })
-            }
-            if ([null, undefined].includes(serie.to)) {
-                error({
-                    componentName: 'VueUiGauge',
-                    type: 'datasetSerieAttribute',
-                    property: 'to (number)',
-                    index: i,
-                    key: 'series'
-                })
-            }
-        })
+    if (!isDataset.value || objectIsEmpty(props.dataset.series || {})) {
+        return {
+            value:0,
+            series: [
+                {
+                    from: 0,
+                    to: 1
+                }
+            ]
+        }
     }
 
     const arr = [];
-    props.dataset.series.forEach(serie => {
-        arr.push(serie.from);
-        arr.push(serie.to);
+    (props.dataset.series || []).forEach(serie => {
+        arr.push(serie.from || 0);
+        arr.push(serie.to || 0);
     });
     const max = Math.max(...arr);
     return {
         ...props.dataset,
-        series: props.dataset.series.map((serie, i) => {
+        series: (props.dataset.series || []).map((serie, i) => {
             return {
                 ...serie,
                 color: convertColorToHex(serie.color) || palette[i],
-                value: ((serie.to - serie.from) / max) * 100,
+                value: (((serie.to || 0) - (serie.from || 0)) / max) * 100,
             }
         })
     }
@@ -149,23 +132,43 @@ const ratingColor = computed(() => {
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
         error({
-            componentNae: 'VueUiGauge',
+            componentName: 'VueUiGauge',
             type: 'dataset'
         })
     } else {
-        if ([null, undefined].includes(props.dataset.value)) {
+        getMissingDatasetAttributes({
+            datasetObject: props.dataset,
+            requiredAttributes: ['value', 'series']
+        }).forEach(attr => {
             error({
                 componentName: 'VueUiGauge',
                 type: 'datasetAttribute',
-                property: 'value (number)'
+                property: attr
             })
-        }
-        if ([null, undefined].includes(props.dataset.series)) {
-            error({
-                componentName: 'VueUiGauge',
-                type: 'datasetAttribute',
-                property: 'series'
-            })
+        });
+        if(Object.hasOwn(props.dataset, 'series')) {
+            if(!props.dataset.series.length) {
+                error({
+                    componentName: 'VueUiGauge',
+                    type: 'datasetAttributeEmpty',
+                    property: 'series'
+                })
+            } else {
+                props.dataset.series.forEach((serie, i) => {
+                    getMissingDatasetAttributes({
+                        datasetObject: serie,
+                        requiredAttributes: ['from', 'to']
+                    }).forEach(attr => {
+                        error({
+                            componentName: 'VueUiGauge',
+                            type: 'datasetSerieAttribute',
+                            property: attr,
+                            index: i
+                        })
+                    })
+                })
+            }
+
         }
     }
     const arr = [];

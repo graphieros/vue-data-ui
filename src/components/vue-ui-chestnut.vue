@@ -10,6 +10,7 @@ import {
     createUid, 
     downloadCsv,
     error,
+    getMissingDatasetAttributes,
     makeDonut,
     objectIsEmpty, 
     opacity, 
@@ -105,35 +106,50 @@ const treeTotal = computed(() => {
 const mutableDataset = computed(() => {
 
     props.dataset.forEach((ds, i) => {
-        if ([null, undefined].includes(ds.name)) {
+        getMissingDatasetAttributes({
+            datasetObject: ds,
+            requiredAttributes: ['name', 'branches']
+        }).forEach(attr => {
             error({
                 componentName: 'VueUiChestnut',
                 type: 'datasetSerieAttribute',
-                property: 'name (string)',
+                property: attr,
                 index: i
-            })
-        }
-        if([null, undefined].includes(ds.branches)) {
-            error({
-                componentName: 'VueUiChestnut',
-                type: 'datasetSerieAttribute',
-                property: 'branches',
-                index: i
-            })
-        } else {
+            });
+        });
+
+        if(ds.branches) {
             ds.branches.forEach((branch, j) => {
-                if([null, undefined].includes(branch.name)) {
+                getMissingDatasetAttributes({
+                    datasetObject: branch,
+                    requiredAttributes: ['name', 'value']
+                }).forEach(attr => {
                     error({
                         componentName: 'VueUiChestnut',
                         type: 'datasetSerieAttribute',
-                        property: 'name',
-                        index: j,
-                        key: `branch (at index ${i})`
-                    })
+                        property: attr,
+                        index: `${i} - ${j}`
+                    });
+                });
+
+                if(branch.breakdown) {
+                    branch.breakdown.forEach((b, k) => {
+                        getMissingDatasetAttributes({
+                            datasetObject: b,
+                            requiredAttributes: ['name', 'value']
+                        }).forEach(attr => {
+                            error({
+                                componentName: 'VueUiChestnut',
+                                type: 'datasetSerieAttribute',
+                                property: attr,
+                                index: `${i} - ${j} - ${k}`
+                            });
+                        });
+                    });
                 }
-            })
+            });
         }
-    })
+    });
 
     return props.dataset.map((root, i) => {
         const rootTotal = root.branches.map(branch => branch.value).reduce((a, b) => a + b);

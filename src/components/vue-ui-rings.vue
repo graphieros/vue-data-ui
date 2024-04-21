@@ -8,6 +8,7 @@ import {
   downloadCsv,
   error,
   functionReturnsString,
+  getMissingDatasetAttributes,
   isFunction,
   objectIsEmpty,
   opacity,
@@ -51,23 +52,18 @@ onMounted(() => {
       type: 'dataset'
     })
   } else {
-    props.dataset.forEach((ds, i) => {
-      if([null, undefined].includes(ds.name)){
+    props.dataset.forEach((ds, i) => {      
+      getMissingDatasetAttributes({
+        datasetObject: ds,
+        requiredAttributes: ['name', 'values']
+      }).forEach(attr => {
         error({
           componentName: 'VueUiRings',
           type: 'datasetSerieAttribute',
-          property: 'name',
+          property: attr,
           index: i
-        })
-      }
-      if([null, undefined].includes(ds.values)){
-        error({
-          componentName: 'VueUiRings',
-          type: 'datasetSerieAttribute',
-          property: 'values',
-          index: i
-        })
-      }
+        });
+      });
     })
   }
 })

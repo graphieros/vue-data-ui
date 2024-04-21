@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { 
     createUid,
     error,
+    getMissingDatasetAttributes,
     objectIsEmpty,
     opacity, 
     shiftHue, 
@@ -39,17 +40,20 @@ onMounted(() => {
         })
     } else {
         props.dataset.forEach((ds, i) => {
-            if([undefined].includes(ds.value)) {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['value']
+            }).forEach(attr => {
                 error({
                     componentName: 'VueUiSparkHistogram',
                     type: 'datasetSerieAttribute',
-                    property: 'value (number)',
+                    property: attr,
                     index: i
-                })
-            }
-        })
+                });
+            });
+        });
     }
-})
+});
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkhistogram);

@@ -9,6 +9,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    getMissingDatasetAttributes,
     isFunction,
     makePath,
     objectIsEmpty, 
@@ -151,17 +152,27 @@ const datasetCopy = computed(() => {
         });
         return []
     } else {
-        props.dataset.categories.forEach((cat, i) => {
-            if ([null, undefined].includes(cat.name)) {
-                error({
-                    componentName: 'VueUiRadar',
-                    type: 'datasetSerieAttribute',
-                    property: 'name (string)',
-                    key: 'categories',
-                    index: i
+        if(props.dataset.categories.length === 0) {
+            error({
+                componentName: 'VueUiRadar',
+                type: 'datasetAttributeEmpty',
+                property: 'categories',
+            })
+        } else {
+            props.dataset.categories.forEach((cat, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: cat,
+                    requiredAttributes: ['name']
+                }).forEach(attr => {
+                    error({
+                        componentName: 'VueUiRadar',
+                        type: 'datasetAttribute',
+                        property: `category.${attr} at index ${i}`,
+                        index: i
+                    })
                 })
-            }
-        })
+            })
+        }
     }
     if([null, undefined].includes(props.dataset.series)) {
         error({
@@ -171,33 +182,18 @@ const datasetCopy = computed(() => {
         })
     } else {
         props.dataset.series.forEach((serie, i) => {
-            if ([null, undefined].includes(serie.name)) {
+            getMissingDatasetAttributes({
+                datasetObject: serie,
+                requiredAttributes: ['name', 'values', 'target']
+            }).forEach(attr => {
                 error({
                     componentName: 'VueUiRadar',
                     type: 'datasetSerieAttribute',
-                    property: 'name (string)',
                     key: 'series',
+                    property: attr,
                     index: i
                 })
-            }
-            if ([null, undefined].includes(serie.values)) {
-                error({
-                    componentName: 'VueUiRadar',
-                    type: 'datasetSerieAttribute',
-                    property: 'values (number[])',
-                    key: 'series',
-                    index: i
-                })
-            }
-            if ([null, undefined].includes(serie.target)) {
-                error({
-                    componentName: 'VueUiRadar',
-                    type: 'datasetSerieAttribute',
-                    property: 'target (number)',
-                    key: 'series',
-                    index: i
-                })
-            }
+            })
         })
     }
 

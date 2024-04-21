@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { palette, createUid, error, objectIsEmpty } from "../lib.js";
+import { palette, createUid, error, objectIsEmpty, getMissingDatasetAttributes } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -89,39 +89,18 @@ onMounted(() => {
         })
     } else {
         props.dataset.forEach((ds, i) => {
-            if([null, undefined].includes(ds.id)) {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['id', 'label', 'relations', 'weights']
+            }).forEach(attr => {
                 error({
                     componentName: 'VueUiRelationCircle',
                     type: 'datasetSerieAttribute',
-                    property: 'id',
+                    property: attr,
                     index: i
                 })
-            }
-            if([null, undefined].includes(ds.label)) {
-                error({
-                    componentName: 'VueUiRelationCircle',
-                    type: 'datasetSerieAttribute',
-                    property: 'label',
-                    index: i
-                })
-            }
-            if([null, undefined].includes(ds.relations)) {
-                error({
-                    componentName: 'VueUiRelationCircle',
-                    type: 'datasetSerieAttribute',
-                    property: 'relations',
-                    index: i
-                })
-            }
-            if([null, undefined].includes(ds.weights)) {
-                error({
-                    componentName: 'VueUiRelationCircle',
-                    type: 'datasetSerieAttribute',
-                    property: 'weights',
-                    index: i
-                })
-            }
-        })
+            });
+        });
     }
 
     createPlots();

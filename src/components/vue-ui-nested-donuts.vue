@@ -127,26 +127,34 @@ const immutableDataset = computed(() => {
                 index: i
             })
         } else {
-            ds.series.forEach((serie, j) => {
-                if([null, undefined].includes(serie.name)) {
-                    error({
-                        componentName: 'VueUiNestedDonuts',
-                        type: 'datasetSerieAttribute',
-                        property: 'name',
-                        index: j,
-                        key: 'serie'
-                    })
-                }
-                if([null, undefined].includes(serie.values)) {
-                    error({
-                        componentName: 'VueUiNestedDonuts',
-                        type: 'datasetSerieAttribute',
-                        property: 'values',
-                        index: j,
-                        key: 'serie'
-                    })
-                }
-            })
+            if(ds.series.length === 0) {
+                error({
+                    componentName: 'VueUiNestedDonuts',
+                    type: 'datasetAttributeEmpty',
+                    property: `series at index ${i}`
+                })
+            } else {
+                ds.series.forEach((serie, j) => {
+                    if([null, undefined].includes(serie.name)) {
+                        error({
+                            componentName: 'VueUiNestedDonuts',
+                            type: 'datasetSerieAttribute',
+                            property: 'name',
+                            index: j,
+                            key: 'serie'
+                        })
+                    }
+                    if([null, undefined].includes(serie.values)) {
+                        error({
+                            componentName: 'VueUiNestedDonuts',
+                            type: 'datasetSerieAttribute',
+                            property: 'values',
+                            index: j,
+                            key: 'serie'
+                        })
+                    }
+                })
+            }
         }
     })
 

@@ -11,6 +11,7 @@ import {
     dataLabel,
     downloadCsv,
     error,
+    getMissingDatasetAttributes,
     lightenHexColor,
     makeDonut,
     objectIsEmpty, 
@@ -132,6 +133,48 @@ onMounted(() => {
             componentName: 'VueUi3dBar',
             type: 'dataset'
         })
+    } else {
+        if(!props.dataset.series) {
+            getMissingDatasetAttributes({
+                datasetObject: props.dataset,
+                requiredAttributes: ['percentage']
+            }).forEach(attr => {
+                error({
+                    componentName: 'VueUi3dBar',
+                    type: 'datasetAttribute',
+                    property: attr
+                })
+            })
+        } else {
+            props.dataset.series.forEach((serie, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: serie,
+                    requiredAttributes: ['name', 'value']
+                }).forEach(attr => {
+                    error({
+                        componentName: 'VueUi3dBar',
+                        type: 'datasetSerieAttribute',
+                        property: attr,
+                        index: i
+                    })
+                });
+                if(serie.breakdown) {
+                    serie.breakdown.forEach((b, j) => {
+                        getMissingDatasetAttributes({
+                            datasetObject: b,
+                            requiredAttributes: ['name', 'value']
+                        }).forEach(attr => {
+                            error({
+                                componentName: 'VueUi3dBar',
+                                type: 'datasetSerieAttribute',
+                                property: attr,
+                                index: `${i} - ${j}`
+                            })
+                        })
+                    })
+                }
+            })
+        }
     }
 
     let acceleration = 0;

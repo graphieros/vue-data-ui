@@ -4,6 +4,7 @@ import {
     convertColorToHex, 
     createUid,
     error,
+    getMissingDatasetAttributes,
     objectIsEmpty,
     opacity, 
     palette, 
@@ -58,23 +59,18 @@ onMounted(() => {
         })
     } else {
         props.dataset.forEach((ds, i) => {
-            if([null, undefined].includes(ds.name)) {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['name', 'value']
+            }).forEach(attr => {
                 error({
                     componentName: 'VueUiSparkStackbar',
                     type: 'datasetSerieAttribute',
-                    property: 'name',
+                    property: attr,
                     index: i
-                })
-            }
-            if([undefined].includes(ds.value)) {
-                error({
-                    componentName: 'VueUiSparkStackbar',
-                    type: 'datasetSerieAttribute',
-                    property: 'value',
-                    index: i
-                })
-            }
-        })
+                });
+            });
+        });
     }
 
     if (stackConfig.value.style.animation.show) {

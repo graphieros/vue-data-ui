@@ -14,6 +14,7 @@ import {
     checkObj,
     closestDecimal,
     convertColorToHex,
+    convertNameColorToHex,
     createArc,
     createPolygonPath,
     createSmoothPath,
@@ -24,6 +25,7 @@ import {
     error,
     functionReturnsString,
     generateSpiralCoordinates,
+    getMissingDatasetAttributes,
     hslToRgb,
     interpolateColorHex,
     isFunction,
@@ -39,6 +41,38 @@ import {
     sumByAttribute,
     treeShake
 } from "../src/lib"
+
+describe('getMissingDatasetAttributes', () => {
+    test('returns the missing attributes from a dataset object', () => {
+        const requiredAttributes = ['name', 'color'];
+        const dataset1 = {
+            name: 'name',
+            color: 'color',
+            attr: 'attr'
+        }
+        const dataset2 = {
+            color: 'color',
+            attr: 'attr'
+        }
+        const dataset3 = {
+            attr: 'attr'
+        }
+        expect(getMissingDatasetAttributes({ datasetObject: dataset1, requiredAttributes })).toStrictEqual([])
+        expect(getMissingDatasetAttributes({ datasetObject: dataset2, requiredAttributes })).toStrictEqual(['name'])
+        expect(getMissingDatasetAttributes({ datasetObject: dataset3, requiredAttributes })).toStrictEqual(['name', 'color'])
+    })
+})
+
+describe('convertNameColorToHex', () => {
+    test('returns a hex color from a standard html color name', () => {
+        expect(convertNameColorToHex('red')).toBe('#FF0000')
+        expect(convertNameColorToHex('Red')).toBe('#FF0000')
+        expect(convertNameColorToHex('RED')).toBe('#FF0000')
+        expect(convertNameColorToHex('sandybrown')).toBe('#F4A460')
+        expect(convertNameColorToHex('SandyBrown')).toBe('#F4A460')
+        expect(convertNameColorToHex('SANDYBROWN')).toBe('#F4A460')
+    })
+})
 
 describe('degreesToRadians', () => {
     test('converts degrees to radians', () => {
@@ -263,6 +297,11 @@ describe('convertColorToHex', () => {
     test('returns HEX color from an HSL passed through hslToRgb', () => {
         const rgb = hslToRgb(50, 50, 50);
         expect(convertColorToHex(`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`)).toBe('#bfaa40')
+    })
+    test('returns HEX color from a name color', () => {
+        expect(convertColorToHex('red')).toBe('#FF0000')
+        expect(convertColorToHex('RED')).toBe('#FF0000')
+        expect(convertColorToHex('Red')).toBe('#FF0000')
     })
 })
 
@@ -850,7 +889,7 @@ describe('error', () => {
             });
             fail('Error was not thrown');
         } catch (error) {
-            expect(error.message).toBe('\n> VueUiXy dataset is missing the name attribute.\n')
+            expect(error.message).toBe(`\n> VueUiXy dataset is missing the 'name' attribute.\n`)
         }
     })
 
@@ -861,7 +900,7 @@ describe('error', () => {
             property: 'name',
         });
         expect(consoleMock).toHaveBeenCalledOnce();
-        expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy dataset is missing the name attribute.\n');
+        expect(consoleMock).toHaveBeenLastCalledWith(`\n> VueUiXy dataset is missing the 'name' attribute.\n`);
     })
 
 
@@ -876,7 +915,7 @@ describe('error', () => {
             });
             fail('Error was not thrown');
         } catch (error) {
-            expect(error.message).toBe('\n> VueUiXy dataset  item at index 0 is missing the name attribute.\n')
+            expect(error.message).toBe(`\n> VueUiXy dataset  item at index 0 is missing the 'name' attribute.\n`)
         }
     })
 
@@ -888,7 +927,7 @@ describe('error', () => {
             index: 0,
         });
         expect(consoleMock).toHaveBeenCalledOnce();
-        expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy dataset  item at index 0 is missing the name attribute.\n');
+        expect(consoleMock).toHaveBeenLastCalledWith(`\n> VueUiXy dataset  item at index 0 is missing the 'name' attribute.\n`);
     })
 
     test('throws an error for an empty dataset array item', () => {
@@ -901,7 +940,7 @@ describe('error', () => {
             });
             fail('Error was not thrown');
         } catch (error) {
-            expect(error.message).toBe('\n> VueUiXy dataset series attribute cannot be empty.\n')
+            expect(error.message).toBe(`\n> VueUiXy dataset 'series' attribute cannot be empty.\n`)
         }
     })
 
@@ -912,7 +951,7 @@ describe('error', () => {
             property: 'series',
         });
         expect(consoleMock).toHaveBeenCalledOnce();
-        expect(consoleMock).toHaveBeenLastCalledWith('\n> VueUiXy dataset series attribute cannot be empty.\n');
+        expect(consoleMock).toHaveBeenLastCalledWith(`\n> VueUiXy dataset 'series' attribute cannot be empty.\n`);
     })
 });
 

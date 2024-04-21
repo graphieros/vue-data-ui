@@ -9,6 +9,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    getMissingDatasetAttributes,
     isFunction,
     objectIsEmpty, 
     palette, 
@@ -48,6 +49,20 @@ onMounted(() => {
         error({
             componentName: 'VueUiGalaxy',
             type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['name', 'values']
+            }).forEach(attr => {
+                error({
+                    componentName: 'VueUiGalaxy',
+                    type: 'datasetSerieAttribute',
+                    property: attr,
+                    index: i
+                })
+            })
         })
     }
 });
@@ -143,16 +158,6 @@ const segregatedSet = computed(() => {
 })
 
 const galaxySet = computed(() => {
-    props.dataset.forEach((ds, i) => {
-        if([null, undefined].includes(ds.values)) {
-            error({
-                componentName: 'VueUiGalaxy',
-                type: 'datasetSerieAttribute',
-                property: 'values (number[])',
-                index: i
-            });
-        }
-    })
 
     const res = [];
     let start = 0;

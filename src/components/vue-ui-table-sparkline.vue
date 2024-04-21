@@ -8,6 +8,7 @@ import { calcMedian,
     createUid, 
     downloadCsv,
     error,
+    getMissingDatasetAttributes,
     objectIsEmpty,
     palette,
 } from "../lib";
@@ -71,23 +72,18 @@ onMounted(() => {
 
 const computedDataset = computed(() => {
     props.dataset.forEach((ds, i) => {
-        if([null, undefined].includes(ds.name)) {
+        getMissingDatasetAttributes({
+            datasetObject: ds,
+            requiredAttributes: ['name', 'values']
+        }).forEach(attr => {
             error({
                 componentName: 'VueUiTableSparkline',
                 type: 'datasetSerieAttribute',
-                property: 'name',
+                property: attr,
                 index: i
-            })
-        }
-        if([null, undefined].includes(ds.values)) {
-            error({
-                componentName: 'VueUiTableSparkline',
-                type: 'datasetSerieAttribute',
-                property: 'values',
-                index: i
-            })
-        }
-    })
+            });
+        });
+    });
 
     return props.dataset.map((ds, i) => {
         const cleanValues = (ds.values || []).map((v) => (isNaN(v) ? 0 : v ?? 0));

@@ -5,6 +5,7 @@ import {
     createUid,
     dataLabel as dl,
     error,
+    getMissingDatasetAttributes,
     objectIsEmpty,
     opacity,
     shiftHue,
@@ -72,23 +73,18 @@ onMounted(() => {
         })
     } else {
         props.dataset.forEach((ds, i) => {
-            if([null, undefined].includes(ds.period)) {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['period', 'value']
+            }).forEach(attr => {
                 error({
                     componentName: 'VueUiSparkline',
                     type: 'datasetSerieAttribute',
-                    property: 'name',
+                    property: attr,
                     index: i
-                })
-            }
-            if([undefined].includes(ds.value)) {
-                error({
-                    componentName: 'VueUiSparkline',
-                    type: 'datasetSerieAttribute',
-                    property: 'value',
-                    index: i
-                })
-            }
-        })
+                });
+            });
+        });
     }
 
     if (sparklineConfig.value.style.animation.show && props.dataset.length > 1) {

@@ -11,6 +11,7 @@ import {
     isFunction,
     interpolateColorHex,
     objectIsEmpty,
+getMissingDatasetAttributes,
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
@@ -156,16 +157,20 @@ const dataLabels = computed(() => {
 
 
 const mutableDataset = computed(() => {
+
     props.dataset.forEach((ds, i) => {
-        if ([null, undefined].includes(ds.values)) {
+        getMissingDatasetAttributes({
+            datasetObject: ds,
+            requiredAttributes: ['values']
+        }) .forEach(attr => {
             error({
                 componentName: 'VueUiHeatmap',
                 type: 'datasetSerieAttribute',
                 property: 'values',
                 index: i
             })
-        }
-    })
+        })
+    });
 
     return props.dataset.map(ds => {
         return {

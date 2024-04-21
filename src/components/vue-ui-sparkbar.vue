@@ -4,6 +4,7 @@ import {
     convertColorToHex, 
     createUid,
     error,
+    getMissingDatasetAttributes,
     objectIsEmpty,
     opacity, 
     palette, 
@@ -98,22 +99,17 @@ const max = computed(() => {
 
 const drawableDataset = computed(() => {
     props.dataset.forEach((ds, i) => {
-        if([null, undefined].includes(ds.name)) {
+        getMissingDatasetAttributes({
+            datasetObject: ds,
+            requiredAttributes: ['name', 'value']
+        }).forEach(attr => {
             error({
                 componentName: 'VueUiSparkbar',
                 type: 'datasetSerieAttribute',
-                property: 'name',
+                property: attr,
                 index: i
-            })
-        }
-        if([undefined].includes(ds.value)) {
-            error({
-                componentName: 'VueUiSparkbar',
-                type: 'datasetSerieAttribute',
-                property: 'value',
-                index: i
-            })
-        }
+            });
+        });
     })
 
     return safeDatasetCopy.value.map((d, i) => {
