@@ -3637,5 +3637,18 @@
         "userOptions": {
             "show": true
         }
+    },
+    "vue_ui_accordion": {
+        "head": {
+            "useArrowSlot": false,
+            "backgroundColor": "#FFFFFF",
+            "color": "#2D353C",
+            "iconColor": "#5f8bee",
+            "padding": "12px 6px"
+        },
+        "body": {
+            "backgroundColor": "#FFFFFF",
+            "color":"#2D353C"
+        }
     }
 }

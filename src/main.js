@@ -45,7 +45,8 @@ import {
     VueUiWaffle, 
     VueUiWheel,
     VueUiXy,
-    VueUiTableHeatmap
+    VueUiTableHeatmap,
+    VueUiAccordion
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -94,4 +95,5 @@ app.component("VueUiVerticalBar", VueUiVerticalBar);
 app.component("VueUiWaffle", VueUiWaffle);
 app.component("VueUiWheel", VueUiWheel);
 app.component("VueUiXy", VueUiXy);
+app.component("VueUiAccordion", VueUiAccordion);
 app.mount('#app');

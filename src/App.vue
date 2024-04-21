@@ -58,6 +58,7 @@ import VueUiKpiTest from "./components/vue-ui-kpi.vue";
 import GalaxyTest from "./components/vue-ui-galaxy.vue";
 import TreemapTest from "./components/vue-ui-treemap.vue";
 import TableHeatmapTest from "./components/vue-ui-table-heatmap.vue";
+import AccordionTest from "./components/vue-ui-accordion.vue";
 
 const dataset = ref([
   {
@@ -3390,9 +3391,56 @@ const tableHeatmapDataset = ref([
       </template>
       </Box>
 
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_accordion)">
+        <template #title>
+          <BaseIcon name="accordion"/>
+          VueUiAccordion
+        </template>
+        <template #info>
+          <!-- <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/> -->
+        </template>
+        <template #dev>
+          <AccordionTest>
+            <template #arrow>
+              <BaseIcon name="arrowRight"/>
+            </template>
+            <template #title>
+              <div style="font-size: 16px; font-weight: bold">
+                TITLE
+              </div>
+            </template>
+            <template #content>
+              <VueDataUi component="VueUiGalaxy" :dataset="galaxyDataset" :config="galaxyConfig" />
+            </template>
+          </AccordionTest>
+        </template>
+        <template #prod>
+          <VueUiAccordion>
+            <template #arrow>
+              <BaseIcon name="arrowRight"/>
+            </template>
+            <template #title>
+              <div style="font-size: 16px; font-weight: bold">
+                TITLE
+              </div>
+            </template>
+            <template #content>
+              <VueDataUi component="VueUiGalaxy" :dataset="galaxyDataset" :config="galaxyConfig" />
+            </template>
+          </VueUiAccordion>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_accordion }}
+        </template>
+      </Box>
+
       <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_table_heatmap)">
         <template #title>
-          <!-- <BaseIcon name="chartTreemap"/> -->
+          <BaseIcon name="chartTable"/>
           VueUiTableHeatmap
         </template>
         <template #info>

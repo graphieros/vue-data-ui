@@ -44,6 +44,7 @@ import VueUiWaffle from "./vue-ui-waffle.vue";
 import VueUiWheel from "./vue-ui-wheel.vue";
 import VueUiXy from "./vue-ui-xy.vue";
 import VueUiTableHeatmap from "./vue-ui-table-heatmap.vue";
+import VueUiAccordion from "./vue-ui-accordion.vue";
 
 const props = defineProps({
     component: { type: String },
@@ -52,7 +53,7 @@ const props = defineProps({
 })
 
 const isError = computed(() => {
-    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiKpi", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy", "VueUiTreemap", "VueUiTableHeatmap"].includes(props.component)
+    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiKpi", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy", "VueUiTreemap", "VueUiTableHeatmap", "VueUiAccordion"].includes(props.component)
 });
 
 const vue_ui_3d_bar = ref(null);
@@ -128,7 +129,7 @@ const recalculateHeight = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
-        throw new Error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n. VueUi3dBar\n. VueUiAgePyramid\n. VueUiAnnotator\n. VueUiCandlestick\n. VueUiChestnut\n. VueUiDashboard\n. VueUiDigits\n. VueUiDonutEvolution\n. VueUiDonut\n. VueUiGauge\n. VueUiHeatmap\n. VueUiMiniLoadar\n. VueUiKpi\n. VueUiMolecule\n. VueUiMoodRadar\n. VueUiNestedDonuts\n. VueUiOnion\n. VueUiQuadrant\n. VueUiRadar\n. VueUiRating\n. VueUiRelationCircle\n. VueUiRings\n. VueUiScatter\n. VueUiScreenshot\n. VueUiSkeleton\n. VueUiSmiley\n. VueUiSparkbar\n. VueUiSparkgauge\n. VueUiSparkHistogram\n. VueUiSparkline\n. VueUiSparkStackbar\n. VueUiTableHeatmap\n. VueUiTableSparkline\n. VueUiTable\n. VueUiThermometer\n. VueUiTiremarks\n. VueUiVerticalBar\n. VueUiWaffle\n. VueUiWheel\n. VueUiXy\n\n`)
+        throw new Error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n. VueUi3dBar\n. VueUiAccordion\n. VueUiAgePyramid\n. VueUiAnnotator\n. VueUiCandlestick\n. VueUiChestnut\n. VueUiDashboard\n. VueUiDigits\n. VueUiDonutEvolution\n. VueUiDonut\n. VueUiGauge\n. VueUiHeatmap\n. VueUiMiniLoadar\n. VueUiKpi\n. VueUiMolecule\n. VueUiMoodRadar\n. VueUiNestedDonuts\n. VueUiOnion\n. VueUiQuadrant\n. VueUiRadar\n. VueUiRating\n. VueUiRelationCircle\n. VueUiRings\n. VueUiScatter\n. VueUiScreenshot\n. VueUiSkeleton\n. VueUiSmiley\n. VueUiSparkbar\n. VueUiSparkgauge\n. VueUiSparkHistogram\n. VueUiSparkline\n. VueUiSparkStackbar\n. VueUiTableHeatmap\n. VueUiTableSparkline\n. VueUiTable\n. VueUiThermometer\n. VueUiTiremarks\n. VueUiVerticalBar\n. VueUiWaffle\n. VueUiWheel\n. VueUiXy\n\n`)
     }
 
     if(vue_ui_table_heatmap.value) {
@@ -348,6 +349,18 @@ defineExpose({
         </div>
         The provided component "{{ component }}" does not exist
     </div>
+
+    <VueUiAccordion v-if="component === 'VueUiAccordion'" :config="config">
+        <template #arrow="{ backgroundColor, color, iconColor }">
+            <slot name="arrow" v-bind="{ backgroundColor, color, iconColor }"/>
+        </template>
+        <template #title="{ color }">
+            <slot name="title" v-bind="{ color }"/>
+        </template>
+        <template #content="{ backgroundColor, color }">
+            <slot name="content" v-bind="{ backgroundColor, color }"/>
+        </template>
+    </VueUiAccordion>
 
     <VueUiTableHeatmap 
         v-if="component === 'VueUiTableHeatmap'"
