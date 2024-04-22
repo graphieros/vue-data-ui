@@ -4651,6 +4651,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiAccordionConfig = {
         open?: boolean;
+        maxHeight: number;
         head?: {
             useArrowSlot?: boolean;
             backgroundColor?: string;

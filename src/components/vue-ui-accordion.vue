@@ -39,6 +39,10 @@ function toggleDetails() {
     init.value += 1;
 }
 
+const maxHeight = computed(() => {
+    return `${accordionConfig.value.maxHeight}px`
+})
+
 </script>
 
 <template>
@@ -101,13 +105,13 @@ div.vue-ui-accordion-content {
     box-sizing: border-box;
     max-height: 0;
     overflow: hidden;
-    padding: 0 10px;
-    transition: max-height 400ms ease-out, border 0ms 400ms linear, opacity 400ms ease-out;
+    transition: max-height 400ms ease-out, opacity 400ms ease-out;
 }
 
 details[open]+div.vue-ui-accordion-content {
-    max-height: 800px;
-    transition: max-height 400ms ease-out, border 0ms linear, opacity 400ms ease-out;
+    max-height: v-bind(maxHeight);
+    overflow-y: auto;
+    transition: max-height 1s ease-out, opacity 1s ease-out;
     opacity: 1;
 }
 
