@@ -110,7 +110,6 @@ div.vue-ui-accordion-content {
 
 details[open]+div.vue-ui-accordion-content {
     max-height: v-bind(maxHeight);
-    overflow-y: auto;
     transition: max-height 1s ease-out, opacity 1s ease-out;
     opacity: 1;
 }
