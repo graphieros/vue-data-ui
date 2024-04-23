@@ -622,19 +622,19 @@ export function createUid() {
         });
 }
 
-export function calcMarkerOffsetX(arc, isTitle = false, offset = 16) {
+export function calcMarkerOffsetX(arc, isTitle = false, offset = 16, useCss = false) {
     let x = 0;
     let offsetX = isTitle ? offset : 0;
-    let anchor = "middle";
+    let anchor = useCss ? 'center' : "middle";
     if (arc.center.endX > arc.cx) {
         x = arc.center.endX + offset + offsetX;
-        anchor = "start";
+        anchor = useCss ? 'left' : "start";
     } else if (arc.center.endX < arc.cx) {
         x = arc.center.endX - offset - offsetX;
-        anchor = "end";
+        anchor = useCss ? 'right' : "end";
     } else {
         x = arc.centerX + offsetX;
-        anchor = "middle";
+        anchor = useCss ? 'center' : "middle";
     }
     return { x, anchor }
 }

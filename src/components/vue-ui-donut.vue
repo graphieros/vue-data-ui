@@ -397,6 +397,12 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+const isSafari = computed(() => {
+    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+})
+
+console.log(isSafari.value)
+
 function selectDatapoint(datapoint, index) {
     emit('selectDatapoint', { datapoint, index })
 }
@@ -617,46 +623,70 @@ defineExpose({
 
             <!-- DATALABELS -->
             <g v-for="(arc, i) in currentDonut" :filter="getBlurFilter(i)">
-                <text
-                    :data-cy="`donut-datalabel-value-${i}`"
-                    v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                    :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                    :x="calcMarkerOffsetX(arc).x"
-                    :y="calcMarkerOffsetY(arc)"
-                    :fill="arc.color"
-                    :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize * 0.8"
-                    font-family="Arial"
-                    :filter="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? ``: `url(#blur_${uid})`"
-                    @click="selectDatapoint(arc, i)"
-                >
-                    ⬤
-                </text>
-                <text
-                    :data-cy="`donut-datalabel-value-${i}`"
-                    v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                    :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
-                    :x="calcMarkerOffsetX(arc, true, 20).x"
-                    :y="calcMarkerOffsetY(arc)"
-                    :fill="donutConfig.style.chart.layout.labels.percentage.color"
-                    :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize"
-                    :style="`font-weight:${donutConfig.style.chart.layout.labels.percentage.bold ? 'bold': ''}`"
-                    @click="selectDatapoint(arc, i)"
-                >
-                    {{ displayArcPercentage(arc, currentDonut)  }} {{ donutConfig.style.chart.layout.labels.value.show ? `(${dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, rounding: donutConfig.style.chart.layout.labels.value.rounding})})` : '' }}
-                </text>
-                <text
-                    :data-cy="`donut-datalabel-name-${i}`"
-                    v-if="isArcBigEnough(arc, true, 20) && mutableConfig.dataLabels.show"
-                    :text-anchor="calcMarkerOffsetX(arc).anchor"
-                    :x="calcMarkerOffsetX(arc, true, 20).x"
-                    :y="calcMarkerOffsetY(arc) + donutConfig.style.chart.layout.labels.percentage.fontSize"
-                    :fill="donutConfig.style.chart.layout.labels.name.color"
-                    :font-size="donutConfig.style.chart.layout.labels.name.fontSize"
-                    :style="`font-weight:${donutConfig.style.chart.layout.labels.name.bold ? 'bold': ''}`"
-                    @click="selectDatapoint(arc, i)"
-                >
-                    {{ arc.name }}
-                </text>
+                <g v-if="donutConfig.style.chart.layout.labels.dataLabels.useLabelSlots">
+                    <foreignObject
+                        :x="calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - 120 : calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - 60 : calcMarkerOffsetX(arc).x"
+                        :y="calcMarkerOffsetY(arc) - (isSafari ? 20 : 0)"
+                        width="120"
+                        height="60"
+                        style="overflow: visible;"
+                    >
+                        <div :class="{'vue-ui-donut-datalabel-slot': true, 'vue-ui-donut-datalabel-slot-not-safari' : !isSafari}">
+                            <slot name="dataLabel" v-bind="{
+                                datapoint: arc, 
+                                isBlur: !defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i,
+                                isSafari: isSafari,
+                                isVisible: isArcBigEnough(arc) && mutableConfig.dataLabels.show,
+                                textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor,
+                                flexAlign: calcMarkerOffsetX(arc, true, 16).anchor,
+                                percentage: displayArcPercentage(arc, currentDonut),
+                            }"/>
+                        </div>
+                    </foreignObject>
+                </g>
+
+                <g v-else>
+                    <text
+                        :data-cy="`donut-datalabel-value-${i}`"
+                        v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                        :text-anchor="calcMarkerOffsetX(arc, true).anchor"
+                        :x="calcMarkerOffsetX(arc).x"
+                        :y="calcMarkerOffsetY(arc)"
+                        :fill="arc.color"
+                        :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize * 0.8"
+                        font-family="Arial"
+                        :filter="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? ``: `url(#blur_${uid})`"
+                        @click="selectDatapoint(arc, i)"
+                    >
+                        ⬤
+                    </text>
+                    <text
+                        :data-cy="`donut-datalabel-value-${i}`"
+                        v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                        :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
+                        :x="calcMarkerOffsetX(arc, true, 20).x"
+                        :y="calcMarkerOffsetY(arc)"
+                        :fill="donutConfig.style.chart.layout.labels.percentage.color"
+                        :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize"
+                        :style="`font-weight:${donutConfig.style.chart.layout.labels.percentage.bold ? 'bold': ''}`"
+                        @click="selectDatapoint(arc, i)"
+                    >
+                        {{ displayArcPercentage(arc, currentDonut)  }} {{ donutConfig.style.chart.layout.labels.value.show ? `(${dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, rounding: donutConfig.style.chart.layout.labels.value.rounding})})` : '' }}
+                    </text>
+                    <text
+                        :data-cy="`donut-datalabel-name-${i}`"
+                        v-if="isArcBigEnough(arc, true, 20) && mutableConfig.dataLabels.show"
+                        :text-anchor="calcMarkerOffsetX(arc).anchor"
+                        :x="calcMarkerOffsetX(arc, true, 20).x"
+                        :y="calcMarkerOffsetY(arc) + donutConfig.style.chart.layout.labels.percentage.fontSize"
+                        :fill="donutConfig.style.chart.layout.labels.name.color"
+                        :font-size="donutConfig.style.chart.layout.labels.name.fontSize"
+                        :style="`font-weight:${donutConfig.style.chart.layout.labels.name.bold ? 'bold': ''}`"
+                        @click="selectDatapoint(arc, i)"
+                    >
+                        {{ arc.name }}
+                    </text>
+                </g>
             </g>
 
             <!-- LEGEND AS G -->
@@ -799,6 +829,18 @@ path {
     justify-content: center;
     text-align:center;
     width:100%;
+}
+
+.vue-ui-donut-datalabel-slot {
+    width: 100%;
+    height: -webkit-fit-content;
+    height: fit-content;
+}
+
+.vue-ui-donut-datalabel-slot-not-safari {
+    position: absolute;
+    top:0;
+    transform: translateY(-50%);
 }
 
 </style>

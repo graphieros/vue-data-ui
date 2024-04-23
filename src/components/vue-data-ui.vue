@@ -523,6 +523,9 @@ defineExpose({
         <template #svg="{ svg }">
             <slot name="svg" :svg="svg"></slot>
         </template>
+        <template #dataLabel="{ datapoint, isBlur, isSafari, isVisible, flexAlign, textAlign, percentage }">
+            <slot name="dataLabel" v-bind="{ datapoint, isBlur, isSafari, isVisible, flexAlign, textAlign, percentage }"/>
+        </template>
         <template #legend="{ legend }">
             <slot name="legend" v-bind:legend="legend" />
         </template>

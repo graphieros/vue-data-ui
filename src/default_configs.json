@@ -351,6 +351,7 @@
                     "labels": {
                         "dataLabels": {
                             "show": true,
+                            "useLabelSlots": false,
                             "hideUnderValue": 3,
                             "prefix": "",
                             "suffix": ""

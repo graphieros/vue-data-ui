@@ -2534,6 +2534,7 @@ declare module 'vue-data-ui' {
                     labels?: {
                         dataLabels?: {
                             show?: boolean;
+                            useLabelSlots?: boolean;
                             hideUnderValue?: number;
                             prefix?: string;
                             suffix?: string;

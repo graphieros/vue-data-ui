@@ -2634,6 +2634,13 @@ const moodRadarConfig = ref({
 const donutConfig = ref({
   style: {
     chart: {
+      layout: {
+        labels: {
+          dataLabels: {
+            useLabelSlots: true
+          }
+        }
+      },
       tooltip: {
         // customFormat: ({ datapoint, seriesIndex, series , config}) => {
         //   console.log({datapoint, seriesIndex, series, config});
@@ -4242,7 +4249,7 @@ const tableHeatmapDataset = ref([
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter
@@ -4498,7 +4505,7 @@ const tableHeatmapDataset = ref([
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
         <template #title>
           <BaseIcon name="chartDonut" />
           VueUiDonut
@@ -4519,6 +4526,13 @@ const tableHeatmapDataset = ref([
             :config="donutConfig"
             @selectLegend="selectLegendDonut"
           >
+          <template #dataLabel="{ datapoint, isBlur, isVisible, textAlign, flexAlign, percentage }">
+            <div v-if="isVisible" :style="`background: ${datapoint.color}30; border: 1px solid ${datapoint.color};text-align:${textAlign};display:flex; place-items:center; justify-content:flex-${flexAlign}`">
+              <VueUiIcon name="chartDonut" :stroke="datapoint.color"/>
+              {{ datapoint.name }}
+            </div>
+          </template>
+
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
               {{ datapoint.name }}
@@ -4546,24 +4560,30 @@ const tableHeatmapDataset = ref([
           </VueDataUiTest>
         </template>
         <template #prod>
-          <!-- <VueDataUi
+          <VueDataUi
             component="VueUiDonut"
             ref="donuttest"
             :dataset="donutDataset"
             :config="donutConfig"
             @selectLegend="selectLegendDonut"
           >
+          <template #dataLabel="{ datapoint, isBlur, isVisible, textAlign, flexAlign, percentage }">
+            <div v-if="isVisible" :style="`background: ${datapoint.color}30; border: 1px solid ${datapoint.color};text-align:${textAlign};display:flex; place-items:center; justify-content:flex-${flexAlign}`">
+              <VueUiIcon name="chartDonut" :stroke="datapoint.color"/>
+              {{ datapoint.name }}
+            </div>
+          </template>
             <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
             </template>
-          </VueDataUi> -->
+          </VueDataUi>
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_donut }}
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
         <template #title>
           <BaseIcon name="chartSparkStackbar" />
           VueUiSparkStackbar
