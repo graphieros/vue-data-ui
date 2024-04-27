@@ -45,6 +45,8 @@ import VueUiKpi from "./components/vue-ui-kpi.vue";
 import VueUiTreemap from "./components/vue-ui-treemap.vue";
 import VueUiTableHeatmap from "./components/vue-ui-table-heatmap.vue";
 import VueUiAccordion from "./components/vue-ui-accordion.vue";
+import VueUiQuickChart from "./components/vue-ui-quick-chart.vue";
+import { getPalette } from "./lib";
 
 export { 
     VueUiXy, 
@@ -85,6 +87,7 @@ export {
     VueUiTableSparkline,
     Arrow,
     VueUiMiniLoader,
+    getPalette,
     getVueDataUiConfig,
     VueUiNestedDonuts,
     VueUiSparkgauge,
@@ -93,5 +96,6 @@ export {
     VueUiKpi,
     VueUiTreemap,
     VueUiTableHeatmap,
-    VueUiAccordion
+    VueUiAccordion,
+    VueUiQuickChart,
 };

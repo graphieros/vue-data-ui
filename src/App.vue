@@ -59,6 +59,7 @@ import GalaxyTest from "./components/vue-ui-galaxy.vue";
 import TreemapTest from "./components/vue-ui-treemap.vue";
 import TableHeatmapTest from "./components/vue-ui-table-heatmap.vue";
 import AccordionTest from "./components/vue-ui-accordion.vue";
+import QuickTest from "./components/vue-ui-quick-chart.vue";
 
 const dataset = ref([
   {
@@ -2635,9 +2636,12 @@ const donutConfig = ref({
   style: {
     chart: {
       layout: {
+        donut: {
+          strokeWidth: 130
+        },
         labels: {
           dataLabels: {
-            useLabelSlots: true
+            useLabelSlots: false
           }
         }
       },
@@ -3258,6 +3262,68 @@ const tableHeatmapDataset = ref([
   }
 ])
 
+const quickDatasetDonut = ref([
+  {
+    name: 'serie1',
+    value: 10,
+  },
+  {
+    name: 'Serie 2',
+    value: 20,
+  },
+  {
+    name: 'Serie 3',
+    value: 5,
+  },
+  {
+    name: 'Serie 4',
+    value: 2,
+  },
+  {
+    name: 'Serie 5',
+    value: 1,
+  },
+]);
+
+const quickDatasetLine = ref([
+  {
+    name: 'Serie1',
+    values: [1, 2, 3, 2, 3, 4, 3, 4, 5]
+  },
+  {
+    name: 'Serie2',
+    values: [5, 6, 7, 6, 7, 8, 7, 8, 9]
+  },
+  {
+    name: 'Serie3',
+    values: [1, 2, 3, 5, 8, 13, 21, 13, 8]
+  },
+])
+
+
+const quickDatasetSimpleLine = ref([1, 2, 3, 5, 8, 13, 21, 34, 55, 89])
+const quickDatasetSimpleBar = ref([1, 2, -3, 5, 8])
+
+const quickDatasetBar = ref([
+  {
+    name: 'Serie1',
+    values: [1, 2, 3, 2, 3]
+  },
+  {
+    name: 'Serie2',
+    values: [5, 6, 7, 6, 7]
+  },
+  {
+    name: 'Serie3',
+    values: [1, 2, 3, 5, 8,]
+  },
+])
+
+const quickConfig = ref({
+  title: 'Some title that can be kinda long',
+  xyPeriods: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+})
+
 </script>
 
 <template>
@@ -3398,6 +3464,32 @@ const tableHeatmapDataset = ref([
       </template>
       </Box>
 
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_quick_chart)">
+        <template #title>
+          <BaseIcon name="vueDataUi"/>
+          VueUiQuickChart
+        </template>
+        <template #info>
+        </template>
+        <template #dev>
+          <QuickTest :dataset="quickDatasetDonut" :config="quickConfig"/>
+          <QuickTest :dataset="quickDatasetLine" :config="quickConfig"/>
+          <QuickTest :dataset="quickDatasetSimpleLine" :config="quickConfig"/>
+          <QuickTest :dataset="quickDatasetBar" :config="quickConfig"/>
+          <QuickTest :dataset="quickDatasetSimpleBar" :config="quickConfig"/>
+        </template>
+        <template #prod>
+          <VueDataUi component="VueUiQuickChart" :dataset="quickDatasetDonut" :config="quickConfig"/>
+          <VueUiQuickChart :dataset="quickDatasetLine" :config="quickConfig"/>
+          <VueUiQuickChart :dataset="quickDatasetSimpleLine" :config="quickConfig"/>
+          <VueUiQuickChart :dataset="quickDatasetBar" :config="quickConfig"/>
+          <VueUiQuickChart :dataset="quickDatasetSimpleBar" :config="quickConfig"/>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_quick_chart }}
+        </template>
+      </Box>
+
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_accordion)">
         <template #title>
           <BaseIcon name="accordion"/>
@@ -3445,7 +3537,7 @@ const tableHeatmapDataset = ref([
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_table_heatmap)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_table_heatmap)">
         <template #title>
           <BaseIcon name="chartTable"/>
           VueUiTableHeatmap

@@ -506,7 +506,7 @@ defineExpose({
             <!-- LABEL CONNECTOR -->
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="5" :id="`blur_std_${uid}`" />
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
                     <feColorMatrix type="saturate" values="0" />
                 </filter>
             </defs>
@@ -523,6 +523,13 @@ defineExpose({
                     :filter="getBlurFilter(i)"
                 />
             </g>
+
+            <circle
+                :cx="svg.width / 2"
+                :cy="svg.height / 2"
+                :r="130"
+                :fill="donutConfig.style.chart.backgroundColor"
+            />
 
             <path 
                 v-for="(arc, i) in currentDonut"
@@ -567,12 +574,6 @@ defineExpose({
                 @mouseleave="isTooltip = false; selectedSerie = null"
                 @click="selectDatapoint(arc, i)"
             />
-
-            <circle 
-                :cx="svg.width / 2" 
-                :cy="svg.height / 2" 
-                :r="svg.width - 400 - donutConfig.style.chart.layout.donut.strokeWidth / 2"
-                :fill="donutConfig.style.chart.backgroundColor"/>
 
             <!-- HOLLOW LABELS -->
             <text 
@@ -646,25 +647,20 @@ defineExpose({
                 </g>
 
                 <g v-else>
-                    <text
-                        :data-cy="`donut-datalabel-value-${i}`"
+                    <circle
                         v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                        :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                        :x="calcMarkerOffsetX(arc).x"
-                        :y="calcMarkerOffsetY(arc)"
+                        :cx="calcMarkerOffsetX(arc).x"
+                        :cy="calcMarkerOffsetY(arc) - 3.5"
                         :fill="arc.color"
-                        :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize * 0.8"
-                        font-family="Arial"
+                        :r="3"
                         :filter="!defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? ``: `url(#blur_${uid})`"
                         @click="selectDatapoint(arc, i)"
-                    >
-                        ⬤
-                    </text>
+                    />
                     <text
                         :data-cy="`donut-datalabel-value-${i}`"
                         v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                        :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
-                        :x="calcMarkerOffsetX(arc, true, 20).x"
+                        :text-anchor="calcMarkerOffsetX(arc, true, 12).anchor"
+                        :x="calcMarkerOffsetX(arc, true, 12).x"
                         :y="calcMarkerOffsetY(arc)"
                         :fill="donutConfig.style.chart.layout.labels.percentage.color"
                         :font-size="donutConfig.style.chart.layout.labels.percentage.fontSize"
@@ -675,9 +671,9 @@ defineExpose({
                     </text>
                     <text
                         :data-cy="`donut-datalabel-name-${i}`"
-                        v-if="isArcBigEnough(arc, true, 20) && mutableConfig.dataLabels.show"
+                        v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
                         :text-anchor="calcMarkerOffsetX(arc).anchor"
-                        :x="calcMarkerOffsetX(arc, true, 20).x"
+                        :x="calcMarkerOffsetX(arc, true, 12).x"
                         :y="calcMarkerOffsetY(arc) + donutConfig.style.chart.layout.labels.percentage.fontSize"
                         :fill="donutConfig.style.chart.layout.labels.name.color"
                         :font-size="donutConfig.style.chart.layout.labels.name.fontSize"

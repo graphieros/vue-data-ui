@@ -13,7 +13,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-44-green)
+![Static Badge](https://img.shields.io/badge/components-45-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -36,6 +36,7 @@ Available components:
 - [VueUiNestedDonuts](https://vue-data-ui.graphieros.com/docs#vue-ui-nested-donuts)
 - [VueUiOnion](https://vue-data-ui.graphieros.com/docs#vue-ui-onion)
 - [VueUiQuadrant](https://vue-data-ui.graphieros.com/docs#vue-ui-quadrant)
+- [VueUiQuickChart](https://vue-data-ui.graphieros.com/docs#vue-ui-quick-chart)
 - [VueUiRadar](https://vue-data-ui.graphieros.com/docs#vue-ui-radar)
 - [VueUiRelationCircle](https://vue-data-ui.graphieros.com/docs#vue-ui-relation-circle)
 - [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
