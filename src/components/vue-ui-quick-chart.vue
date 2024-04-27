@@ -738,7 +738,7 @@ defineExpose({
                         </text>
                     </template>
                 </g>
-                <g class="donut-hollow quick-animation">
+                <g class="donut-hollow quick-animation" v-if="quickConfig.donutShowTotal">
                     <text
                         text-anchor="middle"
                         :x="donut.drawingArea.centerX"
@@ -851,6 +851,7 @@ defineExpose({
                         :y="line.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6"
                         :font-size="quickConfig.xyLabelsXFontSize"
                         text-anchor="middle"
+                        :fill="quickConfig.color"
                     >
                         {{ quickConfig.xyPeriods[i] }}
                     </text>
@@ -1023,6 +1024,7 @@ defineExpose({
                         :y="bar.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6"
                         :font-size="quickConfig.xyLabelsXFontSize"
                         text-anchor="middle"
+                        :fill="quickConfig.color"
                     >
                         {{ quickConfig.xyPeriods[i] }}
                     </text>
@@ -1044,7 +1046,7 @@ defineExpose({
                         />
                     </template>
                 </g>
-                <g class="dataLabels">
+                <g class="dataLabels" v-if="quickConfig.showDataLabels">
                     <template v-for="(ds, i) in bar.dataset">
                         <text 
                             v-for="(plot, j) in ds.coordinates"
