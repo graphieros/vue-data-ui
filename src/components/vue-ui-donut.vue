@@ -523,7 +523,7 @@ defineExpose({
                     :filter="getBlurFilter(i)"
                 />
             </g>
-
+            
             <circle
                 :cx="svg.width / 2"
                 :cy="svg.height / 2"
@@ -574,6 +574,12 @@ defineExpose({
                 @mouseleave="isTooltip = false; selectedSerie = null"
                 @click="selectDatapoint(arc, i)"
             />
+
+            <circle 
+                :cx="svg.width / 2" 
+                :cy="svg.height / 2" 
+                :r="svg.width - 400 - donutConfig.style.chart.layout.donut.strokeWidth / 2"
+                :fill="donutConfig.style.chart.backgroundColor"/>
 
             <!-- HOLLOW LABELS -->
             <text 
