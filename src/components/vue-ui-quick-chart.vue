@@ -828,6 +828,7 @@ defineExpose({
                             :y="label.y + quickConfig.xyLabelsYFontSize / 3"
                             text-anchor="end"
                             :font-size="quickConfig.xyLabelsYFontSize"
+                            :fill="quickConfig.color"
                         >
                             {{ label.value }}
                         </text>
@@ -999,6 +1000,7 @@ defineExpose({
                             :y="label.y + quickConfig.xyLabelsYFontSize / 3"
                             text-anchor="end"
                             :font-size="quickConfig.xyLabelsYFontSize"
+                            :fill="quickConfig.color"
                         >
                             {{ label.value }}
                         </text>
