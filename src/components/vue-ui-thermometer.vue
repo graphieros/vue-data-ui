@@ -8,7 +8,8 @@ import {
     getMissingDatasetAttributes,
     objectIsEmpty,
     opacity, 
-    palette, 
+    palette,
+    XMLNS
 } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
@@ -308,7 +309,7 @@ defineExpose({
             :hasXls="false"
         />
 
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" :style="`background:${thermoConfig.style.chart.backgroundColor}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" :style="`background:${thermoConfig.style.chart.backgroundColor}`">
             <defs>
                 <clipPath id="vueUiPill" clipPathUnits="objectBoundingBox">
                     <rect 

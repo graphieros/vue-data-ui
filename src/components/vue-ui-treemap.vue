@@ -22,7 +22,8 @@ import {
     isFunction,
     lightenHexColor,
     objectIsEmpty,
-    palette
+    palette,
+    XMLNS
 } from '../lib';
 import {
     generateTreemap,
@@ -489,7 +490,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg v-if="isDataset"
+        <svg :xmlns="XMLNS" v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
             data-cy="treemap-svg" :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width} ${viewBox.height}`"
             :style="`max-width:100%; overflow: hidden; background:${treemapConfig.style.chart.backgroundColor};color:${treemapConfig.style.chart.color}`">

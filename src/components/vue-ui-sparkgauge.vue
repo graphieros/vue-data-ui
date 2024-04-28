@@ -2,7 +2,15 @@
 import { ref, computed, onMounted } from "vue";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
-import { createUid, dataLabel, interpolateColorHex, objectIsEmpty, error, getMissingDatasetAttributes } from "../lib";
+import { 
+    createUid, 
+    dataLabel, 
+    error, 
+    getMissingDatasetAttributes,
+    interpolateColorHex, 
+    objectIsEmpty,
+    XMLNS
+} from "../lib";
 import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
@@ -144,7 +152,7 @@ const trackColor = computed(() => {
     <div v-if="sparkgaugeConfig.style.title.show && nameLabel && sparkgaugeConfig.style.title.position === 'top'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${sparkgaugeConfig.style.title.fontSize}px;text-align:${sparkgaugeConfig.style.title.textAlign};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};color:${sparkgaugeConfig.style.title.color}`">
         {{ nameLabel }}
     </div>
-    <svg v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:${sparkgaugeConfig.style.background}; width:100%;`">
+    <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:${sparkgaugeConfig.style.background}; width:100%;`">
         <defs>
             <linearGradient :id="`gradient_${ uid}`" x1="-10%" y1="100%" x2="110%" y2="100%">
                 <stop offset="0%" :stop-color="sparkgaugeConfig.style.colors.min"/>

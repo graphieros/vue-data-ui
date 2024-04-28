@@ -11,7 +11,8 @@ import {
     isFunction,
     objectIsEmpty,
     opacity, 
-    palette, 
+    palette,
+    XMLNS
 } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
@@ -484,7 +485,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
 
             <!-- TITLE AS G -->
             <g v-if="scatterConfig.style.title.text && mutableConfig.inside && !isPrinting">

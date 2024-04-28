@@ -221,7 +221,8 @@
                         "values": [],
                         "fontSize": 6,
                         "showOnlyFirstAndLast": false,
-                        "yOffset": 0
+                        "yOffset": 0,
+                        "rotation": 0
                     }
                 }
             },
@@ -3707,6 +3708,7 @@
         "xyPaddingRight": 12,
         "xyPaddingTop": 24,
         "xyPeriods": [],
+        "xyPeriodLabelsRotation": 0,
         "xyScaleSegments": 10,
         "xyShowAxis": true,
         "xyShowGrid": true,

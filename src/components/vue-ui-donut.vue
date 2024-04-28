@@ -16,7 +16,8 @@ import {
     makeDonut,
     objectIsEmpty, 
     opacity, 
-    palette, 
+    palette,
+    XMLNS
 } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
@@ -465,7 +466,7 @@ defineExpose({
             @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
         />
 
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             
             <!-- DEFS -->
             <defs>

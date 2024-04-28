@@ -1,6 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { palette, createUid, error, objectIsEmpty, getMissingDatasetAttributes } from "../lib.js";
+import { 
+    createUid, 
+    error, 
+    getMissingDatasetAttributes,
+    objectIsEmpty, 
+    palette,
+    XMLNS
+} from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -345,6 +352,7 @@ defineExpose({
         />
 
         <svg
+            :xmlns="XMLNS"
             v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`0 0 ${size} ${size}`"

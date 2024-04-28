@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import mainConfig from "../default_configs.json";
+import { XMLNS } from "../lib";
 
 const props = defineProps({
     config: {
@@ -56,7 +57,7 @@ const barBlur = computed(() => `blur(${loaderConfig.value.bar.trackBlur}px) hue-
 </script>
 
 <template>
-    <svg :viewBox="viewBox[loaderConfig.type]" style="background: transparent" width="100%">
+    <svg :xmlns="XMLNS" :viewBox="viewBox[loaderConfig.type]" style="background: transparent" width="100%">
         <g v-if="loaderConfig.type === 'onion'">        
             <path d="M 3 32 C 3 45 12 62 32 62 A 1 1 0 0 0 32 3" stroke-width="4" fill="none" stroke-linecap="round" :style="onionStyle.gutter + onionStyle.gutterBlur"/>
             <path d="M 13 32 C 13 39 19 52 32 52 A 1 1 0 0 0 32 13" stroke-width="4" fill="none" stroke-linecap="round" :style="onionStyle.gutter + onionStyle.gutterBlur"/>

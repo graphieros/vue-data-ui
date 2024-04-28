@@ -15,7 +15,8 @@ import {
     objectIsEmpty, 
     opacity, 
     palette, 
-    shiftHue, 
+    shiftHue,
+    XMLNS
 } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
@@ -521,7 +522,7 @@ defineExpose({
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
        />
 
-        <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
 
             <!-- TITLE AS G -->
             <g v-if="!selectedNut">

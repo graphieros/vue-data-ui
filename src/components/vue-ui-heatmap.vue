@@ -8,10 +8,11 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
-    isFunction,
+    getMissingDatasetAttributes,
     interpolateColorHex,
+    isFunction,
     objectIsEmpty,
-getMissingDatasetAttributes,
+    XMLNS
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import pdf from "../pdf";
@@ -382,7 +383,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.heightWithLegend}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.heightWithLegend}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
             <!-- TITLE AS G -->
             <g v-if="heatmapConfig.style.title.text && mutableConfig.inside && !isPrinting">
                 <text

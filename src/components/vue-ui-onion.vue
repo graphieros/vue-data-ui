@@ -10,8 +10,8 @@ import {
     functionReturnsString,
     isFunction,
     objectIsEmpty,
-    opacity, 
-    palette, 
+    palette,
+    XMLNS
 } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
@@ -407,15 +407,7 @@ defineExpose({
         />
 
         <!-- CHART -->
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
-
-            <!-- <defs>
-                <radialGradient :id="`onion_gradient_${uid}`">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(onionConfig.style.chart.backgroundColor)}00`" />
-                    <stop offset="90%" :stop-color="'#FFFFFF' + opacity[onionConfig.style.chart.gradientIntensity]" />
-                    <stop offset="100%" :stop-color="`${convertColorToHex(onionConfig.style.chart.backgroundColor)}00`" />
-                </radialGradient>
-            </defs> -->
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
 
             <!-- TITLE AS G -->
             <g v-if="onionConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">

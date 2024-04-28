@@ -9,7 +9,8 @@ import {
     makePath,
     objectIsEmpty, 
     opacity, 
-    shiftHue, 
+    shiftHue,
+    XMLNS
 } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
@@ -341,7 +342,7 @@ defineExpose({
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />
 
-        <svg v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"
+        <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"
         :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`">
             <!-- DEFS -->

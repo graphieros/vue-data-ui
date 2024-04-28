@@ -8,7 +8,8 @@ import {
     objectIsEmpty,
     opacity, 
     palette, 
-    shiftHue, 
+    shiftHue,
+    XMLNS 
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
@@ -176,7 +177,7 @@ function selectDatapoint(datapoint, index) {
             
         </div>
         <!-- CHART -->
-        <svg v-if="isDataset" width="100%" :viewBox="`0 0 ${svg.width} ${svg.height}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" width="100%" :viewBox="`0 0 ${svg.width} ${svg.height}`">
         <defs>
             <linearGradient v-for="(rect, i) in drawableDataset" :key="`stack_gradient_${i}`" gradientTransform="rotate(90)" :id="`stack_gradient_${i}_${uid}`">
                 <stop offset="0%" :stop-color="rect.color"/>

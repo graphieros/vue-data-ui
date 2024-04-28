@@ -2659,6 +2659,14 @@ const donutConfig = ref({
 
 const xyConfig = ref({
   chart: {
+    grid: {
+      labels: {
+        xAxisLabels: {
+          rotation: 0,
+          values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+        }
+      }
+    },
     labels: {
       fontSize: 30
     },
@@ -3321,7 +3329,8 @@ const quickDatasetBar = ref([
 
 const quickConfig = ref({
   title: 'Some title that can be kinda long',
-  xyPeriods: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+  xyPeriods: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
+  xyPeriodLabelsRotation: -20
 })
 
 </script>

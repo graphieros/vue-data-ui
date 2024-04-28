@@ -12,7 +12,8 @@ import {
     getMissingDatasetAttributes,
     isFunction,
     objectIsEmpty, 
-    palette, 
+    palette,
+    XMLNS
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
@@ -428,7 +429,7 @@ defineExpose({
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
         />
 
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="galaxy-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${galaxyConfig.style.chart.backgroundColor};color:${galaxyConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="galaxy-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${galaxyConfig.style.chart.backgroundColor};color:${galaxyConfig.style.chart.color}`">
             
             <!-- PATHS -->
             <g v-for="datapoint in galaxySet">

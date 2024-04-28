@@ -5,7 +5,8 @@ import {
     createUid,
     error,
     objectIsEmpty,
-    shiftHue, 
+    shiftHue,
+    XMLNS
 } from "../lib.js";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
@@ -181,6 +182,7 @@ defineExpose({
 
                     <!-- STAR FIRST LAYER -->
                     <svg
+                        :xmlns="XMLNS"
                         v-else
                         viewBox="0 0 100 100"
                         :height="ratingConfig.style.itemSize"
@@ -236,6 +238,7 @@ defineExpose({
 
                     <!-- STAR SECOND LAYER -->
                     <svg
+                        :xmlns="XMLNS"
                         :data-cy="`rating-shape-overlay-${i}`"
                         v-else
                         :viewBox="`0 0 ${calcShapeFill(i)} 100`"
@@ -267,6 +270,7 @@ defineExpose({
 
                     <!-- MOUSE TRAPS -->
                     <svg
+                        :xmlns="XMLNS"
                         :viewBox="`0 0 100 100`"
                         :height="ratingConfig.style.itemSize"
                         class="vue-ui-rating-unit"

@@ -14,7 +14,8 @@ import {
     isFunction, 
     makeDonut, 
     objectIsEmpty,
-    palette, 
+    palette,
+    XMLNS 
 } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
@@ -552,7 +553,7 @@ defineExpose({
             @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
         />
 
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             <!-- NESTED DONUTS -->
             <g v-for="(item, i) in mutableDataset">
                 <g v-for="(arc, j) in item.donut">

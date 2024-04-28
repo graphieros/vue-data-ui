@@ -9,6 +9,7 @@ import {
     objectIsEmpty,
     opacity,
     shiftHue,
+    XMLNS
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
@@ -231,7 +232,7 @@ function selectDatapoint(datapoint, index) {
             </span>
         </div>
         <!-- CHART -->
-        <svg v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${sparklineConfig.style.backgroundColor};overflow:visible`">
+        <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${sparklineConfig.style.backgroundColor};overflow:visible`">
             <!-- DEFS -->
             <defs>
                 <linearGradient

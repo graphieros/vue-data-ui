@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { error, objectIsEmpty, shiftHue } from "../lib";
+import { error, objectIsEmpty, shiftHue, XMLNS } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 
@@ -171,7 +171,7 @@ function getActiveColor(index) {
                     </div>
                 </template>
 
-                <svg v-if="ratingConfig.style.icons.filled" style="transition: all 0.1s ease-in-out;position:absolute;top:0;left:0" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(0)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled" style="transition: all 0.1s ease-in-out;position:absolute;top:0;left:0" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(0)" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <defs>
                         <radialGradient id="vueUiSmiley0">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.active[0], 0.05)"/>
@@ -183,7 +183,7 @@ function getActiveColor(index) {
                 <svg v-else style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out;" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(0)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" /></svg>
 
                 <!-- RATING -->
-                <svg v-if="ratingConfig.style.icons.filled && isReadonly" style="transition: all 0.1s ease-in-out;position:absolute;top:0;left:0" height="100%" :viewBox="`0 0 ${calcShapeFill(0)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[0]" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled && isReadonly" style="transition: all 0.1s ease-in-out;position:absolute;top:0;left:0" height="100%" :viewBox="`0 0 ${calcShapeFill(0)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[0]" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <defs>
                         <radialGradient id="vueUiSmiley0">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.activeReadonly[0], 0.05)"/>
@@ -209,7 +209,7 @@ function getActiveColor(index) {
                     </div>
                 </template>
 
-                <svg v-if="ratingConfig.style.icons.filled" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(1)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(1)" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <defs>
                         <radialGradient id="vueUiSmiley1">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.active[1], 0.05)"/>
@@ -218,10 +218,10 @@ function getActiveColor(index) {
                     </defs>
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 10.66h-6l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h6l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm-5.99 -5l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" stroke-width="0" :fill="getActiveColor(1)" /></svg>
 
-                <svg v-else style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(1)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9 15l6 0" /></svg>
+                <svg :xmlns="XMLNS" v-else style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(1)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9 15l6 0" /></svg>
 
                 <!-- RATING -->
-                <svg v-if="ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(1)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[1]" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(1)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[1]" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <defs>
                         <radialGradient id="vueUiSmiley1">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.activeReadonly[1], 0.05)"/>
@@ -247,7 +247,7 @@ function getActiveColor(index) {
                     </div>
                 </template>
 
-                <svg v-if="ratingConfig.style.icons.filled" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(2)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(2)" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <defs>
                         <radialGradient id="vueUiSmiley2">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.activeReadonly[2], 0.05)"/>
@@ -256,10 +256,10 @@ function getActiveColor(index) {
                     </defs>
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-7.99 5.66l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" stroke-width="0" :fill="getActiveColor(2)" /></svg>
 
-                <svg v-else style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(2)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /></svg>
+                <svg :xmlns="XMLNS" v-else style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(2)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /></svg>
 
                 <!-- RATING -->
-                <svg v-if="ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(2)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[2]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(2)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[2]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <defs>
                         <radialGradient id="vueUiSmiley2">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.activeReadonly[2], 0.05)"/>
@@ -268,7 +268,7 @@ function getActiveColor(index) {
                     </defs>
                 <path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-7.99 5.66l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" stroke-width="0" :fill="ratingConfig.style.icons.useGradient ? `url(#vueUiSmiley2)` : ratingConfig.style.colors.activeReadonly[2]" /></svg>
 
-                <svg v-if="!ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(2)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[2]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /></svg>
+                <svg :xmlns="XMLNS" v-if="!ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(2)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[2]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /></svg>
             </div>
 
             <!--3-->
@@ -285,7 +285,7 @@ function getActiveColor(index) {
                     </div>
                 </template>
 
-                <svg v-if="ratingConfig.style.icons.filled" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(3)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(3)" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <defs>
                         <radialGradient id="vueUiSmiley3">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.activeReadonly[3], 0.95)"/>
@@ -294,10 +294,10 @@ function getActiveColor(index) {
                     </defs>
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.8 10.946a1 1 0 0 0 -1.414 .014a2.5 2.5 0 0 1 -3.572 0a1 1 0 0 0 -1.428 1.4a4.5 4.5 0 0 0 6.428 0a1 1 0 0 0 -.014 -1.414zm-6.19 -5.286l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z" stroke-width="0" :fill="getActiveColor(3)" /></svg>
 
-                <svg v-else style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(3)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15a3.5 3.5 0 0 0 5 0" /></svg>
+                <svg :xmlns="XMLNS" v-else style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(3)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15a3.5 3.5 0 0 0 5 0" /></svg>
 
                 <!-- RATING -->
-                <svg v-if="ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(3)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[3]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(3)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[3]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <defs>
                         <radialGradient id="vueUiSmiley3">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.activeReadonly[3], 0.95)"/>
@@ -306,7 +306,7 @@ function getActiveColor(index) {
                     </defs>
                 <path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.8 10.946a1 1 0 0 0 -1.414 .014a2.5 2.5 0 0 1 -3.572 0a1 1 0 0 0 -1.428 1.4a4.5 4.5 0 0 0 6.428 0a1 1 0 0 0 -.014 -1.414zm-6.19 -5.286l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z" stroke-width="0" :fill="ratingConfig.style.icons.useGradient ? `url(#vueUiSmiley3)` : ratingConfig.style.colors.activeReadonly[3]"/></svg>
 
-                <svg v-if="!ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(3)} 24`"  stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[3]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15a3.5 3.5 0 0 0 5 0" /></svg>
+                <svg :xmlns="XMLNS" v-if="!ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(3)} 24`"  stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[3]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15a3.5 3.5 0 0 0 5 0" /></svg>
             </div>
 
             <!--4-->
@@ -323,7 +323,7 @@ function getActiveColor(index) {
                     </div>
                 </template>
 
-                <svg v-if="ratingConfig.style.icons.filled" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(4)"  fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(4)"  fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <defs>
                         <radialGradient id="vueUiSmiley4">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.activeReadonly[4], 0.9)"/>
@@ -332,10 +332,10 @@ function getActiveColor(index) {
                     </defs>
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 9.66h-6a1 1 0 0 0 -1 1v.05a3.975 3.975 0 0 0 3.777 3.97l.227 .005a4.026 4.026 0 0 0 3.99 -3.79l.006 -.206a1 1 0 0 0 -1 -1.029zm-5.99 -5l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z" stroke-width="0" :fill="getActiveColor(4)" /></svg>
 
-                <svg v-else style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(4)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 9l.01 0" /><path d="M15 9l.01 0" /><path d="M8 13a4 4 0 1 0 8 0h-8" /></svg>
+                <svg :xmlns="XMLNS" v-else style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" viewBox="0 0 24 24" stroke-width="1.5" :stroke="getActiveColor(4)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 9l.01 0" /><path d="M15 9l.01 0" /><path d="M8 13a4 4 0 1 0 8 0h-8" /></svg>
 
                 <!-- RATING -->
-                <svg v-if="ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(4)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[4]"  fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <svg :xmlns="XMLNS" v-if="ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(4)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[4]"  fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <defs>
                         <radialGradient id="vueUiSmiley4">
                             <stop offset="0%" :stop-color="shiftHue(ratingConfig.style.colors.activeReadonly[4], 0.9)"/>
@@ -344,7 +344,7 @@ function getActiveColor(index) {
                     </defs>
                 <path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 9.66h-6a1 1 0 0 0 -1 1v.05a3.975 3.975 0 0 0 3.777 3.97l.227 .005a4.026 4.026 0 0 0 3.99 -3.79l.006 -.206a1 1 0 0 0 -1 -1.029zm-5.99 -5l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z" stroke-width="0" :fill="ratingConfig.style.icons.useGradient ? `url(#vueUiSmiley4)` : ratingConfig.style.colors.activeReadonly[4]" /></svg>
 
-                <svg v-if="!ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(4)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[4]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 9l.01 0" /><path d="M15 9l.01 0" /><path d="M8 13a4 4 0 1 0 8 0h-8" /></svg>
+                <svg :xmlns="XMLNS" v-if="!ratingConfig.style.icons.filled && isReadonly" style="position:absolute;top:0;left:0;transition: all 0.1s ease-in-out" height="100%" :viewBox="`0 0 ${calcShapeFill(4)} 24`" stroke-width="1.5" :stroke="ratingConfig.style.colors.activeReadonly[4]" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 9l.01 0" /><path d="M15 9l.01 0" /><path d="M8 13a4 4 0 1 0 8 0h-8" /></svg>
             </div>
 
             

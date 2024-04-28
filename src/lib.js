@@ -1243,6 +1243,8 @@ export function convertNameColorToHex(colorName) {
     return colorMap[colorName.toUpperCase()] || colorName;
 }
 
+export const XMLNS = "http://www.w3.org/2000/svg";
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -1291,5 +1293,6 @@ const lib = {
     shiftHue,
     sumByAttribute,
     treeShake,
+    XMLNS
 };
 export default lib;

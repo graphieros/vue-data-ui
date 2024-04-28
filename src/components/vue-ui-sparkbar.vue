@@ -9,6 +9,7 @@ import {
     opacity, 
     palette, 
     shiftHue, 
+    XMLNS
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
@@ -157,7 +158,7 @@ function selectDatapoint(datapoint, index) {
                        : {{ bar.prefix ? bar.prefix : '' }}{{ Number(bar.value.toFixed(bar.rounding ? bar.rounding : 0)).toLocaleString() }}{{ bar.suffix ? bar.suffix : '' }}
                     </span>
                 </div>
-                <svg :data-cy="`sparkbar-svg-${i}`" :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
+                <svg :xmlns="XMLNS" :data-cy="`sparkbar-svg-${i}`" :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
                     <defs>
                         <linearGradient
                             x1="0%"

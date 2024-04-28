@@ -6,7 +6,8 @@ import {
     getMissingDatasetAttributes,
     objectIsEmpty,
     opacity, 
-    shiftHue, 
+    shiftHue,
+    XMLNS 
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
@@ -155,7 +156,7 @@ const animation = computed(() => {
             </div>    
         </div>
 
-        <svg v-if="isDataset" data-cy="sparkhistogram-svg" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" style="overflow: visible">
+        <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkhistogram-svg" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" style="overflow: visible">
             <defs>
                 <radialGradient v-for="(posGrad, i) in computedDataset" :id="`gradient_positive_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
                     <stop offset="0%" :stop-color="`${shiftHue(histoConfig.style.bars.colors.positive, 0.05)}${opacity[posGrad.intensity]}`"/>
@@ -192,7 +193,6 @@ const animation = computed(() => {
                     :class="{'vue-ui-sparkhistogram-shape' : histoConfig.style.animation.show }"
                 />
             </g>
-
 
             <text v-for="(val, i) in computedDataset"
                 :data-cy="`sparkhistogram-value-label-${i}`"

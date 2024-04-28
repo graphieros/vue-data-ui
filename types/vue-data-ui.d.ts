@@ -2335,6 +2335,7 @@ declare module 'vue-data-ui' {
                         fontSize?: number;
                         showOnlyFirstAndLast?: boolean;
                         yOffset?: number;
+                        rotation?: number;
                     };
                 };
             };
@@ -4723,6 +4724,7 @@ declare module 'vue-data-ui' {
         xyPaddingRight?: number;
         xyPaddingTop?: number;
         xyPeriods?: Array<number | string>;
+        xyPeriodLabelsRotation?: number;
         xyScaleSegments?: number;
         xyShowAxis?: boolean;
         xyShowGrid?: boolean;

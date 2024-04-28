@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import Digit from '../atoms/Digit.vue';
 import mainConfig from "../default_configs.json"
 import { useNestedProp } from "../useNestedProp";
+import { XMLNS } from "../lib";
 
 const props = defineProps({
     dataset: {
@@ -58,7 +59,7 @@ const maxY = computed(() => {
 </script>
 
 <template>
-    <svg :viewBox="`0 0 ${maxY} 80`" :style="`background:${digitConfig.backgroundColor};${digitConfig.height ? `height:${digitConfig.height};` : ''}${digitConfig.width ? `width:${digitConfig.width}` : ''}`">
+    <svg :xmlns="XMLNS" :viewBox="`0 0 ${maxY} 80`" :style="`background:${digitConfig.backgroundColor};${digitConfig.height ? `height:${digitConfig.height};` : ''}${digitConfig.width ? `width:${digitConfig.width}` : ''}`">
         <Digit
             v-for="digit in digits"
             :x="digit.x"

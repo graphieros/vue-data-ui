@@ -14,7 +14,8 @@ import {
     functionReturnsString,
     isFunction,
     makeDonut, 
-    palette
+    palette,
+    XMLNS
 } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
@@ -643,7 +644,8 @@ defineExpose({
         <div class="vue-ui-quick-chart-title" v-if="quickConfig.title" :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color};font-size:${quickConfig.titleFontSize}px;font-weight:${quickConfig.titleBold ? 'bold': 'normal'};text-align:${quickConfig.titleTextAlign}`">
             {{ quickConfig.title }}
         </div>
-        <svg 
+        <svg
+            :xmlns="XMLNS"
             :viewBox="viewBox" 
             :style="`max-width:100%;overflow:visible;background:${quickConfig.backgroundColor};color:${quickConfig.color}`"
         >
@@ -847,11 +849,10 @@ defineExpose({
                     />
                     <text
                         v-for="(_, i) in line.extremes.maxSeries"
-                        :x="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
-                        :y="line.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6"
                         :font-size="quickConfig.xyLabelsXFontSize"
-                        text-anchor="middle"
+                        :text-anchor="quickConfig.xyPeriodLabelsRotation ? 'end' : 'middle'"
                         :fill="quickConfig.color"
+                        :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6}), rotate(${quickConfig.xyPeriodLabelsRotation})`"
                     >
                         {{ quickConfig.xyPeriods[i] }}
                     </text>
@@ -1020,10 +1021,9 @@ defineExpose({
                     />
                     <text
                         v-for="(_, i) in bar.extremes.maxSeries"
-                        :x="bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)"
-                        :y="bar.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6"
                         :font-size="quickConfig.xyLabelsXFontSize"
-                        text-anchor="middle"
+                        :text-anchor="quickConfig.xyPeriodLabelsRotation ? 'end' : 'middle'"
+                        :transform="`translate(${bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)}, ${bar.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6}) rotate(${quickConfig.xyPeriodLabelsRotation})`"
                         :fill="quickConfig.color"
                     >
                         {{ quickConfig.xyPeriods[i] }}

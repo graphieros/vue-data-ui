@@ -50,7 +50,7 @@
         <canvas ref="vueUiXyCanvas" v-if="chartConfig.useCanvas && isDataset" :height="chartConfig.chart.height" :width="chartConfig.chart.width" @mouseover="isInsideCanvas = true" @mouseleave="resetCanvas">
         </canvas>
 
-        <svg v-if="isDataset && !chartConfig.useCanvas" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
+        <svg xmlns="http://www.w3.org/2000/svg" v-if="isDataset && !chartConfig.useCanvas" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
@@ -570,11 +570,10 @@
                         <text
                             :data-cy="`xy-time-label-${i}`"
                             v-if="(label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1)) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i)"
-                            text-anchor="middle"
-                            :y="drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3 + chartConfig.chart.grid.labels.xAxisLabels.yOffset"
-                            :x="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
+                            :text-anchor="chartConfig.chart.grid.labels.xAxisLabels.rotation ? 'end' : 'middle'"
                             :font-size="chartConfig.chart.grid.labels.xAxisLabels.fontSize"
                             :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
+                            :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3 + chartConfig.chart.grid.labels.xAxisLabels.yOffset}), rotate(${chartConfig.chart.grid.labels.xAxisLabels.rotation})`"
                         >
                             {{ label || "" }}
                         </text>

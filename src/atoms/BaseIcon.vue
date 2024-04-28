@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from "vue";
+import { XMLNS } from "../lib";
 
 const props = defineProps({
     name: String,
@@ -145,7 +146,7 @@ const icons = computed(() => {
 </script>
 
 <template>
-    <svg :class="{ 'spin ': isSpin }" viewBox="0 0 20 20" :height="size" :width="size" v-html="icons[name]" style="background:transparent" />
+    <svg :xmlns="XMLNS" :class="{ 'spin ': isSpin }" viewBox="0 0 20 20" :height="size" :width="size" v-html="icons[name]" style="background:transparent" />
 </template>
 
 <style scoped>

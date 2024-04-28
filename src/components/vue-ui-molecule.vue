@@ -10,7 +10,8 @@ import {
     isFunction, 
     lightenHexColor, 
     objectIsEmpty,
-    palette, 
+    palette,
+    XMLNS
 } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
@@ -536,7 +537,7 @@ defineExpose({
             @toggleLabels="mutableConfig.showDataLabels = !mutableConfig.showDataLabels"
         />
 
-        <svg v-if="isDataset" data-cy="cluster-svg" :viewBox="dynamicViewBox"
+        <svg :xmlns="XMLNS" v-if="isDataset" data-cy="cluster-svg" :viewBox="dynamicViewBox"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`overflow: hidden; background:${moleculeConfig.style.chart.backgroundColor};color:${moleculeConfig.style.chart.color}`" @click="unzoom($event)">
 

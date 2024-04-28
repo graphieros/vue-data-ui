@@ -10,7 +10,8 @@ import {
     createUid,
     error,
     objectIsEmpty, 
-    shiftHue, 
+    shiftHue,
+    XMLNS
 } from "../lib";
 import Skeleton from "./vue-ui-skeleton.vue";
 
@@ -314,7 +315,7 @@ defineExpose({
             @generateImage="generateImage"
         />
 
-        <svg v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${tiremarksConfig.style.chart.backgroundColor};color:${tiremarksConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${tiremarksConfig.style.chart.backgroundColor};color:${tiremarksConfig.style.chart.color}`">
             <g v-if="tiremarksConfig.style.chart.layout.curved">
                 <path
                     v-for="(tick, i) in ticks"

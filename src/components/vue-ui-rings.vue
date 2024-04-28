@@ -14,6 +14,7 @@ import {
   opacity,
   palette,
   shiftHue,
+  XMLNS
 } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
@@ -460,6 +461,7 @@ defineExpose({
     <!-- CHART -->
 
     <svg
+      :xmlns="XMLNS"
       v-if="isDataset"
       :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
       data-cy="rings-svg"
