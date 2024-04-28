@@ -3302,7 +3302,7 @@ const quickDatasetLine = ref([
 
 
 const quickDatasetSimpleLine = ref([1, 2, 3, 5, 8, 13, 21, 34, 55, 89])
-const quickDatasetSimpleBar = ref([1, 2, -3, 5, 8])
+const quickDatasetSimpleBar = ref([1, 2, -10, -5, 8])
 
 const quickDatasetBar = ref([
   {

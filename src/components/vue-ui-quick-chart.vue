@@ -476,7 +476,7 @@ const bar = computed(() => {
             ...d,
             coordinates: d.values.map((v,j) => {
                 const barHeight = (((v + absoluteMin) / (extremes.max + absoluteMin)) * drawingArea.height)
-                const barHeightNegative = (Math.abs(v) / Math.abs(extremes.min) * (drawingArea.height - absoluteZero))
+                const barHeightNegative = (Math.abs(v) / (extremes.max + absoluteMin) * (drawingArea.height))
                 const absoluteMinHeight = (absoluteMin / (extremes.max + absoluteMin)) * drawingArea.height;
                 const barWidth = (slotSize / ds.filter(d => !segregated.value.includes(d.id)).length) - (quickConfig.value.barGap / ds.filter(d => !segregated.value.includes(d.id)).length);
 
