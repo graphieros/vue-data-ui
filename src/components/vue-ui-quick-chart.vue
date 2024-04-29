@@ -617,7 +617,7 @@ defineExpose({
         v-if="isProcessable"
         :id="`${chartType}_${uid}`"
         ref="quickChart"
-        class="vue-ui-quick-chart" 
+        :class="{'vue-ui-quick-chart': true, 'vue-data-ui-wrapper-fullscreen' : isFullscreen }" 
         :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color};font-family:${quickConfig.fontFamily}; position: relative`"
     >
 
@@ -1168,30 +1168,31 @@ defineExpose({
                 </div>
             </template>
         </div>
+        
+        <Tooltip
+            :show="quickConfig.showTooltip && isTooltip"
+            :backgroundColor="quickConfig.backgroundColor"
+            :color="quickConfig.color"
+            :parent="quickChart"
+            :content="tooltipContent"
+            :isCustom="isFunction(quickConfig.tooltipCustomFormat)"
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+        </Tooltip>
     </div>
     <div v-else class="vue-ui-quick-chart-not-processable">
         <BaseIcon name="circleCancel" stroke="red"/>
         <span>Dataset is not processable</span>
     </div>
-
-    <Tooltip
-        :show="quickConfig.showTooltip && isTooltip"
-        :backgroundColor="quickConfig.backgroundColor"
-        :color="quickConfig.color"
-        :parent="quickChart"
-        :content="tooltipContent"
-        :isCustom="isFunction(quickConfig.tooltipCustomFormat)"
-    >
-        <template #tooltip-before>
-            <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
-        </template>
-        <template #tooltip-after>
-            <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
-        </template>
-    </Tooltip>
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
 .vue-ui-quick-chart * {
     transition: unset;
 }
