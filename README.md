@@ -76,8 +76,8 @@ Available components:
 
 - [VueUiAccordion](https://vue-data-ui.graphieros.com/docs#vue-ui-accordion)
 - [VueUiAnnotator](https://vue-data-ui.graphieros.com/docs#vue-ui-annotator)
-- [VueUiAnnotator](https://vue-data-ui.graphieros.com/docs#vue-ui-annotator)
 - [VueUiCursor](https://vue-data-ui.graphieros.com/docs#vue-ui-cursor)
+- [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
 - [VueUiDigits](https://vue-data-ui.graphieros.com/docs#vue-ui-digits)
 - [VueUiIcon](https://vue-data-ui.graphieros.com/docs#vue-ui-icon)
 - [VueUiKpi](https://vue-data-ui.graphieros.com/docs#vue-ui-kpi)
