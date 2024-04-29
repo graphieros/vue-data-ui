@@ -13,7 +13,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-45-green)
+![Static Badge](https://img.shields.io/badge/components-46-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -76,7 +76,8 @@ Available components:
 
 - [VueUiAccordion](https://vue-data-ui.graphieros.com/docs#vue-ui-accordion)
 - [VueUiAnnotator](https://vue-data-ui.graphieros.com/docs#vue-ui-annotator)
-- [VueUiDashboard](https://vue-data-ui.graphieros.com/docs#vue-ui-dashboard)
+- [VueUiAnnotator](https://vue-data-ui.graphieros.com/docs#vue-ui-annotator)
+- [VueUiCursor](https://vue-data-ui.graphieros.com/docs#vue-ui-cursor)
 - [VueUiDigits](https://vue-data-ui.graphieros.com/docs#vue-ui-digits)
 - [VueUiIcon](https://vue-data-ui.graphieros.com/docs#vue-ui-icon)
 - [VueUiKpi](https://vue-data-ui.graphieros.com/docs#vue-ui-kpi)

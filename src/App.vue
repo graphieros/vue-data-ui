@@ -60,6 +60,7 @@ import TreemapTest from "./components/vue-ui-treemap.vue";
 import TableHeatmapTest from "./components/vue-ui-table-heatmap.vue";
 import AccordionTest from "./components/vue-ui-accordion.vue";
 import QuickTest from "./components/vue-ui-quick-chart.vue";
+import TestCursor from "./components/vue-ui-cursor.vue";
 
 const dataset = ref([
   {
@@ -3333,12 +3334,18 @@ const quickConfig = ref({
   xyPeriodLabelsRotation: -20
 })
 
+const cursorConfig = ref({
+  
+})
+
 </script>
 
 <template>
 
+  <VueDataUi component="VueUiCursor" :config="cursorConfig"/>
+
   <div style="padding-left: 48px; padding-right: 48px; width: 100%; max-width: 80%;margin: 0 auto">
-      <div style="padding-top: 48px; padding-bottom: 48px;font-weight: bold; line-height: 20px; display: flex; flex-direction:row; gap:24px; align-items:center">
+      <div id="haha" style="padding-top: 48px; padding-bottom: 48px;font-weight: bold; line-height: 20px; display: flex; flex-direction:row; gap:24px; align-items:center">
           <img src="../../vue-data-ui-logo.png" height="100px"/>
           <!-- <BaseIcon name="chartRelationCircle" :size="118" :strokeWidth="0.8" stroke="#5A5A5A"/> -->
         <div>
@@ -3469,6 +3476,7 @@ const quickConfig = ref({
           <BaseIcon name="lambda" stroke="#42d392" />
           <BaseIcon name="people" stroke="#42d392" />
           <BaseIcon name="copy" stroke="#42d392" />
+          <BaseIcon name="cursor" stroke="#42d392" />
         </div>
       </template>
       </Box>

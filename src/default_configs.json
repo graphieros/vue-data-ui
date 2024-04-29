@@ -3713,5 +3713,31 @@
         "xyShowAxis": true,
         "xyShowGrid": true,
         "xyShowScale": true
+    },
+    "vue_ui_cursor": {
+        "bubbleEffect": true,
+        "bubbleEffectColor": "#FFFFFF",
+        "bubbleEffectOpacity": 0.1,
+        "centerCircleColor": "#FFFFFF",
+        "centerCircleDasharray": 0,
+        "centerCircleOpacity": 0,
+        "centerCircleRadius": 50,
+        "centerCircleStroke": "#CCCCCC",
+        "centerCircleStrokeWidth": 0.5,
+        "coordinatesColor": "#CCCCCC",
+        "coordinatesFontSize": 10,
+        "coordinatesOffset": 0,
+        "crosshairDasharray": 0,
+        "crosshairStroke": "#CCCCCC",
+        "crosshairStrokeWidth": 0.5,
+        "intersectCirclesFill": "#CCCCCC",
+        "intersectCirclesRadius": 2,
+        "isLoading": false,
+        "parentId": "",
+        "showCenterCircle": true,
+        "showCoordinates": true,
+        "showCrosshair": true,
+        "showIntersectCircles": true,
+        "useWaveOnClick": true
     }
 }
