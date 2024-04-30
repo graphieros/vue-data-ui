@@ -205,7 +205,7 @@ const waveScale = computed(() => {
                 style="font-variant-numeric: tabular-nums"
                 font-family="Arial"
             >
-                {{ position.x }}
+                {{ position.x.toFixed(0) }}
             </text>
             <g :transform="`translate(${50 - (cursorConfig.coordinatesFontSize / 2) + cursorConfig.coordinatesOffset}, ${-cursorConfig.centerCircleRadius + 50 - (cursorConfig.coordinatesFontSize / 2) + cursorConfig.coordinatesOffset})`">
                 <text
@@ -216,7 +216,7 @@ const waveScale = computed(() => {
                     transform="rotate(-90)"
                     font-family="Arial"
                 >
-                    {{ position.y }}
+                    {{ position.y.toFixed(0) }}
                 </text>
             </g>
         </g>

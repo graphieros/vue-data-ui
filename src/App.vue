@@ -2749,6 +2749,7 @@ const radarConfig = ref({
 const quadrantConfig = ref({
   style: {
     chart: {
+      backgroundColor: '#1A1A1A',
       title: {
         text: "Title",
         subtitle: {
@@ -4507,7 +4508,7 @@ const cursorConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
         <template #title>
           <BaseIcon name="chartQuadrant" />
           VueUiQuadrant

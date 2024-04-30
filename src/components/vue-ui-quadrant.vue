@@ -273,12 +273,6 @@ function selectQuadrantSide(side) {
         }
         isZoom.value = true
     }
-    // if(isZoom.value && selectedSide.value === side) {
-    //     selectedSide.value = null;
-    //     isZoom.value = false;
-    // } else {
-    //     isZoom.value = true;
-    // }
 }
 
 const graduations = computed(() => {
@@ -1184,30 +1178,30 @@ defineExpose({
             </template>
 
             <!-- HIDDEN AREAS ON ZOOM -->
-            <g v-if="isZoom">
+            <g v-if="isZoom" class="vue-ui-dna">
                 <polygon 
                     v-if="selectedSide === 'TL'"
                     :points="`${svg.left},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.top} ${svg.right},${svg.top} ${svg.right},${svg.bottom} ${svg.left},${svg.bottom} ${svg.left},${svg.centerY}`"
                     :fill="quadrantConfig.style.chart.backgroundColor"
-                    style="opacity:0.95"
+                    style="opacity:1"
                 />
                 <polygon 
                     v-if="selectedSide === 'TR'"
                     :points="`${svg.left},${svg.top} ${svg.centerX},${svg.top} ${svg.centerX},${svg.centerY} ${svg.right},${svg.centerY} ${svg.right},${svg.bottom} ${svg.left},${svg.bottom} ${svg.left},${svg.top}`"
                     :fill="quadrantConfig.style.chart.backgroundColor"
-                    style="opacity:0.95"
+                    style="opacity:1"
                 />
                 <polygon 
                     v-if="selectedSide === 'BR'"
                     :points="`${svg.left},${svg.top} ${svg.right},${svg.top} ${svg.right},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.bottom} ${svg.left},${svg.bottom} ${svg.left},${svg.top}`"
                     :fill="quadrantConfig.style.chart.backgroundColor"
-                    style="opacity:0.95"
+                    style="opacity:1"
                 />
                 <polygon 
                     v-if="selectedSide === 'BL'"
                     :points="`${svg.left},${svg.top} ${svg.right},${svg.top} ${svg.right},${svg.bottom} ${svg.centerX},${svg.bottom} ${svg.centerX},${svg.centerY} ${svg.left},${svg.centerY} ${svg.left},${svg.top}`"
                     :fill="quadrantConfig.style.chart.backgroundColor"
-                    style="opacity:0.95"
+                    style="opacity:1"
                 />
             </g>
 
