@@ -796,6 +796,7 @@
     },
     "vue_ui_quadrant": {
         "useCssAnimation": true,
+        "zoomAnimationFrames": 20,
         "style": {
             "fontFamily": "inherit",
             "chart": {

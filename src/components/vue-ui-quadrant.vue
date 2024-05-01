@@ -225,43 +225,129 @@ const mutableSvg = ref({
 
 const selectedSide = ref(null);
 
+const selectedSideLabelCoordinates = computed(() => {
+    switch (selectedSide.value) {
+        case 'TL':
+            return {
+                x: mutableSvg.value.startX + mutableSvg.value.width / 2,
+                y: mutableSvg.value.height,
+                text: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tl.text || 'Top Left',
+                fontSize: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tl.fontSize,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tl.color,
+                bold: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tl.bold
+            }
+        case 'TR': 
+            return {
+                x: mutableSvg.value.startX + mutableSvg.value.width / 2,
+                y: mutableSvg.value.height,
+                text: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tr.text || 'Top Right',
+                fontSize: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tr.fontSize,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tr.color,
+                bold: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.tr.bold
+            }
+        case 'BR': 
+            return {
+                x: mutableSvg.value.startX + mutableSvg.value.width / 2,
+                y: mutableSvg.value.height * 1.678,
+                text: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.br.text || 'Bottom Right',
+                fontSize: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.br.fontSize,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.br.color,
+                bold: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.br.bold
+            }
+        case 'BL': 
+            return {
+                x: mutableSvg.value.startX + mutableSvg.value.width / 2,
+                y: mutableSvg.value.height * 1.678,
+                text: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.text || 'Bottom Left',
+                fontSize: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.fontSize,
+                fill: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.color,
+                bold: quadrantConfig.value.style.chart.layout.labels.quadrantLabels.bl.bold
+            }
+    
+        default:
+            return {x: 0, y: 0, text: '', fontSize: 0, fill: 'none', bold: false}
+    }
+})
+
+const currentAnimationFrame = ref(null);
+const isAnimating = ref(false);
+
+function zoomOnSide({ targetX, targetY, targetW, targetH}) {
+    const differentials = {
+        x: targetX - mutableSvg.value.startX,
+        y: targetY - mutableSvg.value.startY,
+        w: targetW - mutableSvg.value.width,
+        h: targetH - mutableSvg.value.height
+    }
+
+    const steps = quadrantConfig.value.zoomAnimationFrames;
+    let init = 0;
+    function anim() {
+        isAnimating.value = true;
+        mutableSvg.value.startX += (differentials.x / steps);
+        mutableSvg.value.startY += (differentials.y / steps);
+        mutableSvg.value.width += (differentials.w / steps);
+        mutableSvg.value.height += (differentials.h / steps);
+        init += 1;
+        if(init < steps) {
+            currentAnimationFrame.value = requestAnimationFrame(anim)
+        } else {
+            isAnimating.value = false;
+        }
+    }
+    anim()
+}
+
 function selectQuadrantSide(side) {
+    if(isAnimating.value) {
+        return;
+    }
     if(isZoom.value && selectedSide.value === side) {
-        mutableSvg.value.startX = 0;
-        mutableSvg.value.startY = 0;
-        mutableSvg.value.width = svg.value.width;
-        mutableSvg.value.height = svg.value.height;
+        zoomOnSide({
+            targetX: 0,
+            targetY: 0,
+            targetW: svg.value.width,
+            targetH: svg.value.height
+        })
         selectedSide.value = null;
         isZoom.value = false;
     } else  {
         selectedSide.value = side;
         switch (side) {
             case 'TL':
-                mutableSvg.value.startX = 0;
-                mutableSvg.value.startY = 0;
-                mutableSvg.value.width = svg.value.width / 2 + svg.value.left;
-                mutableSvg.value.height = svg.value.height / 2 + svg.value.top;
+                zoomOnSide({
+                    targetX: 0,
+                    targetY: 0,
+                    targetW: svg.value.width / 2 + svg.value.left,
+                    targetH: svg.value.height / 2 + svg.value.top
+                })
             break;
             
             case 'TR':
-                mutableSvg.value.startX = svg.value.width / 2 - svg.value.left;
-                mutableSvg.value.startY = 0;
-                mutableSvg.value.width = svg.value.width / 2 + svg.value.left;
-                mutableSvg.value.height = svg.value.height / 2 + svg.value.top;
+                zoomOnSide({
+                    targetX: svg.value.width / 2 - svg.value.left,
+                    targetY: 0,
+                    targetW: svg.value.width / 2 + svg.value.left,
+                    targetH: svg.value.height / 2 + svg.value.top
+                })
             break;
 
             case 'BR':
-                mutableSvg.value.startX = svg.value.width / 2 - svg.value.left;
-                mutableSvg.value.startY = svg.value.height / 2 - svg.value.top;
-                mutableSvg.value.width = svg.value.width / 2 + svg.value.left;
-                mutableSvg.value.height = svg.value.height / 2 + svg.value.top;
+                zoomOnSide({
+                    targetX: svg.value.width / 2 - svg.value.left,
+                    targetY: svg.value.height / 2 - svg.value.top,
+                    targetW: svg.value.width / 2 + svg.value.left,
+                    targetH: svg.value.height / 2 + svg.value.top
+                })
             break;
 
             case 'BL':
-                mutableSvg.value.startX = 0;
-                mutableSvg.value.startY = svg.value.height / 2 - svg.value.top;
-                mutableSvg.value.width = svg.value.width / 2 + svg.value.left;
-                mutableSvg.value.height = svg.value.height / 2 + svg.value.top;
+                zoomOnSide({
+                    targetX: 0,
+                    targetY: svg.value.height / 2 - svg.value.top,
+                    targetW: svg.value.width / 2 + svg.value.left,
+                    targetH: svg.value.height / 2 + svg.value.top
+                })
             break;
         
             default:
@@ -1205,6 +1291,19 @@ defineExpose({
                 />
             </g>
 
+            <g v-if="selectedSide && !isAnimating">
+                <text
+                    :x="selectedSideLabelCoordinates.x"
+                    :y="selectedSideLabelCoordinates.y - (selectedSideLabelCoordinates.fontSize / 1.5)"
+                    :font-size="selectedSideLabelCoordinates.fontSize / 1.5"
+                    :fill="selectedSideLabelCoordinates.fill"
+                    text-anchor="middle"
+                    :font-weight="selectedSideLabelCoordinates.bold ? 'bold' : 'normal'"
+                >
+                    {{ selectedSideLabelCoordinates.text }}
+                </text>
+            </g>
+
             <!-- LEGEND AS G -->
             <foreignObject
                 v-if="quadrantConfig.style.chart.legend.show && mutableConfig.inside && !isPrinting"
@@ -1284,7 +1383,6 @@ defineExpose({
             </g>
             <slot name="svg" :svg="svg"/>
         </svg>
-        {{ selectedSide }}
 
         <Skeleton 
             v-if="!isDataset"

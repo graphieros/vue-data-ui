@@ -2749,7 +2749,6 @@ const radarConfig = ref({
 const quadrantConfig = ref({
   style: {
     chart: {
-      backgroundColor: '#1A1A1A',
       title: {
         text: "Title",
         subtitle: {

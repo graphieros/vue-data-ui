@@ -3173,6 +3173,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiQuadrantConfig = {
         useCssAnimation?: boolean;
+        zoomAnimationFrames?: number;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -4732,8 +4733,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiQuickChartDatasetObjectItem = {
-        [key]: string;
-        [key]: number | number[]
+        [key: string]: string | number[];
     };
 
     export type VueUiQuickChartDataset = number[] | VueUiQuickChartDatasetObjectItem | VueUiQuickChartDatasetObjectItem[];
