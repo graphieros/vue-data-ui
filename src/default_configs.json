@@ -3657,6 +3657,7 @@
         }
     },
     "vue_ui_quick_chart": {
+        "axisLabelsFontSize": 12,
         "backgroundColor":"#FFFFFF",
         "barGap": 12,
         "barStrokeWidth": 1,
@@ -3696,6 +3697,7 @@
         "valuePrefix": "",
         "valueSuffix": "",
         "width": 512,
+        "xAxisLabel": "",
         "xyAxisStroke": "#CCCCCC",
         "xyAxisStrokeWidth": 1,
         "xyGridStroke": "#e1e5e8",
@@ -3704,16 +3706,17 @@
         "xyHighlighterOpacity": 0.05,
         "xyLabelsXFontSize": 8,
         "xyLabelsYFontSize": 12,
-        "xyPaddingBottom": 24,
+        "xyPaddingBottom": 48,
         "xyPaddingLeft": 48,
         "xyPaddingRight": 12,
         "xyPaddingTop": 24,
-        "xyPeriods": [],
         "xyPeriodLabelsRotation": 0,
+        "xyPeriods": [],
         "xyScaleSegments": 10,
         "xyShowAxis": true,
         "xyShowGrid": true,
-        "xyShowScale": true
+        "xyShowScale": true,
+        "yAxisLabel": ""
     },
     "vue_ui_cursor": {
         "bubbleEffect": true,

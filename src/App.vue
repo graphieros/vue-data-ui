@@ -3331,7 +3331,9 @@ const quickDatasetBar = ref([
 const quickConfig = ref({
   title: 'Some title that can be kinda long',
   xyPeriods: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
-  xyPeriodLabelsRotation: -20
+  xyPeriodLabelsRotation: -20,
+  xAxisLabel: 'This is x axis',
+  yAxisLabel: 'This is y axis'
 })
 
 const cursorConfig = ref({

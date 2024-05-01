@@ -1086,6 +1086,53 @@ defineExpose({
                     />
                 </g>
             </template>
+
+            <template v-if="[detector.chartType.LINE, detector.chartType.BAR].includes(chartType)">
+                <g class="axis-labels">
+                    <g v-if="quickConfig.xAxisLabel && chartType === detector.chartType.LINE">
+                        <text 
+                            :font-size="quickConfig.axisLabelsFontSize"
+                            :fill="quickConfig.color" 
+                            text-anchor="middle"
+                            :x="line.drawingArea.left + (line.drawingArea.width / 2)"
+                            :y="defaultSizes.line.height - (quickConfig.axisLabelsFontSize / 3)"
+                        >
+                            {{ quickConfig.xAxisLabel }}
+                        </text>
+                    </g>
+                    <g v-if="quickConfig.xAxisLabel && chartType === detector.chartType.BAR">
+                        <text 
+                            :font-size="quickConfig.axisLabelsFontSize"
+                            :fill="quickConfig.color" 
+                            text-anchor="middle"
+                            :x="bar.drawingArea.left + (bar.drawingArea.width / 2)"
+                            :y="defaultSizes.bar.height - (quickConfig.axisLabelsFontSize / 3)"
+                        >
+                            {{ quickConfig.xAxisLabel }}
+                        </text>
+                    </g>
+                    <g v-if="quickConfig.yAxisLabel && chartType === detector.chartType.LINE">
+                        <text 
+                            :font-size="quickConfig.axisLabelsFontSize"
+                            :fill="quickConfig.color"
+                            :transform="`translate(${quickConfig.axisLabelsFontSize}, ${line.drawingArea.top + (line.drawingArea.height / 2)}) rotate(-90)`"
+                            text-anchor="middle"
+                        >
+                            {{ quickConfig.yAxisLabel }}
+                        </text>
+                    </g>
+                    <g v-if="quickConfig.yAxisLabel && chartType === detector.chartType.BAR">
+                        <text 
+                            :font-size="quickConfig.axisLabelsFontSize"
+                            :fill="quickConfig.color"
+                            :transform="`translate(${quickConfig.axisLabelsFontSize}, ${bar.drawingArea.top + (bar.drawingArea.height / 2)}) rotate(-90)`"
+                            text-anchor="middle"
+                        >
+                            {{ quickConfig.yAxisLabel }}
+                        </text>
+                    </g>
+                </g>
+            </template>
         </svg>
         <div 
             v-if="quickConfig.showLegend"

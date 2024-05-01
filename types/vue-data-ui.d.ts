@@ -4673,6 +4673,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiQuickChartConfig = {
+        axisLabelsFontSize?: number;
         backgroundColor?: string;
         barGap?: number;
         barStrokeWidth?: number;
@@ -4712,6 +4713,7 @@ declare module 'vue-data-ui' {
         valuePrefix?: string;
         valueSuffix?: string;
         width?: number | null;
+        xAxisLabel?: string;
         xyAxisStroke?: string;
         xyAxisStrokeWidth?: number;
         xyGridStroke?: string;
@@ -4730,6 +4732,7 @@ declare module 'vue-data-ui' {
         xyShowAxis?: boolean;
         xyShowGrid?: boolean;
         xyShowScale?: boolean;
+        yAxisLabel?: string;
     };
 
     export type VueUiQuickChartDatasetObjectItem = {
