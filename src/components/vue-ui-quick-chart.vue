@@ -60,13 +60,15 @@ const quickConfig = computed(() => {
 
 const emit = defineEmits(['selectDatapoint', 'selectLegend'])
 
-const formattedDataset = computed(() => {
+const fd = computed(() => {
     const f = detector.detectChart({ dataset: props.dataset, barLineSwitch: quickConfig.value.chartIsBarUnderDatasetLength });
     if(!f) {
         console.error('VueUiQuickChart : Dataset is not processable')
     }
     return f
 })
+
+const formattedDataset = ref(fd.value)
 
 const isProcessable = computed(() => {
     return !!formattedDataset.value
@@ -135,7 +137,7 @@ const donut = computed(() => {
     const ds = formattedDataset.value.dataset.map((ds, i) => {
         return {
             ...ds,
-            value: ds.VALUE || ds.DATA || ds.SERIE || ds.VALUES || ds.NUM,
+            value: ds.VALUE || ds.DATA || ds.SERIE || ds.VALUES || ds.NUM || 0,
             name: ds.NAME || ds.DESCRIPTION || ds.TITLE || ds.LABEL || `Serie ${i}`,
             id: `donut_${i}`
         }
@@ -199,11 +201,12 @@ const donut = computed(() => {
         centerY: (quickConfig.value.height || defaultSizes.value.donut.height) / 2
     }
     
-    const total = ds.filter(d => !segregated.value.includes(d.id)).map(d => d.value).reduce((a,b) => a + b, 0);
+    const total = ds.filter(d => !segregated.value.includes(d.id)).map(d => d.value||0).reduce((a,b) => a + b, 0);
     const legend = ds.map(d => {
         return {
             ...d,
-            proportion: d.value / total
+            proportion: (d.value || 0) / total,
+            value: d.value || 0
         }
     })
 
@@ -266,7 +269,7 @@ const line = computed(() => {
         ds = formattedDataset.value.dataset.map((d, i) => {
             return {
                 ...d,
-                values: d.VALUE || d.DATA || d.SERIE || d.VALUES || d.NUM,
+                values: d.VALUE || d.DATA || d.SERIE || d.VALUES || d.NUM || 0,
                 name: d.NAME || d.DESCRIPTION || d.TITLE || d.LABEL || `Serie ${i}`,
                 id: `line_${i}`
             }
@@ -420,7 +423,7 @@ const bar = computed(() => {
         ds = formattedDataset.value.dataset.map((d, i) => {
             return {
                 ...d,
-                values: d.VALUE || d.DATA || d.SERIE || d.VALUES || d.NUM,
+                values: d.VALUE || d.DATA || d.SERIE || d.VALUES || d.NUM || 0,
                 name: d.NAME || d.DESCRIPTION || d.TITLE || d.LABEL || `Serie ${i}`,
                 id: `bar_${i}`
             }

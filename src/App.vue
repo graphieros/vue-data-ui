@@ -3290,14 +3290,14 @@ const quickDatasetDonut = ref([
   },
   {
     name: 'Serie 5',
-    value: 1,
+    value: 0,
   },
 ]);
 
 const quickDatasetLine = ref([
   {
     name: 'Serie1',
-    values: [1, 2, 3, 2, 3, 4, 3, 4, 5]
+    values: [1, 0, 3, 2, 3, 4, 3, 4, 5]
   },
   {
     name: 'Serie2',
@@ -3316,7 +3316,7 @@ const quickDatasetSimpleBar = ref([1, 2, -10, -5, 8])
 const quickDatasetBar = ref([
   {
     name: 'Serie1',
-    values: [1, 2, 3, 2, 3]
+    values: [1, 0, 3, 2, 3]
   },
   {
     name: 'Serie2',
@@ -4509,7 +4509,7 @@ const cursorConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_quadrant)">
         <template #title>
           <BaseIcon name="chartQuadrant" />
           VueUiQuadrant
