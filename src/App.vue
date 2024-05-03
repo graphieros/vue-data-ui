@@ -3273,24 +3273,24 @@ const tableHeatmapDataset = ref([
 
 const quickDatasetDonut = ref([
   {
-    name: 'serie1',
-    value: 10,
+    name: 'Serie 2',
+    value: 200,
   },
   {
-    name: 'Serie 2',
-    value: 20,
+    name: 'serie1',
+    value: 100,
   },
   {
     name: 'Serie 3',
-    value: 5,
+    value: 50,
   },
   {
     name: 'Serie 4',
-    value: 2,
+    value: 20,
   },
   {
     name: 'Serie 5',
-    value: 0,
+    value: 10,
   },
 ]);
 

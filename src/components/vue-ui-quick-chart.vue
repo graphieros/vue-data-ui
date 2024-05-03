@@ -132,6 +132,93 @@ function segregate(id, len) {
     }
 }
 
+const raf = ref(null)
+const rafUp = ref(null)
+
+function segregateDonut(arc, ds) {
+    let initVal = arc.value;
+    if(segregated.value.includes(arc.id)) {
+        segregated.value = segregated.value.filter(el => el !== arc.id)
+        const targetVal = fd.value.dataset.find((el, i) => arc.id === `donut_${i}`).VALUE;
+        function animUp() {
+            if(initVal > targetVal) {
+                cancelAnimationFrame(animUp)
+                formattedDataset.value = {
+                    ...formattedDataset.value,
+                    dataset: formattedDataset.value.dataset.map((ds, i) => {
+                        if(arc.id === `donut_${i}`) {
+                            return {
+                                ...ds,
+                                value: targetVal,
+                                VALUE: targetVal
+                            }
+                        } else {
+                            return ds
+                        }
+                    })
+                }
+            } else {
+                initVal += (targetVal * 0.025);
+                formattedDataset.value = {
+                    ...formattedDataset.value,
+                    dataset: formattedDataset.value.dataset.map((ds, i) => {
+                        if(arc.id === `donut_${i}`) {
+                            return {
+                                ...ds,
+                                value: initVal,
+                                VALUE: initVal
+                            }
+                        } else {
+                            return ds
+                        }
+                    })
+                };
+                rafUp.value = requestAnimationFrame(animUp)
+            }
+        }
+        animUp()
+    } else if(ds.length > 1) {
+        function anim() {
+            if(initVal < 0.1) {
+                cancelAnimationFrame(anim)
+                segregated.value.push(arc.id)
+                formattedDataset.value = {
+                    ...formattedDataset.value,
+                    dataset: formattedDataset.value.dataset.map((ds, i) => {
+                    if(arc.id === `donut_${i}`) {
+                        return {
+                            ...ds,
+                            value: 0,
+                            VALUE: 0
+                        }
+                    } else {
+                        return ds
+                    }
+                })
+                }
+            } else {
+                initVal /= 1.1;
+                formattedDataset.value = {
+                    ...formattedDataset.value,
+                    dataset: formattedDataset.value.dataset.map((ds, i) => {
+                    if(arc.id === `donut_${i}`) {
+                        return {
+                            ...ds,
+                            value: initVal,
+                            VALUE: initVal
+                        }
+                    } else {
+                        return ds
+                    }
+                })
+                }
+                raf.value = requestAnimationFrame(anim)
+            }
+        }
+        anim()
+    }
+}
+
 const donut = computed(() => {
     if(chartType.value !== detector.chartType.DONUT) return null;
     const ds = formattedDataset.value.dataset.map((ds, i) => {
@@ -142,7 +229,7 @@ const donut = computed(() => {
             id: `donut_${i}`
         }
     })
-    .sort((a, b) => b.value - a.value)
+    // .sort((a, b) => b.value - a.value)
     .map((ds, i) => {
         return {
             ...ds,
@@ -156,6 +243,12 @@ const donut = computed(() => {
 
     function isArcBigEnough(arc) {
         return arc.proportion * 100 > quickConfig.value.donutHideLabelUnderPercentage;
+    }
+
+    function getSpaces(datapointId, num2) {
+        const num1 = fd.value.dataset.find((_,i) => `donut_${i}` === datapointId).VALUE;
+        const difference = Math.abs(String(Number(num1.toFixed(0))).length - String(Number(num2.toFixed(0))).length);
+        return difference
     }
 
     function useTooltip({ datapoint, seriesIndex }) {
@@ -202,11 +295,13 @@ const donut = computed(() => {
     }
     
     const total = ds.filter(d => !segregated.value.includes(d.id)).map(d => d.value||0).reduce((a,b) => a + b, 0);
-    const legend = ds.map(d => {
+
+    const legend = ds.map((d, i) => {
         return {
             ...d,
             proportion: (d.value || 0) / total,
-            value: d.value || 0
+            value: d.value || 0,
+            absoluteValue: fd.value.dataset.find((el, idx) => `donut_${idx}` === d.id).VALUE,
         }
     })
 
@@ -218,6 +313,7 @@ const donut = computed(() => {
         isArcBigEnough,
         useTooltip,
         killTooltip,
+        getSpaces,
         total,
         chart: makeDonut(
             { series: ds.filter(s => !segregated.value.includes(s.id)) },
@@ -663,7 +759,6 @@ defineExpose({
                 <g class="donut-label-connectors" v-if="quickConfig.showDataLabels">
                     <template v-for="(arc, i) in donut.chart">
                         <path
-                            class="quick-animation"
                             v-if="donut.isArcBigEnough(arc)"
                             :d="calcNutArrowPath(arc, {x: (quickConfig.width || defaultSizes.donut.width) / 2, y: (quickConfig.height || defaultSizes.donut.height) /2}, 16, 16, false, false, quickConfig.donutLabelMarkerStrokeWidth)"
                             :stroke="arc.color"
@@ -684,7 +779,6 @@ defineExpose({
                 /> 
                 <g class="donut">
                     <path
-                        class="quick-animation"
                         v-for="(arc, i) in donut.chart"
                         :d="arc.arcSlice"
                         :fill="arc.color"
@@ -693,7 +787,6 @@ defineExpose({
                         :filter="getBlurFilter(arc.id)"
                     />
                     <path
-                        class="quick-animation"
                         v-for="(arc, i) in donut.chart"
                         :d="arc.arcSlice"
                         fill="transparent"
@@ -705,7 +798,6 @@ defineExpose({
                 <g class="donut-labels quick-animation" v-if="quickConfig.showDataLabels">
                     <template v-for="(arc, i) in donut.chart">
                         <circle
-                            class="quick-animation"
                             v-if="donut.isArcBigEnough(arc)"
                             :cx="calcMarkerOffsetX(arc).x"
                             :cy="calcMarkerOffsetY(arc) - 3.7"
@@ -1146,7 +1238,7 @@ defineExpose({
                 <div 
                     class="vue-ui-quick-chart-legend-item" 
                     v-for="(legendItem, i) in donut.legend" 
-                    @click="segregate(legendItem.id, donut.legend.length - 1); emit('selectLegend', legendItem)"
+                    @click="segregateDonut(legendItem, donut.dataset); emit('selectLegend', legendItem)"
                     :style="`cursor: ${donut.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                 >
                     <template v-if="quickConfig.useCustomLegend">
@@ -1158,19 +1250,19 @@ defineExpose({
                         <span :style="`font-size:${quickConfig.legendFontSize}px`">
                             {{ legendItem.name }}
                         </span>
-                        <span :style="`font-size:${quickConfig.legendFontSize}px`">
-                            {{ dataLabel({
+                        <span :style="`font-size:${quickConfig.legendFontSize}px;font-variant-numeric:tabular-nums`">
+                            {{ segregated.includes(legendItem.id) ? '-' : dataLabel({
                                 p: quickConfig.valuePrefix,
-                                v: legendItem.value,
+                                v: legendItem.absoluteValue,
                                 s: quickConfig.valueSuffix,
-                                r: quickConfig.dataLabelRoundingValue
+                                r: quickConfig.dataLabelRoundingValue,
                             }) }}
                         </span>
                         <span v-if="segregated.includes(legendItem.id)" :style="`font-size:${quickConfig.legendFontSize}px`">
                             ( - % )
                         </span>
-                        <span v-else :style="`font-size:${quickConfig.legendFontSize}px`">
-                            ({{ dataLabel({
+                        <span v-else :style="`font-size:${quickConfig.legendFontSize}px; font-variant-numeric: tabular-nums;`">
+                            ({{ legendItem.value / donut.total * 100 < 100 && legendItem.value / donut.total * 100 > 10 ? '' :  '' }}{{ dataLabel({
                                 v: legendItem.value / donut.total * 100,
                                 s: '%',
                                 r: quickConfig.dataLabelRoundingPercentage
