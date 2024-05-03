@@ -116,23 +116,6 @@ const svg = computed(() => {
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
 
-const segregated = ref([]);
-
-function segregate(index) {
-    if(segregated.value.includes(index)) {
-        segregated.value = segregated.value.filter(s => s !== index);
-    }else {
-        segregated.value.push(index);
-    }
-    emit('selectLegend', donutSet.value.map(ds => {
-        return {
-            name: ds.name,
-            color: ds.color,
-            value: ds.value
-        }
-    }));
-}
-
 const immutableSet = computed(() => {
     return props.dataset
         .map((serie, i) => {
@@ -143,8 +126,10 @@ const immutableSet = computed(() => {
                 absoluteValues: serie.values,
             }
         })
-        .sort((a,b) => b.value - a.value)
+        // .sort((a,b) => b.value - a.value)
 });
+
+const mutableSet = ref(immutableSet.value)
 
 function getData() {
     return immutableSet.value.map(ds => {
@@ -156,8 +141,89 @@ function getData() {
     });
 }
 
+const segregated = ref([]);
+const rafUp = ref(null);
+const rafDown = ref(null);
+
+function segregate(index) {
+    const target = immutableSet.value.find((_, idx) => idx === index)
+    const source = mutableSet.value.find((_, idx) => idx === index)
+    let initVal = source.value;
+    if(segregated.value.includes(index)) {
+        segregated.value = segregated.value.filter(s => s !== index);
+        const targetVal = target.value;
+        function animUp() {
+            if(initVal > targetVal) {
+                cancelAnimationFrame(animUp);
+                mutableSet.value = mutableSet.value.map((ds, i) => {
+                    if(index === i) {
+                        return {
+                            ...ds,
+                            value: targetVal
+                        }
+                    } else {
+                        return ds
+                    }
+                })
+            } else {
+                initVal += (targetVal * 0.025);
+                mutableSet.value = mutableSet.value.map((ds, i) => {
+                    if((index === i)) {
+                        return {
+                            ...ds,
+                            value: initVal
+                        }
+                    } else {
+                        return ds
+                    }
+                })
+                rafUp.value = requestAnimationFrame(animUp)
+            }
+        }
+        animUp()
+    } else if (segregated.value.length < immutableSet.value.length - 1) {
+        function animDown() {
+            if(initVal < 0.1) {
+                cancelAnimationFrame(animDown);
+                segregated.value.push(index);
+                mutableSet.value = mutableSet.value.map((ds, i) => {
+                    if(index === i) {
+                        return {
+                            ...ds,
+                            value: 0,
+                        }
+                    } else {
+                        return ds
+                    }
+                })
+            } else {
+                initVal /= 1.1;
+                mutableSet.value = mutableSet.value.map((ds, i) => {
+                    if(index === i) {
+                        return {
+                            ...ds,
+                            value: initVal
+                        }
+                    } else {
+                        return ds
+                    }
+                })
+                rafDown.value = requestAnimationFrame(animDown)
+            }
+        }
+        animDown()
+    }
+    emit('selectLegend', donutSet.value.map(ds => {
+        return {
+            name: ds.name,
+            color: ds.color,
+            value: ds.value
+        }
+    }));
+}
+
 const donutSet = computed(() => {
-    props.dataset.forEach((ds, i) => {
+    mutableSet.value.forEach((ds, i) => {
         if([null, undefined].includes(ds.values)) {
             return {
                 ...ds,
@@ -165,17 +231,13 @@ const donutSet = computed(() => {
             }
         }
     })
-    return props.dataset
+    return mutableSet.value
         .map((serie, i) => {
             return {
-                name: serie.name,
-                color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
-                value: (serie.values || []).reduce((a,b) => a + b, 0),
-                absoluteValues: serie.values || [],
+                ...serie,
                 seriesIndex: i
             }
         })
-        .sort((a,b) => b.value - a.value)
         .filter((_, i) => !segregated.value.includes(i))
 });
 
@@ -189,7 +251,6 @@ const legendSet = computed(() => {
                 shape: 'circle',
             }
         })
-        .sort((a,b) => b.value - a.value)
         .map((el, i) => {
             return {
                 ...el,
@@ -630,7 +691,7 @@ defineExpose({
             </text>
 
             <!-- DATALABELS -->
-            <g v-for="(arc, i) in currentDonut" :filter="getBlurFilter(i)">
+            <g v-for="(arc, i) in currentDonut" :filter="getBlurFilter(i)" class="animated">
                 <g v-if="donutConfig.style.chart.layout.labels.dataLabels.useLabelSlots">
                     <foreignObject
                         :x="calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - 120 : calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - 60 : calcMarkerOffsetX(arc).x"
@@ -806,7 +867,7 @@ defineExpose({
     position: relative;
 }
 
-path {
+.animated {
     animation: donut 0.5s ease-in-out;
     transform-origin: center;
 }

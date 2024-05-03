@@ -346,16 +346,10 @@ const tableTestDataset = {
 
 const donutDataset = [
   {
-    name: "serie 1",
+    name: "serie 4",
     color: "",
-    values: [1],
-    shape: "star"
-  },
-  {
-    name: "serie 2",
-    color: "",
-    values: [2],
-    shape: "diamond"
+    values: [3, 5],
+    shape: "hexagon"
   },
   {
     name: "serie 3",
@@ -364,10 +358,16 @@ const donutDataset = [
     shape: "triangle"
   },
   {
-    name: "serie 4",
+    name: "serie 2",
     color: "",
-    values: [3, 5],
-    shape: "hexagon"
+    values: [2],
+    shape: "diamond"
+  },
+  {
+    name: "serie 1",
+    color: "",
+    values: [1],
+    shape: "star"
   },
 ];
 

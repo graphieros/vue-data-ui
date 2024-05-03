@@ -1262,7 +1262,7 @@ defineExpose({
                             ( - % )
                         </span>
                         <span v-else :style="`font-size:${quickConfig.legendFontSize}px; font-variant-numeric: tabular-nums;`">
-                            ({{ legendItem.value / donut.total * 100 < 100 && legendItem.value / donut.total * 100 > 10 ? '' :  '' }}{{ dataLabel({
+                            ({{ dataLabel({
                                 v: legendItem.value / donut.total * 100,
                                 s: '%',
                                 r: quickConfig.dataLabelRoundingPercentage

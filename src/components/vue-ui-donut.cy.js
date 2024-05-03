@@ -30,10 +30,8 @@ describe('<VueUiDonut />', () => {
         }
       });
 
-      const sortedDataset = fixture.dataset.toSorted((a,b) => b.values.reduce((x,y) => x + y, 0) - a.values.reduce((x, y) => x + y, 0))
-
       cy.get('[data-cy="donut-trap-0"]').trigger('mouseenter', { force: true})
-      cy.get('[data-cy="tooltip"]').should('be.visible').contains(sortedDataset[0].name)
+      cy.get('[data-cy="tooltip"]').should('be.visible').contains(fixture.dataset[0].name)
     })
   })
 
@@ -47,12 +45,10 @@ describe('<VueUiDonut />', () => {
         }
       });
 
-      const sortedDataset = fixture.dataset.toSorted((a,b) => b.values.reduce((x,y) => x + y, 0) - a.values.reduce((x, y) => x + y, 0))
-
       cy.get('[data-cy="legend-item-0"]').click()
-      cy.get('[data-cy-donut-trap]').should('have.length', sortedDataset.length - 1)
+      cy.get('[data-cy-donut-trap]').should('have.length', fixture.dataset.length - 1)
       cy.get('[data-cy="legend-item-0"]').click()
-      cy.get('[data-cy-donut-trap]').should('have.length', sortedDataset.length)
+      cy.get('[data-cy-donut-trap]').should('have.length', fixture.dataset.length)
     })
   })
 
@@ -78,17 +74,12 @@ describe('<VueUiDonut />', () => {
 
       cy.get('[data-cy="donut-div-legend"]').should('exist');
 
-      const sortedDataset = JSON.parse(JSON.stringify(fixture.dataset)).sort((a, b) => {
-        const sumx = a.values.reduce((x, y) => x + y, 0);
-        const sumy = b.values.reduce((x, y) => x + y, 0);
-        return sumy - sumx
-      });
 
       const grandTotal = fixture.dataset.map((d) => d.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0);
 
       for (let i = 0; i < fixture.dataset.length; i += 1) {
-        const thisValue = sortedDataset[i].values.reduce((a, b) => a + b, 0);
-        cy.contains(sortedDataset[i].name);
+        const thisValue = fixture.dataset[i].values.reduce((a, b) => a + b, 0);
+        cy.contains(fixture.dataset[i].name);
         cy.contains(Number(thisValue.toFixed(fixture.config.style.chart.legend.roundingValue)).toLocaleString());
         cy.contains(`(${(thisValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage)}%)`)
       }
@@ -134,7 +125,7 @@ describe('<VueUiDonut />', () => {
       }
 
       for (let i = 0; i < fixture.dataset.length; i += 1) {
-        const thisValue = sortedDataset[i].values.reduce((a, b) => a + b, 0);
+        const thisValue = fixture.dataset[i].values.reduce((a, b) => a + b, 0);
         const thisPercentage = `${(thisValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage)}%`;
 
         cy.get(`[data-cy="donut-datalabel-value-${i}"]`)
@@ -143,7 +134,7 @@ describe('<VueUiDonut />', () => {
 
         cy.get(`[data-cy="donut-datalabel-name-${i}"]`)
           .should('exist')
-          .contains(sortedDataset[i].name)
+          .contains(fixture.dataset[i].name)
       }
 
       cy.get(`[data-cy="user-options-summary"]`)
