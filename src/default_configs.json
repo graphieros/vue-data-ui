@@ -3743,5 +3743,59 @@
         "showCrosshair": true,
         "showIntersectCircles": true,
         "useWaveOnClick": true
+    },
+    "vue_ui_spark_trend": {
+        "style": {
+            "backgroundColor": "#FFFFFF",
+            "fontFamily":"inherit",
+            "animation": {
+                "show": true,
+                "animationFrames": 20
+            },
+            "line": {
+                "stroke": "#2D353C",
+                "strokeWidth": 2,
+                "strokeLinecap": "round",
+                "strokeLinejoin": "round",
+                "smooth": true,
+                "useColorTrend": true
+            },
+            "area": {
+                "show": true,
+                "useGradient": true,
+                "opacity":20
+            },
+            "dataLabel": {
+                "show": true,
+                "useColorTrend": true,
+                "color":"#2D353C",
+                "fontSize": 14,
+                "bold": false,
+                "prefix": "",
+                "suffix": "",
+                "rounding": 0
+            },
+            "trendLabel": {
+                "trendType": "global",
+                "useColorTrend": true,
+                "color":"#2D353C",
+                "fontSize": 14,
+                "bold": true,
+                "rounding": 0
+            },
+            "arrow": {
+                "colors": {
+                    "positive": "#2ca02c",
+                    "neutral": "#7f7f7f",
+                    "negative": "#d62728"
+                }
+            },
+            "padding": {
+                "top": 12,
+                "left": 82,
+                "right": 12,
+                "bottom": 12
+            }
+        }
     }
 }

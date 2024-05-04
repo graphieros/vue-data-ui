@@ -47,7 +47,8 @@ import {
     VueUiXy,
     VueUiTableHeatmap,
     VueUiAccordion,
-    VueUiQuickChart
+    VueUiQuickChart,
+    VueUiSparkTrend
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -98,4 +99,5 @@ app.component("VueUiWheel", VueUiWheel);
 app.component("VueUiXy", VueUiXy);
 app.component("VueUiAccordion", VueUiAccordion);
 app.component("VueUiQuickChart", VueUiQuickChart);
+app.component("VueUiSparkTrend", VueUiSparkTrend);
 app.mount('#app');

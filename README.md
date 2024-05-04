@@ -13,7 +13,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-46-green)
+![Static Badge](https://img.shields.io/badge/components-47-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -56,6 +56,7 @@ Available components:
 - [VueUiSparkgauge](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkgauge)
 - [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
 - [VueUiSparkstackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
+- [VueUiSparkTrend](https://vue-data-ui.graphieros.com/docs#vue-ui-spark-trend)
 
 ## 3d
 

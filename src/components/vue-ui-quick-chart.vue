@@ -1136,7 +1136,6 @@ defineExpose({
                             :stroke="quickConfig.backgroundColor"
                             :stroke-width="quickConfig.barStrokeWidth"
                             stroke-linecap="round"
-                            class="quick-animation"
                             style="transition: all 0.3s ease-in-out"
                         />
                     </template>

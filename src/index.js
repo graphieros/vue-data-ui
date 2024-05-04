@@ -47,6 +47,7 @@ import VueUiTableHeatmap from "./components/vue-ui-table-heatmap.vue";
 import VueUiAccordion from "./components/vue-ui-accordion.vue";
 import VueUiQuickChart from "./components/vue-ui-quick-chart.vue";
 import VueUiCursor from "./components/vue-ui-cursor.vue";
+import VueUiSparkTrend from "./components/vue-ui-spark-trend.vue";
 import { getPalette } from "./lib";
 
 export { 
@@ -100,4 +101,5 @@ export {
     VueUiAccordion,
     VueUiQuickChart,
     VueUiCursor,
+    VueUiSparkTrend
 };

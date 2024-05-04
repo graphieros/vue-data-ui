@@ -937,7 +937,9 @@ export function interpolateColorHex(minColor, maxColor, minValue, maxValue, valu
  * @type {DataLabel}
  */
 export function dataLabel({ p = '', v, s = '', r = 0, space = false }) {
-    return `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : Number(Number(v).toFixed(r).toLocaleString())}${space ? ' ' : ''}${s ?? ''}`
+    const num = Number(Number(v).toFixed(r).toLocaleString())
+    const numStr = num === Infinity ? '∞' : num === -Infinity ? '-∞' : num;
+    return `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
 }
 
 /**
@@ -1245,6 +1247,36 @@ export function convertNameColorToHex(colorName) {
 
 export const XMLNS = "http://www.w3.org/2000/svg";
 
+export function calcTrend(numbers) {
+    if (numbers.length < 2) {
+        return 0;
+    }
+    
+    let totalPercentageChange = 0;
+    let pairsCount = 0;
+
+    for (let i = 1; i < numbers.length; i++) {
+        const initial = numbers[i - 1];
+        const final = numbers[i];
+        
+        if ([null, undefined, 0, Infinity, -Infinity].includes(initial)) {
+            continue;
+        }
+
+        const percentageChange = ((final - initial) / Math.abs(initial)) * 100;
+        totalPercentageChange += percentageChange;
+        pairsCount++;
+    }
+
+    if (pairsCount === 0) {
+        return 0;
+    }
+
+    const averagePercentageChange = totalPercentageChange / pairsCount;
+
+    return averagePercentageChange;
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -1254,6 +1286,7 @@ const lib = {
     calcMarkerOffsetY,
     calcMedian,
     calcNutArrowPath,
+    calcTrend,
     canShowValue,
     checkArray,
     checkNaN,

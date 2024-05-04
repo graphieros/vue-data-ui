@@ -61,6 +61,7 @@ import TableHeatmapTest from "./components/vue-ui-table-heatmap.vue";
 import AccordionTest from "./components/vue-ui-accordion.vue";
 import QuickTest from "./components/vue-ui-quick-chart.vue";
 import TestCursor from "./components/vue-ui-cursor.vue";
+import TestTrend from "./components/vue-ui-spark-trend.vue";
 
 const dataset = ref([
   {
@@ -3301,7 +3302,7 @@ const quickDatasetLine = ref([
   },
   {
     name: 'Serie2',
-    values: [5, 6, 7, 6, 7, 8, 7, 8, 9]
+    values: [5, 6, 7, 6, -10, 8, 7, 8, 9]
   },
   {
     name: 'Serie3',
@@ -3310,7 +3311,7 @@ const quickDatasetLine = ref([
 ])
 
 
-const quickDatasetSimpleLine = ref([1, 2, 3, 5, 8, 13, 21, 34, 55, 89])
+const quickDatasetSimpleLine = ref([1, 2, 3, 5, -8, 13, 21, 34, 55, 89])
 const quickDatasetSimpleBar = ref([1, 2, -10, -5, 8])
 
 const quickDatasetBar = ref([
@@ -3336,8 +3337,28 @@ const quickConfig = ref({
   yAxisLabel: 'This is y axis'
 })
 
-const cursorConfig = ref({
-  
+const cursorConfig = ref({})
+
+const pillDataset = ref([0, 1, 2, 3, 5, 8, -13, 21, 34, 55, 89])
+
+const pillConfig = ref({
+  style: {
+    trendLabel: {
+      trendType: "global"
+    },
+    area: {
+      opacity: 20
+    },
+    line: {
+      useColorTrend: true
+    },
+    trendLabel: {
+      useColorTrend: true
+    },
+    dataLabel: {
+      useColorTrend: true,
+    }
+  }
 })
 
 </script>
@@ -3479,8 +3500,27 @@ const cursorConfig = ref({
           <BaseIcon name="people" stroke="#42d392" />
           <BaseIcon name="copy" stroke="#42d392" />
           <BaseIcon name="cursor" stroke="#42d392" />
+          <BaseIcon name="trend" stroke="#42d392" />
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_spark_trend)">
+        <template #title>
+          <BaseIcon name="trend"/>
+          VueUiSparkTrend
+        </template>
+        <template #info>
+        </template>
+        <template #dev>
+          <TestTrend :dataset="pillDataset" :config="pillConfig"/>
+        </template>
+        <template #prod>
+          <VueUiSparkTrend :dataset="pillDataset" :config="pillConfig"/>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_spark_trend }}
+        </template>
       </Box>
 
       <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_quick_chart)">

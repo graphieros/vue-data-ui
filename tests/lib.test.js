@@ -8,6 +8,7 @@ import {
     calcPercentageTrend,
     calcPolygonPoints,
     calcStarPoints,
+    calcTrend,
     calculateNiceScale,
     checkArray,
     checkNaN,
@@ -41,6 +42,18 @@ import {
     sumByAttribute,
     treeShake
 } from "../src/lib"
+
+describe('calcTrend', () => {
+    test('returns 0 if dataset has insufficient length', () => {
+        expect(calcTrend([1])).toBe(0)
+        expect(calcTrend([0, 1])).toBe(0)
+    })
+    test('returns expected trend from a dataset', () => {
+        expect(calcTrend([0, 1, 2])).toBe(100)
+        expect(calcTrend([1, 0])).toBe(-100)
+        expect(calcTrend([2, 1, 0])).toBe(-75)
+    })
+})
 
 describe('getMissingDatasetAttributes', () => {
     test('returns the missing attributes from a dataset object', () => {

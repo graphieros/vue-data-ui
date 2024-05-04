@@ -1,4 +1,4 @@
-<script setup>
+‹<script setup>
 import { computed } from "vue";
 import { XMLNS } from "../lib";
 
@@ -140,7 +140,8 @@ const icons = computed(() => {
         people: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth / 2}" fill="none" d="M 5 1 A 1 1 0 0 0 5 9 A 1 1 0 0 0 5 1 M 15 1 A 1 1 0 0 0 15 9 A 1 1 0 0 0 15 1 M 5 11 A 1 1 0 0 0 5 19 A 1 1 0 0 0 5 11 M 15 11 A 1 1 0 0 0 15 19 A 1 1 0 0 0 15 11 M 3 4 L 3 4 M 7 4 L 7 4 M 3 6 C 4 7 6 7 7 6 M 13 4 L 13 4 M 17 4 L 17 4 M 13 6 C 14 7 16 7 17 6 M 3 14 L 3 14 M 7 14 L 7 14 M 3 16 C 4 17 6 17 7 16 M 13 14 L 13 14 M 17 14 L 17 14 M 13 16 C 14 17 16 17 17 16" stroke-linecap="round" stroke-linejoin="round"/>`,
         copy: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" fill="none" d="M 18 16 C 18 17 17 18 16 18 L 8 18 C 7 18 6 17 6 16 L 6 8 C 6 7 7 6 8 6 L 16 6 C 17 6 18 7 18 8 L 18 16 M 6 14 L 4 14 C 3 14 2 13 2 12 L 2 4 C 2 3 3 2 4 2 L 12 2 C 13 2 14 3 14 4 L 14 6" stroke-linecap="round" stroke-linejoin="round"/>`,
         accordion: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 2 2 L 18 2 L 16 4 L 18 6 L 16 8 L 18 10 L 16 12 L 18 14 L 16 16 L 18 18 L 2 18 L 4 16 L 2 14 L 4 12 L 2 10 L 4 8 L 2 6 L 4 4 L 2 2"/><path stroke="none" fill="${props.stroke}" style="opacity:0.3" stroke-linecap="round" stroke-linejoin="round" d="M 2 2 L 18 2 L 16 4 L 4 4 Z" /><path stroke="none" fill="${props.stroke}" style="opacity:0.3" stroke-linecap="round" stroke-linejoin="round" d="M 2 6 L 18 6 L 16 8 L 4 8 Z" /><path stroke="none" fill="${props.stroke}" style="opacity:0.3" stroke-linecap="round" stroke-linejoin="round" d="M 2 10 L 18 10 L 16 12 L 4 12 Z" /><path stroke="none" fill="${props.stroke}" style="opacity:0.3" stroke-linecap="round" stroke-linejoin="round" d="M 2 14 L 18 14 L 16 16 L 4 16 Z" />`,
-        cursor: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" d="M 6 10 A 1 1 0 0 0 14 10 A 1 1 0 0 0 6 10 M 1 10 L 6 10 M 14 10 L 19 10 M 10 1 L 10 6 M 10 14 L 10 19 M 10 8 L 10 12 M 8 10 L 12 10" />`
+        cursor: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" d="M 6 10 A 1 1 0 0 0 14 10 A 1 1 0 0 0 6 10 M 1 10 L 6 10 M 14 10 L 19 10 M 10 1 L 10 6 M 10 14 L 10 19 M 10 8 L 10 12 M 8 10 L 12 10" />`,
+        trend: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" fill="none" stroke-linecap="round" stroke-kinejoin="round" d="M 1 6 L 4 4 L 7 6 M 4 4 L 4 13 M 7 16 C 7 16 7 18 9 18 C 12 18 10 9 12 9 C 14 9 14 13 15 13 C 18 14 17.6667 5.6667 19 2"/>`
     }
 })
 
