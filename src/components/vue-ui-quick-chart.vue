@@ -229,7 +229,6 @@ const donut = computed(() => {
             id: `donut_${i}`
         }
     })
-    // .sort((a, b) => b.value - a.value)
     .map((ds, i) => {
         return {
             ...ds,
@@ -280,7 +279,6 @@ const donut = computed(() => {
 
             tooltipContent.value = `<div>${html}</div>`;
         }
-
         isTooltip.value = true;
     }
 
@@ -382,11 +380,11 @@ const line = computed(() => {
         maxSeries: Math.max(...ds.map(d => d.values.length))
     }
 
+    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, quickConfig.value.xyScaleSegments)
     const absoluteMin = extremes.min < 0 ? Math.abs(extremes.min) : 0;
-    const absoluteZero = drawingArea.bottom - (absoluteMin / (extremes.max + absoluteMin) * drawingArea.height)
+    const absoluteZero = drawingArea.bottom - (absoluteMin / (scale.max + absoluteMin) * drawingArea.height)
     const slotSize = drawingArea.width / extremes.maxSeries;
 
-    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, quickConfig.value.xyScaleSegments)
 
     const yLabels = scale.ticks.map(t => {
         return {
@@ -402,7 +400,7 @@ const line = computed(() => {
             coordinates: d.values.map((v,j) => {
                 return {
                     x: drawingArea.left + (slotSize * (j + 1)) - (slotSize / 2),
-                    y: drawingArea.bottom - (((v + absoluteMin) / (extremes.max + absoluteMin)) * drawingArea.height),
+                    y: drawingArea.bottom - (((v + absoluteMin) / (scale.max + absoluteMin)) * drawingArea.height),
                     value: v
                 }
             })
@@ -537,11 +535,11 @@ const bar = computed(() => {
         maxSeries: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).map(d => d.values.length))
     }
 
+    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, quickConfig.value.xyScaleSegments)
     const absoluteMin = extremes.min < 0 ? Math.abs(extremes.min) : 0;
-    const absoluteZero = drawingArea.bottom - (absoluteMin / (extremes.max + absoluteMin) * drawingArea.height)
+    const absoluteZero = drawingArea.bottom - (absoluteMin / (scale.max + absoluteMin) * drawingArea.height)
     const slotSize = drawingArea.width / extremes.maxSeries;
 
-    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, quickConfig.value.xyScaleSegments)
 
     const yLabels = scale.ticks.map(t => {
         return {

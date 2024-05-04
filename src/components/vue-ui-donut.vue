@@ -144,6 +144,7 @@ function getData() {
 const segregated = ref([]);
 const rafUp = ref(null);
 const rafDown = ref(null);
+const isAnimating = ref(false);
 
 function segregate(index) {
     const target = immutableSet.value.find((_, idx) => idx === index)
@@ -164,8 +165,10 @@ function segregate(index) {
                     } else {
                         return ds
                     }
-                })
+                });
+                isAnimating.value = false;
             } else {
+                isAnimating.value = true;
                 initVal += (targetVal * 0.025);
                 mutableSet.value = mutableSet.value.map((ds, i) => {
                     if((index === i)) {
@@ -195,8 +198,10 @@ function segregate(index) {
                     } else {
                         return ds
                     }
-                })
+                });
+                isAnimating.value = false;
             } else {
+                isAnimating.value = true;
                 initVal /= 1.1;
                 mutableSet.value = mutableSet.value.map((ds, i) => {
                     if(index === i) {
@@ -463,8 +468,6 @@ const isSafari = computed(() => {
     return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 })
 
-console.log(isSafari.value)
-
 function selectDatapoint(datapoint, index) {
     emit('selectDatapoint', { datapoint, index })
 }
@@ -691,7 +694,7 @@ defineExpose({
             </text>
 
             <!-- DATALABELS -->
-            <g v-for="(arc, i) in currentDonut" :filter="getBlurFilter(i)" class="animated">
+            <g v-for="(arc, i) in currentDonut" :filter="getBlurFilter(i)" :class="{ 'animated': donutConfig.useCssAnimation}">
                 <g v-if="donutConfig.style.chart.layout.labels.dataLabels.useLabelSlots">
                     <foreignObject
                         :x="calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - 120 : calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - 60 : calcMarkerOffsetX(arc).x"

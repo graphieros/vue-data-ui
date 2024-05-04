@@ -173,7 +173,11 @@
                             :font-size="chartConfig.chart.labels.fontSize"
                             :fill="serie.color"
                         >
-                            {{ `${(calcLinearProgression(serie.plots).trend * 100).toFixed(2)}%` }}
+                            {{  dataLabel({
+                                v: calcLinearProgression(serie.plots).trend * 100,
+                                s: '%',
+                                r: 2
+                            }) }}
                         </text>
                     </g>
                 </g>
@@ -223,7 +227,11 @@
                             :font-size="chartConfig.chart.labels.fontSize"
                             :fill="serie.color"
                         >
-                            {{ `${(calcLinearProgression(serie.plots).trend * 100).toFixed(2)}%` }}
+                            {{  dataLabel({
+                                v: calcLinearProgression(serie.plots).trend * 100,
+                                s: '%',
+                                r: 2
+                            }) }}
                         </text>
                     </g>
                 </g>
@@ -294,7 +302,11 @@
                             :font-size="chartConfig.chart.labels.fontSize"
                             :fill="serie.color"
                         >
-                            {{ `${(calcLinearProgression(serie.plots).trend * 100).toFixed(2)}%` }}
+                            {{  dataLabel({
+                                v: calcLinearProgression(serie.plots).trend * 100,
+                                s: '%',
+                                r: 2
+                            }) }}
                         </text>
                     </g>
                 </g>

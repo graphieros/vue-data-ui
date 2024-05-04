@@ -94,7 +94,7 @@ describe('<VueUiXy />', () => {
       cy.get(`[data-cy="xy-bar-progression-label-1"]`).should('contain', '-91.67%');
 
       cy.get(`[data-cy="xy-plot-progression-0"]`).should('exist');
-      cy.get(`[data-cy="xy-plot-progression-label-0"]`).should('contain', '100.00%');
+      cy.get(`[data-cy="xy-plot-progression-label-0"]`).should('contain', '100%');
 
       for(let i = 0; i < 10; i += 1) {
         cy.get(`[data-cy="xy-plot-0-${i}"]`).should('exist');

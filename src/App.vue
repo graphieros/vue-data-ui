@@ -2635,6 +2635,7 @@ const moodRadarConfig = ref({
   })
 
 const donutConfig = ref({
+  useCssAnimation: true,
   style: {
     chart: {
       layout: {
@@ -3302,7 +3303,7 @@ const quickDatasetLine = ref([
   },
   {
     name: 'Serie2',
-    values: [5, 6, 7, 6, -10, 8, 7, 8, 9]
+    values: [5, 6, 7, 6, 5, 8, 7, 8, 9]
   },
   {
     name: 'Serie3',
@@ -3311,7 +3312,7 @@ const quickDatasetLine = ref([
 ])
 
 
-const quickDatasetSimpleLine = ref([1, 2, 3, 5, -8, 13, 21, 34, 55, 89])
+const quickDatasetSimpleLine = ref([1, 2, 3, 5, 8, 13, 21, 34, 55, 89])
 const quickDatasetSimpleBar = ref([1, 2, -10, -5, 8])
 
 const quickDatasetBar = ref([
@@ -3321,7 +3322,7 @@ const quickDatasetBar = ref([
   },
   {
     name: 'Serie2',
-    values: [5, 6, 7, 6, 7]
+    values: [5, 6, -7, 6, 7]
   },
   {
     name: 'Serie3',
