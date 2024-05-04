@@ -299,12 +299,13 @@ const straightLine = computed(() => {
                 :fill="trendColor"
             />
             <text
-                v-if="mutableDataset.length && mutableDataset.at(-1).x !== undefined"
+                v-if="mutableDataset.length && mutableDataset.at(-1).x !== undefined && trendConfig.style.dataLabel.show"
                 text-anchor="middle"
                 :x="mutableDataset.at(-1).x"
                 :y="mutableDataset.at(-1).y - (trendConfig.style.dataLabel.fontSize / 1.5)"
                 :font-size="trendConfig.style.dataLabel.fontSize"
                 :fill="trendConfig.style.dataLabel.useColorTrend ? trendColor : trendConfig.style.dataLabel.color"
+                :font-weight="trendConfig.style.dataLabel.bold ? 'bold': 'normal'"
             >
                 {{ dataLabel({
                     p: trendConfig.style.dataLabel.prefix,
