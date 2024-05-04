@@ -54,7 +54,7 @@ const safeDatasetCopy = ref(props.dataset.map(v => {
     if(trendConfig.value.style.animation.show) {
         return null
     } else {
-        return ![undefined].includes(d) ? d : null
+        return ![undefined].includes(v) ? v : null
     }
 }))
 
@@ -73,7 +73,7 @@ onMounted(() => {
     let interval = 1000 / fps;
     let then = performance.now();
 
-    if (trendConfig.value.style.animation && trendConfig.value.style.animation.animationFrames && props.dataset.length > 1) {
+    if (trendConfig.value.style.animation.show && trendConfig.value.style.animation.animationFrames && props.dataset.length > 1) {
         safeDatasetCopy.value = [];
         let start = 0;
 
