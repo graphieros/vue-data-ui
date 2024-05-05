@@ -96,8 +96,6 @@ const mutableConfig = ref({
     showTable: waffleConfig.value.table.show
 })
 
-const captions = computed(() => waffleConfig.style.chart.layout.labels.captions)
-
 const svg = computed(() => {
     const height = mutableConfig.value.inside ? 704 : 512;
     return {
@@ -267,6 +265,26 @@ const positions = computed(() => {
     return grid;
 });
 
+const segregated = ref([]);
+
+function segregate(uid) {
+    if(segregated.value.includes(uid)) {
+        segregated.value = segregated.value.filter(s => s !== uid);
+    }else {
+        if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
+            segregated.value.push(uid);
+        }
+    }
+    emit('selectLegend', waffleSet.value.map(w => {
+        return {
+            name: w.name,
+            color: w.color,
+            value: w.value,
+            proportion: (w.proportion / (Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)))
+        }
+    }));
+}
+
 const legendSet = computed(() => {
     return datasetCopy.value
         .map((serie, i) => {
@@ -283,7 +301,9 @@ const legendSet = computed(() => {
             return {
                 ...el,
                 proportion: el.value / datasetCopy.value.map(ds => (ds.values || []).reduce((a,b) => a + b, 0)).reduce((a, b) => a + b, 0),
-                opacity: segregated.value.includes(el.uid) ? 0.5 : 1
+                opacity: segregated.value.includes(el.uid) ? 0.5 : 1,
+                segregate: () => segregate(el.uid),
+                isSegregated: segregated.value.includes(el.uid)
             }
         })
 });
@@ -353,26 +373,6 @@ function useTooltip(index) {
 }
 
 const emit = defineEmits(['selectLegend']);
-
-const segregated = ref([]);
-
-function segregate(uid) {
-    if(segregated.value.includes(uid)) {
-        segregated.value = segregated.value.filter(s => s !== uid);
-    }else {
-        if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
-            segregated.value.push(uid);
-        }
-    }
-    emit('selectLegend', waffleSet.value.map(w => {
-        return {
-            name: w.name,
-            color: w.color,
-            value: w.value,
-            proportion: (w.proportion / (Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)))
-        }
-    }));
-}
 
 const table = computed(() => {
     const head = waffleSet.value.map(ds => {
@@ -700,7 +700,7 @@ defineExpose({
                     @clickMarker="({legend}) => segregate(legend.uid)"
                 >
                     <template #item="{ legend }">
-                        <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                        <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
                             {{ legend.name }} : {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue}) }}
                             <span v-if="!segregated.includes(legend.uid)">
                                 ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)
@@ -736,7 +736,7 @@ defineExpose({
             @clickMarker="({legend}) => segregate(legend.uid)"
         >
             <template #item="{ legend }">
-                <div @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue}) }}
                     <span v-if="!segregated.includes(legend.uid)">
                         ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)

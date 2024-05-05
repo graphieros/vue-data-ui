@@ -305,7 +305,9 @@ const legendSet = computed(() => {
         .map((el, i) => {
             return {
                 ...el,
-                opacity: segregated.value.includes(el.uid) ? 0.5 : 1
+                opacity: segregated.value.includes(el.uid) ? 0.5 : 1,
+                segregate: () => segregate(el.uid),
+                isSegregated: segregated.value.includes(el.uid)
             }
         })
 });
@@ -867,7 +869,7 @@ defineExpose({
             </template>
         </Legend>
 
-        <slot name="legend" v-bind:legend="convertedDataset"></slot>
+        <slot name="legend" v-bind:legend="legendSet"></slot>
 
         <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable && isDataset">
             <DataTable

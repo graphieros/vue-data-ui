@@ -158,6 +158,8 @@ const datasetWithId = computed(() => {
             color: ds.color ? ds.color : (palette[i] || palette[i % palette.length]),
             opacity: segregated.value.includes(id) ? 0.5: 1,
             shape: ds.shape ?? 'circle',
+            segregate: () => segregate(id),
+            isSegregated: segregated.value.includes(id)
         }
     })
 })
@@ -709,7 +711,7 @@ defineExpose({
                     @clickMarker="({ legend }) => segregate(legend.id)"
                 >
                     <template #item="{ legend }">
-                        <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                        <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                             {{ legend.name }}
                         </div>
                     </template>
@@ -745,7 +747,7 @@ defineExpose({
             @clickMarker="({ legend }) => segregate(legend.id)"
         >
             <template #item="{ legend }">
-                <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                     {{ legend.name }}
                 </div>
             </template>

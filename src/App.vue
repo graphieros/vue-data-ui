@@ -3506,7 +3506,7 @@ const pillConfig = ref({
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_spark_trend)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_spark_trend)">
         <template #title>
           <BaseIcon name="trend"/>
           VueUiSparkTrend
@@ -3524,7 +3524,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_quick_chart)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_quick_chart)">
         <template #title>
           <BaseIcon name="vueDataUi"/>
           VueUiQuickChart
@@ -3573,7 +3573,15 @@ const pillConfig = ref({
               </div>
             </template>
             <template #content>
-              <VueDataUi component="VueUiGalaxy" :dataset="galaxyDataset" :config="galaxyConfig" />
+              <VueDataUi component="VueUiGalaxy" :dataset="galaxyDataset" :config="galaxyConfig">
+                <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }} {{ item.color }}
+                </div>
+              </div>
+            </template>
+              </VueDataUi>
             </template>
           </AccordionTest>
         </template>
@@ -3811,6 +3819,14 @@ const pillConfig = ref({
             <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
             </template>
+            <template #legend="{legend}">
+              <div v-for="legendSets in legend">
+
+                <div v-for="l in legendSets" :style="`opacity: ${l.isSegregated ? '0.3' : '1'}`" @click="l.segregate()">
+                  {{ l.name }} {{ l.color }}
+                </div>
+              </div>
+            </template>
           </VueDataUiTest>
             
         </template>
@@ -4001,6 +4017,13 @@ const pillConfig = ref({
             :dataset="donutEvolutionDataset"
             :config="donutEvolutionConfig"
           >
+          <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }} {{ item.color }}
+                </div>
+              </div>
+            </template>
             <template #svg="{ svg }">
               <circle :cx="svg.absoluteWidth / 2" :cy="svg.absoluteHeight / 2" :r="30" fill="#FF000033"/>
             </template>
@@ -4142,6 +4165,13 @@ const pillConfig = ref({
             :dataset="ringsDataset"
             :config="ringsConfig"
           >
+          <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }} {{ item.color }} {{ item.value }} {{  item.proportion }}
+                </div>
+              </div>
+            </template>
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
             </template>
@@ -4294,6 +4324,14 @@ const pillConfig = ref({
             <template #tooltip-after="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
             </template>
+
+            <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                 {{ item.name }}
+                </div>
+              </div>
+            </template>
           </VueDataUiTest>
           <VueDataUiTest
             component="VueUiXy"
@@ -4420,6 +4458,13 @@ const pillConfig = ref({
             :dataset="scatterDataset" 
             :config="scatterConfig"
           >
+          <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }} {{ item.color }}
+                </div>
+              </div>
+            </template>
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
             </template>
@@ -4469,6 +4514,13 @@ const pillConfig = ref({
             :dataset="verticalDataset"
             :config="verticalBarConfig"
           >
+          <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }} {{ item.color }} {{ item.value }} {{  item.proportion }}
+                </div>
+              </div>
+            </template>
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
               {{ datapoint.name }}
@@ -4519,6 +4571,13 @@ const pillConfig = ref({
             :dataset="onionDataset"
             @selectLegend="selectOnionLegend"
           >
+          <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }} {{ item.color }} {{ item.value }} {{  item.proportion }}
+                </div>
+              </div>
+            </template>
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
               {{ datapoint.name }}
@@ -4573,6 +4632,13 @@ const pillConfig = ref({
             @selectSide="selectSide"
             @selectLegend="selectQuadrantLegend"
           >
+          <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }}
+                </div>
+              </div>
+            </template>
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
               {{ datapoint.name }}
@@ -4626,6 +4692,13 @@ const pillConfig = ref({
             :config="radarConfig"
             @selectLegend="selectRadarLegend"
           >
+          <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }}
+                </div>
+              </div>
+            </template>
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
               {{ datapoint.name }}
@@ -4657,7 +4730,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_donut)">
         <template #title>
           <BaseIcon name="chartDonut" />
           VueUiDonut
@@ -4693,7 +4766,7 @@ const pillConfig = ref({
               {{ seriesIndex }}
               {{ datapoint.name }}
             </template>
-            <template #svg="{ svg }">
+            <!-- <template #svg="{ svg }">
               <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#FF000033"/>
               <Arrow
                 :x1="20"
@@ -4703,10 +4776,12 @@ const pillConfig = ref({
                 :pointerSize="10"
                 :strokeWidth="2"
               />
-            </template>
+            </template> -->
             <template #legend="{legend}">
-              <div v-for="item in legend">
-                {{ item.name }} {{ item.color }} {{ item.value }} {{  item.proportion }}
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }} {{ item.color }} {{ item.value }} {{  item.proportion }}
+                </div>
               </div>
             </template>
           </VueDataUiTest>
@@ -4978,6 +5053,13 @@ const pillConfig = ref({
               <BaseIcon name="smiley" :stroke="cell.color" :size="30" />
             </div>
           </template> -->
+          <template #legend="{legend}">
+              <div v-for="item in legend" @click="item.segregate()">
+                <div :style="`opacity: ${item.isSegregated ? '0.3' : '1'}`">
+                  {{ item.name }} {{ item.color }} {{ item.value }} {{  item.proportion }}
+                </div>
+              </div>
+            </template>
           <template #tooltip-before="{ seriesIndex, datapoint, series, config }">
               {{ seriesIndex }}
             </template>

@@ -260,7 +260,9 @@ const legendSet = computed(() => {
             return {
                 ...el,
                 proportion: el.value / props.dataset.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
-                opacity: segregated.value.includes(i) ? 0.5 : 1
+                opacity: segregated.value.includes(i) ? 0.5 : 1,
+                segregate: () => segregate(i),
+                isSegregated: segregated.value.includes(i)
             }
         })
 });
@@ -467,6 +469,10 @@ function toggleFullscreen(state) {
 const isSafari = computed(() => {
     return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 })
+
+function dashLabel(num) {
+    return num.toFixed(donutConfig.value.style.chart.legend.roundingPercentage).split('').map(el => '-').join('')
+}
 
 function selectDatapoint(datapoint, index) {
     emit('selectDatapoint', { datapoint, index })
@@ -771,13 +777,17 @@ defineExpose({
                     @clickMarker="({i}) => segregate(i)"
                 >
                     <template #item="{ legend, index }">
-                        <div @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                        <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                             {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
                             <span v-if="!segregated.includes(index)">
-                                ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)
+                                ({{ isNaN(legend.value / total) ? '-' : dataLabel({
+                                    v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
+                                    s: '%',
+                                    r: donutConfig.style.chart.legend.roundingPercentage
+                                })}})
                             </span>
                             <span v-else>
-                                ( - % )
+                                ( {{ dashLabel(legend.proportion * 100) }} % )
                             </span>
                         </div>
                     </template>
@@ -810,13 +820,17 @@ defineExpose({
             @clickMarker="({i}) => segregate(i)"
         >
             <template #item="{ legend, index }">
-                <div :data-cy="`legend-item-${index}`" @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                <div :data-cy="`legend-item-${index}`" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
-                    <span v-if="!segregated.includes(index)">
-                        ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(donutConfig.style.chart.legend.roundingPercentage)}}%)
+                    <span v-if="!segregated.includes(index)" style="font-variant-numeric: tabular-nums;">
+                        ({{ isNaN(legend.value / total) ? '-' : dataLabel({
+                            v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
+                            s: '%',
+                            r: donutConfig.style.chart.legend.roundingPercentage
+                        })}})
                     </span>
                     <span v-else>
-                        ( - % )
+                        ( {{ dashLabel(legend.proportion * 100) }} % )
                     </span>
                 </div>
             </template>

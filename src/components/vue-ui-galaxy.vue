@@ -249,7 +249,9 @@ const legendSet = computed(() => {
                 ...el,
                 proportion: (el.value || 0) / props.dataset.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
                 opacity: segregated.value.includes(el.id) ? 0.5 : 1,
-                shape: el.shape || 'circle'
+                shape: el.shape || 'circle',
+                segregate: () => segregate(el),
+                isSegregated: segregated.value.includes(el.id)
             }
         })
 });

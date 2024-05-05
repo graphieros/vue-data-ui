@@ -963,6 +963,8 @@ export default {
                     ...datapoint,
                     series: datapoint.series.map(plot => plot + this.relativeZero),
                     absoluteValues: datapoint.series,
+                    segregate: () => this.segregate(datapoint),
+                    isSegregated: this.segregatedSeries.includes(datapoint.id)
                 }
             })
         },

@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "2.1.22",
+  "version": "2.1.23",
   "type": "module",
   "description": "A user-empowering data visualization Vue components library",
   "keywords": [

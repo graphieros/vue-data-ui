@@ -148,6 +148,8 @@ const immutableDataset = computed(() => {
             value: hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : (serie.value || 0),
             hasChildren,
             isChild: false,
+            segregate: () => segregate(id),
+            isSegregated: segregated.value.includes(id),
             color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
             children: !serie.children || !serie.children.length ? [] : serie.children
                 .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)

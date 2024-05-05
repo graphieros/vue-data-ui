@@ -360,12 +360,14 @@ const legendSets = computed(() => {
                 id: s.id,
                 seriesIndex: j,
                 datasetIndex: i,
-                total: ds.series.filter(s => !segregated.value.includes(s.id)).map(s => s.value).reduce((a, b) => a + b, 0)
+                total: ds.series.filter(s => !segregated.value.includes(s.id)).map(s => s.value).reduce((a, b) => a + b, 0),
             }
         }).map((s) => {
             return {
                 ...s,
-                opacity: segregated.value.includes(s.id) ? 0.5 : 1
+                opacity: segregated.value.includes(s.id) ? 0.5 : 1,
+                segregate: () => segregate(s),
+                isSegregated: segregated.value.includes(s.id)
             }
         })
     })

@@ -151,7 +151,9 @@ const legendSet = computed(() => {
       return {
         ...el,
         shape: 'circle',
-        opacity: segregated.value.includes(el.uid) ? 0.5 : 1
+        opacity: segregated.value.includes(el.uid) ? 0.5 : 1,
+        segregate: () => segregate(el.uid),
+        isSegregated: segregated.value.includes(el.uid)
       }
     })
     .toSorted((a,b) => b.value - a.value)
@@ -583,7 +585,7 @@ defineExpose({
       </template>
     </Legend>
 
-    <slot name="legend" v-bind:legend="datasetCopy"></slot>
+    <slot name="legend" v-bind:legend="legendSet"></slot>
 
     <!-- TOOLTIP -->
     <Tooltip

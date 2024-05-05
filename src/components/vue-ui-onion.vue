@@ -136,7 +136,9 @@ const immutableDataset = computed(() => {
             id,
             shape: 'circle',
             opacity: segregated.value.includes(id) ? 0.5 : 1,
-            absoluteIndex: i
+            absoluteIndex: i,
+            segregate: () => segregate(id),
+            isSegregated: segregated.value.includes(id)
         }
     })
 });
@@ -548,7 +550,7 @@ defineExpose({
                     @clickMarker="({legend}) => segregate(legend.id)"
                 >
                     <template #item="{ legend }">
-                        <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                        <div @click="legend.segregate" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                             {{ legend.name }} : {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
 
 
@@ -580,7 +582,7 @@ defineExpose({
             @clickMarker="({legend}) => segregate(legend.id)"
         >
             <template #item="{ legend }">
-                <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
                 </div>
             </template>

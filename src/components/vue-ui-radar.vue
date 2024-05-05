@@ -306,8 +306,9 @@ const legendSet = computed(() => {
             ...d,
             totalProportion: ratios.map(r => r[i]).reduce((a, b) => a + b, 0) / seriesCopy.value.length,
             shape: 'circle',
-            opacity: segregated.value.includes(i) ? 0.5 : 1
-
+            opacity: segregated.value.includes(i) ? 0.5 : 1,
+            segregate: () => segregate(i),
+            isSegregated: segregated.value.includes(i)
         }
     })
 });
@@ -673,7 +674,7 @@ defineExpose({
                     @clickMarker="({i}) => segregate(i)"
                 >
                     <template #item="{ legend, index }">
-                        <div @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                        <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                             {{ legend.name }} : {{ (legend.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%
                         </div>
                     </template>
@@ -708,7 +709,7 @@ defineExpose({
             @clickMarker="({i}) => segregate(i)"
         >
             <template #item="{ legend, index }">
-                <div data-cy-legend-item @click="segregate(index)" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ (legend.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%
                 </div>
             </template>

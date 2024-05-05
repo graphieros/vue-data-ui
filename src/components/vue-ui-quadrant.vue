@@ -584,6 +584,17 @@ const dataTable = computed(() => {
     return { head, body, config, colNames: head }
 })
 
+function segregate(id) {
+    if(segregated.value.includes(id)) {
+        segregated.value = segregated.value.filter(s => s !== id);
+    } else {
+        segregated.value.push(id)
+    }
+    const currentData = getData();
+    emit('selectLegend', currentData);
+}
+
+
 const legendSet = computed(() => {
     return datasetReference.value.map(category => {
         return {
@@ -591,7 +602,9 @@ const legendSet = computed(() => {
             shape: category.shape,
             color: category.color,
             id: category.id,
-            opacity: segregated.value.includes(category.id) ? 0.5 : 1
+            opacity: segregated.value.includes(category.id) ? 0.5 : 1,
+            segregate: () => segregate(category.id),
+            isSegregated: segregated.value.includes(category.id)
         }
     })
 });
@@ -606,16 +619,6 @@ const legendConfig = computed(() => {
         fontWeight: quadrantConfig.value.style.chart.legend.bold ? 'bold' : ''
     }
 })
-
-function segregate(id) {
-    if(segregated.value.includes(id)) {
-        segregated.value = segregated.value.filter(s => s !== id);
-    } else {
-        segregated.value.push(id)
-    }
-    const currentData = getData();
-    emit('selectLegend', currentData);
-}
 
 function getQuadrantSide(plot) {
     switch (true) {
@@ -1417,7 +1420,7 @@ defineExpose({
             </template>
         </Legend>
 
-        <slot name="legend" v-bind:legend="datasetReference"></slot>
+        <slot name="legend" v-bind:legend="legendSet"></slot>
 
         <!-- TOOLTIP -->
         <Tooltip
