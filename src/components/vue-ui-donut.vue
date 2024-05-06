@@ -673,7 +673,11 @@ defineExpose({
                 :font-size="donutConfig.style.chart.layout.labels.hollow.total.value.fontSize"
                 :style="`font-weight:${donutConfig.style.chart.layout.labels.hollow.total.value.bold ? 'bold': ''}`"
             >
-                {{ dataLabel({p: donutConfig.style.chart.layout.labels.hollow.total.value.prefix, v: total, s: donutConfig.style.chart.layout.labels.hollow.total.value.suffix}) }}
+                {{ dataLabel({
+                    p: donutConfig.style.chart.layout.labels.hollow.total.value.prefix, 
+                    v: total, 
+                    s: donutConfig.style.chart.layout.labels.hollow.total.value.suffix
+                }) }}
             </text>
 
             <text 
@@ -696,7 +700,12 @@ defineExpose({
                 :font-size="donutConfig.style.chart.layout.labels.hollow.average.value.fontSize"
                 :style="`font-weight:${donutConfig.style.chart.layout.labels.hollow.average.value.bold ? 'bold': ''}`"
             >
-                {{ donutConfig.style.chart.layout.labels.hollow.average.value.prefix }} {{ isNaN(average.toFixed(donutConfig.style.chart.layout.labels.hollow.average.value.rounding)) ? "-" : Number(average.toFixed(donutConfig.style.chart.layout.labels.hollow.average.value.rounding)).toLocaleString() }} {{ donutConfig.style.chart.layout.labels.hollow.average.value.suffix }}
+                {{ isAnimating ? '--' : dataLabel({
+                    p: donutConfig.style.chart.layout.labels.hollow.average.value.prefix,
+                    v: average,
+                    s: donutConfig.style.chart.layout.labels.hollow.average.value.suffix,
+                    r: donutConfig.style.chart.layout.labels.hollow.average.value.rounding
+                }) }}
             </text>
 
             <!-- DATALABELS -->
