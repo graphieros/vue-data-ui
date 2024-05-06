@@ -1,9 +1,9 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "2.1.24",
+  "version": "2.1.25",
   "type": "module",
-  "description": "A user-empowering data visualization Vue components library",
+  "description": "A user-empowering data visualization Vue 3 components library for eloquent data storytelling",
   "keywords": [
     "3d bar",
     "Vue",
@@ -69,7 +69,7 @@
     "dev": "npm i && vite",
     "clean": "node cleanup.cjs",
     "build": "npm run clean && vite build --mode production && node copy-types.cjs && npm i",
-    "prod": "npm run test && npx cypress run --component && npm run clean && vite build --mode production && node copy-types.cjs",
+    "prod": "npm run test && npx cypress run --component && npm run clean && vite build --mode production && node copy-types.cjs && node copy-docs.cjs",
     "build:dev": "npm run build && npm run dev",
     "test": "vitest --run",
     "test:w": "vitest --watch",
