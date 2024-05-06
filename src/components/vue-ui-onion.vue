@@ -162,8 +162,8 @@ const mutableCount = computed(() => {
 
 const onionSkin = computed(() => {
     return {
-        gutter: drawableArea.value.width / 2 / mutableCount.value * onionConfig.value.style.chart.layout.gutter.width,
-        track: drawableArea.value.width / 2 / mutableCount.value * onionConfig.value.style.chart.layout.track.width,
+        gutter: drawableArea.value.width / 2 / immutableDataset.value.length * onionConfig.value.style.chart.layout.gutter.width,
+        track: drawableArea.value.width / 2 / immutableDataset.value.length * onionConfig.value.style.chart.layout.track.width,
     }
 });
 
