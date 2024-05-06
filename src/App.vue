@@ -3530,6 +3530,9 @@ const pillConfig = ref({
           VueUiQuickChart
         </template>
         <template #info>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
         </template>
         <template #dev>
           <QuickTest :dataset="quickDatasetDonut" :config="quickConfig"/>
@@ -4552,7 +4555,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
         <template #title>
           <BaseIcon name="chartOnion" />
           VueUiOnion
