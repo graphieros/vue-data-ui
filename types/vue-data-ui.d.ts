@@ -1997,6 +1997,16 @@ declare module 'vue-data-ui' {
                         fillOpacity?: number;
                     };
                 };
+                marginalBars?: {
+                    show?: boolean;
+                    size?: number;
+                    opacity?: number;
+                    fill?: string;
+                    strokeWidth?: number;
+                    offset?: number;
+                    borderRadius?: number;
+                    useGradient?: boolean;
+                };
                 correlation?: {
                     show?: boolean;
                     strokeDasharray?: number;

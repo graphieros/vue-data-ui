@@ -1916,6 +1916,16 @@
                     "stroke":"#e1e5e8",
                     "strokeWidth":1
                 },
+                "marginalBars": {
+                    "show": false,
+                    "size": 40,
+                    "opacity": 0.6,
+                    "fill": "#2D353C",
+                    "strokeWidth": 1,
+                    "offset": 20,
+                    "borderRadius": 2,
+                    "useGradient": true
+                },
                 "plots": {
                     "radius": 2,
                     "stroke": "#FFFFFF",

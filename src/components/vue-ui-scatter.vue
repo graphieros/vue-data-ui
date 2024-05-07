@@ -94,14 +94,21 @@ const svg = computed(() => {
     }
 });
 
+const marginalSize = computed(() => {
+    if(!scatterConfig.value.style.layout.marginalBars.show) {
+        return 0
+    }
+    return scatterConfig.value.style.layout.marginalBars.size + scatterConfig.value.style.layout.marginalBars.offset
+})
+
 const drawingArea = computed(() => {
     return {
-        top: scatterConfig.value.style.layout.padding.top,
-        right: svg.value.width - scatterConfig.value.style.layout.padding.right,
+        top: scatterConfig.value.style.layout.padding.top + marginalSize.value,
+        right: svg.value.width - scatterConfig.value.style.layout.padding.right - marginalSize.value,
         bottom: svg.value.height - scatterConfig.value.style.layout.padding.bottom,
         left: scatterConfig.value.style.layout.padding.left,
-        height: svg.value.height - scatterConfig.value.style.layout.padding.top - scatterConfig.value.style.layout.padding.bottom,
-        width: svg.value.width - scatterConfig.value.style.layout.padding.left - scatterConfig.value.style.layout.padding.right
+        height: svg.value.height - scatterConfig.value.style.layout.padding.top - scatterConfig.value.style.layout.padding.bottom - marginalSize.value,
+        width: svg.value.width - scatterConfig.value.style.layout.padding.left - scatterConfig.value.style.layout.padding.right - marginalSize.value
     }
 });
 
@@ -255,6 +262,61 @@ const drawableDataset = computed(() => {
 function getData() {
     return drawableDataset.value;
 }
+
+function aggregateCoordinates(arr, scale) {
+    const flattened = arr.flatMap(a => {
+        return a.plots.map((p) => {
+            return {
+                x: p.x,
+                y: p.y
+            }
+        })
+    });
+
+    let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+
+    flattened.forEach(({x, y}) => {
+        xMin = Math.min(xMin, x);
+        xMax = Math.max(xMax, x);
+        yMin = Math.min(yMin, y);
+        yMax = Math.max(yMax, y);
+    });
+
+    const totalX = xMax - xMin;
+    const totalY = yMax - yMin;
+    const chunkSizeX = totalX / scale;
+    const chunkSizeY = totalY / scale;
+    const xCounts = Array(scale).fill(0);
+    const yCounts = Array(scale).fill(0);
+
+    flattened.forEach(({ x, y }) => {
+        const xIndex = Math.floor((x - xMin) / chunkSizeX);
+        const yIndex = Math.floor((y - yMin) / chunkSizeY);
+        if(!xCounts[xIndex]) {
+            xCounts[xIndex] = 0;
+        }
+        if(!yCounts[yIndex]) {
+            yCounts[yIndex] = 0;
+        }
+        xCounts[xIndex] += 1;
+        yCounts[yIndex] += 1;
+    });
+
+    const avgX = [];
+    const avgY = [];
+    for (let i = 0; i < scale; i += 1) {
+        avgX.push(xMin + (i + 0.5) * chunkSizeX);
+        avgY.push(yMin + (i + 0.5) * chunkSizeY);
+    }
+    const maxX = Math.max(...xCounts);
+    const maxY = Math.max(...yCounts);
+    return { x: xCounts, y: yCounts, avgX, avgY, maxX, maxY };
+}
+
+const scale = ref(20);
+const marginalBars = computed(() => {
+    return aggregateCoordinates(mutableDataset.value, scale.value)
+})
 
 const selectedPlotId = ref(undefined);
 const selectedPlot = ref(null);
@@ -590,6 +652,46 @@ defineExpose({
                 </g>
             </g>
 
+            <!-- MARGINAL BARS -->
+            <g v-if="scatterConfig.style.layout.marginalBars.show">
+                <defs>
+                    <linearGradient :id="`marginal_x_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" :stop-color="scatterConfig.style.layout.marginalBars.fill"/>
+                        <stop offset="100%" :stop-color="scatterConfig.style.backgroundColor"/>
+                    </linearGradient>
+                    <linearGradient :id="`marginal_y_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
+                        <stop offset="0%" :stop-color="scatterConfig.style.backgroundColor"/>
+                        <stop offset="100%" :stop-color="scatterConfig.style.layout.marginalBars.fill"/>
+                    </linearGradient>
+                </defs>
+                <g v-for="(x, i) in marginalBars.x">
+                    <rect
+                        v-if="x && marginalBars.avgX[i]"
+                        :x="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
+                        :y="drawingArea.top - scatterConfig.style.layout.marginalBars.offset - x / marginalBars.maxX * scatterConfig.style.layout.marginalBars.size"
+                        :width="drawingArea.width / scale"
+                        :height="x / marginalBars.maxX * scatterConfig.style.layout.marginalBars.size"
+                        :fill="scatterConfig.style.layout.marginalBars.useGradient ? `url(#marginal_x_${uid})` : scatterConfig.style.layout.marginalBars.fill"
+                        :style="`opacity:${scatterConfig.style.layout.marginalBars.opacity}`"
+                        :stroke="scatterConfig.style.backgroundColor"
+                        :rx="scatterConfig.style.layout.marginalBars.borderRadius"
+                    />
+                </g>
+                <g v-for="(y, i) in marginalBars.y">
+                    <rect
+                        v-if="y && marginalBars.avgY[i]"
+                        :x="drawingArea.right + scatterConfig.style.layout.marginalBars.offset"
+                        :y="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
+                        :height="drawingArea.height / scale"
+                        :width="y / marginalBars.maxY * scatterConfig.style.layout.marginalBars.size"
+                        :fill="scatterConfig.style.layout.marginalBars.useGradient ? `url(#marginal_y_${uid})` : scatterConfig.style.layout.marginalBars.fill"
+                        :style="`opacity:${scatterConfig.style.layout.marginalBars.opacity}`"
+                        :stroke="scatterConfig.style.backgroundColor"
+                        :rx="scatterConfig.style.layout.marginalBars.borderRadius"
+                    />
+                </g>
+            </g>
+
             <!-- AXIS LABELS -->
             <g v-if="scatterConfig.style.layout.dataLabels.xAxis.show">
                 <text
@@ -652,7 +754,7 @@ defineExpose({
                     :font-weight="scatterConfig.style.layout.dataLabels.yAxis.bold ? 'bold' : 'normal'"
                     :fill="scatterConfig.style.layout.dataLabels.yAxis.color"
                     :x="drawingArea.left + drawingArea.width / 2"
-                    :y="drawingArea.top - 8 - scatterConfig.style.layout.dataLabels.yAxis.fontSize"
+                    :y="drawingArea.bottom + 8 + scatterConfig.style.layout.dataLabels.yAxis.fontSize"
                 >
                     {{ scatterConfig.style.layout.dataLabels.yAxis.name }}
                 </text>

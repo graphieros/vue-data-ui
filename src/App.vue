@@ -1061,7 +1061,7 @@ const weeks = computed(() => {
 
 const scat1 = computed(() => {
   const arr = [];
-  for (let i = 0; i < 200; i += 1) {
+  for (let i = 0; i < 100; i += 1) {
     arr.push({
       x: Math.random() * i + 12,
       y: (Math.random() * i) / 20,
@@ -4442,7 +4442,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter
