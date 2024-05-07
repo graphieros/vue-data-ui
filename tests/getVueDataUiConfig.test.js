@@ -5,19 +5,20 @@ import getVueDataUiConfig from "../src/getVueDataUiConfig";
 describe('getVueDataUiConfig', () => {
 
     const components = [
+        "heatmap",
         '3d_bar',
+        'accordion',
         'age_pyramid',
         'annotator',
         'candlestick',
         'chestnut',
+        'cursor',
         'dashboard',
         'digits',
-        'donut',
         'donut',
         'donut_evolution',
         'galaxy',
         'gauge',
-        "heatmap",
         'kpi',
         'mini_loader',
         'molecule',
@@ -25,6 +26,7 @@ describe('getVueDataUiConfig', () => {
         'nested_donuts',
         'onion',
         'quadrant',
+        'quick_chart',
         'radar',
         'rating',
         'relation_circle',
@@ -33,19 +35,21 @@ describe('getVueDataUiConfig', () => {
         'screenshot',
         'skeleton',
         'smiley',
+        'spark_trend',
         'sparkbar',
         'sparkgauge',
         'sparkhistogram',
         'sparkline',
         'sparkstackbar',
         'table',
+        'table_heatmap',
         'table_sparkline',
         'thermometer',
         'tiremarks',
         'vertical_bar',
         'waffle',
         'wheel',
-        'xy'
+        'xy',
     ]
 
     components.forEach(component => {
