@@ -2007,6 +2007,8 @@ declare module 'vue-data-ui' {
                     offset?: number;
                     borderRadius?: number;
                     useGradient?: boolean;
+                    showLines?: boolean;
+                    linesStrokeWidth?: number;
                 };
                 correlation?: {
                     show?: boolean;

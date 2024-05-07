@@ -1061,7 +1061,7 @@ const weeks = computed(() => {
 
 const scat1 = computed(() => {
   const arr = [];
-  for (let i = 0; i < 100; i += 1) {
+  for (let i = -100; i < 100; i += 1) {
     arr.push({
       x: Math.random() * i + 12,
       y: (Math.random() * i) / 20,
@@ -1072,7 +1072,7 @@ const scat1 = computed(() => {
 });
 const scat2 = computed(() => {
   const arr = [];
-  for (let i = 0; i < 50; i += 1) {
+  for (let i = -50; i < 50; i += 1) {
     arr.push({
       x: (Math.random() * i) / 2,
       y: (Math.random() * i) / 10,
@@ -1143,12 +1143,14 @@ const scatterDataset = computed(() => {
     {
       name: "Cluster 1",
       values: scat1.value,
-      shape: "star"
+      shape: "star",
+      color: '#FF0000'
     },
     {
       name: "Cluster 2",
       values: scat2.value,
-      shape: "diamond"
+      shape: "diamond",
+      color: "#00FF00"
     },
   ];
 });
@@ -2826,9 +2828,14 @@ const heatmapConfig = ref({
 const scatterConfig = ref({
   style: {
     layout: {
+      marginalBars: {
+        show: true,
+        showLines: true,
+        linesStrokeWidth: 1
+      },
       plots: {
         giftWrap: {
-          show: true,
+          show: false,
           strokeDasharray: 10
         }
       }
@@ -3801,7 +3808,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">
         <template #title>
           <BaseIcon name="chartNestedDonuts"/>
           VueUiNestedDonuts
@@ -4442,7 +4449,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter

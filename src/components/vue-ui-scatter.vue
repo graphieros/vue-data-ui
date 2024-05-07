@@ -12,6 +12,7 @@ import {
     objectIsEmpty,
     opacity, 
     palette,
+    createSmoothPath,
     XMLNS
 } from '../lib';
 import pdf from "../pdf";
@@ -264,14 +265,19 @@ function getData() {
 }
 
 function aggregateCoordinates(arr, scale) {
-    const flattened = arr.flatMap(a => {
+    const flattened = Array.isArray(arr) ? arr.flatMap(a => {
         return a.plots.map((p) => {
             return {
                 x: p.x,
                 y: p.y
             }
         })
-    });
+    }) : arr.plots.map(p => {
+        return {
+            x: p.x,
+            y: p.y
+        }
+    })
 
     let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
 
@@ -314,8 +320,35 @@ function aggregateCoordinates(arr, scale) {
 }
 
 const scale = computed(() => scatterConfig.value.style.layout.marginalBars.tranches)
+
 const marginalBars = computed(() => {
     return aggregateCoordinates(mutableDataset.value, scale.value)
+});
+
+const marginalLines = computed(() => {
+    const top = drawingArea.value.top - scatterConfig.value.style.layout.marginalBars.offset;
+    const right = drawingArea.value.right + scatterConfig.value.style.layout.marginalBars.offset;
+    return mutableDataset.value.map(ds => {
+        const coords = aggregateCoordinates(ds, scale.value);
+
+        return {
+            coords,
+            dX: createSmoothPath(coords.avgX.map((el,i) => {
+                return { 
+                    x: el, 
+                    y: top - coords.x[i] / coords.maxX * scatterConfig.value.style.layout.marginalBars.size
+                }
+            })),
+            dY: createSmoothPath(coords.avgY.map((el, i) => {
+                return {
+                    y: el,
+                    x: right + (scatterConfig.value.style.layout.marginalBars.size * coords.y[i] / coords.maxY)
+                }
+            })),
+            color: ds.color,
+            id: ds.id,
+        }
+    })
 })
 
 const selectedPlotId = ref(undefined);
@@ -692,6 +725,46 @@ defineExpose({
                         :rx="scatterConfig.style.layout.marginalBars.borderRadius"
                     />
                 </g>
+                <g v-if="scatterConfig.style.layout.marginalBars.showLines">
+                    <template v-for="line in marginalLines">                   
+                        <path
+                            v-if="!segregated.includes(line.id)"
+                            :d="`M ${line.dX}`"
+                            :stroke="scatterConfig.style.backgroundColor"
+                            :stroke-width="scatterConfig.style.layout.marginalBars.linesStrokeWidth + 1"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                        />
+                        <path
+                            v-if="!segregated.includes(line.id)"
+                            :d="`M ${line.dX}`"
+                            :stroke="line.color"
+                            :stroke-width="scatterConfig.style.layout.marginalBars.linesStrokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                        />
+                        <path
+                            v-if="!segregated.includes(line.id)"
+                            :d="`M ${line.dY}`"
+                            :stroke="scatterConfig.style.backgroundColor"
+                            :stroke-width="scatterConfig.style.layout.marginalBars.linesStrokeWidth + 1"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                        />
+                        <path
+                            v-if="!segregated.includes(line.id)"
+                            :d="`M ${line.dY}`"
+                            :stroke="line.color"
+                            :stroke-width="scatterConfig.style.layout.marginalBars.linesStrokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                        />
+                    </template>
+                </g>
             </g>
 
             <!-- AXIS LABELS -->
@@ -764,8 +837,8 @@ defineExpose({
 
             <clipPath :id="`clip_path_${uid}`">
                 <rect
-                    :x="scatterConfig.style.layout.padding.left"
-                    :y="scatterConfig.style.layout.padding.top"
+                    :x="drawingArea.left"
+                    :y="drawingArea.top"
                     :width="drawingArea.width"
                     :height="drawingArea.height"
                 />
