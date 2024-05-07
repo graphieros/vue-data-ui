@@ -2000,6 +2000,7 @@ declare module 'vue-data-ui' {
                 marginalBars?: {
                     show?: boolean;
                     size?: number;
+                    tranches?: number;
                     opacity?: number;
                     fill?: string;
                     strokeWidth?: number;

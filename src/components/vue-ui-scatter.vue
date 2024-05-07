@@ -313,7 +313,7 @@ function aggregateCoordinates(arr, scale) {
     return { x: xCounts, y: yCounts, avgX, avgY, maxX, maxY };
 }
 
-const scale = ref(20);
+const scale = computed(() => scatterConfig.value.style.layout.marginalBars.tranches)
 const marginalBars = computed(() => {
     return aggregateCoordinates(mutableDataset.value, scale.value)
 })
@@ -674,6 +674,7 @@ defineExpose({
                         :fill="scatterConfig.style.layout.marginalBars.useGradient ? `url(#marginal_x_${uid})` : scatterConfig.style.layout.marginalBars.fill"
                         :style="`opacity:${scatterConfig.style.layout.marginalBars.opacity}`"
                         :stroke="scatterConfig.style.backgroundColor"
+                        :stroke-width="scatterConfig.style.layout.marginalBars.strokeWidth"
                         :rx="scatterConfig.style.layout.marginalBars.borderRadius"
                     />
                 </g>
@@ -687,6 +688,7 @@ defineExpose({
                         :fill="scatterConfig.style.layout.marginalBars.useGradient ? `url(#marginal_y_${uid})` : scatterConfig.style.layout.marginalBars.fill"
                         :style="`opacity:${scatterConfig.style.layout.marginalBars.opacity}`"
                         :stroke="scatterConfig.style.backgroundColor"
+                        :stroke-width="scatterConfig.style.layout.marginalBars.strokeWidth"
                         :rx="scatterConfig.style.layout.marginalBars.borderRadius"
                     />
                 </g>

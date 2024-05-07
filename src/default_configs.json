@@ -1919,6 +1919,7 @@
                 "marginalBars": {
                     "show": false,
                     "size": 40,
+                    "tranches": 20,
                     "opacity": 0.6,
                     "fill": "#2D353C",
                     "strokeWidth": 1,
