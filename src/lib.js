@@ -1000,7 +1000,7 @@ export function generateSpiralCoordinates({ points, a, b, angleStep, startX, sta
 
     for (let i = 0; i < points; i++) {
         const theta = angleStep * i;
-        const r = a + b * theta; // i * 0.007 for gradual slope increase, should be a var
+        const r = a + b * theta;
         const x = r * Math.cos(theta) + startX;
         const y = r * Math.sin(theta) + startY;
         coordinates.push({ x, y });

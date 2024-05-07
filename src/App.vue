@@ -3801,7 +3801,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_nested_donuts)">
         <template #title>
           <BaseIcon name="chartNestedDonuts"/>
           VueUiNestedDonuts
@@ -4442,7 +4442,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter
@@ -4555,7 +4555,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_onion)">
         <template #title>
           <BaseIcon name="chartOnion" />
           VueUiOnion

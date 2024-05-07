@@ -95,15 +95,6 @@ const svg = computed(() => {
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint']);
 
-function segregate(legend) {
-    if(segregated.value.includes(legend.id)) {
-        segregated.value = segregated.value.filter(s => s !== legend.id)
-    } else {
-        segregated.value.push(legend.id)
-    }
-    emit('selectLegend', legend)
-}
-
 function selectDatapoint({ datapoint, index }) {
     emit('selectDatapoint', { datapoint, index })
 }
@@ -180,11 +171,11 @@ const immutableDataset = computed(() => {
             })
         }
     })
-})
+});
 
 const donutSize = computed(() => donutConfig.value.style.chart.layout.donut.strokeWidth)
 
-const mutableDataset = computed(() => {
+const md = computed(() => {
     return [...immutableDataset.value].map((ds, i) => {
         const sizeRatio = i * donutSize.value / immutableDataset.value.length;
 
@@ -201,8 +192,125 @@ const mutableDataset = computed(() => {
                     proportion: s.value / total
                 }
             }),
+        }
+    })
+});
+
+function checkSegregation(sourceArray, n, targetArray) {
+    let count = 0;
+    for (let i = 0; i < sourceArray.length; i += 1) {
+        if (targetArray.includes(sourceArray[i])) {
+            count += 1;
+        }
+    }
+    return count < n;
+}
+
+const mutableDataset = ref(md.value);
+const rafUp = ref(null);
+const rafDown = ref(null);
+
+function segregateDonut(item) {
+    emit('selectLegend', item);
+    const target = immutableDataset.value.flatMap(d => d.series).find(el => el.id === item.id);
+    const source = mutableDataset.value.flatMap(d => d.series).find(el => el.id === item.id).value;
+    let initVal = source;
+
+    const allParentDonutIds = immutableDataset.value.find(el => el.id === target.arcOfId).series.map(s => s.id);
+    const canSegregate = checkSegregation(allParentDonutIds, allParentDonutIds.length - 1, segregated.value);
+
+    if(segregated.value.includes(item.id)) {
+        segregated.value = segregated.value.filter(s => s !== item.id);
+        function animUp() {
+            if(initVal > target.value) {
+                cancelAnimationFrame(animUp);
+                mutableDataset.value = mutableDataset.value.map(ds => {
+                    return {
+                        ...ds,
+                        series: ds.series.map(s => {
+                            if(s.id == item.id) {
+                                return {
+                                    ...s,
+                                    value: target.value
+                                }
+                            } else {
+                                return s;
+                            }
+                        })
+                    }
+                });
+            } else {
+                initVal += (target.value * 0.025);
+                mutableDataset.value = mutableDataset.value.map(ds => {
+                    return {
+                        ...ds,
+                        series: ds.series.map(s => {
+                            if(s.id === item.id) {
+                                return {
+                                    ...s,
+                                    value: initVal
+                                }
+                            } else {
+                                return s;
+                            }
+                        })
+                    }
+                });
+                rafUp.value = requestAnimationFrame(animUp);
+            }
+        }
+        animUp();
+    } else if(canSegregate) {
+        function animDown() {
+            if(initVal < 0.1) {
+                cancelAnimationFrame(animDown);
+                segregated.value.push(item.id);
+                mutableDataset.value = mutableDataset.value.map((ds, i) => {
+                    return {
+                        ...ds,
+                        series: ds.series.map(s => {
+                            if(s.id === item.id) {
+                                return {
+                                    ...s,
+                                    value: 0
+                                }
+                            } else {
+                                return s
+                            }
+                        })
+                    }
+                });
+            } else {
+                initVal /= 1.1;
+                mutableDataset.value = mutableDataset.value.map((ds, i) => {
+                    return {
+                        ...ds,
+                        series: ds.series.map(s => {
+                            if(s.id === item.id) {
+                                return {
+                                    ...s,
+                                    value: initVal
+                                }
+                            } else {
+                                return s
+                            }
+                        })
+                    }
+                });
+                rafDown.value = requestAnimationFrame(animDown);
+            }
+        }
+        animDown();
+    }
+}
+
+const donuts = computed(() => {
+    return mutableDataset.value.map((ds, i) => {
+        const sizeRatio = i * donutSize.value / immutableDataset.value.length;
+        return {
+            ...ds,
             donut: makeDonut(
-                { series: ds.series.filter(serie => !segregated.value.includes(serie.id))},
+                { series: ds.series },
                 svg.value.width / 2,
                 svg.value.height / 2,
                 donutSize.value - sizeRatio,
@@ -216,7 +324,7 @@ const mutableDataset = computed(() => {
             )
         }
     })
-})
+});
 
 const gradientSets = computed(() => {
     return [...immutableDataset.value].map((ds, i)  => {
@@ -239,7 +347,7 @@ const gradientSets = computed(() => {
             )[0]
         }
     })
-})
+});
 
 const selectedDonut = ref(null);
 const selectedDatapoint = ref(null);
@@ -366,7 +474,7 @@ const legendSets = computed(() => {
             return {
                 ...s,
                 opacity: segregated.value.includes(s.id) ? 0.5 : 1,
-                segregate: () => segregate(s),
+                segregate: () => segregateDonut(s),
                 isSegregated: segregated.value.includes(s.id)
             }
         })
@@ -557,7 +665,7 @@ defineExpose({
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             <!-- NESTED DONUTS -->
-            <g v-for="(item, i) in mutableDataset">
+            <g v-for="(item, i) in donuts">
                 <g v-for="(arc, j) in item.donut">
                     <path
                         class="vue-ui-donut-arc-path"
@@ -598,9 +706,10 @@ defineExpose({
             </g>
 
             <g v-if="donutConfig.style.chart.layout.labels.dataLabels.showDonutName">
-                <g v-for="(item, i) in mutableDataset">
+                <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut">    
                         <text
+                            :class="{ 'animated': donutConfig.useCssAnimation }"
                             v-if="j === 0"
                             :x="svg.width / 2"
                             :y="arc.startY - donutConfig.style.chart.layout.labels.dataLabels.fontSize + donutConfig.style.chart.layout.labels.dataLabels.donutNameOffsetY"
@@ -617,9 +726,10 @@ defineExpose({
 
             <!-- DATALABELS -->
             <g v-if="donutConfig.style.chart.layout.labels.dataLabels.show">
-                <g v-for="(item, i) in mutableDataset">
+                <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut" :filter="getBlurFilter(arc, j)">
                         <text
+                            :class="{ 'animated': donutConfig.useCssAnimation }"
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && donutConfig.style.chart.layout.labels.dataLabels.showPercentage"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
                             :x="calcMarkerOffsetX(arc, false, donutConfig.style.chart.layout.labels.dataLabels.offsetX).x"
@@ -631,6 +741,7 @@ defineExpose({
                             {{ dataLabel({ v: arc.proportion * 100, s: '%', r: donutConfig.style.chart.layout.labels.dataLabels.roundingPercentage }) }}
                         </text>
                         <text
+                            :class="{ 'animated': donutConfig.useCssAnimation }"
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && donutConfig.style.chart.layout.labels.dataLabels.showPercentage && donutConfig.style.chart.layout.labels.dataLabels.showValue"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
                             :x="calcMarkerOffsetX(arc, false, donutConfig.style.chart.layout.labels.dataLabels.offsetX).x"
@@ -642,6 +753,7 @@ defineExpose({
                             ({{ dataLabel({ p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.layout.labels.dataLabels.roundingValue }) }})
                         </text>
                         <text
+                            :class="{ 'animated': donutConfig.useCssAnimation }"
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && !donutConfig.style.chart.layout.labels.dataLabels.showPercentage && donutConfig.style.chart.layout.labels.dataLabels.showValue"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
                             :x="calcMarkerOffsetX(arc, false, donutConfig.style.chart.layout.labels.dataLabels.offsetX).x"
@@ -657,7 +769,7 @@ defineExpose({
             </g>
 
             <!-- TOOLTIP TRAPS -->
-            <g v-for="(item, i) in mutableDataset">
+            <g v-for="(item, i) in donuts">
                 <g v-for="(arc, j) in item.donut">
                     <path 
                         data-cy-donut-trap
@@ -712,7 +824,7 @@ defineExpose({
                 v-for="legendSet in legendSets"
                 :legendSet="legendSet"
                 :config="legendConfig"
-                @clickMarker="({ legend, index }) => segregate(legend, index)"
+                @clickMarker="({ legend }) => segregateDonut(legend)"
             >
                 <template #legendTitle="{ titleSet }">
                     <div class="vue-ui-nested-donuts-legend-title" v-if="titleSet[0].arcOf">
@@ -720,7 +832,7 @@ defineExpose({
                     </div>
                 </template>
                 <template #item="{ legend, index }">
-                    <div :data-cy="`legend-item-${index}`" @click="segregate(legend, index)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    <div :data-cy="`legend-item-${index}`" @click="segregateDonut(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                     {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
                     <template v-if="!segregated.includes(legend.id)">
                         ({{ isNaN(legend.value / legend.total) ? '-' : dataLabel({ v: legend.value / legend.total * 100, s: '%', r: donutConfig.style.chart.legend.roundingPercentage }) }})
@@ -765,7 +877,7 @@ defineExpose({
     position: relative;
 }
 
-path {
+.animated {
     animation: donut 0.5s ease-in-out;
     transform-origin: center;
 }
