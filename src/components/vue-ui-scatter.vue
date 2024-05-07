@@ -754,7 +754,7 @@ defineExpose({
                     :font-weight="scatterConfig.style.layout.dataLabels.yAxis.bold ? 'bold' : 'normal'"
                     :fill="scatterConfig.style.layout.dataLabels.yAxis.color"
                     :x="drawingArea.left + drawingArea.width / 2"
-                    :y="drawingArea.bottom + 8 + scatterConfig.style.layout.dataLabels.yAxis.fontSize"
+                    :y="drawingArea.bottom + 8 + scatterConfig.style.layout.dataLabels.yAxis.fontSize * 2"
                 >
                     {{ scatterConfig.style.layout.dataLabels.yAxis.name }}
                 </text>
