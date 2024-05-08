@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { 
     convertColorToHex, 
     createUid,
+    dataLabel,
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
@@ -113,16 +114,6 @@ const svg = ref({
 
 const segregated = ref([])
 
-function segregate(id) {
-    if(segregated.value.includes(id)) {
-        segregated.value =segregated.value.filter(s => s !== id)
-    } else {
-        if(segregated.value.length < safeDatasetCopy.value.length - 1) {
-            segregated.value.push(id)
-        }
-    }
-}
-
 const total = computed(() => {
     return props.dataset.map(d => d.value || 0).filter((ds, i) => !segregated.value.includes(i)).reduce((a, b) => a + b, 0);
 });
@@ -134,24 +125,39 @@ const absoluteDataset = computed(() => {
             value: d.value || 0,
             proportion: (d.value || 0) / total.value,
             width: (d.value || 0) / total.value * svg.value.width,
-            proportionLabel: `${Number(((d.value || 0) / total.value * 100).toFixed(stackConfig.value.style.legend.percentage.rounding)).toLocaleString()}%`,
+            proportionLabel: dataLabel({
+                v: (d.value || 0) / total.value * 100,
+                s: '%',
+                r: stackConfig.value.style.legend.percentage.rounding
+            }),
         }
     })
 });
 
-const computedDataset = computed(() => {
+const mutableDataset = computed(() => {
     return absoluteDataset.value.filter((ds, i) => !segregated.value.includes(i))
 });
+
+
+function segregate(index) {
+    if(segregated.value.includes(index)) {
+        segregated.value =segregated.value.filter(s => s !== index)
+    } else {
+        if(segregated.value.length < safeDatasetCopy.value.length - 1) {
+            segregated.value.push(index)
+        }
+    }
+}
 
 const drawableDataset = computed(() => {
     let start = 0;
     const datapoints = [];
-    for (let i = 0; i < computedDataset.value.length; i += 1) {
+    for (let i = 0; i < mutableDataset.value.length; i += 1) {
         datapoints.push({
-            ...computedDataset.value[i],
+            ...mutableDataset.value[i],
             start
         });
-        start += computedDataset.value[i].width
+        start += mutableDataset.value[i].width
     }
     return datapoints
 });
@@ -197,7 +203,13 @@ function selectDatapoint(datapoint, index) {
             </clipPath>
         </defs>
             <g clip-path="url(#stackPill)">
-                <rect :x="0" :y="0" :height="svg.height" :width="drawableDataset.map(ds => ds.width).reduce((a, b) => a + b, 0)" :fill="stackConfig.style.bar.gradient.underlayerColor"/>
+                <rect 
+                    :x="0" 
+                    :y="0" 
+                    :height="svg.height" 
+                    :width="drawableDataset.map(ds => ds.width).reduce((a, b) => a + b, 0)" 
+                    :fill="stackConfig.style.bar.gradient.underlayerColor"
+                />
                 <rect 
                     v-for="(rect, i) in drawableDataset" :key="`stack_${i}`"
                     @click="() => selectDatapoint(rect, i)"
@@ -224,20 +236,45 @@ function selectDatapoint(datapoint, index) {
                 }
             }"
         />
-        <div v-if="stackConfig.style.legend.show" data-cy="sparkstackbar-legend" :style="`background:${stackConfig.style.backgroundColor};margin:0 auto;margin:${stackConfig.style.legend.margin};justify-content:${stackConfig.style.legend.textAlign === 'left' ? 'flex-start' : stackConfig.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" class="vue-ui-sparkstackbar-legend">
-            <div v-for=" (rect, i) in absoluteDataset" :style="`font-size:${stackConfig.style.legend.fontSize}px`" :class="{'vue-ui-sparkstackbar-legend-item': true, 'vue-ui-sparkstackbar-legend-item-unselected': segregated.includes(i)}" @click="segregate(i); selectDatapoint(rect, i)">
+        <div 
+            v-if="stackConfig.style.legend.show" 
+            data-cy="sparkstackbar-legend" 
+            :style="`background:${stackConfig.style.backgroundColor};margin:0 auto;margin:${stackConfig.style.legend.margin};justify-content:${stackConfig.style.legend.textAlign === 'left' ? 'flex-start' : stackConfig.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" 
+            class="vue-ui-sparkstackbar-legend"
+        >
+            <div 
+                v-for=" (rect, i) in absoluteDataset" 
+                :style="`font-size:${stackConfig.style.legend.fontSize}px;`" 
+                :class="{'vue-ui-sparkstackbar-legend-item': true, 'vue-ui-sparkstackbar-legend-item-unselected': segregated.includes(i)}" 
+                @click="segregate(i); selectDatapoint(rect, i)"
+            >
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px;justify-content:center" >
-                    <svg :height="`${stackConfig.style.legend.fontSize}px`" :width="`${stackConfig.style.legend.fontSize}px`" viewBox="0 0 10 10">
+                    <svg 
+                        :height="`${stackConfig.style.legend.fontSize}px`" 
+                        :width="`${stackConfig.style.legend.fontSize}px`" 
+                        viewBox="0 0 10 10"
+                    >
                         <circle :cx="5" :cy="5" :r="5" :fill="rect.color"/>
                     </svg>
                     <span :style="`color:${stackConfig.style.legend.name.color}`">
                         {{ rect.name }}
                     </span>
-                    <span v-if="stackConfig.style.legend.percentage.show" :style="`font-weight:${stackConfig.style.legend.percentage.bold ? 'bold': 'normal'};color:${stackConfig.style.legend.percentage.color}`">
+                    <span 
+                        v-if="stackConfig.style.legend.percentage.show" 
+                        :style="`font-weight:${stackConfig.style.legend.percentage.bold ? 'bold': 'normal'};color:${stackConfig.style.legend.percentage.color}`"
+                    >
                         {{ segregated.includes(i) ? ' - ' : rect.proportionLabel }}
                     </span>
-                    <span v-if="stackConfig.style.legend.value.show" :style="`font-weight:${stackConfig.style.legend.value.bold ? 'bold' : 'normal'};color:${stackConfig.style.legend.value.color}`">
-                        ({{ stackConfig.style.legend.value.prefix }}{{ Number(rect.value.toFixed(stackConfig.style.legend.value.rounding)).toLocaleString() }}{{ stackConfig.style.legend.value.suffix }})
+                    <span 
+                        v-if="stackConfig.style.legend.value.show" 
+                        :style="`font-weight:${stackConfig.style.legend.value.bold ? 'bold' : 'normal'};color:${stackConfig.style.legend.value.color}`"
+                    >
+                        ({{ dataLabel({
+                            p: stackConfig.style.legend.value.prefix,
+                            v: rect.value,
+                            s: stackConfig.style.legend.value.suffix,
+                            r: stackConfig.style.legend.value.rounding
+                        }) }})
                     </span> 
                 </div>
             </div>
@@ -255,8 +292,12 @@ function selectDatapoint(datapoint, index) {
 }
 .vue-ui-sparkstackbar-legend-item {
     cursor: pointer;
+    transition: opacity 0.2s ease-in-out;
 }
 .vue-ui-sparkstackbar-legend-item-unselected {
     opacity: 0.3;
+}
+rect {
+    transition: all 0.3s ease-in-out !important;
 }
 </style>
