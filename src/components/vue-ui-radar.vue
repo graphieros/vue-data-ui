@@ -642,6 +642,7 @@ defineExpose({
                         :stroke="radarConfig.style.chart.backgroundColor"
                         :stroke-width="radarConfig.style.chart.layout.dataPolygon.strokeWidth + 1"
                         fill="none"
+                        :class="{ 'animated-out': segregated.includes(i) && radarConfig.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && radarConfig.useCssAnimation }"
                     />
                     <polygon
                         data-cy-radar-path
