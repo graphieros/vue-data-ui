@@ -641,6 +641,7 @@ defineExpose({
 circle {
     animation: xyAnimation 0.5s ease-in-out;
     transform-origin: center;
+    transition: all 0.3s ease-in-out !important;
 }
 @keyframes xyAnimation {
     0% {
