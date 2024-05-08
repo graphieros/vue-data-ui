@@ -956,6 +956,15 @@ defineExpose({
                             <template v-if="quickConfig.lineSmooth">
                                 <path
                                     :d="`M ${createSmoothPath(ds.coordinates)}`"
+                                    :stroke="quickConfig.backgroundColor"
+                                    :stroke-width="quickConfig.lineStrokeWidth + 1"
+                                    stroke-linecap="round"
+                                    fill="none"
+                                    class="quick-animation"
+                                    style="transition: all 0.3s ease-in-out"
+                                />
+                                <path
+                                    :d="`M ${createSmoothPath(ds.coordinates)}`"
                                     :stroke="ds.color"
                                     :stroke-width="quickConfig.lineStrokeWidth"
                                     stroke-linecap="round"
@@ -965,6 +974,15 @@ defineExpose({
                                 />
                             </template>
                             <template v-else>
+                                <path
+                                    :d="`M ${ds.linePath}`"
+                                    :stroke="quickConfig.backgroundColor"
+                                    :stroke-width="quickConfig.lineStrokeWidth + 1"
+                                    stroke-linecap="round"
+                                    fill="none"
+                                    class="quick-animation"
+                                    style="transition: all 0.3s ease-in-out"
+                                />
                                 <path
                                     :d="`M ${ds.linePath}`"
                                     :stroke="ds.color"

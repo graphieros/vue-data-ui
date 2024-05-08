@@ -242,9 +242,39 @@
                         <path v-if="serie.smooth" :d="`M ${serie.plots[0].x},${drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1).x},${drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
                         <path v-else :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
                     </g>
-                    <path :data-cy="`xy-line-area-path-${i}`" v-if="serie.smooth" :d="`M${serie.curve}`" :stroke="serie.color" :stroke-width="chartConfig.line.strokeWidth" :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" fill="none" />
+                    <path 
+                        :data-cy="`xy-line-area-path-${i}`" 
+                        v-if="serie.smooth" 
+                        :d="`M${serie.curve}`" 
+                        :stroke="chartConfig.chart.backgroundColor" 
+                        :stroke-width="chartConfig.line.strokeWidth + 1" 
+                        :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" 
+                        fill="none" 
+                    />
+                    <path 
+                        :data-cy="`xy-line-area-path-${i}`" 
+                        v-if="serie.smooth" 
+                        :d="`M${serie.curve}`" 
+                        :stroke="serie.color" 
+                        :stroke-width="chartConfig.line.strokeWidth" 
+                        :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" 
+                        fill="none" 
+                    />
                     <g v-else>
                         <g v-for="(plot, j) in serie.plots" :key="`line_${i}_${j}`">
+                            <line
+                                :data-cy="`xy-line-segment-${i}-${j}`"
+                                v-if="j < serie.plots.length - 1 && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
+                                :x1="plot.x"
+                                :x2="serie.plots[j+1].x"
+                                :y1="plot.y"
+                                :y2="serie.plots[j+1].y"
+                                :stroke="chartConfig.chart.backgroundColor"
+                                :stroke-width="chartConfig.line.strokeWidth + 1"
+                                :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
                             <line
                                 :data-cy="`xy-line-segment-${i}-${j}`"
                                 v-if="j < serie.plots.length - 1 && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
