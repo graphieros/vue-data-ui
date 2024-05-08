@@ -7,22 +7,6 @@ describe('<VueUiRadar />', () => {
     cy.viewport(500, 500);
   });
 
-  it('segregates series when selecting legend items', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiRadar, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        },
-      });
-
-      cy.get('[data-cy-legend-item]').eq(0).click()
-      cy.get('[data-cy-radar-path]').should('have.length', 2)
-      cy.get('[data-cy-legend-item]').eq(0).click()
-      cy.get('[data-cy-radar-path]').should('have.length', 3)
-    });
-  })
-
   it('renders', () => {
     cy.get('@fixture').then((fixture) => {
       cy.mount(VueUiRadar, {

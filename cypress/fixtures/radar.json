@@ -75,7 +75,7 @@
         ]
     },
     "config": {
-        "useCssAnimation": true,
+        "useCssAnimation": false,
         "style": {
             "fontFamily": "inherit",
             "chart": {
