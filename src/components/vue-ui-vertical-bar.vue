@@ -592,6 +592,7 @@ defineExpose({
                     :height="verticalBarConfig.style.chart.layout.bars.height"
                     :fill="verticalBarConfig.style.chart.layout.bars.underlayerColor"
                     :rx="verticalBarConfig.style.chart.layout.bars.borderRadius"
+                    :class="{ 'animated': verticalBarConfig.useCssAnimation }"
                 />
             </g>
             <g v-for="(serie, i) in bars"> 
