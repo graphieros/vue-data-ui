@@ -1300,4 +1300,8 @@ caption {
         text-transform: capitalize;
     }
 }
+
+path, circle, rect, text, line {
+    transition: opacity 0.3s ease-in-out !important;
+}
 </style>
