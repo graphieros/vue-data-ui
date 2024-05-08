@@ -118,12 +118,23 @@ const svg = computed(() => {
 const emit = defineEmits(['selectLegend']);
 
 const segregated = ref([]);
+const inSegregation = ref(null);
+const isAnimating = ref(false);
 
 function segregate(index) {
+    isAnimating.value = true;
     if(segregated.value.includes(index)) {
+        inSegregation.value = index;
         segregated.value = segregated.value.filter(s => s !== index);
+        setTimeout(() => {
+            isAnimating.value = false;
+            inSegregation.value = null;
+        }, 500)
     }else {
         segregated.value.push(index);
+        setTimeout(() => {
+            isAnimating.value = false;
+        }, 500)
     }
     emit('selectLegend', legendSet.value.filter((_, i) => !segregated.value.includes(i)).map(l => {
         return {
@@ -323,18 +334,6 @@ const legendConfig = computed(() => {
         fontWeight: radarConfig.value.style.chart.legend.bold ? 'bold' : ''
     }
 })
-
-const table = computed(() => {
-    const head = [{ name:"", color:""}, {name:radarConfig.value.translations.target, color:""}, ...legendSet.value];
-    const body = props.dataset.series.map((s, i) => {
-        return [ s.name, s.target, ...s.values.flatMap(v => {
-            return [
-                v ? v.toFixed(radarConfig.value.table.td.roundingValue) : '-', isNaN(v / s.target) ? '' : (v / s.target * 100).toFixed(radarConfig.value.table.td.roundingPercentage) + '%'
-            ]
-        })]
-    });
-    return { head, body };
-});
 
 const dataTable = computed(() => {
     const head = [
@@ -636,13 +635,21 @@ defineExpose({
 
             <!-- PLOTS -->
             <g v-for="(d, i) in datasetCopy">
-                <g v-if="!segregated.includes(i)">
-                    <path
+                <g>
+                    <polygon
                         data-cy-radar-path
-                        :d="makePath(radar.map(r => r.plots[i]))"
+                        :points="makePath(radar.map(r => r.plots[i]), false, true)"
+                        :stroke="radarConfig.style.chart.backgroundColor"
+                        :stroke-width="radarConfig.style.chart.layout.dataPolygon.strokeWidth + 1"
+                        fill="none"
+                    />
+                    <polygon
+                        data-cy-radar-path
+                        :points="makePath(radar.map(r => r.plots[i]), false, true)"
                         :stroke="d.color"
                         :stroke-width="radarConfig.style.chart.layout.dataPolygon.strokeWidth"
                         :fill="radarConfig.style.chart.layout.dataPolygon.transparent ? 'transparent' : radarConfig.style.chart.layout.dataPolygon.useGradient ? `url(#radar_gradient_${uid}_${i})` : d.color + opacity[radarConfig.style.chart.layout.dataPolygon.opacity]"
+                        :class="{ 'animated-out': segregated.includes(i) && radarConfig.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && radarConfig.useCssAnimation }"
                     />
                 </g>
             </g>
@@ -655,6 +662,9 @@ defineExpose({
                         :cy="p.y"
                         :fill="segregated.includes(j) ? 'transparent' : datasetCopy[j].color"
                         :r="selectedIndex !== null && selectedIndex === i ? radarConfig.style.chart.layout.plots.radius * 1.6 : radarConfig.style.chart.layout.plots.radius"
+                        :stroke="segregated.includes(j) ? 'transparent' : radarConfig.style.chart.backgroundColor"
+                        :stroke-width="0.5"
+                        :class="{ 'animated-out': segregated.includes(j) && radarConfig.useCssAnimation, 'animated-in': isAnimating && inSegregation === j && radarConfig.useCssAnimation }"
                     />
                 </g>
             </g>
@@ -764,7 +774,7 @@ defineExpose({
 }
 
 path, line, rect, circle {
-    animation: xyAnimation 0.5s ease-in-out;
+    animation: xyAnimation 0.5s ease-in-out !important;
     transform-origin: center;
 }
 @keyframes xyAnimation {
@@ -794,4 +804,38 @@ path, line, rect, circle {
     text-align:center;
     width:100%;
 }
+
+polygon {
+    transform-origin: center;
+}
+
+.animated-in {
+    animation: animatedIn 0.3s cubic-bezier(0, 1.01, 1, 1) forwards;
+}
+
+@keyframes animatedIn {
+    0% {
+        transform: scale(0, 0);
+    }
+    80% {
+        transform: scale(1.05, 1.05);
+    }
+    100% {
+        transform: scale(1, 1);
+    }
+}
+
+.animated-out {
+    animation: animatedOut 0.3s cubic-bezier(0, 1.01, 1, 1) forwards;
+}
+
+@keyframes animatedOut {
+    from {
+        transform: scale(1, 1);
+    }
+    to {
+        transform: scale(0, 0);
+    }
+}
+
 </style>

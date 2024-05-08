@@ -717,12 +717,16 @@ export function sumByAttribute(arr, attr) {
     return [...arr].map(a => a[attr]).reduce((a, b) => a + b, 0)
 }
 
-export function makePath(plots, closed = true) {
+export function makePath(plots, closed = true, bare = false) {
     let path = "";
     plots.forEach(plot => {
         path += `${plot.x},${plot.y} `
     })
-    return `M${path}${closed ? 'Z' : ''}`;
+    if(bare) {
+        return path.trim();
+    } else {
+        return `M${path}${closed ? 'Z' : ''}`;
+    }
 }
 
 export function downloadCsv({ csvContent, title = "vue-data-ui" }) {

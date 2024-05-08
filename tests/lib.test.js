@@ -677,6 +677,9 @@ describe('makePath', () => {
     test('creates a closed svg path from an array of plots', () => {
         expect(makePath(plots)).toBe('M1,2 2,3 3,4 4,5 5,6 Z')
     })
+    test('creates svg points for a polygon', () => {
+        expect(makePath(plots, false, true)).toBe('1,2 2,3 3,4 4,5 5,6')
+    })
 })
 
 describe('calculateNiceScale', () => {
