@@ -271,17 +271,23 @@ function enter(datapoint) {
     hoveredDatapoint.value = datapoint;
 }
 
-function fixDatapoint(datapoint) {
+const fixedDatapointIndex = ref(null);
+
+function fixDatapoint(datapoint, index) {
     if(!datapoint.subtotal) return;
     hoveredDatapoint.value = null;
     hoveredIndex.value = null;
     isFixed.value = true;
     fixedDatapoint.value = datapoint;
+    if(![null, undefined].includes(index)) {
+        fixedDatapointIndex.value = index;
+    }
 }
 
 function unfixDatapoint() {
     fixedDatapoint.value = null;
     isFixed.value = false;
+    fixedDatapointIndex.value = null;
 }
 
 const __to__ = ref(null);
@@ -327,29 +333,16 @@ const legendConfig = computed(() => {
     }
 })
 
-function segregate(index) {
-
-    if(segregated.value.includes(index)) {
-        segregated.value = segregated.value.filter(s => s !== index);
+function segregate(id) {
+    if(segregated.value.includes(id)) {
+        segregated.value = segregated.value.filter(s => s !== id);
     }else {
         if(segregated.value.length === convertedDataset.value.length - 1) return;
-        segregated.value.push(index);
+        segregated.value.push(id);
     }
     emit('selectLegend', drawableDataset.value);
     if(fixedDatapoint.value) {
-        fixedDatapoint.value = {
-            ...fixedDatapoint.value,
-            donutFocus: makeDonut({
-                series: mutableDataset.value.map((s, k) => {
-                    return {
-                        color: s.color,
-                        name: s.name,
-                        value: s.values[fixedDatapoint.value.index] ?? 0
-                    }
-                }).filter(ds => !segregated.value.includes(ds.uid))
-            }, svg.value.centerX, svg.value.centerY, svg.value.height / 5, svg.value.height / 5),
-        }
-        fixDatapoint(fixedDatapoint.value)
+        fixDatapoint(drawableDataset.value.find((_, i) => i === fixedDatapointIndex.value))
     }
 }
 
@@ -696,7 +689,7 @@ defineExpose({
                 :width="slit"
                 :height="10"
                 :fill="hoveredIndex === datapoint.index ? `url(#hover_${uid})` : 'transparent'"
-                @click="fixDatapoint(datapoint)"
+                @click="fixDatapoint(datapoint, i)"
                 :class="{'donut-hover': hoveredIndex === datapoint.index && datapoint.subtotal}"
             />
             <rect 
@@ -710,7 +703,7 @@ defineExpose({
                 fill="transparent"
                 @mouseenter="enter(datapoint)"
                 @mouseleave="leave"
-                @click="fixDatapoint(datapoint)"
+                @click="fixDatapoint(datapoint, i)"
                 :class="{'donut-hover': hoveredIndex === datapoint.index && datapoint.subtotal}"
             />
 
