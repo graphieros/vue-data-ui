@@ -53,6 +53,8 @@ const safeDatasetCopy = ref(props.dataset.map((d, i ) => {
     }
 }));
 
+const isLoading = ref(true);
+
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
         error({
@@ -80,6 +82,7 @@ onMounted(() => {
         const chunkSet = props.dataset.map((d, i) => d.value / chunks);
         const total = props.dataset.map(d => d.value || 0).reduce((a, b) => a + b, 0);
         let start = 0;
+        isLoading.value = true;
 
         function animate() {
             start += (total / chunks);
@@ -93,6 +96,7 @@ onMounted(() => {
                 });
                 requestAnimationFrame(animate)
             } else {
+                isLoading.value = false;
                 safeDatasetCopy.value = props.dataset.map((d,i) => {
                     return {
                         ...d,
@@ -209,6 +213,7 @@ function selectDatapoint(datapoint, index) {
                     :height="svg.height" 
                     :width="drawableDataset.map(ds => ds.width).reduce((a, b) => a + b, 0)" 
                     :fill="stackConfig.style.bar.gradient.underlayerColor"
+                    :class="{'animated': !isLoading}"
                 />
                 <rect 
                     v-for="(rect, i) in drawableDataset" :key="`stack_${i}`"
@@ -220,6 +225,7 @@ function selectDatapoint(datapoint, index) {
                     :fill="stackConfig.style.bar.gradient.show ? `url(#stack_gradient_${i}_${uid})` : rect.color"
                     :stroke="stackConfig.style.backgroundColor"
                     stroke-linecap="round"
+                    :class="{'animated': !isLoading}"
                 />
             </g>
         </svg>
@@ -247,6 +253,7 @@ function selectDatapoint(datapoint, index) {
                 :style="`font-size:${stackConfig.style.legend.fontSize}px;`" 
                 :class="{'vue-ui-sparkstackbar-legend-item': true, 'vue-ui-sparkstackbar-legend-item-unselected': segregated.includes(i)}" 
                 @click="segregate(i); selectDatapoint(rect, i)"
+
             >
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px;justify-content:center" >
                     <svg 
@@ -297,7 +304,7 @@ function selectDatapoint(datapoint, index) {
 .vue-ui-sparkstackbar-legend-item-unselected {
     opacity: 0.3;
 }
-rect {
+rect.animated {
     transition: all 0.3s ease-in-out !important;
 }
 </style>
