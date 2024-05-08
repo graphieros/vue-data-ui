@@ -605,6 +605,7 @@ defineExpose({
                     :rx="verticalBarConfig.style.chart.layout.bars.borderRadius"
                     :stroke="verticalBarConfig.style.chart.layout.bars.useStroke ? serie.color : 'none'"
                     :stroke-width="verticalBarConfig.style.chart.layout.bars.useStroke ? verticalBarConfig.style.chart.layout.bars.strokeWidth : 0"
+                    :class="{ 'animated': verticalBarConfig.useCssAnimation }"
                 />
 
                 <!-- SEPARATORS -->
@@ -666,6 +667,7 @@ defineExpose({
                     :font-weight="verticalBarConfig.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                     text-anchor="start"
                 >
+                
                 {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.prefix }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.show ? getParentData(serie, i).value : '' }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.show ? `(${getParentData(serie, i).percentageToTotal})` : '' }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.suffix }}
                 </text>
 
@@ -839,6 +841,7 @@ path, line, rect, circle, polygon {
     animation: verticalBarAnimation 0.5s ease-in-out;
     transform-origin: center;
 }
+
 @keyframes verticalBarAnimation {
     0% {
         transform: scale(0.9,0.9);
@@ -929,5 +932,9 @@ caption {
         font-weight: 700;
         text-transform: capitalize;
     }
+}
+
+.animated {
+    transition: all 0.3s ease-in-out !important;
 }
 </style>
