@@ -155,7 +155,7 @@ function segregate(index) {
         const targetVal = target.value;
         function animUp() {
             if(initVal > targetVal) {
-                cancelAnimationFrame(animUp);
+                cancelAnimationFrame(rafUp.value);
                 mutableSet.value = mutableSet.value.map((ds, i) => {
                     if(index === i) {
                         return {
@@ -187,7 +187,7 @@ function segregate(index) {
     } else if (segregated.value.length < immutableSet.value.length - 1) {
         function animDown() {
             if(initVal < 0.1) {
-                cancelAnimationFrame(animDown);
+                cancelAnimationFrame(rafDown.value);
                 segregated.value.push(index);
                 mutableSet.value = mutableSet.value.map((ds, i) => {
                     if(index === i) {

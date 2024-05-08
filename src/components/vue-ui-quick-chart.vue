@@ -142,7 +142,7 @@ function segregateDonut(arc, ds) {
         const targetVal = fd.value.dataset.find((el, i) => arc.id === `donut_${i}`).VALUE;
         function animUp() {
             if(initVal > targetVal) {
-                cancelAnimationFrame(animUp)
+                cancelAnimationFrame(rafUp.value)
                 formattedDataset.value = {
                     ...formattedDataset.value,
                     dataset: formattedDataset.value.dataset.map((ds, i) => {
@@ -180,7 +180,7 @@ function segregateDonut(arc, ds) {
     } else if(ds.length > 1) {
         function anim() {
             if(initVal < 0.1) {
-                cancelAnimationFrame(anim)
+                cancelAnimationFrame(raf.value)
                 segregated.value.push(arc.id)
                 formattedDataset.value = {
                     ...formattedDataset.value,

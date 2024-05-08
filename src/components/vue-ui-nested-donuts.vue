@@ -223,7 +223,7 @@ function segregateDonut(item) {
         segregated.value = segregated.value.filter(s => s !== item.id);
         function animUp() {
             if(initVal > target.value) {
-                cancelAnimationFrame(animUp);
+                cancelAnimationFrame(rafUp.value);
                 mutableDataset.value = mutableDataset.value.map(ds => {
                     return {
                         ...ds,
@@ -263,7 +263,7 @@ function segregateDonut(item) {
     } else if(canSegregate) {
         function animDown() {
             if(initVal < 0.1) {
-                cancelAnimationFrame(animDown);
+                cancelAnimationFrame(rafDown.value);
                 segregated.value.push(item.id);
                 mutableDataset.value = mutableDataset.value.map((ds, i) => {
                     return {
