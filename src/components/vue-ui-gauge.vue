@@ -120,6 +120,20 @@ const pointer = computed(() => {
     }
 });
 
+const pointyPointerPath = computed(() => {
+    const centerX = svg.value.width / 2;
+    const centerY = svg.value.height * 0.69;
+    const angle = Math.PI * ((activeRating.value + 0 - min.value) / (max.value - min.value)) + Math.PI;
+    const tipX = centerX + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size) * Math.cos(angle);
+    const tipY = centerY + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size) * Math.sin(angle);
+    const baseLength = gaugeConfig.value.style.chart.layout.pointer.circle.radius;
+    const baseX1 = centerX + baseLength * Math.cos(angle + (Math.PI / 2));
+    const baseY1 = centerY + baseLength * Math.sin(angle + (Math.PI / 2));
+    const baseX2 = centerX + baseLength * Math.cos(angle - (Math.PI / 2));
+    const baseY2 = centerY + baseLength * Math.sin(angle - (Math.PI / 2));
+    return `M ${tipX},${tipY} ${baseX1},${baseY1} ${baseX2},${baseY2} Z`;
+})
+
 const ratingColor = computed(() => {
     for(let i = 0; i < mutableDataset.value.series.length; i += 1) {
         const { color, from, to } = mutableDataset.value.series[i];
@@ -523,40 +537,51 @@ defineExpose({
             </text>
 
             <!-- GAUGE POINTER -->
-            <line
-                data-cy="gauge-pointer-border"
-                v-if="!isNaN(pointer.x2)"
-                :x1="pointer.x1"
-                :y1="pointer.y1"
-                :x2="pointer.x2"
-                :y2="pointer.y2"
-                :stroke="gaugeConfig.style.chart.layout.pointer.stroke"
-                :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth"
-                stroke-linecap="round"
-            />
-            <line
-                data-cy="gauge-pointer"
-                v-if="!isNaN(pointer.x2)"
-                :x1="pointer.x1"
-                :y1="pointer.y1"
-                :x2="pointer.x2"
-                :y2="pointer.y2"
-                :stroke="gaugeConfig.style.chart.layout.pointer.useRatingColor ? ratingColor : gaugeConfig.style.chart.layout.pointer.color"
-                stroke-linecap="round"
-                :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth * 0.7"
-            />
-            <line
-                data-cy="gauge-pointer"
-                v-if="!isNaN(pointer.x2) && gaugeConfig.style.chart.layout.track.useGradient"
-                :x1="pointer.x1"
-                :y1="pointer.y1"
-                :x2="pointer.x2"
-                :y2="pointer.y2"
-                :stroke="'white'"
-                stroke-linecap="round"
-                :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth * 0.3"
-                :filter="`url(#blur_${uid})`"
-            />
+            <g v-if="gaugeConfig.style.chart.layout.pointer.type === 'rounded'">            
+                <line
+                    data-cy="gauge-pointer-border"
+                    v-if="!isNaN(pointer.x2)"
+                    :x1="pointer.x1"
+                    :y1="pointer.y1"
+                    :x2="pointer.x2"
+                    :y2="pointer.y2"
+                    :stroke="gaugeConfig.style.chart.layout.pointer.stroke"
+                    :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth"
+                    stroke-linecap="round"
+                />
+                <line
+                    data-cy="gauge-pointer"
+                    v-if="!isNaN(pointer.x2)"
+                    :x1="pointer.x1"
+                    :y1="pointer.y1"
+                    :x2="pointer.x2"
+                    :y2="pointer.y2"
+                    :stroke="gaugeConfig.style.chart.layout.pointer.useRatingColor ? ratingColor : gaugeConfig.style.chart.layout.pointer.color"
+                    stroke-linecap="round"
+                    :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth * 0.7"
+                />
+                <line
+                    data-cy="gauge-pointer"
+                    v-if="!isNaN(pointer.x2) && gaugeConfig.style.chart.layout.track.useGradient"
+                    :x1="pointer.x1"
+                    :y1="pointer.y1"
+                    :x2="pointer.x2"
+                    :y2="pointer.y2"
+                    :stroke="'white'"
+                    stroke-linecap="round"
+                    :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth * 0.3"
+                    :filter="`url(#blur_${uid})`"
+                />
+            </g>
+            <g v-else>
+                <path
+                    :d="pointyPointerPath"
+                    :fill="gaugeConfig.style.chart.layout.pointer.useRatingColor ? ratingColor : gaugeConfig.style.chart.layout.pointer.color"
+                    :stroke="gaugeConfig.style.chart.layout.pointer.stroke"
+                    :stroke-width="gaugeConfig.style.chart.layout.pointer.circle.strokeWidth"
+                    stroke-linejoin="round"
+                />
+            </g>
             <circle
                 data-cy="gauge-pointer-circle"
                 :cx="svg.width / 2"

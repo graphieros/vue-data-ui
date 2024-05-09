@@ -978,6 +978,7 @@
                         "roundingValue": 0
                     },
                     "pointer": {
+                        "type": "rounded",
                         "size": 1,
                         "stroke": "#2D353C",
                         "strokeWidth": 12,

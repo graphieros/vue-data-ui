@@ -3407,6 +3407,7 @@ declare module 'vue-data-ui' {
                         roundingValue?: number;
                     };
                     pointer?: {
+                        type?: "rounded" | "pointy";
                         size?: number;
                         stroke?: string;
                         strokeWidth?: number;
