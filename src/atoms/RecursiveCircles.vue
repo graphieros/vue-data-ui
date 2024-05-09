@@ -10,7 +10,7 @@
                     :stroke="hoveredUid && hoveredUid === node.uid ? strokeHovered : stroke" 
                     :stroke-width="hoveredUid && hoveredUid === node.uid ? node.circleRadius / 6 : node.circleRadius / 12" 
                     style="cursor:pointer"
-                    @click="zoom(node)" 
+                    @click.stop="zoom(node)" 
                     @mouseover="hover(node)" 
                     @mouseleave="hover(null)" 
                 />
