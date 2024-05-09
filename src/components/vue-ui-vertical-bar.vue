@@ -5,6 +5,7 @@ import {
     createCsvContent,
     createUid,
     downloadCsv,
+    dataLabel,
     error,
     functionReturnsString,
     isFunction,
@@ -345,7 +346,22 @@ function useTooltip(bar, seriesIndex) {
     
         tooltipContent.value = `<div style="text-align:left">${html}</div>`;
     }
+}
 
+function makeDataLabel(value) {
+    if (isNaN(value) || !verticalBarConfig.value.style.chart.layout.bars.dataLabels.value.show) {
+        return '';
+    }
+    const label = dataLabel({
+        p: verticalBarConfig.value.style.chart.layout.bars.dataLabels.value.prefix,
+        v: value,
+        s: verticalBarConfig.value.style.chart.layout.bars.dataLabels.value.suffix,
+        r: verticalBarConfig.value.style.chart.layout.bars.dataLabels.value.roundingValue
+    });
+
+    const percentage = `(${calcProportionToTotal(value, true, verticalBarConfig.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)})`;
+
+    return `${label}${verticalBarConfig.value.style.chart.layout.bars.dataLabels.percentage.show ? ` ${percentage}` : ''}`;
 }
 
 const __to__ = ref(null);
@@ -631,7 +647,7 @@ defineExpose({
                     :fill="verticalBarConfig.style.chart.layout.bars.dataLabels.color"
                     :font-weight="verticalBarConfig.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                 >
-                    {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.prefix }} {{ isNaN(serie.value) || !verticalBarConfig.style.chart.layout.bars.dataLabels.value.show ? '' : serie.value.toFixed(verticalBarConfig.style.chart.layout.bars.dataLabels.value.roundingValue) }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.suffix  }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.show ? `(${calcProportionToTotal(serie.value, true, verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)})` : '' }}
+                    {{ makeDataLabel(serie.value) }}
                 </text>
 
                 <!-- CHILDREN | LONELY PARENTS NAMES -->
@@ -668,8 +684,7 @@ defineExpose({
                     :font-weight="verticalBarConfig.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                     text-anchor="start"
                 >
-                
-                {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.prefix }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.show ? getParentData(serie, i).value : '' }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.percentage.show ? `(${getParentData(serie, i).percentageToTotal})` : '' }} {{ verticalBarConfig.style.chart.layout.bars.dataLabels.value.suffix }}
+                    {{ makeDataLabel(getParentData(serie, i).value) }}
                 </text>
 
                 <!-- TOOLTIP TRAPS -->
