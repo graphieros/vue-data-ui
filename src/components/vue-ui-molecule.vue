@@ -209,40 +209,44 @@ const currentAnimationFrame = ref(null);
 
 
 function zoomOnNode(node) {
-    if (currentAnimationFrame.value) {
-        cancelAnimationFrame(currentAnimationFrame.value);
-    }
-    const vb = dynamicViewBox.value.split(' ');
-    const startX = parseFloat(vb[0]);
-    const startY = parseFloat(vb[1]);
-    const startWidth = parseFloat(vb[2]);
-    const startHeight = parseFloat(vb[3]);
-    const { x, y } = node.polygonPath.coordinates[0];
-    const { circleRadius } = node;
-    const sizer = 8.34;
-    const targetX = x - circleRadius * sizer;
-    const targetY = y - circleRadius * sizer;
-    const targetWidth = circleRadius * sizer * 2;
-    const targetHeight = circleRadius * sizer * 2;
+    moleculeChart.value.focus();
 
-    const distance = Math.sqrt((targetX - startX) ** 2 + (targetY - startY) ** 2);
-    const numSteps = Math.min(1200, Math.max(20, Math.floor(distance / 10)));
-    const stepX = (targetX - startX) / numSteps;
-    const stepY = (targetY - startY) / numSteps;
-    const stepWidth = (targetWidth - startWidth) / numSteps;
-    const stepHeight = (targetHeight - startHeight) / numSteps;
-    let currentStep = 0;
-
-    function animateZoom() {
-        dynamicViewBox.value = `${startX + stepX * currentStep} ${startY + stepY * currentStep} ${startWidth + stepWidth * currentStep} ${startHeight + stepHeight * currentStep}`;
-        currentStep += moleculeConfig.value.style.chart.zoom.speed;
-
-        if (currentStep <= numSteps) {
-            currentAnimationFrame.value = requestAnimationFrame(animateZoom);
+    nextTick(() => {
+        if (currentAnimationFrame.value) {
+            cancelAnimationFrame(currentAnimationFrame.value);
         }
-        
-    }
-    animateZoom();
+        const vb = dynamicViewBox.value.split(' ');
+        const startX = parseFloat(vb[0]);
+        const startY = parseFloat(vb[1]);
+        const startWidth = parseFloat(vb[2]);
+        const startHeight = parseFloat(vb[3]);
+        const { x, y } = node.polygonPath.coordinates[0];
+        const { circleRadius } = node;
+        const sizer = 8.34;
+        const targetX = x - circleRadius * sizer;
+        const targetY = y - circleRadius * sizer;
+        const targetWidth = circleRadius * sizer * 2;
+        const targetHeight = circleRadius * sizer * 2;
+    
+        const distance = Math.sqrt((targetX - startX) ** 2 + (targetY - startY) ** 2);
+        const numSteps = Math.min(1200, Math.max(20, Math.floor(distance / 10)));
+        const stepX = (targetX - startX) / numSteps;
+        const stepY = (targetY - startY) / numSteps;
+        const stepWidth = (targetWidth - startWidth) / numSteps;
+        const stepHeight = (targetHeight - startHeight) / numSteps;
+        let currentStep = 0;
+    
+        function animateZoom() {
+            dynamicViewBox.value = `${startX + stepX * currentStep} ${startY + stepY * currentStep} ${startWidth + stepWidth * currentStep} ${startHeight + stepHeight * currentStep}`;
+            currentStep += moleculeConfig.value.style.chart.zoom.speed;
+    
+            if (currentStep <= numSteps) {
+                currentAnimationFrame.value = requestAnimationFrame(animateZoom);
+            }
+            
+        }
+        animateZoom();
+    })
 }
 
 function zoom(node) {
