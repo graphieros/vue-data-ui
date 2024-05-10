@@ -232,6 +232,7 @@ The following charts bear these slots:
 - VueUiNestedDonuts
 - VueUiOnion
 - VueUiQuadrant
+- VueUiQuickChart
 - VueUiRadar
 - VueUiRings
 - VueUiScatter
