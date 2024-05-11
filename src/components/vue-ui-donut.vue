@@ -126,7 +126,6 @@ const immutableSet = computed(() => {
                 absoluteValues: serie.values,
             }
         })
-        // .sort((a,b) => b.value - a.value)
 });
 
 const mutableSet = ref(immutableSet.value)

@@ -62,6 +62,7 @@ import AccordionTest from "./components/vue-ui-accordion.vue";
 import QuickTest from "./components/vue-ui-quick-chart.vue";
 import TestCursor from "./components/vue-ui-cursor.vue";
 import TestTrend from "./components/vue-ui-spark-trend.vue";
+import TestStrip from "./components/vue-ui-strip-plot.vue";
 
 const dataset = ref([
   {
@@ -2181,7 +2182,8 @@ const skeletonOptions = ref([
   'rings',
   'wheel',
   'donutEvolution',
-  'treemap'
+  'treemap',
+  'stripPlot'
 ]);
 
 const skeletonChoice = ref('donutEvolution')
@@ -3369,6 +3371,112 @@ const pillConfig = ref({
   }
 })
 
+const stripDataset = ref([
+  {
+    name: "Asia",
+    plots: [
+      { name: "Shanghai", value: 24.9 },
+      { name: "Beijing", value: 21.9 },
+      { name: "Delhi", value: 16.8 },
+      { name: "Guangzhou", value: 16.1 },
+      { name: "Istanbul", value: 15.6 },
+      { name: "Chengdu", value: 15.4 },
+      { name: "Mumbai", value: 15.4 },
+      { name: "Karachi", value: 14.9 },
+      { name: "Shenzen", value: 14.7 },
+      { name: "Tokyo", value: 14 },
+    ]
+  },
+  {
+    name: "Africa",
+    plots: [
+      { name: "Kinshasa", value: 17.1 },
+      { name: "Lagos", value: 14.9 },
+      { name: "Cairo", value: 9.3 },
+      { name: "Johannesburg", value: 5.6 },
+      { name: "Giza", value: 5.6 },
+      { name: "Khartoum", value: 5.3 },
+      { name: "Abidjan", value: 5 },
+      { name: "Alexandria", value: 4.9 },
+      { name: "Dar es Salaam", value: 4.7 },
+      { name: "Nairobi", value: 4.4 },
+    ]
+  },
+  {
+    name: "Europe",
+    plots: [
+      { name: "Moscow", value: 13},
+      { name: "London", value: 9},
+      { name: "Saint Petersburg", value: 5.4},
+      { name: "Berlin", value: 3.8},
+      { name: "Madrid", value: 3.3},
+      { name: "Kyiv", value: 3},
+      { name: "Rome", value: 2.7},
+      { name: "Paris", value: 2.1},
+      { name: "Minsk", value: 2},
+      { name: "Vienna", value: 1.9}
+    ]
+  },
+  {
+    name: "America",
+    plots: [
+      { name: "Sao Paulo", value: 12.2},
+      { name: "Lima", value: 9.7},
+      { name: "Mexico City", value: 9.2},
+      { name: "New York", value: 8.4},
+      { name: "Bogota", value: 8},
+      { name: "Rio de Janeiro", value: 6.7},
+      { name: "Santiago", value: 6.2},
+      { name: "Los Angeles", value: 4},
+      { name: "Buenos Aires", value: 3},
+      { name: "Brasilia", value: 2.9}
+    ]
+  },
+  {
+    name: "Australia & Oceania",
+    plots: [
+      { name: "Sydney", value: 5.4},
+      { name: "Melbourne", value: 5.1},
+      { name: "Brisbane", value: 2.6},
+      { name: "Perth", value: 2.1},
+      { name: "Auckland", value: 1.7},
+      { name: "Adelaide", value: 1.4},
+      { name: "Honolulu", value: 1},
+      { name: "Gold Coast", value: 0.7},
+      { name: "Newcastle-Maitland", value: 0.5},
+      { name: "Canberra", value: 0.46},
+    ]
+  },
+]);
+
+const stripConfig = ref({
+  useCssAnimation: true,
+  style: {
+    chart: {
+      plots: {
+        radius: 20,
+        shape: "circle",
+        gradient: {
+          show: true,
+          intensity: 80
+        }
+      },
+      // tooltip: {
+      //   customFormat: (test) => {
+      //     console.log(test)
+      //     return "TEST"
+      //   }
+      // },
+      title: {
+        text: "Title",
+        subtitle: {
+          text: "Subtitle"
+        }
+      }
+    }
+  }
+})
+
 </script>
 
 <template>
@@ -3509,8 +3617,33 @@ const pillConfig = ref({
           <BaseIcon name="copy" stroke="#42d392" />
           <BaseIcon name="cursor" stroke="#42d392" />
           <BaseIcon name="trend" stroke="#42d392" />
+          <BaseIcon name="chartStripPlot" stroke="#42d392" />
         </div>
       </template>
+      </Box>
+
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_strip_plot)">
+        <template #title>
+          <BaseIcon name="chartStripPlot"/>
+          VueUiStripPlot
+        </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
+        <template #dev>
+          <TestStrip :dataset="stripDataset" :config="stripConfig" />
+        </template>
+        <template #prod>
+          <VueUiStripPlot :dataset="stripDataset" :config="stripConfig">
+          </VueUiStripPlot>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_strip_plot }}
+        </template>
       </Box>
 
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_spark_trend)">
@@ -3888,7 +4021,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
         <template #title>
           <BaseIcon name="chartCluster"/>
           VueUiMolecule
@@ -4090,7 +4223,7 @@ const pillConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)">
         <template #title>
           <BaseIcon name="skeleton"/>
           VueUiSkeleton

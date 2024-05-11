@@ -290,6 +290,43 @@ const ticks = computed(() => {
 
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
+        <!-- STRIP PLOT -->
+        <template v-if="type === 'stripPlot'">
+            <svg :xmlns="XMLNS" data-cy="skeleton-line" width="100%" viewBox="0 0 100 100" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <g v-if="skeletonConfig.style.line.axis.show">
+                    <line x1="3" x2="3" y1="3" y2="97" :stroke="skeletonConfig.style.stripPlot.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="3" x2="97" y1="97" y2="97" :stroke="skeletonConfig.style.stripPlot.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+                <circle cx="12" cy="8" r="4"  :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="12" cy="40" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="12" cy="60" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="12" cy="70" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                
+                <circle cx="32" cy="25" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="32" cy="38" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="32" cy="44" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="32" cy="55" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                
+                <circle cx="52" cy="30" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="52" cy="33" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="52" cy="43" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="52" cy="63" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="52" cy="78" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+
+                <circle cx="72" cy="58" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="72" cy="70" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="72" cy="78" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="72" cy="88" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+
+                <circle cx="92" cy="66" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="92" cy="77" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="92" cy="85" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="92" cy="88" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="92" cy="90" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+                <circle cx="92" cy="92" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
+            </svg>
+        </template>
+        
         <!-- TREEMAP -->
         <template v-if="type === 'treemap'">
             <svg :xmlns="XMLNS" data-cy="skeleton-treemap" width="100%" viewBox="0 0 30 21" :style="`background:${skeletonConfig.style.backgroundColor}`">

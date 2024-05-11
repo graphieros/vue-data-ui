@@ -13,7 +13,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-47-green)
+![Static Badge](https://img.shields.io/badge/components-48-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -41,6 +41,7 @@ Available components
 - [VueUiRelationCircle](https://vue-data-ui.graphieros.com/docs#vue-ui-relation-circle)
 - [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
 - [VueUiScatter](https://vue-data-ui.graphieros.com/docs#vue-ui-scatter)
+- [VueUiStripPlot](https://vue-data-ui.graphieros.com/docs#vue-ui-strip-plot)
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
 - [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
 - [VueUiTreemap](https://vue-data-ui.graphieros.com/docs#vue-ui-treemap)
@@ -330,6 +331,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiRadar`          | `VueUiRadarDataset`                | `VueUiRadarConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`               | ✅             |
 | `VueUiRings`          | `VueUiRingsDatasetItem[]`          | `VueUiRingsConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`               | ✅             |
 | `VueUiScatter`        | `VueUiScatterDatasetItem[]`        | `VueUiScatterConfig`        | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`               | ✅             |
+| `VueUiStripPlot`      | `VueUiStripPlotDataset[]`          | `VueUiStripPlotConfig`      | `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                            | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`               | ✅             |
 | `VueUiThermometer`    | `VueUiThermometerDataset`          | `VueUiThermometerConfig`    | `generatePdf`, `generateImage`                                                                          | `#svg`                                                               | ❌             |
 | `VueUiTiremarks`      | `VueUiTiremarksDataset`            | `VueUiTiremarksConfig`      | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`               | ❌             |
 | `VueUiTreemap`        | `VueUiTreemapDatasetItem[]`        | `VueUiTreemapConfig`        | `@selectLegend`, `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#rect`, `#legend`, `#tooltip-before`, `#tooltip-after`      | ✅             |
