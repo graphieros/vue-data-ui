@@ -668,5 +668,14 @@ defineExpose({
     user-select: none;
     position: relative;
 }
+</style>
 
+<style>
+.vue-ui-strip-plot-animated * {
+    transition-property: cy, opacity ;
+    transition-duration: 0.3s ;
+}
+.vue-ui-strip-plot-select-circle * {
+    transition: all 0.1s ease-in-out !important;
+}
 </style>
