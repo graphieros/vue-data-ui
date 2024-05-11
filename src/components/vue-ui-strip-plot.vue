@@ -663,23 +663,10 @@ defineExpose({
 
 <style scoped>
 @import "../vue-data-ui.css";
-.vue-ui-strip-plot * {
-    transition: unset;
-}
 
 .vue-ui-strip-plot {
     user-select: none;
     position: relative;
 }
 
-</style>
-
-<style>
-.vue-ui-strip-plot-animated * {
-    transition-property: cy, opacity;
-    transition-duration: 0.3s;
-}
-.vue-ui-strip-plot-select-circle * {
-    transition: all 0.1s ease-in-out !important;
-}
 </style>
