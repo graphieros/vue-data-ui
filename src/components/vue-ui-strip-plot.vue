@@ -130,7 +130,6 @@ const drawingArea = computed(() => {
         right: absoluteWidth - stripConfig.value.style.chart.padding.right,
         top: stripConfig.value.style.chart.padding.top,
         bottom: absoluteHeight - stripConfig.value.style.chart.padding.bottom,
-        top: stripConfig.value.style.chart.padding.top,
         width: stripWidth * props.dataset.length,
         height: absoluteHeight - stripConfig.value.style.chart.padding.top - stripConfig.value.style.chart.padding.bottom,
         stripWidth,
@@ -360,8 +359,6 @@ const dataTable = computed(() => {
     }
 });
 
-const baseLine = computed(() => drawingArea.value.bottom);
-
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
@@ -369,7 +366,7 @@ function toggleFullscreen(state) {
 }
 
 function getData() {
-    return mutableConfig.value
+    return mutableDataset.value
 }
 
 defineExpose({

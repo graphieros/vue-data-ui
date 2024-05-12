@@ -63,6 +63,7 @@ import QuickTest from "./components/vue-ui-quick-chart.vue";
 import TestCursor from "./components/vue-ui-cursor.vue";
 import TestTrend from "./components/vue-ui-spark-trend.vue";
 import TestStrip from "./components/vue-ui-strip-plot.vue";
+import TestDumb from "./components/vue-ui-dumbbell.vue";
 
 const dataset = ref([
   {
@@ -1292,18 +1293,28 @@ const pyramidDataset = ref([
 // IDEAS:
 // . treeselector (with sums & avgs & so on)
 
-const sparkbarConfig = ref({});
+const sparkbarConfig = ref({
+  style: {
+    layout: {
+      independant: true,
+      percentage: false,
+      target: 110
+    }
+  }
+});
+
+
 const sparkbarDataset = ref([
   {
     name: "Some random kpi",
-    value: 80.8798798787,
-    suffix: "%",
+    value: 60,
+    suffix: "$",
     rounding: 1,
   },
   {
     name: "Some other kpi",
-    value: 95.26576576565,
-    suffix: "%",
+    value: 50,
+    suffix: "$",
     rounding: 2,
   },
 ]);
@@ -3477,6 +3488,148 @@ const stripConfig = ref({
   }
 })
 
+const dumbDataset = ref([
+  { name: 'Sweden', start: 5000, end:  7100},
+  { name: 'Korea, Rep.', start: 4900, end: 7050},
+  { name: 'Iceland', start: 6500, end: 8000},
+  { name: 'Finland', start: 6400, end: 7600},
+  { name: 'Norway', start: 5400, end: 6050},
+  { name: 'Ireland', start: 3000, end: 2000}
+]);
+
+const dumbConfig = ref({
+  useCssAnimation: true,
+  userOptions: {
+    show: true
+  },
+  style: {
+    fontFamily: "inherit",
+    chart: {
+      backgroundColor: "#1A1A1A",
+      color: "#2D353C",
+      width: 600,
+      rowHeight: 40,
+      padding: {
+        top: 12,
+        left: 100,
+        right: 24,
+        bottom: 12
+      },
+      plots: {
+        startColor: "#ff6400",
+        endColor: "#5f8bee",
+        radius: 6,
+        stroke: "#FFFFFF",
+        strokeWidth: 1,
+        link: {
+          strokeWidth: 2,
+          type: "curved"
+        },
+        gradient: {
+          show: true,
+          intensity: 40
+        }
+      },
+      grid: {
+        strokeWidth: 1,
+        scaleSteps: 10,
+        horizontalGrid: {
+          show: true,
+          stroke: "#cccccc",
+          strokeWidth: 0.5,
+          strokeDasharray: 4
+        },
+        verticalGrid: {
+          show: true,
+          stroke: "#cccccc",
+          strokeWidth: 0.5,
+          strokeDasharray: 0
+        }
+      },
+      labels: {
+        prefix: "",
+        suffix: "",
+        yAxisLabels: {
+          show: true,
+          fontSize: 14,
+          color: "#2D353C",
+          offsetX: 0,
+          bold: true,
+          showProgression: true,
+          rounding: 1
+        },
+        xAxisLabels: {
+          show: true,
+          fontSize: 14,
+          color: "#2D353C",
+          offsetY: 0,
+          bold: false,
+          rounding: 0
+        },
+        startLabels: {
+          show: true,
+          fontSize: 10,
+          color: "#2D353C",
+          offsetY: 0,
+          rounding: 0,
+          useStartColor: true
+        },
+        endLabels: {
+          show: true,
+          fontSize: 10,
+          color: "#2D353C",
+          offsetY: 0,
+          rounding: 0,
+          useEndColor: true
+        }
+      },
+      legend: {
+        show: true,
+        labelStart: "start",
+        labelEnd: "end",
+        backgroundColor: "#FFFFFF",
+        color: "#2D353C",
+        fontSize: 14,
+        bold: false
+      },
+      title: {
+        text: "",
+        color: "#2D353C",
+        fontSize: 20,
+        bold: true,
+        subtitle: {
+          color: "#A1A1A1",
+          text: "",
+          fontSize: 16,
+          bold: false
+        }
+      }
+    }
+  },
+  table: {
+    show: false,
+    responsiveBreakpoint: 300,
+    columnNames: {
+      series: "Series",
+      start: "Start value",
+      end: "End value",
+      progression: "Progression"
+    },
+    th: {
+      backgroundColor: "#FAFAFA",
+      color: "#2D353C",
+      outline: "none"
+    },
+    td: {
+      backgroundColor: "#FFFFFF",
+      color: "#2D353C",
+      outline: "none",
+      roundingValue: 0,
+      roundingPercentage: 1
+    }
+  }
+})
+
 </script>
 
 <template>
@@ -3618,11 +3771,36 @@ const stripConfig = ref({
           <BaseIcon name="cursor" stroke="#42d392" />
           <BaseIcon name="trend" stroke="#42d392" />
           <BaseIcon name="chartStripPlot" stroke="#42d392" />
+          <BaseIcon name="chartDumbbell" stroke="#42d392" />
         </div>
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_strip_plot)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_dumbbell)">
+        <template #title>
+          <BaseIcon name="chartDumbbell"/>
+          VueUiDumbbell
+        </template>
+        <template #info>
+          <BaseIcon name="chartTable" stroke="#5f8bee"/>
+          <BaseIcon name="pdf" stroke="#5f8bee"/>
+          <BaseIcon name="image" stroke="#5f8bee"/>
+          <BaseIcon name="excel" stroke="#5f8bee"/>
+          <BaseIcon name="fullscreen" stroke="#5f8bee"/>
+        </template>
+        <template #dev>
+          <TestDumb :dataset="dumbDataset" :config="dumbConfig" />
+        </template>
+        <template #prod>
+          <VueUiDumbbell :dataset="dumbDataset" :config="dumbConfig">
+          </VueUiDumbbell>
+        </template>
+        <template #config>
+          {{ PROD_CONFIG.vue_ui_dumbbell }}
+        </template>
+      </Box>
+
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_strip_plot)">
         <template #title>
           <BaseIcon name="chartStripPlot"/>
           VueUiStripPlot
@@ -4021,7 +4199,7 @@ const stripConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_molecule)">
         <template #title>
           <BaseIcon name="chartCluster"/>
           VueUiMolecule
@@ -4223,7 +4401,7 @@ const stripConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_skeleton)">
         <template #title>
           <BaseIcon name="skeleton"/>
           VueUiSkeleton
@@ -4582,7 +4760,7 @@ const stripConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_scatter)">
         <template #title>
           <BaseIcon name="chartScatter" />
           VueUiScatter
@@ -4953,7 +5131,7 @@ const stripConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_sparkstackbar)">
         <template #title>
           <BaseIcon name="chartSparkStackbar" />
           VueUiSparkStackbar

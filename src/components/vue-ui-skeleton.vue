@@ -290,13 +290,68 @@ const ticks = computed(() => {
 
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
+        <!-- DUMBBELL -->
+        <template v-if="type === 'dumbbell'">
+            <svg :xmlns="XMLNS" data-cy="skeleton-line" width="100%" viewBox="0 0 100 55" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <line x1="3" x2="3" y1="3" y2="67" :stroke="skeletonConfig.style.dumbbell.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="
+                    M 30,11
+                    C 39,10 39,10
+                    45,11
+                    L 45,9
+                    C 39,10 39,10
+                    30,9 Z
+                " :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="30" cy="10" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="46" cy="10" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+                <path d="
+                    M 10,21
+                    C 23,20 23,20
+                    36,21
+                    L 36,19
+                    C 23,20 23,20
+                    10,19 Z
+                " :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="10" cy="20" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="36" cy="20" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+                <path d="
+                    M 30,31
+                    C 45,30 45,30
+                    60,31
+                    L 60,29
+                    C 45,30 45,30
+                    30,29 Z
+                " :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="30" cy="30" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="60" cy="30" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+                <path d="
+                    M 50,41
+                    C 65,40 65,40
+                    80,41
+                    L 80,39
+                    C 65,40 65,40
+                    50,39 Z
+                " :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="50" cy="40" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="80" cy="40" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+                <path d="
+                    M 40,51
+                    C 65,50 65,50
+                    90,51
+                    L 90,49
+                    C 65,50 65,50
+                    40,49 Z
+                " :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="40" cy="50" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+                <circle cx="90" cy="50" r="2" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.dumbbell.color"/>
+            </svg>
+        </template>
+
         <!-- STRIP PLOT -->
         <template v-if="type === 'stripPlot'">
             <svg :xmlns="XMLNS" data-cy="skeleton-line" width="100%" viewBox="0 0 100 100" :style="`background:${skeletonConfig.style.backgroundColor}`">
-                <g v-if="skeletonConfig.style.line.axis.show">
-                    <line x1="3" x2="3" y1="3" y2="97" :stroke="skeletonConfig.style.stripPlot.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <line x1="3" x2="97" y1="97" y2="97" :stroke="skeletonConfig.style.stripPlot.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </g>
+                <line x1="3" x2="3" y1="3" y2="97" :stroke="skeletonConfig.style.stripPlot.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="3" x2="97" y1="97" y2="97" :stroke="skeletonConfig.style.stripPlot.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <circle cx="12" cy="8" r="4"  :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
                 <circle cx="12" cy="40" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>
                 <circle cx="12" cy="60" r="4" :stroke="skeletonConfig.style.backgroundColor" :stroke-width="0.3" :fill="skeletonConfig.style.stripPlot.color" style="opacity:0.5"/>

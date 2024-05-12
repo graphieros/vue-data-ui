@@ -33,7 +33,7 @@ function handleClick(legend, i) {
         :id="id"
         :data-cy="config.cy"
         class="vue-data-ui-legend"
-        :style="`background:${config.backgroundColor};font-size:${config.fontSize}px;color:${config.color};padding-bottom:${config.paddingBottom}px;font-weight:${config.fontWeight}`"
+        :style="`background:${config.backgroundColor};font-size:${config.fontSize}px;color:${config.color};padding-bottom:${config.paddingBottom}px;padding-top:${config.paddingTop || 0}px;font-weight:${config.fontWeight}`"
     >
         <slot name="legendTitle" :titleSet="legendSet"></slot>
         <div v-for="(legend, i) in legendSet" class="vue-data-ui-legend-item">

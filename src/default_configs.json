@@ -1566,6 +1566,9 @@
             "treemap": {
                 "color": "#E1E5E8"
             },
+            "dumbbell": {
+                "color":"#E1E5E8"
+            },
             "stripPlot": {
                 "color": "#E1E5E8"
             },
@@ -3820,25 +3823,6 @@
         "userOptions": {
             "show": true
         },
-        "table": {
-            "show": false,
-            "responsiveBreakpoint": 300,
-            "columnNames": {
-                "series": "Series",
-                "value": "Value"
-            },
-            "th": {
-                "backgroundColor": "#FAFAFA",
-                "color": "#2D353C",
-                "outline": "none"
-            },
-            "td": {
-                "backgroundColor": "#FFFFFF",
-                "color": "#2D353C",
-                "outline": "none",
-                "roundingValue": 0
-            }
-        },
         "style": {
             "fontFamily":"inherit",
             "chart": {
@@ -3934,6 +3918,157 @@
                     "roundingValue": 0,
                     "customFormat": null
                 }
+            }
+        },
+        "table": {
+            "show": false,
+            "responsiveBreakpoint": 300,
+            "columnNames": {
+                "series": "Series",
+                "value": "Value"
+            },
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "none"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none",
+                "roundingValue": 0
+            }
+        }
+    },
+    "vue_ui_dumbbell": {
+        "useCssAnimation": true,
+        "userOptions": {
+            "show": true
+        },
+        "style": {
+            "fontFamily":"inherit",
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "width": 600,
+                "rowHeight": 40,
+                "padding": {
+                    "top": 12,
+                    "left": 100,
+                    "right": 24,
+                    "bottom": 12
+                },
+                "plots": {
+                    "startColor": "#ff6400",
+                    "endColor": "#5f8bee",
+                    "radius": 6,
+                    "stroke":"#FFFFFF",
+                    "strokeWidth": 1,
+                    "link": {
+                        "strokeWidth": 2,
+                        "type": "curved"
+                    },
+                    "gradient": {
+                        "show": true,
+                        "intensity": 40
+                    }
+                },
+                "grid": {
+                    "strokeWidth": 1,
+                    "scaleSteps": 10,
+                    "horizontalGrid": {
+                        "show": true,
+                        "stroke": "#cccccc",
+                        "strokeWidth": 0.5,
+                        "strokeDasharray": 4
+                    },
+                    "verticalGrid": {
+                        "show": true,
+                        "stroke": "#cccccc",
+                        "strokeWidth": 0.5,
+                        "strokeDasharray": 0
+                    }
+                },
+                "labels": {
+                    "prefix": "",
+                    "suffix": "",
+                    "yAxisLabels": {
+                        "show": true,
+                        "fontSize": 14,
+                        "color":"#2D353C",
+                        "offsetX": 0,
+                        "bold": true,
+                        "showProgression": true,
+                        "rounding": 1
+                    },
+                    "xAxisLabels": {
+                        "show": true,
+                        "fontSize": 14,
+                        "color":"#2D353C",
+                        "offsetY": 0,
+                        "bold": false,
+                        "rounding": 0
+                    },
+                    "startLabels": {
+                        "show": true,
+                        "fontSize": 10,
+                        "color":"#2D353C",
+                        "offsetY": 0,
+                        "rounding": 0,
+                        "useStartColor": true
+                    },
+                    "endLabels": {
+                        "show": true,
+                        "fontSize": 10,
+                        "color":"#2D353C",
+                        "offsetY": 0,
+                        "rounding": 0,
+                        "useEndColor": true
+                    }
+                },
+                "legend": {
+                    "show": true,
+                    "labelStart": "start",
+                    "labelEnd": "end",
+                    "backgroundColor": "#FFFFFF",
+                    "color":"#2D353C",
+                    "fontSize":14,
+                    "bold":false
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "responsiveBreakpoint": 300,
+            "columnNames": {
+                "series": "Series",
+                "start": "Start value",
+                "end": "End value",
+                "progression": "Progression"
+            },
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "none"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none",
+                "roundingValue": 0,
+                "roundingPercentage": 1
             }
         }
     }

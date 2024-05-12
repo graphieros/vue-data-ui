@@ -49,6 +49,7 @@ import VueUiQuickChart from "./components/vue-ui-quick-chart.vue";
 import VueUiCursor from "./components/vue-ui-cursor.vue";
 import VueUiSparkTrend from "./components/vue-ui-spark-trend.vue";
 import VueUiStripPlot from "./components/vue-ui-strip-plot.vue";
+import VueUiDumbbell from "./components/vue-ui-dumbbell.vue";
 import { getPalette } from "./lib";
 
 export { 
@@ -103,5 +104,6 @@ export {
     VueUiQuickChart,
     VueUiCursor,
     VueUiSparkTrend,
-    VueUiStripPlot
+    VueUiStripPlot,
+    VueUiDumbbell
 };

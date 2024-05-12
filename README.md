@@ -13,7 +13,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-48-green)
+![Static Badge](https://img.shields.io/badge/components-49-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -28,6 +28,7 @@ Available components
 - [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
 - [VueUiDonutEvolution](https://vue-data-ui.graphieros.com/docs#vue-ui-donut-evolution)
 - [VueUiDonut](https://vue-data-ui.graphieros.com/docs#vue-ui-donut)
+- [VueUiDumbbell](https://vue-data-ui.graphieros.com/docs#vue-ui-dumbbell)
 - [VueUiGalaxy](https://vue-data-ui.graphieros.com/docs#vue-ui-galaxy)
 - [VueUiGauge](https://vue-data-ui.graphieros.com/docs#vue-ui-gauge)
 - [VueUiHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-heatmap)
@@ -194,6 +195,7 @@ All charts expose a #legend slot except for:
 - VueUiThermometer
 - VueUiTiremarks
 - VueUiWheel
+- VueUiDumbbell
 
 The legend slot also works when using the VueDataUi universal component, if the component it wraps supports it.
 It is recommended to set the show legend config attribute to false, to hide the default legend.
@@ -320,6 +322,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiChestnut`       | `VueUiChestnutDatasetRoot[]`       | `VueUiChestnutConfig`       | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`  | `#svg`, `#legend`                                                    | ❌             |
 | `VueUiDonut`          | `VueUiDonutDatasetItem[]`          | `VueUiDonutConfig`          | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after` | ✅             |
 | `VueUiDonutEvolution` | `VueUiDonutEvolutionDatasetItem[]` | `VueUiDonutEvolutionConfig` | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`,                                                   | ❌             |
+| `VueUiDumbbell`       | `VueUiDumbbellDataset[]`           | `VueUiDumbbellConfig`       | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`,                                                   | ❌             |
 | `VueUiGalaxy`         | `VueUiGalaxyDatasetItem[]`         | `VueUiGalaxyConfig`         | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                | ✅             |
 | `VueUiGauge`          | `VueUiGaugeDataset`                | `VueUiGaugeConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`,                                                   | ❌             |
 | `VueUiHeatmap`        | `VueUiHeatmapDatasetItem[]`        | `VueUiHeatmapConfig`        | `generatePdf`, `generateCsv`, `generateImage`                                                           | `#svg`, `#tooltip-before`, `#tooltip-after`                          | ✅             |

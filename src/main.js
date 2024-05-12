@@ -49,7 +49,8 @@ import {
     VueUiAccordion,
     VueUiQuickChart,
     VueUiSparkTrend,
-    VueUiStripPlot
+    VueUiStripPlot,
+    VueUiDumbbell
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -102,4 +103,5 @@ app.component("VueUiAccordion", VueUiAccordion);
 app.component("VueUiQuickChart", VueUiQuickChart);
 app.component("VueUiSparkTrend", VueUiSparkTrend);
 app.component("VueUiStripPlot", VueUiStripPlot);
+app.component("VueUiDumbbell", VueUiDumbbell);
 app.mount('#app');

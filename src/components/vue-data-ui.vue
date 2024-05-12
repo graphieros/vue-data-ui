@@ -49,6 +49,7 @@ import VueUiQuickChart from "./vue-ui-quick-chart.vue";
 import VueUiCursor from "./vue-ui-cursor.vue";
 import VueUiSparkTrend from "./vue-ui-spark-trend.vue";
 import VueUiStripPlot from "./vue-ui-strip-plot.vue";
+import VueUiDumbbell from "./vue-ui-dumbbell.vue";
 
 const props = defineProps({
     component: { type: String },
@@ -57,7 +58,7 @@ const props = defineProps({
 })
 
 const isError = computed(() => {
-    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiKpi", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiStripPlot", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy", "VueUiTreemap", "VueUiTableHeatmap", "VueUiAccordion", "VueUiQuickChart", "VueUiCursor", "VueUiSparkTrend"].includes(props.component)
+    return !["VueUi3dBar", "VueUiAgePyramid", "VueUiAnnotator", "VueUiCandlestick", "VueUiChestnut", "VueUiDashboard", "VueUiDigits", "VueUiDonutEvolution", "VueUiDonut", "VueUiGauge", "VueUiGalaxy", "VueUiHeatmap", "VueUiKpi", "VueUiMiniLoader", "VueUiMolecule", "VueUiMoodRadar", "VueUiNestedDonuts", "VueUiOnion", "VueUiQuadrant", "VueUiRadar", "VueUiRating", "VueUiRelationCircle", "VueUiRings", "VueUiScatter", "VueUiScreenshot", "VueUiSkeleton", "VueUiSmiley", "VueUiSparkbar", "VueUiSparkgauge", "VueUiSparkHistogram", "VueUiSparkline", "VueUiSparkStackbar", "VueUiStripPlot", "VueUiTableSparkline", "VueUiTable", "VueUiThermometer", "VueUiTiremarks", "VueUiVerticalBar", "VueUiWaffle", "VueUiWheel", "VueUiXy", "VueUiTreemap", "VueUiTableHeatmap", "VueUiAccordion", "VueUiQuickChart", "VueUiCursor", "VueUiSparkTrend", "VueUiDumbbell"].includes(props.component)
 });
 
 const vue_ui_3d_bar = ref(null);
@@ -106,6 +107,7 @@ const vue_ui_quick_chart = ref(null);
 const vue_ui_cursor = ref(null);
 const vue_ui_spark_trend = ref(null);
 const vue_ui_strip_plot = ref(null);
+const vue_ui_dumbbell = ref(null);
 
 const emit = defineEmits([
     'selectLegend',
@@ -137,7 +139,14 @@ const recalculateHeight = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
-        throw new Error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n. VueUi3dBar\n. VueUiAccordion\n. VueUiAgePyramid\n. VueUiAnnotator\n. VueUiCandlestick\n. VueUiChestnut\n. VueUiCursor\n. VueUiDashboard\n. VueUiDigits\n. VueUiDonutEvolution\n. VueUiDonut\n. VueUiGauge\n. VueUiHeatmap\n. VueUiMiniLoadar\n. VueUiKpi\n. VueUiMolecule\n. VueUiMoodRadar\n. VueUiNestedDonuts\n. VueUiOnion\n. VueUiQuadrant\n. VueUiQuickChart\n. VueUiRadar\n. VueUiRating\n. VueUiRelationCircle\n. VueUiRings\n. VueUiScatter\n. VueUiScreenshot\n. VueUiSkeleton\n. VueUiSmiley\n. VueUiSparkbar\n. VueUiSparkgauge\n. VueUiSparkHistogram\n. VueUiSparkline\n. VueUiSparkStackbar\n. VueUiSparkTrend\n. VueUiStripPlot\n. VueUiTableHeatmap\n. VueUiTableSparkline\n. VueUiTable\n. VueUiThermometer\n. VueUiTiremarks\n. VueUiVerticalBar\n. VueUiWaffle\n. VueUiWheel\n. VueUiXy\n\n`)
+        throw new Error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n. VueUi3dBar\n. VueUiAccordion\n. VueUiAgePyramid\n. VueUiAnnotator\n. VueUiCandlestick\n. VueUiChestnut\n. VueUiCursor\n. VueUiDashboard\n. VueUiDigits\n. VueUiDonutEvolution\n. VueUiDonut\n. VueUiDumbbell\n. VueUiGauge\n. VueUiHeatmap\n. VueUiMiniLoadar\n. VueUiKpi\n. VueUiMolecule\n. VueUiMoodRadar\n. VueUiNestedDonuts\n. VueUiOnion\n. VueUiQuadrant\n. VueUiQuickChart\n. VueUiRadar\n. VueUiRating\n. VueUiRelationCircle\n. VueUiRings\n. VueUiScatter\n. VueUiScreenshot\n. VueUiSkeleton\n. VueUiSmiley\n. VueUiSparkbar\n. VueUiSparkgauge\n. VueUiSparkHistogram\n. VueUiSparkline\n. VueUiSparkStackbar\n. VueUiSparkTrend\n. VueUiStripPlot\n. VueUiTableHeatmap\n. VueUiTableSparkline\n. VueUiTable\n. VueUiThermometer\n. VueUiTiremarks\n. VueUiVerticalBar\n. VueUiWaffle\n. VueUiWheel\n. VueUiXy\n\n`)
+    }
+
+    if(vue_ui_dumbbell.value) {
+        generatePdf.value = vue_ui_dumbbell.value.generatePdf;
+        generateImage.value = vue_ui_dumbbell.value.generateImage;
+        generateCsv.value = vue_ui_dumbbell.value.generateCsv;
+        getData.value = vue_ui_dumbbell.value.getData;
     }
 
     if(vue_ui_strip_plot.value) {
@@ -369,6 +378,20 @@ defineExpose({
         </div>
         The provided component "{{ component }}" does not exist
     </div>
+
+    <VueUiDumbbell
+        v-if="component === 'VueUiDumbbell'"
+        :config="config"
+        :dataset="dataset"
+        ref="vue_ui_dumbbell"
+    >
+        <template #legend="{ legend }">
+            <slot name="legend" v-bind:legend="legend"/>
+        </template>
+        <template #svg="{ svg }">
+            <slot name="svg" :svg="svg"></slot>
+        </template>
+    </VueUiDumbbell>
 
     <VueUiStripPlot
         v-if="component === 'VueUiStripPlot'"
