@@ -1145,6 +1145,8 @@ export default {
                 const zeroPosition = this.drawingArea.bottom - (this.drawingArea.height * individualZero / individualMax);
                 return {
                     individualScale,
+                    zeroPosition,
+                    individualMax,
                     ...datapoint,
                     plots: datapoint.series.map((plot, j) => {
                         const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
@@ -1154,7 +1156,7 @@ export default {
                             y: this.drawingArea.bottom - (this.drawingArea.height * yRatio),
                             value: datapoint.absoluteValues[j],
                             zeroPosition,
-                            individualMax
+                            individualMax,
                         }
                     }),
                 }
