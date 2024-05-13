@@ -482,8 +482,8 @@ defineExpose({
                 <text
                     v-for="(tick, i) in scale.ticks"
                     :x="drawingArea.left + (i * (drawingArea.width / (scale.ticks.length - 1)))"
-                    :y="drawingArea.bottom + dumbConfig.style.chart.labels.yAxisLabels.fontSize + dumbConfig.style.chart.labels.xAxisLabels.offsetY"
-                    :font-size="dumbConfig.style.chart.labels.yAxisLabels.fontSize"
+                    :y="drawingArea.bottom + dumbConfig.style.chart.labels.xAxisLabels.fontSize + dumbConfig.style.chart.labels.xAxisLabels.offsetY"
+                    :font-size="dumbConfig.style.chart.labels.xAxisLabels.fontSize"
                     :fill="dumbConfig.style.chart.labels.xAxisLabels.color"
                     :font-weight="dumbConfig.style.chart.labels.xAxisLabels.bold ? 'bold': 'normal'"
                     text-anchor="middle"
