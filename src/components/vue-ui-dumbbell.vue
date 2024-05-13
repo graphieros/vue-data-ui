@@ -200,7 +200,7 @@ onMounted(() => {
 
 const legendSet = computed(() => {
     return [
-        { name: dumbConfig.value.style.chart.legend.labelStart, color: dumbConfig.value.style.chart.plots.gradient.show ? `url(#start_grad_${uid.value})` : dumbConfig.style.chart.plots.startColor},
+        { name: dumbConfig.value.style.chart.legend.labelStart, color: dumbConfig.value.style.chart.plots.gradient.show ? `url(#start_grad_${uid.value})` : dumbConfig.value.style.chart.plots.startColor},
         { name: dumbConfig.value.style.chart.legend.labelEnd, color: dumbConfig.value.style.chart.plots.gradient.show ? `url(#end_grad_${uid.value})` : dumbConfig.value.style.chart.plots.endColor},
     ]
 })
