@@ -362,7 +362,7 @@
 
                 <!-- X LABELS BAR -->
                 <g v-if="(chartConfig.bar.labels.show || chartConfig.bar.serieName.show) && mutableConfig.dataLabels.show">
-                    <g v-for="(serie, i) in barSet" :key="`xLabel_bar_${i}`" :class="`xLabel_bar_${i}`">
+                    <g v-for="(serie, i) in barSet" :key="`xLabel_bar_${i}`" :class="`xLabel_bar_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_bar_${i}_${j}`">
                             <text
                                 :data-cy="`xy-bar-label-x-${i}-${j}`"
@@ -392,7 +392,7 @@
 
                 <!-- X LABELS PLOT -->
                 <g v-if="chartConfig.plot.labels.show && mutableConfig.dataLabels.show">
-                    <g v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`">
+                    <g v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                             <text
                                 :data-cy="`xy-plot-label-x-${i}-${j}`"
@@ -437,7 +437,7 @@
 
                 <!-- X LABELS LINE -->
                 <g v-if="chartConfig.line.labels.show && mutableConfig.dataLabels.show">
-                    <g v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`">
+                    <g v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                             <text
                                 :data-cy="`xy-line-label-x-${i}-${j}`"
@@ -1192,7 +1192,7 @@ export default {
                     ...datapoint,
                     curve,
                     plots,
-                    area: !datapoint.useArea ? '' : this.createArea(plots)
+                    area: !datapoint.useArea ? '' : this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? this.createIndividualArea(plots, this.drawingArea.bottom) :  this.createArea(plots)
                 }
             })
         },
@@ -1628,6 +1628,15 @@ export default {
         createArea(plots) {
             const start = { x: plots[0].x, y: this.zero };
             const end = { x: plots.at(-1).x, y: this.zero };
+            const path = [];
+            plots.forEach(plot => {
+                path.push(`${plot.x},${plot.y} `);
+            });
+            return [ start.x, start.y, ...path, end.x, end.y].toString();
+        },
+        createIndividualArea(plots, zero) {
+            const start = { x: plots[0].x, y: zero };
+            const end = { x: plots.at(-1).x, y: zero };
             const path = [];
             plots.forEach(plot => {
                 path.push(`${plot.x},${plot.y} `);

@@ -110,7 +110,7 @@ const dataset2 = ref([
         series: [ 55, 34, 21, 13, 8, 5, 3, 2, 1, 1, 0, -1, -1, -2, -3, -5, -8, -13, -21, -34, -55],
         type: "line",
         color: "rgb(66,211,146)",
-        useArea: false,
+        useArea: true,
         useProgression: true,
         dataLabels: false,
         shape: "hexagon",
