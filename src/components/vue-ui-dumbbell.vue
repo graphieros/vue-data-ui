@@ -134,7 +134,9 @@ const drawingArea = computed(() => {
     }
 });
 
-const mutableDataset = computed(() => {
+
+
+function getMutableDataset() {
     return immutableDataset.value.map((ds, i) => {
         const startX = drawingArea.value.left + (((ds.start + Math.abs(scale.value.min)) / (scale.value.max + Math.abs(scale.value.min))) * drawingArea.value.widthPlotReference);
         const endX = drawingArea.value.left + (((ds.end + Math.abs(scale.value.min)) / (scale.value.max + Math.abs(scale.value.min))) * drawingArea.value.widthPlotReference);
@@ -144,10 +146,57 @@ const mutableDataset = computed(() => {
             startX,
             endX,
             centerX,
-            y: drawingArea.value.top + (i * dumbConfig.value.style.chart.rowHeight) + (dumbConfig.value.style.chart.rowHeight / 2)
+            y: drawingArea.value.top + (i * dumbConfig.value.style.chart.rowHeight) + (dumbConfig.value.style.chart.rowHeight / 2),
+            endVal: ds.start
         }
     })
+}
+
+const mutableDataset = ref([])
+
+const raf = ref(null);
+const grandTotalEnd = computed(() => {
+    return immutableDataset.value.map(ds => ds.end).reduce((a, b) => a + b, 0);
 });
+
+onMounted(() => {
+    mutableDataset.value = getMutableDataset();
+
+    let totalEnd = mutableDataset.value.map(ds => ds.start).reduce((a, b) => a + b, 0);
+
+    function anim() {
+        const diffs = immutableDataset.value.map(ds => {
+            return ds.end - ds.start
+        })
+
+        if(totalEnd >= grandTotalEnd.value) {
+            cancelAnimationFrame(raf.value);
+            mutableDataset.value = getMutableDataset();
+        } else {
+            mutableDataset.value = mutableDataset.value.map((ds, i) => {
+                ds.endVal += diffs[i] * (dumbConfig.value.animationSpeed / 100);
+                const startX = drawingArea.value.left + (((ds.start + Math.abs(scale.value.min)) / (scale.value.max + Math.abs(scale.value.min))) * drawingArea.value.widthPlotReference);
+                const endX = drawingArea.value.left + (((ds.endVal + Math.abs(scale.value.min)) / (scale.value.max + Math.abs(scale.value.min))) * drawingArea.value.widthPlotReference);
+                const centerX = startX + ((endX - startX) / 2)
+                return {
+                    ...ds,
+                    startX,
+                    endX,
+                    centerX,
+                    y: drawingArea.value.top + (i * dumbConfig.value.style.chart.rowHeight) + (dumbConfig.value.style.chart.rowHeight / 2),
+                    endVal: ds.endVal
+                }
+            })
+            totalEnd = mutableDataset.value.map(ds => ds.endVal).reduce((a, b) => a + b, 0);
+            raf.value = requestAnimationFrame(anim)
+        }
+    }
+    if(dumbConfig.value.useAnimation) {
+        anim()
+    } else {
+        mutableDataset.value = getMutableDataset()
+    }
+})
 
 const legendSet = computed(() => {
     return [
@@ -316,7 +365,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="dumbbellChart" :class="`vue-ui-dumbbell ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${dumbConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${dumbConfig.style.fontFamily};width:100%; text-align:center;${!dumbConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${dumbConfig.style.chart.backgroundColor}`" :id="`dumbbell_${uid}`">
+    <div ref="dumbbellChart" :class="`vue-ui-dumbbell ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${dumbConfig.style.fontFamily};width:100%; text-align:center;${!dumbConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${dumbConfig.style.chart.backgroundColor}`" :id="`dumbbell_${uid}`">
 
         <div v-if="dumbConfig.style.chart.title.text" :style="`width:100%;background:${dumbConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <Title
@@ -505,7 +554,7 @@ defineExpose({
                     :fill="dumbConfig.style.chart.plots.gradient.show ? `url(#start_grad_${uid})` : dumbConfig.style.chart.plots.startColor"
                     :stroke="dumbConfig.style.chart.plots.stroke"
                     :stroke-width="dumbConfig.style.chart.plots.strokeWidth"
-                    :class="{ 'animated' : dumbConfig.useCssAnimation }"
+                    
                 />
                 <!-- END -->
                 <circle
@@ -515,7 +564,7 @@ defineExpose({
                     :fill="dumbConfig.style.chart.plots.gradient.show ? `url(#end_grad_${uid})` : dumbConfig.style.chart.plots.endColor"
                     :stroke="dumbConfig.style.chart.plots.stroke"
                     :stroke-width="dumbConfig.style.chart.plots.strokeWidth"
-                    :class="{ 'animated' : dumbConfig.useCssAnimation }"
+                    
                 />
 
                 <!-- START LABELS -->
@@ -527,7 +576,7 @@ defineExpose({
                         :fill="dumbConfig.style.chart.labels.startLabels.useStartColor ? dumbConfig.style.chart.plots.startColor : dumbConfig.style.chart.labels.startLabels.color"
                         :font-size="dumbConfig.style.chart.labels.startLabels.fontSize"
                         text-anchor="middle"
-                        :class="{ 'animated' : dumbConfig.useCssAnimation }"
+                        
                     >
                         {{ dataLabel({
                             p: dumbConfig.style.chart.labels.prefix,
@@ -546,7 +595,7 @@ defineExpose({
                         :fill="dumbConfig.style.chart.labels.endLabels.useEndColor ? dumbConfig.style.chart.plots.endColor : dumbConfig.style.chart.labels.endLabels.color"
                         :font-size="dumbConfig.style.chart.labels.endLabels.fontSize"
                         text-anchor="middle"
-                        :class="{ 'animated' : dumbConfig.useCssAnimation }"
+                        
                     >
                         {{ dataLabel({
                             p: dumbConfig.style.chart.labels.prefix,
@@ -619,24 +668,5 @@ defineExpose({
 .vue-ui-dumbbell {
     user-select: none;
     position: relative;
-}
-
-.animated {
-    animation: dumbbell 0.5s ease-in-out;
-    transform-origin: center;
-}
-@keyframes dumbbell {
-    0% {
-        transform: scale(0.9,0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02,1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1,1);
-        opacity: 1;
-    }
 }
 </style>

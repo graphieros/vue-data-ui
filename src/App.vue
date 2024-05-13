@@ -3498,14 +3498,15 @@ const dumbDataset = ref([
 ]);
 
 const dumbConfig = ref({
-  useCssAnimation: true,
+  useAnimation: true,
+  animationSpeed: 2,
   userOptions: {
     show: true
   },
   style: {
     fontFamily: "inherit",
     chart: {
-      backgroundColor: "#1A1A1A",
+      backgroundColor: "#FFFFFF",
       color: "#2D353C",
       width: 600,
       rowHeight: 40,

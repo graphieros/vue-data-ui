@@ -5013,7 +5013,8 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiDumbbellConfig = {
-        useCssAnimation?: boolean;
+        useAnimation?: boolean;
+        animationSpeed?: number;
         userOptions?: {
             show?: boolean;
         };

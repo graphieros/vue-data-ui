@@ -3941,7 +3941,8 @@
         }
     },
     "vue_ui_dumbbell": {
-        "useCssAnimation": true,
+        "useAnimation": true,
+        "animationSpeed": 2,
         "userOptions": {
             "show": true
         },
