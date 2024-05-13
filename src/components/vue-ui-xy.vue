@@ -54,26 +54,44 @@
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
-                    <line
-                        data-cy="xy-grid-line-y"
-                        :stroke="chartConfig.chart.grid.stroke" 
-                        stroke-width="1" 
-                        :x1="drawingArea.left" 
-                        :x2="drawingArea.left" 
-                        :y1="drawingArea.top" 
-                        :y2="drawingArea.bottom" 
-                        stroke-linecap="round"
-                    />
-                    <line
-                        data-cy="xy-grid-line-x"
-                        :stroke="chartConfig.chart.grid.stroke" 
-                        stroke-width="1" 
-                        :x1="drawingArea.left" 
-                        :x2="drawingArea.right" 
-                        :y1="zero" 
-                        :y2="zero" 
-                        stroke-linecap="round"
-                    />
+                    <template v-if="!chartConfig.chart.grid.labels.yAxis.useIndividualScale">
+                        <line
+                            data-cy="xy-grid-line-y"
+                            :stroke="chartConfig.chart.grid.stroke" 
+                            stroke-width="1" 
+                            :x1="drawingArea.left" 
+                            :x2="drawingArea.left" 
+                            :y1="drawingArea.top" 
+                            :y2="drawingArea.bottom" 
+                            stroke-linecap="round"
+                        />
+                        <line
+                            data-cy="xy-grid-line-x"
+                            :stroke="chartConfig.chart.grid.stroke" 
+                            stroke-width="1" 
+                            :x1="drawingArea.left" 
+                            :x2="drawingArea.right" 
+                            :y1="zero" 
+                            :y2="zero" 
+                            stroke-linecap="round"
+                        />
+                    </template>
+                    <template v-else>
+                        <g v-for="grid in allScales">
+                            <template v-if="grid.id === selectedScale">
+                                <line 
+                                    v-for="l in grid.yLabels"
+                                    :x1="drawingArea.left"
+                                    :x2="drawingArea.right"
+                                    :y1="l.y"
+                                    :y2="l.y"
+                                    :stroke="grid.color"
+                                    :stroke-width="0.5"
+                                    stroke-linecap="round"
+                                />
+                            </template>
+                        </g>
+                    </template>
                     <g v-if="chartConfig.chart.grid.showVerticalLines" data-cy="xy-grid-vertical-lines">
                         <line
                             :data-cy="`xy-grid-vertical-line-${i}`"
@@ -130,16 +148,17 @@
                 </template>
 
                 <!-- BARS -->
-                <g v-for="(serie, i) in barSet" :key="`serie_bar_${i}`" :class="`serie_bar_${i}`">
+                <g v-for="(serie, i) in barSet" :key="`serie_bar_${i}`" :class="`serie_bar_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                     <g 
                         v-for="(plot, j) in serie.plots" 
-                        :key="`bar_plot_${i}_${j}`">
+                        :key="`bar_plot_${i}_${j}`"
+                    >
                         <rect
                             :data-cy="`xy-bar-${i}-${j}`"
                             v-if="canShowValue(plot.value)"
                             :x="calcRectX(plot)"
-                            :y="calcRectY(plot)"
-                            :height="calcRectHeight(plot)"
+                            :y="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
+                            :height="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualHeight(plot) : calcRectHeight(plot)"
                             :width="calcRectWidth()"
                             :rx="chartConfig.bar.borderRadius"
                             :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
@@ -183,7 +202,7 @@
                 </g>
 
                 <!-- PLOTS -->
-                <g v-for="(serie, i) in plotSet" :key="`serie_plot_${i}`" :class="`serie_plot_${i}`">
+                <g v-for="(serie, i) in plotSet" :key="`serie_plot_${i}`" :class="`serie_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                     <g 
                         v-for="(plot, j) in serie.plots" 
                         :key="`circle_plot_${i}_${j}`"
@@ -237,7 +256,7 @@
                 </g>
 
                 <!-- LINES -->
-                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`">
+                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                     <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea">
                         <path v-if="serie.smooth" :d="`M ${serie.plots[0].x},${drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1).x},${drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
                         <path v-else :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
@@ -505,29 +524,91 @@
 
                 <!-- Y LABELS -->
                 <g v-if="chartConfig.chart.grid.labels.show">
-                    <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
+                    <template v-if="chartConfig.chart.grid.labels.yAxis.useIndividualScale">
                         <line 
-                            v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
-                            :x1="drawingArea.left" 
-                            :x2="drawingArea.left - 5" 
-                            :y1="yLabel.y" 
-                            :y2="yLabel.y" 
-                            :stroke="chartConfig.chart.grid.stroke" 
-                            stroke-width="1" 
+                            v-for="el in allScales"
+                            :x1="el.x"
+                            :x2="el.x"
+                            :y1="drawingArea.top"
+                            :y2="drawingArea.bottom"
+                            :stroke="el.color"
+                            :stroke-width="chartConfig.chart.grid.stroke"
+                            stroke-linecap="round"
+                            :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
                         />
-                        <text
-                            :data-cy="`xy-label-y-${i}`"
-                            v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
-                            :x="drawingArea.left - 7" 
-                            :y="yLabel.y + chartConfig.chart.labels.fontSize / 3" 
-                            :font-size="chartConfig.chart.grid.labels.fontSize" 
-                            text-anchor="end"
-                            :fill="chartConfig.chart.grid.labels.color"
-                        >
-                            {{ canShowValue(yLabel.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: yLabel.value, s: chartConfig.chart.labels.suffix, r: 1}) : '' }}
-                        </text>
-                    </g>
+                        <g v-for="el in allScales" :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
+                            <text
+                                :fill="el.color"
+                                :font-size="chartConfig.chart.grid.labels.fontSize"
+                                text-anchor="middle"
+                                :transform="`translate(${el.x - chartConfig.chart.grid.labels.yAxis.labelWidth + 5}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                            >
+                                {{ el.name }} {{ el.scaleLabel ? `- ${el.scaleLabel}` : '' }}
+                            </text>
+                            <line
+                                v-for="(yLabel, j) in el.yLabels"
+                                :x1="el.x - 3"
+                                :x2="el.x"
+                                :y1="yLabel.y"
+                                :y2="yLabel.y"
+                                :stroke="el.color"
+                                :stroke-width="1"
+                                stroke-linecap="round"
+                            />
+                            <text 
+                                v-for="(yLabel, j) in el.yLabels"
+                                :x="el.x - 5" 
+                                :y="yLabel.y" 
+                                :font-size="chartConfig.chart.grid.labels.fontSize" 
+                                text-anchor="end"
+                                :fill="el.color"
+                            >
+                                {{
+                                    dataLabel({p:chartConfig.chart.labels.prefix, v: yLabel.value, s: chartConfig.chart.labels.suffix, r: 1})
+                                }}
+                            </text>
+                        </g>
+                    </template>
+                    <template v-else>
+                        <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
+                            <line 
+                                v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
+                                :x1="drawingArea.left" 
+                                :x2="drawingArea.left - 5" 
+                                :y1="yLabel.y" 
+                                :y2="yLabel.y" 
+                                :stroke="chartConfig.chart.grid.stroke" 
+                                stroke-width="1" 
+                                stroke-linecap="round"
+                            />
+                            <text
+                                :data-cy="`xy-label-y-${i}`"
+                                v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
+                                :x="drawingArea.left - 7" 
+                                :y="yLabel.y + chartConfig.chart.labels.fontSize / 3" 
+                                :font-size="chartConfig.chart.grid.labels.fontSize" 
+                                text-anchor="end"
+                                :fill="chartConfig.chart.grid.labels.color"
+                            >
+                                {{ canShowValue(yLabel.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: yLabel.value, s: chartConfig.chart.labels.suffix, r: 1}) : '' }}
+                            </text>
+                        </g>
+                    </template>
                 </g>
+
+                <!-- Y LABELS MOUSE TRAPS -->
+                <template v-if="chartConfig.chart.grid.labels.yAxis.useIndividualScale">
+                    <rect 
+                        v-for="trap in allScales"
+                        :x="trap.x - chartConfig.chart.grid.labels.yAxis.labelWidth"
+                        :y="drawingArea.top"
+                        :width="chartConfig.chart.grid.labels.yAxis.labelWidth"
+                        :height="drawingArea.height"
+                        :fill="selectedScale === trap.id ? `${trap.color}20` : 'transparent'"
+                        @mouseenter="selectedScale = trap.id"
+                        @mouseleave="selectedScale = null"
+                    />
+                </template>
 
                 <!-- AXIS LABELS -->
                 <g>
@@ -844,6 +925,7 @@ export default {
         }
 
         return {
+            selectedScale: null,
             CTX: null,
             CANVAS: null,
             opacity,
@@ -890,6 +972,58 @@ export default {
         }
     },
     computed: {
+        allScales() {
+            const lines = this.lineSet.map(l => {
+                return {
+                    name: l.name,
+                    color: l.color,
+                    scale: l.individualScale,
+                    zero: l.zeroPosition,
+                    max: l.individualMax,
+                    scaleLabel: l.scaleLabel || "",
+                    id: l.id
+                }
+            });
+            const bars = this.barSet.map(b => {
+                return {
+                    name: b.name,
+                    color: b.color,
+                    scale: b.individualScale,
+                    zero: b.zeroPosition,
+                    max: b.individualMax,
+                    scaleLabel: b.scaleLabel || "",
+                    id: b.id
+                }
+            });
+            const plots = this.plotSet.map(p => {
+                return {
+                    name: p.name,
+                    color: p.color,
+                    scale: p.individualScale,
+                    zero: p.zeroPosition,
+                    max: p.individualMax,
+                    scaleLabel: p.scaleLabel || "",
+                    id: p.id
+                }
+            });
+            const len = [...lines, ...bars, ...plots].flatMap(el => el).length;
+            return [...lines, ...bars, ...plots].flatMap((el,i) => {
+                return {
+                    id: el.id,
+                    scaleLabel: el.scaleLabel,
+                    name: el.name,
+                    color: el.color,
+                    scale: el.scale,
+                    x: (this.drawingArea.left / len) * (i+1),
+                    yLabels: el.scale.ticks.map(t => {
+                        return {
+                            y: t >= 0 ? el.zero - (this.drawingArea.height * (t / el.max)) : el.zero + (this.drawingArea.height * Math.abs(t) / el.max),
+                            value: t
+                        }
+                    })
+                }
+            })
+        },
         isDataset() {
             return !!this.dataset && this.dataset.length;
         },
@@ -1000,13 +1134,27 @@ export default {
         },
         barSet() {
             return this.absoluteDataset.filter(s => s.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint, i) => {
+                const individualExtremes = {
+                    max: Math.max(...datapoint.absoluteValues),
+                    min: Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
+                };
+                const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
+                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
+                const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
+                const individualMax = individualScale.max + individualZero;
+                const zeroPosition = this.drawingArea.bottom - (this.drawingArea.height * individualZero / individualMax);
                 return {
+                    individualScale,
                     ...datapoint,
                     plots: datapoint.series.map((plot, j) => {
+                        const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
+
                         return {
                             x: (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length),
-                            y: this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(plot)),
+                            y: this.drawingArea.bottom - (this.drawingArea.height * yRatio),
                             value: datapoint.absoluteValues[j],
+                            zeroPosition,
+                            individualMax
                         }
                     }),
                 }
@@ -1014,15 +1162,31 @@ export default {
         },
         lineSet() {
             return this.absoluteDataset.filter(s => s.type === 'line').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
+                const individualExtremes = {
+                    max: Math.max(...datapoint.absoluteValues),
+                    min: Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
+                };
+
+                const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
+                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
+                const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
+                const individualMax = individualScale.max + Math.abs(individualZero) 
+                const zeroPosition = this.drawingArea.bottom - (this.drawingArea.height * individualZero / individualMax);
+
                 const plots = datapoint.series.map((plot, j) => {
-                        return {
-                            x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
-                            y: this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(plot)),
-                            value: datapoint.absoluteValues[j],
-                        }
-                    });
+                    const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
+
+                    return {
+                        x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
+                        y: this.drawingArea.bottom - (this.drawingArea.height * yRatio),
+                        value: datapoint.absoluteValues[j],
+                    }
+                });
                 const curve = this.createSmoothPath(plots);
                 return {
+                    individualScale,
+                    individualMax,
+                    zeroPosition,
                     ...datapoint,
                     curve,
                     plots,
@@ -1032,12 +1196,28 @@ export default {
         },
         plotSet() {
             return this.absoluteDataset.filter(s => s.type === 'plot').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
+                const individualExtremes = {
+                    max: Math.max(...datapoint.absoluteValues),
+                    min: Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
+                };
+
+                const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
+                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
+                const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
+                const individualMax = individualScale.max + individualZero;
+                
+                const zeroPosition = this.drawingArea.bottom - (this.drawingArea.height * individualZero / individualMax);
+
                 return {
                     ...datapoint,
+                    zeroPosition,
+                    individualMax,
+                    individualScale,
                     plots: datapoint.series.map((plot, j) => {
+                        const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
                         return {
                             x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
-                            y: this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(plot)),
+                            y: this.drawingArea.bottom - (this.drawingArea.height * yRatio),
                             value: datapoint.absoluteValues[j],
                         }
                     })
@@ -1045,13 +1225,14 @@ export default {
             })
         },
         drawingArea() {
+            const individualScalesPadding = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.show ? this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)).length * this.chartConfig.chart.grid.labels.yAxis.labelWidth : 0;
             return {
                 top: this.chartConfig.chart.padding.top,
                 right: this.chartConfig.chart.width - this.chartConfig.chart.padding.right,
                 bottom: this.chartConfig.chart.height - this.chartConfig.chart.padding.bottom,
-                left: this.chartConfig.chart.padding.left,
+                left: this.chartConfig.chart.padding.left + individualScalesPadding,
                 height: this.chartConfig.chart.height - (this.chartConfig.chart.padding.top + this.chartConfig.chart.padding.bottom),
-                width: this.chartConfig.chart.width - (this.chartConfig.chart.padding.right + this.chartConfig.chart.padding.left)
+                width: this.chartConfig.chart.width - (this.chartConfig.chart.padding.right + this.chartConfig.chart.padding.left + individualScalesPadding)
             }
         },
         max(){
@@ -1063,7 +1244,7 @@ export default {
             return min;
         },
         niceScale() {
-            return this.calculateNiceScale(this.min, this.max, 10)
+            return this.calculateNiceScale(this.min, this.max, this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps)
         },
         maxSeries(){
             return this.slicer.end - this.slicer.start;
@@ -2026,6 +2207,13 @@ export default {
                 return plot.y - this.zero;
             }
         },
+        calcIndividualHeight(plot) {
+            if(plot.value >= 0) {
+                return plot.zeroPosition - plot.y
+            } else {
+                return plot.y - plot.zeroPosition
+            }
+        },
         calcRectWidth() {
             return this.slot.bar * 0.9;
         },
@@ -2036,6 +2224,10 @@ export default {
             if(plot.value >= 0) return plot.y;
             return this.zero;
         },
+        calcIndividualRectY(plot) {
+            if(plot.value >= 0) return plot.y;
+            return plot.zeroPosition;
+        },  
         canShowValue(value) {
             return ![null, undefined, NaN].includes(value);
         },

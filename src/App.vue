@@ -98,26 +98,32 @@ const dataset = ref([
 const dataset2 = ref([
     {
         name: "Series 1",
-        series: [ -55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
-        type: "bar",
-        color: "rgb(95,139,238)"
+        series: [ 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+        type: "plot",
+        color: "rgb(95,139,238)",
+        smooth: true,
+        scaleSteps: 20,
+        scaleLabel: "label test"
     },
     {
         name: "Series 2",
         series: [ 55, 34, 21, 13, 8, 5, 3, 2, 1, 1, 0, -1, -1, -2, -3, -5, -8, -13, -21, -34, -55],
         type: "line",
         color: "rgb(66,211,146)",
-        useArea: true,
+        useArea: false,
         useProgression: true,
         dataLabels: false,
-        shape: "hexagon"
+        shape: "hexagon",
+        scaleLabel: "label test"
     },
     {
         name: "Series 3",
-        series: [ 64, 60, 52, 42, 30, 16, 0, -18, -38, -46, -50, -46, -38, -18, 0, 16, 30, 42, 52, 60, 64],
-        type: "plot",
+        series: [ 3600, 2900, 4700, 2950, 3222, 4786, 3333, 2222, 4444, 5555, 3336, 2272, 1112, 3337, 2298],
+        type: "line",
         color: "rgb(255,100,0)",
-        shape: "star"
+        shape: "star",
+        smooth: true,
+        scaleLabel: "label test"
     },
     {
         name: "Series 4",
@@ -127,16 +133,19 @@ const dataset2 = ref([
         useArea: false,
         dataLabels: false,
         color: "rgb(200,200,50)",
-        shape: "pentagon"
+        shape: "pentagon",
+        scaleLabel: "label test"
     },
     {
         name: "Target",
-        series: [ 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+        series: [ -500, 500, -500, 500, -500, 500, -500, 500, -500, 500, -500, 500],
         type: "line",
         color: "#404040",
         dashed: true,
         useTag: "start",
         dataLabels: false,
+        scaleSteps: 20,
+        scaleLabel: "label test"
     },
 ]);
 
@@ -2679,6 +2688,9 @@ const xyConfig = ref({
   chart: {
     grid: {
       labels: {
+        yAxis: {
+          useIndividualScale: true
+        },
         xAxisLabels: {
           rotation: 0,
           values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
@@ -4618,7 +4630,7 @@ const dumbConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
         <template #title>
           <BaseIcon name="chartLine" />
           VueUiXy
@@ -4655,12 +4667,12 @@ const dumbConfig = ref({
               </div>
             </template>
           </VueDataUiTest>
-          <VueDataUiTest
+          <!-- <VueDataUiTest
             component="VueUiXy"
             :config="xyConfig"
             :dataset="dataset"
           >
-          </VueDataUiTest>
+          </VueDataUiTest> -->
         </template>
         <template #prod>
           <VueDataUi
@@ -4676,11 +4688,11 @@ const dumbConfig = ref({
             </template>
             
           </VueDataUi>
-          <VueDataUi
+          <!-- <VueDataUi
             component="VueUiXy"
             :config="xyConfig"
             :dataset="dataset"
-          />
+          /> -->
         </template>
         <template #config>
           {{ PROD_CONFIG.vue_ui_xy }}

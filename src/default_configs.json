@@ -215,6 +215,11 @@
                         "xLabel": "",
                         "fontSize": 12
                     },
+                    "yAxis": {
+                        "commonScaleSteps": 10,
+                        "useIndividualScale": false,
+                        "labelWidth": 40
+                    },
                     "xAxisLabels": {
                         "color": "#2D353C",
                         "show": true,

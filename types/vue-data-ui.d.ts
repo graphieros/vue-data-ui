@@ -2341,6 +2341,11 @@ declare module 'vue-data-ui' {
                         xLabel?: string;
                         fontSize?: number;
                     };
+                    yAxis?: {
+                        commonScaleSteps?: number;
+                        useIndividualScale?: boolean;
+                        labelWidth?: number;
+                    };
                     xAxisLabels?: {
                         color?: string;
                         show?: boolean;
@@ -2475,6 +2480,8 @@ declare module 'vue-data-ui' {
         useArea?: boolean;
         dataLabels?: boolean;
         useProgression?: boolean;
+        scaleSteps?: number;
+        scaleLabel?: string;
     };
 
     export type VueUiXyDatasetBarItem = {
