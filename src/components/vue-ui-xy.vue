@@ -1106,14 +1106,13 @@ export default {
         },
         tableSparklineConfig() {
             return {
-
                 responsiveBreakpoint: this.chartConfig.table.responsiveBreakpoint,
                 roundingValues: this.chartConfig.table.rounding,
                 showAverage: false,
                 showMedian: false,
                 showTotal: false,
                 fontFamily: this.chartConfig.chart.fontFamily,
-                colNames: this.chartConfig.chart.grid.labels.xAxisLabels.values.slice(0, this.maxSeries),
+                colNames: this.chartConfig.chart.grid.labels.xAxisLabels.values,
                 thead: {
                     backgroundColor: this.chartConfig.table.th.backgroundColor,
                     color: this.chartConfig.table.th.color,
