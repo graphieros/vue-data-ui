@@ -1319,7 +1319,7 @@ declare module 'vue-data-ui' {
         width?: number;
     }
 
-    export const VueUiSparkstackbar: DefineComponent<{
+    export const VueUiSparkStackbar: DefineComponent<{
         config?: VueUiSparkStackBarConfig,
         dataset: VueUiSparkStackBarDatasetItem[]
     }>;
