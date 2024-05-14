@@ -2338,7 +2338,9 @@ declare module 'vue-data-ui' {
                     fontSize?: number;
                     axis?: {
                         yLabel?: string;
+                        yLabelOffsetX?: number;
                         xLabel?: string;
+                        xLabelOffsetY?: number;
                         fontSize?: number;
                     };
                     yAxis?: {

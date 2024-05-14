@@ -212,7 +212,9 @@
                     "fontSize": 12,
                     "axis": {
                         "yLabel": "",
+                        "yLabelOffsetX": 0,
                         "xLabel": "",
+                        "xLabelOffsetY": 0,
                         "fontSize": 12
                     },
                     "yAxis": {

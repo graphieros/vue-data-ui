@@ -612,7 +612,15 @@
 
                 <!-- AXIS LABELS -->
                 <g>
-                    <text data-cy="xy-axis-yLabel" v-if="chartConfig.chart.grid.labels.axis.yLabel" :font-size="chartConfig.chart.grid.labels.axis.fontSize" :fill="chartConfig.chart.grid.labels.color" id="yAxisLabel" text-anchor="middle" style="transition: none">
+                    <text 
+                        data-cy="xy-axis-yLabel" 
+                        v-if="chartConfig.chart.grid.labels.axis.yLabel && ! chartConfig.chart.grid.labels.yAxis.useIndividualScale" 
+                        :font-size="chartConfig.chart.grid.labels.axis.fontSize" 
+                        :fill="chartConfig.chart.grid.labels.color"
+                        :transform="`translate(${chartConfig.chart.grid.labels.axis.fontSize + chartConfig.chart.grid.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                        text-anchor="middle" 
+                        style="transition: none"
+                    >
                         {{ chartConfig.chart.grid.labels.axis.yLabel }}
                     </text>
                     <text 
@@ -620,7 +628,7 @@
                         v-if="chartConfig.chart.grid.labels.axis.xLabel" 
                         text-anchor="middle"
                         :x="chartConfig.chart.width / 2"
-                        :y="drawingArea.bottom + chartConfig.chart.grid.labels.axis.fontSize + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3"
+                        :y="drawingArea.bottom + chartConfig.chart.grid.labels.axis.fontSize + (chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3) + chartConfig.chart.grid.labels.axis.xLabelOffsetY"
                         :font-size="chartConfig.chart.grid.labels.axis.fontSize"
                         :fill="chartConfig.chart.grid.labels.color"
                     >
@@ -1496,18 +1504,6 @@ export default {
                     })
                 }
             })
-        }
-
-        const that = this;
-        const yLabel = document.getElementById("yAxisLabel");
-        if(yLabel) {
-            const bboxY = yLabel.getBBox();
-            const xPosition = bboxY.height / 2 + this.chartConfig.chart.padding.left / 5;
-            const yPosition =  this.chartConfig.chart.height / 2;
-            yLabel.setAttributeNS(null, "transform", `rotate(-90, ${xPosition}, ${yPosition})`);
-            yLabel.setAttributeNS(null, "x", xPosition);
-            yLabel.setAttributeNS(null, "y", yPosition);
-            yLabel.setAttributeNS(null, "font-size", this.chartConfig.chart.grid.labels.axis.fontSize);
         }
 
         if(this.chartConfig.showWarnings) {
