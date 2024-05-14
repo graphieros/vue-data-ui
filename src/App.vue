@@ -123,6 +123,7 @@ const dataset2 = ref([
         color: "rgb(255,100,0)",
         shape: "star",
         smooth: true,
+        useArea: true,
         scaleLabel: "label test"
     },
     {
@@ -2688,6 +2689,10 @@ const xyConfig = ref({
   chart: {
     grid: {
       labels: {
+        axis: {
+          yLabel: 'Y LABEL TEST',
+          xLabel: 'X LABEL TEST'
+        },
         yAxis: {
           useIndividualScale: true
         },
