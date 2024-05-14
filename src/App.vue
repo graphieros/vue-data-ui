@@ -100,28 +100,34 @@ const dataset2 = ref([
         name: "Series 1",
         series: [ 10, 20, 30, 20, 25, 12, 24, 21, 12, 22, 23, 24],
         type: "line",
-        color: "rgb(66,211,146)",
         scaleLabel: "label test",
         smooth: true,
+        scaleSteps: 2
     },
     {
         name: "Series 2",
         series: [ 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
         type: "line",
-        color: "rgb(255,100,0)",
         scaleLabel: "label test",
-        scaleMin: 0,
-        scaleMax: 5,
-        scaleSteps: 3,
+        scaleSteps: 2,
+        dataLabels: false,
+        useArea:true
     },
     {
         name: "Series 3",
-        series: [ 2, 3, 3, 3, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 3, 3, 3],
+        series: [ 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
+        type: "line",
+        dataLabels: false,
+        scaleLabel: "label test",
+        scaleSteps: 2,
+
+    },
+    {
+        name: "Series 3",
+        series: [ 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
         type: "line",
         scaleLabel: "label test",
-        scaleMin: 0,
-        scaleMax: 5,
-        scaleSteps: 3
+        scaleSteps: 2
     },
 ]);
 
@@ -2663,13 +2669,16 @@ const donutConfig = ref({
 const xyConfig = ref({
   chart: {
     grid: {
+      showHorizontalLines: true,
       labels: {
         axis: {
           yLabel: 'Y LABEL TEST',
           xLabel: 'X LABEL TEST'
         },
         yAxis: {
-          useIndividualScale: true
+          useIndividualScale: true,
+          stacked: true,
+          gap:50
         },
         xAxisLabels: {
           rotation: 0,

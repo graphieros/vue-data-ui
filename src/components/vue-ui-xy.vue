@@ -76,7 +76,7 @@
                             stroke-linecap="round"
                         />
                     </template>
-                    <template v-else>
+                    <template v-else-if="chartConfig.chart.grid.showHorizontalLines">
                         <g v-for="grid in allScales">
                             <template v-if="grid.id === selectedScale">
                                 <line 
@@ -86,6 +86,18 @@
                                     :y1="l.y"
                                     :y2="l.y"
                                     :stroke="grid.color"
+                                    :stroke-width="0.5"
+                                    stroke-linecap="round"
+                                />
+                            </template>
+                            <template v-else>
+                                <line 
+                                    v-for="l in grid.yLabels"
+                                    :x1="drawingArea.left"
+                                    :x2="drawingArea.right"
+                                    :y1="l.y"
+                                    :y2="l.y"
+                                    :stroke="chartConfig.chart.grid.stroke"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
                                 />
@@ -529,8 +541,8 @@
                             v-for="el in allScales"
                             :x1="el.x"
                             :x2="el.x"
-                            :y1="drawingArea.top"
-                            :y2="drawingArea.bottom"
+                            :y1="chartConfig.chart.grid.labels.yAxis.stacked ? (drawingArea.bottom - el.yOffset - el.individualHeight) : drawingArea.top"
+                            :y2="chartConfig.chart.grid.labels.yAxis.stacked ? (drawingArea.bottom - el.yOffset) : drawingArea.bottom"
                             :stroke="el.color"
                             :stroke-width="chartConfig.chart.grid.stroke"
                             stroke-linecap="round"
@@ -541,7 +553,7 @@
                                 :fill="el.color"
                                 :font-size="chartConfig.chart.grid.labels.fontSize"
                                 text-anchor="middle"
-                                :transform="`translate(${el.x - chartConfig.chart.grid.labels.yAxis.labelWidth + 5}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                                :transform="`translate(${el.x - chartConfig.chart.grid.labels.yAxis.labelWidth + 5}, ${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                             >
                                 {{ el.name }} {{ el.scaleLabel ? `- ${el.scaleLabel}` : '' }}
                             </text>
@@ -597,7 +609,7 @@
                 </g>
 
                 <!-- Y LABELS MOUSE TRAPS -->
-                <template v-if="chartConfig.chart.grid.labels.yAxis.useIndividualScale">
+                <template v-if="chartConfig.chart.grid.labels.yAxis.useIndividualScale && !chartConfig.chart.grid.labels.yAxis.stacked">
                     <rect 
                         v-for="trap in allScales"
                         :x="trap.x - chartConfig.chart.grid.labels.yAxis.labelWidth"
@@ -989,7 +1001,9 @@ export default {
                     zero: l.zeroPosition,
                     max: l.individualMax,
                     scaleLabel: l.scaleLabel || "",
-                    id: l.id
+                    id: l.id,
+                    yOffset: l.yOffset || 0,
+                    individualHeight: l.individualHeight || this.drawingArea.height
                 }
             });
             const bars = this.barSet.map(b => {
@@ -1000,7 +1014,9 @@ export default {
                     zero: b.zeroPosition,
                     max: b.individualMax,
                     scaleLabel: b.scaleLabel || "",
-                    id: b.id
+                    id: b.id,
+                    yOffset: b.yOffset || 0,
+                    individualHeight: b.individualHeight || this.drawingArea.height
                 }
             });
             const plots = this.plotSet.map(p => {
@@ -1011,7 +1027,9 @@ export default {
                     zero: p.zeroPosition,
                     max: p.individualMax,
                     scaleLabel: p.scaleLabel || "",
-                    id: p.id
+                    id: p.id,
+                    yOffset: p.yOffset || 0,
+                    individualHeight: p.individualHeight || this.drawingArea.height
                 }
             });
             const len = [...lines, ...bars, ...plots].flatMap(el => el).length;
@@ -1022,10 +1040,12 @@ export default {
                     name: el.name,
                     color: el.color,
                     scale: el.scale,
-                    x: (this.drawingArea.left / len) * (i+1),
+                    yOffset: el.yOffset,
+                    individualHeight: el.individualHeight,
+                    x: this.chartConfig.chart.grid.labels.yAxis.stacked ? this.drawingArea.left : (this.drawingArea.left / len) * (i+1),
                     yLabels: el.scale.ticks.map(t => {
                         return {
-                            y: t >= 0 ? el.zero - (this.drawingArea.height * (t / el.max)) : el.zero + (this.drawingArea.height * Math.abs(t) / el.max),
+                            y: t >= 0 ? el.zero - (el.individualHeight * (t / el.max)) : el.zero + (el.individualHeight * Math.abs(t) / el.max),
                             value: t
                         }
                     })
@@ -1131,6 +1151,7 @@ export default {
         absoluteDataset() {
             return this.safeDataset.map((datapoint, i) => {
                 return {
+                    absoluteIndex: i,
                     ...datapoint,
                     series: datapoint.series.map(plot => plot + this.relativeZero),
                     absoluteValues: datapoint.series,
@@ -1149,9 +1170,14 @@ export default {
                 const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
                 const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
                 const individualMax = individualScale.max + individualZero;
-                const zeroPosition = this.drawingArea.bottom - (this.drawingArea.height * individualZero / individualMax);
+                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) * datapoint.absoluteIndex : 0;
+
+                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
                 return {
                     individualScale,
+                    yOffset,
+                    individualHeight,
                     zeroPosition,
                     individualMax,
                     ...datapoint,
@@ -1159,8 +1185,10 @@ export default {
                         const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
 
                         return {
+                            yOffset,
+                            individualHeight,
                             x: (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length),
-                            y: this.drawingArea.bottom - (this.drawingArea.height * yRatio),
+                            y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
                             value: datapoint.absoluteValues[j],
                             zeroPosition,
                             individualMax,
@@ -1168,6 +1196,9 @@ export default {
                     }),
                 }
             })
+        },
+        activeSeriesLength() {
+            return this.absoluteDataset.length
         },
         lineSet() {
             return this.absoluteDataset.filter(s => s.type === 'line').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
@@ -1180,26 +1211,34 @@ export default {
                 const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
                 const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min))
                 const individualMax = individualScale.max + Math.abs(individualZero)
-                const zeroPosition = this.drawingArea.bottom - (this.drawingArea.height * individualZero / individualMax);
+
+                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) * datapoint.absoluteIndex : 0;
+
+                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
 
                 const plots = datapoint.series.map((plot, j) => {
-                    const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
+                    const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale 
+                        ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) 
+                        : this.ratioToMax(plot)
 
                     return {
                         x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
-                        y: this.drawingArea.bottom - (this.drawingArea.height * yRatio),
+                        y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
                         value: datapoint.absoluteValues[j],
                     }
                 });
                 const curve = this.createSmoothPath(plots);
                 return {
+                    yOffset,
+                    individualHeight,
                     individualScale,
                     individualMax,
                     zeroPosition,
                     ...datapoint,
                     curve,
                     plots,
-                    area: !datapoint.useArea ? '' : this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? this.createIndividualArea(plots, this.drawingArea.bottom) :  this.createArea(plots)
+                    area: !datapoint.useArea ? '' : this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? this.createIndividualArea(plots, zeroPosition) :  this.createArea(plots)
                 }
             })
         },
@@ -1215,9 +1254,14 @@ export default {
                 const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
                 const individualMax = individualScale.max + individualZero;
                 
-                const zeroPosition = this.drawingArea.bottom - (this.drawingArea.height * individualZero / individualMax);
+                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) * datapoint.absoluteIndex : 0;
+
+                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
 
                 return {
+                    individualHeight,
+                    yOffset,
                     ...datapoint,
                     zeroPosition,
                     individualMax,
@@ -1226,7 +1270,7 @@ export default {
                         const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
                         return {
                             x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
-                            y: this.drawingArea.bottom - (this.drawingArea.height * yRatio),
+                            y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
                             value: datapoint.absoluteValues[j],
                         }
                     })
@@ -1234,7 +1278,7 @@ export default {
             })
         },
         drawingArea() {
-            const individualScalesPadding = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.show ? this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)).length * this.chartConfig.chart.grid.labels.yAxis.labelWidth : 0;
+            const individualScalesPadding = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.show ? this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)).length * (this.chartConfig.chart.grid.labels.yAxis.stacked ? 0 : this.chartConfig.chart.grid.labels.yAxis.labelWidth) : 0;
             return {
                 top: this.chartConfig.chart.padding.top,
                 right: this.chartConfig.chart.width - this.chartConfig.chart.padding.right,

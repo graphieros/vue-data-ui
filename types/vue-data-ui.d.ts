@@ -2331,6 +2331,7 @@ declare module 'vue-data-ui' {
             };
             grid?: {
                 stroke?: string;
+                showHorizontalLines?: boolean;
                 showVerticalLines?: boolean;
                 labels?: {
                     color?: string;
@@ -2346,6 +2347,8 @@ declare module 'vue-data-ui' {
                     yAxis?: {
                         commonScaleSteps?: number;
                         useIndividualScale?: boolean;
+                        stacked?: boolean;
+                        gap?: number;
                         labelWidth?: number;
                     };
                     xAxisLabels?: {

@@ -206,6 +206,7 @@
             "grid": {
                 "stroke": "#e1e5e8",
                 "showVerticalLines": false,
+                "showHorizontalLines": false,
                 "labels": {
                     "color": "#2D353C",
                     "show": true,
@@ -220,6 +221,8 @@
                     "yAxis": {
                         "commonScaleSteps": 10,
                         "useIndividualScale": false,
+                        "stacked": false,
+                        "gap": 64,
                         "labelWidth": 40
                     },
                     "xAxisLabels": {
