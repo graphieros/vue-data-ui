@@ -2484,6 +2484,8 @@ declare module 'vue-data-ui' {
         useProgression?: boolean;
         scaleSteps?: number;
         scaleLabel?: string;
+        scaleMax?: number;
+        scaleMin?: number;
     };
 
     export type VueUiXyDatasetBarItem = {

@@ -98,55 +98,30 @@ const dataset = ref([
 const dataset2 = ref([
     {
         name: "Series 1",
-        series: [ 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
-        type: "bar",
-        color: "rgb(95,139,238)",
+        series: [ 10, 20, 30, 20, 25, 12, 24, 21, 12, 22, 23, 24],
+        type: "line",
+        color: "rgb(66,211,146)",
+        scaleLabel: "label test",
         smooth: true,
-        scaleSteps: 20,
-        scaleLabel: "label test"
     },
     {
         name: "Series 2",
-        series: [ 55, 34, 21, 13, 8, 5, 3, 2, 1, 1, 0, -1, -1, -2, -3, -5, -8, -13, -21, -34, -55],
+        series: [ 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
         type: "line",
-        color: "rgb(66,211,146)",
-        useArea: true,
-        useProgression: true,
-        dataLabels: false,
-        shape: "hexagon",
-        scaleLabel: "label test"
+        color: "rgb(255,100,0)",
+        scaleLabel: "label test",
+        scaleMin: 0,
+        scaleMax: 5,
+        scaleSteps: 3,
     },
     {
         name: "Series 3",
-        series: [ 3600, 2900, 4700, 2950, 3222, 4786, 3333, 2222, 4444, 5555, 3336, 2272, 1112, 3337, 2298],
+        series: [ 2, 3, 3, 3, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 3, 3, 3],
         type: "line",
-        color: "rgb(255,100,0)",
-        shape: "star",
-        smooth: true,
-        useArea: true,
-        scaleLabel: "label test"
-    },
-    {
-        name: "Series 4",
-        series: [ 0, 1, -2, 3, -4, 5, -6, 7, -8, 9, -10, 11, -12, 13, -14, 15, -16, 17, -18, 19, -20],
-        type: "line",
-        smooth: true,
-        useArea: false,
-        dataLabels: false,
-        color: "rgb(200,200,50)",
-        shape: "pentagon",
-        scaleLabel: "label test"
-    },
-    {
-        name: "Target",
-        series: [ -500, 500, -500, 500, -500, 500, -500, 500, -500, 500, -500, 500],
-        type: "line",
-        color: "#404040",
-        dashed: true,
-        useTag: "start",
-        dataLabels: false,
-        scaleSteps: 20,
-        scaleLabel: "label test"
+        scaleLabel: "label test",
+        scaleMin: 0,
+        scaleMax: 5,
+        scaleSteps: 3
     },
 ]);
 

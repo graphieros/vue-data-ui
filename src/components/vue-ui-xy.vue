@@ -1142,8 +1142,8 @@ export default {
         barSet() {
             return this.absoluteDataset.filter(s => s.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint, i) => {
                 const individualExtremes = {
-                    max: Math.max(...datapoint.absoluteValues),
-                    min: Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
+                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues),
+                    min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
                 };
                 const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
                 const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
@@ -1172,14 +1172,14 @@ export default {
         lineSet() {
             return this.absoluteDataset.filter(s => s.type === 'line').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
                 const individualExtremes = {
-                    max: Math.max(...datapoint.absoluteValues),
-                    min: Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
+                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues),
+                    min: datapoint.scaleMin || (Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues))
                 };
 
                 const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
                 const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
-                const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
-                const individualMax = individualScale.max + Math.abs(individualZero) 
+                const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min))
+                const individualMax = individualScale.max + Math.abs(individualZero)
                 const zeroPosition = this.drawingArea.bottom - (this.drawingArea.height * individualZero / individualMax);
 
                 const plots = datapoint.series.map((plot, j) => {
@@ -1206,8 +1206,8 @@ export default {
         plotSet() {
             return this.absoluteDataset.filter(s => s.type === 'plot').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
                 const individualExtremes = {
-                    max: Math.max(...datapoint.absoluteValues),
-                    min: Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
+                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues),
+                    min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
                 };
 
                 const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
