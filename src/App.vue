@@ -98,36 +98,33 @@ const dataset = ref([
 const dataset2 = ref([
     {
         name: "Series 1",
-        series: [ 10, 20, 30, 20, 25, 12, 24, 21, 12, 22, 23, 24],
+        series: [ 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
         type: "line",
-        scaleLabel: "label test",
-        smooth: true,
-        scaleSteps: 2
+        color: "rgb(95,139,238)",
+        useArea: true,
+        shape: 'circle',
+        scaleSteps: 2,
     },
     {
         name: "Series 2",
-        series: [ 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
+        series: [ 55, 34, 21, 13, 8, 5, 3, 2, 1, 1, 0],
         type: "line",
-        scaleLabel: "label test",
-        scaleSteps: 2,
+        color: "rgb(66,211,146)",
+        useArea: true,
+        smooth: true,
+        useProgression: true,
         dataLabels: false,
-        useArea:true
+        shape: "triangle",
+        scaleSteps: 2,
     },
     {
         name: "Series 3",
-        series: [ 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
+        series: [ 64, 60, 52, 42, 30, 16, 0, -18, -38, -46, -50, -46, -38, -18, 0, 16, 30, 42, 52, 60, 64],
         type: "line",
-        dataLabels: false,
-        scaleLabel: "label test",
+        useArea: true,
+        color: "rgb(255,100,0)",
+        shape: "star",
         scaleSteps: 2,
-
-    },
-    {
-        name: "Series 3",
-        series: [ 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
-        type: "line",
-        scaleLabel: "label test",
-        scaleSteps: 2
     },
 ]);
 

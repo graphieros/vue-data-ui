@@ -78,7 +78,7 @@
                     </template>
                     <template v-else-if="chartConfig.chart.grid.showHorizontalLines">
                         <g v-for="grid in allScales">
-                            <template v-if="grid.id === selectedScale">
+                            <template v-if="grid.id === selectedScale && grid.yLabels.length">
                                 <line 
                                     v-for="l in grid.yLabels"
                                     :x1="drawingArea.left"
@@ -90,7 +90,7 @@
                                     stroke-linecap="round"
                                 />
                             </template>
-                            <template v-else>
+                            <template v-else-if="grid.yLabels.length">
                                 <line 
                                     v-for="l in grid.yLabels"
                                     :x1="drawingArea.left"
@@ -187,6 +187,7 @@
                             </marker>
                         </defs>
                         <line
+                            v-if="serie.plots.length > 1"
                             :x1="calcLinearProgression(serie.plots).x1"
                             :x2="calcLinearProgression(serie.plots).x2"
                             :y1="calcLinearProgression(serie.plots).y1"
@@ -197,6 +198,7 @@
                             :marker-end="`url(#bar_arrow_${i})`"
                         />
                         <text
+                            v-if="serie.plots.length > 1"
                             :data-cy="`xy-bar-progression-label-${i}`"
                             text-anchor="middle"
                             :x="calcLinearProgression(serie.plots).x2"
@@ -241,6 +243,7 @@
                             </marker>
                         </defs>
                         <line
+                            v-if="serie.plots.length > 1"
                             :x1="calcLinearProgression(serie.plots).x1"
                             :x2="calcLinearProgression(serie.plots).x2"
                             :y1="calcLinearProgression(serie.plots).y1"
@@ -251,6 +254,7 @@
                             :marker-end="`url(#plot_arrow_${i})`"
                         />
                         <text
+                            v-if="serie.plots.length > 1"
                             :data-cy="`xy-plot-progression-label-${i}`"
                             text-anchor="middle"
                             :x="calcLinearProgression(serie.plots).x2"
@@ -268,14 +272,14 @@
                 </g>
 
                 <!-- LINES -->
-                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
-                    <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea">
-                        <path v-if="serie.smooth" :d="`M ${serie.plots[0].x},${drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1).x},${drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
+                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">    
+                    <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea && serie.plots.length > 1">
+                        <path v-if="serie.smooth" :d="`M ${serie.plots[0].x},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1).x},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
                         <path v-else :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
                     </g>
                     <path 
                         :data-cy="`xy-line-area-path-${i}`" 
-                        v-if="serie.smooth" 
+                        v-if="serie.smooth && serie.plots.length > 1" 
                         :d="`M${serie.curve}`" 
                         :stroke="chartConfig.chart.backgroundColor" 
                         :stroke-width="chartConfig.line.strokeWidth + 1" 
@@ -284,14 +288,14 @@
                     />
                     <path 
                         :data-cy="`xy-line-area-path-${i}`" 
-                        v-if="serie.smooth" 
+                        v-if="serie.smooth && serie.plots.length > 1" 
                         :d="`M${serie.curve}`" 
                         :stroke="serie.color" 
                         :stroke-width="chartConfig.line.strokeWidth" 
                         :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" 
                         fill="none" 
                     />
-                    <g v-else>
+                    <g v-else-if="serie.plots.length > 1">
                         <g v-for="(plot, j) in serie.plots" :key="`line_${i}_${j}`">
                             <line
                                 :data-cy="`xy-line-segment-${i}-${j}`"
@@ -337,15 +341,16 @@
                     </g > 
                     <g :data-cy="`xy-line-progression-${i}`" v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                         <defs>
-                                <marker :id="`line_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
-                                refX="0" :refY="7/2" orient="auto">
-                                    <polygon 
-                                        :points="`0 0, ${7} ${7/2}, 0 ${7}`" 
-                                        :fill="serie.color"
-                                    />
-                                </marker>
-                            </defs>
-                            <line
+                            <marker :id="`line_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
+                            refX="0" :refY="7/2" orient="auto">
+                                <polygon 
+                                    :points="`0 0, ${7} ${7/2}, 0 ${7}`" 
+                                    :fill="serie.color"
+                                />
+                            </marker>
+                        </defs>
+                        <line
+                            v-if="serie.plots.length > 1"
                             :x1="calcLinearProgression(serie.plots).x1"
                             :x2="calcLinearProgression(serie.plots).x2"
                             :y1="calcLinearProgression(serie.plots).y1"
@@ -356,6 +361,7 @@
                             :marker-end="`url(#line_arrow_${i})`"
                         />
                         <text
+                            v-if="serie.plots.length > 1"
                             :data-cy="`xy-line-progression-label-${i}`"
                             text-anchor="middle"
                             :x="calcLinearProgression(serie.plots).x2"
@@ -537,17 +543,18 @@
                 <!-- Y LABELS -->
                 <g v-if="chartConfig.chart.grid.labels.show">
                     <template v-if="chartConfig.chart.grid.labels.yAxis.useIndividualScale">
-                        <line 
-                            v-for="el in allScales"
-                            :x1="el.x"
-                            :x2="el.x"
-                            :y1="chartConfig.chart.grid.labels.yAxis.stacked ? (drawingArea.bottom - el.yOffset - el.individualHeight) : drawingArea.top"
-                            :y2="chartConfig.chart.grid.labels.yAxis.stacked ? (drawingArea.bottom - el.yOffset) : drawingArea.bottom"
-                            :stroke="el.color"
-                            :stroke-width="chartConfig.chart.grid.stroke"
-                            stroke-linecap="round"
-                            :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
-                        />
+                        <g v-for="el in allScales">
+                            <line 
+                                :x1="el.x"
+                                :x2="el.x"
+                                :y1="chartConfig.chart.grid.labels.yAxis.stacked ? (drawingArea.bottom - el.yOffset - el.individualHeight) : drawingArea.top"
+                                :y2="chartConfig.chart.grid.labels.yAxis.stacked ? (drawingArea.bottom - el.yOffset) : drawingArea.bottom"
+                                :stroke="el.color"
+                                :stroke-width="chartConfig.chart.grid.stroke"
+                                stroke-linecap="round"
+                                :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
+                            />
+                        </g>
                         <g v-for="el in allScales" :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
                             <text
                                 :fill="el.color"
@@ -584,7 +591,7 @@
                     <template v-else>
                         <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
                             <line 
-                                v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
+                                v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
                                 :x1="drawingArea.left" 
                                 :x2="drawingArea.left - 5" 
                                 :y1="yLabel.y" 
@@ -1665,6 +1672,7 @@ export default {
         error,
         objectIsEmpty,
         createArea(plots) {
+            if(!plots[0]) return [-10,-10, '', -10, -10];
             const start = { x: plots[0].x, y: this.zero };
             const end = { x: plots.at(-1).x, y: this.zero };
             const path = [];
@@ -1674,6 +1682,7 @@ export default {
             return [ start.x, start.y, ...path, end.x, end.y].toString();
         },
         createIndividualArea(plots, zero) {
+            if(!plots[0]) return [-10,-10, '', -10, -10];
             const start = { x: plots[0].x, y: zero };
             const end = { x: plots.at(-1).x, y: zero };
             const path = [];
