@@ -4652,7 +4652,9 @@ declare module 'vue-data-ui' {
 
     export type VueUiTableHeatmapDatasetItem = {
         name: string;
-        values: Array<number | string>
+        values: Array<number | string>;
+        color?: string;
+        shape?: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star";
     };
 
     export type VueUiTableHeatmapConfig = {
@@ -4660,6 +4662,7 @@ declare module 'vue-data-ui' {
             backgroundColor?: string;
             color?: string;
             fontFamily?: string;
+            shapeSize?: number;
             heatmapColors?: {
                 useIndividualScale?: boolean;
                 min?: string;

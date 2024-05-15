@@ -17,6 +17,7 @@ import img from "../img";
 import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
+import Shape from "../atoms/Shape.vue";
 
 const props = defineProps({
     config: {
@@ -239,8 +240,23 @@ defineExpose({
                         v-for="(cell, j) in row.displayValues"
                         :data-cell="tableConfig.table.head.values[j]"
                     >
-                        <slot v-if="j === 0" name="rowTitle" v-bind="{ value: cell, rowIndex: i, colIndex: j, type: typeof cell, isResponsive}"></slot>
-                        <slot v-if="j > 0" name="cell" v-bind="{ value: cell, rowIndex: i, colIndex: j, type: typeof cell, isResponsive, color: row.colors[j], textColor: adaptColorToBackground(row.colors[j]) }"></slot>
+                        <template v-if="row.color && j === 0">
+                            <div style="display:flex; flex-direction: row; gap:2px; align-items:center;">
+                                <svg :height="tableConfig.style.shapeSize" :width="tableConfig.style.shapeSize" v-if="row.color" viewBox="0 0 20 20" style="background: none;overflow: visible">
+                                    <Shape
+                                        :plot="{ x: 10, y: 10 }"
+                                        :color="row.color"
+                                        :radius="9"
+                                        :shape="row.shape || 'circle'"
+                                    />
+                                </svg>
+                                <slot name="rowTitle" v-bind="{ value: cell, rowIndex: i, colIndex: j, type: typeof cell, isResponsive}"></slot>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <slot v-if="j === 0" name="rowTitle" v-bind="{ value: cell, rowIndex: i, colIndex: j, type: typeof cell, isResponsive}"></slot>
+                            <slot v-if="j > 0" name="cell" v-bind="{ value: cell, rowIndex: i, colIndex: j, type: typeof cell, isResponsive, color: row.colors[j], textColor: adaptColorToBackground(row.colors[j]) }"></slot>
+                        </template>
                     </td>
                     <td role="cell" data-cell="sum" v-if="tableConfig.table.showSum">
                         <slot name="sum" v-bind="{ value: row.sum, rowIndex: i, isResponsive }"></slot>

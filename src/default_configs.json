@@ -3651,6 +3651,7 @@
             "backgroundColor": "#FFFFFF",
             "color":"#2D353C",
             "fontFamily": "inherit",
+            "shapeSize": 14,
             "heatmapColors": {
                 "useIndividualScale": false,
                 "min": "#FFFFFF",
