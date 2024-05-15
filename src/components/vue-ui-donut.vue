@@ -278,7 +278,7 @@ const legendConfig = computed(() => {
 })
 
 const currentDonut = computed(() => {
-    return makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, 130, 130, 1.99999, 2, 1, 360, 105.25, defaultConfig.value.style.chart.layout.donut.strokeWidth)
+    return makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, 130, 130, 1.99999, 2, 1, 360, 105.25, donutConfig.value.style.chart.layout.donut.strokeWidth)
 });
 
 function isArcBigEnough(arc) {
@@ -645,7 +645,8 @@ defineExpose({
                 @click="selectDatapoint(arc, i)"
             />
 
-            <circle 
+            <circle
+                v-if="donutConfig.style.chart.layout.labels.hollow.show"
                 :cx="svg.width / 2" 
                 :cy="svg.height / 2" 
                 :r="svg.width - 400 - donutConfig.style.chart.layout.donut.strokeWidth / 2"

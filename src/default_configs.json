@@ -382,6 +382,7 @@
                             "fontSize": 14
                         },
                         "hollow": {
+                            "show": true,
                             "total": {
                                 "show": true,
                                 "bold": false,

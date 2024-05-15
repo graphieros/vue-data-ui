@@ -2582,6 +2582,7 @@ declare module 'vue-data-ui' {
                             fontSize?: number;
                         };
                         hollow?: {
+                            show?: true;
                             total?: {
                                 show?: boolean;
                                 bold?: boolean;
