@@ -1,6 +1,6 @@
-import VueUiSparkstackbar from './vue-ui-sparkstackbar.vue'
+import VueUiSparkStackbar from './vue-ui-sparkstackbar.vue'
 
-describe('<VueUiSparkstackbar />', () => {
+describe('<VueUiSparkStackbar />', () => {
 
   beforeEach(function () {
     cy.fixture('sparkstackbar.json').as('fixture');
@@ -16,7 +16,7 @@ describe('<VueUiSparkstackbar />', () => {
 
   it('renders', () => {
     cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiSparkstackbar, {
+      cy.mount(VueUiSparkStackbar, {
         props: {
           dataset: fixture.dataset,
           config: fixture.config
@@ -49,7 +49,7 @@ describe('<VueUiSparkstackbar />', () => {
 
       updateConfigInFixture(modifiedConfig);
 
-      cy.mount(VueUiSparkstackbar, {
+      cy.mount(VueUiSparkStackbar, {
         props: {
           dataset: fixture.dataset,
           config: modifiedConfig
@@ -57,8 +57,8 @@ describe('<VueUiSparkstackbar />', () => {
       });
 
       cy.get(`[data-cy="sparkstackbar-title-wrapper"]`)
-      .should('have.css', 'text-align')
-      .should('include', 'center')
+        .should('have.css', 'text-align')
+        .should('include', 'center')
 
       modifiedConfig = {
         ...fixture.config,
@@ -73,7 +73,7 @@ describe('<VueUiSparkstackbar />', () => {
 
       updateConfigInFixture(modifiedConfig);
 
-      cy.mount(VueUiSparkstackbar, {
+      cy.mount(VueUiSparkStackbar, {
         props: {
           dataset: fixture.dataset,
           config: modifiedConfig
@@ -81,59 +81,59 @@ describe('<VueUiSparkstackbar />', () => {
       });
 
       cy.get(`[data-cy="sparkstackbar-title-wrapper"]`)
-      .should('have.css', 'text-align')
-      .should('include', 'left');
+        .should('have.css', 'text-align')
+        .should('include', 'left');
 
       cy.get(`[data-cy="sparkstackbar-legend"]`)
         .should('exist')
         .should('have.css', 'justify-content')
         .should('include', 'flex-end');
 
-        modifiedConfig = {
-          ...fixture.config,
-          style: {
-            ...fixture.config.style,
-            legend: {
-              ...fixture.config.style.legend,
-              textAlign: 'center'
-            }
+      modifiedConfig = {
+        ...fixture.config,
+        style: {
+          ...fixture.config.style,
+          legend: {
+            ...fixture.config.style.legend,
+            textAlign: 'center'
           }
         }
-  
-        updateConfigInFixture(modifiedConfig);
-  
-        cy.mount(VueUiSparkstackbar, {
-          props: {
-            dataset: fixture.dataset,
-            config: modifiedConfig
-          }
-        });
+      }
 
-        cy.get(`[data-cy="sparkstackbar-legend"]`)
+      updateConfigInFixture(modifiedConfig);
+
+      cy.mount(VueUiSparkStackbar, {
+        props: {
+          dataset: fixture.dataset,
+          config: modifiedConfig
+        }
+      });
+
+      cy.get(`[data-cy="sparkstackbar-legend"]`)
         .should('have.css', 'justify-content')
         .should('include', 'center');
 
-        modifiedConfig = {
-          ...fixture.config,
-          style: {
-            ...fixture.config.style,
-            legend: {
-              ...fixture.config.style.legend,
-              textAlign: 'left'
-            }
+      modifiedConfig = {
+        ...fixture.config,
+        style: {
+          ...fixture.config.style,
+          legend: {
+            ...fixture.config.style.legend,
+            textAlign: 'left'
           }
         }
-  
-        updateConfigInFixture(modifiedConfig);
-  
-        cy.mount(VueUiSparkstackbar, {
-          props: {
-            dataset: fixture.dataset,
-            config: modifiedConfig
-          }
-        });
+      }
 
-        cy.get(`[data-cy="sparkstackbar-legend"]`)
+      updateConfigInFixture(modifiedConfig);
+
+      cy.mount(VueUiSparkStackbar, {
+        props: {
+          dataset: fixture.dataset,
+          config: modifiedConfig
+        }
+      });
+
+      cy.get(`[data-cy="sparkstackbar-legend"]`)
         .should('have.css', 'justify-content')
         .should('include', 'flex-start');
     });

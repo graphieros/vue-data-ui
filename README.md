@@ -57,7 +57,7 @@ Available components
 - [VueUiSparkbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkbar)
 - [VueUiSparkgauge](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkgauge)
 - [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
-- [VueUiSparkstackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
+- [VueUiSparkStackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
 - [VueUiSparkTrend](https://vue-data-ui.graphieros.com/docs#vue-ui-spark-trend)
 
 ## 3d
