@@ -3283,13 +3283,23 @@ function selectBar(bar) {
 const tableHeatmapDataset = ref([
   {
     name: "Serie 1",
-    values: [-100, "test", 0, 100, 150, 50, 25, 10, 20, 30, 10, 20, 30, 10]
+    values: [-100, "test", 0, 100, 150, 50, 25, 10, 20, 30, 10, 20, 30, 10],
+    color: 'red',
+    shape: 'hexagon'
   },
   {
     name: "Serie 2",
-    values: [20, 30, 50, 100, 44, "test"]
+    values: [20, 30, 50, 100, 44, "test"],
+    color: '#6376DD',
+    shape: 'star'
   }
 ])
+
+const tableHeatmapConfig = ref({
+  style: {
+    shapeSize: 24
+  }
+})
 
 const quickDatasetDonut = ref([
   {
@@ -3775,7 +3785,7 @@ const dumbConfig = ref({
       </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_dumbbell)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_dumbbell)">
         <template #title>
           <BaseIcon name="chartDumbbell"/>
           VueUiDumbbell
@@ -3925,7 +3935,7 @@ const dumbConfig = ref({
         </template>
       </Box>
 
-      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_table_heatmap)">
+      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_table_heatmap)">
         <template #title>
           <BaseIcon name="chartTable"/>
           VueUiTableHeatmap
@@ -3938,7 +3948,7 @@ const dumbConfig = ref({
           <BaseIcon name="fullscreen" stroke="#5f8bee"/> -->
         </template>
         <template #dev>
-          <TableHeatmapTest :dataset="tableHeatmapDataset">
+          <TableHeatmapTest :dataset="tableHeatmapDataset" :config="tableHeatmapConfig">
             <template #caption>
               <div style="width: 100%; background: red">
                 TITLE
@@ -3971,7 +3981,7 @@ const dumbConfig = ref({
           </TableHeatmapTest>
         </template>
         <template #prod>
-          <VueDataUi component="VueUiTableHeatmap" :dataset="tableHeatmapDataset">
+          <VueDataUi component="VueUiTableHeatmap" :dataset="tableHeatmapDataset" :config="tableHeatmapConfig">
             <template #caption>
               <div style="width: 100%; background: red">
                 TITLE
@@ -4616,7 +4626,7 @@ const dumbConfig = ref({
         </template>
       </Box>
 
-      <Box open @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
+      <Box @copy="copyConfig(PROD_CONFIG.vue_ui_xy)">
         <template #title>
           <BaseIcon name="chartLine" />
           VueUiXy
