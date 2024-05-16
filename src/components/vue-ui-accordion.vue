@@ -46,19 +46,21 @@ const maxHeight = computed(() => {
 </script>
 
 <template>
-    <details :id="`details_${uid}`" ref="details" @toggle="toggleDetails">
-        <summary>
-            <div class="vue-ui-accordion-head" :style="`background:${accordionConfig.head.backgroundColor};padding:${accordionConfig.head.padding};`">
-                <div class="vue-ui-accordion-arrow">
-                    <slot name="arrow" v-if="accordionConfig.head.useArrowSlot" v-bind="{ backgroundColor: accordionConfig.head.backgroundColor, color: accordionConfig.head.color, iconColor: accordionConfig.head.iconColor, isOpen }" />
-                    <BaseIcon name="arrowRight" v-else :stroke="accordionConfig.head.iconColor" />
+    <div>
+        <details :id="`details_${uid}`" ref="details" @toggle="toggleDetails">
+            <summary>
+                <div class="vue-ui-accordion-head" :style="`background:${accordionConfig.head.backgroundColor};padding:${accordionConfig.head.padding};`">
+                    <div class="vue-ui-accordion-arrow">
+                        <slot name="arrow" v-if="accordionConfig.head.useArrowSlot" v-bind="{ backgroundColor: accordionConfig.head.backgroundColor, color: accordionConfig.head.color, iconColor: accordionConfig.head.iconColor, isOpen }" />
+                        <BaseIcon name="arrowRight" v-else :stroke="accordionConfig.head.iconColor" />
+                    </div>
+                    <slot name="title" v-bind="{ color: accordionConfig.head.color, isOpen }"/>
                 </div>
-                <slot name="title" v-bind="{ color: accordionConfig.head.color, isOpen }"/>
-            </div>
-        </summary>
-    </details>
-    <div class="vue-ui-accordion-content" :style="`background:${accordionConfig.body.backgroundColor};color:${accordionConfig.body.color}`">
-        <slot name="content" v-bind="{ backgroundColor: accordionConfig.body.backgroundColor, color: accordionConfig.body.color, isOpen }"/>
+            </summary>
+        </details>
+        <div class="vue-ui-accordion-content" :style="`background:${accordionConfig.body.backgroundColor};color:${accordionConfig.body.color}`">
+            <slot name="content" v-bind="{ backgroundColor: accordionConfig.body.backgroundColor, color: accordionConfig.body.color, isOpen }"/>
+        </div>
     </div>
 </template>
 
