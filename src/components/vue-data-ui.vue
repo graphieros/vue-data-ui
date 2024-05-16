@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, defineExpose, onMounted, ref, computed, toRefs, nextTick, watchEffect, watch, shallowReactive } from 'vue';
+import { onMounted, ref, computed, toRefs, watch, shallowReactive } from 'vue';
 import { defineAsyncComponent } from 'vue';
 
 import BaseIcon from '../atoms/BaseIcon.vue';
@@ -11,8 +11,6 @@ const props = defineProps({
 });
 
 const { component, dataset, config } = toRefs(props);
-
-// componentOne: defineAsyncComponent(async () => ({setup:  (_, {expose}) => (expose({methodA: () => alert('componentOne')}), () => 'componentOne')})),
 
 const components = {
     VueUi3dBar: defineAsyncComponent(() => import('./vue-ui-3d-bar.vue')),
