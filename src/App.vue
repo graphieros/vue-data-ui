@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import TestingArena from "./TestingArena.vue";
 import ArenaVueUiXy from "../TestingArena/ArenaVueUiXy.vue";
+import ArenaVueUiDonut from "../TestingArena/ArenaVueUiDonut.vue";
 
 const showOldArena = ref(false);
 
@@ -10,7 +11,7 @@ const components = ref([
   "VueUiDonut"
 ]);
 
-const selectedComponent = ref(components.value[0]);
+const selectedComponent = ref(components.value[1]);
 
 </script>
 
@@ -24,4 +25,5 @@ const selectedComponent = ref(components.value[0]);
   </div>
   <TestingArena v-if="showOldArena"/>
   <ArenaVueUiXy v-if="selectedComponent === 'VueUiXy'"/>
+  <ArenaVueUiDonut v-if="selectedComponent === 'VueUiDonut'"/>
 </template>
