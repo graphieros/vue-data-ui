@@ -1382,7 +1382,7 @@ export default {
                     individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
                     individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
                     zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
-                    curve: datapoint.autoScaling ? curve : autoScaleCurve,
+                    curve: datapoint.autoScaling ? autoScaleCurve : curve,
                     plots: datapoint.autoScaling ? autoScalePlots : plots,
                     area: !datapoint.useArea ? '' : this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? this.createIndividualArea(plots, zeroPosition) :  this.createArea(plots)
                 }
