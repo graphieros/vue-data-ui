@@ -59,6 +59,9 @@ const model = ref([
 
     { key: 'chart.highlighter.color', def: '#1A1A1A', type: 'color', label: 'highlighterColor', category: 'general' },
     { key: 'chart.highlighter.opacity', def: 5, type: 'range', min: 0, max: 100, label: 'highlighterOpacity', category: 'general' },
+    { key: "chart.highlighter.useLine", def: true, type: "checkbox" },
+
+    { key: "chart.timeTag.show", def: true, type: "checkbox" },
 
     { key: 'chart.highlightArea.show', def: false, type: 'checkbox', label: 'show', category: 'highlight' },
     { key: 'chart.highlightArea.from', def: 0, type: 'number', min: 0, max: 999, label: 'from', category: 'highlight' },
@@ -193,7 +196,38 @@ const config = computed(() => {
             }
         }
     } else {
-        return c
+        return {
+            ...c,
+            chart: {
+                ...c.chart,
+                grid: {
+                    ...c.chart.grid,
+                    labels: {
+                        ...c.chart.grid.labels,
+                        xAxisLabels: {
+                            ...c.chart.grid.labels.xAxisLabels,
+                            values: [
+                                "A",
+                                "B",
+                                "C",
+                                "D",
+                                "E",
+                                "F",
+                                "G",
+                                "H",
+                                "I",
+                                "J",
+                                "K",
+                                "L",
+                                "M",
+                                "N",
+                                "O"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
     }
 });
 

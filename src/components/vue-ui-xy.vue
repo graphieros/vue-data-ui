@@ -782,7 +782,7 @@
                         style="overflow: visible !important;"
                     >
                         <div class="vue-ui-xy-time-tag" :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${chartConfig.chart.timeTag.backgroundColor};color:${chartConfig.chart.timeTag.color};font-size:${chartConfig.chart.timeTag.fontSize}px`">
-                            {{ chartConfig.chart.grid.labels.xAxisLabels.values[selectedSerieIndex] || selectedSerieIndex }}
+                            {{ timeLabels[selectedSerieIndex] || selectedSerieIndex }}
                         </div>
                     </foreignObject>
                     <circle
