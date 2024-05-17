@@ -828,9 +828,9 @@ export function niceNum(range, round) {
     return niceFraction * Math.pow(10, exponent);
 }
 
-export function calculateNiceScale(minValue, maxValue, maxTicks) {
-    const range = niceNum(maxValue - minValue, false);
-    const tickSpacing = niceNum(range / (maxTicks - 1), true);
+export function calculateNiceScale(minValue, maxValue, maxTicks, rough = false) {
+    const range = rough ? (maxValue - minValue) : niceNum(maxValue - minValue, false);
+    const tickSpacing = rough ? (range / (maxTicks - 1)) : niceNum(range / (maxTicks - 1), true);
     const niceMin = Math.floor(minValue / tickSpacing) * tickSpacing;
     const niceMax = Math.ceil(maxValue / tickSpacing) * tickSpacing;
 

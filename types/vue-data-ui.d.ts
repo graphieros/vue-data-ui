@@ -2351,6 +2351,9 @@ declare module 'vue-data-ui' {
                         gap?: number;
                         labelWidth?: number;
                     };
+                    xAxis?: {
+                        showBaseline?: boolean;
+                    };
                     xAxisLabels?: {
                         color?: string;
                         show?: boolean;
@@ -2489,6 +2492,8 @@ declare module 'vue-data-ui' {
         scaleLabel?: string;
         scaleMax?: number;
         scaleMin?: number;
+        autoScaling?: boolean;
+        stackRatio?: number;
     };
 
     export type VueUiXyDatasetBarItem = {

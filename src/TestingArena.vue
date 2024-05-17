@@ -1322,8 +1322,6 @@ const DATA = computed(() => {
 
 function selectLegendXY(ds) {
   console.log({ds});
-  const data = xytest.value.generateImage();
-  console.log("getData", data);
 }
 
 function selectX(x) {
@@ -2686,8 +2684,8 @@ const xyConfig = ref({
           xLabel: 'X LABEL TEST'
         },
         yAxis: {
-          useIndividualScale: true,
-          stacked: true,
+          useIndividualScale: false,
+          stacked: false,
           gap:50
         },
         xAxisLabels: {

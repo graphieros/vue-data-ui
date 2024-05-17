@@ -11,7 +11,7 @@ const components = ref([
   "VueUiDonut"
 ]);
 
-const selectedComponent = ref(components.value[1]);
+const selectedComponent = ref(components.value[0]);
 
 </script>
 

@@ -54,6 +54,16 @@
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
+                    <line 
+                        v-if="chartConfig.chart.grid.labels.xAxis.showBaseline"
+                        :stroke="chartConfig.chart.grid.stroke" 
+                        stroke-width="1" 
+                        :x1="drawingArea.left"
+                        :x2="drawingArea.right"
+                        :y1="drawingArea.bottom"
+                        :y2="drawingArea.bottom"
+                        stroke-linecap="round"
+                    />
                     <template v-if="!chartConfig.chart.grid.labels.yAxis.useIndividualScale">
                         <line
                             data-cy="xy-grid-line-y"
@@ -1005,12 +1015,14 @@ export default {
                     name: l.name,
                     color: l.color,
                     scale: l.individualScale,
+                    scaleYLabels: l.scaleYLabels,
                     zero: l.zeroPosition,
                     max: l.individualMax,
                     scaleLabel: l.scaleLabel || "",
                     id: l.id,
                     yOffset: l.yOffset || 0,
-                    individualHeight: l.individualHeight || this.drawingArea.height
+                    individualHeight: l.individualHeight || this.drawingArea.height,
+                    autoScaleYLabels: l.autoScaleYLabels
                 }
             });
             const bars = this.barSet.map(b => {
@@ -1018,6 +1030,7 @@ export default {
                     name: b.name,
                     color: b.color,
                     scale: b.individualScale,
+                    scaleYLabels: b.scaleYLabels,
                     zero: b.zeroPosition,
                     max: b.individualMax,
                     scaleLabel: b.scaleLabel || "",
@@ -1031,6 +1044,7 @@ export default {
                     name: p.name,
                     color: p.color,
                     scale: p.individualScale,
+                    scaleYLabels: p.scaleYLabels, // FIX
                     zero: p.zeroPosition,
                     max: p.individualMax,
                     scaleLabel: p.scaleLabel || "",
@@ -1050,7 +1064,7 @@ export default {
                     yOffset: el.yOffset,
                     individualHeight: el.individualHeight,
                     x: this.chartConfig.chart.grid.labels.yAxis.stacked ? this.drawingArea.left : (this.drawingArea.left / len) * (i+1),
-                    yLabels: el.scale.ticks.map(t => {
+                    yLabels: el.scaleYLabels || el.scale.ticks.map(t => {
                         return {
                             y: t >= 0 ? el.zero - (el.individualHeight * (t / el.max)) : el.zero + (el.individualHeight * Math.abs(t) / el.max),
                             value: t
@@ -1168,61 +1182,151 @@ export default {
             })
         },
         barSet() {
-            return this.absoluteDataset.filter(s => s.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint, i) => {
+            return this.activeSeriesWithStackRatios.filter(s => s.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint, i) => {
+                const min = Math.min(...datapoint.absoluteValues);
+                const max = Math.max(...datapoint.absoluteValues);
+                const autoScaledRatios = datapoint.absoluteValues.map(v => {
+                    return (v - min) / (max - min)
+                });
+
+                const autoScale = {
+                    ratios: autoScaledRatios,
+                    valueMin: min,
+                    valueMax: max,
+                }
+
                 const individualExtremes = {
                     max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues),
                     min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
                 };
-                const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
-                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
+                const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps;
+                
+                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps);
+                const autoScaleSteps = this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
+
                 const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
+                const autoScaleZero = 0;
+
                 const individualMax = individualScale.max + individualZero;
-                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) * datapoint.absoluteIndex : 0;
+                const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
 
-                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
+
+                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
-                return {
-                    individualScale,
-                    yOffset,
-                    individualHeight,
-                    zeroPosition,
-                    individualMax,
-                    ...datapoint,
-                    plots: datapoint.series.map((plot, j) => {
-                        const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
+                const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
 
-                        return {
-                            yOffset,
-                            individualHeight,
-                            x: (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length),
-                            y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
-                            value: datapoint.absoluteValues[j],
-                            zeroPosition,
-                            individualMax,
-                        }
-                    }),
+
+                const plots = datapoint.series.map((plot, j) => {
+                    const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
+
+                    return {
+                        yOffset,
+                        individualHeight,
+                        x: (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length),
+                        y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
+                        value: datapoint.absoluteValues[j],
+                        zeroPosition,
+                        individualMax,
+                    }
+                });
+
+                const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(v => {
+                    if(autoScaleSteps.min >= 0) {
+                        return (v - Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
+                    } else {
+                        return (v + Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
+                    }
+                })
+
+                const autoScalePlots = datapoint.series.map((plot, j) => {
+                    const yRatio = (datapoint.absoluteValues[j] + individualZero) / individualMax
+
+                    return {
+                        yOffset,
+                        individualHeight,
+                        x: (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length),
+                        y: this.drawingArea.bottom - yOffset - (individualHeight * autoScaleRatiosToNiceScale[j]),
+                        value: datapoint.absoluteValues[j],
+                        zeroPosition,
+                        individualMax,
+                    }
+                });
+
+                const scaleYLabels = individualScale.ticks.map(t => {
+                    return {
+                        y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
+                        value: t
+                    }
+                })
+
+                const autoScaleYLabels = autoScaleSteps.ticks.map(t => {
+                    const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
+                    return {
+                        y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
+                        value: t
+                    }
+                });
+
+                return {
+                    ...datapoint,
+                    yOffset,
+                    autoScaleYLabels,
+                    individualHeight,
+                    scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
+                    individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
+                    individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+                    zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
+                    plots: datapoint.autoScaling ? autoScalePlots: plots
                 }
             })
         },
         activeSeriesLength() {
             return this.absoluteDataset.length
         },
+        activeSeriesWithStackRatios() {
+            return this.assignStackRatios(this.absoluteDataset)
+        },
         lineSet() {
-            return this.absoluteDataset.filter(s => s.type === 'line').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
+            return this.activeSeriesWithStackRatios.filter(s => s.type === 'line').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
+
+                const min = Math.min(...datapoint.absoluteValues);
+                const max = Math.max(...datapoint.absoluteValues);
+                const autoScaledRatios = datapoint.absoluteValues.map(v => {
+                    return (v - min) / (max - min)
+                });
+
+                const autoScale = {
+                    ratios: autoScaledRatios,
+                    valueMin: min,
+                    valueMax: max,
+                }
+
                 const individualExtremes = {
                     max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues),
                     min: datapoint.scaleMin || (Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues))
                 };
 
                 const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
-                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
-                const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min))
-                const individualMax = individualScale.max + Math.abs(individualZero)
 
-                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) * datapoint.absoluteIndex : 0;
+                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps);
+                
+                const autoScaleSteps = this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
 
-                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min));
+                const autoScaleZero = 0;
+
+                const individualMax = individualScale.max + Math.abs(individualZero);
+                const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
+
+                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
+
+                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
+
+                const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
 
                 const plots = datapoint.series.map((plot, j) => {
                     const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale 
@@ -1235,22 +1339,69 @@ export default {
                         value: datapoint.absoluteValues[j],
                     }
                 });
+
+                const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(v => {
+                    if(autoScaleSteps.min >= 0) {
+                        return (v - Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
+                    } else {
+                        return (v + Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
+                    }
+                })
+
+                const autoScalePlots = datapoint.series.map((plot, j) => {
+                    return {
+                        x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
+                        y: this.drawingArea.bottom - yOffset - (individualHeight * autoScaleRatiosToNiceScale[j]),
+                        value: datapoint.absoluteValues[j]
+                    }
+                })
                 const curve = this.createSmoothPath(plots);
+                const autoScaleCurve = this.createSmoothPath(autoScalePlots);
+
+                const scaleYLabels = individualScale.ticks.map(t => {
+                    return {
+                        y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
+                        value: t
+                    }
+                })
+
+                const autoScaleYLabels = autoScaleSteps.ticks.map(t => {
+                    const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
+                    return {
+                        y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
+                        value: t
+                    }
+                });
+
                 return {
-                    yOffset,
-                    individualHeight,
-                    individualScale,
-                    individualMax,
-                    zeroPosition,
                     ...datapoint,
-                    curve,
-                    plots,
+                    yOffset,
+                    autoScaleYLabels,
+                    individualHeight,
+                    scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
+                    individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
+                    individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+                    zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
+                    curve: datapoint.autoScaling ? curve : autoScaleCurve,
+                    plots: datapoint.autoScaling ? autoScalePlots : plots,
                     area: !datapoint.useArea ? '' : this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? this.createIndividualArea(plots, zeroPosition) :  this.createArea(plots)
                 }
             })
         },
         plotSet() {
-            return this.absoluteDataset.filter(s => s.type === 'plot').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
+            return this.activeSeriesWithStackRatios.filter(s => s.type === 'plot').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
+                const min = Math.min(...datapoint.absoluteValues);
+                const max = Math.max(...datapoint.absoluteValues);
+                const autoScaledRatios = datapoint.absoluteValues.map(v => {
+                    return (v - min) / (max - min)
+                });
+
+                const autoScale = {
+                    ratios: autoScaledRatios,
+                    valueMin: min,
+                    valueMax: max,
+                }
+
                 const individualExtremes = {
                     max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues),
                     min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
@@ -1258,29 +1409,71 @@ export default {
 
                 const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
                 const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
-                const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
-                const individualMax = individualScale.max + individualZero;
-                
-                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) * datapoint.absoluteIndex : 0;
+                const autoScaleSteps = this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
 
-                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height / this.activeSeriesLength) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
+                const autoScaleZero = 0;
+
+                const individualMax = individualScale.max + individualZero;
+                const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
+                
+                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
+
+                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
+                const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+
+                const plots = datapoint.series.map((plot, j) => {
+                    const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
+                    return {
+                        x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
+                        y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
+                        value: datapoint.absoluteValues[j],
+                    }
+                })
+
+                const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(v => {
+                    if(autoScaleSteps.min >= 0) {
+                        return (v - Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
+                    } else {
+                        return (v + Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
+                    }
+                })
+
+                const autoScalePlots = datapoint.series.map((plot, j) => {
+                    return {
+                        x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
+                        y: this.drawingArea.bottom - yOffset - (individualHeight * autoScaleRatiosToNiceScale[j]),
+                        value: datapoint.absoluteValues[j],
+                    }
+                })
+
+                const scaleYLabels = individualScale.ticks.map(t => {
+                    return {
+                        y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
+                        value: t
+                    }
+                })
+
+                const autoScaleYLabels = autoScaleSteps.ticks.map(t => {
+                    const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
+                    return {
+                        y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
+                        value: t
+                    }
+                });
 
                 return {
-                    individualHeight,
-                    yOffset,
                     ...datapoint,
-                    zeroPosition,
-                    individualMax,
-                    individualScale,
-                    plots: datapoint.series.map((plot, j) => {
-                        const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
-                        return {
-                            x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
-                            y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
-                            value: datapoint.absoluteValues[j],
-                        }
-                    })
+                    yOffset,
+                    autoScaleYLabels,
+                    individualHeight,
+                    scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
+                    individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
+                    individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+                    zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
+                    plots: datapoint.autoScaling ? autoScalePlots : plots
                 }
             })
         },
@@ -1693,6 +1886,27 @@ export default {
         },
         createStar,
         createPolygonPath,
+        assignStackRatios(arr) {
+            let providedRatioSum = arr.reduce((sum, item) => sum + (item.stackRatio || 0), 0);
+            let itemsWithoutRatio = arr.filter(item => item.stackRatio === undefined).length;
+            let remainingRatio = 1 - providedRatioSum;
+            let defaultRatio = itemsWithoutRatio > 0 ? remainingRatio / itemsWithoutRatio : 0;
+    
+            let output = arr.map(item => ({
+                ...item,
+                stackRatio: item.stackRatio !== undefined ? item.stackRatio : defaultRatio
+            }));
+            
+            let cumulatedRatio = 0;
+            output = output.map(item => {
+                cumulatedRatio += item.stackRatio;
+                return {
+                    ...item,
+                    cumulatedStackRatio: cumulatedRatio
+                };
+            });
+            return output;
+        },
         /////////////////////////////// CANVAS /////////////////////////////////
         fillArray(len, source) {
             let res = Array(len).fill(0);

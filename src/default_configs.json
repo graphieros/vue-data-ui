@@ -218,11 +218,14 @@
                         "xLabelOffsetY": 0,
                         "fontSize": 12
                     },
+                    "xAxis": {
+                        "showBaseline": false
+                    },
                     "yAxis": {
                         "commonScaleSteps": 10,
                         "useIndividualScale": false,
                         "stacked": false,
-                        "gap": 64,
+                        "gap": 12,
                         "labelWidth": 40
                     },
                     "xAxisLabels": {
