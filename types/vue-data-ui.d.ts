@@ -2312,6 +2312,19 @@ declare module 'vue-data-ui' {
             highlighter?: {
                 color?: string;
                 opacity?: number;
+                useLine?: boolean;
+                lineDasharray?: number;
+                lineWidth?: number;
+            };
+            timeTag?: {
+                show?: boolean;
+                backgroundColor?: string;
+                color?: string;
+                fontSize?: number;
+                circleMarker?: {
+                    radius?: number;
+                    color?: number;
+                };
             };
             highlightArea?: {
                 show?: boolean;

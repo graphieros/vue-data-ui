@@ -184,7 +184,10 @@
             },
             "highlighter": {
                 "color": "#2D353C",
-                "opacity": 5
+                "opacity": 5,
+                "useLine": false,
+                "lineDasharray": 2,
+                "lineWidth": 1
             },
             "highlightArea": {
                 "show": false,
@@ -201,6 +204,16 @@
                     "width": "auto",
                     "padding": 3,
                     "textAlign": "center"
+                }
+            },
+            "timeTag": {
+                "show": false,
+                "backgroundColor": "#e1e5e8",
+                "color":"#2D353C",
+                "fontSize": 12,
+                "circleMarker": {
+                    "radius": 3,
+                    "color": "#2D353C"
                 }
             },
             "grid": {

@@ -757,6 +757,41 @@
                         />
                     </g>
                 </g>
+
+                <g v-if="chartConfig.chart.highlighter.useLine && ![null, undefined].includes(selectedSerieIndex)">
+                    <line
+                        :x1="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
+                        :x2="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
+                        :y1="drawingArea.top"
+                        :y2="drawingArea.bottom"
+                        :stroke="chartConfig.chart.highlighter.color"
+                        :stroke-width="chartConfig.chart.highlighter.lineWidth"
+                        :stroke-dasharray="chartConfig.chart.highlighter.lineDasharray"
+                        stroke-linecap="round"
+                        style="transition:none !important; animation: none !important"
+                    />
+                </g>
+
+                <!-- TIME TAG -->
+                <g v-if="chartConfig.chart.timeTag.show && ![null, undefined].includes(selectedSerieIndex)">
+                    <foreignObject
+                        :x="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex - 100 + (drawingArea.width / maxSeries / 2)"
+                        :y="drawingArea.bottom"
+                        width="200"
+                        height="40"
+                        style="overflow: visible !important;"
+                    >
+                        <div class="vue-ui-xy-time-tag" :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${chartConfig.chart.timeTag.backgroundColor};color:${chartConfig.chart.timeTag.color};font-size:${chartConfig.chart.timeTag.fontSize}px`">
+                            {{ chartConfig.chart.grid.labels.xAxisLabels.values[selectedSerieIndex] || selectedSerieIndex }}
+                        </div>
+                    </foreignObject>
+                    <circle
+                        :cx="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
+                        :cy="drawingArea.bottom"
+                        :r="chartConfig.chart.timeTag.circleMarker.radius"
+                        :fill="chartConfig.chart.timeTag.circleMarker.color"
+                    />
+                </g>
             </g>
 
             <slot name="svg" :svg="svg"/>
@@ -1384,7 +1419,7 @@ export default {
                     zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
                     curve: datapoint.autoScaling ? autoScaleCurve : curve,
                     plots: datapoint.autoScaling ? autoScalePlots : plots,
-                    area: !datapoint.useArea ? '' : this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? this.createIndividualArea(plots, zeroPosition) :  this.createArea(plots)
+                    area: !datapoint.useArea ? '' : this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? this.createIndividualArea(datapoint.autoScaling ? autoScalePlots: plots, datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition) :  this.createArea(plots)
                 }
             })
         },
