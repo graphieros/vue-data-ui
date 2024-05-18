@@ -2412,6 +2412,7 @@ declare module 'vue-data-ui' {
                 showPercentage?: boolean;
                 roundingValue?: number;
                 roundingPercentage?: number;
+                fontSize?: number;
                 customFormat?: (params: VueUiTooltipParams<VueUiXyDatapointItem[], VueUiXySeries, VueUiXyConfig, VueUiXyDatasetBarItem[], VueUiXyDatasetLineItem[], VueUiXyDatasetPlotItem[]>) => string;
             };
             userOptions?: {

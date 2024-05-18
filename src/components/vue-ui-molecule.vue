@@ -605,6 +605,7 @@ defineExpose({
             :show="moleculeConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="moleculeConfig.style.chart.tooltip.backgroundColor"
             :color="moleculeConfig.style.chart.tooltip.color"
+            :fontSize="moleculeConfig.style.chart.tooltip.fontSize"
             :parent="moleculeChart"
             :content="tooltipContent"
             :isCustom="moleculeConfig.style.chart.tooltip.customFormat && typeof moleculeConfig.style.chart.tooltip.customFormat === 'function'"

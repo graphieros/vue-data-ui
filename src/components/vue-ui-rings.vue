@@ -596,6 +596,7 @@ defineExpose({
       "
       :backgroundColor="ringsConfig.style.chart.tooltip.backgroundColor"
       :color="ringsConfig.style.chart.tooltip.color"
+      :fontSize="ringsConfig.style.chart.tooltip.fontSize"
       :parent="ringsChart"
       :content="tooltipContent"
       :isCustom="ringsConfig.style.chart.tooltip.customFormat && typeof ringsConfig.style.chart.tooltip.customFormat === 'function'"

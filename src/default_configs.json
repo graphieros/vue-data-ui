@@ -286,7 +286,8 @@
                 "showPercentage": false,
                 "roundingValue": 0,
                 "roundingPercentage": 0,
-                "customFormat": null
+                "customFormat": null,
+                "fontSize": 14
             },
             "userOptions": {
                 "show": true,

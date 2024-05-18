@@ -628,6 +628,7 @@ defineExpose({
             :show="stripConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="stripConfig.style.chart.tooltip.backgroundColor"
             :color="stripConfig.style.chart.tooltip.color"
+            :fontSize="stripConfig.style.chart.tooltip.fontSize"
             :parent="stripPlotChart"
             :content="tooltipContent"
             :isCustom="isFunction(stripConfig.style.chart.tooltip.customFormat)"

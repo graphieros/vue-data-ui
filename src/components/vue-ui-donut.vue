@@ -852,6 +852,7 @@ defineExpose({
             :show="donutConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="donutConfig.style.chart.tooltip.backgroundColor"
             :color="donutConfig.style.chart.tooltip.color"
+            :fontSize="donutConfig.style.chart.tooltip.fontSize"
             :parent="donutChart"
             :content="tooltipContent"
             :isCustom="isFunction(donutConfig.style.chart.tooltip.customFormat)"

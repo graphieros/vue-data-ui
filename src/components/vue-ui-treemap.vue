@@ -606,6 +606,7 @@ defineExpose({
             :show="treemapConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="treemapConfig.style.chart.tooltip.backgroundColor"
             :color="treemapConfig.style.chart.tooltip.color"
+            :fontSize="treemapConfig.style.chart.tooltip.fontSize"
             :parent="treemapChart"
             :content="tooltipContent"
             :isCustom="isFunction(treemapConfig.style.chart.tooltip.customFormat)"

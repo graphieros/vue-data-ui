@@ -27,6 +27,10 @@ const props = defineProps({
     isCustom: {
         type: Boolean,
         default: false,
+    },
+    fontSize: {
+        type: [Number, String],
+        default: 14
     }
 });
 
@@ -50,7 +54,7 @@ const position = computed(() => {
         data-cy="tooltip"
         :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
         v-if="show"
-        :style="`top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${backgroundColor};color:${color};max-width:${maxWidth}`}`"
+        :style="`top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${backgroundColor};color:${color};max-width:${maxWidth};font-size:${props.fontSize}px`}`"
     >
         <slot name="tooltip-before"/>
         <slot/>

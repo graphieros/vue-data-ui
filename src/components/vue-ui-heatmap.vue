@@ -580,6 +580,7 @@ defineExpose({
             :show="heatmapConfig.style.tooltip.show && isTooltip"
             :backgroundColor="heatmapConfig.style.tooltip.backgroundColor"
             :color="heatmapConfig.style.tooltip.color"
+            :fontSize="heatmapConfig.style.tooltip.fontSize"
             :parent="heatmapChart"
             :content="tooltipContent"
             :isCustom="heatmapConfig.style.tooltip.customFormat && typeof heatmapConfig.style.tooltip.customFormat === 'function'"

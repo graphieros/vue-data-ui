@@ -871,6 +871,7 @@
             :show="chartConfig.chart.tooltip.show && isTooltip"
             :backgroundColor="chartConfig.chart.tooltip.backgroundColor"
             :color="chartConfig.chart.tooltip.color"
+            :fontSize="chartConfig.chart.tooltip.fontSize"
             :parent="$refs.chart"
             :content="tooltipContent"
             :isCustom="chartConfig.chart.tooltip.customFormat && typeof chartConfig.chart.tooltip.customFormat === 'function'"

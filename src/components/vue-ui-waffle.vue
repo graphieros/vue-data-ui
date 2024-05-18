@@ -758,6 +758,7 @@ defineExpose({
             :parent="waffleChart"
             :content="tooltipContent"
             :isCustom="waffleConfig.style.chart.tooltip.customFormat && typeof waffleConfig.style.chart.tooltip.customFormat === 'function'"
+            :fontSize="waffleConfig.style.chart.tooltip.fontSize"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

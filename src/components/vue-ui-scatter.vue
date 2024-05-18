@@ -937,6 +937,7 @@ defineExpose({
             :show="scatterConfig.style.tooltip.show && isTooltip"
             :backgroundColor="scatterConfig.style.tooltip.backgroundColor"
             :color="scatterConfig.style.tooltip.color"
+            :fontSize="scatterConfig.style.tooltip.fontSize"
             :parent="scatterChart"
             :content="tooltipContent"
             :isCustom="scatterConfig.style.tooltip.customFormat && typeof scatterConfig.style.tooltip.customFormat === 'function'"

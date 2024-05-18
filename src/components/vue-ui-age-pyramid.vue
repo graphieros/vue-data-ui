@@ -655,6 +655,7 @@ defineExpose({
             :show="agePyramidConfig.style.tooltip.show && isTooltip"
             :backgroundColor="agePyramidConfig.style.tooltip.backgroundColor"
             :color="agePyramidConfig.style.tooltip.color"
+            :fontSize="agePyramidConfig.style.tooltip.fontSize"
             :parent="agePyramid"
             :content="tooltipContent"
             :isCustom="agePyramidConfig.style.tooltip.customFormat && typeof agePyramidConfig.style.tooltip.customFormat === 'function'"

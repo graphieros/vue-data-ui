@@ -719,6 +719,7 @@ defineExpose({
             :show="candlestickConfig.style.tooltip.show && isTooltip"
             :backgroundColor="candlestickConfig.style.tooltip.backgroundColor"
             :color="candlestickConfig.style.tooltip.color"
+            :fontSize="candlestickConfig.style.tooltip.fontSize"
             :parent="candlestickChart"
             :content="tooltipContent"
             :isCustom="candlestickConfig.style.tooltip.customFormat && typeof candlestickConfig.style.tooltip.customFormat === 'function'"

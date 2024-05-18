@@ -733,6 +733,7 @@ defineExpose({
             :show="radarConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="radarConfig.style.chart.tooltip.backgroundColor"
             :color="radarConfig.style.chart.tooltip.color"
+            :fontSize="radarConfig.style.chart.tooltip.fontSize"
             :parent="radarChart"
             :content="tooltipContent"
             :isCustom="radarConfig.style.chart.tooltip.customFormat && typeof radarConfig.style.chart.tooltip.customFormat === 'function'"

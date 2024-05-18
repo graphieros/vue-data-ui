@@ -762,6 +762,7 @@ defineExpose({
             :show="verticalBarConfig.style.chart.tooltip.show && isTooltip && segregated.length < props.dataset.length"
             :backgroundColor="verticalBarConfig.style.chart.tooltip.backgroundColor"
             :color="verticalBarConfig.style.chart.tooltip.color"
+            :fontSize="verticalBarConfig.style.chart.tooltip.fontSize"
             :parent="verticalBarChart"
             :content="tooltipContent"
             :isCustom="verticalBarConfig.style.chart.tooltip.customFormat && typeof verticalBarConfig.style.chart.tooltip.customFormat === 'function'"

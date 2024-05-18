@@ -527,6 +527,7 @@ defineExpose({
             :show="galaxyConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="galaxyConfig.style.chart.tooltip.backgroundColor"
             :color="galaxyConfig.style.chart.tooltip.color"
+            :fontSize="galaxyConfig.style.chart.tooltip.fontSize"
             :parent="galaxyChart"
             :content="tooltipContent"
             :isCustom="isFunction(galaxyConfig.style.chart.tooltip.customFormat)"

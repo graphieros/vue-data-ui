@@ -1427,6 +1427,7 @@ defineExpose({
             :show="quadrantConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="quadrantConfig.style.chart.tooltip.backgroundColor"
             :color="quadrantConfig.style.chart.tooltip.color"
+            :fontSize="quadrantConfig.style.chart.tooltip.fontSize"
             :parent="quadrantChart"
             :content="tooltipContent"
             :isCustom="quadrantConfig.style.chart.tooltip.customFormat && typeof quadrantConfig.style.chart.tooltip.customFormat === 'function'"

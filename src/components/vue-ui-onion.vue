@@ -595,6 +595,7 @@ defineExpose({
             :show="onionConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="onionConfig.style.chart.tooltip.backgroundColor"
             :color="onionConfig.style.chart.tooltip.color"
+            :fontSize="onionConfig.style.chart.tooltip.fontSize"
             :parent="onionChart"
             :content="tooltipContent"
             :isCustom="isFunction(onionConfig.style.chart.tooltip.customFormat)"
