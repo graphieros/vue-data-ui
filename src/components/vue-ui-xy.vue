@@ -170,60 +170,62 @@
                 </template>
 
                 <!-- BARS -->
-                <g v-for="(serie, i) in barSet" :key="`serie_bar_${i}`" :class="`serie_bar_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
-                    <g 
-                        v-for="(plot, j) in serie.plots" 
-                        :key="`bar_plot_${i}_${j}`"
-                    >
-                        <rect
-                            :data-cy="`xy-bar-${i}-${j}`"
-                            v-if="canShowValue(plot.value)"
-                            :x="calcRectX(plot)"
-                            :y="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
-                            :height="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualHeight(plot) : calcRectHeight(plot)"
-                            :width="calcRectWidth()"
-                            :rx="chartConfig.bar.borderRadius"
-                            :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
-                        />
-                    </g>
-                    <g :data-cy="`xy-bar-progression-${i}`" v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
-                        <defs>
-                            <marker :id="`bar_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
-                            refX="0" :refY="7/2" orient="auto">
-                                <polygon 
-                                    :points="`0 0, ${7} ${7/2}, 0 ${7}`" 
-                                    :fill="serie.color"
-                                />
-                            </marker>
-                        </defs>
-                        <line
-                            v-if="serie.plots.length > 1"
-                            :x1="calcLinearProgression(serie.plots).x1"
-                            :x2="calcLinearProgression(serie.plots).x2"
-                            :y1="calcLinearProgression(serie.plots).y1"
-                            :y2="calcLinearProgression(serie.plots).y2"
-                            :stroke-width="1"
-                            :stroke="serie.color"
-                            :stroke-dasharray="2"
-                            :marker-end="`url(#bar_arrow_${i})`"
-                        />
-                        <text
-                            v-if="serie.plots.length > 1"
-                            :data-cy="`xy-bar-progression-label-${i}`"
-                            text-anchor="middle"
-                            :x="calcLinearProgression(serie.plots).x2"
-                            :y="calcLinearProgression(serie.plots).y2 - 6"
-                            :font-size="chartConfig.chart.labels.fontSize"
-                            :fill="serie.color"
+                <template v-if="barSet.length">
+                    <g v-for="(serie, i) in barSet" :key="`serie_bar_${i}`" :class="`serie_bar_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                        <g 
+                            v-for="(plot, j) in serie.plots" 
+                            :key="`bar_plot_${i}_${j}`"
                         >
-                            {{  dataLabel({
-                                v: calcLinearProgression(serie.plots).trend * 100,
-                                s: '%',
-                                r: 2
-                            }) }}
-                        </text>
+                            <rect
+                                :data-cy="`xy-bar-${i}-${j}`"
+                                v-if="canShowValue(plot.value)"
+                                :x="calcRectX(plot)"
+                                :y="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
+                                :height="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualHeight(plot) : calcRectHeight(plot)"
+                                :width="calcRectWidth()"
+                                :rx="chartConfig.bar.borderRadius"
+                                :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
+                            />
+                        </g>
+                        <g :data-cy="`xy-bar-progression-${i}`" v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
+                            <defs>
+                                <marker :id="`bar_arrow_${i}`" :markerWidth="7" :markerHeight="7" 
+                                refX="0" :refY="7/2" orient="auto">
+                                    <polygon 
+                                        :points="`0 0, ${7} ${7/2}, 0 ${7}`" 
+                                        :fill="serie.color"
+                                    />
+                                </marker>
+                            </defs>
+                            <line
+                                v-if="serie.plots.length > 1"
+                                :x1="calcLinearProgression(serie.plots).x1"
+                                :x2="calcLinearProgression(serie.plots).x2"
+                                :y1="calcLinearProgression(serie.plots).y1"
+                                :y2="calcLinearProgression(serie.plots).y2"
+                                :stroke-width="1"
+                                :stroke="serie.color"
+                                :stroke-dasharray="2"
+                                :marker-end="`url(#bar_arrow_${i})`"
+                            />
+                            <text
+                                v-if="serie.plots.length > 1"
+                                :data-cy="`xy-bar-progression-label-${i}`"
+                                text-anchor="middle"
+                                :x="calcLinearProgression(serie.plots).x2"
+                                :y="calcLinearProgression(serie.plots).y2 - 6"
+                                :font-size="chartConfig.chart.labels.fontSize"
+                                :fill="serie.color"
+                            >
+                                {{  dataLabel({
+                                    v: calcLinearProgression(serie.plots).trend * 100,
+                                    s: '%',
+                                    r: 2
+                                }) }}
+                            </text>
+                        </g>
                     </g>
-                </g>
+                </template>
 
                 <!-- PLOTS -->
                 <g v-for="(serie, i) in plotSet" :key="`serie_plot_${i}`" :class="`serie_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
@@ -1218,7 +1220,7 @@ export default {
             })
         },
         barSet() {
-            return this.activeSeriesWithStackRatios.filter(s => s.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint, i) => {
+            return this.activeSeriesWithStackRatios.filter(s => s.type === 'bar').map((datapoint, i) => {
                 const min = Math.min(...datapoint.absoluteValues);
                 const max = Math.max(...datapoint.absoluteValues);
                 const autoScaledRatios = datapoint.absoluteValues.map(v => {
@@ -1256,11 +1258,13 @@ export default {
 
                 const plots = datapoint.series.map((plot, j) => {
                     const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
-
+                    const x = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked 
+                        ? this.drawingArea.left + (this.drawingArea.width / this.maxSeries * j) 
+                        : (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length);
                     return {
                         yOffset,
                         individualHeight,
-                        x: (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length),
+                        x,
                         y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
                         value: datapoint.absoluteValues[j],
                         zeroPosition,
@@ -1322,10 +1326,10 @@ export default {
             return this.absoluteDataset.length
         },
         activeSeriesWithStackRatios() {
-            return this.assignStackRatios(this.absoluteDataset)
+            return this.assignStackRatios(this.absoluteDataset.filter(ds => !this.segregatedSeries.includes(ds.id)))
         },
         lineSet() {
-            return this.activeSeriesWithStackRatios.filter(s => s.type === 'line').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
+            return this.activeSeriesWithStackRatios.filter(s => s.type === 'line').map((datapoint) => {
 
                 const min = Math.min(...datapoint.absoluteValues);
                 const max = Math.max(...datapoint.absoluteValues);
@@ -1425,7 +1429,7 @@ export default {
             })
         },
         plotSet() {
-            return this.activeSeriesWithStackRatios.filter(s => s.type === 'plot').filter(s => !this.segregatedSeries.includes(s.id)).map((datapoint) => {
+            return this.activeSeriesWithStackRatios.filter(s => s.type === 'plot').map((datapoint) => {
                 const min = Math.min(...datapoint.absoluteValues);
                 const max = Math.max(...datapoint.absoluteValues);
                 const autoScaledRatios = datapoint.absoluteValues.map(v => {
@@ -2524,9 +2528,15 @@ export default {
             }
         },
         calcRectWidth() {
+            if(this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked) {
+                return this.slot.line - ((this.drawingArea.width / this.maxSeries) * 0.1);
+            }
             return this.slot.bar * 0.9;
         },
         calcRectX(plot) {
+            if (this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked) {
+                return plot.x + ((this.drawingArea.width / this.maxSeries) * 0.05)
+            }
             return plot.x + (this.slot.bar * 0.05) + (this.slot.bar / 2);
         },
         calcRectY(plot) {
