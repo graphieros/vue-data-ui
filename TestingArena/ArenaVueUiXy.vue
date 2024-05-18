@@ -126,6 +126,7 @@ const model = ref([
     { key: 'chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'tooltip' },
     { key: 'chart.tooltip.roundingValue', def: 3, type: 'number', min: 0, max: 6, label: 'valueRounding', category: 'tooltip' },
     { key: 'chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'tooltip' },
+    { key: 'chart.tooltip.fontSize', def: 14, type: 'range', min: 8, max: 48},
 
     { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
 
