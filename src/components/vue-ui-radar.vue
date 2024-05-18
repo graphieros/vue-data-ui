@@ -744,7 +744,7 @@ defineExpose({
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <div style="max-width: 200px;margin:0 auto">
+                <div style="max-width: 200px;margin:0 auto" v-if="!radarConfig.style.chart.tooltip.customFormat">
                     <SparkBar :dataset="sparkBarData" :config="sparkBarConfig"/>
                 </div>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
