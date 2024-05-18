@@ -311,7 +311,7 @@
                         <g v-for="(plot, j) in serie.plots" :key="`line_${i}_${j}`">
                             <line
                                 :data-cy="`xy-line-segment-${i}-${j}`"
-                                v-if="j < serie.plots.length - 1 && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
+                                v-if="plot && j < serie.plots.length - 1 && serie.plots[j+1] && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
                                 :x1="plot.x"
                                 :x2="serie.plots[j+1].x"
                                 :y1="plot.y"
@@ -324,7 +324,7 @@
                             />
                             <line
                                 :data-cy="`xy-line-segment-${i}-${j}`"
-                                v-if="j < serie.plots.length - 1 && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
+                                v-if="plot && j < serie.plots.length - 1 && serie.plots[j+1] && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
                                 :x1="plot.x"
                                 :x2="serie.plots[j+1].x"
                                 :y1="plot.y"
@@ -342,7 +342,7 @@
 
                         <Shape
                             :data-cy="`xy-plot-${i}-${j}`"
-                            v-if="canShowValue(plot.value)"
+                            v-if="plot && canShowValue(plot.value)"
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="chartConfig.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
                             :plot="{ x: plot.x, y: plot.y }"
@@ -1330,13 +1330,11 @@ export default {
         },
         lineSet() {
             return this.activeSeriesWithStackRatios.filter(s => s.type === 'line').map((datapoint) => {
-
-                const min = Math.min(...datapoint.absoluteValues);
-                const max = Math.max(...datapoint.absoluteValues);
-                const autoScaledRatios = datapoint.absoluteValues.map(v => {
+                const min = Math.min(...datapoint.absoluteValues.filter(v => ![undefined, null].includes(v)));
+                const max = Math.max(...datapoint.absoluteValues.filter(v => ![undefined, null].includes(v)));
+                const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
                     return (v - min) / (max - min)
                 });
-
                 const autoScale = {
                     ratios: autoScaledRatios,
                     valueMin: min,
@@ -1389,10 +1387,12 @@ export default {
                 })
 
                 const autoScalePlots = datapoint.series.map((plot, j) => {
-                    return {
-                        x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
-                        y: this.drawingArea.bottom - yOffset - (individualHeight * autoScaleRatiosToNiceScale[j]),
-                        value: datapoint.absoluteValues[j]
+                    if(![undefined, null].includes(datapoint.absoluteValues[j])) {
+                        return {
+                            x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
+                            y: this.drawingArea.bottom - yOffset - (individualHeight * autoScaleRatiosToNiceScale[j]),
+                            value: datapoint.absoluteValues[j]
+                        }
                     }
                 })
                 const curve = this.createSmoothPath(plots);
@@ -1919,7 +1919,7 @@ export default {
             const start = { x: plots[0].x, y: zero };
             const end = { x: plots.at(-1).x, y: zero };
             const path = [];
-            plots.forEach(plot => {
+            plots.filter(p => !!p).forEach(plot => {
                 path.push(`${plot.x},${plot.y} `);
             });
             return [ start.x, start.y, ...path, end.x, end.y].toString();
