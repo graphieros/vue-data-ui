@@ -642,6 +642,7 @@ defineExpose({
                         :stroke="radarConfig.style.chart.backgroundColor"
                         :stroke-width="radarConfig.style.chart.layout.dataPolygon.strokeWidth + 1"
                         fill="none"
+                        v-if="radarConfig.useCssAnimation || (!radarConfig.useCssAnimation && !segregated.includes(i))"
                         :class="{ 'animated-out': segregated.includes(i) && radarConfig.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && radarConfig.useCssAnimation }"
                     />
                     <polygon
@@ -649,6 +650,7 @@ defineExpose({
                         :points="makePath(radar.map(r => r.plots[i]), false, true)"
                         :stroke="d.color"
                         :stroke-width="radarConfig.style.chart.layout.dataPolygon.strokeWidth"
+                        v-if="radarConfig.useCssAnimation || (!radarConfig.useCssAnimation && !segregated.includes(i))"
                         :fill="radarConfig.style.chart.layout.dataPolygon.transparent ? 'transparent' : radarConfig.style.chart.layout.dataPolygon.useGradient ? `url(#radar_gradient_${uid}_${i})` : d.color + opacity[radarConfig.style.chart.layout.dataPolygon.opacity]"
                         :class="{ 'animated-out': segregated.includes(i) && radarConfig.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && radarConfig.useCssAnimation }"
                     />
