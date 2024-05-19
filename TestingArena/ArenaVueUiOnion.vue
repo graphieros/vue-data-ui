@@ -1,0 +1,178 @@
+<script setup>
+import { ref, computed } from "vue";
+import LocalVueUiOnion from '../src/components/vue-ui-onion.vue';
+import LocalVueDataUi from '../src/components/vue-data-ui.vue';
+import Box from "./Box.vue";
+import convertArrayToObject from "./convertModel";
+
+const dataset = ref([
+    {
+        name: "Serie 1",
+        percentage: 21,
+        value: 1200,
+    },
+    {
+        name: "Serie 2",
+        percentage: 34,
+        value: 1000,
+    },
+    {
+        name: "Serie 3",
+        percentage: 55,
+        value: 500
+    },
+    {
+        name: "Serie 4",
+        percentage: 79,
+        value: 1280
+    }
+])
+
+const model = ref([
+    { key: 'useCssAnimation', def: true, type: 'checkbox' },
+    { key: 'useBlurOnHover', def: true, type: 'checkbox'},
+    { key: 'style.fontFamily', def: 'inherit', type: 'text', label: "fontFamily", category: 'general' },
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'style.chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
+    { key: 'style.chart.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'general' },
+    { key: 'style.chart.gradientIntensity', def: 20, min: 10, max: 40, type: 'range', label: 'gradientIntensity', category: 'general' },
+    { key: 'style.chart.layout.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
+    { key: 'style.chart.layout.gutter.color', def: '#e1e5e8', type: 'color'},
+    { key: 'style.chart.layout.gutter.width', def: 0.62, type: 'range', min: 0.1, max: 1, step: 0.01},
+    { key: 'style.chart.layout.track.width', def: 0.62, type: 'range', min: 0.1, max: 1, step: 0.01},
+    { key: 'style.chart.layout.labels.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.fontSize', def: 14, type: 'number', min: 8, max: 48},
+    { key: 'style.chart.layout.labels.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.chart.layout.labels.roundingValue', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.layout.labels.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.layout.labels.bold', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.layout.labels.offsetX', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.layout.labels.value.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.percentage.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.title.text', def: 'Lorem ipsum dolor sic amet', type: 'text', label: 'textContent', category: 'title' },
+    { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'title' },
+    { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 6, max: 48, label: 'fontSize', category: 'title' },
+    { key: 'style.chart.title.bold', def: true, type: 'checkbox', label: 'bold', category: 'title' },
+    { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sic amet', type: 'text', label: 'textContent', category: 'subtitle' },
+    { key: 'style.chart.title.subtitle.color', def: '#A1A1A1', type: 'color', label: 'textColor', category: 'subtitle' },
+    { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 6, max: 42, label: 'fontSize', category: 'subtitle' },
+    { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox', label: 'bold', category: 'subtitle' },
+    { key: 'style.chart.legend.show', def: true, type: 'checkbox', label: 'show', category: 'legend' },
+    { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'legend' },
+    { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'legend' },
+    { key: 'style.chart.legend.fontSize', def: 16, type: 'number', min: 6, max: 42, label: 'fontSize', category: 'legend' },
+    { key: 'style.chart.legend.bold', def: false, type: 'checkbox', label: 'bold', category: 'legend' },
+    { key: 'style.chart.legend.roundingValue', def: 0, type: 'number', min: 0, max: 6, label: ['rounding', 'is', 'value'], category: 'legend' },
+    { key: 'style.chart.legend.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'legend' },
+    { key: 'style.chart.legend.offsetY', def: 0, type: 'number', min: -100, max: 100}, // DEPRECATED (used with useDiv set to false)
+    { key: 'style.chart.tooltip.show', def: true, type: 'checkbox' },
+    { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },
+    { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color' },
+    { key: 'style.chart.tooltip.fontSize', def: 14, type: 'number', min: 6, max: 24 },
+    { key: 'style.chart.tooltip.showValue', def: true, type: 'checkbox'},
+    { key: 'style.chart.tooltip.roundingValue', def: 0, type: 'number', min: 0, max: 6},
+    { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6 },
+    { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox' },
+    { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6},
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
+    { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
+    { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color' },
+    { key: 'table.th.color', def: '#1A1A1A', type: 'color' },
+    { key: 'table.th.outline', def: 'none', type: 'text' },
+    { key: 'table.td.backgroundColor', def: '#FFFFFF', type: 'color' },
+    { key: 'table.td.color', def: '#1A1A1A', type: 'color'},
+    { key: 'table.td.outline', def: 'none', type: 'text' },
+    { key: 'table.td.roundingValue', def: 0, type: 'number', min: 0, max: 6 },
+    { key: 'table.td.roundingPercentage', def: 0, type: 'number', min: 0, max: 6 },
+    { key: 'table.translations.value', def: 'Value', type: 'text'},
+    { key: 'table.translations.percentage', def: 'Percentage', type: 'text'},
+    { key: 'table.translations.serie', def: 'Serie', type: 'text'}
+])
+
+const testCustomTooltip = ref(false);
+
+const config = computed(() => {
+    const c = convertArrayToObject(model.value);
+    if(testCustomTooltip.value) {   
+        return {
+            ...c,
+            style: {
+                ...c.style,
+                chart: {
+                    ...c.style.chart,
+                    tooltip: {
+                        ...c.style.chart.tooltip,
+                        customFormat: ({ datapoint }) => {
+                            let html = '';
+                            console.log(datapoint);
+                            return "test"
+                        }
+                    }
+                }
+            }
+
+        }
+    } else {
+        return {
+            ...c
+        }
+    }
+});
+
+const step = ref(0)
+
+</script>
+
+<template>
+    <div style="margin: 12px 0">
+        <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
+        <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
+    </div>
+
+    <Box>
+        <template #title>VueUiOnion</template>
+
+        <template #local>
+            <LocalVueUiOnion :dataset="dataset" :config="config" :key="`local_${step}`">
+            </LocalVueUiOnion>
+        </template>
+
+        <template #VDUI-local>
+            <LocalVueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            </LocalVueDataUi>
+        </template>
+
+        <template #build>
+            <VueUiOnion :dataset="dataset" :config="config" :key="`build_${step}`">
+            </VueUiOnion>
+        </template>
+
+        <template #VDUI-build>
+            <VueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            </VueDataUi>
+        </template>
+
+        <template #knobs>
+            <div
+                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
+                <div v-for="knob in model">
+                    <label style="font-size: 10px">{{ knob.key }}</label>
+                    <div
+                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
+                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
+                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
+                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
+                            <option v-for="opt in knob.options">{{ opt }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template #config>
+            {{ config }}
+        </template>
+    </Box>
+</template>
