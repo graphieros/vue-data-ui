@@ -7,6 +7,8 @@ import ArenaVueUiTreemap from "../TestingArena/ArenaVueUiTreemap.vue";
 import ArenaVueUiWaffle from "../TestingArena/ArenaVueUiWaffle.vue";
 import ArenaVueUiRadar from "../TestingArena/ArenaVueUiRadar.vue";
 import ArenaVueUiQuadrant from "../TestingArena/ArenaVueUiQuadrant.vue";
+import ArenaVueUiGauge from "../TestingArena/ArenaVueUiGauge.vue";
+import ArenaVueUiWheel from "../TestingArena/ArenaVueUiWheel.vue";
 
 const showOldArena = ref(false);
 
@@ -16,10 +18,12 @@ const components = ref([
   "VueUiTreemap",
   "VueUiWaffle",
   "VueUiRadar",
-  "VueUiQuadrant"
+  "VueUiQuadrant",
+  "VueUiGauge",
+  "VueUiWheel"
 ]);
 
-const selectedComponent = ref(components.value[5]);
+const selectedComponent = ref(components.value[7]);
 
 </script>
 
@@ -38,4 +42,6 @@ const selectedComponent = ref(components.value[5]);
   <ArenaVueUiWaffle v-if="selectedComponent === 'VueUiWaffle'" />
   <ArenaVueUiRadar v-if="selectedComponent === 'VueUiRadar'" />
   <ArenaVueUiQuadrant v-if="selectedComponent === 'VueUiQuadrant'" />
+  <ArenaVueUiGauge v-if="selectedComponent === 'VueUiGauge'" />
+  <ArenaVueUiWheel v-if="selectedComponent === 'VueUiWheel'" />
 </template>
