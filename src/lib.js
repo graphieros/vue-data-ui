@@ -586,7 +586,7 @@ export function createSmoothPath(points) {
         const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
         return `C ${cps.x},${cps.y} ${cpe.x},${cpe.y} ${point.x},${point.y}`;
     }
-    const d = points.reduce((acc, point, i, a) => i === 0
+    const d = points.filter(p => !!p).reduce((acc, point, i, a) => i === 0
         ? `${point.x},${point.y} `
         : `${acc} ${bezierCommand(point, i, a)} `
         , '');
