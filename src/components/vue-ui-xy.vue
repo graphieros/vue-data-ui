@@ -286,7 +286,10 @@
                 <!-- LINES -->
                 <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">    
                     <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea && serie.plots.length > 1">
-                        <path v-if="serie.smooth" :d="`M ${serie.plots[0].x},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1).x},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
+                        <path 
+                            v-if="serie.smooth" 
+                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"
+                        />
                         <path v-else :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
                     </g>
                     <path 
@@ -396,8 +399,8 @@
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_bar_${i}_${j}`">
                             <text
                                 :data-cy="`xy-bar-label-x-${i}-${j}`"
-                                v-if="(!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && chartConfig.bar.labels.show"
-                                :x="plot.x + calcRectWidth() * 1.1"
+                                v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && chartConfig.bar.labels.show"
+                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.labels.offsetY : - chartConfig.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="chartConfig.chart.labels.fontSize"
@@ -406,8 +409,8 @@
                                 {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.bar.labels.rounding}) : '' }}
                             </text>
                             <text 
-                                v-if="chartConfig.bar.serieName.show"
-                                :x="plot.x + calcRectWidth() * 1.1"
+                                v-if="plot && chartConfig.bar.serieName.show"
+                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.serieName.offsetY : - chartConfig.bar.serieName.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="chartConfig.chart.labels.fontSize"
@@ -426,7 +429,7 @@
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                             <text
                                 :data-cy="`xy-plot-label-x-${i}-${j}`"
-                                v-if="!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
+                                v-if="plot && !Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
                                 :x="plot.x"
                                 :y="plot.y + chartConfig.plot.labels.offsetY"
                                 text-anchor="middle"
@@ -437,7 +440,7 @@
                             </text>
                             <foreignObject
                                 :data-cy="`xy-plot-tag-start-${i}`"
-                                v-if="j === 0 && serie.useTag && serie.useTag === 'start'"
+                                v-if="plot && j === 0 && serie.useTag && serie.useTag === 'start'"
                                 :x="plot.x"
                                 :y="plot.y - 20"
                                 :height="24"
@@ -450,7 +453,7 @@
                             </foreignObject>
                             <foreignObject
                                 :data-cy="`xy-plot-tag-end-${i}`"
-                                v-if="j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
+                                v-if="plot && j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
                                 :x="plot.x - serie.name.length * (chartConfig.chart.labels.fontSize / 2)"
                                 :y="plot.y - 20"
                                 :height="24"
@@ -471,7 +474,7 @@
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                             <text
                                 :data-cy="`xy-line-label-x-${i}-${j}`"
-                                v-if="!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
+                                v-if="plot && !Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
                                 :x="plot.x"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.line.labels.offsetY : - chartConfig.line.labels.offsetY * 3)"
                                 text-anchor="middle"
@@ -482,7 +485,7 @@
                             </text>
                             <foreignObject
                                 :data-cy="`xy-line-tag-start-${i}`"
-                                v-if="j === 0 && serie.useTag && serie.useTag === 'start'"
+                                v-if="plot && j === 0 && serie.useTag && serie.useTag === 'start'"
                                 :x="plot.x"
                                 :y="plot.y - 20"
                                 :height="24"
@@ -495,7 +498,7 @@
                             </foreignObject>
                             <foreignObject
                                 :data-cy="`xy-line-tag-end-${i}`"
-                                v-if="j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
+                                v-if="plot && j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
                                 :x="plot.x - serie.name.length * (chartConfig.chart.labels.fontSize / 2)"
                                 :y="plot.y - 20"
                                 :height="24"
@@ -1221,9 +1224,10 @@ export default {
         },
         barSet() {
             return this.activeSeriesWithStackRatios.filter(s => s.type === 'bar').map((datapoint, i) => {
-                const min = Math.min(...datapoint.absoluteValues);
-                const max = Math.max(...datapoint.absoluteValues);
-                const autoScaledRatios = datapoint.absoluteValues.map(v => {
+                this.checkAutoScaleError(datapoint);
+                const min = Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)));
+                const max = Math.max(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)));
+                const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
                     return (v - min) / (max - min)
                 });
 
@@ -1234,8 +1238,8 @@ export default {
                 }
 
                 const individualExtremes = {
-                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues),
-                    min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
+                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
+                    min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues.filter(v => ![undefined,null].includes(v))) > 0 ? 0 : Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)))
                 };
                 const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps;
                 
@@ -1281,13 +1285,14 @@ export default {
                 })
 
                 const autoScalePlots = datapoint.series.map((plot, j) => {
-                    const yRatio = (datapoint.absoluteValues[j] + individualZero) / individualMax
-
+                    const x = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked 
+                        ? this.drawingArea.left + (this.drawingArea.width / this.maxSeries * j) 
+                        : (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length);
                     return {
                         yOffset,
                         individualHeight,
-                        x: (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length),
-                        y: this.drawingArea.bottom - yOffset - (individualHeight * autoScaleRatiosToNiceScale[j]),
+                        x,
+                        y: this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0),
                         value: datapoint.absoluteValues[j],
                         zeroPosition,
                         individualMax,
@@ -1330,8 +1335,10 @@ export default {
         },
         lineSet() {
             return this.activeSeriesWithStackRatios.filter(s => s.type === 'line').map((datapoint) => {
+                this.checkAutoScaleError(datapoint);
+
                 const min = Math.min(...datapoint.absoluteValues.filter(v => ![undefined, null].includes(v)));
-                const max = Math.max(...datapoint.absoluteValues.filter(v => ![undefined, null].includes(v)));
+                const max = Math.max(...datapoint.absoluteValues.filter(v => ![undefined, null].includes(v))) || 1;
                 const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
                     return (v - min) / (max - min)
                 });
@@ -1342,7 +1349,7 @@ export default {
                 }
 
                 const individualExtremes = {
-                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues),
+                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
                     min: datapoint.scaleMin || (Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues))
                 };
 
@@ -1390,7 +1397,7 @@ export default {
                     if(![undefined, null].includes(datapoint.absoluteValues[j])) {
                         return {
                             x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
-                            y: this.drawingArea.bottom - yOffset - (individualHeight * autoScaleRatiosToNiceScale[j]),
+                            y: this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0),
                             value: datapoint.absoluteValues[j]
                         }
                     }
@@ -1430,9 +1437,10 @@ export default {
         },
         plotSet() {
             return this.activeSeriesWithStackRatios.filter(s => s.type === 'plot').map((datapoint) => {
-                const min = Math.min(...datapoint.absoluteValues);
-                const max = Math.max(...datapoint.absoluteValues);
-                const autoScaledRatios = datapoint.absoluteValues.map(v => {
+                this.checkAutoScaleError(datapoint);
+                const min = Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)));
+                const max = Math.max(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v))) || 1;
+                const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
                     return (v - min) / (max - min)
                 });
 
@@ -1443,7 +1451,7 @@ export default {
                 }
 
                 const individualExtremes = {
-                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues),
+                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
                     min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
                 };
 
@@ -1484,7 +1492,7 @@ export default {
                 const autoScalePlots = datapoint.series.map((plot, j) => {
                     return {
                         x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
-                        y: this.drawingArea.bottom - yOffset - (individualHeight * autoScaleRatiosToNiceScale[j]),
+                        y: this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0),
                         value: datapoint.absoluteValues[j],
                     }
                 })
@@ -1660,7 +1668,7 @@ export default {
                     html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid #e1e5e8; width:100%">${time}</div>`;
                 }
                 this.selectedSeries.forEach(s => {
-                    if(this.isSafeValue(s.value) && s.value !== null) {
+                    if(this.isSafeValue(s.value)) {
                         let shape = '';
                         let insideShape = '';
                         switch (this.icons[s.type]) {
@@ -1904,6 +1912,16 @@ export default {
         functionReturnsString,
         error,
         objectIsEmpty,
+        checkAutoScaleError(datapoint) {
+            if (datapoint.autoScaling) {
+                if (!this.chartConfig.chart.grid.labels.yAxis.useIndividualScale) {
+                    console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.useIndividualScale is set to true`)
+                }
+                if (!this.chartConfig.chart.grid.labels.yAxis.stacked) {
+                    console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.stacked is set to true`)
+                }
+            }
+        },
         createArea(plots) {
             if(!plots[0]) return [-10,-10, '', -10, -10];
             const start = { x: plots[0].x, y: this.zero };
@@ -1916,8 +1934,8 @@ export default {
         },
         createIndividualArea(plots, zero) {
             if(!plots[0]) return [-10,-10, '', -10, -10];
-            const start = { x: plots[0].x, y: zero };
-            const end = { x: plots.at(-1).x, y: zero };
+            const start = { x: plots[0] ? plots[0].x : Math.min(...plots.filter(p => !!p).map(p => p.x)), y: zero };
+            const end = { x: plots.at(-1) ? plots.at(-1).x : Math.min(...plots.filter(p => !!p).map(p => p.x)), y: zero };
             const path = [];
             plots.filter(p => !!p).forEach(plot => {
                 path.push(`${plot.x},${plot.y} `);
