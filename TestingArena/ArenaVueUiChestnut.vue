@@ -341,21 +341,61 @@ const step = ref(0)
 
     <template #local>
         <LocalVueUiChestnut :dataset="dataset" :config="config" :key="`local_${step}`">
+            <template #svg="{ svg }">
+                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+            </template>
+            <template #legend="{ legend }">
+                #LEGEND
+                <div style="font-size: 8px">
+                    {{ legend }}
+                </div>
+            </template>
         </LocalVueUiChestnut>
     </template>
-
+    
     <template #VDUI-local>
         <LocalVueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <template #svg="{ svg }">
+                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+            </template>
+            <template #legend="{ legend }">
+                #LEGEND
+                <div style="font-size: 8px">
+                    {{ legend }}
+                </div>
+            </template>
         </LocalVueDataUi>
     </template>
-
+    
     <template #build>
         <VueUiChestnut :dataset="dataset" :config="config" :key="`build_${step}`">
+            <template #svg="{ svg }">
+                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+            </template>
+            <template #legend="{ legend }">
+                #LEGEND
+                <div style="font-size: 8px">
+                    {{ legend }}
+                </div>
+            </template>
         </VueUiChestnut>
     </template>
-
+    
     <template #VDUI-build>
         <VueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <template #svg="{ svg }">
+                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+            </template>
+            <template #legend="{ legend }">
+                #LEGEND
+                <div style="font-size: 8px">
+                    {{ legend }}
+                </div>
+            </template>
         </VueDataUi>
     </template>
 
