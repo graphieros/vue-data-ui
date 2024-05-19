@@ -222,21 +222,109 @@ function selectDatapoint(d) {
 
         <template #local>
             <LocalVueUiTreemap :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #rect="{ rect, shouldShow, fontSize, isZoom, textColor }">
+                    #RECT
+                    <div style="font-size: 12px">
+                        {{ rect, shouldShow, fontSize, isZoom, textColor }}
+                    </div>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
             </LocalVueUiTreemap>
         </template>
-
+        
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiTreemap" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #rect="{ rect, shouldShow, fontSize, isZoom, textColor }">
+                    #RECT
+                    <div style="font-size: 12px">
+                        {{ rect, shouldShow, fontSize, isZoom, textColor }}
+                    </div>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
             </LocalVueDataUi>
         </template>
         
         <template #build>
             <VueUiTreemap :dataset="dataset" :config="config" :key="`build_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #rect="{ rect, shouldShow, fontSize, isZoom, textColor }">
+                    #RECT
+                    <div style="font-size: 12px">
+                        {{ rect, shouldShow, fontSize, isZoom, textColor }}
+                    </div>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
             </VueUiTreemap>
         </template>
-
+        
         <template #VDUI-build>
             <VueDataUi component="VueUiTreemap" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #rect="{ rect, shouldShow, fontSize, isZoom, textColor }">
+                    #RECT
+                    <div style="font-size: 12px">
+                        {{ rect, shouldShow, fontSize, isZoom, textColor }}
+                    </div>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
             </VueDataUi>
         </template>
 
