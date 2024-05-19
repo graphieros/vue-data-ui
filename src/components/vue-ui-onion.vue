@@ -524,7 +524,7 @@ defineExpose({
                     <text
                         v-if="!segregated.includes(onion.id)"
                         :x="svg.width / 2 - onionSkin.gutter * 0.8 + onionConfig.style.chart.layout.labels.offsetX"
-                        :y="onion.labelY + onionConfig.style.chart.layout.labels.offsetX"
+                        :y="onion.labelY + onionConfig.style.chart.layout.labels.offsetY"
                         text-anchor="end"
                         :font-size="onionConfig.style.chart.layout.labels.fontSize"
                         :fill="onionConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie === i ? onion.color:  onionConfig.style.chart.layout.labels.color"
