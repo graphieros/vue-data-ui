@@ -8,7 +8,7 @@ import convertArrayToObject from "./convertModel";
 const dataset = ref([
         {
             name: "S0",
-            series: [0, 0, 1, 1, 1, 0, 0, 1, 1, 1],
+            series: [1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1],
             type: "line",
             smooth: false,
             useArea: true,
@@ -17,7 +17,7 @@ const dataset = ref([
         },
         {
             name: "S1",
-            series: [0,1,1,1,1,1,0,0, 1, 1, 0],
+            series: [0,1,1,1,1,1,0,0, 1, 1, 1],
             type: "line",
             smooth: false,
             useArea: true,
@@ -25,7 +25,7 @@ const dataset = ref([
         },
         {
             name: "S2",
-            series: [0,0,0,1,1,0,0,1,1,1],
+            series: [0,0,0,1,1,0,0,1,1,1, 1],
             type: "line",
             smooth: false,
             useArea: true,
@@ -33,12 +33,12 @@ const dataset = ref([
         },
         {
             name: "S3",
-            series: [23.12, 23.12, 23.05, 23.07, 23.65, 23.69, 23.72, 23.21, 23.36, 23.41],
+            series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
             type: "line",
             smooth: false,
             useArea: true,
             scaleSteps: 5,
-            autoScaling: true,
+            autoScaling: false,
             stackRatio: 0.5
         },
     ])
@@ -146,14 +146,14 @@ const model = ref([
     { key: 'line.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'line' },
     { key: 'line.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'line' },
     { key: 'line.strokeWidth', def: 2, type: 'number', min: 1, max: 20, label: 'thickness', category: 'line' },
-    { key: 'line.labels.show', def: false, type: 'checkbox', label: 'showDataLabels', category: 'line' },
+    { key: 'line.labels.show', def: true, type: 'checkbox', label: 'showDataLabels', category: 'line' },
     { key: 'line.labels.offsetY', def: -8, type: 'number', min: -100, max: 100, label: 'offsetYDataLabels', category: 'line' },
     { key: 'line.labels.rounding', def: 0, type: 'number', min: 0, max: 6, label: 'rounding', category: 'line' },
     { key: 'line.labels.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'line' },
     { key: 'line.area.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'line' },
     { key: 'line.area.opacity', def: 20, type: 'range', min: 0, max: 100, label: 'opacity', category: 'line' },
 
-    { key: 'plot.radius', def: 0, type: 'number', min: 0, max: 20, label: 'radius', category: 'plot' },
+    { key: 'plot.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'plot' },
     { key: 'plot.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'plot' },
     { key: 'plot.strokeWidth', def: 2, type: 'number', min: 1, max: 20, label: 'thickness', category: 'plot' },
     { key: 'plot.labels.show', def: true, type: 'checkbox', label: 'showDataLabels', category: 'plot' },
