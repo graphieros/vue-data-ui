@@ -132,21 +132,86 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiRadar :dataset="dataset" :config="config" :key="`local_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
             </LocalVueUiRadar>
         </template>
-
+        
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
             </LocalVueDataUi>
         </template>
-
+        
         <template #build>
             <VueUiRadar :dataset="dataset" :config="config" :key="`build_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
             </VueUiRadar>
         </template>
-
+        
         <template #VDUI-build>
-            <VueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`"></VueDataUi>
+            <VueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueDataUi>
         </template>
 
         <template #knobs>
