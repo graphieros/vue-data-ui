@@ -9,6 +9,7 @@ import ArenaVueUiRadar from "../TestingArena/ArenaVueUiRadar.vue";
 import ArenaVueUiQuadrant from "../TestingArena/ArenaVueUiQuadrant.vue";
 import ArenaVueUiGauge from "../TestingArena/ArenaVueUiGauge.vue";
 import ArenaVueUiWheel from "../TestingArena/ArenaVueUiWheel.vue";
+import ArenaVueUiTiremarks from "../TestingArena/ArenaVueUiTiremarks.vue";
 
 const showOldArena = ref(false);
 
@@ -20,10 +21,11 @@ const components = ref([
   "VueUiRadar",
   "VueUiQuadrant",
   "VueUiGauge",
-  "VueUiWheel"
+  "VueUiWheel",
+  "VueUiTiremarks"
 ]);
 
-const selectedComponent = ref(components.value[7]);
+const selectedComponent = ref(components.value[8]);
 
 </script>
 
@@ -36,12 +38,31 @@ const selectedComponent = ref(components.value[7]);
     </select>
   </div>
   <TestingArena v-if="showOldArena"/>
+
+  <!-- 0 -->
   <ArenaVueUiXy v-if="selectedComponent === 'VueUiXy'"/>
+
+  <!-- 1 -->
   <ArenaVueUiDonut v-if="selectedComponent === 'VueUiDonut'"/>
+
+  <!-- 2 -->
   <ArenaVueUiTreemap v-if="selectedComponent === 'VueUiTreemap'" />
+
+  <!-- 3 -->
   <ArenaVueUiWaffle v-if="selectedComponent === 'VueUiWaffle'" />
+
+  <!-- 4 -->
   <ArenaVueUiRadar v-if="selectedComponent === 'VueUiRadar'" />
+
+  <!-- 5 -->
   <ArenaVueUiQuadrant v-if="selectedComponent === 'VueUiQuadrant'" />
+
+  <!-- 6 -->
   <ArenaVueUiGauge v-if="selectedComponent === 'VueUiGauge'" />
+
+  <!-- 7 -->
   <ArenaVueUiWheel v-if="selectedComponent === 'VueUiWheel'" />
+
+  <!-- 8 -->
+  <ArenaVueUiTiremarks v-if="selectedComponent === 'VueUiTiremarks'" />
 </template>
