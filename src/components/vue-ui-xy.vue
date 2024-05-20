@@ -1050,6 +1050,12 @@ export default {
         }
     },
     computed: {
+        backgroundColor() {
+            return this.chartConfig.chart.backgroundColor;
+        },  
+        slicerColor() {
+            return this.chartConfig.chart.zoom.color;
+        },
         allScales() {
             const lines = this.lineSet.map(l => {
                 return {
@@ -1858,7 +1864,7 @@ export default {
                 function fillColor(){
                     let percent1 = (sliderOne.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
                     let percent2 = (sliderTwo.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
-                    sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
+                    sliderTrack.style.background = `linear-gradient(to right, ${vm.chartConfig.chart.zoom.color} ${percent1}% , ${vm.chartConfig.chart.zoom.color} ${percent1}% , ${vm.chartConfig.chart.zoom.color} ${percent2}%, #dadae5 ${percent2}%)`;
                 }
         
                 slideOne();
@@ -2809,7 +2815,7 @@ input[type="range"]::-webkit-slider-thumb{
     -webkit-appearance: none;
     height: 1.3em;
     width: 1.3em;
-    background-color: #858585;
+    background-color: v-bind(slicerColor);
     cursor: pointer;
     margin-top: -6px;
     pointer-events: auto;
@@ -2822,7 +2828,7 @@ input[type="range"]::-moz-range-thumb{
     width: 1.3em;
     cursor: pointer;
     border-radius: 50%;
-    background-color: #858585;
+    background-color: v-bind(slicerColor);
     pointer-events: auto;
 }
 input[type="range"]::-ms-thumb{
@@ -2831,12 +2837,12 @@ input[type="range"]::-ms-thumb{
     width: 1.3em;
     cursor: pointer;
     border-radius: 50%;
-    background-color: #858585;
+    background-color: v-bind(slicerColor);
     pointer-events: auto;
 }
 input[type="range"]:active::-webkit-slider-thumb{
-    background-color: #CCCCCC;
-    border: 3px solid #858585;
+    background-color: v-bind(slicerColor);
+    border: 2px solid v-bind(backgroundColor);
 }
 canvas {
     width: 100%;
@@ -2855,7 +2861,7 @@ canvas {
     border-radius: 50%;
     cursor: pointer;
     &:focus {
-        outline: 1px solid #CCCCCC
+        outline: 1px solid v-bind(slicerColor);
     }
 }
 </style>
