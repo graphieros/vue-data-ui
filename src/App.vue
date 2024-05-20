@@ -12,6 +12,7 @@ import ArenaVueUiWheel from "../TestingArena/ArenaVueUiWheel.vue";
 import ArenaVueUiTiremarks from "../TestingArena/ArenaVueUiTiremarks.vue";
 import ArenaVueUiChestnut from "../TestingArena/ArenaVueUiChestnut.vue";
 import ArenaVueUiOnion from "../TestingArena/ArenaVueUiOnion.vue";
+import ArenaVueUiVerticalBar from "../TestingArena/ArenaVueUiVerticalBar.vue";
 
 const showOldArena = ref(false);
 
@@ -26,10 +27,11 @@ const components = ref([
   "VueUiWheel",
   "VueUiTiremarks",
   "VueUiChestnut",
-  "VueUiOnion"
+  "VueUiOnion",
+  "VueUiVerticalBar"
 ]);
 
-const selectedComponent = ref(components.value[10]);
+const selectedComponent = ref(components.value[11]);
 
 </script>
 
@@ -43,36 +45,39 @@ const selectedComponent = ref(components.value[10]);
   </div>
   <TestingArena v-if="showOldArena"/>
 
-  <!-- 0 -->
+  <!--  0 -->
   <ArenaVueUiXy v-if="selectedComponent === 'VueUiXy'"/>
 
-  <!-- 1 -->
+  <!--  1 -->
   <ArenaVueUiDonut v-if="selectedComponent === 'VueUiDonut'"/>
 
-  <!-- 2 -->
+  <!--  2 -->
   <ArenaVueUiTreemap v-if="selectedComponent === 'VueUiTreemap'" />
 
-  <!-- 3 -->
+  <!--  3 -->
   <ArenaVueUiWaffle v-if="selectedComponent === 'VueUiWaffle'" />
 
-  <!-- 4 -->
+  <!--  4 -->
   <ArenaVueUiRadar v-if="selectedComponent === 'VueUiRadar'" />
 
-  <!-- 5 -->
+  <!--  5 -->
   <ArenaVueUiQuadrant v-if="selectedComponent === 'VueUiQuadrant'" />
 
-  <!-- 6 -->
+  <!--  6 -->
   <ArenaVueUiGauge v-if="selectedComponent === 'VueUiGauge'" />
 
-  <!-- 7 -->
+  <!--  7 -->
   <ArenaVueUiWheel v-if="selectedComponent === 'VueUiWheel'" />
 
-  <!-- 8 -->
+  <!--  8 -->
   <ArenaVueUiTiremarks v-if="selectedComponent === 'VueUiTiremarks'" />
 
-  <!-- 9 -->
+  <!--  9 -->
   <ArenaVueUiChestnut v-if="selectedComponent === 'VueUiChestnut'" />
 
   <!-- 10 -->
   <ArenaVueUiOnion v-if="selectedComponent === 'VueUiOnion'" />
+
+  <!-- 11 -->
+  <ArenaVueUiVerticalBar v-if="selectedComponent === 'VueUiVerticalBar'" />
 </template>
