@@ -131,6 +131,9 @@ const pointyPointerPath = computed(() => {
     const baseY1 = centerY + baseLength * Math.sin(angle + (Math.PI / 2));
     const baseX2 = centerX + baseLength * Math.cos(angle - (Math.PI / 2));
     const baseY2 = centerY + baseLength * Math.sin(angle - (Math.PI / 2));
+
+    if(isNaN(tipX)) return null;
+
     return `M ${tipX},${tipY} ${baseX1},${baseY1} ${baseX2},${baseY2} Z`;
 })
 
@@ -575,6 +578,7 @@ defineExpose({
             </g>
             <g v-else>
                 <path
+                    v-if="pointyPointerPath"
                     :d="pointyPointerPath"
                     :fill="gaugeConfig.style.chart.layout.pointer.useRatingColor ? ratingColor : gaugeConfig.style.chart.layout.pointer.color"
                     :stroke="gaugeConfig.style.chart.layout.pointer.stroke"
