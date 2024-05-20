@@ -212,7 +212,7 @@ const extremes = computed(() => {
 });
 
 const niceScale = computed(() => {
-    return calculateNiceScale(extremes.value.min, extremes.value.max, 10)
+    return calculateNiceScale(extremes.value.min, extremes.value.max, candlestickConfig.value.style.layout.grid.yAxis.dataLabels.steps)
 })
 
 function convertToPlot(item, index) {
