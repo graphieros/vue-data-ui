@@ -272,7 +272,10 @@ const selectedSideLabelCoordinates = computed(() => {
 const currentAnimationFrame = ref(null);
 const isAnimating = ref(false);
 
-function zoomOnSide({ targetX, targetY, targetW, targetH}) {
+function zoomOnSide({ targetX, targetY, targetW, targetH, side}) {
+    if(selectedSide.value) {
+        selectSide(side);
+    }
     const differentials = {
         x: targetX - mutableSvg.value.startX,
         y: targetY - mutableSvg.value.startY,
@@ -319,7 +322,8 @@ function selectQuadrantSide(side) {
                     targetX: 0,
                     targetY: 0,
                     targetW: svg.value.width / 2 + svg.value.left,
-                    targetH: svg.value.height / 2 + svg.value.top
+                    targetH: svg.value.height / 2 + svg.value.top,
+                    side: 'tl'
                 })
             break;
             
@@ -328,7 +332,8 @@ function selectQuadrantSide(side) {
                     targetX: svg.value.width / 2 - svg.value.left,
                     targetY: 0,
                     targetW: svg.value.width / 2 + svg.value.left,
-                    targetH: svg.value.height / 2 + svg.value.top
+                    targetH: svg.value.height / 2 + svg.value.top,
+                    side: 'tr'
                 })
             break;
 
@@ -337,7 +342,8 @@ function selectQuadrantSide(side) {
                     targetX: svg.value.width / 2 - svg.value.left,
                     targetY: svg.value.height / 2 - svg.value.top,
                     targetW: svg.value.width / 2 + svg.value.left,
-                    targetH: svg.value.height / 2 + svg.value.top
+                    targetH: svg.value.height / 2 + svg.value.top,
+                    side: 'br'
                 })
             break;
 
@@ -346,7 +352,8 @@ function selectQuadrantSide(side) {
                     targetX: 0,
                     targetY: svg.value.height / 2 - svg.value.top,
                     targetW: svg.value.width / 2 + svg.value.left,
-                    targetH: svg.value.height / 2 + svg.value.top
+                    targetH: svg.value.height / 2 + svg.value.top,
+                    side: 'bl'
                 })
             break;
         
@@ -702,6 +709,7 @@ function selectPlot(category, plot) {
 }
 
 function selectSide(side) {
+    if(!side) return;
     const sidePlots = drawableDataset.value.flatMap(category => category.series.filter(s => s.quadrantSide === side).map(s => {
         return {
             category: s.categoryName,
