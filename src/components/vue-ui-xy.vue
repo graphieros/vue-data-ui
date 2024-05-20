@@ -827,10 +827,9 @@
                 {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.start] }}
             </div>
             <div class="vue-ui-xy-range-slider">
-                <div class="vue-ui-xy-slider-track" :id="`vue-ui-slider-track_${sliderId}`"></div>
+                <div ref="sliderTrack" class="vue-ui-xy-slider-track" :id="`vue-ui-slider-track_${sliderId}`"></div>
                     <input data-cy="xy-range-start" :id="`start_${sliderId}`" type="range" :style="`border:none !important;accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="maxX" v-model="slicer.start">
                     <input :id="`end_${sliderId}`" type="range" :style="`border:none !important;accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="maxX" v-model="slicer.end">
-
             </div>
             <div class="vue-ui-xy-range-slider-label-right" data-cy-zoom-legend>
                 {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.end-1] }}
@@ -1835,7 +1834,8 @@ export default {
             const sliderTwo = document.getElementById(`end_${this.sliderId}`);
     
             let minGap = 0;
-            const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.sliderId}`);
+            // const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.sliderId}`);
+            const sliderTrack = this.$refs.sliderTrack;
 
             if(sliderOne && sliderTwo) {
                 sliderOne.addEventListener("input", slideOne);
@@ -1855,7 +1855,6 @@ export default {
                         sliderTwo.value = parseInt(sliderOne.value) + minGap;
                     }
                     fillColor();
-                    fillColor();
                     if (vm.chartConfig.useCanvas) {
                         vm.drawCanvas();
                     }
@@ -1864,7 +1863,8 @@ export default {
                 function fillColor(){
                     sliderTrack.style.background = vm.chartConfig.chart.zoom.color;
                 }
-        
+                
+                fillColor();
                 slideOne();
                 slideTwo();
             }
