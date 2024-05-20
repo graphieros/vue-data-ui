@@ -534,7 +534,7 @@ defineExpose({
                     :y="drawingArea.bottom + heatmapConfig.style.layout.cells.height"
                     :width="svg.width - drawingArea.left - heatmapConfig.style.layout.padding.right"
                     :height="heatmapConfig.style.layout.cells.height"
-                    :rx="heatmapConfig.style.layout.cells.height / 2"
+                    :rx="heatmapConfig.style.legend.scaleBorderRadius > heatmapConfig.style.layout.cells.height / 2 ? heatmapConfig.style.layout.cells.height / 2 : heatmapConfig.style.legend.scaleBorderRadius"
                     fill="url(#colorScaleHorizontal)"
                 />
                 <text
