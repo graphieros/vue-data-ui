@@ -51,6 +51,7 @@ const model = ref([
     { key: 'chart.height', def: 600, type: 'range', min: 300, max: 1000, label: 'height', category: 'general' },
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
     { key: 'chart.zoom.show', def: true, type: 'checkbox', label: 'zoom', category: 'general' },
+    { key: 'chart.zoom.color', def: '#1A1A1A', type: 'color' },
 
     { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
     { key: 'chart.padding.right', def: 24, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },

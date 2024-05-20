@@ -47,7 +47,7 @@ const components = ref([
   "VueUiSparkgauge"
 ]);
 
-const selectedComponent = ref(components.value[19]);
+const selectedComponent = ref(components.value[0]);
 
 </script>
 
