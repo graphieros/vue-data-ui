@@ -525,6 +525,7 @@ defineExpose({
                     :y2="drawingArea.bottom"
                     :stroke="candlestickConfig.style.layout.grid.stroke"
                     :stroke-width="candlestickConfig.style.layout.grid.strokeWidth"
+                    stroke-linecap="round"
                 />
                 <line
                     data-cy="candlestick-grid-x-axis"
@@ -534,6 +535,7 @@ defineExpose({
                     :y2="drawingArea.bottom"
                     :stroke="candlestickConfig.style.layout.grid.stroke"
                     :stroke-width="candlestickConfig.style.layout.grid.strokeWidth"
+                    stroke-linecap="round"
                 />
             </g>
 
@@ -548,7 +550,8 @@ defineExpose({
                         :y1="yLabel.y" 
                         :y2="yLabel.y" 
                         :stroke="candlestickConfig.style.layout.grid.stroke" 
-                        :stroke-width="candlestickConfig.style.layout.grid.strokeWidth" 
+                        :stroke-width="candlestickConfig.style.layout.grid.strokeWidth"
+                        stroke-linecap="round"
                     />
                     <text 
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
