@@ -69,6 +69,7 @@ const model = ref([
     { key: 'style.chart.tooltip.roundingPercentage', def: 2, type: 'range', min: 0, max: 12},
     { key: 'style.chart.tooltip.animation.show', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.animation.animationFrames', def: 60, type: 'range', min: 0, max: 1000},
+    { key: 'style.chart.tooltip.customFormat', def: null, type: 'text'},
     { key: 'style.chart.legend.show', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.bold', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
