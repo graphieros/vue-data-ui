@@ -1834,7 +1834,6 @@ export default {
             const sliderTwo = document.getElementById(`end_${this.sliderId}`);
     
             let minGap = 0;
-            // const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.sliderId}`);
             const sliderTrack = this.$refs.sliderTrack;
 
             if(sliderOne && sliderTwo) {
@@ -1982,8 +1981,6 @@ export default {
                 start: 0,
                 end: Math.max(...this.dataset.map(datapoint => datapoint.series.length))
             }
-            const sliderTrack = document.getElementById(`vue-ui-slider-track_${this.sliderId}`);
-            sliderTrack.style.background = `linear-gradient(to right, #dadae5 0% , #858585 100% , #858585 0%, #dadae5 100%)`;
         },
         createCanvasArea(plots) {
             const start = { x: plots[0].x, y: this.zero };
