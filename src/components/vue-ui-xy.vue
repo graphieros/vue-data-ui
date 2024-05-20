@@ -1860,11 +1860,9 @@ export default {
                         vm.drawCanvas();
                     }
                 }
-                const dataset = this.dataset;
+
                 function fillColor(){
-                    let percent1 = (sliderOne.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
-                    let percent2 = (sliderTwo.value / Math.max(...dataset.map(datapoint => datapoint.series.length))) * 100;
-                    sliderTrack.style.background = `linear-gradient(to right, ${vm.chartConfig.chart.zoom.color} ${percent1}% , ${vm.chartConfig.chart.zoom.color} ${percent1}% , ${vm.chartConfig.chart.zoom.color} ${percent2}%, #dadae5 ${percent2}%)`;
+                    sliderTrack.style.background = vm.chartConfig.chart.zoom.color;
                 }
         
                 slideOne();
