@@ -18,6 +18,7 @@ import ArenaVueUiScatter from "../TestingArena/ArenaVueUiScatter.vue";
 import ArenaVueUiCandlestick from "../TestingArena/ArenaVueUiCandlestick.vue";
 import ArenaVueUiSparkline from "../TestingArena/ArenaVueUiSparkline.vue";
 import ArenaVueUiSparkbar from "../TestingArena/ArenaVueUiSparkbar.vue";
+import ArenaVueUiSparkStackbar from "../TestingArena/ArenaVueUiSparkStackbar.vue";
 
 const showOldArena = ref(false);
 
@@ -38,10 +39,11 @@ const components = ref([
   "VueUiScatter",
   "VueUiCandlestick",
   "VueUiSparkline",
-  "VueUiSparkbar"
+  "VueUiSparkbar",
+  "VueUiSparkStackbar"
 ]);
 
-const selectedComponent = ref(components.value[16]);
+const selectedComponent = ref(components.value[17]);
 
 </script>
 
@@ -105,4 +107,7 @@ const selectedComponent = ref(components.value[16]);
 
   <!-- 16 -->
   <ArenaVueUiSparkbar v-if="selectedComponent === 'VueUiSparkbar'" />
+
+  <!-- 17 -->
+  <ArenaVueUiSparkStackbar v-if="selectedComponent === 'VueUiSparkStackbar'" />
 </template>
