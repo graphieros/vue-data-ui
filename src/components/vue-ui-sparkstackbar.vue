@@ -263,7 +263,7 @@ function selectDatapoint(datapoint, index) {
                     >
                         <circle :cx="5" :cy="5" :r="5" :fill="rect.color"/>
                     </svg>
-                    <span :style="`color:${stackConfig.style.legend.name.color}`">
+                    <span :style="`color:${stackConfig.style.legend.name.color}; font-weight:${stackConfig.style.legend.name.bold ? 'bold' : 'normal'}`">
                         {{ rect.name }}
                     </span>
                     <span 
