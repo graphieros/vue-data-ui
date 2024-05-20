@@ -202,14 +202,13 @@ const config = computed(() => {
 
 const step = ref(0)
 
-function selectLegend(leg) {
-    alert(`@selectLegend\n\n${JSON.stringify(leg)}`)
+function selectLegend(legend) {
+    console.log({legend})
 }
 
-function selectDatapoint(d) {
-    alert(`@selectDatapoint\n\n${JSON.stringify(d)}`)
+function selectDatapoint(datapoint) {
+    console.log({ datapoint })
 }
-
 </script>
 
 <template>

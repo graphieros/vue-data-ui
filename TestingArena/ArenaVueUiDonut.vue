@@ -137,8 +137,12 @@ const config = computed(() => {
 
 const step = ref(0)
 
-function selectLegend(leg) {
-    alert(`@selectLegend\n\n${JSON.stringify(leg)}`)
+function selectLegend(legend) {
+    console.log({legend})
+}
+
+function selectDatapoint(datapoint) {
+    console.log({ datapoint })
 }
 
 </script>
@@ -152,7 +156,7 @@ function selectLegend(leg) {
         <template #title>VueUiDonut</template>
 
         <template #local>
-            <LocalVueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -178,7 +182,7 @@ function selectLegend(leg) {
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -204,7 +208,7 @@ function selectLegend(leg) {
         </template>
         
         <template #build>
-            <VueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`">
+            <VueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -230,7 +234,7 @@ function selectLegend(leg) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`">
+            <VueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

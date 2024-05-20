@@ -234,12 +234,12 @@ const config = computed(() => {
 
 const step = ref(0)
 
-function selectLegend(leg) {
-    alert(`@selectLegend\n\n${JSON.stringify(leg)}`)
+function selectLegend(legend) {
+    console.log({ legend })
 }
 
-function selectX(x) {
-    alert(`@selectX\n\n${JSON.stringify(x)}`)
+function selectX(selectedX) {
+    console.log({ selectedX })
 }
 
 </script>

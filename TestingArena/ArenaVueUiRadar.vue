@@ -119,6 +119,10 @@ const config = computed(() => {
 
 const step = ref(0)
 
+function selectLegend(legend) {
+    console.log({legend})
+}
+
 </script>
 
 <template>
@@ -131,7 +135,7 @@ const step = ref(0)
         <template #title>VueUiRadar</template>
 
         <template #local>
-            <LocalVueUiRadar :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiRadar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -152,7 +156,7 @@ const step = ref(0)
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -173,7 +177,7 @@ const step = ref(0)
         </template>
         
         <template #build>
-            <VueUiRadar :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiRadar :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -194,7 +198,7 @@ const step = ref(0)
         </template>
         
         <template #VDUI-build>
-            <VueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

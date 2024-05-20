@@ -333,6 +333,18 @@ const config = computed(() => convertArrayToObject(model.value));
 
 const step = ref(0)
 
+function selectRoot(root) {
+    console.log({root})
+}
+
+function selectBranch(branch) {
+    console.log({ branch })
+}
+
+function selectNut(nut) {
+    console.log( { nut })
+}
+
 </script>
 
 <template>
@@ -340,7 +352,7 @@ const step = ref(0)
     <template #title>VueUiChestnut</template>
 
     <template #local>
-        <LocalVueUiChestnut :dataset="dataset" :config="config" :key="`local_${step}`">
+        <LocalVueUiChestnut :dataset="dataset" :config="config" :key="`local_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -355,7 +367,7 @@ const step = ref(0)
     </template>
     
     <template #VDUI-local>
-        <LocalVueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+        <LocalVueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -370,7 +382,7 @@ const step = ref(0)
     </template>
     
     <template #build>
-        <VueUiChestnut :dataset="dataset" :config="config" :key="`build_${step}`">
+        <VueUiChestnut :dataset="dataset" :config="config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -385,7 +397,7 @@ const step = ref(0)
     </template>
     
     <template #VDUI-build>
-        <VueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+        <VueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

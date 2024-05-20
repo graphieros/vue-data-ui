@@ -113,6 +113,9 @@ const config = computed(() => {
 
 const step = ref(0)
 
+function selectLegend(legend) {
+    console.log({legend})
+}
 </script>
 
 <template>
@@ -124,7 +127,7 @@ const step = ref(0)
         <template #title>VueUiWaffle</template>
 
         <template #local>
-            <LocalVueUiWaffle :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiWaffle :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend">
                 <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
@@ -167,7 +170,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend">
                 <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
@@ -210,7 +213,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiWaffle :dataset="dataset" :config="config" :key="`build_${step}`" >
+            <VueUiWaffle :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend">
                 <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
@@ -253,7 +256,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend">
                 <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon

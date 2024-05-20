@@ -121,6 +121,10 @@ const config = computed(() => {
     }
 });
 
+function selectLegend(legend) {
+    console.log({ legend })
+}
+
 const step = ref(0)
 
 </script>
@@ -135,7 +139,7 @@ const step = ref(0)
         <template #title>VueUiOnion</template>
 
         <template #local>
-            <LocalVueUiOnion :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiOnion :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -156,7 +160,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -177,7 +181,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiOnion :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiOnion :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -198,7 +202,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
