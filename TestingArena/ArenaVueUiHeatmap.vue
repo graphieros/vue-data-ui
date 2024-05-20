@@ -1,0 +1,252 @@
+<script setup>
+import { ref, computed } from "vue";
+import LocalVueUiHeatmap from '../src/components/vue-ui-heatmap.vue';
+import LocalVueDataUi from '../src/components/vue-data-ui.vue';
+import Box from "./Box.vue";
+import convertArrayToObject from "./convertModel";
+
+const dataset = computed(() => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    const arr = [];
+    const dsLen = 26;
+    const serieLen = days.length;
+    for (let i = 0; i < serieLen; i += 1) {
+        const values = [];
+        for (let j = 0; j < dsLen; j += 1) {
+        values.push((i + j * 2))
+        }
+        arr.push({
+            name: `${days[i]}`,
+            values
+        })
+    }
+    return arr
+});
+
+const model = ref([
+    { key: 'style.fontFamily', def: "inherit", type: 'text'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.layout.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
+    { key: 'style.layout.padding.top', def: 36, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.right', def: 12, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.bottom', def: 12, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.left', def: 48, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.cells.height', def: 36, type: 'number', min: 12, max: 64},
+    { key: 'style.layout.cells.value.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.cells.value.fontSize', def: 18, type: 'number', min: 8, max: 48},
+    { key: 'style.layout.cells.value.bold', def: false, type: 'checkbox'},
+    { key: 'style.layout.cells.value.roundingValue', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.layout.cells.value.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.layout.cells.colors.hot', def: '#dc3912', type: 'color'},
+    { key: 'style.layout.cells.colors.cold', def: '#3366cc', type: 'color'},
+    { key: 'style.layout.cells.colors.underlayer', def: '#FFFFFF', type: 'color'},
+    { key: 'style.layout.cells.spacing', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.layout.cells.selected.border', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.layout.cells.selected.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.layout.dataLabels.prefix', def: 'P', type: 'text'},
+    { key: 'style.layout.dataLabels.suffix', def: 'S', type: 'text'},
+    { key: 'style.layout.dataLabels.xAXis.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.dataLabels.xAxis.fontSize', def: 8, type: 'number', min: 8, max: 24},
+    { key: 'style.layout.dataLabels.xAxis.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.layout.dataLabels.xAxis.bold', def: false, type: 'checkbox'},
+    { key: 'style.layout.dataLabels.xAxis.offsetX', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.layout.dataLabels.xAxis.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.layout.dataLabels.yAxis.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.dataLabels.yAxis.fontSize', def: 8, type: 'number', min: 8, max: 24},
+    { key: 'style.layout.dataLabels.yAxis.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.layout.dataLabels.yAxis.bold', def: false, type: 'checkbox'},
+    { key: 'style.layout.dataLabels.yAxis.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.layout.dataLabels.yAxis.offsetX', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
+    { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.title.fontSize', def: 20, type: 'range', min: 8, max: 48},
+    { key: 'style.title.bold', def: true, type: 'checkbox'},
+    { key: 'style.title.subtitle.text', def:'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
+    { key: 'style.title.subtitle.color', def: '#CCCCCC', type: 'color'},
+    { key: 'style.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
+    { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'},
+    { key: 'style.legend.show', def: true, type: 'checkbox'},
+    { key: 'style.legend.bold', def: true, type: 'checkbox'},
+    { key: 'style.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.legend.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.legend.fontSize', def: 12, type: 'range', min: 8, max: 48},
+    { key: 'style.legend.roundingValue', def: 2, type: 'range', min: 0, max: 12},
+    { key: 'style.legend.position', def: 'right', type: 'select', options: ['right', 'bottom']},
+    { key: 'style.legend.scaleBorderRadius', def: 18, type: 'number', min: 0, max: 48},
+    { key: 'style.tooltip.show', def: true, type: 'checkbox'},
+    { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.tooltip.fontSize', def: 12, type: 'range', min: 8, max: 48},
+    { key: 'style.tooltip.roundingValue', def: 0, type: 'range', min: 0, max: 12},
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
+    { key: 'table.colNames.xAxis', def: 'X AXIS', type: 'text'},
+    { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'table.th.color', def: '#1A1A1A', type: 'color'},
+    { key: 'table.th.outline', def: 'none', type: 'text'},
+    { key: 'table.td.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'table.td.color', def: ' #1A1A1A', type: 'color'},
+    { key: 'table.td.outline', def: 'none', type: 'text'},
+    { key: 'table.td.roundingValue', def: 0, type: 'range', min: 0, max: 12},
+])
+
+const testCustomTooltip = ref(false);
+
+const config = computed(() => {
+    const c = convertArrayToObject(model.value);
+    if(testCustomTooltip.value) {
+        return {
+            ...c,
+            style: {
+                ...c.style,
+                tooltip: {
+                    ...c.style.tooltip,
+                    customFormat: ({ datapoint }) => {
+                        let html = '';
+                        console.log(datapoint);
+                        return "test"
+                    }
+                }
+            }
+
+        }
+    } else {
+        return {
+            ...c,
+            style: {
+                ...c.style,
+                layout: {
+                    ...c.style.layout,
+                    dataLabels: {
+                        ...c.style.layout.dataLabels,
+                        xAxis: {
+                            ...c.style.layout.dataLabels.xAxis,
+                            values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 24, 25]
+                        }
+                    }
+                },
+            }
+        }
+    }
+});
+
+const step = ref(0)
+
+</script>
+
+<template>
+    <div style="margin: 12px 0">
+        <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
+        <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
+    </div>
+    <Box>
+        <template #title>VueUiHeatmap</template>
+        
+        <template #local>
+            <LocalVueUiHeatmap :dataset="dataset" :config="config" :key="`local_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </LocalVueUiHeatmap>
+        </template>
+
+        <template #VDUI-local>
+            <LocalVueDataUi component="VueUiHeatmap" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </LocalVueDataUi>
+        </template>
+
+        <template #build>
+            <VueUiHeatmap :dataset="dataset" :config="config" :key="`build_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueUiHeatmap>
+        </template>
+
+        <template #VDUI-build>
+            <VueDataUi component="VueUiHeatmap" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueDataUi>
+        </template>
+
+        <template #knobs>
+            <div
+                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
+                <div v-for="knob in model">
+                    <label style="font-size: 10px">{{ knob.key }}</label>
+                    <div
+                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
+                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
+                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
+                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
+                            <option v-for="opt in knob.options">{{ opt }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template #config>
+            {{ config }}
+        </template>
+    </Box>
+</template>

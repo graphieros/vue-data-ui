@@ -13,6 +13,7 @@ import ArenaVueUiTiremarks from "../TestingArena/ArenaVueUiTiremarks.vue";
 import ArenaVueUiChestnut from "../TestingArena/ArenaVueUiChestnut.vue";
 import ArenaVueUiOnion from "../TestingArena/ArenaVueUiOnion.vue";
 import ArenaVueUiVerticalBar from "../TestingArena/ArenaVueUiVerticalBar.vue";
+import ArenaVueUiHeatmap from "../TestingArena/ArenaVueUiHeatmap.vue";
 
 const showOldArena = ref(false);
 
@@ -28,10 +29,11 @@ const components = ref([
   "VueUiTiremarks",
   "VueUiChestnut",
   "VueUiOnion",
-  "VueUiVerticalBar"
+  "VueUiVerticalBar",
+  "VueUiHeatmap"
 ]);
 
-const selectedComponent = ref(components.value[11]);
+const selectedComponent = ref(components.value[12]);
 
 </script>
 
@@ -80,4 +82,7 @@ const selectedComponent = ref(components.value[11]);
 
   <!-- 11 -->
   <ArenaVueUiVerticalBar v-if="selectedComponent === 'VueUiVerticalBar'" />
+
+  <!-- 12 -->
+  <ArenaVueUiHeatmap v-if="selectedComponent === 'VueUiHeatmap'" />
 </template>
