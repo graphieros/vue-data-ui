@@ -111,7 +111,6 @@ function reset() {
 <style scoped lang="scss">
 .vue-data-ui-slicer {
     position: relative;
-    width: calc(100% - 48px);
     display: flex;
     flex-direction: column;
     gap: 12px;
