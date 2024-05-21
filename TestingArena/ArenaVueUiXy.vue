@@ -51,7 +51,9 @@ const model = ref([
     { key: 'chart.height', def: 600, type: 'range', min: 300, max: 1000, label: 'height', category: 'general' },
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
     { key: 'chart.zoom.show', def: true, type: 'checkbox', label: 'zoom', category: 'general' },
-    { key: 'chart.zoom.color', def: '#1A1A1A', type: 'color' },
+    { key: 'chart.zoom.color', def: '#CCCCCC', type: 'color' },
+    { key: 'chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
+    { key: 'chart.zoom.useResetSlot', def: false, type: 'checkbox'},
 
     { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
     { key: 'chart.padding.right', def: 24, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
@@ -209,21 +211,21 @@ const config = computed(() => {
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
                             values: [
-                                "A",
-                                "B",
-                                "C",
-                                "D",
-                                "E",
-                                "F",
-                                "G",
-                                "H",
-                                "I",
-                                "J",
-                                "K",
-                                "L",
-                                "M",
-                                "N",
-                                "O"
+                                "JANUARY IS KIND OF LONG",
+                                "FEBRUARY IS KIND OF LONG TOO",
+                                "MARCH",
+                                "APRIL",
+                                "MAY",
+                                "JUNE",
+                                "JULY",
+                                "AUGUST",
+                                "SEPTEMBER",
+                                "OCTOBER",
+                                "NOVEMBER IS KIND OF LONG TOO",
+                                "DECEMBER",
+                                "JANUARY+",
+                                "FEBRUARY+",
+                                "MARCH+"
                             ]
                         }
                     }
@@ -272,6 +274,9 @@ function selectX(selectedX) {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
             </LocalVueUiXy>
         </template>
 
@@ -293,6 +298,9 @@ function selectX(selectedX) {
                 </template>
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
                 </template>
             </LocalVueDataUi>
         </template>
@@ -316,6 +324,9 @@ function selectX(selectedX) {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
             </VueUiXy>
         </template>
 
@@ -337,6 +348,9 @@ function selectX(selectedX) {
                 </template>
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
                 </template>
             </VueDataUi>
         </template>

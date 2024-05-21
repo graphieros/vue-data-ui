@@ -69,7 +69,9 @@ const model = ref([
     { key: 'style.layout.candle.gradient.underlayer', def: '#FFFFFF', type: 'color'},
     { key: 'style.layout.candle.widthRatio', def: 0.5, type: 'number', min: 0.1, max: 1, step: 0.1},
     { key: 'style.zoom.show', def: true, type: 'checkbox'},
-    { key: 'style.zoom.color', def: '#CCCCCC', type: 'color'}, // not applied
+    { key: 'style.zoom.color', def: '#CCCCCC', type: 'color'},
+    { key: 'style.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
+    { key: 'style.zoom.useResetSlot', def: false, type: 'checkbox'},
     { key: 'style.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
     { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.title.fontSize', def: 20, type: 'number', min: 8, max: 48},
@@ -164,6 +166,9 @@ const step = ref(0)
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
             </LocalVueUiCandlestick>
         </template>
 
@@ -184,6 +189,9 @@ const step = ref(0)
                 </template>
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
                 </template>
             </LocalVueDataUi>
         </template>
@@ -206,6 +214,9 @@ const step = ref(0)
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
             </VueUiCandlestick>
         </template>
 
@@ -226,6 +237,9 @@ const step = ref(0)
                 </template>
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
                 </template>
             </VueDataUi>
         </template>
