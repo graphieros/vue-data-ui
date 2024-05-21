@@ -22,6 +22,7 @@ import ArenaVueUiSparkStackbar from "../TestingArena/ArenaVueUiSparkStackbar.vue
 import ArenaVueUiSparkHistogram from "../TestingArena/ArenaVueUiSparkHistogram.vue";
 import ArenaVueUiSparkGauge from "../TestingArena/ArenaVueUiSparkGauge.vue";
 import ArenaVueUiSparkTrend from "../TestingArena/ArenaVueUiSparkTrend.vue";
+import ArenaVueUiQuickChart from "../TestingArena/ArenaVueUiQuickChart.vue";
 
 const showOldArena = ref(false);
 
@@ -46,10 +47,11 @@ const components = ref([
   "VueUiSparkStackbar",
   "VueUiSparkHistogram",
   "VueUiSparkgauge",
-  "VueUiSparkTrend"
+  "VueUiSparkTrend",
+  "VueUiQuickChart"
 ]);
 
-const selectedComponent = ref(components.value[20]);
+const selectedComponent = ref(components.value[21]);
 
 </script>
 
@@ -125,4 +127,7 @@ const selectedComponent = ref(components.value[20]);
 
   <!-- 20 -->
   <ArenaVueUiSparkTrend v-if="selectedComponent === 'VueUiSparkTrend'" />
+
+  <!-- 21 -->
+  <ArenaVueUiQuickChart v-if="selectedComponent === 'VueUiQuickChart'" />
 </template>
