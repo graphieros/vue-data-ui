@@ -1834,48 +1834,6 @@ export default {
             showTable: this.chartConfig.showTable === true
         }
 
-        // if (this.chartConfig.chart.zoom.show) {
-        //     const vm = this;
-        //     const sliderOne = document.getElementById(`start_${this.sliderId}`);
-        //     const sliderTwo = document.getElementById(`end_${this.sliderId}`);
-    
-        //     let minGap = 0;
-        //     const sliderTrack = this.$refs.sliderTrack;
-
-        //     if(sliderOne && sliderTwo) {
-        //         sliderOne.addEventListener("input", slideOne);
-        //         sliderTwo.addEventListener("input", slideTwo);
-                
-        //         function slideOne(){
-        //             if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-        //                 sliderOne.value = parseInt(sliderTwo.value) - minGap;
-        //             }
-        //             fillColor();
-        //             if (vm.chartConfig.useCanvas) {
-        //                 vm.drawCanvas();
-        //             }
-        //         }
-        //         function slideTwo(){
-        //             if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-        //                 sliderTwo.value = parseInt(sliderOne.value) + minGap;
-        //             }
-        //             fillColor();
-        //             if (vm.chartConfig.useCanvas) {
-        //                 vm.drawCanvas();
-        //             }
-        //         }
-
-        //         function fillColor(){
-        //             sliderTrack.style.background = vm.chartConfig.chart.zoom.color;
-        //         }
-                
-        //         fillColor();
-        //         slideOne();
-        //         slideTwo();
-        //     }
-    
-        // }
-
         if (this.chartConfig.useCanvas) {
             const canvas = this.$refs.vueUiXyCanvas;
             this.drawCanvas();

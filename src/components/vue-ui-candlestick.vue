@@ -64,35 +64,6 @@ onMounted(() => {
             type: 'dataset'
         })
     }
-
-    // const sliderOne = document.getElementById(`start_${uid.value}`);
-    // const sliderTwo = document.getElementById(`end_${uid.value}`);
-    // let minGap = 0;
-    // const sliderTrack = document.getElementById(`vue-ui-slider-track_${uid.value}`);
-
-    // if(sliderOne && sliderTwo && sliderTrack) {
-    //     sliderOne.addEventListener("input", slideOne);
-    //     sliderTwo.addEventListener("input", slideTwo);
-    //     function slideOne(){
-    //         if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-    //             sliderOne.value = parseInt(sliderTwo.value) - minGap;
-    //         }
-    //         fillColor();
-    //     }
-    //     function slideTwo(){
-    //         if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-    //             sliderTwo.value = parseInt(sliderOne.value) + minGap;
-    //         }
-    //         fillColor();
-    //     }
-    //     function fillColor(){
-    //         let percent1 = (sliderOne.value / props.dataset.length) * 100;
-    //         let percent2 = (sliderTwo.value / props.dataset.length) * 100;
-    //         sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
-    //     }
-    //     slideOne();
-    //     slideTwo();
-    // }
 });
 
 const candlestickConfig = computed(() => {
