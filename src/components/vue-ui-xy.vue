@@ -820,26 +820,29 @@
                 }
             }"
         />
-        
-        <!-- SLICER -->
-        <div v-if="chartConfig.chart.zoom.show && maxX > 6" class="vue-ui-xy-range-slider-wrapper" data-html2canvas-ignore style="position:relative">
-            <div class="vue-ui-xy-range-slider-label-left" data-cy-zoom-legend>
-                {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.start] }}
-            </div>
-            <div class="vue-ui-xy-range-slider">
-                <div ref="sliderTrack" class="vue-ui-xy-slider-track" :id="`vue-ui-slider-track_${sliderId}`"></div>
-                    <input data-cy="xy-range-start" :id="`start_${sliderId}`" type="range" :style="`border:none !important;accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="maxX" v-model="slicer.start">
-                    <input :id="`end_${sliderId}`" type="range" :style="`border:none !important;accent-color:${chartConfig.chart.zoom.color}`" :min="0" :max="maxX" v-model="slicer.end">
-            </div>
-            <div class="vue-ui-xy-range-slider-label-right" data-cy-zoom-legend>
-                {{ chartConfig.chart.grid.labels.xAxisLabels.values[slicer.end-1] }}
-            </div>
-            <div v-if="slicer.start > 0 || slicer.end < maxX" style="position:absolute;right:0">
-                <button data-cy-reset tabindex="0" role="button" class="vue-ui-xy-refresh-button" @click="refreshSlicer">
-                    <BaseIcon name="refresh" :stroke="chartConfig.chart.color"/>
-                </button>
-            </div>
-        </div>
+
+        <Slicer
+            v-if="chartConfig.chart.zoom.show && maxX > 6 && isDataset"
+            :key="`slicer_${slicerStep}`"
+            :background="chartConfig.chart.backgroundColor"
+            :fontSize="chartConfig.chart.zoom.fontSize"
+            :useResetSlot="chartConfig.chart.zoom.useResetSlot"
+            :labelLeft="chartConfig.chart.grid.labels.xAxisLabels.values[slicer.start]"
+            :labelRight="chartConfig.chart.grid.labels.xAxisLabels.values[slicer.end-1]"
+            :textColor="chartConfig.chart.color"
+            :inputColor="chartConfig.chart.zoom.color"
+            :max="maxX"
+            :min="0"
+            :valueStart="slicer.start"
+            :valueEnd="slicer.end"
+            v-model:start="slicer.start"
+            v-model:end="slicer.end"
+            @reset="refreshSlicer"
+        >
+            <template #reset-action="{ reset }">
+                <slot name="reset-action" v-bind="{ reset }"/>
+            </template>
+        </Slicer>
 
         <!-- LEGEND AS OUTSIDE DIV -->
         <div data-cy="xy-div-legend" v-if="chartConfig.chart.legend.show && (!mutableConfig.legendInside || isPrinting)" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
@@ -955,6 +958,7 @@ import Shape from "../atoms/Shape.vue";
 import BaseIcon from '../atoms/BaseIcon.vue';
 import TableSparkline from "./vue-ui-table-sparkline.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import Slicer from '../atoms/Slicer.vue';
 
 const sliderId = createUid();
 
@@ -982,7 +986,8 @@ export default {
     UserOptions,
     BaseIcon,
     TableSparkline,
-    Skeleton
+    Skeleton,
+    Slicer
 },
     data(){
         this.dataset.forEach((ds, i) => {
@@ -1002,6 +1007,7 @@ export default {
         }
 
         return {
+            slicerStep: 0,
             selectedScale: null,
             CTX: null,
             CANVAS: null,
@@ -1828,47 +1834,47 @@ export default {
             showTable: this.chartConfig.showTable === true
         }
 
-        if (this.chartConfig.chart.zoom.show) {
-            const vm = this;
-            const sliderOne = document.getElementById(`start_${this.sliderId}`);
-            const sliderTwo = document.getElementById(`end_${this.sliderId}`);
+        // if (this.chartConfig.chart.zoom.show) {
+        //     const vm = this;
+        //     const sliderOne = document.getElementById(`start_${this.sliderId}`);
+        //     const sliderTwo = document.getElementById(`end_${this.sliderId}`);
     
-            let minGap = 0;
-            const sliderTrack = this.$refs.sliderTrack;
+        //     let minGap = 0;
+        //     const sliderTrack = this.$refs.sliderTrack;
 
-            if(sliderOne && sliderTwo) {
-                sliderOne.addEventListener("input", slideOne);
-                sliderTwo.addEventListener("input", slideTwo);
+        //     if(sliderOne && sliderTwo) {
+        //         sliderOne.addEventListener("input", slideOne);
+        //         sliderTwo.addEventListener("input", slideTwo);
                 
-                function slideOne(){
-                    if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-                        sliderOne.value = parseInt(sliderTwo.value) - minGap;
-                    }
-                    fillColor();
-                    if (vm.chartConfig.useCanvas) {
-                        vm.drawCanvas();
-                    }
-                }
-                function slideTwo(){
-                    if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-                        sliderTwo.value = parseInt(sliderOne.value) + minGap;
-                    }
-                    fillColor();
-                    if (vm.chartConfig.useCanvas) {
-                        vm.drawCanvas();
-                    }
-                }
+        //         function slideOne(){
+        //             if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+        //                 sliderOne.value = parseInt(sliderTwo.value) - minGap;
+        //             }
+        //             fillColor();
+        //             if (vm.chartConfig.useCanvas) {
+        //                 vm.drawCanvas();
+        //             }
+        //         }
+        //         function slideTwo(){
+        //             if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+        //                 sliderTwo.value = parseInt(sliderOne.value) + minGap;
+        //             }
+        //             fillColor();
+        //             if (vm.chartConfig.useCanvas) {
+        //                 vm.drawCanvas();
+        //             }
+        //         }
 
-                function fillColor(){
-                    sliderTrack.style.background = vm.chartConfig.chart.zoom.color;
-                }
+        //         function fillColor(){
+        //             sliderTrack.style.background = vm.chartConfig.chart.zoom.color;
+        //         }
                 
-                fillColor();
-                slideOne();
-                slideTwo();
-            }
+        //         fillColor();
+        //         slideOne();
+        //         slideTwo();
+        //     }
     
-        }
+        // }
 
         if (this.chartConfig.useCanvas) {
             const canvas = this.$refs.vueUiXyCanvas;
@@ -1981,6 +1987,7 @@ export default {
                 start: 0,
                 end: Math.max(...this.dataset.map(datapoint => datapoint.series.length))
             }
+            this.slicerStep += 1;
         },
         createCanvasArea(plots) {
             const start = { x: plots[0].x, y: this.zero };
@@ -2744,119 +2751,8 @@ path, line, rect {
     transition: all 0.11s ease-in-out;
 }
 
-.vue-ui-xy-range-slider-wrapper {
-    width: 100%;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: row;
-    gap: 6px;
-    align-items:center;
-}
-.vue-ui-xy-range-slider {
-    position: relative;
-    width: 100%;
-    margin: 0 auto;
-    height: 12px;
-}
-.vue-ui-xy-range-slider-label-right,
-.vue-ui-xy-range-slider-label-left {
-    width: 100%;
-}
-
-.vue-ui-xy-range-slider-label-right {
-    text-align: left;
-}
-
-.vue-ui-xy-range-slider-label-left {
-    text-align: right;
-}
-
-input[type="range"]{
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 100%;
-    outline: none;
-    position: absolute;
-    margin: auto;
-    top: 0;
-    bottom: 0;
-    background-color: transparent;
-    pointer-events: none;
-}
-
-.vue-ui-xy-slider-track {
-    width: 100%;
-    height: 5px;
-    position: absolute;
-    margin: auto;
-    top: 0;
-    bottom: 0;
-    border-radius: 5px;
-}
-input[type="range"]::-webkit-slider-runnable-track{
-    -webkit-appearance: none;
-    height: 5px;
-}
-input[type="range"]::-moz-range-track{
-    -moz-appearance: none;
-    height: 5px;
-}
-input[type="range"]::-ms-track{
-    appearance: none;
-    height: 5px;
-}
-input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance: none;
-    height: 1.3em;
-    width: 1.3em;
-    background-color: v-bind(slicerColor);
-    cursor: pointer;
-    margin-top: -6px;
-    pointer-events: auto;
-    border-radius: 50%;
-}
-input[type="range"]::-moz-range-thumb{
-    -webkit-appearance: none;
-    appearance: none;
-    height: 1.3em;
-    width: 1.3em;
-    cursor: pointer;
-    border-radius: 50%;
-    background-color: v-bind(slicerColor);
-    pointer-events: auto;
-}
-input[type="range"]::-ms-thumb{
-    appearance: none;
-    height: 1.3em;
-    width: 1.3em;
-    cursor: pointer;
-    border-radius: 50%;
-    background-color: v-bind(slicerColor);
-    pointer-events: auto;
-}
-input[type="range"]:active::-webkit-slider-thumb{
-    background-color: v-bind(slicerColor);
-    border: 2px solid v-bind(backgroundColor);
-}
 canvas {
     width: 100%;
     object-fit: contain;
-}
-
-.vue-ui-xy-refresh-button {
-    outline: none;
-    border: none;
-    background: transparent;
-    height: 36px;
-    width: 36px;
-    display: flex;
-    align-items:center;
-    justify-content:center;
-    border-radius: 50%;
-    cursor: pointer;
-    &:focus {
-        outline: 1px solid v-bind(slicerColor);
-    }
 }
 </style>

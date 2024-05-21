@@ -23,6 +23,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import Slicer from "../atoms/Slicer.vue";
 
 const props = defineProps({
     config: {
@@ -54,6 +55,7 @@ const tooltipContent = ref("");
 const candlestickChart = ref(null);
 const hoveredIndex = ref(undefined);
 const step = ref(0);
+const slicerStep = ref(0);
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -63,34 +65,34 @@ onMounted(() => {
         })
     }
 
-    const sliderOne = document.getElementById(`start_${uid.value}`);
-    const sliderTwo = document.getElementById(`end_${uid.value}`);
-    let minGap = 0;
-    const sliderTrack = document.getElementById(`vue-ui-slider-track_${uid.value}`);
+    // const sliderOne = document.getElementById(`start_${uid.value}`);
+    // const sliderTwo = document.getElementById(`end_${uid.value}`);
+    // let minGap = 0;
+    // const sliderTrack = document.getElementById(`vue-ui-slider-track_${uid.value}`);
 
-    if(sliderOne && sliderTwo && sliderTrack) {
-        sliderOne.addEventListener("input", slideOne);
-        sliderTwo.addEventListener("input", slideTwo);
-        function slideOne(){
-            if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-                sliderOne.value = parseInt(sliderTwo.value) - minGap;
-            }
-            fillColor();
-        }
-        function slideTwo(){
-            if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
-                sliderTwo.value = parseInt(sliderOne.value) + minGap;
-            }
-            fillColor();
-        }
-        function fillColor(){
-            let percent1 = (sliderOne.value / props.dataset.length) * 100;
-            let percent2 = (sliderTwo.value / props.dataset.length) * 100;
-            sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
-        }
-        slideOne();
-        slideTwo();
-    }
+    // if(sliderOne && sliderTwo && sliderTrack) {
+    //     sliderOne.addEventListener("input", slideOne);
+    //     sliderTwo.addEventListener("input", slideTwo);
+    //     function slideOne(){
+    //         if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+    //             sliderOne.value = parseInt(sliderTwo.value) - minGap;
+    //         }
+    //         fillColor();
+    //     }
+    //     function slideTwo(){
+    //         if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
+    //             sliderTwo.value = parseInt(sliderOne.value) + minGap;
+    //         }
+    //         fillColor();
+    //     }
+    //     function fillColor(){
+    //         let percent1 = (sliderOne.value / props.dataset.length) * 100;
+    //         let percent2 = (sliderTwo.value / props.dataset.length) * 100;
+    //         sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #858585 ${percent1}% , #858585 ${percent2}%, #dadae5 ${percent2}%)`;
+    //     }
+    //     slideOne();
+    //     slideTwo();
+    // }
 });
 
 const candlestickConfig = computed(() => {
@@ -312,6 +314,14 @@ function useTooltip(index, datapoint) {
         }
     }
     isTooltip.value = true;
+}
+
+function refreshSlicer() {
+    slicer.value = {
+        start: 0,
+        end: len.value
+    };
+    slicerStep.value += 1;
 }
 
 const __to__ = ref(null);
@@ -699,22 +709,27 @@ defineExpose({
             }"
         />
 
-        <!-- SLICER -->
-        <div v-if="candlestickConfig.style.zoom.show && isDataset" class="vue-ui-candlestick-range-slider-wrapper" data-html2canvas-ignore>
-            <div class="vue-ui-candlestick-range-slider-label-left">
-                {{ dataset[slicer.start] ? dataset[slicer.start][0] : dataset[0][0] }}
-            </div>
-            <div class="vue-ui-candlestick-range-slider">
-                <div class="vue-ui-candlestick-slider-track" :id="`vue-ui-slider-track_${uid}`"></div>
-                    <input :id="`start_${uid}`" type="range" :style="`border:none !important;accent-color:${candlestickConfig.style.zoom.color}`" :min="0" :max="len" v-model="slicer.start">
-                    <input :id="`end_${uid}`" type="range" :style="`border:none !important;accent-color:${candlestickConfig.style.zoom.color}`" :min="0" :max="len" v-model="slicer.end">
-
-            </div>
-            <div class="vue-ui-candlestick-range-slider-label-right">
-                {{ dataset[slicer.end-1] ? dataset[slicer.end-1][0] : dataset.at(-1)[0] }}
-            </div>
-        </div>
-
+        <Slicer v-if="candlestickConfig.style.zoom.show && isDataset"
+            :key="`slicer_${slicerStep}`"
+            :background="candlestickConfig.style.backgroundColor"
+            :fontSize="candlestickConfig.style.zoom.fontSize"
+            :useResetSlot="candlestickConfig.style.zoom.useResetSlot"
+            :labelLeft="dataset[slicer.start] ? dataset[slicer.start][0] : dataset[0][0]"
+            :labelRight="dataset[slicer.end-1] ? dataset[slicer.end-1][0] : dataset.at(-1)[0]"
+            :textColor="candlestickConfig.style.color"
+            :inputColor="candlestickConfig.style.zoom.color"
+            :max="len"
+            :min="0"
+            :valueStart="slicer.start"
+            :valueEnd="slicer.end"
+            v-model:start="slicer.start"
+            v-model:end="slicer.end"
+            @reset="refreshSlicer"
+        >
+            <template #reset-action="{ reset }">
+                <slot name="reset-action" v-bind="{ reset }"/>
+            </template>
+        </Slicer>
         <slot name="legend" v-bind:legend="drawableDataset"></slot>
 
         <!-- TOOLTIP -->
@@ -802,99 +817,5 @@ path, line, rect {
     position: fixed;
     padding:12px;
     z-index:1;
-}
-.vue-ui-candlestick-range-slider-wrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 6px;
-    align-items:center;
-}
-.vue-ui-candlestick-range-slider {
-    position: relative;
-    width: 100%;
-    height: 12px;
-}
-.vue-ui-candlestick-range-slider-label-right,
-.vue-ui-candlestick-range-slider-label-left {
-    width: 130px;
-}
-
-.vue-ui-candlestick-range-slider-label-right {
-    text-align: left;
-}
-
-.vue-ui-candlestick-range-slider-label-left {
-    text-align: right;
-}
-
-input[type="range"]{
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 100%;
-    outline: none;
-    position: absolute;
-    margin: auto;
-    top: 0;
-    bottom: 0;
-    left:0;
-    background-color: transparent;
-    pointer-events: none;
-}
-
-.vue-ui-candlestick-slider-track {
-    width: 100%;
-    height: 5px;
-    position: absolute;
-    margin: auto;
-    top: 0;
-    bottom: 0;
-    border-radius: 5px;
-}
-input[type="range"]::-webkit-slider-runnable-track{
-    -webkit-appearance: none;
-    height: 5px;
-}
-input[type="range"]::-moz-range-track{
-    -moz-appearance: none;
-    height: 5px;
-}
-input[type="range"]::-ms-track{
-    appearance: none;
-    height: 5px;
-}
-input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance: none;
-    height: 1.3em;
-    width: 1.3em;
-    background-color: #858585;
-    cursor: pointer;
-    margin-top: -6px;
-    pointer-events: auto;
-    border-radius: 50%;
-}
-input[type="range"]::-moz-range-thumb{
-    -webkit-appearance: none;
-    appearance: none;
-    height: 1.3em;
-    width: 1.3em;
-    cursor: pointer;
-    border-radius: 50%;
-    background-color: #858585;
-    pointer-events: auto;
-}
-input[type="range"]::-ms-thumb{
-    appearance: none;
-    height: 1.3em;
-    width: 1.3em;
-    cursor: pointer;
-    border-radius: 50%;
-    background-color: #858585;
-    pointer-events: auto;
-}
-input[type="range"]:active::-webkit-slider-thumb{
-    background-color: #CCCCCC;
-    border: 3px solid #858585;
 }
 </style>

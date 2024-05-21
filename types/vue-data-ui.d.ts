@@ -1866,6 +1866,8 @@ declare module 'vue-data-ui' {
             zoom?: {
                 show?: boolean;
                 color?: string;
+                fontSize?: number;
+                useResetSlot?: boolean;
             };
             title?: {
                 text?: string;
@@ -2302,6 +2304,8 @@ declare module 'vue-data-ui' {
             zoom?: {
                 show?: boolean;
                 color?: string;
+                fontSize?: number;
+                useResetSlot?: boolean;
             };
             padding?: {
                 top?: number;

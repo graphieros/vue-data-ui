@@ -174,7 +174,9 @@
             "width": 1000,
             "zoom": {
                 "show": true,
-                "color": "#2D353C"
+                "color": "#CCCCCC",
+                "fontSize": 14,
+                "useResetSlot": false
             },
             "padding": {
                 "top": 36,
@@ -2157,7 +2159,9 @@
             },
             "zoom": {
                 "show": true,
-                "color":"#CCCCCC"
+                "color": "#CCCCCC",
+                "fontSize": 14,
+                "useResetSlot": false
             },
             "title": {
                 "text": "",
