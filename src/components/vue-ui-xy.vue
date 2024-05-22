@@ -283,30 +283,14 @@
                     </g>
                 </g>
 
-                <!-- LINES -->
-                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">    
-                    <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea && serie.plots.length > 1">
-                        <path 
-                            v-if="serie.smooth" 
-                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"
-                        />
-                        <path v-else :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
-                    </g>
+                <!-- LINE COATINGS -->
+                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                     <path 
                         :data-cy="`xy-line-area-path-${i}`" 
                         v-if="serie.smooth && serie.plots.length > 1" 
                         :d="`M${serie.curve}`" 
                         :stroke="chartConfig.chart.backgroundColor" 
                         :stroke-width="chartConfig.line.strokeWidth + 1" 
-                        :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" 
-                        fill="none" 
-                    />
-                    <path 
-                        :data-cy="`xy-line-area-path-${i}`" 
-                        v-if="serie.smooth && serie.plots.length > 1" 
-                        :d="`M${serie.curve}`" 
-                        :stroke="serie.color" 
-                        :stroke-width="chartConfig.line.strokeWidth" 
                         :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" 
                         fill="none" 
                     />
@@ -325,6 +309,31 @@
                                 stroke-linejoin="round"
                                 stroke-linecap="round"
                             />
+                        </g>
+                    </g>
+                </g>
+                
+                <!-- LINES -->
+                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">    
+                    <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea && serie.plots.length > 1">
+                        <path 
+                            v-if="serie.smooth" 
+                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"
+                        />
+                        <path v-else :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
+                    </g>
+
+                    <path 
+                        :data-cy="`xy-line-area-path-${i}`" 
+                        v-if="serie.smooth && serie.plots.length > 1" 
+                        :d="`M${serie.curve}`" 
+                        :stroke="serie.color" 
+                        :stroke-width="chartConfig.line.strokeWidth" 
+                        :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" 
+                        fill="none" 
+                    />
+                    <g v-else-if="serie.plots.length > 1">
+                        <g v-for="(plot, j) in serie.plots" :key="`line_${i}_${j}`">
                             <line
                                 :data-cy="`xy-line-segment-${i}-${j}`"
                                 v-if="plot && j < serie.plots.length - 1 && serie.plots[j+1] && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
