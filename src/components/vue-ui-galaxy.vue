@@ -481,6 +481,7 @@ defineExpose({
                         show: true
                     })"
                     @mouseleave="isTooltip = false; selectedSerie = null"
+                    @click="emit('selectDatapoint', datapoint)"
                 />
             </g>
             <slot name="svg" :svg="svg"/>
