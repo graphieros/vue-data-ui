@@ -948,7 +948,12 @@ defineExpose({
                             :font-size="quickConfig.xyLabelsYFontSize"
                             :fill="quickConfig.color"
                         >
-                            {{ label.value }}
+                            {{ dataLabel({
+                                p: quickConfig.valuePrefix,
+                                v: label.value,
+                                s: quickConfig.valueSuffix,
+                                r: quickConfig.dataLabelRoundingValue
+                            }) }}
                         </text>
                     </template>
                 </g>
@@ -1138,7 +1143,12 @@ defineExpose({
                             :font-size="quickConfig.xyLabelsYFontSize"
                             :fill="quickConfig.color"
                         >
-                            {{ label.value }}
+                            {{ dataLabel({
+                                p: quickConfig.valuePrefix,
+                                v: label.value,
+                                s: quickConfig.valueSuffix,
+                                r: quickConfig.dataLabelRoundingValue
+                            }) }}
                         </text>
                     </template>
                 </g>
