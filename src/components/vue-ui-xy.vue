@@ -735,7 +735,7 @@
                         <text
                             :data-cy="`xy-time-label-${i}`"
                             v-if="(label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1)) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i)"
-                            :text-anchor="chartConfig.chart.grid.labels.xAxisLabels.rotation ? 'end' : 'middle'"
+                            :text-anchor="chartConfig.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : chartConfig.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                             :font-size="chartConfig.chart.grid.labels.xAxisLabels.fontSize"
                             :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
                             :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3 + chartConfig.chart.grid.labels.xAxisLabels.yOffset}), rotate(${chartConfig.chart.grid.labels.xAxisLabels.rotation})`"
