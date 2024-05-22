@@ -33,6 +33,7 @@ import ArenaVueUiMoodRadar from "../TestingArena/ArenaVueUiMoodRadar.vue";
 import ArenaVueUiMolecule from "../TestingArena/ArenaVueUiMolecule.vue";
 import ArenaVueUiNestedDonuts from "../TestingArena/ArenaVueUiNestedDonuts.vue";
 import ArenaVueUiGalaxy from "../TestingArena/ArenaVueUiGalaxy.vue";
+import ArenaVueUiStripPlot from "../TestingArena/ArenaVueUiStripPlot.vue";
 
 const showOldArena = ref(false);
 
@@ -68,10 +69,11 @@ const components = ref([
   "VueUiMoodRadar",
   "VueUiMolecule",
   "VueUiNestedDonuts",
-  "VueUiGalaxy"
+  "VueUiGalaxy",
+  "VueUiStripPlot"
 ]);
 
-const selectedComponent = ref(components.value[31]);
+const selectedComponent = ref(components.value[32]);
 
 </script>
 
@@ -180,4 +182,7 @@ const selectedComponent = ref(components.value[31]);
 
   <!-- 31 -->
   <ArenaVueUiGalaxy v-if="selectedComponent === 'VueUiGalaxy'" />
+
+  <!-- 32 -->
+  <ArenaVueUiStripPlot v-if="selectedComponent === 'VueUiStripPlot'" />
 </template>
