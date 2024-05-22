@@ -552,9 +552,8 @@ defineExpose({
                 <g v-for="(xLabel, i) in xLabels">
                     <text
                         :data-cy="`candlestick-time-label-${i}`"
-                        :x="drawingArea.left + (slot * i) + (slot / 2)"
-                        :y="drawingArea.bottom + candlestickConfig.style.layout.grid.xAxis.dataLabels.fontSize * 2 + candlestickConfig.style.layout.grid.xAxis.dataLabels.offsetY"
-                        text-anchor="middle"
+                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + candlestickConfig.style.layout.grid.xAxis.dataLabels.fontSize * 2 + candlestickConfig.style.layout.grid.xAxis.dataLabels.offsetY}), rotate(${candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation})`"
+                        :text-anchor="candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
                         :font-size="candlestickConfig.style.layout.grid.xAxis.dataLabels.fontSize"
                         :fill="candlestickConfig.style.layout.grid.xAxis.dataLabels.color"
                         :font-weight="candlestickConfig.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"

@@ -2115,7 +2115,8 @@
                             "fontSize": 4,
                             "color":"#2D353C",
                             "offsetY": 0,
-                            "bold": false
+                            "bold": false,
+                            "rotation": 0
                         }
                     },
                     "yAxis": {

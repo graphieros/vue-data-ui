@@ -1824,6 +1824,7 @@ declare module 'vue-data-ui' {
                             color?: string;
                             offsetY?: number;
                             bold?: boolean;
+                            rotation?: number;
                         };
                     };
                     yAxis?: {
