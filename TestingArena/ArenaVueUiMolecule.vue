@@ -240,7 +240,7 @@ const step = ref(0);
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
     <Box>
-        <template #title></template>
+        <template #title>VueUiMolecule</template>
 
         <template #local>
             <LocalVueUiMolecule :dataset="dataset" :config="config" :key="`local_${step}`">
