@@ -98,9 +98,9 @@ Type definitions are available in the `vue-data-ui.d.ts` file in the `dist/types
 
 From the dataset you pass into the props, this component will produce the most adapted chart (either a line, bar or donut chart)
 
-| Name              | dataset type             | config type             | emits / exposed methods                                             | slots                                          | custom tooltip |
-| ----------------- | ------------------------ | ----------------------- | ------------------------------------------------------------------- | ---------------------------------------------- | -------------- |
-| `VueUiQuickChart` | `VueUiQuickChartDataset` | `VueUiQuickChartConfig` | `@selectDatapoint`, `@selectLegend`, `generatePdf`, `generateImage` | `#legend`, `#tooltip-before`, `#tooltip-after` | ✅             |
+| Name              | dataset type             | config type             | emits / exposed methods                                             | slots                                                           | custom tooltip |
+| ----------------- | ------------------------ | ----------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------- | -------------- |
+| `VueUiQuickChart` | `VueUiQuickChartDataset` | `VueUiQuickChartConfig` | `@selectDatapoint`, `@selectLegend`, `generatePdf`, `generateImage` | `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action` | ✅             |
 
 ### Mini charts
 
