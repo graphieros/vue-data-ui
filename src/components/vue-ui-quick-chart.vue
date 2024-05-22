@@ -943,7 +943,7 @@ defineExpose({
                     <text
                         v-for="(_, i) in line.extremes.maxSeries"
                         :font-size="quickConfig.xyLabelsXFontSize"
-                        :text-anchor="quickConfig.xyPeriodLabelsRotation ? 'end' : 'middle'"
+                        :text-anchor="quickConfig.xyPeriodLabelsRotation > 0 ? 'start' : quickConfig.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
                         :fill="quickConfig.color"
                         :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6}), rotate(${quickConfig.xyPeriodLabelsRotation})`"
                     >
@@ -1133,7 +1133,7 @@ defineExpose({
                     <text
                         v-for="(_, i) in bar.extremes.maxSeries"
                         :font-size="quickConfig.xyLabelsXFontSize"
-                        :text-anchor="quickConfig.xyPeriodLabelsRotation ? 'end' : 'middle'"
+                        :text-anchor="quickConfig.xyPeriodLabelsRotation > 0 ? 'start' : quickConfig.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
                         :transform="`translate(${bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)}, ${bar.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6}) rotate(${quickConfig.xyPeriodLabelsRotation})`"
                         :fill="quickConfig.color"
                     >
