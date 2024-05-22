@@ -190,7 +190,7 @@ const drawableDataset = computed(() => {
         const radiusReference = (slit.value / 2) * 0.7;
         const radius = radiusReference > svg.value.width / 16 ? svg.value.width / 16 : radiusReference;
         const activeRadius = hoveredIndex.value === a.index ? svg.value.width / 16 : radius;
-        const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxSubtotal, 10).max);
+        const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxSubtotal, donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps).max);
         return {
             ...a,
             y,
@@ -239,7 +239,7 @@ const extremes = computed(() => {
 });
 
 const niceScale = computed(() => {
-    return calculateNiceScale(extremes.value.min, extremes.value.max, 10)
+    return calculateNiceScale(extremes.value.min, extremes.value.max, donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps)
 })
 
 function ratioToMax(value) {
