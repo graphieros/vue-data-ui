@@ -34,6 +34,7 @@ import ArenaVueUiMolecule from "../TestingArena/ArenaVueUiMolecule.vue";
 import ArenaVueUiNestedDonuts from "../TestingArena/ArenaVueUiNestedDonuts.vue";
 import ArenaVueUiGalaxy from "../TestingArena/ArenaVueUiGalaxy.vue";
 import ArenaVueUiStripPlot from "../TestingArena/ArenaVueUiStripPlot.vue";
+import ArenaVueUiDumbbell from "../TestingArena/ArenaVueUiDumbbell.vue";
 
 const showOldArena = ref(false);
 
@@ -70,10 +71,11 @@ const components = ref([
   "VueUiMolecule",
   "VueUiNestedDonuts",
   "VueUiGalaxy",
-  "VueUiStripPlot"
+  "VueUiStripPlot",
+  "VueUiDumbbell"
 ]);
 
-const selectedComponent = ref(components.value[32]);
+const selectedComponent = ref(components.value[33]);
 
 </script>
 
@@ -185,4 +187,7 @@ const selectedComponent = ref(components.value[32]);
 
   <!-- 32 -->
   <ArenaVueUiStripPlot v-if="selectedComponent === 'VueUiStripPlot'" />
+
+  <!-- 33 -->
+  <ArenaVueUiDumbbell v-if="selectedComponent === 'VueUiDumbbell'" />
 </template>
