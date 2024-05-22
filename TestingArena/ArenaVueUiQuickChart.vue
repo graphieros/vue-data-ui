@@ -104,7 +104,11 @@ const model = ref([
     { key: 'xyShowAxis', def: true, type: 'checkbox'},
     { key: 'xyShowGrid', def: true, type: 'checkbox'},
     { key: 'xyShowScale', def: true, type: 'checkbox'},
-    { key: 'yAxisLabel', def: 'Lorem ipsum Y axis labellum'}
+    { key: 'yAxisLabel', def: 'Lorem ipsum Y axis labellum'},
+    { key: 'zoomXy', def: true, type: 'checkbox'},
+    { key: 'zoomColor', def: '#CCCCCC', type: 'color'},
+    { key: 'zoomFontSize', def: 14, type: 'number', min: 8, max: 48},
+    { key: 'zoomUseResetSlot', def: false, type: 'checkbox'}
 
 ])
 
@@ -150,6 +154,9 @@ function selectDatapoint(datapoint) {
             <template #tooltip-after="{ seriesIndex }">
                 #AFTER {{ seriesIndex }}
             </template>
+            <template #reset-action="{ reset }">
+                <button @click="reset()">REFRESH</button>
+            </template>
         </LocalVueUiQuickChart>
     </template>
 
@@ -166,6 +173,9 @@ function selectDatapoint(datapoint) {
             </template>
             <template #tooltip-after="{ seriesIndex }">
                 #AFTER {{ seriesIndex }}
+            </template>
+            <template #reset-action="{ reset }">
+                <button @click="reset()">REFRESH</button>
             </template>
         </LocalVueDataUi>
     </template>
@@ -184,6 +194,9 @@ function selectDatapoint(datapoint) {
             <template #tooltip-after="{ seriesIndex }">
                 #AFTER {{ seriesIndex }}
             </template>
+            <template #reset-action="{ reset }">
+                <button @click="reset()">REFRESH</button>
+            </template>
         </VueUiQuickChart>
     </template>
 
@@ -200,6 +213,9 @@ function selectDatapoint(datapoint) {
             </template>
             <template #tooltip-after="{ seriesIndex }">
                 #AFTER {{ seriesIndex }}
+            </template>
+            <template #reset-action="{ reset }">
+                <button @click="reset()">REFRESH</button>
             </template>
         </VueDataUi>
     </template>
