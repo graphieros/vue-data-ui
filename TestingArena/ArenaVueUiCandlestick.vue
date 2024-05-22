@@ -46,6 +46,7 @@ const model = ref([
     { key: 'style.layout.grid.xAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.grid.xAxis.dataLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.layout.grid.xAxis.dataLabels.bold', def: false, type: 'checkbox'},
+    { key: 'style.layout.grid.xAxis.dataLabels.rotation', def: -20, type: 'number', min: -360, max: 360},
     { key: 'style.layout.grid.yAxis.dataLabels.show', def: true, type: 'checkbox'},
     { key: 'style.layout.grid.yAxis.dataLabels.fontSize', def: 4, type: 'number', min: 4, max: 12},
     { key: 'style.layout.grid.yAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
