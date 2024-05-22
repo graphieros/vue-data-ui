@@ -142,21 +142,61 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiDonutEvolution :dataset="dataset" :config="config" :key="`local_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
             </LocalVueUiDonutEvolution>
         </template>
 
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiDonutEvolution" :dataset="dataset" :config="config" :key="`vdui_local_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
             </LocalVueDataUi>
         </template>
 
         <template #build>
             <VueUiDonutEvolution :dataset="dataset" :config="config" :key="`build_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
             </VueUiDonutEvolution>
         </template>
 
         <template #VDUI-build>
             <VueDataUi component="VueUiDonutEvolution" :dataset="dataset" :config="config" :key="`vdui_build_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
             </VueDataUi>
         </template>
 
