@@ -195,6 +195,20 @@ const scale = computed(() => {
     return calculateNiceScale(extremes.value.min < 0 ? extremes.value.min : 0, extremes.value.max, stripConfig.value.style.chart.grid.scaleSteps);
 })
 
+const drawableDataset = computed(() => {
+    return (mutableDataset.value || []).map((ds, i) => {
+        return {
+            ...ds,
+            plots: ds.plots.map((p) => {
+                return {
+                    ...p,
+                    y: drawingArea.value.bottom -(((p.value + scale.value.min) / (scale.value.max + scale.value.min)) * drawingArea.value.height)
+                }
+            })
+        }
+    })
+});
+
 const yLines = computed(() => {
     return scale.value.ticks.map(t => {
         return {
@@ -568,7 +582,7 @@ defineExpose({
                     <stop offset="100%" :stop-color="ds.color"/>
                 </radialGradient>
             </defs>
-            <template v-for="(ds, S) in mutableDataset">
+            <template v-for="(ds, S) in drawableDataset">
                 <!--FIXME: Animation only works on circles, as y is direct and dynamic whereas other shapes build paths -->
                 <Shape 
                     v-for="(plot, i) in ds.plots"
