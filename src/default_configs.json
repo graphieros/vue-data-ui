@@ -3772,7 +3772,11 @@
         "xyShowAxis": true,
         "xyShowGrid": true,
         "xyShowScale": true,
-        "yAxisLabel": ""
+        "yAxisLabel": "",
+        "zoomXy": true,
+        "zoomColor": "#CCCCCC",
+        "zoomFontSize": 14, 
+        "zoomUseResetSlot": false
     },
     "vue_ui_cursor": {
         "bubbleEffect": true,

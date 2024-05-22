@@ -12,6 +12,7 @@ export const timeType = ['TIME', 'PERIOD', 'MONTH', 'YEAR', 'MONTHS', 'YEARS', '
 export function detectChart({dataset, barLineSwitch = 6}) {
     let type = null;
     let usableDataset = null;
+    let maxSeriesLength = 0;
 
     const isJustANumber = typeof dataset === 'number';
     const isJustAString = typeof dataset === 'string';
@@ -25,6 +26,7 @@ export function detectChart({dataset, barLineSwitch = 6}) {
         if (isSimpleArrayOfNumbers(dataset)) {
             dataset.length < barLineSwitch ? type = chartType.BAR : type = chartType.LINE;
             usableDataset = dataset;
+            maxSeriesLength = dataset.length;
         }
 
         if (isSimpleArrayOfObjects(dataset)) {
@@ -54,6 +56,7 @@ export function detectChart({dataset, barLineSwitch = 6}) {
                 } else {
                     type = chartType.BAR
                 }
+                maxSeriesLength = maxLengthOfArrayTypesInArrayOfObjects(dataset);
                 usableDataset = dataset.map(d => {
                     return {
                         ...d,
@@ -72,7 +75,8 @@ export function detectChart({dataset, barLineSwitch = 6}) {
     return {
         dataset,
         type,
-        usableDataset
+        usableDataset,
+        maxSeriesLength
     }
 }
 

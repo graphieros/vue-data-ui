@@ -4797,6 +4797,10 @@ declare module 'vue-data-ui' {
         xyShowGrid?: boolean;
         xyShowScale?: boolean;
         yAxisLabel?: string;
+        zoomXy?: boolean;
+        zoomColor?: string;
+        zoomFontSize?: number;
+        zoomUseResetSlot?: boolean;
     };
 
     export type VueUiQuickChartDatasetObjectItem = {

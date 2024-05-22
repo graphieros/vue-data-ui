@@ -23,6 +23,7 @@ import { useNestedProp } from "../useNestedProp";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import Slicer from "../atoms/Slicer.vue";
 
 const props = defineProps({
     config: {
@@ -50,6 +51,7 @@ const segregated = ref([]);
 const isPrinting = ref(false);
 const isImaging = ref(false);
 const step = ref(0);
+const slicerStep = ref(0);
 
 const quickConfig = computed(() => {
     return useNestedProp({
@@ -329,6 +331,19 @@ const donut = computed(() => {
     }
 });
 
+const slicer = ref({
+    start: 0,
+    end: formattedDataset.value.maxSeriesLength
+});
+
+function refreshSlicer() {
+    slicer.value = {
+        start: 0,
+        end: formattedDataset.value.maxSeriesLength
+    };
+    slicerStep.value += 1;
+}
+
 const line = computed(() => {
     if(chartType.value !== detector.chartType.LINE) return null;
 
@@ -351,7 +366,8 @@ const line = computed(() => {
     if(detector.isSimpleArrayOfNumbers(formattedDataset.value.dataset)) {
         ds = [
             {
-                values: formattedDataset.value.dataset,
+                values: formattedDataset.value.dataset.slice(slicer.value.start, slicer.value.end),
+                absoluteIndices: formattedDataset.value.dataset.map((d, i) => i).slice(slicer.value.start, slicer.value.end),
                 name: quickConfig.value.title,
                 color: palette[quickConfig.value.paletteStartIndex],
                 id: `line_0`
@@ -371,8 +387,10 @@ const line = computed(() => {
             return {
                 ...d,
                 color: d.COLOR ? convertColorToHex(d.COLOR) : palette[i + (quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
+                values: d.values.slice(slicer.value.start, slicer.value.end),
+                absoluteIndices: d.values.map((d,i) => i).slice(slicer.value.start, slicer.value.end)
             }
-        });
+        })
     }
     const extremes = {
         max: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)),
@@ -421,7 +439,8 @@ const line = computed(() => {
         const mappedSeries = ds.map(d => {
             return {
                 ...d,
-                value: d.values[index]
+                value: d.values[index],
+                absoluteIndex: d.absoluteIndices[index]
             }
         }).filter(d => !segregated.value.includes(d.id))
         dataTooltipSlot.value = { datapoint: mappedSeries, seriesIndex: index, config: quickConfig.value, dataset: ds };
@@ -442,8 +461,8 @@ const line = computed(() => {
         } else {
             let html = '';
 
-            if (quickConfig.value.xyPeriods[index]) {
-                html += `<div style="border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[index]}</div>`
+            if (quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
+                html += `<div style="border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
             mappedSeries.forEach(s => {
@@ -505,7 +524,8 @@ const bar = computed(() => {
     if(detector.isSimpleArrayOfNumbers(formattedDataset.value.dataset)) {
         ds = [
             {
-                values: formattedDataset.value.dataset,
+                values: formattedDataset.value.dataset.slice(slicer.value.start, slicer.value.end),
+                absoluteIndices: formattedDataset.value.dataset.map((_,i) => i).slice(slicer.value.start, slicer.value.end),
                 name: quickConfig.value.title,
                 color: palette[quickConfig.value.paletteStartIndex],
                 id: 'bar_0'
@@ -525,6 +545,8 @@ const bar = computed(() => {
             return {
                 ...d,
                 color: d.COLOR ? convertColorToHex(d.COLOR) : palette[i + (quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
+                values: d.values.slice(slicer.value.start, slicer.value.end),
+                absoluteIndices: d.values.map((_,i) => i).slice(slicer.value.start, slicer.value.end)
             }
         });
     }
@@ -595,7 +617,8 @@ const bar = computed(() => {
         const mappedSeries = ds.map(d => {
             return {
                 ...d,
-                value: d.values[index]
+                value: d.values[index],
+                absoluteIndex: d.absoluteIndices[index]
             }
         }).filter(d => !segregated.value.includes(d.id));
 
@@ -617,8 +640,8 @@ const bar = computed(() => {
         } else {
             let html = '';
 
-            if (quickConfig.value.xyPeriods[index]) {
-                html += `<div style="border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[index]}</div>`
+            if (quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
+                html += `<div style="border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
             mappedSeries.forEach(s => {
@@ -931,7 +954,7 @@ defineExpose({
                 </g>
                 <g class="periodLabels" v-if="quickConfig.xyShowScale && quickConfig.xyPeriods.length">
                     <line
-                        v-for="(_, i) in line.extremes.maxSeries"
+                        v-for="(_, i) in quickConfig.xyPeriods.slice(slicer.start, slicer.end)"
                         :x1="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
                         :x2="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
                         :y1="line.drawingArea.bottom"
@@ -941,13 +964,13 @@ defineExpose({
                         stroke-linecap="round"
                     />
                     <text
-                        v-for="(_, i) in line.extremes.maxSeries"
+                        v-for="(period, i) in quickConfig.xyPeriods.slice(slicer.start, slicer.end)"
                         :font-size="quickConfig.xyLabelsXFontSize"
                         :text-anchor="quickConfig.xyPeriodLabelsRotation > 0 ? 'start' : quickConfig.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
                         :fill="quickConfig.color"
                         :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6}), rotate(${quickConfig.xyPeriodLabelsRotation})`"
                     >
-                        {{ quickConfig.xyPeriods[i] }}
+                        {{ period }}
                     </text>
                 </g>
                 <g class="plots">
@@ -1121,7 +1144,7 @@ defineExpose({
                 </g>
                 <g class="periodLabels" v-if="quickConfig.xyShowScale && quickConfig.xyPeriods.length">
                     <line
-                        v-for="(_, i) in bar.extremes.maxSeries"
+                        v-for="(_, i) in quickConfig.xyPeriods.slice(slicer.start, slicer.end)"
                         :x1="bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)"
                         :x2="bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)"
                         :y1="bar.drawingArea.bottom"
@@ -1131,13 +1154,13 @@ defineExpose({
                         stroke-linecap="round"
                     />
                     <text
-                        v-for="(_, i) in bar.extremes.maxSeries"
+                        v-for="(period, i) in quickConfig.xyPeriods.slice(slicer.start, slicer.end)"
                         :font-size="quickConfig.xyLabelsXFontSize"
                         :text-anchor="quickConfig.xyPeriodLabelsRotation > 0 ? 'start' : quickConfig.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
                         :transform="`translate(${bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)}, ${bar.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6}) rotate(${quickConfig.xyPeriodLabelsRotation})`"
                         :fill="quickConfig.color"
                     >
-                        {{ quickConfig.xyPeriods[i] }}
+                        {{ period }}
                     </text>
                 </g>
                 <g class="plots">
@@ -1244,6 +1267,30 @@ defineExpose({
                 </g>
             </template>
         </svg>
+
+        <Slicer 
+            v-if="[detector.chartType.BAR, detector.chartType.LINE].includes(chartType) && quickConfig.zoomXy && formattedDataset.maxSeriesLength > 1"
+            :key="`slicer_${slicerStep}`"
+            :background="quickConfig.backgroundColor"
+            :fontSize="quickConfig.zoomFontSize"
+            :useResetSlot="quickConfig.zoomUseResetSlot"
+            :labelLeft="quickConfig.xyPeriods[slicer.start] ? quickConfig.xyPeriods[slicer.start] : ''"
+            :labelRight="quickConfig.xyPeriods[slicer.end-1] ? quickConfig.xyPeriods[slicer.end-1] : ''"
+            :textColor="quickConfig.color"
+            :inputColor="quickConfig.zoomColor"
+            :max="formattedDataset.maxSeriesLength"
+            :min="0"
+            :valueStart="slicer.start"
+            :valueEnd="slicer.end"
+            v-model:start="slicer.start"
+            v-model:end="slicer.end"
+            @reset="refreshSlicer"
+        >
+            <template #reset-action="{ reset }">
+                <slot name="reset-action" v-bind="{ reset }"/>
+            </template>
+        </Slicer>
+        
         <div 
             v-if="quickConfig.showLegend"
             class="vue-ui-quick-chart-legend" 
@@ -1325,7 +1372,7 @@ defineExpose({
                 </div>
             </template>
         </div>
-        
+
         <Tooltip
             :show="quickConfig.showTooltip && isTooltip"
             :backgroundColor="quickConfig.backgroundColor"
