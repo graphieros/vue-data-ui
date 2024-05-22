@@ -336,11 +336,12 @@ const legendConfig = computed(() => {
 function segregate(id) {
     if(segregated.value.includes(id)) {
         segregated.value = segregated.value.filter(s => s !== id);
+        emit('selectLegend', null)
     }else {
         if(segregated.value.length === convertedDataset.value.length - 1) return;
         segregated.value.push(id);
+        emit('selectLegend', convertedDataset.value.find(d => d.uid === id));
     }
-    emit('selectLegend', drawableDataset.value);
     if(fixedDatapoint.value) {
         fixDatapoint(drawableDataset.value.find((_, i) => i === fixedDatapointIndex.value))
     }
