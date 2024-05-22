@@ -3002,7 +3002,9 @@
                                 "values": [],
                                 "fontSize": 8,
                                 "showOnlyFirstAndLast": false,
-                                "color": "#2D353C"
+                                "color": "#2D353C",
+                                "rotation": 0,
+                                "offsetY": 0
                             }
                         }
                     },

@@ -557,11 +557,10 @@ defineExpose({
                 <g v-for="(_, i) in maxLength">
                     <text
                         v-if="(donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast"
-                        :x="padding.left + (slit * i) + (slit / 2)"
-                        :y="svg.absoluteHeight - padding.bottom + donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2"
-                        text-anchor="middle"
+                        :text-anchor="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
                         :font-size="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize"
                         :fill="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.color"
+                        :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
 
                     >
                         {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[i] ?? '' }}
