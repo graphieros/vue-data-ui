@@ -119,7 +119,7 @@ function selectDatapoint(datapoint) {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
     <Box>
-        <template #title></template>
+        <template #title>VueUiGalaxy</template>
 
         <template #local>
             <LocalVueUiGalaxy :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
