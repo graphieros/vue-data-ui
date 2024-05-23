@@ -544,7 +544,7 @@ defineExpose({
                 <line :x1="padding.left" :x2="svg.absoluteWidth - padding.right" :y1="svg.absoluteHeight - padding.bottom" :y2="svg.absoluteHeight - padding.bottom" :stroke="donutEvolutionConfig.style.chart.layout.grid.stroke" :stroke-width="donutEvolutionConfig.style.chart.layout.grid.strokeWidth" stroke-linecap="round" />
 
                 <g v-if="donutEvolutionConfig.style.chart.layout.grid.showVerticalLines">
-                    <line v-for="(l, i) in maxLength" :x1="padding.left + ((i +1 ) * slit)" :x2="padding.left + ((i +1) * slit)" :y1="padding.top" :y2="svg.absoluteHeight - padding.bottom" :stroke="donutEvolutionConfig.style.chart.layout.grid.stroke" :stroke-width="donutEvolutionConfig.style.chart.layout.grid.strokeWidth" stroke-linecap="round"/>
+                    <line v-for="(l, i) in (slicer.end - slicer.start)" :x1="padding.left + ((i +1 ) * slit)" :x2="padding.left + ((i +1) * slit)" :y1="padding.top" :y2="svg.absoluteHeight - padding.bottom" :stroke="donutEvolutionConfig.style.chart.layout.grid.stroke" :stroke-width="donutEvolutionConfig.style.chart.layout.grid.strokeWidth" stroke-linecap="round"/>
                 </g>
             </g>
 
