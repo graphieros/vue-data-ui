@@ -92,6 +92,10 @@ const model = ref([
     { key: 'table.th.outline', def: 'none', type: 'text'},
     { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 12},
     { key: 'table.td.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.zoom.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 48},
+    { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color'},
+    { key: 'style.chart.zoom.useResetSlot', def: false, type: 'checkbox'}
 ]);
 
 const config = computed(() => {
@@ -156,6 +160,9 @@ const step = ref(0)
                         {{ legend }}
                     </div>
                 </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
             </LocalVueUiDonutEvolution>
         </template>
 
@@ -170,6 +177,9 @@ const step = ref(0)
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
                 </template>
             </LocalVueDataUi>
         </template>
@@ -186,6 +196,9 @@ const step = ref(0)
                         {{ legend }}
                     </div>
                 </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
             </VueUiDonutEvolution>
         </template>
 
@@ -200,6 +213,9 @@ const step = ref(0)
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
                 </template>
             </VueDataUi>
         </template>
