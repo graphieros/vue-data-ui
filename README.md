@@ -280,6 +280,7 @@ Available for the following components:
 
 - VueUiQuickChart (for line & bar types only)
 - VueUiXy
+- VueUiDonutEvolution
 - VueUiCandlestick
 
 The config option zoom.useResetSlot must be set to true to use the slot.
@@ -339,7 +340,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiCandlestick`    | `Array<Array<string / number>>`    | `VueUiCandlestickConfig`    | `generatePdf`, `generateImage`, `generateCsv`                                                           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action` | ✅             |
 | `VueUiChestnut`       | `VueUiChestnutDatasetRoot[]`       | `VueUiChestnutConfig`       | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`  | `#svg`, `#legend`                                                       | ❌             |
 | `VueUiDonut`          | `VueUiDonutDatasetItem[]`          | `VueUiDonutConfig`          | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`    | ✅             |
-| `VueUiDonutEvolution` | `VueUiDonutEvolutionDatasetItem[]` | `VueUiDonutEvolutionConfig` | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`,                                                      | ❌             |
+| `VueUiDonutEvolution` | `VueUiDonutEvolutionDatasetItem[]` | `VueUiDonutEvolutionConfig` | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#reset-action`                                      | ❌             |
 | `VueUiDumbbell`       | `VueUiDumbbellDataset[]`           | `VueUiDumbbellConfig`       | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`,                                                      | ❌             |
 | `VueUiGalaxy`         | `VueUiGalaxyDatasetItem[]`         | `VueUiGalaxyConfig`         | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                   | ✅             |
 | `VueUiGauge`          | `VueUiGaugeDataset`                | `VueUiGaugeConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`,                                                      | ❌             |
