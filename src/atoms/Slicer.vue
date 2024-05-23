@@ -71,7 +71,7 @@ function reset() {
 <template>
     <div class="vue-data-ui-slicer" data-html2canvas-ignore>
         <div class="vue-data-ui-slicer-labels">
-            <div class="vue-data-ui-slicer-label-left" :style="`font-size:${props.fontSize}px`">
+            <div class="vue-data-ui-slicer-label-left" :style="`font-size:${props.fontSize}px;color:${props.textColor}`">
                 {{ labelLeft }}
             </div>
             <div v-if="valueStart > 0 || valueEnd < max">
@@ -80,7 +80,7 @@ function reset() {
                 </button>
                 <slot v-else name="reset-action" v-bind="{ reset }"/>
             </div>
-            <div class="vue-data-ui-slicer-label-right" :style="`font-size:${props.fontSize}px`">
+            <div class="vue-data-ui-slicer-label-right" :style="`font-size:${props.fontSize}px;color:${props.textColor}`">
                 {{ labelRight }}
             </div>
         </div>
