@@ -805,6 +805,12 @@ declare module 'vue-data-ui' {
             chart?: {
                 backgroundColor?: string;
                 color?: string;
+                zoom?: {
+                    show?: boolean;
+                    color?: string;
+                    fontSize?: number;
+                    useResetSlot?: boolean;
+                };
                 layout?: {
                     height?: number;
                     width?: number;

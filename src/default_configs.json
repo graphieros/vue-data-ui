@@ -2972,6 +2972,12 @@
             "chart": {
                 "backgroundColor":"#FFFFFF",
                 "color":"#2D353C",
+                "zoom": {
+                    "show": true,
+                    "color": "#CCCCCC",
+                    "fontSize": 14,
+                    "useResetSlot": false
+                },
                 "layout": {
                     "height": 316,
                     "width": 500,

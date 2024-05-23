@@ -28,6 +28,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import Slicer from "../atoms/Slicer.vue";
 
 const props = defineProps({
     config: {
@@ -47,6 +48,19 @@ const props = defineProps({
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 })
+
+const slicer = ref({
+    start: 0,
+    end: Math.max(...props.dataset.map(ds => ds.values.length))
+})
+
+function refreshSlicer() {
+    slicer.value = {
+        start: 0,
+        end: maxLength.value
+    };
+    slicerStep.value += 1;
+}
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -85,6 +99,7 @@ const isFixed = ref(false);
 const fixedDatapoint = ref(null);
 const donutEvolutionChart = ref(null);
 const step = ref(0);
+const slicerStep = ref(0);
 
 const emit = defineEmits(['selectLegend'])
 
@@ -155,7 +170,12 @@ const convertedDataset = computed(() => {
 });
 
 const mutableDataset = computed(() => {
-    return convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid))
+    return convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => {
+        return {
+            ...ds,
+            values: ds.values.filter((_v, k) => k >= slicer.value.start && k <= slicer.value.end)
+        }
+    })
 })
 
 const maxLength = computed(() => {
@@ -163,13 +183,14 @@ const maxLength = computed(() => {
 })
 
 const slit = computed(() => {
-    return svg.value.width / maxLength.value;
+    return svg.value.width / (slicer.value.end - slicer.value.start);
 })
 
 const drawableDataset = computed(() => {
     const arr = [];
-    for(let i = 0; i < maxLength.value; i += 1) {
-        const values = mutableDataset.value.map(ds => ds.values[i] ?? null);
+    for(let i = 0; i < (slicer.value.end - slicer.value.start); i += 1) {
+        const values = mutableDataset.value
+            .map(ds => ds.values[i] ?? null)
         const allValuesAreNull = values.filter(v => [undefined, null].includes(v)).length === values.length;
         const subtotal = values.reduce((a, b) => a + b, 0);
         const percentages = values.map(v => v / subtotal);
@@ -417,7 +438,7 @@ const table = computed(() => {
     }
 
     const colNames = [
-         donutEvolutionConfig.value.table.columnNames.period
+        donutEvolutionConfig.value.table.columnNames.period
     ].concat(convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => ds.name)).concat(donutEvolutionConfig.value.table.columnNames.total)
 
     return { head, body, config, colNames };
@@ -555,7 +576,7 @@ defineExpose({
 
             <!-- X LABELS -->
             <g v-if="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': isFixed}">
-                <g v-for="(_, i) in maxLength">
+                <g v-for="(_, i) in (slicer.end - slicer.start)">
                     <text
                         v-if="(donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast"
                         :text-anchor="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
@@ -564,7 +585,7 @@ defineExpose({
                         :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
 
                     >
-                        {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[i] ?? '' }}
+                        {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(i) + Number(slicer.start)] ?? '' }}
                     </text>
                 </g>
             </g>
@@ -654,15 +675,6 @@ defineExpose({
                             :stroke="donutEvolutionConfig.style.chart.backgroundColor"
                         />
                     </g>
-                </g>
-                <g v-if="datapoint.subtotal !== null">
-                    <circle
-                        v-if="datapoint.subtotal"
-                        :cx="datapoint.x"
-                        :cy="datapoint.y"
-                        :r="hoveredIndex === datapoint.index ? svg.width / 30 : slit / 10"
-                        :fill="donutEvolutionConfig.style.chart.backgroundColor"
-                    />
                 </g>
             </g>
 
@@ -819,7 +831,7 @@ defineExpose({
                     :font-size="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 1.6"
                     :fill="donutEvolutionConfig.style.chart.layout.dataLabels.color"
                 >
-                    {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[fixedDatapoint.index] }}
+                    {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(fixedDatapoint.index) + Number(slicer.start)] }}
                 </text>
             </g>
             <slot name="svg" :svg="svg"/>
@@ -842,6 +854,29 @@ defineExpose({
                 }
             }"
         />
+
+        <Slicer
+            v-if="maxLength > 1 && donutEvolutionConfig.style.chart.zoom.show"
+            :key="`slicer_${slicerStep}`"
+            :background="donutEvolutionConfig.style.chart.backgroundColor"
+            :fontSize="donutEvolutionConfig.style.chart.zoom.fontSize"
+            :useResetSlot="donutEvolutionConfig.style.chart.zoom.useResetSlot"
+            :labelLeft="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.start)] || ''"
+            :labelRight="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.end)-1] || ''"
+            :textColor="donutEvolutionConfig.style.chart.color"
+            :inputColor="donutEvolutionConfig.style.chart.zoom.color"
+            :max="maxLength"
+            :min="0"
+            :valueStart="slicer.start"
+            :valueEnd="slicer.end"
+            v-model:start="slicer.start"
+            v-model:end="slicer.end"
+            @reset="refreshSlicer"
+        >
+            <template #reset-action="{ reset }">
+                <slot name="reset-action" v-bind="{ reset }"/>
+            </template>
+        </Slicer>
 
         <Legend
             v-if="donutEvolutionConfig.style.chart.legend.show"
