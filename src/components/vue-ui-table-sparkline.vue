@@ -38,6 +38,7 @@ const step = ref(0);
 const defaultConfig = ref(mainConfig.vue_ui_table_sparkline);
 const isPrinting = ref(false);
 const isImaging = ref(false);
+const sparkStep = ref(0)
 
 const tableConfig = computed(() => {
     return useNestedProp({
@@ -132,6 +133,10 @@ const datasetWithOrders = computed(() => {
 
 const mutableDataset = ref(datasetWithOrders.value)
 
+const maxSeries = computed(() =>{
+    return Math.max(...mutableDataset.value.map(ds => (ds.values || []).length))
+})
+
 const sortIndex = ref(undefined)
 const isSorting = ref(false);
 const currentSortingIndex = ref(undefined);
@@ -163,7 +168,8 @@ function orderDatasetByIndex(index) {
 
     const sortedDataset = sortedIndices.map(i => datasetWithOrders.value[i]);
 
-    mutableDataset.value = sortedDataset
+    mutableDataset.value = sortedDataset;
+    sparkStep.value += 1
 }
 
 const maxSeriesLength = computed(() => {
@@ -373,7 +379,7 @@ defineExpose({
                                 <span>{{ tr.name ?? "-" }}</span>
                             </div>
                         </td>
-                        <td role="cell" v-for="(td, j) in tr.values" :style="{
+                        <td role="cell" v-for="(_, j) in maxSeries" :style="{
                             outline: tableConfig.tbody.outline,
                             fontSize: `${tableConfig.tbody.fontSize}px`,
                             fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
@@ -393,7 +399,7 @@ defineExpose({
                                     ? '3px'
                                     : '',
                         }" :data-cell="colNames[j]" class="vue-ui-data-table__tbody__td" @pointerenter="selectedSerieIndex = i; selectedDataIndex = j">
-                            {{ Number(td.toFixed(tableConfig.roundingValues)).toLocaleString() }}
+                            {{ [null, undefined].includes(tr.values[j]) ? '-' : Number(tr.values[j].toFixed(tableConfig.roundingValues)).toLocaleString() }}
                         </td>
                         <td role="cell" v-if="tableConfig.showTotal" :style="{
                             outline: tableConfig.tbody.outline,
@@ -425,7 +431,7 @@ defineExpose({
                             fontWeight: tableConfig.tbody.bold ? 'bold' : 'normal',
                             textAlign: tableConfig.tbody.textAlign,
                         }" class="vue-ui-data-table__tbody__td sticky-col">
-                            <SparkLine @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
+                            <SparkLine :key="`sparkline_${i}_${sparkStep}`" @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
                                 " :dataset="tr.sparklineDataset" :showInfo="false" :selectedIndex="selectedDataIndex" :config="{
                                 type: tableConfig.sparkline.type,
                                 style: {
