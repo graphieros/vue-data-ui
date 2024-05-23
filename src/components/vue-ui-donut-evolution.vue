@@ -676,6 +676,15 @@ defineExpose({
                         />
                     </g>
                 </g>
+                <g v-if="datapoint.subtotal !== null">
+                    <circle
+                        v-if="datapoint.subtotal"
+                        :cx="datapoint.x"
+                        :cy="datapoint.y"
+                        :r="hoveredIndex === datapoint.index ? svg.width / 30 : slit / 10"
+                        :fill="donutEvolutionConfig.style.chart.backgroundColor"
+                    />
+                </g>
             </g>
 
             <!-- DATALABELS -->
