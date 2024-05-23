@@ -42,46 +42,46 @@ import ArenaVueUiTableHeatmap from "../TestingArena/ArenaVueUiTableHeatmap.vue";
 const showOldArena = ref(false);
 
 const components = ref([
-  "VueUiXy",
-  "VueUiDonut",
-  "VueUiTreemap",
-  "VueUiWaffle",
-  "VueUiRadar",
-  "VueUiQuadrant",
-  "VueUiGauge",
-  "VueUiWheel",
-  "VueUiTiremarks",
-  "VueUiChestnut",
-  "VueUiOnion",
-  "VueUiVerticalBar",
-  "VueUiHeatmap",
-  "VueUiScatter",
-  "VueUiCandlestick",
-  "VueUiSparkline",
-  "VueUiSparkbar",
-  "VueUiSparkStackbar",
-  "VueUiSparkHistogram",
-  "VueUiSparkgauge",
-  "VueUiSparkTrend",
-  "VueUiQuickChart",
-  "VueUiAgePyramid",
-  "VueUiRelationCircle",
-  "VueUiThermometer",
-  "VueUiRings",
-  "VueUiDonutEvolution",
-  "VueUiIcon",
-  "VueUiMoodRadar",
-  "VueUiMolecule",
-  "VueUiNestedDonuts",
-  "VueUiGalaxy",
-  "VueUiStripPlot",
-  "VueUiDumbbell",
-  "VueUi3dBar",
-  "VueUiTableSparkline",
-  "VueUiTableHeatmap"
+  /*____________*/"VueUiXy", //  0
+  /*_________*/"VueUiDonut", //  1
+  /*_______*/"VueUiTreemap", //  2
+  /*________*/"VueUiWaffle", //  3
+  /*_________*/"VueUiRadar", //  4
+  /*______*/"VueUiQuadrant", //  5
+  /*_________*/"VueUiGauge", //  6
+  /*_________*/"VueUiWheel", //  7
+  /*_____*/"VueUiTiremarks", //  8
+  /*______*/"VueUiChestnut", //  9
+  /*_________*/"VueUiOnion", // 10
+  /*___*/"VueUiVerticalBar", // 11
+  /*_______*/"VueUiHeatmap", // 12
+  /*_______*/"VueUiScatter", // 13
+  /*___*/"VueUiCandlestick", // 14
+  /*_____*/"VueUiSparkline", // 15
+  /*______*/"VueUiSparkbar", // 16
+  /*_*/"VueUiSparkStackbar", // 17
+  /**/"VueUiSparkHistogram", // 18
+  /*____*/"VueUiSparkgauge", // 19
+  /*____*/"VueUiSparkTrend", // 20
+  /*____*/"VueUiQuickChart", // 21
+  /*____*/"VueUiAgePyramid", // 22
+  /**/"VueUiRelationCircle", // 23
+  /*___*/"VueUiThermometer", // 24
+  /*_________*/"VueUiRings", // 25
+  /**/"VueUiDonutEvolution", // 26
+  /*__________*/"VueUiIcon", // 27
+  /*_____*/"VueUiMoodRadar", // 28
+  /*______*/"VueUiMolecule", // 29
+  /*__*/"VueUiNestedDonuts", // 30
+  /*________*/"VueUiGalaxy", // 31
+  /*_____*/"VueUiStripPlot", // 32
+  /*______*/"VueUiDumbbell", // 33
+  /*_________*/"VueUi3dBar", // 34
+  /**/"VueUiTableSparkline", // 35
+  /*__*/"VueUiTableHeatmap"  // 36
 ]);
 
-const selectedComponent = ref(components.value[36]);
+const selectedComponent = ref(components.value[26]);
 
 </script>
 
