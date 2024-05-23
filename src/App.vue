@@ -36,6 +36,7 @@ import ArenaVueUiGalaxy from "../TestingArena/ArenaVueUiGalaxy.vue";
 import ArenaVueUiStripPlot from "../TestingArena/ArenaVueUiStripPlot.vue";
 import ArenaVueUiDumbbell from "../TestingArena/ArenaVueUiDumbbell.vue";
 import ArenaVueUi3dBar from "../TestingArena/ArenaVueUi3dBar.vue";
+import ArenaVueUiTableSparkline from "../TestingArena/ArenaVueUiTableSparkline.vue";
 
 const showOldArena = ref(false);
 
@@ -74,10 +75,11 @@ const components = ref([
   "VueUiGalaxy",
   "VueUiStripPlot",
   "VueUiDumbbell",
-  "VueUi3dBar"
+  "VueUi3dBar",
+  "VueUiTableSparkline"
 ]);
 
-const selectedComponent = ref(components.value[34]);
+const selectedComponent = ref(components.value[35]);
 
 </script>
 
@@ -195,4 +197,7 @@ const selectedComponent = ref(components.value[34]);
 
   <!-- 34 -->
   <ArenaVueUi3dBar v-if="selectedComponent === 'VueUi3dBar'" />
+
+  <!-- 35 -->
+  <ArenaVueUiTableSparkline v-if="selectedComponent === 'VueUiTableSparkline'" />
 </template>
