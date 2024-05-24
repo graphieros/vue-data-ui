@@ -84,6 +84,21 @@ const model = ref([
     { key: 'style.layout.plots.giftWrap.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
     { key: 'style.layout.plots.giftWrap.strokeDasharray', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.layout.plots.giftWrap.fillOpacity', def: 0.2, type: 'number', min: 0, max: 1, step: 0.01},
+    { key: 'style.layout.plots.selectors.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.plots.selectors.stroke', def: '#1A1A1A', type: 'color'},
+    { key: 'style.layout.plots.selectors.strokeWidth', def: 0.7, type: 'number', min: 0, max: 12, step: 0.1},
+    { key: 'style.layout.plots.selectors.strokeDasharray', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.plots.selectors.labels.fontSize', def: 12, type: 'number', min: 8, max: 24},
+    { key: 'style.layout.plots.selectors.labels.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.layout.plots.selectors.labels.rounding', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.layout.plots.selectors.labels.bold', def: false, type: 'checkbox'},
+    { key: 'style.layout.plots.selectors.labels.showName', def: true, type: "checkbox"},
+    { key: 'style.layout.plots.selectors.labels.prefix', def: 'P', type: 'text'},
+    { key: 'style.layout.plots.selectors.labels.suffix', def: 'S', type: 'text'},
+    { key: 'style.layout.plots.selectors.markers.radius', def: 1.5, type: 'number', min: 0, max: 12, step: 0.5},
+    { key: 'style.layout.plots.selectors.markers.stroke', def: '#FFFFFF', type: 'color'},
+    { key: 'style.layout.plots.selectors.markers.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.5},
+    { key: 'style.layout.plots.selectors.markers.fill', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.correlation.show', def: true, type: 'checkbox'},
     { key: 'style.layout.correlation.strokeDasharray', def: 2, type: 'number', min: 0, max: 100},
     { key: 'style.layout.correlation.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
@@ -128,8 +143,10 @@ const model = ref([
     { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.tooltip.fontSize', def: 14, type: 'number', min: 6, max: 24 },
     { key: 'style.tooltip.showValue', def: true, type: 'checkbox'},
-    { key: 'style.tooltip.roundingValue', def: 0, type: 'number', min: 0, max: 6},
+    { key: 'style.tooltip.roundingValue', def: 2, type: 'number', min: 0, max: 6},
     { key: 'style.tooltip.showShape', def: true, type: 'checkbox' },
+    { key: 'style.tooltip.prefix', def: 'P', type: 'text'},
+    { key: 'style.tooltip.suffix', def: 'S', type: 'text'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
@@ -144,7 +161,7 @@ const model = ref([
     { key: 'table.translations.correlationCoefficient', def: 'Correlation coef.', type: 'text'},
     { key: 'table.translations.nbrPlots', def: 'Nbr plots', type: 'text'},
     { key: 'table.translations.average', def: 'Average', type: 'text'},
-    { key: 'table.translations.series', def: 'Series', type: 'text'}
+    { key: 'table.translations.series', def: 'Series', type: 'text'},
 ])
 
 const testCustomTooltip = ref(false);
@@ -194,8 +211,8 @@ function selectLegend(legend) {
         <template #local>
             <LocalVueUiScatter :dataset="dataset" :config="config" :key="`local_${step}`">
                 <template #svg="{ svg }">
-                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
                 </template>
                 <template #legend="{ legend }">
                     #LEGEND
@@ -215,8 +232,8 @@ function selectLegend(legend) {
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiScatter" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
                 <template #svg="{ svg }">
-                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
                 </template>
                 <template #legend="{ legend }">
                     #LEGEND
@@ -236,8 +253,8 @@ function selectLegend(legend) {
         <template #build>
             <VueUiScatter :dataset="dataset" :config="config" :key="`build_${step}`">
                 <template #svg="{ svg }">
-                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
                 </template>
                 <template #legend="{ legend }">
                     #LEGEND
@@ -257,8 +274,8 @@ function selectLegend(legend) {
         <template #VDUI-build>
             <VueDataUi component="VueUiScatter" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
                 <template #svg="{ svg }">
-                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
                 </template>
                 <template #legend="{ legend }">
                     #LEGEND
