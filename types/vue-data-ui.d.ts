@@ -2007,6 +2007,27 @@ declare module 'vue-data-ui' {
                         strokeDasharray?: number;
                         fillOpacity?: number;
                     };
+                    selectors?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        strokeDasharray?: number;
+                        labels?: {
+                            fontSize?: number;
+                            color?: string;
+                            rounding?: number;
+                            bold?: boolean;
+                            showName?: boolean;
+                            prefix?: string;
+                            suffix?: string;
+                        };
+                        markers?: {
+                            radius?: number;
+                            stroke?: string;
+                            strokeWidth?: number;
+                            fill?: string;
+                        };
+                    };
                 };
                 marginalBars?: {
                     show?: boolean;
@@ -2084,6 +2105,8 @@ declare module 'vue-data-ui' {
                 fontSize?: number;
                 roundingValue?: number;
                 showShape?: boolean;
+                prefix?: string;
+                suffix?: string;
                 customFormat?: (params: VueUiTooltipParams<VueUiScatterDatapoint, VueUiScatterSeries[], VueUiScatterConfig>) => string
             };
         };

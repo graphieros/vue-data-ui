@@ -13,7 +13,8 @@ import {
     opacity, 
     palette,
     createSmoothPath,
-    XMLNS
+    XMLNS,
+dataLabel
 } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
@@ -391,9 +392,26 @@ function useTooltip(plot, seriesIndex) {
         }
     
         html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
-        html += `<div>${scatterConfig.value.style.layout.dataLabels.xAxis.name} : <b>${isNaN(plot.v.x) ? '-' : Number(plot.v.x.toFixed(scatterConfig.value.style.layout.dataLabels.xAxis.roundingValue)).toLocaleString()}</b></div>`;
-        html += `<div>${scatterConfig.value.style.layout.dataLabels.yAxis.name} : <b>${isNaN(plot.v.y) ? '-' : Number(plot.v.y.toFixed(scatterConfig.value.style.layout.dataLabels.yAxis.roundingValue)).toLocaleString()}</b></div>`;
-        html += `${scatterConfig.value.style.layout.plots.deviation.translation} : <b>${Number(plot.deviation.toFixed(scatterConfig.value.style.layout.plots.deviation.roundingValue)).toLocaleString()}</b>`
+
+        html += `<div>${scatterConfig.value.style.layout.dataLabels.xAxis.name} : <b>${isNaN(plot.v.x) ? '-' : dataLabel({
+            p: scatterConfig.value.style.tooltip.prefix,
+            v: plot.v.x,
+            s: scatterConfig.value.style.tooltip.suffix,
+            r: scatterConfig.value.style.tooltip.roundingValue
+        })}</b></div>`;
+
+        html += `<div>${scatterConfig.value.style.layout.dataLabels.yAxis.name} : <b>${isNaN(plot.v.y) ? '-' :  dataLabel({
+            p: scatterConfig.value.style.tooltip.prefix,
+            v: plot.v.y,
+            s: scatterConfig.value.style.tooltip.suffix,
+            r: scatterConfig.value.style.tooltip.roundingValue
+        })}</b></div>`;
+        
+        html += `${scatterConfig.value.style.layout.plots.deviation.translation} : <b>${dataLabel({
+            v: plot.deviation,
+            r: scatterConfig.value.style.layout.plots.deviation.roundingValue
+        })}</b>`;
+
         html += `</div>`;
     
         tooltipContent.value = `<div>${html}</div>`
@@ -767,6 +785,91 @@ defineExpose({
                 </g>
             </g>
 
+            <!-- SELECTORS -->
+            <g v-if="selectedPlot && scatterConfig.style.layout.plots.selectors.show" style="pointer-events: none !important;">
+                <line
+                    :x1="zero.x"
+                    :x2="selectedPlot.x"
+                    :y1="selectedPlot.y"
+                    :y2="selectedPlot.y"
+                    :stroke="scatterConfig.style.layout.plots.selectors.stroke"
+                    :stroke-width="scatterConfig.style.layout.plots.selectors.strokeWidth"
+                    :stroke-dasharray="scatterConfig.style.layout.plots.selectors.strokeDasharray"
+                    stroke-linecap="round"
+                    class="line-pointer"
+                />
+                <line
+                    :x1="selectedPlot.x"
+                    :x2="selectedPlot.x"
+                    :y1="zero.y"
+                    :y2="selectedPlot.y"
+                    :stroke="scatterConfig.style.layout.plots.selectors.stroke"
+                    :stroke-width="scatterConfig.style.layout.plots.selectors.strokeWidth"
+                    :stroke-dasharray="scatterConfig.style.layout.plots.selectors.strokeDasharray"
+                    stroke-linecap="round"
+                    class="line-pointer"
+                />
+                <text
+                    :x="zero.x + (selectedPlot.x > zero.x ? -6 : 6)"
+                    :y="selectedPlot.y + scatterConfig.style.layout.plots.selectors.labels.fontSize / 3"
+                    :font-size="scatterConfig.style.layout.plots.selectors.labels.fontSize"
+                    :fill="scatterConfig.style.layout.plots.selectors.labels.color"
+                    :font-weight="scatterConfig.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
+                    :text-anchor="selectedPlot.x > zero.x ? 'end' : 'start'"
+                >
+                    {{ dataLabel({
+                        p: scatterConfig.style.layout.plots.selectors.labels.prefix,
+                        v: selectedPlot.v.y,
+                        s: scatterConfig.style.layout.plots.selectors.labels.suffix,
+                        r: scatterConfig.style.layout.plots.selectors.labels.rounding
+                    }) }}
+                </text>
+                <text
+                    :x="selectedPlot.x"
+                    :y="zero.y + (selectedPlot.y > zero.y ? - 6 : scatterConfig.style.layout.plots.selectors.labels.fontSize +6)"
+                    :font-size="scatterConfig.style.layout.plots.selectors.labels.fontSize"
+                    :fill="scatterConfig.style.layout.plots.selectors.labels.color"
+                    :font-weight="scatterConfig.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
+                    :text-anchor="'middle'"
+                >
+                    {{ dataLabel({
+                        p: scatterConfig.style.layout.plots.selectors.labels.prefix,
+                        v: selectedPlot.v.x,
+                        s: scatterConfig.style.layout.plots.selectors.labels.suffix,
+                        r: scatterConfig.style.layout.plots.selectors.labels.rounding
+                    }) }}
+                </text>
+                <circle
+                    :cx="zero.x"
+                    :cy="selectedPlot.y"
+                    :r="scatterConfig.style.layout.plots.selectors.markers.radius"
+                    :fill="scatterConfig.style.layout.plots.selectors.markers.fill"
+                    :stroke="scatterConfig.style.layout.plots.selectors.markers.stroke"
+                    :stroke-width="scatterConfig.style.layout.plots.selectors.markers.strokeWidth"
+                    class="line-pointer"
+                />
+                <circle
+                    :cx="selectedPlot.x"
+                    :cy="zero.y"
+                    :r="scatterConfig.style.layout.plots.selectors.markers.radius"
+                    :fill="scatterConfig.style.layout.plots.selectors.markers.fill"
+                    :stroke="scatterConfig.style.layout.plots.selectors.markers.stroke"
+                    :stroke-width="scatterConfig.style.layout.plots.selectors.markers.strokeWidth"
+                    class="line-pointer"
+                />
+                <text
+                    v-if="scatterConfig.style.layout.plots.selectors.labels.showName"
+                    :x="selectedPlot.x"
+                    :y="selectedPlot.y + (selectedPlot.y < zero.y ? - scatterConfig.style.layout.plots.selectors.labels.fontSize /2 : scatterConfig.style.layout.plots.selectors.labels.fontSize)"
+                    :font-size="scatterConfig.style.layout.plots.selectors.labels.fontSize"
+                    :fill="scatterConfig.style.layout.plots.selectors.labels.color"
+                    :font-weight="scatterConfig.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
+                    :text-anchor="selectedPlot.x < drawingArea.left + 100 ? 'start' : selectedPlot.x > drawingArea.right - 100 ? 'end' : selectedPlot.x > zero.x ? 'start' : 'end'"
+                >
+                    {{ selectedPlot.v.name }}
+                </text>
+            </g>
+
             <!-- AXIS LABELS -->
             <g v-if="scatterConfig.style.layout.dataLabels.xAxis.show">
                 <text
@@ -929,7 +1032,6 @@ defineExpose({
                 </div>
             </template>
         </Legend>
-
         <slot name="legend" v-bind:legend="datasetWithId"></slot>
 
         <!-- TOOLTIP -->
@@ -995,7 +1097,7 @@ defineExpose({
     position: relative;
 }
 
-path, line, circle {
+path, line:not(.line-pointer), circle:not(.line-pointer) {
     animation: verticalBarAnimation 0.5s ease-in-out !important;
     transform-origin: center !important;
 }
@@ -1048,5 +1150,18 @@ path, line, circle {
     top:0;
     font-weight: 400;
     user-select: none;
+}
+.line-pointer {
+    animation: line-pointer-opacity 0.3s ease-in-out forwards;
+    opacity: 0;
+}
+
+@keyframes line-pointer-opacity {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 </style>

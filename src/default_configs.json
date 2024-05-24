@@ -1985,6 +1985,27 @@
                         "strokeWidth": 1,
                         "strokeDasharray": 0,
                         "fillOpacity": 0.2
+                    },
+                    "selectors": {
+                        "show": true,
+                        "stroke": "#2D353C",
+                        "strokeWidth": 0.7,
+                        "strokeDasharray": 0,
+                        "labels": {
+                            "fontSize": 12,
+                            "color":"#2D353C",
+                            "rounding": 2,
+                            "bold": false,
+                            "showName": true,
+                            "prefix": "",
+                            "suffix": ""
+                        },
+                        "markers": {
+                            "radius": 1.5,
+                            "stroke": "#FFFFFF",
+                            "strokeWidth": 0.5,
+                            "fill": "#2D353C"
+                        }
                     }
                 },
                 "correlation": {
@@ -2048,9 +2069,11 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "fontSize": 14,
-                "roundingValue": 0,
+                "roundingValue": 2,
                 "customFormat": null,
-                "showShape": true
+                "showShape": true,
+                "prefix": "",
+                "suffix": ""
             }
         },
         "userOptions": {
