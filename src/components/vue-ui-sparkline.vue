@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import {
+calcLinearProgression,
+calcMedian,
     createSmoothPath,
     createUid,
     dataLabel as dl,
@@ -199,16 +201,44 @@ function unselectPlot() {
     emits('hoverIndex', {index:undefined})
 }
 
+const dataLabelValues = computed(() => {
+    if (!isDataset.value) {
+        return {
+            latest: null,
+            sum: null,
+            average: null,
+            median: null,
+            trend: null
+        }
+    } else {
+        const ds = mutableDataset.value.map(m => m.absoluteValue);
+        const sum = ds.reduce((a, b) => a + b, 0)
+        return {
+            latest: mutableDataset.value[mutableDataset.value.length -1].absoluteValue,
+            sum,
+            average: sum / mutableDataset.value.length,
+            median: calcMedian(ds),
+            trend: calcLinearProgression(mutableDataset.value.map(({x, y, absoluteValue}) => {
+                return {
+                    x,
+                    y,
+                    value: absoluteValue
+                }
+            })).trend
+        }
+    }
+});
+
 const dataLabel = computed(() => {
     if(!isDataset.value) {
         return 0
     }
     if (sparklineConfig.value.style.dataLabel.valueType === 'latest') {
-        return mutableDataset.value[mutableDataset.value.length -1].absoluteValue;
+        return dataLabelValues.value.latest
     } else if(sparklineConfig.value.style.dataLabel.valueType === 'sum') {
-        return mutableDataset.value.map(m => m.absoluteValue).reduce((a,b) => a + b);
+        return dataLabelValues.value.sum;
     } else if(sparklineConfig.value.style.dataLabel.valueType === "average") {
-        return mutableDataset.value.map(m => m.absoluteValue).reduce((a,b) => a + b) / mutableDataset.value.length;
+        return dataLabelValues.value.average;
     } else {
         return 0;
     }
@@ -225,12 +255,26 @@ function selectDatapoint(datapoint, index) {
 
 <template>
     <div class="vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${sparklineConfig.style.fontFamily}`">
+        <!-- SLOT BEFORE -->
+        <slot 
+            name="before" 
+            v-bind="{ 
+                selected: selectedPlot, 
+                latest: dataLabelValues.latest,
+                sum: dataLabelValues.sum,
+                average: dataLabelValues.average,
+                median: dataLabelValues.median,
+                trend: dataLabelValues.trend
+            }"
+        />
+
         <!-- TITLE -->
         <div v-if="sparklineConfig.style.title.show && showInfo" class="vue-ui-sparkline-title" :style="`display:flex;align-items:center;width:100%;color:${sparklineConfig.style.title.color};background:${sparklineConfig.style.backgroundColor};justify-content:${sparklineConfig.style.title.textAlign === 'left' ? 'flex-start' : sparklineConfig.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${sparklineConfig.style.title.fontSize * 2}px;font-size:${sparklineConfig.style.title.fontSize}px;font-weight:${sparklineConfig.style.title.bold ? 'bold' : 'normal'};`">
             <span data-cy="sparkline-period-label" :style="`padding:${sparklineConfig.style.title.textAlign === 'left' ? '0 0 0 12px' : sparklineConfig.style.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`">
                 {{ selectedPlot ? selectedPlot.period : sparklineConfig.style.title.text }}
             </span>
         </div>
+
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${sparklineConfig.style.backgroundColor};overflow:visible`">
             <!-- DEFS -->
