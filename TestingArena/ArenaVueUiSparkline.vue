@@ -133,21 +133,73 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiSparkline :dataset="dataset" :config="config" :key="`local_${step}`">
+                <template #before="{ selected, latest, sum, average, median, trend }">
+                    <div style="color: white;height: 180px;font-size:11px">
+                        #BEFORE
+                        <ul>
+                            <li>Latest: {{ latest }}</li>
+                            <li>Sum: {{ sum }}</li>
+                            <li>Average: {{ average }}</li>
+                            <li>Median: {{ median }}</li>
+                            <li>Trend: {{ trend }}</li>
+                            <li>Selected: {{ selected }}</li>
+                        </ul>
+                    </div>
+                </template>
             </LocalVueUiSparkline>
         </template>
 
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiSparkline" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+                <template #before="{ selected, latest, sum, average, median, trend }">
+                    <div style="color: white;height: 180px;font-size:11px">
+                        #BEFORE
+                        <ul>
+                            <li>Latest: {{ latest }}</li>
+                            <li>Sum: {{ sum }}</li>
+                            <li>Average: {{ average }}</li>
+                            <li>Median: {{ median }}</li>
+                            <li>Trend: {{ trend }}</li>
+                            <li>Selected: {{ selected }}</li>
+                        </ul>
+                    </div>
+                </template>
             </LocalVueDataUi>
         </template>
 
         <template #build>
             <VueUiSparkline :dataset="dataset" :config="config" :key="`build_${step}`">
+                <template #before="{ selected, latest, sum, average, median, trend }">
+                    <div style="color: white;height: 180px;font-size:11px">
+                        #BEFORE
+                        <ul>
+                            <li>Latest: {{ latest }}</li>
+                            <li>Sum: {{ sum }}</li>
+                            <li>Average: {{ average }}</li>
+                            <li>Median: {{ median }}</li>
+                            <li>Trend: {{ trend }}</li>
+                            <li>Selected: {{ selected }}</li>
+                        </ul>
+                    </div>
+                </template>
             </VueUiSparkline>
         </template>
 
         <template #VDUI-build>
             <VueDataUi component="VueUiSparkline" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+                <template #before="{ selected, latest, sum, average, median, trend }">
+                    <div style="color: white;height: 180px;font-size:11px">
+                        #BEFORE
+                        <ul>
+                            <li>Latest: {{ latest }}</li>
+                            <li>Sum: {{ sum }}</li>
+                            <li>Average: {{ average }}</li>
+                            <li>Median: {{ median }}</li>
+                            <li>Trend: {{ trend }}</li>
+                            <li>Selected: {{ selected }}</li>
+                        </ul>
+                    </div>
+                </template>
             </VueDataUi>
         </template>
 
