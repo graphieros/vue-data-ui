@@ -433,6 +433,13 @@ defineExpose({
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="galaxy-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${galaxyConfig.style.chart.backgroundColor};color:${galaxyConfig.style.chart.color}`">
             
+            <!-- GRADIENT -->
+            <defs>
+                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / galaxyConfig.style.chart.layout.arcs.gradient.intensity" />
+                </filter>
+            </defs>
+
             <!-- PATHS -->
             <g v-for="datapoint in galaxySet">
                 <path 
@@ -452,17 +459,16 @@ defineExpose({
                     stroke-linecap="round"
                     :class="`${selectedSerie && selectedSerie !== datapoint.id && galaxyConfig.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
                 />
-                <path
-                    v-if="datapoint.value && galaxyConfig.style.chart.layout.arcs.gradient.show"
-                    :d="datapoint.path"
-                    fill="none"
-                    :stroke="galaxyConfig.style.chart.layout.arcs.gradient.color"
-                    :stroke-width="(galaxyConfig.style.chart.layout.arcs.strokeWidth / 2) * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
-                    stroke-linecap="round"
-                    :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && galaxyConfig.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
-                    :style="`filter: blur(5px) opacity(${galaxyConfig.style.chart.layout.arcs.gradient.intensity}%);transform: translate(0,0)`"
-                    class="inner-gradient"
-                />
+                <g :filter="`url(#blur_${uid})`" v-if="datapoint.value && galaxyConfig.style.chart.layout.arcs.gradient.show">
+                    <path
+                        :d="datapoint.path"
+                        fill="none"
+                        :stroke="galaxyConfig.style.chart.layout.arcs.gradient.color"
+                        :stroke-width="(galaxyConfig.style.chart.layout.arcs.strokeWidth / 2) * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
+                        stroke-linecap="round"
+                        :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && galaxyConfig.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                    />
+                </g>
             </g>
 
             <!-- TRAPS -->
