@@ -59,6 +59,10 @@ onMounted(() => {
     }
 });
 
+const isSafari = computed(() => {
+    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+})
+
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_treemap);
 const isPrinting = ref(false);
@@ -497,70 +501,69 @@ defineExpose({
 
             <g v-for="(rect, i) in squarified">            
                 <defs v-if="treemapConfig.style.chart.layout.rects.gradient.show">
-                    <radialGradient :id="`tgrad_${rect.id}`" gradientTransform="translate(-1, -1) scale(2, 2)">
+                    <radialGradient :id="`tgrad_${rect.id}`" gradientTransform="translate(-1, -1.000001) scale(2, 2)">
                         <stop offset="18%" :stop-color="rect.color"/>
                         <stop offset="100%" :stop-color="lightenHexColor(rect.color, treemapConfig.style.chart.layout.rects.gradient.intensity / 100)"/>
                     </radialGradient>
                 </defs>
             </g>
 
-         
-                <g v-for="(rect, i) in squarified">
-                    <rect 
-                        :x="rect.x0" 
-                        :y="rect.y0" 
-                        :height="getHeight(rect)" 
-                        :width="getWidth(rect)" 
-                        :fill="treemapConfig.style.chart.layout.rects.gradient.show ? `url(#tgrad_${rect.id})` : rect.color"
-                        :rx="treemapConfig.style.chart.layout.rects.borderRadius"
-                        :stroke="selectedRect && selectedRect.id === rect.id ? treemapConfig.style.chart.layout.rects.selected.stroke : treemapConfig.style.chart.layout.rects.stroke"
-                        :stroke-width="selectedRect && selectedRect.id === rect.id ? treemapConfig.style.chart.layout.rects.selected.strokeWidth : treemapConfig.style.chart.layout.rects.strokeWidth"
-                        @click="zoom(rect)"
-                        @mouseenter="() => useTooltip({
-                            datapoint: rect,
-                            seriesIndex: i,
-                        })"
-                        @mouseleave="selectedRect = null; isTooltip = false"
-                        :style="`opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : treemapConfig.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
-                        class="vue-ui-treemap-rect"
-                    />
-    
-                    <foreignObject
-                        :x="rect.x0" 
-                        :y="rect.y0" 
-                        :height="getHeight(rect)" 
-                        :width="getWidth(rect)"
-                        class="vue-ui-treemap-cell-foreignObject"
-                    >
-                        <div style="width: 100%; height: 100%" class="vue-ui-treemap-cell">
-                            <div
-                                class="vue-ui-treemap-cell-default"
-                                v-if="treemapConfig.style.chart.layout.labels.showDefaultLabels && (rect.proportion > treemapConfig.style.chart.layout.labels.hideUnderProportion || isZoom)" :style="`width:calc(100% - ${calcFontSize(rect) / 1.5}px);text-align:left;line-height:${calcFontSize(rect) < 14 ? 14 : calcFontSize(rect)}px;padding:${calcFontSize(rect) / 3}px; color:${adaptColorToBackground(rect.color)}`"
-                            >
-                                <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
-                                    {{ rect.name }}
-                                </span><br>
-                                <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
-                                    {{  dataLabel({
-                                        p: treemapConfig.style.chart.layout.labels.prefix,
-                                        v: rect.value,
-                                        s: treemapConfig.style.chart.layout.labels.suffix,
-                                        r: treemapConfig.style.chart.layout.labels.rounding
-                                    }) }}
-                                </span>
-                            </div>
-                            <slot 
-                                name="rect" 
-                                v-bind="{ 
-                                    rect, 
-                                    shouldShow: rect.proportion > treemapConfig.style.chart.layout.labels.hideUnderProportion || isZoom, 
-                                    fontSize: calcFontSize(rect), 
-                                    isZoom, 
-                                    textColor: adaptColorToBackground(rect.color) 
-                            }"/>
+            <g v-for="(rect, i) in squarified">
+                <rect 
+                    :x="rect.x0" 
+                    :y="rect.y0" 
+                    :height="getHeight(rect)" 
+                    :width="getWidth(rect)" 
+                    :fill="isSafari ? rect.color : treemapConfig.style.chart.layout.rects.gradient.show ? `url(#tgrad_${rect.id})` : rect.color"
+                    :rx="treemapConfig.style.chart.layout.rects.borderRadius"
+                    :stroke="selectedRect && selectedRect.id === rect.id ? treemapConfig.style.chart.layout.rects.selected.stroke : treemapConfig.style.chart.layout.rects.stroke"
+                    :stroke-width="selectedRect && selectedRect.id === rect.id ? treemapConfig.style.chart.layout.rects.selected.strokeWidth : treemapConfig.style.chart.layout.rects.strokeWidth"
+                    @click="zoom(rect)"
+                    @mouseenter="() => useTooltip({
+                        datapoint: rect,
+                        seriesIndex: i,
+                    })"
+                    @mouseleave="selectedRect = null; isTooltip = false"
+                    :style="`opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : treemapConfig.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
+                    class="vue-ui-treemap-rect"
+                />
+
+                <foreignObject
+                    :x="rect.x0" 
+                    :y="rect.y0" 
+                    :height="getHeight(rect)" 
+                    :width="getWidth(rect)"
+                    class="vue-ui-treemap-cell-foreignObject"
+                >
+                    <div style="width: 100%; height: 100%" class="vue-ui-treemap-cell">
+                        <div
+                            class="vue-ui-treemap-cell-default"
+                            v-if="treemapConfig.style.chart.layout.labels.showDefaultLabels && (rect.proportion > treemapConfig.style.chart.layout.labels.hideUnderProportion || isZoom)" :style="`width:calc(100% - ${calcFontSize(rect) / 1.5}px);text-align:left;line-height:${calcFontSize(rect) < 14 ? 14 : calcFontSize(rect)}px;padding:${calcFontSize(rect) / 3}px; color:${adaptColorToBackground(rect.color)}`"
+                        >
+                            <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
+                                {{ rect.name }}
+                            </span><br>
+                            <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
+                                {{  dataLabel({
+                                    p: treemapConfig.style.chart.layout.labels.prefix,
+                                    v: rect.value,
+                                    s: treemapConfig.style.chart.layout.labels.suffix,
+                                    r: treemapConfig.style.chart.layout.labels.rounding
+                                }) }}
+                            </span>
                         </div>
-                    </foreignObject>
-                </g>
+                        <slot 
+                            name="rect" 
+                            v-bind="{ 
+                                rect, 
+                                shouldShow: rect.proportion > treemapConfig.style.chart.layout.labels.hideUnderProportion || isZoom, 
+                                fontSize: calcFontSize(rect), 
+                                isZoom, 
+                                textColor: adaptColorToBackground(rect.color) 
+                        }"/>
+                    </div>
+                </foreignObject>
+            </g>
             <slot name="svg" v-bind="{ svg, isZoom, rect: selectedRect, config: treemapConfig }"/>
         </svg>
 
