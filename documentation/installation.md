@@ -104,14 +104,14 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Mini charts
 
-| Name                  | dataset type                       | config type                 | emits / exposed methods | slots  | custom tooltip |
-| --------------------- | ---------------------------------- | --------------------------- | ----------------------- | ------ | -------------- |
-| `VueUiSparkline`      | `VueUiSparklineDatasetItem[]`      | `VueUiSparklineConfig`      | `@selectDatapoint`      | `#svg` | ❌             |
-| `VueUiSparkbar`       | `VueUiSparkbarDatasetItem[]`       | `VueUiSparkbarConfig`       | `@selectDatapoint`      | ❌     | ❌             |
-| `VueUiSparkStackbar`  | `VueUiSparkStackbarDatasetItem[]`  | `VueUiSparkStackbarConfig`  | `@selectDatapoint`      | ❌     | ❌             |
-| `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`      | ❌     | ❌             |
-| `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                      | ❌     | ❌             |
-| `VueUiSparkTrend`     | `number[]`                         | `VueUiSparkTrendConfig`     | ❌                      | ❌     | ❌             |
+| Name                  | dataset type                       | config type                 | emits / exposed methods | slots             | custom tooltip |
+| --------------------- | ---------------------------------- | --------------------------- | ----------------------- | ----------------- | -------------- |
+| `VueUiSparkline`      | `VueUiSparklineDatasetItem[]`      | `VueUiSparklineConfig`      | `@selectDatapoint`      | `#svg`, `#before` | ❌             |
+| `VueUiSparkbar`       | `VueUiSparkbarDatasetItem[]`       | `VueUiSparkbarConfig`       | `@selectDatapoint`      | ❌                | ❌             |
+| `VueUiSparkStackbar`  | `VueUiSparkStackbarDatasetItem[]`  | `VueUiSparkStackbarConfig`  | `@selectDatapoint`      | ❌                | ❌             |
+| `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`      | ❌                | ❌             |
+| `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                      | ❌                | ❌             |
+| `VueUiSparkTrend`     | `number[]`                         | `VueUiSparkTrendConfig`     | ❌                      | ❌                | ❌             |
 
 ### Charts
 
