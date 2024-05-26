@@ -1289,11 +1289,9 @@ export default {
                         : this.drawingArea.left
                             + (this.slot.bar * i)
                             + (this.slot.bar * j * barLen)
-                            + (this.barPeriodGap / 2)
-                            - (this.slot.bar / 2)
+                            - (this.barSlot / 2)
                             - (i * this.barPeriodGap)
 
-         
 
                     return {
                         yOffset,
