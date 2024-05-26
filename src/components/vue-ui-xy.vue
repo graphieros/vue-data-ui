@@ -409,7 +409,7 @@
                             <text
                                 :data-cy="`xy-bar-label-x-${i}-${j}`"
                                 v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && chartConfig.bar.labels.show"
-                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1"
+                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : calcRectX(plot) + barPeriodGap"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.labels.offsetY : - chartConfig.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="chartConfig.chart.labels.fontSize"

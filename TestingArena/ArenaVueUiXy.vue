@@ -12,7 +12,7 @@ const dataset = ref([
             type: "bar",
             smooth: false,
             useArea: true,
-            dataLabels: false,
+            dataLabels: true,
             scaleSteps: 2,
         },
         {
@@ -103,7 +103,7 @@ const model = ref([
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 40, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.xAxis.showBaseline', def: true,  type: 'checkbox'},
 
-    { key: 'chart.labels.fontSize', def: 10, type: 'number', min: 6, max: 30, label: 'fontSize', category: 'labels' },
+    { key: 'chart.labels.fontSize', def: 20, type: 'number', min: 6, max: 30, label: 'fontSize', category: 'labels' },
     { key: 'chart.labels.prefix', def: '', type: 'text', label: 'prefix', category: 'labels' },
     { key: 'chart.labels.suffix', def: '', type: 'text', label: 'suffix', category: 'labels' },
 
