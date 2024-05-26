@@ -81,7 +81,7 @@ const components = ref([
   /*__*/"VueUiTableHeatmap"  // 36
 ]);
 
-const selectedComponent = ref(components.value[26]);
+const selectedComponent = ref(components.value[0]);
 
 </script>
 

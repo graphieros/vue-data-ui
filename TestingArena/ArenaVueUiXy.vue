@@ -8,42 +8,43 @@ import convertArrayToObject from "./convertModel";
 const dataset = ref([
         {
             name: "S0",
-            series: [1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1],
-            type: "line",
+            series: [10, 20, 12, 13, 10, 20, 30, 20, 12, 16, 32, 64],
+            type: "bar",
             smooth: false,
             useArea: true,
-            dataLabels: false,
+            dataLabels: true,
             scaleSteps: 2,
         },
-        {
-            name: "S1",
-            series: [0,1,1,1,1,1,0,0, 1, 1, 1],
-            type: "line",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2,
-        },
-        {
-            name: "S2",
-            series: [0,0,0,1,1,0,0,1,1,1, 1],
-            type: "line",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2
-        },
-        {
-            name: "S3",
-            series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
-            type: "line",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 5,
-            autoScaling: false,
-            stackRatio: 0.5
-        },
+        // {
+        //     name: "S1",
+        //     series: [8, 4, 8, 16, 12, 13, 16, 25, 12, 3, 7, 12, 6],
+        //     type: "bar",
+        //     smooth: false,
+        //     useArea: true,
+        //     scaleSteps: 2,
+        // },
+        // {
+        //     name: "S2",
+        //     series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
+        //     type: "bar",
+        //     smooth: false,
+        //     useArea: true,
+        //     scaleSteps: 2
+        // },
+        // {
+        //     name: "S3",
+        //     series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
+        //     type: "line",
+        //     smooth: false,
+        //     useArea: true,
+        //     scaleSteps: 5,
+        //     autoScaling: false,
+        //     stackRatio: 0.5
+        // },
     ])
 
 const model = ref([
+    { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
     { key: 'chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
@@ -80,8 +81,8 @@ const model = ref([
     { key: 'chart.highlightArea.caption.padding', def: 3, type: 'number', min: 0, max: 48, label: 'captionPadding', category: 'highlight' },
     { key: 'chart.highlightArea.caption.textAlign', def: 'center', type: 'select', options: ['left', 'center', 'right'], label: 'textAlign', category: 'highlight' },
 
-    { key: 'chart.grid.stroke', def: '#e1e5e8', type: 'color', label: 'lineColor', category: 'grid' },
-    { key: 'chart.grid.showVerticalLines', def: false, type: 'checkbox', label: 'verticalLines', category: 'grid' },
+    { key: 'chart.grid.stroke', def: '#FF0000', type: 'color', label: 'lineColor', category: 'grid' },
+    { key: 'chart.grid.showVerticalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
     { key: 'chart.grid.labels.show', def: true, type: 'checkbox', label: 'showLabels', category: 'grid' },
     { key: 'chart.grid.labels.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'grid' },
     { key: 'chart.grid.labels.fontSize', def: 12, type: 'number', min: 4, max: 30, label: 'fontSize', category: 'grid' },
@@ -96,13 +97,13 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 8, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 20, min: 0, max: 100, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
-    { key: 'chart.grid.labels.yAxis.stacked', def: true, type: 'checkbox' },
+    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
+    { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 40, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.xAxis.showBaseline', def: true,  type: 'checkbox'},
 
-    { key: 'chart.labels.fontSize', def: 10, type: 'number', min: 6, max: 30, label: 'fontSize', category: 'labels' },
+    { key: 'chart.labels.fontSize', def: 20, type: 'number', min: 6, max: 30, label: 'fontSize', category: 'labels' },
     { key: 'chart.labels.prefix', def: '', type: 'text', label: 'prefix', category: 'labels' },
     { key: 'chart.labels.suffix', def: '', type: 'text', label: 'suffix', category: 'labels' },
 
@@ -145,6 +146,7 @@ const model = ref([
     { key: 'bar.serieName.abbreviationSize', def: 3, type: 'number', min: 0, max: 12, label: ['serieName', 'abbreviation', 'is', 'size'], category: 'bar' },
     { key: 'bar.serieName.useSerieColor', def: true, type: 'checkbox', label: ['serieName', 'textColor', 'is', 'series'], category: 'bar' },
     { key: 'bar.serieName.color', def: '#1A1A1A', type: 'color', label: ['serieName', 'is', 'textColor'], category: 'bar' },
+    { key: 'bar.periodGap', def: 0.1, type: 'number', min: 0, max: 24},
 
     { key: 'line.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'line' },
     { key: 'line.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'line' },

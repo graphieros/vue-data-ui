@@ -182,7 +182,7 @@
                                 :x="calcRectX(plot)"
                                 :y="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
                                 :height="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualHeight(plot) : calcRectHeight(plot)"
-                                :width="calcRectWidth()"
+                                :width="calcRectWidth() - (chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? 0 : barPeriodGap)"
                                 :rx="chartConfig.bar.borderRadius"
                                 :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                             />
@@ -409,7 +409,7 @@
                             <text
                                 :data-cy="`xy-bar-label-x-${i}-${j}`"
                                 v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && chartConfig.bar.labels.show"
-                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1"
+                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : calcRectX(plot) + calcRectWidth() / 2 - barPeriodGap / 2"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.labels.offsetY : - chartConfig.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="chartConfig.chart.labels.fontSize"
@@ -1279,12 +1279,20 @@ export default {
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
                 const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
 
+                const barLen = this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length;
 
                 const plots = datapoint.series.map((plot, j) => {
                     const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
                     const x = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked 
                         ? this.drawingArea.left + (this.drawingArea.width / this.maxSeries * j) 
-                        : (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length);
+                        // : (this.drawingArea.left - this.slot.bar / 2 + (this.slot.bar) * i) + ((this.slot.bar) * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length);
+                        : this.drawingArea.left
+                            + (this.slot.bar * i)
+                            + (this.slot.bar * j * barLen)
+                            - (this.barSlot / 2)
+                            - (i * this.barPeriodGap)
+
+
                     return {
                         yOffset,
                         individualHeight,
@@ -1579,6 +1587,13 @@ export default {
                 plot: this.drawingArea.width / this.maxSeries,
                 line: this.drawingArea.width / this.maxSeries,
             }
+        },
+        barSlot() {
+            const len = this.safeDataset.filter(serie => serie.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length
+            return (this.drawingArea.width) / this.maxSeries / len - (this.barPeriodGap * len)
+        },
+        barPeriodGap() {
+            return this.slot.line * this.chartConfig.bar.periodGap;
         },
         maxSlot(){
             return Math.max(...Object.values(this.slot).filter(e => e !== Infinity))
@@ -2524,13 +2539,13 @@ export default {
             if(this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked) {
                 return this.slot.line - ((this.drawingArea.width / this.maxSeries) * 0.1);
             }
-            return this.slot.bar * 0.9;
+            return this.slot.bar;
         },
         calcRectX(plot) {
             if (this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked) {
                 return plot.x + ((this.drawingArea.width / this.maxSeries) * 0.05)
             }
-            return plot.x + (this.slot.bar * 0.05) + (this.slot.bar / 2);
+            return plot.x + (this.slot.bar / 2);
         },
         calcRectY(plot) {
             if(plot.value >= 0) return plot.y;
