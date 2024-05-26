@@ -182,7 +182,7 @@
                                 :x="calcRectX(plot)"
                                 :y="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
                                 :height="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualHeight(plot) : calcRectHeight(plot)"
-                                :width="calcRectWidth() - barPeriodGap"
+                                :width="calcRectWidth() - (chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? 0 : barPeriodGap)"
                                 :rx="chartConfig.bar.borderRadius"
                                 :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                             />
@@ -409,7 +409,7 @@
                             <text
                                 :data-cy="`xy-bar-label-x-${i}-${j}`"
                                 v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && chartConfig.bar.labels.show"
-                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : calcRectX(plot) + barPeriodGap"
+                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : calcRectX(plot) + calcRectWidth() / 2 - barPeriodGap / 2"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.labels.offsetY : - chartConfig.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="chartConfig.chart.labels.fontSize"

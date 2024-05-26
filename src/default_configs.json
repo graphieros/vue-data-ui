@@ -305,7 +305,7 @@
         "bar": {
             "borderRadius": 2,
             "useGradient": true,
-            "periodGap": 0,
+            "periodGap": 0.1,
             "labels": {
                 "show": false,
                 "offsetY": -6,

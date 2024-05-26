@@ -8,29 +8,29 @@ import convertArrayToObject from "./convertModel";
 const dataset = ref([
         {
             name: "S0",
-            series: [10, 20, 12, 13],
+            series: [10, 20, 12, 13, 10, 20, 30, 20, 12, 16, 32, 64],
             type: "bar",
             smooth: false,
             useArea: true,
             dataLabels: true,
             scaleSteps: 2,
         },
-        {
-            name: "S1",
-            series: [8, 4, 8, 16],
-            type: "bar",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2,
-        },
-        {
-            name: "S2",
-            series: [10,12,10,12],
-            type: "bar",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2
-        },
+        // {
+        //     name: "S1",
+        //     series: [8, 4, 8, 16, 12, 13, 16, 25, 12, 3, 7, 12, 6],
+        //     type: "bar",
+        //     smooth: false,
+        //     useArea: true,
+        //     scaleSteps: 2,
+        // },
+        // {
+        //     name: "S2",
+        //     series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
+        //     type: "bar",
+        //     smooth: false,
+        //     useArea: true,
+        //     scaleSteps: 2
+        // },
         // {
         //     name: "S3",
         //     series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
@@ -146,7 +146,7 @@ const model = ref([
     { key: 'bar.serieName.abbreviationSize', def: 3, type: 'number', min: 0, max: 12, label: ['serieName', 'abbreviation', 'is', 'size'], category: 'bar' },
     { key: 'bar.serieName.useSerieColor', def: true, type: 'checkbox', label: ['serieName', 'textColor', 'is', 'series'], category: 'bar' },
     { key: 'bar.serieName.color', def: '#1A1A1A', type: 'color', label: ['serieName', 'is', 'textColor'], category: 'bar' },
-    { key: 'bar.periodGap', def: 0.125, type: 'number', min: 0, max: 24},
+    { key: 'bar.periodGap', def: 0.1, type: 'number', min: 0, max: 24},
 
     { key: 'line.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'line' },
     { key: 'line.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'line' },

@@ -2465,6 +2465,7 @@ declare module 'vue-data-ui' {
         bar?: {
             borderRadius?: number;
             useGradient?: boolean;
+            periodGap?: number;
             labels?: {
                 show?: boolean;
                 offsetY?: number;
