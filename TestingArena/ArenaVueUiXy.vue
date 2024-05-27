@@ -15,14 +15,14 @@ const dataset = ref([
             dataLabels: true,
             scaleSteps: 2,
         },
-        // {
-        //     name: "S1",
-        //     series: [8, 4, 8, 16, 12, 13, 16, 25, 12, 3, 7, 12, 6],
-        //     type: "bar",
-        //     smooth: false,
-        //     useArea: true,
-        //     scaleSteps: 2,
-        // },
+        {
+            name: "S1",
+            series: [8, 4, 8, 16, 12, 13, 16, 25, 12, 3, 7, 12, 6],
+            type: "bar",
+            smooth: false,
+            useArea: true,
+            scaleSteps: 2,
+        },
         // {
         //     name: "S2",
         //     series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
@@ -44,7 +44,7 @@ const dataset = ref([
     ])
 
 const model = ref([
-    { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED
+    { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
     { key: 'chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
@@ -147,6 +147,9 @@ const model = ref([
     { key: 'bar.serieName.useSerieColor', def: true, type: 'checkbox', label: ['serieName', 'textColor', 'is', 'series'], category: 'bar' },
     { key: 'bar.serieName.color', def: '#1A1A1A', type: 'color', label: ['serieName', 'is', 'textColor'], category: 'bar' },
     { key: 'bar.periodGap', def: 0.1, type: 'number', min: 0, max: 24},
+    { key: 'bar.border.useSerieColor', def: false, type: 'checkbox'},
+    { key: 'bar.border.stroke', def: '#FFFFFF', type: 'color'},
+    { key: 'bar.border.strokeWidth', def: 1, type: 'number', min: 0, max: 12, step: 0.5},
 
     { key: 'line.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'line' },
     { key: 'line.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'line' },

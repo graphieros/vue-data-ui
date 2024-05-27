@@ -164,7 +164,6 @@
         "useChart": true
     },
     "vue_ui_xy": {
-        "useCanvas": false,
         "useCssAnimation": true,
         "chart": {
             "fontFamily" : "inherit",
@@ -306,6 +305,11 @@
             "borderRadius": 2,
             "useGradient": true,
             "periodGap": 0.1,
+            "border": {
+                "useSerieColor":false,
+                "strokeWidth": 1,
+                "stroke": "#FFFFFF"
+            },
             "labels": {
                 "show": false,
                 "offsetY": -6,
