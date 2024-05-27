@@ -307,7 +307,7 @@
             "periodGap": 0.1,
             "border": {
                 "useSerieColor":false,
-                "strokeWidth": 1,
+                "strokeWidth": 0,
                 "stroke": "#FFFFFF"
             },
             "labels": {
