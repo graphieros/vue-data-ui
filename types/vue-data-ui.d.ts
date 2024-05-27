@@ -2325,7 +2325,6 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiXyConfig = {
-        useCanvas?: boolean;
         useCssAnimation?: boolean;
         chart?: {
             fontFamily?: string;
@@ -2466,6 +2465,11 @@ declare module 'vue-data-ui' {
             borderRadius?: number;
             useGradient?: boolean;
             periodGap?: number;
+            border?: {
+                useSerieColor?: boolean;
+                strokeWidth?: number;
+                stroke?: string;
+            };
             labels?: {
                 show?: boolean;
                 offsetY?: number;
