@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref } from "vue";
-import BaseIcon from "./BaseIcon.vue";
+import { ref, computed, watch } from 'vue';
+import BaseIcon from './BaseIcon.vue';
 
 const props = defineProps({
     background: {
@@ -9,7 +9,7 @@ const props = defineProps({
     },
     fontSize: {
         type: Number,
-        default: 14,
+        default: 14
     },
     labelLeft: {
         type: String,
@@ -35,13 +35,17 @@ const props = defineProps({
         type: Number,
         default: 0
     },
+    selectColor: {
+        type: String,
+        default: '#4A4A4A'
+    },
     useResetSlot: {
         type: Boolean,
         default: false
     },
     valueStart: {
         type: [Number, String],
-        default: 0,
+        default: 0
     },
     valueEnd: {
         type: [Number, String],
@@ -49,152 +53,190 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits([
-    'update:start',
-    'update:end',
-    'reset'
-]);
+const startValue = ref(props.min);
+const endValue = ref(props.max);
 
-const REF_SLICER = ref(null);
-const REF_START = ref(null);
-const REF_END = ref(null);
+const emit = defineEmits(['update:start', 'update:end', 'reset']);
+
+const highlightStyle = computed(() => {
+    const range = props.max - props.min;
+    const startPercent = ((startValue.value - props.min) / range) * 100;
+    const endPercent = ((endValue.value - props.min) / range) * 100;
+    return {
+        left: `calc(${startPercent}% + 2px)`,
+        width: `calc(${endPercent - startPercent - 1}% + 5px)`,
+        background: props.selectColor
+    };
+});
 
 const slicerColor = computed(() => props.inputColor);
 const backgroundColor = computed(() => props.background);
+const selectColorOpaque = computed(() => `${props.selectColor}33`)
 
 function reset() {
-    emit('reset')
+    emit('reset');
 }
 
+function onStartInput() {
+    if (Number(startValue.value) > Number(endValue.value) - 1) {
+        startValue.value = Number(endValue.value) - 1;
+    }
+    emit('update:start', Number(startValue.value));
+}
+
+function onEndInput() {
+    if (Number(endValue.value) < Number(startValue.value) + 1) {
+        endValue.value = Number(startValue.value) + 1;
+    }
+    emit('update:end', Number(endValue.value));
+}
+
+watch(
+    () => props.min,
+    (newMin) => {
+        if (Number(startValue.value) < Number(newMin)) {
+            startValue.value = Number(newMin);
+        }
+        if (Number(endValue.value) < Number(newMin)) {
+            endValue.value = Number(newMin);
+        }
+    }
+);
+
+watch(
+    () => props.max,
+    (newMax) => {
+        if (Number(startValue.value) > Number(newMax)) {
+            startValue.value = Number(newMax);
+        }
+        if (Number(endValue.value) > Number(newMax)) {
+            endValue.value = Number(newMax);
+        }
+    }
+);
 </script>
 
 <template>
-    <div class="vue-data-ui-slicer" data-html2canvas-ignore>
+    <div>
         <div class="vue-data-ui-slicer-labels">
-            <div class="vue-data-ui-slicer-label-left" :style="`font-size:${props.fontSize}px;color:${props.textColor}`">
+            <div class="vue-data-ui-slicer-label-left"
+                :style="{ fontSize: `${props.fontSize}px`, color: props.textColor }">
                 {{ labelLeft }}
             </div>
             <div v-if="valueStart > 0 || valueEnd < max">
-                <button v-if="!useResetSlot" data-cy-reset tabindex="0" role="button" class="vue-data-ui-refresh-button" @click="reset()">
-                    <BaseIcon name="refresh" :stroke="textColor"/>
+                <button v-if="!useResetSlot" data-cy-reset tabindex="0" role="button" class="vue-data-ui-refresh-button"
+                    @click="reset">
+                    <BaseIcon name="refresh" :stroke="textColor" />
                 </button>
-                <slot v-else name="reset-action" v-bind="{ reset }"/>
+                <slot v-else name="reset-action" :reset="reset" />
             </div>
-            <div class="vue-data-ui-slicer-label-right" :style="`font-size:${props.fontSize}px;color:${props.textColor}`">
+            <div class="vue-data-ui-slicer-label-right"
+                :style="{ fontSize: `${props.fontSize}px`, color: props.textColor }">
                 {{ labelRight }}
             </div>
         </div>
-        <div class="vue-data-ui-slicer-knobs">
-            <div ref="REF_SLICER" class="vue-data-ui-slicer-track"/>
-            <input 
-                ref="REF_START" 
-                type="range"
-                :value="valueStart"
-                :style="`border:none !important;accent-color:${slicerColor}`" 
-                :min="min" 
-                :max="max" 
-                @input="emit('update:start', $event.target.value)"
-            >
-            <input 
-                ref="REF_END" 
-                type="range"
-                :value="valueEnd"
-                :style="`border:none !important;accent-color:${slicerColor}`" 
-                :min="min" 
-                :max="max" 
-                @input="emit('update:end', $event.target.value)"
-            >
+        <div class="double-range-slider">
+            <div class="slider-track"></div>
+            <div class="range-highlight" :style="highlightStyle"></div>
+            <input type="range" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
+            <input type="range" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
         </div>
     </div>
 </template>
 
+
 <style scoped lang="scss">
-.vue-data-ui-slicer {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 0 24px;
-    margin-bottom: 24px;
-}
-
-.vue-data-ui-slicer-knobs {
-    position: relative;
+.double-range-slider {
+    position: relative !important;
     width: calc(100% - 48px);
+    height: 40px;
     margin: 0 auto;
-    height: 12px;
 }
 
-input[type="range"]{
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 100%;
-    outline: none;
+input[type="range"] {
     position: absolute;
-    margin: auto;
-    top: 0;
-    bottom: 0;
     left: 0;
-    background-color: transparent;
+    width: 100%;
+    appearance: none;
+    background: transparent;
     pointer-events: none;
+    z-index: 3;
 }
 
-.vue-data-ui-slicer-track {
-    width: 100%;
-    height: 5px;
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    background-color: v-bind(slicerColor);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    outline: 2px solid v-bind(backgroundColor);
+    transition: all 0.2s ease-in-out;
+    &:active,
+    &:hover {
+        box-shadow: 0 0 0 10px v-bind(selectColorOpaque);
+        background-color: v-bind(selectColor);
+    }
+}
+
+input[type="range"]::-moz-range-thumb {
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    background-color: v-bind(slicerColor);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    outline: 2px solid v-bind(backgroundColor);
+    transition: all 0.2s ease-in-out;
+    &:active,
+    &:hover {
+        box-shadow: 0 0 0 10px v-bind(selectColorOpaque);
+        background-color: v-bind(selectColor);
+    }
+}
+
+input[type="range"]::-ms-thumb {
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    background-color: v-bind(slicerColor);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    outline: 2px solid v-bind(backgroundColor);
+    transition: all 0.2s ease-in-out;
+    &:active,
+    &:hover {
+        box-shadow: 0 0 0 10px v-bind(selectColorOpaque);
+        background-color: v-bind(selectColor);
+    }
+}
+
+.slider-track {
     position: absolute;
-    margin: auto;
-    top: 0;
-    bottom: 0;
-    border-radius: 5px;
-    background: v-bind(slicerColor);
+    width: 99%;
+    height: 8px;
+    border-radius: 4px;
+    background: #ddd;
+    top: 8px;
+    z-index: 1;
+    left: 50%;
+    transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
 }
-input[type="range"]::-webkit-slider-runnable-track{
-    -webkit-appearance: none;
-    height: 5px;
-}
-input[type="range"]::-moz-range-track{
-    -moz-appearance: none;
-    height: 5px;
-}
-input[type="range"]::-ms-track{
-    appearance: none;
-    height: 5px;
-}
-input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance: none;
-    height: 1.3em;
-    width: 1.3em;
-    background-color: v-bind(slicerColor);
-    cursor: pointer;
-    margin-top: -6px;
-    pointer-events: auto;
-    border-radius: 50%;
-    border: 1px solid v-bind(backgroundColor);
-}
-input[type="range"]::-moz-range-thumb{
-    -webkit-appearance: none;
-    appearance: none;
-    height: 1.3em;
-    width: 1.3em;
-    cursor: pointer;
-    border-radius: 50%;
-    background-color: v-bind(slicerColor);
-    pointer-events: auto;
-}
-input[type="range"]::-ms-thumb{
-    appearance: none;
-    height: 1.3em;
-    width: 1.3em;
-    cursor: pointer;
-    border-radius: 50%;
-    background-color: v-bind(slicerColor);
-    pointer-events: auto;
-}
-input[type="range"]:active::-webkit-slider-thumb{
-    background-color: v-bind(slicerColor);
-    border: 2px solid v-bind(backgroundColor);
+
+.range-highlight {
+    position: absolute;
+    height: 8px;
+    top: 8px;
+    z-index: 1;
+    border-radius: 4px;
 }
 
 .vue-data-ui-refresh-button {
@@ -204,11 +246,12 @@ input[type="range"]:active::-webkit-slider-thumb{
     height: 36px;
     width: 36px;
     display: flex;
-    align-items:center;
-    justify-content:center;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
     cursor: pointer;
     transition: transform 0.2s ease-in-out;
+    transform-origin: center;
     &:focus {
         outline: 1px solid v-bind(slicerColor);
     }
@@ -220,7 +263,7 @@ input[type="range"]:active::-webkit-slider-thumb{
 .vue-data-ui-slicer-labels {
     display: flex;
     flex-direction: row;
-    align-items:center;
+    align-items: center;
     padding: 0 24px;
     height: 40px;
 }
@@ -229,9 +272,11 @@ input[type="range"]:active::-webkit-slider-thumb{
 .vue-data-ui-slicer-label-right {
     width: 100%;
 }
+
 .vue-data-ui-slicer-label-left {
     text-align: left;
 }
+
 .vue-data-ui-slicer-label-right {
     text-align: right;
 }
