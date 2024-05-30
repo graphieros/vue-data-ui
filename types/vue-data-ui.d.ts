@@ -808,6 +808,7 @@ declare module 'vue-data-ui' {
                 zoom?: {
                     show?: boolean;
                     color?: string;
+                    highlightColor?: string;
                     fontSize?: number;
                     useResetSlot?: boolean;
                 };
@@ -1875,6 +1876,7 @@ declare module 'vue-data-ui' {
             zoom?: {
                 show?: boolean;
                 color?: string;
+                highlightColor?: string;
                 fontSize?: number;
                 useResetSlot?: boolean;
             };
@@ -2335,6 +2337,7 @@ declare module 'vue-data-ui' {
             zoom?: {
                 show?: boolean;
                 color?: string;
+                highlightColor?: string;
                 fontSize?: number;
                 useResetSlot?: boolean;
             };
@@ -4833,6 +4836,7 @@ declare module 'vue-data-ui' {
         yAxisLabel?: string;
         zoomXy?: boolean;
         zoomColor?: string;
+        zoomHighlightColor?: string;
         zoomFontSize?: number;
         zoomUseResetSlot?: boolean;
     };

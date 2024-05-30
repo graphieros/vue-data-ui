@@ -404,7 +404,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="candlestickChart" :class="`vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${candlestickConfig.style.fontFamily};width:100%; text-align:center;${!candlestickConfig.style.title.text ? 'padding-top:36px' : ''};background:${candlestickConfig.style.backgroundColor}`" :id="`vue-ui-candlestick_${uid}`">
+    <div ref="candlestickChart" :class="`vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`position:relative;font-family:${candlestickConfig.style.fontFamily}; text-align:center;${!candlestickConfig.style.title.text ? 'padding-top:36px' : ''};background:${candlestickConfig.style.backgroundColor}`" :id="`vue-ui-candlestick_${uid}`">
         <div v-if="(!mutableConfig.inside || isPrinting) && candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
@@ -688,6 +688,7 @@ defineExpose({
             :labelRight="dataset[slicer.end-1] ? dataset[slicer.end-1][0] : dataset.at(-1)[0]"
             :textColor="candlestickConfig.style.color"
             :inputColor="candlestickConfig.style.zoom.color"
+            :selectColor="candlestickConfig.style.zoom.highlightColor"
             :max="len"
             :min="0"
             :valueStart="slicer.start"
@@ -748,7 +749,7 @@ defineExpose({
 }
 .vue-ui-candlestick {
     user-select: none;
-    position: relative;
+    width: 100%
 }
 
 path, line, rect {

@@ -71,6 +71,7 @@ const model = ref([
     { key: 'style.layout.candle.widthRatio', def: 0.5, type: 'number', min: 0.1, max: 1, step: 0.1},
     { key: 'style.zoom.show', def: true, type: 'checkbox'},
     { key: 'style.zoom.color', def: '#CCCCCC', type: 'color'},
+    { key: 'style.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
     { key: 'style.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'style.zoom.useResetSlot', def: false, type: 'checkbox'},
     { key: 'style.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},

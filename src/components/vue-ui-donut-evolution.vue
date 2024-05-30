@@ -874,6 +874,7 @@ defineExpose({
             :labelRight="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.end)-1] || ''"
             :textColor="donutEvolutionConfig.style.chart.color"
             :inputColor="donutEvolutionConfig.style.chart.zoom.color"
+            :selectColor="donutEvolutionConfig.style.chart.zoom.highlightColor"
             :max="maxLength"
             :min="0"
             :valueStart="slicer.start"

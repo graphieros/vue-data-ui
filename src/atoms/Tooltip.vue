@@ -70,10 +70,10 @@ const position = computed(() => {
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
     position: fixed;
     padding:12px;
-    z-index:2;
+    z-index:3 !important;
 }
 .vue-data-ui-custom-tooltip {
     position: fixed;
-    z-index: 2;
+    z-index: 3;
 }
 </style>
