@@ -1288,6 +1288,7 @@ defineExpose({
             :labelRight="quickConfig.xyPeriods[slicer.end-1] ? quickConfig.xyPeriods[slicer.end-1] : ''"
             :textColor="quickConfig.color"
             :inputColor="quickConfig.zoomColor"
+            :selectColor="quickConfig.zoomHighlightColor"
             :max="formattedDataset.maxSeriesLength"
             :min="0"
             :valueStart="slicer.start"

@@ -839,6 +839,7 @@
             :labelRight="chartConfig.chart.grid.labels.xAxisLabels.values[slicer.end-1]"
             :textColor="chartConfig.chart.color"
             :inputColor="chartConfig.chart.zoom.color"
+            :selectColor="chartConfig.chart.zoom.highlightColor"
             :max="maxX"
             :min="0"
             :valueStart="slicer.start"
@@ -995,7 +996,7 @@ export default {
     BaseIcon,
     TableSparkline,
     Skeleton,
-    Slicer
+    Slicer,
 },
     data(){
         this.dataset.forEach((ds, i) => {
