@@ -63,8 +63,8 @@ const highlightStyle = computed(() => {
     const startPercent = ((startValue.value - props.min) / range) * 100;
     const endPercent = ((endValue.value - props.min) / range) * 100;
     return {
-        left: `calc(${startPercent}% + 2px)`,
-        width: `calc(${endPercent - startPercent - 1}% + 5px)`,
+        left: `calc(${startPercent}% + 5px)`,
+        width: `${endPercent - startPercent - 1}%`,
         background: props.selectColor
     };
 });
