@@ -53,6 +53,7 @@ const model = ref([
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
     { key: 'chart.zoom.show', def: true, type: 'checkbox', label: 'zoom', category: 'general' },
     { key: 'chart.zoom.color', def: '#CCCCCC', type: 'color' },
+    { key: 'chart.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
     { key: 'chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'chart.zoom.useResetSlot', def: false, type: 'checkbox'},
 
