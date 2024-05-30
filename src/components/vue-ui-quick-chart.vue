@@ -1281,7 +1281,8 @@ defineExpose({
         <Slicer 
             v-if="[detector.chartType.BAR, detector.chartType.LINE].includes(chartType) && quickConfig.zoomXy && formattedDataset.maxSeriesLength > 1"
             :key="`slicer_${slicerStep}`"
-            :background="quickConfig.backgroundColor"
+            :background="quickConfig.zoomColor"
+            :borderColor="quickConfig.backgroundColor"
             :fontSize="quickConfig.zoomFontSize"
             :useResetSlot="quickConfig.zoomUseResetSlot"
             :labelLeft="quickConfig.xyPeriods[slicer.start] ? quickConfig.xyPeriods[slicer.start] : ''"

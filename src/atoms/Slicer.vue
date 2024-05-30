@@ -7,6 +7,10 @@ const props = defineProps({
         type: String,
         default: '#FFFFFF'
     },
+    borderColor: {
+        type: String,
+        default: '#FFFFFF'
+    },
     fontSize: {
         type: Number,
         default: 14
@@ -71,7 +75,8 @@ const highlightStyle = computed(() => {
 
 const slicerColor = computed(() => props.inputColor);
 const backgroundColor = computed(() => props.background);
-const selectColorOpaque = computed(() => `${props.selectColor}33`)
+const selectColorOpaque = computed(() => `${props.selectColor}33`);
+const borderColor = computed(() => props.borderColor);
 
 function reset() {
     emit('reset');
@@ -173,7 +178,7 @@ input[type="range"]::-webkit-slider-thumb {
     cursor: pointer;
     position: relative;
     z-index: 2;
-    outline: 2px solid v-bind(backgroundColor);
+    outline: 2px solid v-bind(borderColor);
     transition: all 0.2s ease-in-out;
     &:active,
     &:hover {
@@ -191,7 +196,7 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
     position: relative;
     z-index: 2;
-    outline: 2px solid v-bind(backgroundColor);
+    outline: 2px solid v-bind(borderColor);
     transition: all 0.2s ease-in-out;
     &:active,
     &:hover {
@@ -209,7 +214,7 @@ input[type="range"]::-ms-thumb {
     cursor: pointer;
     position: relative;
     z-index: 2;
-    outline: 2px solid v-bind(backgroundColor);
+    outline: 2px solid v-bind(borderColor);
     transition: all 0.2s ease-in-out;
     &:active,
     &:hover {
@@ -223,7 +228,7 @@ input[type="range"]::-ms-thumb {
     width: 99%;
     height: 8px;
     border-radius: 4px;
-    background: #ddd;
+    background: v-bind(backgroundColor);
     top: 8px;
     z-index: 1;
     left: 50%;

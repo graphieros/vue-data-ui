@@ -681,7 +681,8 @@ defineExpose({
 
         <Slicer v-if="candlestickConfig.style.zoom.show && isDataset"
             :key="`slicer_${slicerStep}`"
-            :background="candlestickConfig.style.backgroundColor"
+            :background="candlestickConfig.style.zoom.color"
+            :borderColor="candlestickConfig.style.backgroundColor"
             :fontSize="candlestickConfig.style.zoom.fontSize"
             :useResetSlot="candlestickConfig.style.zoom.useResetSlot"
             :labelLeft="dataset[slicer.start] ? dataset[slicer.start][0] : dataset[0][0]"

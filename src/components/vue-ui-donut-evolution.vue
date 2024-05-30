@@ -867,7 +867,8 @@ defineExpose({
         <Slicer
             v-if="maxLength > 1 && donutEvolutionConfig.style.chart.zoom.show"
             :key="`slicer_${slicerStep}`"
-            :background="donutEvolutionConfig.style.chart.backgroundColor"
+            :background="donutEvolutionConfig.style.chart.zoom.color"
+            :borderColor="donutEvolutionConfig.style.chart.backgroundColor"
             :fontSize="donutEvolutionConfig.style.chart.zoom.fontSize"
             :useResetSlot="donutEvolutionConfig.style.chart.zoom.useResetSlot"
             :labelLeft="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.start)] || ''"

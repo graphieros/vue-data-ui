@@ -832,7 +832,7 @@
         <Slicer
             v-if="chartConfig.chart.zoom.show && maxX > 6 && isDataset"
             :key="`slicer_${slicerStep}`"
-            :background="chartConfig.chart.backgroundColor"
+            :background="chartConfig.chart.zoom.color"
             :fontSize="chartConfig.chart.zoom.fontSize"
             :useResetSlot="chartConfig.chart.zoom.useResetSlot"
             :labelLeft="chartConfig.chart.grid.labels.xAxisLabels.values[slicer.start]"
@@ -840,6 +840,7 @@
             :textColor="chartConfig.chart.color"
             :inputColor="chartConfig.chart.zoom.color"
             :selectColor="chartConfig.chart.zoom.highlightColor"
+            :borderColor="chartConfig.chart.backgroundColor"
             :max="maxX"
             :min="0"
             :valueStart="slicer.start"
