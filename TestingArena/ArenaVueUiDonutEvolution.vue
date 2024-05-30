@@ -95,6 +95,7 @@ const model = ref([
     { key: 'style.chart.zoom.show', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color'},
+    { key: 'style.chart.zoom.highlightColor', def: "#1A1A1A", type: 'color' },
     { key: 'style.chart.zoom.useResetSlot', def: false, type: 'checkbox'}
 ]);
 
