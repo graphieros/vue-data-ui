@@ -107,6 +107,7 @@ const model = ref([
     { key: 'yAxisLabel', def: 'Lorem ipsum Y axis labellum'},
     { key: 'zoomXy', def: true, type: 'checkbox'},
     { key: 'zoomColor', def: '#CCCCCC', type: 'color'},
+    { key: 'zoomHighlightColor', def: '#1A1A1A', type: 'color'},
     { key: 'zoomFontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'zoomUseResetSlot', def: false, type: 'checkbox'}
 
