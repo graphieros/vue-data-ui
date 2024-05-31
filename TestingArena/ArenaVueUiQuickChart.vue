@@ -22,6 +22,34 @@ const datasets = ref({
             values: [3, 4, 5, 6, 7]
         }
     ],
+    shortObjectNegative: [
+        {
+            name: 'Serie 1',
+            values: [-1, -2, -3, -4, -5]
+        },
+        {
+            name: 'Serie 2',
+            values: [-2, -3, -4, -5, -6]
+        },
+        {
+            name: 'Serie 3',
+            values: [-3, -4, -5, -6, -7]
+        }
+    ],
+    shortObjectMixed: [
+        {
+            name: 'Serie 1',
+            values: [-1, 2, -3, 4, -5]
+        },
+        {
+            name: 'Serie 2',
+            values: [-2, 3, -4, 5, -6]
+        },
+        {
+            name: 'Serie 3',
+            values: [-3, -4, -5, 6, -7]
+        }
+    ],
     longObject: [
         {
             name: 'Serie 1',
@@ -46,7 +74,7 @@ const datasets = ref({
 })
 
 
-const selectedSerie = ref('longObject');
+const selectedSerie = ref('shortObjectNegative');
 
 const model = ref([
     { key: 'axisLabelsFontSize', def: 12, type: 'number', min: 8, max: 24},
