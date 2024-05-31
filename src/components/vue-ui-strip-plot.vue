@@ -160,9 +160,6 @@ const immutableDataset = computed(() => {
 });
 
 const mutableDataset = computed(() => {
-    const s = (immutableDataset.value || []).flatMap(ds => ds.plots.map(p => p.value));
-    const min = Math.min(...s) < 0 ? Math.abs(Math.min(...s)) : 0;
-    const max = Math.max(...s);
     return (immutableDataset.value || []).map((ds, i) => {
         return {
             ...ds,
@@ -170,7 +167,6 @@ const mutableDataset = computed(() => {
                 return {
                     ...p,
                     x: drawingArea.value.left + ((i + 1) * drawingArea.value.stripWidth) - drawingArea.value.stripWidth / 2,
-                    y: drawingArea.value.bottom -( ((p.value + min) / (max + min)) * drawingArea.value.height)
                 }
             })
         }
@@ -187,10 +183,6 @@ const extremes = computed(() => {
     }
 })
 
-const absoluteMin = computed(() => {
-    return extremes.value.min < 0 ? Math.abs(extremes.value.min) : 0
-})
-
 const scale = computed(() => {
     return calculateNiceScale(extremes.value.min < 0 ? extremes.value.min : 0, extremes.value.max, stripConfig.value.style.chart.grid.scaleSteps);
 })
@@ -202,7 +194,7 @@ const drawableDataset = computed(() => {
             plots: ds.plots.map((p) => {
                 return {
                     ...p,
-                    y: drawingArea.value.bottom -(((p.value + scale.value.min) / (scale.value.max + scale.value.min)) * drawingArea.value.height)
+                    y: drawingArea.value.bottom - (((p.value + Math.abs(scale.value.min)) / (scale.value.max + Math.abs(scale.value.min))) * drawingArea.value.height)
                 }
             })
         }
@@ -212,7 +204,7 @@ const drawableDataset = computed(() => {
 const yLines = computed(() => {
     return scale.value.ticks.map(t => {
         return {
-            y: drawingArea.value.bottom - (drawingArea.value.height * ((t + absoluteMin.value) / (scale.value.max + absoluteMin.value))),
+            y: drawingArea.value.bottom - (drawingArea.value.height * ((t + Math.abs(scale.value.min)) / (scale.value.max + Math.abs(scale.value.min)))),
             x1: drawingArea.value.left,
             x2: drawingArea.value.right,
             value: t
