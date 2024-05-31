@@ -141,6 +141,9 @@ const immutableDataset = computed(() => {
         .map((serie, i) => {
             const id = `vertical_parent_${i}_${uid.value}`;
         const hasChildren = !!serie.children && serie.children.length > 0;
+        if (![null, undefined].includes(serie.value) && serie.value < 0) {
+            console.warn(`VueUiVerticalBar is not designed to graph negative values. ${serie.name || 'serie at index' + i} has the following value: ${serie.value}`)
+        }
         return {
             ...serie,
             id,
@@ -155,6 +158,9 @@ const immutableDataset = computed(() => {
             children: !serie.children || !serie.children.length ? [] : serie.children
                 .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
                 .map((c, j) => {
+                    if (![null, undefined].includes(c.value) && c.value < 0) {
+                            console.warn(`VueUiVerticalBar is not designed to graph negative values. ${c.name + ' child serie' || 'child serie at index' + i + ', ' + j } has the following value: ${c.value}`)
+                        }
                     return {
                         ...c,
                         value: c.value || 0,
