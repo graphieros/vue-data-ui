@@ -1255,7 +1255,7 @@ export default {
                 const autoScale = {
                     ratios: autoScaledRatios,
                     valueMin: min,
-                    valueMax: max,
+                    valueMax: max < 0 ? 0 : max,
                 }
 
                 const individualExtremes = {
@@ -1574,7 +1574,7 @@ export default {
             return min;
         },
         niceScale() {
-            return this.calculateNiceScale(this.min, this.max, this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps)
+            return this.calculateNiceScale(this.min, this.max < 0 ? 0 : this.max, this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps)
         },
         maxSeries(){
             return this.slicer.end - this.slicer.start;
