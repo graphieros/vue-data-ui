@@ -552,7 +552,7 @@ const bar = computed(() => {
     }
 
     const extremes = {
-        max: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)),
+        max: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)) < 0 ? 0 : Math.max(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)),
         min: Math.min(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)),
         maxSeries: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).map(d => d.values.length))
     }
