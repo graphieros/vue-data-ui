@@ -206,16 +206,20 @@ const drawableDataset = computed(() => {
     
     const minSubtotal = 0;
     const maxSubtotal = Math.max(...arr.map(a => a.subtotal))
+    const maxScale = arr.length === 1 ? maxSubtotal * 2 : maxSubtotal;
     
     return arr.map((a, i) => {
         const radiusReference = (slit.value / 2) * 0.7;
         const radius = radiusReference > svg.value.width / 16 ? svg.value.width / 16 : radiusReference;
         const activeRadius = hoveredIndex.value === a.index ? svg.value.width / 16 : radius;
-        const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxSubtotal, donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps).max);
+        const hoverRadius = arr.length > 4 ? radiusReference * 2 : radiusReference * 2 > (slit.value / 2 * 0.7) ? slit.value / 2 * 0.7 : radiusReference * 2
+        const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxScale, donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps).max);
         return {
             ...a,
             y,
             radius,
+            activeRadius,
+            hoverRadius,
             donut: makeDonut({
                 series: mutableDataset.value.map((s, k) => {
                     return {
@@ -224,7 +228,7 @@ const drawableDataset = computed(() => {
                         value: s.values[i] ?? 0
                     }
                 })
-            }, a.x, y, activeRadius, activeRadius, 1.99999, 2, 1, 360, 105.25, slit.value / 5 > 16 ? 16 : slit.value / 5),
+            }, a.x, y, radius, radius, 1.99999, 2, 1, 360, 105.25, radius / 2),
             donutHover: makeDonut({
                 series: mutableDataset.value.map((s, k) => {
                     return {
@@ -233,7 +237,7 @@ const drawableDataset = computed(() => {
                         value: s.values[i] ?? 0
                     }
                 })
-            }, a.x, y, activeRadius, activeRadius, 1.99999, 2, 1, 360, 105.25, 12),
+            }, a.x, y, hoverRadius, hoverRadius, 1.99999, 2, 1, 360, 105.25, hoverRadius / 2),
             donutFocus: makeDonut({
                 series: mutableDataset.value.map((s, k) => {
                     return {
@@ -260,7 +264,8 @@ const extremes = computed(() => {
 });
 
 const niceScale = computed(() => {
-    return calculateNiceScale(extremes.value.min, extremes.value.max, donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps)
+    const maxScale = drawableDataset.value.length === 1 ? extremes.value.max * 2 : extremes.value.max
+    return calculateNiceScale(extremes.value.min, maxScale, donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps)
 })
 
 function ratioToMax(value) {
@@ -609,7 +614,7 @@ defineExpose({
                         v-if="datapoint.subtotal"
                         :cx="datapoint.x"
                         :cy="datapoint.y"
-                        :r="hoveredIndex === datapoint.index ? slit / 2.5 : slit / 6"
+                        :r="datapoint.activeRadius"
                         :fill="donutEvolutionConfig.style.chart.backgroundColor"
                     />
                 </g>
@@ -618,7 +623,7 @@ defineExpose({
             <g v-for="(datapoint, i ) in drawableDataset" :data-cy="`donut-wrapper-${i}`" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || isFixed}">
                 <g v-if="datapoint.subtotal">
                     <g v-if="hoveredIndex !== null && hoveredIndex === i">
-                        <g v-for="arc in datapoint.donut">
+                        <g v-for="arc in datapoint.donutHover">
                             <path
                                 :data-cy="`donut_hover_${i}`"
                                 :d="calcNutArrowPath(arc, {x: arc.center.endX, y: arc.center.endY}, 12, 12, { x: datapoint.x, y: datapoint.y}, true)"
@@ -630,7 +635,7 @@ defineExpose({
                             />
                         </g>
                         <!-- DATALABELS (hovered datapoint) -->
-                        <g v-for="(arc, i) in datapoint.donut">
+                        <g v-for="(arc, i) in datapoint.donutHover">
                             <text
                                 :data-cy="`donut-datalabel-value-${i}`"
                                 data-cy-hover-label
@@ -643,6 +648,14 @@ defineExpose({
                             >
                             {{ arc.name}} : {{ displayArcPercentage(arc, datapoint.donut)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value) }})
                             </text>
+                        </g>
+                        <g>
+                            <circle
+                                :cx="datapoint.x"
+                                :cy="datapoint.y"
+                                :r="datapoint.hoverRadius"
+                                :fill="donutEvolutionConfig.style.chart.backgroundColor"
+                            />
                         </g>
                     </g>
                 </g>
@@ -675,15 +688,6 @@ defineExpose({
                             :stroke="donutEvolutionConfig.style.chart.backgroundColor"
                         />
                     </g>
-                </g>
-                <g v-if="datapoint.subtotal !== null">
-                    <circle
-                        v-if="datapoint.subtotal"
-                        :cx="datapoint.x"
-                        :cy="datapoint.y"
-                        :r="hoveredIndex === datapoint.index ? svg.width / 30 : slit / 10"
-                        :fill="donutEvolutionConfig.style.chart.backgroundColor"
-                    />
                 </g>
             </g>
 
