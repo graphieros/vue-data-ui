@@ -60,7 +60,7 @@ const step = ref(0);
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)){
-        error({
+        error({ 
             componentName: 'VueUiScatter',
             type: 'dataset'
         })
@@ -260,6 +260,10 @@ const drawableDataset = computed(() => {
         }
     })
 });
+
+const maxDeviation = computed(() => {
+    return Math.max(...drawableDataset.value.flatMap(ds => ds.plots.map(p => Math.abs(p.deviation))))
+})
 
 function getData() {
     return drawableDataset.value;
@@ -683,7 +687,7 @@ defineExpose({
                         :stroke-width="scatterConfig.style.layout.plots.strokeWidth"
                         @mouseover="useTooltip(plot, i)"
                         @mouseleave="clearHover"
-                        :style="`opacity:${scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
+                        :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : scatterConfig.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
                     />
                 </g>
                 <g v-else>
@@ -698,7 +702,7 @@ defineExpose({
                         :strokeWidth="scatterConfig.style.layout.plots.strokeWidth"
                         @mouseover="useTooltip(plot, i)"
                         @mouseleave="clearHover"
-                        :style="`opacity:${scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
+                        :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : scatterConfig.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
                     />
                 </g>
             </g>

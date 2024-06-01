@@ -1996,6 +1996,7 @@ declare module 'vue-data-ui' {
                     opacity?: number;
                     significance?: {
                         show?: boolean;
+                        useDistanceOpacity?: boolean;
                         deviationThreshold?: number;
                         opacity?: number;
                     };
