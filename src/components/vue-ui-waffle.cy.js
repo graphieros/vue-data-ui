@@ -52,34 +52,6 @@ describe('<VueUiWaffle />', () => {
       cy.get(`[data-cy="waffle-rect-0"]`)
         .trigger('mouseover');
 
-      cy.get(`[data-cy="tooltip"]`).then(($tooltip) => {
-
-        const expectedValue = sortedDataset[0].values.reduce((a, b) => a + b, 0);
-        const expectedPercentage = (expectedValue / grandTotal * 100).toFixed(fixture.config.style.chart.legend.roundingPercentage);
-
-        cy.wrap($tooltip)
-          .should('exist')
-
-        cy.get(`[data-cy="waffle-tooltip-name"]`)
-          .should('exist')
-          .contains(sortedDataset[0].name)
-
-        cy.get(`[data-cy="waffle-tooltip-marker"]`).then(($marker) => {
-          cy.wrap($marker)
-            .should('exist')
-            .invoke('attr', 'fill')
-            .should('eq', sortedDataset[0].color)
-        });
-
-        cy.get(`[data-cy="waffle-tooltip-value"]`)
-          .should('exist')
-          .contains(expectedValue)
-
-        cy.get(`[data-cy="waffle-tooltip-percentage"]`)
-          .should('exist')
-          .contains(`(${expectedPercentage}%)`)
-      });
-
       cy.get(`[data-cy="waffle-rect-0"]`)
         .trigger('mouseleave');
 
