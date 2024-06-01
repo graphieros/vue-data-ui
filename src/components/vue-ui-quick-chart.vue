@@ -401,13 +401,12 @@ const line = computed(() => {
         max: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)),
         min: Math.min(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)),
         maxSeries: Math.max(...ds.map(d => d.values.length))
-    }
+    };
 
-    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, quickConfig.value.xyScaleSegments)
+    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max < 0 ? 0 : extremes.max, quickConfig.value.xyScaleSegments)
     const absoluteMin = extremes.min < 0 ? Math.abs(extremes.min) : 0;
-    const absoluteZero = drawingArea.bottom - (absoluteMin / (scale.max + absoluteMin) * drawingArea.height)
+    const absoluteZero = extremes.max < 0 ? drawingArea.top : drawingArea.bottom - (absoluteMin / (scale.max + absoluteMin) * drawingArea.height)
     const slotSize = drawingArea.width / extremes.maxSeries;
-
 
     const yLabels = scale.ticks.map(t => {
         return {
@@ -415,7 +414,7 @@ const line = computed(() => {
             x: drawingArea.left -8,
             value: t
         }
-    })
+    });
 
     const drawableDataset = ds.map((d, i) => {
         return {
