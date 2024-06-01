@@ -622,6 +622,7 @@
     "vue_ui_waffle": {
         "useBlurOnHover": true,
         "useCustomCells": false,
+        "useAnimation": true,
         "style": {
             "fontFamily": "inherit",
             "chart": {
