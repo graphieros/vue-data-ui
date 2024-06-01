@@ -733,7 +733,7 @@ defineExpose({
             />
 
             <!-- DIALOG -->
-            <g v-if="isFixed" data-cy-zoom>
+            <g v-if="isFixed" data-cy-zoom class="vue-ui-donut-evolution-dialog">
                 <rect 
                     :rx="4"
                     :x="padding.left"
@@ -982,4 +982,25 @@ defineExpose({
         opacity: 1;
     }
 }
+
+.vue-ui-donut-evolution-dialog * {
+    animation: dialog-pop 0.1s ease-in !important;
+    transform-origin: center !important;
+}
+
+@keyframes dialog-pop {
+    0% {
+        transform: scale(0.8,0.8);
+        opacity: 0;
+    }
+    90% {
+        transform: scale(1.05, 1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1,1);
+        opacity: 1;
+    }
+}
+
 </style>
