@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 TODO.txt
 publish-build.cjs
+changeLog.cjs
+package-copy.json
