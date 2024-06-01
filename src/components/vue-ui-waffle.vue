@@ -134,7 +134,7 @@ function calculateProportions(numbers) {
   return proportions;
 }
 
-const datasetCopy = computed(() => {
+const datasetCopyReference = computed(() => {
     return props.dataset.map((s, i) => {
         return {
             ...s,
@@ -144,6 +144,8 @@ const datasetCopy = computed(() => {
         }
     });
 });
+
+const datasetCopy = ref(datasetCopyReference.value)
 
 const proportions = computed(() => {
     const numbers = datasetCopy.value
@@ -182,7 +184,6 @@ const waffleSet = computed(() => {
                 proportion: proportions.value[i] * Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)
             }
         })
-        .sort((a,b) => b.value - a.value)
 });
 
 const immutableSet = computed(() => {
@@ -198,7 +199,6 @@ const immutableSet = computed(() => {
                 proportion: immutableProportions.value[i] * Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)
             }
         })
-        .sort((a,b) => b.value - a.value)
 });
 
 function getData() {
@@ -239,6 +239,7 @@ const rects = computed(() => {
                 value: serie.value,
                 serieIndex: s,
                 absoluteStartIndex: i < 3,
+                serieId: serie.uid,
                 ...serie
             }
         })
@@ -266,14 +267,91 @@ const positions = computed(() => {
 });
 
 const segregated = ref([]);
+const isAnimating = ref(false);
+const rafUp = ref(null);
+const rafDown = ref(null);
 
 function segregate(uid) {
-    if(segregated.value.includes(uid)) {
-        segregated.value = segregated.value.filter(s => s !== uid);
-    }else {
-        if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
+    if (!waffleConfig.value.useAnimation) {
+        if(segregated.value.includes(uid)) {
+            segregated.value = segregated.value.filter(s => s !== uid);
+        } else if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
             segregated.value.push(uid);
         }
+        return
+    }
+
+    const target = datasetCopyReference.value.find(el => el.uid === uid).values.reduce((a, b) => a + b, 0);
+    const source = datasetCopy.value.find(el => el.uid === uid).values.reduce((a, b) => a + b, 0);
+    let initVal = source;
+
+    if(segregated.value.includes(uid)) {
+        segregated.value = segregated.value.filter(s => s !== uid);
+        const targetVal = target;
+        function animUp() {
+            if(initVal > targetVal) {
+                cancelAnimationFrame(rafUp.value);
+                datasetCopy.value = datasetCopy.value.map((ds, i) => {
+                    if (ds.uid === uid) {
+                        return {
+                            ...ds,
+                            values: [targetVal]
+                        }
+                    } else {
+                        return ds
+                    }
+                });
+                isAnimating.value = false;
+            } else {
+                isAnimating.value = true;
+                initVal += (targetVal * 0.025)
+                datasetCopy.value = datasetCopy.value.map((ds, i) => {
+                    if (ds.uid === uid) {
+                        return {
+                            ...ds,
+                            values: [initVal]
+                        }
+                    } else {
+                        return ds;
+                    }
+                })
+                rafUp.value = requestAnimationFrame(animUp)
+            }
+        }
+        animUp()
+    } else if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
+        function animDown() {
+            if(initVal < 0.1) {
+                cancelAnimationFrame(rafDown.value)
+                segregated.value.push(uid);
+                datasetCopy.value = datasetCopy.value.map((ds, i) => {
+                    if (ds.uid === uid) {
+                        return {
+                            ...ds,
+                            values: [0]
+                        }
+                    } else {
+                        return ds;
+                    }
+                });
+                isAnimating.value = false;
+            } else {
+                isAnimating.value = true;
+                initVal /= 1.5;
+                datasetCopy.value = datasetCopy.value.map((ds, i) => {
+                    if (ds.uid === uid) {
+                        return {
+                            ...ds,
+                            values: [initVal]
+                        }
+                    } else {
+                        return ds
+                    }
+                })
+                rafDown.value = requestAnimationFrame(animDown)
+            }
+        }
+        animDown()
     }
     emit('selectLegend', waffleSet.value.map(w => {
         return {
@@ -296,7 +374,6 @@ const legendSet = computed(() => {
                 shape: 'square'
             }
         })
-        .sort((a,b) => b.value - a.value)
         .map((el, i) => {
             return {
                 ...el,
@@ -648,7 +725,7 @@ defineExpose({
             <!-- DATA LABELS -->
             <template v-for="(position, i) in positions">
                 <foreignObject
-                    v-if="!waffleConfig.style.chart.layout.grid.vertical && waffleConfig.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < waffleConfig.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % waffleConfig.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
+                    v-if="!isAnimating && !waffleConfig.style.chart.layout.grid.vertical && waffleConfig.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < waffleConfig.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % waffleConfig.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
                     :x="position.x + waffleConfig.style.chart.layout.labels.captions.offsetX"
                     :y="position.y + waffleConfig.style.chart.layout.labels.captions.offsetY"
                     :height="absoluteRectDimension"
