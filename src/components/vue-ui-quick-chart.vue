@@ -136,14 +136,17 @@ function segregate(id, len) {
 
 const raf = ref(null)
 const rafUp = ref(null)
+const isSegregatingDonut = ref(false);
 
 function segregateDonut(arc, ds) {
+    isSegregatingDonut.value = true;
     let initVal = arc.value;
     if(segregated.value.includes(arc.id)) {
         segregated.value = segregated.value.filter(el => el !== arc.id)
         const targetVal = fd.value.dataset.find((el, i) => arc.id === `donut_${i}`).VALUE;
         function animUp() {
             if(initVal > targetVal) {
+                isSegregatingDonut.value = false;
                 cancelAnimationFrame(rafUp.value)
                 formattedDataset.value = {
                     ...formattedDataset.value,
@@ -182,6 +185,7 @@ function segregateDonut(arc, ds) {
     } else if(ds.length > 1) {
         function anim() {
             if(initVal < 0.1) {
+                isSegregatingDonut.value = false;
                 cancelAnimationFrame(raf.value)
                 segregated.value.push(arc.id)
                 formattedDataset.value = {
@@ -235,6 +239,7 @@ const donut = computed(() => {
         return {
             ...ds,
             color: ds.COLOR ? convertColorToHex(ds.COLOR) : palette[(i + quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
+            immutableValue: ds.value
         }
     });
 
@@ -1333,6 +1338,9 @@ defineExpose({
                             }) }}
                         </span>
                         <span v-if="segregated.includes(legendItem.id)" :style="`font-size:${quickConfig.legendFontSize}px`">
+                            ( - % )
+                        </span>
+                        <span v-else-if="isSegregatingDonut" :style="`font-size:${quickConfig.legendFontSize}px; font-variant-numeric: tabular-nums;`">
                             ( - % )
                         </span>
                         <span v-else :style="`font-size:${quickConfig.legendFontSize}px; font-variant-numeric: tabular-nums;`">
