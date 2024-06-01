@@ -23,6 +23,7 @@ const dataset = ref([
 const model = ref([
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
     { key: 'useCustomCells', def: false, type: 'checkbox'},
+    { key: 'useAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
