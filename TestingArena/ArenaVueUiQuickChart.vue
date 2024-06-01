@@ -8,6 +8,7 @@ import convertArrayToObject from "./convertModel";
 const datasets = ref({
     shortArray: [1, 2, -3, 5, 8],
     longArray: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89],
+    longArrayNegative: [-1, -2, -3, -5, -8, -13, -21, -34, -55, -89],
     shortObject: [
         {
             name: 'Serie 1',
@@ -64,6 +65,20 @@ const datasets = ref({
             values: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
         }
     ],
+    longObjectNegative: [
+        {
+            name: 'Serie 1',
+            values: [-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12]
+        },
+        {
+            name: 'Serie 2',
+            values: [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13]
+        },
+        {
+            name: 'Serie 3',
+            values: [-3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14]
+        }
+    ],
     donut: [
         { name: 'Serie 1', value: 24},
         { name: 'Serie 2', value: 12},
@@ -74,7 +89,7 @@ const datasets = ref({
 })
 
 
-const selectedSerie = ref('shortObjectNegative');
+const selectedSerie = ref('longArray');
 
 const model = ref([
     { key: 'axisLabelsFontSize', def: 12, type: 'number', min: 8, max: 24},
