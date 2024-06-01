@@ -7,7 +7,7 @@ import convertArrayToObject from "./convertModel";
 
 const scat1 = computed(() => {
     const arr = [];
-    for (let i = -100; i < 100; i += 1) {
+    for (let i = -200; i < 500; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.3 ? i / 3 : -i / 5),
             y: Math.random() * i / 20,
@@ -35,7 +35,7 @@ const dataset = computed(() => {
         {
             name: "Cluster 1",
             values: scat1.value,
-            shape: "star"
+            shape: "star",
         },
         {
             name: "Cluster 2",
@@ -76,6 +76,7 @@ const model = ref([
     { key: 'style.layout.plots.strokeWidth', def: 0.3, type: 'range', min: 0.1, max: 12, step: 0.1},
     { key: 'style.layout.plots.opacity', def: 0.6, type: 'number', min: 0, max: 1, step: 0.01},
     { key: 'style.layout.plots.significance.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.plots.significance.useDistanceOpacity', def: true, type: 'checkbox' },
     { key: 'style.layout.plots.significance.deviationThreshold', def: 10, type: 'number', min: 0, max: 100},
     { key: 'style.layout.plots.significance.opacity', def: 0.3, type: 'number', min: 0, max: 1, step: 0.01},
     { key: 'style.layout.plots.deviation.translation', def: 'deviation', type: 'text'},
