@@ -587,7 +587,7 @@ defineExpose({
                     @mouseenter="useTooltip({ datapoint: plot, seriesIndex: i })"
                     @mouseleave="isTooltip = false; selectedDatapoint = null"
                     @click="emit('selectDatapoint', plot)"
-                    :style="`opacity:${selectedDatapoint && selectedDatapoint.id === plot.id ? 1 : stripConfig.style.chart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
+                    :style="`transition: all 0.2s ease-in-out; opacity:${selectedDatapoint ? selectedDatapoint.id === plot.id ? 1 : 0.2 : stripConfig.style.chart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
                     :class="{ 'vue-ui-strip-plot-animated': stripConfig.useCssAnimation && animationActive, 'vue-ui-strip-plot-select-circle': stripConfig.useCssAnimation && !animationActive}"
                     v-bind="$attrs"
                 />
