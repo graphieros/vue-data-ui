@@ -730,6 +730,7 @@ defineExpose({
                 :body="dataTable.body"
                 :config="dataTable.config"
                 :title="`${candlestickConfig.style.title.text}${candlestickConfig.style.title.subtitle.text ? ` : ${candlestickConfig.style.title.subtitle.text}` : ''}`"
+                @close="mutableConfig.showTable = false"
             >
                 <template #th="{ th }">
                     {{ th }}
