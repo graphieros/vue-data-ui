@@ -24,6 +24,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import BaseIcon from "../atoms/BaseIcon.vue";
 
 const props = defineProps({
     config: {
@@ -783,7 +784,10 @@ defineExpose({
 
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-vertical-bar-table">        
-            <div :style="`width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable && isDataset">
+            <div :style="`width:100%;padding-top: 36px;position:relative`" v-if="mutableConfig.showTable && isDataset">
+                <div role="button" tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${verticalBarConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                    <BaseIcon name="close" :stroke="verticalBarConfig.table.th.color" :stroke-width="2" />
+                </div> 
                 <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">
                     <table class="vue-ui-data-table">
                         <caption :style="{backgroundColor: verticalBarConfig.table.th.backgroundColor, color: verticalBarConfig.table.th.color, outline: verticalBarConfig.table.th.outline }" class="vue-ui-data-table__caption">
