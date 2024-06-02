@@ -853,6 +853,7 @@ defineExpose({
             :body="dataTable.body"
             :config="dataTable.config"
             :title="`${waffleConfig.style.chart.title.text}${waffleConfig.style.chart.title.subtitle.text ? ` : ${waffleConfig.style.chart.title.subtitle.text}` : ''}`"
+            @close="mutableConfig.showTable = false"
         >
             <template #th="{th}">
                 <div v-html="th" style="display:flex;align-items:center"></div>
