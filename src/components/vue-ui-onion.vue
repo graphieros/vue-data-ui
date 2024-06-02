@@ -619,6 +619,7 @@ defineExpose({
                 :body="dataTable.body"
                 :config="dataTable.config"
                 :title="`${onionConfig.style.chart.title.text}${onionConfig.style.chart.title.subtitle.text ? ` : ${onionConfig.style.chart.title.subtitle.text}` : ''}`"
+                @close="mutableConfig.showTable = false"
             >
                 <template #th="{ th }">
                     {{ th }}
