@@ -768,6 +768,16 @@ describe('dataLabel', () => {
         expect(dataLabel({ p: '$', v: 1, s: '$', space: true })).toBe('$ 1 $')
         expect(dataLabel({ p: '$', v: 1.1, s: '$', r: 1, space: true })).toBe('$ 1.1 $')
     })
+    test('returns a formatted dataLabel in loading mode', () => {
+        expect(dataLabel({ p: '$', v: 1, s: '$', isAnimating: true})).toBe('---')
+    })
+    test('returns a formatted percentage datalabel in loading mode', () => {
+        expect(dataLabel({ v: 10, s: '%',  isAnimating: true})).toBe('--%')
+    })
+    test('returns a formatted dataLabel in loading mode with a custom regex', () => {
+        expect(dataLabel({ p: '$', v: 10, isAnimating: true, regex: /[^$]/g })).toBe('$--')
+        expect(dataLabel({ p: '$', v: 10, s: '$', isAnimating: true, regex: /[^$]/g })).toBe('$--$')
+    })
 })
 
 describe('abbreviate', () => {

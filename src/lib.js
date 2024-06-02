@@ -938,12 +938,16 @@ export function interpolateColorHex(minColor, maxColor, minValue, maxValue, valu
  * @property {string=} s - suffix
  * @property {number=} r - rounding
  * @property {boolean=} space  - space between elements
+ * @property {boolean=} isAnimating
+ * @property {RegExp=} regex - replacements when isAnimating is true
+ * @property {string=} replacement - the replacement for regex result when isAnimating is true
  * @type {DataLabel}
  */
-export function dataLabel({ p = '', v, s = '', r = 0, space = false }) {
+export function dataLabel({ p = '', v, s = '', r = 0, space = false, isAnimating = false, regex = /[^%]/g, replacement = '-' }) {
     const num = Number(Number(v).toFixed(r).toLocaleString())
     const numStr = num === Infinity ? '∞' : num === -Infinity ? '-∞' : num;
-    return `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
+    const result = `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
+    return isAnimating ? result.replace(regex, replacement) : result
 }
 
 /**
