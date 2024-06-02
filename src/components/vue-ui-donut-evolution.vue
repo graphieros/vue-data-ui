@@ -921,6 +921,7 @@ defineExpose({
                 :body="table.body" 
                 :config="table.config" 
                 :title="`${donutEvolutionConfig.style.chart.title.text}${donutEvolutionConfig.style.chart.title.subtitle.text ? ` : ${donutEvolutionConfig.style.chart.title.subtitle.text}` : ''}`"
+                @close="mutableConfig.showTable = false"
             >
                 <template #th="{th}">
                     {{ th.name ?? th }}
