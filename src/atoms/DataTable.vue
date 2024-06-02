@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import Shape from "./Shape.vue";
+import BaseIcon from "./BaseIcon.vue";
 
 const props = defineProps({
     colNames: {
@@ -36,10 +37,15 @@ onMounted(() => {
     }     
 })
 
+const emit = defineEmits(['close'])
+
 </script>
 
 <template>
-    <div ref="tableContainer" style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}"> 
+    <div ref="tableContainer" style="width: 100%; container-type: inline-size; position:relative;padding-top: 36px" :class="{'vue-ui-responsive': isResponsive}">
+        <div role="button" tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${thbg};`" @click="emit('close')" @keypress.enter="emit('close')">
+            <BaseIcon name="close" :stroke="thc" :stroke-width="2" />
+        </div>
         <table data-cy="vue-data-ui-table-data" class="vue-ui-data-table">
         <caption :style="{backgroundColor: thbg, color: thc, outline: tho}" class="vue-ui-data-table__caption">
             {{  title }}
