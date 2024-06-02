@@ -617,6 +617,7 @@ defineExpose({
             :body="dataTable.body"
             :config="dataTable.config"
             :title="`${ringsConfig.style.chart.title.text}${ringsConfig.style.chart.title.subtitle.text ? ` : ${ringsConfig.style.chart.title.subtitle.text}` : ''}`"
+            @close="mutableConfig.showTable = false"
         >
           <template #th="{th}">
               <div v-html="th" style="display:flex;align-items:center"></div>
