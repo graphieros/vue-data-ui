@@ -676,6 +676,7 @@ defineExpose({
                 :body="dataTable.body"
                 :config="dataTable.config"
                 :title="`${agePyramidConfig.style.title.text}${agePyramidConfig.style.title.subtitle.text ? ` : ${agePyramidConfig.style.title.subtitle.text}` : ''}`"
+                @close="mutableConfig.showTable = false"
             >
                 <template #th="{ th }">
                     {{ th }}
