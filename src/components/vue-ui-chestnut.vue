@@ -24,6 +24,7 @@ import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import BaseIcon from "../atoms/BaseIcon.vue";
 
 const props = defineProps({
     config: {
@@ -1062,8 +1063,11 @@ defineExpose({
         />
         <slot name="legend" v-bind:legend="mutableDataset"></slot>
         <!-- DATA TABLE -->
-        <div ref="tableContainer" class="vue-ui-chestnut-table">        
-            <div v-if="mutableConfig.showTable && isDataset">
+        <div ref="tableContainer" class="vue-ui-chestnut-table">
+            <div v-if="mutableConfig.showTable && isDataset" style="padding-top:36px; position: relative">
+                <div role="button" tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${chestnutConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                    <BaseIcon name="close" :stroke="chestnutConfig.table.th.color" :stroke-width="2" />
+                </div>        
                 <div style="width: 100%" :class="{'vue-ui-responsive': isResponsive}">
                     <table data-cy="chestnut-table" class="vue-ui-data-table">
                         <caption :style="{backgroundColor: chestnutConfig.table.th.backgroundColor, color: chestnutConfig.table.th.color, outline: chestnutConfig.table.th.outline }" class="vue-ui-data-table__caption">
