@@ -1065,7 +1065,7 @@ defineExpose({
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-chestnut-table">
             <div v-if="mutableConfig.showTable && isDataset" style="padding-top:36px; position: relative">
-                <div role="button" tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${chestnutConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${chestnutConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
                     <BaseIcon name="close" :stroke="chestnutConfig.table.th.color" :stroke-width="2" />
                 </div>        
                 <div style="width: 100%" :class="{'vue-ui-responsive': isResponsive}">
