@@ -2544,6 +2544,7 @@ declare module 'vue-data-ui' {
         color?: string;
         dashed?: boolean;
         useTag?: "start" | "end";
+        showSerieName?: "start" | "end";
         useArea?: boolean;
         dataLabels?: boolean;
         useProgression?: boolean;

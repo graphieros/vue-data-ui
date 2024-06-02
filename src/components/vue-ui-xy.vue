@@ -550,17 +550,93 @@
                     <rect
                         :x="0"
                         :y="drawingArea.top"
-                        :width="drawingArea.left - 1"
+                        :width="chartConfig.chart.padding.right - 1"
                         :height="drawingArea.height"
                         :fill="chartConfig.chart.backgroundColor"
                     />
                     <rect
                         :x="drawingArea.right + 1"
                         :y="drawingArea.top"
-                        :width="chartConfig.chart.width - drawingArea.left - 1"
+                        :width="chartConfig.chart.padding.right"
                         :height="drawingArea.height"
                         :fill="chartConfig.chart.backgroundColor"
                     />
+                </g>
+
+                <!-- SERIE NAME TAGS : LINES -->
+                <g v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                    <g v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
+                        <text 
+                            v-if="plot && j === 0 && serie.showSerieName && serie.showSerieName === 'start'"
+                            :x="plot.x - chartConfig.chart.labels.fontSize"
+                            :y="plot.y"
+                            :font-size="chartConfig.chart.labels.fontSize"
+                            text-anchor="end"
+                            :fill="serie.color"
+                            v-html="createTSpans({
+                                content: serie.name,
+                                fontSize: chartConfig.chart.labels.fontSize,
+                                fill: serie.color,
+                                x: plot.x - chartConfig.chart.labels.fontSize,
+                                y: plot.y,
+                                maxWords: 2
+                            })"
+                        />
+                        <text 
+                            v-if="plot && j === serie.plots.length - 1 && serie.showSerieName && serie.showSerieName === 'end'"
+                            :x="plot.x + chartConfig.chart.labels.fontSize"
+                            :y="plot.y"
+                            :font-size="chartConfig.chart.labels.fontSize"
+                            text-anchor="start"
+                            :fill="serie.color"
+                            v-html="createTSpans({
+                                content: serie.name,
+                                fontSize: chartConfig.chart.labels.fontSize,
+                                fill: serie.color,
+                                x: plot.x + chartConfig.chart.labels.fontSize,
+                                y: plot.y,
+                                maxWords: 2
+                            })"
+                        />
+                    </g>
+                </g>
+
+                <!-- SERIE NAME TAGS : PLOTS -->
+                <g v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                    <g v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
+                        <text 
+                            v-if="plot && j === 0 && serie.showSerieName && serie.showSerieName === 'start'"
+                            :x="plot.x - chartConfig.chart.labels.fontSize"
+                            :y="plot.y"
+                            :font-size="chartConfig.chart.labels.fontSize"
+                            text-anchor="end"
+                            :fill="serie.color"
+                            v-html="createTSpans({
+                                content: serie.name,
+                                fontSize: chartConfig.chart.labels.fontSize,
+                                fill: serie.color,
+                                x: plot.x - chartConfig.chart.labels.fontSize,
+                                y: plot.y,
+                                maxWords: 2
+                            })"
+                        />
+                        <text
+                            v-if="plot && j === serie.plots.length - 1 && serie.showSerieName && serie.showSerieName === 'end'"
+                            :x="plot.x + chartConfig.chart.labels.fontSize"
+                            :y="plot.y"
+                            :font-size="chartConfig.chart.labels.fontSize"
+                            text-anchor="start"
+                            :fill="serie.color"
+                            v-html="createTSpans({
+                                content: serie.name,
+                                fontSize: chartConfig.chart.labels.fontSize,
+                                fill: serie.color,
+                                x: plot.x + chartConfig.chart.labels.fontSize,
+                                y: plot.y,
+                                maxWords: 2
+                            })"
+                        />
+                    </g>
                 </g>
 
                 <!-- Y LABELS -->
@@ -947,6 +1023,7 @@ import {
     createPolygonPath,
     createSmoothPath,
     createStar,
+    createTSpans,
     createUid,
     dataLabel,
     downloadCsv,
@@ -1859,6 +1936,7 @@ export default {
         functionReturnsString,
         error,
         objectIsEmpty,
+        createTSpans,
         checkAutoScaleError(datapoint) {
             if (datapoint.autoScaling) {
                 if (!this.chartConfig.chart.grid.labels.yAxis.useIndividualScale) {
