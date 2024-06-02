@@ -1466,6 +1466,7 @@ defineExpose({
                 :body="dataTable.body"
                 :config="dataTable.config"
                 :title="`${quadrantConfig.style.chart.title.text}${quadrantConfig.style.chart.title.subtitle.text ? ` : ${quadrantConfig.style.chart.title.subtitle.text}` : ''}`"
+                @close="mutableConfig.showTable = false"
             >
                 <template #th="{ th }">
                     {{ th }}
