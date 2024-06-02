@@ -917,6 +917,7 @@
                 :body="dataTable.body"
                 :config="dataTable.config"
                 :title="`${chartConfig.chart.title.text}${chartConfig.chart.title.subtitle.text ? ` : ${chartConfig.chart.title.subtitle.text}` : ''}`"
+                @close="mutableConfig.showTable = false"
             >
                 <template #th="{ th }">
                     <div v-html="th"/>
