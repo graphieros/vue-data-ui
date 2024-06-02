@@ -22,6 +22,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import BaseIcon from "../atoms/BaseIcon.vue";
 
 const props = defineProps({
     config: {
@@ -595,7 +596,10 @@ defineExpose({
         
         <!-- DATA TABLE -->
         <div ref="tableContainer" class="vue-ui-heatmap-table">
-            <div :style="`width:100%;overflow-x:auto`" v-if="mutableConfig.showTable && isDataset" :class="{'vue-ui-responsive' : isResponsive}">
+            <div :style="`width:100%;overflow-x:auto;padding-top:36px;position:relative`" v-if="mutableConfig.showTable && isDataset" :class="{'vue-ui-responsive' : isResponsive}">
+                <div role="button" tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${heatmapConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                    <BaseIcon name="close" :stroke="heatmapConfig.table.th.color" :stroke-width="2" />
+                </div> 
                 <table class="vue-ui-data-table">
                     <caption :style="`backgroundColor:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline}`">
                         {{ heatmapConfig.style.title.text }} <span v-if="heatmapConfig.style.title.subtitle.text">{{  heatmapConfig.style.title.subtitle.text }}</span>
