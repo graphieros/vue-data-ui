@@ -1074,7 +1074,7 @@ defineExpose({
                 :body="dataTable.body"
                 :config="dataTable.config"
                 :title="`${scatterConfig.style.title.text}${scatterConfig.style.title.subtitle.text ? ` : ${scatterConfig.style.title.subtitle.text}` : ''}`"
-
+                @close="mutableConfig.showTable = false"
             >
                 <template #th="{ th }">
                     {{ th }}
