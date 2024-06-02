@@ -1285,6 +1285,35 @@ export function calcTrend(numbers) {
     return averagePercentageChange;
 }
 
+export function createTSpans({
+    content,
+    fontSize,
+    fill,
+    maxWords,
+    x,
+    y
+}) {
+    function chunk(text, len) {
+        const words = text.split(" ");
+        const chunks = [];
+        
+        for (let i = 0; i < words.length; i += len) {
+            chunks.push(words.slice(i, i + len).join(" "));
+        }
+        
+        return chunks;
+    }
+    let tspans = "";
+    const chunks = chunk(content, maxWords);
+
+    chunks.forEach((c, i) => {
+        const tspan = `<tspan x="${x}" y="${ y + (i * fontSize)}" fill="${ fill }">${ c }</tspan>`;
+        tspans += tspan
+    });
+
+    return tspans;
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -1307,6 +1336,7 @@ const lib = {
     createSmoothPath,
     createSpiralPath,
     createStar,
+    createTSpans,
     createUid,
     darkenHexColor,
     dataLabel,

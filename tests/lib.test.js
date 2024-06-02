@@ -21,6 +21,7 @@ import {
     createSmoothPath,
     createSpiralPath,
     createStar,
+    createTSpans,
     dataLabel,
     degreesToRadians,
     error,
@@ -1038,5 +1039,18 @@ describe('generateSpiralCoordinates and createSpiralPath', () => {
 
     test('creates a spiral path', () => {
         expect(createSpiralPath(config)).toStrictEqual('M106 100 C106.20213871081302 100.22451653995347, 106.58867741786025 100.70175399203677, 106.93679092749588 101.23394688852463 C106.93679092749588 101.23394688852463, 107.24070510356202 101.81791512692755, 107.49491237014524 102.44994181068077 C107.49491237014524 102.44994181068077, 107.69421837276232 103.12579565022835, 107.83378676371768 103.84075725015884 C107.83378676371768 103.84075725015884, 107.90918179753004 104.58964912639482, 107.91640843518921 105.36686927260743')
+    })
+})
+
+describe('createTSpans', () => {
+    test('creates tspans from text content', () => {
+        expect(createTSpans({
+            content: 'Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet',
+            fontSize: 20,
+            fill: '#FF0000',
+            maxWords: 5,
+            x: 0,
+            y: 0
+        })).toStrictEqual("<tspan x=\"0\" y=\"0\" fill=\"#FF0000\">Lorem ipsum dolor sit amet</tspan><tspan x=\"0\" y=\"20\" fill=\"#FF0000\">Lorem ipsum dolor sit amet</tspan>")
     })
 })
