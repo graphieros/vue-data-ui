@@ -68,9 +68,9 @@ const model = ref([
 
     { key: "chart.timeTag.show", def: true, type: "checkbox" },
 
-    { key: 'chart.highlightArea.show', def: false, type: 'checkbox', label: 'show', category: 'highlight' },
-    { key: 'chart.highlightArea.from', def: 0, type: 'number', min: 0, max: 999, label: 'from', category: 'highlight' },
-    { key: 'chart.highlightArea.to', def: 0, type: 'number', min: 0, max: 999, label: 'to', category: 'highlight' },
+    { key: 'chart.highlightArea.show', def: true, type: 'checkbox', label: 'show', category: 'highlight' },
+    { key: 'chart.highlightArea.from', def: 2, type: 'number', min: 0, max: 999, label: 'from', category: 'highlight' },
+    { key: 'chart.highlightArea.to', def: 5, type: 'number', min: 0, max: 999, label: 'to', category: 'highlight' },
     { key: 'chart.highlightArea.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'highlight' },
     { key: 'chart.highlightArea.opacity', def: 20, type: 'range', min: 0, max: 100, label: 'opacity', category: 'highlight' },
     { key: 'chart.highlightArea.caption.text', def: 'Caption', type: 'text', label: 'caption', category: 'highlight' },
