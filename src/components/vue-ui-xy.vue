@@ -550,7 +550,7 @@
                     <rect
                         :x="0"
                         :y="drawingArea.top"
-                        :width="chartConfig.chart.padding.right - 1"
+                        :width="chartConfig.chart.padding.left - 1"
                         :height="drawingArea.height"
                         :fill="chartConfig.chart.backgroundColor"
                     />
