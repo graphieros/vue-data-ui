@@ -25,6 +25,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import pdf from "../pdf";
 import img from "../img";
 import Skeleton from "./vue-ui-skeleton.vue";
+import Accordion from "./vue-ui-accordion.vue";
 
 const props = defineProps({
     config: {
@@ -548,22 +549,28 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <DataTable
-            v-if="mutableConfig.showTable"
-            :colNames="dataTable.colNames"
-            :head="dataTable.head" 
-            :body="dataTable.body"
-            :config="dataTable.config"
-            :title="`${galaxyConfig.style.chart.title.text}${galaxyConfig.style.chart.title.subtitle.text ? ` : ${galaxyConfig.style.chart.title.subtitle.text}` : ''}`"
-            @close="mutableConfig.showTable = false"
-        >
-            <template #th="{ th }">
-                <div v-html="th" style="display:flex;align-items:center"></div>
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000
+        }">
+            <template #content>
+                <DataTable
+                    :colNames="dataTable.colNames"
+                    :head="dataTable.head" 
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="`${galaxyConfig.style.chart.title.text}${galaxyConfig.style.chart.title.subtitle.text ? ` : ${galaxyConfig.style.chart.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false"
+                >
+                    <template #th="{ th }">
+                        <div v-html="th" style="display:flex;align-items:center"></div>
+                    </template>
+                    <template #td="{ td }">
+                        {{ td.name || td }}
+                    </template>
+                </DataTable>
             </template>
-            <template #td="{ td }">
-                {{ td.name || td }}
-            </template>
-        </DataTable>
+        </Accordion>
     </div>
 </template>
 
