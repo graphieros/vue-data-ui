@@ -26,6 +26,7 @@ import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Accordion from "./vue-ui-accordion.vue";
 
 const props = defineProps({
     config: {
@@ -864,22 +865,28 @@ defineExpose({
         />
         
         <!-- DATA TABLE -->
-        <DataTable
-            v-if="mutableConfig.showTable && hasStack"
-            :colNames="dataTable.colNames"
-            :head="dataTable.head" 
-            :body="dataTable.body"
-            :config="dataTable.config"
-            :title="`${barConfig.style.chart.title.text}${barConfig.style.chart.title.subtitle.text ? ` : ${barConfig.style.chart.title.subtitle.text}` : ''}`"
-            @close="mutableConfig.showTable = false"
-        >
-            <template #th="{ th }">
-                <div v-html="th" style="display:flex;align-items:center"></div>
+        <Accordion hideDetails v-if="isDataset && hasStack" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000
+        }">
+            <template #content>
+                <DataTable
+                    :colNames="dataTable.colNames"
+                    :head="dataTable.head" 
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="`${barConfig.style.chart.title.text}${barConfig.style.chart.title.subtitle.text ? ` : ${barConfig.style.chart.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false"
+                >
+                    <template #th="{ th }">
+                        <div v-html="th" style="display:flex;align-items:center"></div>
+                    </template>
+                    <template #td="{ td }">
+                        {{ td.name || td }}
+                    </template>
+                </DataTable>
             </template>
-            <template #td="{ td }">
-                {{ td.name || td }}
-            </template>
-        </DataTable>
+        </Accordion>
     </div>
 </template>
 
