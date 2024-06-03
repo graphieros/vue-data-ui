@@ -980,7 +980,15 @@
         <!-- DATA TABLE -->
         <Accordion hideDetails v-if="isDataset" :config="{
             open: mutableConfig.showTable,
-            maxHeight: 10000
+            maxHeight: 10000,
+            body: {
+                backgroundColor: chartConfig.chart.backgroundColor,
+                color: chartConfig.chart.color
+            },
+            head: {
+                backgroundColor: chartConfig.chart.backgroundColor,
+                color: chartConfig.chart.color
+            }
         }">
             <template #content>
                 <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`">

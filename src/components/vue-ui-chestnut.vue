@@ -1066,7 +1066,15 @@ defineExpose({
         <!-- DATA TABLE -->
         <Accordion hideDetails v-if="isDataset" :config="{
             open: mutableConfig.showTable,
-            maxHeight: 10000
+            maxHeight: 10000,
+            body: {
+                backgroundColor: chestnutConfig.style.chart.backgroundColor,
+                color: chestnutConfig.style.chart.color,
+            },
+            head: {
+                backgroundColor: chestnutConfig.style.chart.backgroundColor,
+                color: chestnutConfig.style.chart.color,
+            }
         }">
             <template #content>
                 <div ref="tableContainer" class="vue-ui-chestnut-table">

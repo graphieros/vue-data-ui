@@ -867,7 +867,15 @@ defineExpose({
         <!-- DATA TABLE -->
         <Accordion hideDetails v-if="isDataset && hasStack" :config="{
             open: mutableConfig.showTable,
-            maxHeight: 10000
+            maxHeight: 10000,
+            body: {
+                backgroundColor: barConfig.style.chart.backgroundColor,
+                color: barConfig.style.chart.color,
+            },
+            head: {
+                backgroundColor: barConfig.style.chart.backgroundColor,
+                color: barConfig.style.chart.color,
+            }
         }">
             <template #content>
                 <DataTable

@@ -849,7 +849,15 @@ defineExpose({
         <!-- DATA TABLE -->
         <Accordion hideDetails v-if="isDataset" :config="{
             open: mutableConfig.showTable,
-            maxHeight: 10000
+            maxHeight: 10000,
+            body: {
+                backgroundColor: waffleConfig.style.chart.backgroundColor,
+                color: waffleConfig.style.chart.color
+            },
+            head: {
+                backgroundColor: waffleConfig.style.chart.backgroundColor,
+                color: waffleConfig.style.chart.color
+            }
         }">
             <template #content>            
                 <DataTable

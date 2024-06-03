@@ -786,7 +786,15 @@ defineExpose({
         <!-- DATA TABLE -->
         <Accordion hideDetails v-if="isDataset" :config="{
             open: mutableConfig.showTable,
-            maxHeight: 10000
+            maxHeight: 10000,
+            body: {
+                backgroundColor: verticalBarConfig.style.chart.backgroundColor,
+                color: verticalBarConfig.style.chart.color,
+            },
+            head: {
+                backgroundColor: verticalBarConfig.style.chart.backgroundColor,
+                color: verticalBarConfig.style.chart.color,
+            }
         }">
             <template #content>
                 <div ref="tableContainer" class="vue-ui-vertical-bar-table">        
