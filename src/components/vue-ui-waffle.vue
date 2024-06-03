@@ -28,6 +28,7 @@ import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import Accordion from "./vue-ui-accordion.vue";
 
 const props = defineProps({
     config: {
@@ -846,22 +847,28 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <DataTable
-            v-if="mutableConfig.showTable && isDataset"
-            :colNames="dataTable.colNames"
-            :head="dataTable.head" 
-            :body="dataTable.body"
-            :config="dataTable.config"
-            :title="`${waffleConfig.style.chart.title.text}${waffleConfig.style.chart.title.subtitle.text ? ` : ${waffleConfig.style.chart.title.subtitle.text}` : ''}`"
-            @close="mutableConfig.showTable = false"
-        >
-            <template #th="{th}">
-                <div v-html="th" style="display:flex;align-items:center"></div>
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000
+        }">
+            <template #content>            
+                <DataTable
+                    :colNames="dataTable.colNames"
+                    :head="dataTable.head" 
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="`${waffleConfig.style.chart.title.text}${waffleConfig.style.chart.title.subtitle.text ? ` : ${waffleConfig.style.chart.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false"
+                >
+                    <template #th="{th}">
+                        <div v-html="th" style="display:flex;align-items:center"></div>
+                    </template>
+                    <template #td="{td}">
+                        {{ td.name || td }}
+                    </template>
+                </DataTable>
             </template>
-            <template #td="{td}">
-                {{ td.name || td }}
-            </template>
-        </DataTable>
+        </Accordion>
     </div>
 </template>
 
