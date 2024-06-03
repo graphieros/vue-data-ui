@@ -29,6 +29,7 @@ import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Slicer from "../atoms/Slicer.vue";
+import Accordion from "./vue-ui-accordion.vue";
 
 const props = defineProps({
     config: {
@@ -424,7 +425,7 @@ const table = computed(() => {
                 value: ds.values[i] ?? 0,
                 percentage: ds.values[i] ? ds.values[i] / sum * 100 : 0
             }
-        })).concat([`${donutEvolutionConfig.value.style.chart.layout.dataLabels.prefix}${sum}${donutEvolutionConfig.value.style.chart.layout.dataLabels.suffix}`]))
+        })).concat([`${donutEvolutionConfig.value.style.chart.layout.dataLabels.prefix}${Number(sum.toFixed(donutEvolutionConfig.value.table.td.roundingValue))}${donutEvolutionConfig.value.style.chart.layout.dataLabels.suffix}`]))
 
     }
 
@@ -914,30 +915,34 @@ defineExpose({
 
         <slot name="legend" v-bind:legend="legendSet"></slot>
 
-        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable && isDataset">
-            <DataTable
-                :colNames="table.colNames"
-                :head="table.head" 
-                :body="table.body" 
-                :config="table.config" 
-                :title="`${donutEvolutionConfig.style.chart.title.text}${donutEvolutionConfig.style.chart.title.subtitle.text ? ` : ${donutEvolutionConfig.style.chart.title.subtitle.text}` : ''}`"
-                @close="mutableConfig.showTable = false"
-            >
-                <template #th="{th}">
-                    {{ th.name ?? th }}
-                </template>
-                <template #td="{td}">
-                    <span v-if="td.value === null">-</span>
-                    <b v-else>
-                        {{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.prefix : '' }}{{ !isNaN(td.value) && td.value !== null ? Number(td.value.toFixed(donutEvolutionConfig.table.td.roundingValue)).toLocaleString() : td }}{{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.suffix : '' }} 
-                    </b>
-                    <span>
-                        {{ td.percentage && !isNaN(td.percentage) ? `(${Number(td.percentage.toFixed(donutEvolutionConfig.table.td.roundingPercentage)).toLocaleString()}%)` : '' }}
-                    </span>
-                </template>
-            </DataTable>
-        </div>
-
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000
+        }">
+            <template #content>
+                <DataTable
+                    :colNames="table.colNames"
+                    :head="table.head" 
+                    :body="table.body" 
+                    :config="table.config" 
+                    :title="`${donutEvolutionConfig.style.chart.title.text}${donutEvolutionConfig.style.chart.title.subtitle.text ? ` : ${donutEvolutionConfig.style.chart.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false"
+                >
+                    <template #th="{th}">
+                        {{ th.name ?? th }}
+                    </template>
+                    <template #td="{td}">
+                        <span v-if="td.value === null">-</span>
+                        <b v-else>
+                            {{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.prefix : '' }}{{ !isNaN(td.value) && td.value !== null ? Number(td.value.toFixed(donutEvolutionConfig.table.td.roundingValue)).toLocaleString() : td }}{{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.suffix : '' }} 
+                        </b>
+                        <span>
+                            {{ td.percentage && !isNaN(td.percentage) ? `(${Number(td.percentage.toFixed(donutEvolutionConfig.table.td.roundingPercentage)).toLocaleString()}%)` : '' }}
+                        </span>
+                    </template>
+                </DataTable>
+            </template>
+        </Accordion>
     </div>
 </template>
 
