@@ -27,6 +27,7 @@ import Legend from "../atoms/Legend.vue";
 import Shape from "../atoms/Shape.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import Accordion from "./vue-ui-accordion.vue";
 
 const props = defineProps({
     config: {
@@ -1067,26 +1068,31 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:${mutableConfig.inside ? '48px' : ''}`" v-if="mutableConfig.showTable && isDataset">
-            <DataTable
-                :colNames="dataTable.colNames"
-                :head="dataTable.head"
-                :body="dataTable.body"
-                :config="dataTable.config"
-                :title="`${scatterConfig.style.title.text}${scatterConfig.style.title.subtitle.text ? ` : ${scatterConfig.style.title.subtitle.text}` : ''}`"
-                @close="mutableConfig.showTable = false"
-            >
-                <template #th="{ th }">
-                    {{ th }}
-                </template>
-                <template #td="{ td }">
-                    <div v-if="td.shape">
-                        <span>{{ td.content }}</span>
-                    </div>
-                    <div v-else v-html="td"/>
-                </template>
-            </DataTable>
-        </div>
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000
+        }">
+            <template #content>
+                <DataTable
+                    :colNames="dataTable.colNames"
+                    :head="dataTable.head"
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="`${scatterConfig.style.title.text}${scatterConfig.style.title.subtitle.text ? ` : ${scatterConfig.style.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false"
+                >
+                    <template #th="{ th }">
+                        {{ th }}
+                    </template>
+                    <template #td="{ td }">
+                        <div v-if="td.shape">
+                            <span>{{ td.content }}</span>
+                        </div>
+                        <div v-else v-html="td"/>
+                    </template>
+                </DataTable>
+            </template>
+        </Accordion>
     </div>
 </template>
 
