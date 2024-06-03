@@ -12,6 +12,10 @@ const props = defineProps({
             return {}
         }
     },
+    hideDetails: {
+        type: Boolean,
+        default: false,
+    }
 });
 
 const defaultConfig = ref(mainConfig.vue_ui_accordion);
@@ -23,13 +27,18 @@ const accordionConfig = computed(() => {
     });
 });
 
-const isOpen = ref(props.config.open);
+const isOpen = ref(accordionConfig.value.open);
+
 const uid = ref(createUid())
 const details = ref(null);
 const init = ref(0)
 
 onMounted(() => {
     details.value.open = accordionConfig.value.open;
+})
+
+watch(() => accordionConfig.value.open, (val) => {
+    details.value.open = val;
 })
 
 function toggleDetails() {
@@ -48,9 +57,9 @@ const maxHeight = computed(() => {
 <template>
     <div>
         <details :id="`details_${uid}`" ref="details" @toggle="toggleDetails">
-            <summary>
-                <div class="vue-ui-accordion-head" :style="`background:${accordionConfig.head.backgroundColor};padding:${accordionConfig.head.padding};`">
-                    <div class="vue-ui-accordion-arrow">
+            <summary :class="{ 'vue-ui-accordion-headless': hideDetails }">
+                <div class="vue-ui-accordion-head" :style="`background:${accordionConfig.head.backgroundColor};padding:${accordionConfig.head.padding}; ${hideDetails ? 'height: 0px !important; padding: 0 !important;' : ''}`">
+                    <div class="vue-ui-accordion-arrow" v-if="!hideDetails">
                         <slot name="arrow" v-if="accordionConfig.head.useArrowSlot" v-bind="{ backgroundColor: accordionConfig.head.backgroundColor, color: accordionConfig.head.color, iconColor: accordionConfig.head.iconColor, isOpen }" />
                         <BaseIcon name="arrowRight" v-else :stroke="accordionConfig.head.iconColor" />
                     </div>
