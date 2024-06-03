@@ -26,6 +26,7 @@ import RecursiveLinks from "../atoms/RecursiveLinks.vue";
 import RecursiveLabels from "../atoms/RecursiveLabels.vue";
 import BaseDirectionPad from "../atoms/BaseDirectionPad.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import Accordion from "./vue-ui-accordion.vue";
 
 const props = defineProps({
     config: {
@@ -618,23 +619,28 @@ defineExpose({
             </template>
         </Tooltip>
         
-        <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`" v-if="mutableConfig.showTable">
-            <DataTable
-                :colNames="dataTable.colNames"
-                :head="dataTable.head" 
-                :body="dataTable.body"
-                :config="dataTable.config"
-                :title="`${moleculeConfig.style.chart.title.text}${moleculeConfig.style.chart.title.subtitle.text ? ` : ${moleculeConfig.style.chart.title.subtitle.text}` : ''}`"
-                @close="mutableConfig.showTable = false"
-            >
-                <template #th="{ th }">
-                    <div v-html="th" style="display:flex;align-items:center"></div>
-                </template>
-                <template #td="{ td }">
-                    {{ td.name || td }}
-                </template>
-            </DataTable>
-        </div>
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000
+        }">
+            <template #content>
+                <DataTable
+                    :colNames="dataTable.colNames"
+                    :head="dataTable.head" 
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="`${moleculeConfig.style.chart.title.text}${moleculeConfig.style.chart.title.subtitle.text ? ` : ${moleculeConfig.style.chart.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false"
+                >
+                    <template #th="{ th }">
+                        <div v-html="th" style="display:flex;align-items:center"></div>
+                    </template>
+                    <template #td="{ td }">
+                        {{ td.name || td }}
+                    </template>
+                </DataTable>
+            </template>
+        </Accordion>
     </div>
 </template>
 
