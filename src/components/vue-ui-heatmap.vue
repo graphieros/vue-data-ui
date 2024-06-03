@@ -23,6 +23,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
+import Accordion from "./vue-ui-accordion.vue";
 
 const props = defineProps({
     config: {
@@ -595,40 +596,47 @@ defineExpose({
         </Tooltip>
         
         <!-- DATA TABLE -->
-        <div ref="tableContainer" class="vue-ui-heatmap-table">
-            <div :style="`width:100%;overflow-x:auto;padding-top:36px;position:relative`" v-if="mutableConfig.showTable && isDataset" :class="{'vue-ui-responsive' : isResponsive}">
-                <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${heatmapConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
-                    <BaseIcon name="close" :stroke="heatmapConfig.table.th.color" :stroke-width="2" />
-                </div> 
-                <table class="vue-ui-data-table">
-                    <caption :style="`backgroundColor:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline}`">
-                        {{ heatmapConfig.style.title.text }} <span v-if="heatmapConfig.style.title.subtitle.text">{{  heatmapConfig.style.title.subtitle.text }}</span>
-                    </caption>
-                    <thead>
-                        <tr role="row" :style="`background:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color}`">
-                            <th :style="`outline:${heatmapConfig.table.th.outline};padding-right:6px`"></th>
-                            <th align="right" :style="`outline:${heatmapConfig.table.th.outline};padding-right:6px`" v-for="(th,i) in dataset" :data-cy="`heatmap-table-col-name-${i}`">
-                                {{ th.name }}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr role="row" v-for="(tr, i) in dataLabels.xLabels" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${heatmapConfig.table.td.backgroundColor};color:${heatmapConfig.table.td.color}`">
-                            <td :data-cell="heatmapConfig.table.colNames.xAxis" class="vue-ui-data-table__tbody__td"  :data-cy="`heatmap-table-row-name-${i}`" :style="`outline:${heatmapConfig.table.td.outline}`">
-                                <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                    {{ tr }}
-                                </div>
-                            </td>
-                            <td class="vue-ui-data-table__tbody__td"  v-for="(trData, j) in dataset" :data-cell="dataset[j].name" :style="`outline:${heatmapConfig.table.td.outline}`">
-                                <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                    {{ isNaN(trData.values[i]) ? '-' : dataLabel({p:heatmapConfig.style.layout.dataLabels.prefix, v:trData.values[i], s: heatmapConfig.style.layout.dataLabels.suffix, r: heatmapConfig.table.td.roundingValue}) }}
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000
+        }">
+            <template #content>
+                <div ref="tableContainer" class="vue-ui-heatmap-table">
+                    <div :style="`width:100%;overflow-x:auto;padding-top:36px;position:relative`" :class="{'vue-ui-responsive' : isResponsive}">
+                        <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${heatmapConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                            <BaseIcon name="close" :stroke="heatmapConfig.table.th.color" :stroke-width="2" />
+                        </div> 
+                        <table class="vue-ui-data-table">
+                            <caption :style="`backgroundColor:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color};outline:${heatmapConfig.table.th.outline}`">
+                                {{ heatmapConfig.style.title.text }} <span v-if="heatmapConfig.style.title.subtitle.text">{{  heatmapConfig.style.title.subtitle.text }}</span>
+                            </caption>
+                            <thead>
+                                <tr role="row" :style="`background:${heatmapConfig.table.th.backgroundColor};color:${heatmapConfig.table.th.color}`">
+                                    <th :style="`outline:${heatmapConfig.table.th.outline};padding-right:6px`"></th>
+                                    <th align="right" :style="`outline:${heatmapConfig.table.th.outline};padding-right:6px`" v-for="(th,i) in dataset" :data-cy="`heatmap-table-col-name-${i}`">
+                                        {{ th.name }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr role="row" v-for="(tr, i) in dataLabels.xLabels" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${heatmapConfig.table.td.backgroundColor};color:${heatmapConfig.table.td.color}`">
+                                    <td :data-cell="heatmapConfig.table.colNames.xAxis" class="vue-ui-data-table__tbody__td"  :data-cy="`heatmap-table-row-name-${i}`" :style="`outline:${heatmapConfig.table.td.outline}`">
+                                        <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                            {{ tr }}
+                                        </div>
+                                    </td>
+                                    <td class="vue-ui-data-table__tbody__td"  v-for="(trData, j) in dataset" :data-cell="dataset[j].name" :style="`outline:${heatmapConfig.table.td.outline}`">
+                                        <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                            {{ isNaN(trData.values[i]) ? '-' : dataLabel({p:heatmapConfig.style.layout.dataLabels.prefix, v:trData.values[i], s: heatmapConfig.style.layout.dataLabels.suffix, r: heatmapConfig.table.td.roundingValue}) }}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </template>
+        </Accordion>
      </div> 
 </template>
 
