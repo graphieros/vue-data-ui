@@ -25,6 +25,7 @@ import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
+import Accordion from "./vue-ui-accordion.vue";
 
 const props = defineProps({
     config: {
@@ -783,77 +784,84 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <div ref="tableContainer" class="vue-ui-vertical-bar-table">        
-            <div :style="`width:100%;padding-top: 36px;position:relative`" v-if="mutableConfig.showTable && isDataset">
-                <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${verticalBarConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
-                    <BaseIcon name="close" :stroke="verticalBarConfig.table.th.color" :stroke-width="2" />
-                </div> 
-                <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">
-                    <table class="vue-ui-data-table">
-                        <caption :style="{backgroundColor: verticalBarConfig.table.th.backgroundColor, color: verticalBarConfig.table.th.color, outline: verticalBarConfig.table.th.outline }" class="vue-ui-data-table__caption">
-                            {{ verticalBarConfig.style.chart.title.text }} <span v-if="verticalBarConfig.style.chart.title.subtitle.text">{{  verticalBarConfig.style.chart.title.subtitle.text }}</span>
-                        </caption>
-                        <thead data-cy="vertical-bar-thead">
-                            <tr role="row" data-cy="vertical-bar-thead-tr" :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color}`">
-                                <th v-for="th in table.head" :style="`outline:${verticalBarConfig.table.th.outline}`">
-                                    <div style="width:100%">
-                                        {{ th }}
-                                    </div>
-                                </th>
-                            </tr>
-                            <tr>
-                                <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
-                                <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline};text-align:right;padding-right:5px;font-weight:bold`">∑ {{verticalBarConfig.table.td.prefix}}{{ isNaN(total) ? '' : total.toFixed(verticalBarConfig.table.td.roundingValue) }}{{verticalBarConfig.table.td.suffix}}</th>
-                                <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline};text-align:right;padding-right:5px;font-weight:bold`">100%</th>
-                                <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
-                                <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
-                                <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
-                                <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(tr, i) in table.body" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${verticalBarConfig.table.td.backgroundColor};color:${verticalBarConfig.table.td.color}`">
-                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline};font-variant-numeric: tabular-nums;`" :data-cell="(table.head[0] ?? '')">
-                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                        <span v-if="tr.color" :style="`color:${tr.color};margin-right:3px`">⬤</span><span>{{ tr.parentName }}</span>
-                                    </div>
-                                </td>
-                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[1] ?? '')">
-                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">                                
-                                        {{verticalBarConfig.table.td.prefix}}{{ ["", NaN, undefined].includes(tr.parentValue) ? '' : tr.parentValue.toFixed(verticalBarConfig.table.td.roundingValue) }}{{verticalBarConfig.table.td.suffix}}
-                                    </div>
-                                </td>
-                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[2] ?? '')">
-                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">                                
-                                        {{  ["", NaN, undefined].includes(tr.percentageToTotal) ? '' : `${(tr.percentageToTotal * 100).toFixed(verticalBarConfig.table.td.roundingPercentage)}%` }}
-                                    </div>
-                                </td>
-                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[3] ?? '')">
-                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                        {{ tr.childName }}
-                                    </div>
-                                </td>
-                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[4] ?? '')">
-                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                        {{verticalBarConfig.table.td.prefix}}{{ ["", NaN, undefined].includes(tr.childValue) ? '' : tr.childValue.toFixed(verticalBarConfig.table.td.roundingValue) }}{{verticalBarConfig.table.td.suffix}}
-                                    </div>
-                                </td>
-                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[5] ?? '')">
-                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                        {{ ["", NaN, undefined].includes(tr.childPercentageToParent) ? '' : `${(tr.childPercentageToParent * 100).toFixed(verticalBarConfig.table.td.roundingPercentage)}%` }}
-                                    </div>
-                                </td>
-                                <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[6] ?? '')">
-                                    <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                        {{ ["", NaN, undefined].includes(tr.childPercentageToTotal) ? '' : `${(tr.childPercentageToTotal * 100).toFixed(verticalBarConfig.table.td.roundingPercentage)}%` }}
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000
+        }">
+            <template #content>
+                <div ref="tableContainer" class="vue-ui-vertical-bar-table">        
+                    <div :style="`width:100%;padding-top: 36px;position:relative`">
+                        <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${verticalBarConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                            <BaseIcon name="close" :stroke="verticalBarConfig.table.th.color" :stroke-width="2" />
+                        </div> 
+                        <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">
+                            <table class="vue-ui-data-table">
+                                <caption :style="{backgroundColor: verticalBarConfig.table.th.backgroundColor, color: verticalBarConfig.table.th.color, outline: verticalBarConfig.table.th.outline }" class="vue-ui-data-table__caption">
+                                    {{ verticalBarConfig.style.chart.title.text }} <span v-if="verticalBarConfig.style.chart.title.subtitle.text">{{  verticalBarConfig.style.chart.title.subtitle.text }}</span>
+                                </caption>
+                                <thead data-cy="vertical-bar-thead">
+                                    <tr role="row" data-cy="vertical-bar-thead-tr" :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color}`">
+                                        <th v-for="th in table.head" :style="`outline:${verticalBarConfig.table.th.outline}`">
+                                            <div style="width:100%">
+                                                {{ th }}
+                                            </div>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
+                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline};text-align:right;padding-right:5px;font-weight:bold`">∑ {{verticalBarConfig.table.td.prefix}}{{ isNaN(total) ? '' : total.toFixed(verticalBarConfig.table.td.roundingValue) }}{{verticalBarConfig.table.td.suffix}}</th>
+                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline};text-align:right;padding-right:5px;font-weight:bold`">100%</th>
+                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
+                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
+                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
+                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(tr, i) in table.body" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${verticalBarConfig.table.td.backgroundColor};color:${verticalBarConfig.table.td.color}`">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline};font-variant-numeric: tabular-nums;`" :data-cell="(table.head[0] ?? '')">
+                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                                <span v-if="tr.color" :style="`color:${tr.color};margin-right:3px`">⬤</span><span>{{ tr.parentName }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[1] ?? '')">
+                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">                                
+                                                {{verticalBarConfig.table.td.prefix}}{{ ["", NaN, undefined].includes(tr.parentValue) ? '' : tr.parentValue.toFixed(verticalBarConfig.table.td.roundingValue) }}{{verticalBarConfig.table.td.suffix}}
+                                            </div>
+                                        </td>
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[2] ?? '')">
+                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">                                
+                                                {{  ["", NaN, undefined].includes(tr.percentageToTotal) ? '' : `${(tr.percentageToTotal * 100).toFixed(verticalBarConfig.table.td.roundingPercentage)}%` }}
+                                            </div>
+                                        </td>
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[3] ?? '')">
+                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                                {{ tr.childName }}
+                                            </div>
+                                        </td>
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[4] ?? '')">
+                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                                {{verticalBarConfig.table.td.prefix}}{{ ["", NaN, undefined].includes(tr.childValue) ? '' : tr.childValue.toFixed(verticalBarConfig.table.td.roundingValue) }}{{verticalBarConfig.table.td.suffix}}
+                                            </div>
+                                        </td>
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[5] ?? '')">
+                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                                {{ ["", NaN, undefined].includes(tr.childPercentageToParent) ? '' : `${(tr.childPercentageToParent * 100).toFixed(verticalBarConfig.table.td.roundingPercentage)}%` }}
+                                            </div>
+                                        </td>
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[6] ?? '')">
+                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                                {{ ["", NaN, undefined].includes(tr.childPercentageToTotal) ? '' : `${(tr.childPercentageToTotal * 100).toFixed(verticalBarConfig.table.td.roundingPercentage)}%` }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                 </div>
-        </div>
-        </div>
+                </div>
+            </template>
+        </Accordion>
     </div>
 </template>
 
