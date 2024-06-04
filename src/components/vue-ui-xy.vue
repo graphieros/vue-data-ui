@@ -217,6 +217,20 @@
                     </g>
                 </template>
 
+                <!-- ZERO LINE (AFTER BAR DATASETS, BEFORE LABELS) -->
+                <template v-if="!chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.zeroLine.show">
+                    <line
+                        data-cy="xy-grid-line-x"
+                        :stroke="chartConfig.chart.grid.stroke" 
+                        stroke-width="1" 
+                        :x1="drawingArea.left" 
+                        :x2="drawingArea.right" 
+                        :y1="zero" 
+                        :y2="zero" 
+                        stroke-linecap="round"
+                    />
+                </template>
+
                 <!-- PLOTS -->
                 <g v-for="(serie, i) in plotSet" :key="`serie_plot_${i}`" :class="`serie_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                     <g 
@@ -391,20 +405,6 @@
                         </text>
                     </g>
                 </g>
-
-                <!-- ZERO LINE (AFTER DATASETS, BEFORE LABELS) -->
-                <template v-if="!chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.zeroLine.show">
-                    <line
-                        data-cy="xy-grid-line-x"
-                        :stroke="chartConfig.chart.grid.stroke" 
-                        stroke-width="1" 
-                        :x1="drawingArea.left" 
-                        :x2="drawingArea.right" 
-                        :y1="zero" 
-                        :y2="zero" 
-                        stroke-linecap="round"
-                    />
-                </template>
 
                 <!-- X LABELS BAR -->
                 <g v-if="(chartConfig.bar.labels.show || chartConfig.bar.serieName.show) && mutableConfig.dataLabels.show">
