@@ -2408,12 +2408,16 @@ declare module 'vue-data-ui' {
                         xLabelOffsetY?: number;
                         fontSize?: number;
                     };
+                    zeroLine?: {
+                        show?: boolean;
+                    };
                     yAxis?: {
                         commonScaleSteps?: number;
                         useIndividualScale?: boolean;
                         stacked?: boolean;
                         gap?: number;
                         labelWidth?: number;
+                        showBaseline?: boolean;
                     };
                     xAxis?: {
                         showBaseline?: boolean;

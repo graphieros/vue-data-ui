@@ -63,6 +63,7 @@
                     />
                     <template v-if="!chartConfig.chart.grid.labels.yAxis.useIndividualScale">
                         <line
+                            v-if="chartConfig.chart.grid.labels.yAxis.showBaseline"
                             data-cy="xy-grid-line-y"
                             :stroke="chartConfig.chart.grid.stroke" 
                             stroke-width="1" 
@@ -70,16 +71,6 @@
                             :x2="drawingArea.left" 
                             :y1="drawingArea.top" 
                             :y2="drawingArea.bottom" 
-                            stroke-linecap="round"
-                        />
-                        <line
-                            data-cy="xy-grid-line-x"
-                            :stroke="chartConfig.chart.grid.stroke" 
-                            stroke-width="1" 
-                            :x1="drawingArea.left" 
-                            :x2="drawingArea.right" 
-                            :y1="zero" 
-                            :y2="zero" 
                             stroke-linecap="round"
                         />
                     </template>
@@ -400,6 +391,20 @@
                         </text>
                     </g>
                 </g>
+
+                <!-- ZERO LINE (AFTER DATASETS, BEFORE LABELS) -->
+                <template v-if="!chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.zeroLine.show">
+                    <line
+                        data-cy="xy-grid-line-x"
+                        :stroke="chartConfig.chart.grid.stroke" 
+                        stroke-width="1" 
+                        :x1="drawingArea.left" 
+                        :x2="drawingArea.right" 
+                        :y1="zero" 
+                        :y2="zero" 
+                        stroke-linecap="round"
+                    />
+                </template>
 
                 <!-- X LABELS BAR -->
                 <g v-if="(chartConfig.bar.labels.show || chartConfig.bar.serieName.show) && mutableConfig.dataLabels.show">

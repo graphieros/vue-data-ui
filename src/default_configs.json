@@ -234,10 +234,14 @@
                         "xLabelOffsetY": 0,
                         "fontSize": 12
                     },
+                    "zeroLine": {
+                        "show": true
+                    },
                     "xAxis": {
                         "showBaseline": false
                     },
                     "yAxis": {
+                        "showBaseline": true,
                         "commonScaleSteps": 10,
                         "useIndividualScale": false,
                         "stacked": false,
