@@ -15,6 +15,7 @@ import {
     checkObj,
     closestDecimal,
     convertColorToHex,
+    convertCustomPalette,
     convertNameColorToHex,
     createArc,
     createPolygonPath,
@@ -1052,5 +1053,17 @@ describe('createTSpans', () => {
             x: 0,
             y: 0
         })).toStrictEqual("<tspan x=\"0\" y=\"0\" fill=\"#FF0000\">Lorem ipsum dolor sit amet</tspan><tspan x=\"0\" y=\"20\" fill=\"#FF0000\">Lorem ipsum dolor sit amet</tspan>")
+    })
+})
+
+describe('convertCustomPalette', () => {
+    test('returns null if custom palette is empty', () => {
+        expect(convertCustomPalette([])).toStrictEqual([])
+    })
+    test('returns converted named colors', () => {
+        expect(convertCustomPalette(['red', 'green', 'blue'])).toStrictEqual(['#FF0000', '#008000', '#0000FF'])
+    })
+    test('returns converted rgb colors', () => {
+        expect(convertCustomPalette(['rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)'])).toStrictEqual(["#ff0000", "#00ff00", "#0000ff"])
     })
 })
