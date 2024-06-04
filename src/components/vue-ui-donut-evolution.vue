@@ -7,6 +7,7 @@ import {
     calculateNiceScale,
     canShowValue, 
     convertColorToHex, 
+    convertCustomPalette, 
     createCsvContent, 
     createUid, 
     downloadCsv,
@@ -111,6 +112,10 @@ const donutEvolutionConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(donutEvolutionConfig.value.customPalette);
+})
+
 const mutableConfig = ref({
     showTable: donutEvolutionConfig.value.table.show
 })
@@ -163,7 +168,7 @@ const convertedDataset = computed(() => {
         return {
             ...ds,
             values: ds.values || [],
-            color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             length: (ds.values || []).length,
             uid: createUid(),
         }
