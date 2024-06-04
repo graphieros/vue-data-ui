@@ -15,7 +15,8 @@ import {
     makeDonut, 
     objectIsEmpty,
     palette,
-    XMLNS 
+    XMLNS, 
+convertCustomPalette
 } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
@@ -79,6 +80,10 @@ const donutConfig = computed(() => {
         defaultConfig: defaultConfig.value
     })
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(donutConfig.value.customPalette);
+})
 
 const mutableConfig = ref({
     dataLabels: {
@@ -165,7 +170,7 @@ const immutableDataset = computed(() => {
                     id: `${uid.value}_${i}_${j}`,
                     seriesIndex: j,
                     datasetIndex: i,
-                    color: convertColorToHex(serie.color) || palette[j] || palette[i % palette.length],
+                    color: convertColorToHex(serie.color) || customPalette.value[j] || palette[j] || palette[j % palette.length],
                     value: (serie.values || []).reduce((a, b) => a + b, 0),
                     absoluteValues: serie.values || []
                 }
