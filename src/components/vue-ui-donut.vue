@@ -5,6 +5,7 @@ import {
     calcMarkerOffsetY, 
     calcNutArrowPath, 
     convertColorToHex, 
+    convertCustomPalette, 
     createCsvContent, 
     createUid, 
     dataLabel,
@@ -99,6 +100,10 @@ const donutConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(donutConfig.value.customPalette);
+})
+
 const mutableConfig = ref({
     dataLabels: {
         show: donutConfig.value.style.chart.layout.labels.dataLabels.show,
@@ -117,12 +122,13 @@ const svg = computed(() => {
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
 
+
 const immutableSet = computed(() => {
     return props.dataset
         .map((serie, i) => {
             return {
                 name: serie.name,
-                color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
+                color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 value: serie.values.reduce((a,b) => a + b, 0),
                 absoluteValues: serie.values,
             }
@@ -251,7 +257,7 @@ const legendSet = computed(() => {
         .map((serie, i) => {
             return {
                 name: serie.name,
-                color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
+                color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 value: (serie.values || []).reduce((a,b) => a + b, 0),
                 shape: 'circle',
             }
