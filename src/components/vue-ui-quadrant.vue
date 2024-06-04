@@ -14,7 +14,8 @@ import {
     opacity, 
     palette, 
     shiftHue,
-    XMLNS
+    XMLNS,
+convertCustomPalette
 } from "../lib";
 import pdf from "../pdf.js";
 import img from "../img.js";
@@ -102,6 +103,7 @@ onMounted(() => {
     positionAxisLabels();
 });
 
+// FIXME: replace this weak implementation with simple inline transform on text elements
 function positionAxisLabels() {
     if (quadrantConfig.value.style.chart.layout.labels.axisLabels.show) {
         const xmlns = "http://www.w3.org/2000/svg";
@@ -184,6 +186,10 @@ const quadrantConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(quadrantConfig.value.customPalette);
+})
 
 const mutableConfig = ref({
     plotLabels: {
@@ -429,7 +435,7 @@ const immutableDataset = computed(() => props.dataset.map((category, i) => {
     return {
         ...category,
         id: `cat_${i}_${uid.value}`,
-        color: convertColorToHex(category.color) || palette[i],
+        color: convertColorToHex(category.color) || customPalette.value[i] || palette[i],
     }
 }));
 
@@ -488,7 +494,7 @@ const drawableDataset = computed(() => {
         return {
             ...category,
             shape: category.shape || "circle",
-            color: category.color || palette[i],
+            color: category.color || customPalette.value[i] || palette[i],
             series: category.series.map(s => {
                 return {
                     ...s,
