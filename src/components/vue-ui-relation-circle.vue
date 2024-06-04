@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { 
+convertCustomPalette,
     createUid, 
     error, 
     getMissingDatasetAttributes,
@@ -48,6 +49,10 @@ const relationConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(relationConfig.value.customPalette);
+})
 
 const circles = ref([]);
 const radius = computed(() => {
@@ -148,7 +153,7 @@ function createPlots() {
     limitedDataset.value.forEach((plot, i) => {
         const x = radius.value * Math.cos(angle) + relationConfig.value.style.size / 2;
         const y = radius.value * Math.sin(angle) + relationConfig.value.style.size / 2 + relationConfig.value.style.circle.offsetY;
-        circles.value.push({x,y, ...plot, color: plot.color ? plot.color : palette[i], regAngle});
+        circles.value.push({x,y, ...plot, color: plot.color ? plot.color : customPalette.value[i] ? customPalette.value[i] : palette[i], regAngle});
         angle += angleGap;
         regAngle += regAngleGap
     });
