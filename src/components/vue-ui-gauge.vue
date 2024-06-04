@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { 
     addVector, 
     convertColorToHex, 
+    convertCustomPalette, 
     createUid,
     error,
     getMissingDatasetAttributes,
@@ -56,6 +57,10 @@ const gaugeConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(gaugeConfig.value.customPalette);
+})
+
 const mutableConfig = ref({
     inside: !gaugeConfig.value.style.chart.layout.useDiv,
 });
@@ -85,7 +90,7 @@ const mutableDataset = computed(() => {
         series: (props.dataset.series || []).map((serie, i) => {
             return {
                 ...serie,
-                color: convertColorToHex(serie.color) || palette[i],
+                color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i],
                 value: (((serie.to || 0) - (serie.from || 0)) / max) * 100,
             }
         })
