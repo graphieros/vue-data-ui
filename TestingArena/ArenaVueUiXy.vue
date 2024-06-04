@@ -8,7 +8,7 @@ import convertArrayToObject from "./convertModel";
 const dataset = ref([
         {
             name: "S0",
-            series: [10, 20, 12, 13, 10, 20, 30, 20, 12, 16, 32, 64],
+            series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64],
             type: "bar",
             smooth: false,
             useArea: true,
@@ -17,7 +17,7 @@ const dataset = ref([
         },
         {
             name: "S1",
-            series: [8, 4, 8, 16, 12, 13, 16, 25, 12, 3, 7, 12, 6],
+            series: [8, 4, 8, 16, 12, 13, -16, 25, 12, 3, 7, 12, 6],
             type: "bar",
             smooth: false,
             useArea: true,
@@ -102,7 +102,9 @@ const model = ref([
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 40, min: 0, max: 100, type: 'number' },
+    { key: 'chart.grid.labels.yAxis.showBaseline', def: true,  type: 'checkbox'},
     { key: 'chart.grid.labels.xAxis.showBaseline', def: true,  type: 'checkbox'},
+    { key: 'chart.grid.labels.zeroLine.show', def: true, type: 'checkbox'},
 
     { key: 'chart.labels.fontSize', def: 20, type: 'number', min: 6, max: 30, label: 'fontSize', category: 'labels' },
     { key: 'chart.labels.prefix', def: '', type: 'text', label: 'prefix', category: 'labels' },
