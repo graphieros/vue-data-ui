@@ -6,6 +6,7 @@ import {
     calcMarkerOffsetY, 
     calcNutArrowPath, 
     convertColorToHex, 
+    convertCustomPalette, 
     createCsvContent, 
     createUid, 
     downloadCsv,
@@ -62,6 +63,10 @@ const chestnutConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(chestnutConfig.value.customPalette);
+})
 
 const mutableConfig = ref({
     showTable: chestnutConfig.value.table.show,
@@ -158,7 +163,7 @@ const mutableDataset = computed(() => {
         const rootTotal = root.branches.map(branch => branch.value).reduce((a, b) => a + b);
         return {
             ...root,
-            color: convertColorToHex(root.color) || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(root.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             id: root.id || `root_${i}_${uid.value}`,
             type: "root",
             total: rootTotal,
@@ -168,7 +173,7 @@ const mutableDataset = computed(() => {
                     ...branch,
                     rootName: root.name,
                     rootIndex: i,
-                    color: convertColorToHex(root.color) || palette[i] || palette[i % palette.length],
+                    color: convertColorToHex(root.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                     value: branch.value >= 0 ? branch.value : 0,
                     id: branch.id || `branch_${i}_${j}_${uid.value}`,
                     proportionToRoot: branch.value / rootTotal,
@@ -199,7 +204,7 @@ const mutableDataset = computed(() => {
                             proportionToTree: nut.value / treeTotal.value,
                             rootIndex: i,
                             id: nut.id || `nut_${i}_${j}_${k}_${uid.value}`,
-                            color: convertColorToHex(nut.color) || palette[k] || palette[k % palette.length],
+                            color: convertColorToHex(nut.color) || customPalette.value[k] || palette[k] || palette[k % palette.length],
                             value: nut.value >= 0 ? nut.value : 0
                         }
                     }),
