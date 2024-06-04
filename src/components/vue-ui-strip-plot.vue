@@ -4,6 +4,7 @@ import {
     XMLNS,
     calculateNiceScale,
     convertColorToHex,
+    convertCustomPalette,
     createCsvContent,
     createUid,
     darkenHexColor,
@@ -116,6 +117,11 @@ const stripConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(stripConfig.value.customPalette);
+})
+
 const animationActive = ref(stripConfig.value.useCssAnimation);
 const mutableConfig = ref({
     showTable: stripConfig.value.table.show,
@@ -147,12 +153,12 @@ const immutableDataset = computed(() => {
         return {
             ...ds,
             id,
-            color: ds.color ? convertColorToHex(ds.color) : palette[i] || palette[i % palette.length],
+            color: ds.color ? convertColorToHex(ds.color) : customPalette.value[i] || palette[i] || palette[i % palette.length],
             plots: ds.plots.map(p => {
                 return {
                     ...p,
                     parentId: id,
-                    color: ds.color ? convertColorToHex(ds.color) : palette[i] || palette[i % palette.length],
+                    color: ds.color ? convertColorToHex(ds.color) : customPalette.value[i] || palette[i] || palette[i % palette.length],
                     id: createUid(),
                 }
             }).sort((a, b) => a.value - b.value)
