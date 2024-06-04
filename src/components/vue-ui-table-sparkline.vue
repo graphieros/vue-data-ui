@@ -4,6 +4,7 @@ import mainConfig from "../default_configs.json";
 import { useNestedProp } from "../useNestedProp";
 import { calcMedian, 
     convertColorToHex, 
+    convertCustomPalette, 
     createCsvContent, 
     createUid, 
     downloadCsv,
@@ -46,6 +47,10 @@ const tableConfig = computed(() => {
         defaultConfig: defaultConfig.value,
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(tableConfig.value.customPalette);
+})
 
 const tableContainer = ref(null);
 const isResponsive = ref(false);
@@ -92,7 +97,7 @@ const computedDataset = computed(() => {
         return {
             ...ds,
             values: ds.values || [],
-            color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             sum,
             average: sum / cleanValues.length,
             median: calcMedian(cleanValues),
