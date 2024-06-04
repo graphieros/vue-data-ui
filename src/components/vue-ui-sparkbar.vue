@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { 
     convertColorToHex, 
+    convertCustomPalette, 
     createUid,
     error,
     getMissingDatasetAttributes,
@@ -43,6 +44,10 @@ const sparkbarConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(sparkbarConfig.value.customPalette);
+})
 
 const safeDatasetCopy = ref(props.dataset.map(d => {
     return {
@@ -117,7 +122,7 @@ const drawableDataset = computed(() => {
         return {
             ...d,
             value: d.value || 0,
-            color: convertColorToHex(d.color) || palette[i] || palette[i % palette.length]
+            color: convertColorToHex(d.color) || customPalette.value[i] || palette[i] || palette[i % palette.length]
         }
     })
 })
