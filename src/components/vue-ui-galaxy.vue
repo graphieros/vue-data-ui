@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import {
     convertColorToHex,
+    convertCustomPalette,
     createCsvContent,
     createSpiralPath,
     createUid,
@@ -89,6 +90,10 @@ const galaxyConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(galaxyConfig.value.customPalette);
+})
+
 const mutableConfig = ref({
     dataLabels: {
         show: galaxyConfig.value.style.chart.layout.labels.dataLabels.show,
@@ -129,7 +134,7 @@ const immutableSet = computed(() => {
         .map((serie, i) => {
             return {
                 name: serie.name,
-                color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
+                color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 value: serie.values ? serie.values.reduce((a,b) => a + b, 0) : 0,
                 absoluteValues: serie.values || [0],
                 id: createUid(),
