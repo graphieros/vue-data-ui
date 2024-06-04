@@ -8,6 +8,7 @@ import {
     calcNutArrowPath,
     calculateNiceScale,
     convertColorToHex,
+    convertCustomPalette,
     createSmoothPath,
     createUid,
     dataLabel,
@@ -59,6 +60,10 @@ const quickConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(quickConfig.value.customPalette);
+})
 
 const emit = defineEmits(['selectDatapoint', 'selectLegend'])
 
@@ -238,7 +243,7 @@ const donut = computed(() => {
     .map((ds, i) => {
         return {
             ...ds,
-            color: ds.COLOR ? convertColorToHex(ds.COLOR) : palette[(i + quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
+            color: ds.COLOR ? convertColorToHex(ds.COLOR) : customPalette.value[(i + quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
             immutableValue: ds.value
         }
     });
@@ -374,7 +379,7 @@ const line = computed(() => {
                 values: formattedDataset.value.dataset.slice(slicer.value.start, slicer.value.end),
                 absoluteIndices: formattedDataset.value.dataset.map((d, i) => i).slice(slicer.value.start, slicer.value.end),
                 name: quickConfig.value.title,
-                color: palette[quickConfig.value.paletteStartIndex],
+                color: customPalette.value[quickConfig.value.paletteStartIndex] || palette[quickConfig.value.paletteStartIndex],
                 id: `line_0`
             }
         ]
@@ -391,7 +396,7 @@ const line = computed(() => {
         }).map((d, i) => {
             return {
                 ...d,
-                color: d.COLOR ? convertColorToHex(d.COLOR) : palette[i + (quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
+                color: d.COLOR ? convertColorToHex(d.COLOR) : customPalette.value[i + (quickConfig.value.paletteStartIndex)] || palette[i + (quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
                 values: d.values.slice(slicer.value.start, slicer.value.end),
                 absoluteIndices: d.values.map((d,i) => i).slice(slicer.value.start, slicer.value.end)
             }
@@ -531,7 +536,7 @@ const bar = computed(() => {
                 values: formattedDataset.value.dataset.slice(slicer.value.start, slicer.value.end),
                 absoluteIndices: formattedDataset.value.dataset.map((_,i) => i).slice(slicer.value.start, slicer.value.end),
                 name: quickConfig.value.title,
-                color: palette[quickConfig.value.paletteStartIndex],
+                color: customPalette.value[quickConfig.value.paletteStartIndex] || palette[quickConfig.value.paletteStartIndex],
                 id: 'bar_0'
             }
         ]
@@ -548,7 +553,7 @@ const bar = computed(() => {
         }).map((d, i) => {
             return {
                 ...d,
-                color: d.COLOR ? convertColorToHex(d.COLOR) : palette[i + (quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
+                color: d.COLOR ? convertColorToHex(d.COLOR) : customPalette.value[i + (quickConfig.value.paletteStartIndex)] || palette[i + (quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
                 values: d.values.slice(slicer.value.start, slicer.value.end),
                 absoluteIndices: d.values.map((_,i) => i).slice(slicer.value.start, slicer.value.end)
             }
