@@ -188,3 +188,35 @@ Tailor made icons are available through the VueUiIcon component:
 ```
 
 All names of available icons are available in the vue-data-ui.d.ts file under the `VueUiIconName` type.
+
+# Custom palette
+
+It is possible to provide a custom palette in the config prop through config.customPalette (string[]) for the following components:
+
+- VueUi3dBar
+- VueUiChestnut
+- VueUiDonut
+- VueUiDonutEvolution
+- VueUiGalaxy
+- VueUiGauge
+- VueUiMolecule
+- VueUiNestedDonuts
+- VueUiOnion
+- VueUiQuadrant
+- VueUiQuickChart
+- VueUiRadar
+- VueUiRelationCircle
+- VueUiRings
+- VueUiScatter
+- VueUiSparkStackbar
+- VueUiSparkbar
+- VueUiStripPlot
+- VueUiTableSparkline
+- VueUiThermometer
+- VueUiTreemap
+- VueUiVerticalBar
+- VueUiWaffle
+- VueUiXy
+
+If the array of colors provided in customPalette is too small for the dataset, remaining colors will be computed from the default internal palette.
+Accepted color formats: HEX, RGB, HSL, named colors.
