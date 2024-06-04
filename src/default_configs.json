@@ -164,6 +164,7 @@
         "useChart": true
     },
     "vue_ui_xy": {
+        "customPalette": [],
         "useCssAnimation": true,
         "chart": {
             "fontFamily" : "inherit",
@@ -374,6 +375,7 @@
         "showTable": false
     },
     "vue_ui_donut": {
+        "customPalette": [],
         "useCssAnimation": true,
         "useBlurOnHover": true,
         "style": {
@@ -519,6 +521,7 @@
         }
     },
     "vue_ui_nested_donuts": {
+        "customPalette": [],
         "useCssAnimation": true,
         "useBlurOnHover": true,
         "userOptions": {
@@ -620,6 +623,7 @@
         }
     },
     "vue_ui_waffle": {
+        "customPalette": [],
         "useBlurOnHover": true,
         "useCustomCells": false,
         "useAnimation": true,
@@ -728,6 +732,7 @@
         }
     },
     "vue_ui_radar": {
+        "customPalette": [],
         "useCssAnimation": true,
         "style": {
             "fontFamily": "inherit",
@@ -832,6 +837,7 @@
         }
     },
     "vue_ui_quadrant": {
+        "customPalette": [],
         "useCssAnimation": true,
         "zoomAnimationFrames": 20,
         "style": {
@@ -986,6 +992,7 @@
         }
     },
     "vue_ui_gauge": {
+        "customPalette": [],
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -1065,6 +1072,7 @@
         }
     },
     "vue_ui_chestnut": {
+        "customPalette": [],
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -1240,6 +1248,7 @@
         }
     },
     "vue_ui_onion": {
+        "customPalette": [],
         "useCssAnimation": true,
         "useBlurOnHover": true,
         "style": {
@@ -1341,6 +1350,7 @@
         }
     },
     "vue_ui_vertical_bar": {
+        "customPalette": [],
         "useCssAnimation": true,
         "style": {
             "fontFamily": "inherit",
@@ -1940,6 +1950,7 @@
         }
     },
     "vue_ui_scatter": {
+        "customPalette": [],
         "useCssAnimation": true,
         "style": {
             "backgroundColor": "#FFFFFF",
@@ -2376,6 +2387,7 @@
         }
     },
     "vue_ui_sparkbar": {
+        "customPalette": [],
         "style": {
             "backgroundColor": "#FFFFFF",
             "fontFamily": "inherit",
@@ -2560,6 +2572,7 @@
         }
     },
     "vue_ui_relation_circle": {
+        "customPalette": [],
         "style": {
             "color":"#2D353C",
             "backgroundColor": "#FFFFFF",
@@ -2608,6 +2621,7 @@
         }
     },
     "vue_ui_thermometer": {
+        "customPalette": [],
         "style": {
             "fontFamily":"inherit",
             "chart": {
@@ -2671,6 +2685,7 @@
         }
     },
     "vue_ui_sparkstackbar": {
+        "customPalette": [],
         "style": {
             "backgroundColor": "#FFFFFF",
             "fontFamily": "inherit",
@@ -2801,6 +2816,7 @@
         }
     },
     "vue_ui_rings": {
+        "customPalette": [],
         "useCssAnimation": true,
         "useBlurOnHover": true,
         "style": {
@@ -2999,6 +3015,7 @@
         }
     },
     "vue_ui_donut_evolution": {
+        "customPalette": [],
         "style": {
             "fontFamily":"inherit",
             "chart": {
@@ -3207,6 +3224,7 @@
         }
     },
     "vue_ui_3d_bar": {
+        "customPalette": [],
         "style": {
             "fontFamily":"inherit",
             "shape": "bar",
@@ -3305,6 +3323,7 @@
         }
     },
     "vue_ui_molecule": {
+        "customPalette": [],
         "style": {
             "fontFamily": "inherit",
             "chart": {
@@ -3365,6 +3384,7 @@
         }
     },
     "vue_ui_table_sparkline": {
+        "customPalette": [],
         "responsiveBreakpoint": 500,
         "showAverage": true,
         "showMedian": true,
@@ -3500,6 +3520,7 @@
         }
     },
     "vue_ui_galaxy": {
+        "customPalette": [],
         "useCssAnimation": true,
         "useBlurOnHover": true,
         "style": {
@@ -3613,6 +3634,7 @@
         "valueRounding": 0
     },
     "vue_ui_treemap": {
+        "customPalette": [],
         "userOptions": {
             "show": true
         },
@@ -3759,6 +3781,7 @@
         "blurOnHover": true,
         "chartIsBarUnderDatasetLength": 6,
         "color":"#2D353C",
+        "customPalette": [],
         "dataLabelFontSize": 14,
         "dataLabelRoundingPercentage": 1,
         "dataLabelRoundingValue": 0,
@@ -3899,6 +3922,7 @@
         }
     },
     "vue_ui_strip_plot": {
+        "customPalette": [],
         "useCssAnimation": true,
         "userOptions": {
             "show": true
