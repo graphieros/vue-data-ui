@@ -187,7 +187,8 @@ const config = computed(() => {
         }
     } else {
         return {
-            ...c
+            ...c,
+            customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }
     }
 });

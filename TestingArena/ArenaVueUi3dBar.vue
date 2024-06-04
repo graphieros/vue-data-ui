@@ -113,7 +113,12 @@ const model = ref([
     { key: 'table.td.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
 ])
 
-const config = computed(() => convertArrayToObject(model.value))
+const config = computed(() => {
+    return {
+        ...convertArrayToObject(model.value),
+        customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
+    }
+})
 
 const step = ref(0)
 

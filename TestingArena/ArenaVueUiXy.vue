@@ -208,6 +208,7 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
             chart: {
                 ...c.chart,
                 grid: {

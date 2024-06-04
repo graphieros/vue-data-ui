@@ -10,10 +10,6 @@ const dataset = ref({
     from: -100,
     to: 100,
     steps: 20,
-    colors: {
-        from: "#dc3912",
-        to: "#3366cc",
-    }
 })
 
 const model = ref([
@@ -54,7 +50,12 @@ const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'}
 ])
 
-const config = computed(() => convertArrayToObject(model.value))
+const config = computed(() => {
+    return {
+        ...convertArrayToObject(model.value),
+        customPalette: ["#DD3322", "#66DDAA"],
+    }
+})
 
 const step = ref(0);
 

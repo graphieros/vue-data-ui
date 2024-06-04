@@ -329,7 +329,12 @@ const model = ref([
     { key: 'translations.of', def: 'of', type: 'text'}
 ])
 
-const config = computed(() => convertArrayToObject(model.value));
+const config = computed(() => {
+    return {
+        ...convertArrayToObject(model.value),
+        customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
+    }
+});
 
 const step = ref(0)
 
