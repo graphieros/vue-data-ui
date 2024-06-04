@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, onMounted } from "vue";
 import { 
     convertColorToHex, 
+    convertCustomPalette, 
     createCsvContent, 
     createPolygonPath, 
     createUid, 
@@ -77,6 +78,10 @@ const radarConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(radarConfig.value.customPalette);
+})
 
 const mutableConfig = ref({
     dataLabels: {
@@ -214,7 +219,7 @@ const datasetCopy = computed(() => {
         return {
             name: c.name,
             categoryId: `radar_category_${uid.value}_${i}`,
-            color: convertColorToHex(c.color) || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(c.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             prefix: c.prefix ?? '',
             suffix: c.suffix ?? ''
         }
@@ -229,7 +234,7 @@ const seriesCopy = computed(() => {
         .map((s, i) => {
             return {
                 ...s,
-                color: convertColorToHex(s.color) || palette[i] || palette[i % palette.length],
+                color: convertColorToHex(s.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 serieId: `radar_serie_${uid.value}_${i}`
             }
         });
