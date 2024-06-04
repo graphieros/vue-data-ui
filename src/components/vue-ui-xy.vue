@@ -1034,6 +1034,7 @@ import {
     closestDecimal,
     convertColorToHex, 
     convertConfigColors,
+    convertCustomPalette,
     createCsvContent,
     createPolygonPath,
     createSmoothPath,
@@ -1160,6 +1161,9 @@ export default {
         }
     },
     computed: {
+        customPalette() {
+            return this.convertCustomPalette(this.chartConfig.customPalette);
+        },
         backgroundColor() {
             return this.chartConfig.chart.backgroundColor;
         },  
@@ -1277,7 +1281,7 @@ export default {
                     series: datapoint.series.map(d => {
                         return this.isSafeValue(d) ? d : null
                     }).slice(this.slicer.start, this.slicer.end),
-                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.palette[i]),
+                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.customPalette[i] ? this.customPalette[i] : this.palette[i]),
                     id: `uniqueId_${i}`
                 }
             });
@@ -1942,6 +1946,7 @@ export default {
         img,
         convertColorToHex,
         convertConfigColors,
+        convertCustomPalette,
         downloadCsv,
         createCsvContent,
         adaptColorToBackground,
