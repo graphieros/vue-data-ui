@@ -103,6 +103,7 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value)
     return {
         ...c,
+        customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         style: {
             ...c.style,
             chart: {

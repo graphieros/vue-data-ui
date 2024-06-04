@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, onMounted } from "vue";
 import { 
     convertColorToHex, 
+    convertCustomPalette, 
     createCsvContent, 
     createUid,
     dataLabel,
@@ -71,6 +72,10 @@ const onionConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(onionConfig.value.customPalette);
+})
+
 const mutableConfig = ref({
     inside: !onionConfig.value.style.chart.layout.useDiv,
     showTable: onionConfig.value.table.show
@@ -133,7 +138,7 @@ const immutableDataset = computed(() => {
         return {
             ...onion,
             percentage: onion.percentage || 0,
-            color: convertColorToHex(onion.color) || palette[i],
+            color: convertColorToHex(onion.color) || customPalette.value[i] || palette[i],
             id,
             shape: 'circle',
             opacity: segregated.value.includes(id) ? 0.5 : 1,

@@ -5,6 +5,7 @@ import {
     calcMarkerOffsetY,
     calcNutArrowPath,
     convertColorToHex, 
+    convertCustomPalette, 
     createCsvContent,
     createUid,
     darkenHexColor,
@@ -66,6 +67,10 @@ const barConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(barConfig.value.customPalette);
+})
+
 const mutableConfig = ref({
     showTable: barConfig.value.table.show
 })
@@ -95,7 +100,7 @@ const stack = computed(() => {
                 ...ds,
                 id: createUid(),
                 proportion: (ds.value || 0) / total,
-                color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length],
+                color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 breakdown: ds.breakdown ? ds.breakdown.sort((a,b) => b.value - a.value) : null
             }
         })

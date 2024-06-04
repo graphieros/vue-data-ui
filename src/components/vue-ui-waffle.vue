@@ -4,6 +4,7 @@ import {
     abbreviate,
     adaptColorToBackground,
     convertColorToHex,
+    convertCustomPalette,
     createCsvContent,
     createUid, 
     dataLabel,
@@ -92,6 +93,11 @@ const waffleConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(waffleConfig.value.customPalette);
+})
+
+
 const mutableConfig = ref({
     inside: !waffleConfig.value.style.chart.layout.useDiv,
     showTable: waffleConfig.value.table.show
@@ -139,7 +145,7 @@ const datasetCopyReference = computed(() => {
     return props.dataset.map((s, i) => {
         return {
             ...s,
-            color: convertColorToHex(s.color) || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(s.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             uid: `serie_${i}`,
             absoluteIndex: i
         }
@@ -369,7 +375,7 @@ const legendSet = computed(() => {
         .map((serie, i) => {
             return {
                 name: serie.name,
-                color: serie.color || palette[i] || palette[i % palette.length],
+                color: serie.color || customPalette[i] || palette[i] || palette[i % palette.length],
                 value: (serie.values || []).reduce((a,b) => a + b, 0),
                 uid: serie.uid,
                 shape: 'square'

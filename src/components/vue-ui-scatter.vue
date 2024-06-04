@@ -14,7 +14,8 @@ import {
     palette,
     createSmoothPath,
     XMLNS,
-dataLabel
+dataLabel,
+convertCustomPalette
 } from '../lib';
 import pdf from "../pdf";
 import img from "../img";
@@ -84,6 +85,10 @@ const scatterConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(scatterConfig.value.customPalette);
+})
 
 const mutableConfig = ref({
     inside: !scatterConfig.value.style.layout.useDiv,
@@ -165,7 +170,7 @@ const datasetWithId = computed(() => {
         return {
             ...ds,
             id,
-            color: ds.color ? ds.color : (palette[i] || palette[i % palette.length]),
+            color: ds.color ? ds.color : (customPalette.value[i] || palette[i] || palette[i % palette.length]),
             opacity: segregated.value.includes(id) ? 0.5: 1,
             shape: ds.shape ?? 'circle',
             segregate: () => segregate(id),
@@ -198,7 +203,7 @@ const mutableDataset = computed(() => {
                         name: v.name || ""
                     },
                     clusterName: ds.name,
-                    color: ds.color ? ds.color : (palette[i] || palette[i % palette.length]),
+                    color: ds.color ? ds.color : (customPalette.value[i] || palette[i] || palette[i % palette.length]),
                     id: `plot_${uid.value}_${Math.random()}`,
                     weight: v.weight ?? scatterConfig.value.style.layout.plots.radius
                 }

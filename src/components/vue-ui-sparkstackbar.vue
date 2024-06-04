@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { 
     convertColorToHex, 
+    convertCustomPalette, 
     createUid,
     dataLabel,
     error,
@@ -45,11 +46,15 @@ const stackConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(stackConfig.value.customPalette);
+})
+
 const safeDatasetCopy = ref(props.dataset.map((d, i ) => {
     return {
         ...d,
         value: stackConfig.value.style.animation.show ? 0 : d.value || 0,
-        color: d.color ? convertColorToHex(d.color) : palette[i] || palette[i % palette.length]
+        color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length]
     }
 }));
 
@@ -91,7 +96,7 @@ onMounted(() => {
                     return {
                         ...d,
                         value: d.value += chunkSet[i],
-                        color: d.color ? convertColorToHex(d.color) : palette[i] || palette[i % palette.length]
+                        color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length]
                     }
                 });
                 requestAnimationFrame(animate)
@@ -101,7 +106,7 @@ onMounted(() => {
                     return {
                         ...d,
                         value: d.value || 0,
-                        color: d.color ? convertColorToHex(d.color) : palette[i] || palette[i % palette.length],
+                        color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length],
                         id: createUid(),
                     }
                 })

@@ -52,7 +52,12 @@ const model = ref([
     { key: 'style.gap', def: 4, type: 'number', min: 0, max: 24}
 ])
 
-const config = computed(() => convertArrayToObject(model.value));
+const config = computed(() => {
+    return {
+        ...convertArrayToObject(model.value),
+        customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
+    }
+});
 
 const step = ref(0)
 

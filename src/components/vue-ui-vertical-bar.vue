@@ -13,7 +13,8 @@ import {
     opacity,
     palette,
     shiftHue,
-    XMLNS
+    XMLNS,
+convertCustomPalette
 } from "../lib.js";
 import pdf from "../pdf.js";
 import img from "../img.js";
@@ -67,6 +68,10 @@ const verticalBarConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(verticalBarConfig.value.customPalette);
+})
 
 const tableContainer = ref(null)
 const isResponsive = ref(false)
@@ -156,7 +161,7 @@ const immutableDataset = computed(() => {
             isChild: false,
             segregate: () => segregate(id),
             isSegregated: segregated.value.includes(id),
-            color: convertColorToHex(serie.color) || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             children: !serie.children || !serie.children.length ? [] : serie.children
                 .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
                 .map((c, j) => {
@@ -172,7 +177,7 @@ const immutableDataset = computed(() => {
                         parentValue: serie.value,
                         id: `vertical_child_${i}_${j}_${uid.value}`,
                         childIndex: j,
-                        color: convertColorToHex(c.color) || convertColorToHex(serie.color) || palette[i] || palette[i % palette.length]
+                        color: convertColorToHex(c.color) || convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length]
                     }
                 })
                 .map((c,j) => {

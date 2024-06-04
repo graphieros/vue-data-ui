@@ -28,6 +28,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiTreemapConfig = {
+        customPalette?: string[];
         userOptions?: {
             show?: boolean;
         };
@@ -185,6 +186,7 @@ declare module 'vue-data-ui' {
     export type VueUiGalaxyDatasetItem = VueUiDonutDatasetItem;
 
     export type VueUiGalaxyConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
         style?: {
@@ -407,6 +409,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiTableSparklineConfig = {
+        customPalette?: string[];
         responsiveBreakpoint?: number;
         showAverage?: boolean;
         showMedian?: boolean;
@@ -589,6 +592,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUi3dBarConfig = {
+        customPalette?: string[];
         style?: {
             fontFamily?: string;
             shape?: "bar" | "tube";
@@ -800,6 +804,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiDonutEvolutionConfig = {
+        customPalette?: string[];
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1054,6 +1059,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRingsConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
         style?: {
@@ -1263,6 +1269,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSparkStackBarConfig = {
+        customPalette?: string[];
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -1334,6 +1341,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiThermometerConfig = {
+        customPalette?: string[];
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1413,6 +1421,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRelationCircleConfig = {
+        customPalette?: string[];
         style?: {
             color?: string;
             backgroundColor?: string;
@@ -1603,6 +1612,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiSparkbarConfig = {
+        customPalette?: string[];
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -1969,6 +1979,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiScatterConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
             backgroundColor?: string;
@@ -2328,6 +2339,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiXyConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         chart?: {
             fontFamily?: string;
@@ -2613,6 +2625,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiDonutConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
         style?: {
@@ -2799,6 +2812,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiNestedDonutsConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
         userOptions?: {
@@ -2949,6 +2963,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiWaffleConfig = {
+        customPalette?: string[];
         useBlurOnHover?: boolean;
         useCustomCells?: boolean;
         useAnimation?: boolean;
@@ -3091,6 +3106,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRadarConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
             fontFamily?: string;
@@ -3459,6 +3475,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiGaugeConfig = {
+        customPalette?: string[];
         style?: {
             fontFamily?: string;
             chart?: {
@@ -3562,6 +3579,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiChestnutConfig = {
+        customPalette?: string[];
         style?: {
             fontFamily?: string;
             chart?: {
@@ -3752,6 +3770,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiOnionConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
             fontFamily?: string;
@@ -3905,6 +3924,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiVerticalBarConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
             fontFamily?: string;
@@ -4784,6 +4804,7 @@ declare module 'vue-data-ui' {
         blurOnHover?: boolean;
         chartIsBarUnderDatasetLength?: number;
         color?: string;
+        customPalette?: string[];
         dataLabelFontSize?: number;
         dataLabelRoundingPercentage?: number;
         dataLabelRoundingValue?: number;
@@ -4947,6 +4968,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiStripPlotConfig = {
+        customPalette?: string[];
         useCssAnimation?: boolean;
         userOptions?: {
             show?: boolean;

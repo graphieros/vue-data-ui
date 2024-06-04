@@ -1314,6 +1314,13 @@ export function createTSpans({
     return tspans;
 }
 
+export function convertCustomPalette(colors) {
+    if(!colors.length) {
+        return []
+    }
+    return colors.map(c => convertColorToHex(c))
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -1331,6 +1338,7 @@ const lib = {
     closestDecimal,
     convertColorToHex,
     convertConfigColors,
+    convertCustomPalette,
     createCsvContent,
     createPolygonPath,
     createSmoothPath,

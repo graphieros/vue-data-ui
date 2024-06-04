@@ -2,6 +2,7 @@
 import { computed, ref, nextTick, onMounted } from "vue";
 import {
   convertColorToHex,
+  convertCustomPalette,
   createCsvContent,
   createUid,
   dataLabel,
@@ -89,6 +90,10 @@ const ringsConfig = computed(() => {
   });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(ringsConfig.value.customPalette);
+})
+
 const mutableConfig = ref({
     showTable: ringsConfig.value.table.show,
 });
@@ -139,7 +144,7 @@ const datasetCopy = computed(() => {
         return {
             name,
             color:
-          color || convertColorToHex(color) || palette[i] || palette[i % palette.length],
+          color || convertColorToHex(color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
           value: subTotal,
           proportion: subTotal / props.dataset.map(ds => (ds.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
             uid: createUid()
@@ -188,7 +193,7 @@ const convertedDataset = computed(() => {
         uid,
         name,
         color:
-          color || convertColorToHex(color) || palette[i] || palette[i % palette.length],
+          color || convertColorToHex(color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
         value,
         proportion: proportionToMax(value),
         percentage: (value / grandTotal.value) * 100,

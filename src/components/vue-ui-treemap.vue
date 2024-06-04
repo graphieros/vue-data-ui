@@ -14,6 +14,7 @@ import Accordion from './vue-ui-accordion.vue';
 import {
     adaptColorToBackground,
     convertColorToHex,
+    convertCustomPalette,
     createCsvContent,
     createUid,
     dataLabel,
@@ -82,6 +83,10 @@ const treemapConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(treemapConfig.value.customPalette);
+})
+
 const mutableConfig = ref({
     showTable: treemapConfig.value.table.show,
 });
@@ -102,7 +107,7 @@ const svg = computed(() => {
 function addIdsToTree(tree) {
   tree.forEach((node, i) => {
     node.id = createUid();
-    node.color = convertColorToHex(node.color) || palette[i] || palette[i % palette.length];
+    node.color = convertColorToHex(node.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
     if (node.children) {
         node.children.forEach(c => {
             c.parentId = node.id,
@@ -124,7 +129,7 @@ const datasetCopy = computed(() => {
     return currentSet.value.map((ds, i) => {
         return {
             ...ds,
-            color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
         }
     }).filter((ds) => !segregated.value.includes(ds.id))
 });
@@ -159,7 +164,7 @@ function calcRectOpacity(color, rect, totalValue) {
 
 function mapChildren(children, parentColor, parentName, totalValue) {
     return children.map((item, j) => {
-        const color = calcRectOpacity(convertColorToHex(parentColor) || palette[j] || palette[j % palette.length], item, totalValue);
+        const color = calcRectOpacity(convertColorToHex(parentColor) || customPalette.value[j] || palette[j] || palette[j % palette.length], item, totalValue);
         const proportion = calcRectProportion(item, totalValue);
         return {
             ...item,
@@ -286,7 +291,7 @@ const legendSet = computed(() => {
     return immutableDataset.value.map((ds, i) => {
         return {
             ...ds,
-            color: convertColorToHex(ds.color) || palette[i] || palette[i % palette.length],
+            color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             shape: 'square',
         }
     })

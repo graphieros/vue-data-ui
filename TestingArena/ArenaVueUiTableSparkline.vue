@@ -76,7 +76,12 @@ const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'}
 ])
 
-const config = computed(() => convertArrayToObject(model.value))
+const config = computed(() => {
+    return {
+        ...convertArrayToObject(model.value),
+        customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
+    }
+})
 
 const step = ref(0)
 

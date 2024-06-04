@@ -186,7 +186,10 @@ const config = computed(() => {
             }
         }
     } else {
-        return c
+        return {
+            ...c,
+            customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
+        }
     }
 })
 

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { 
     convertColorToHex, 
+    convertCustomPalette, 
     createUid, 
     dataLabel,
     error,
@@ -71,6 +72,10 @@ const thermoConfig = computed(() => {
         defaultConfig: defaultConfig.value
     });
 });
+
+const customPalette = computed(() => {
+    return convertCustomPalette(thermoConfig.value.customPalette);
+})
 
 const baseWidth = computed(() => {
     return thermoConfig.value.style.chart.thermometer.width;
@@ -181,13 +186,13 @@ const cssSpeed = computed(() => {
 
 const colors = computed(() => {
     if (!props.dataset.colors) {
-        return generateColorRange(palette[1], palette[0], (steps.value )|| 10)
+        return generateColorRange(customPalette.value[1] || palette[1], customPalette.value[0] || palette[0], (steps.value )|| 10)
     } else {
         if (!props.dataset.colors.from) {
-            return generateColorRange(palette[0], convertColorToHex(props.dataset.colors.to), (steps.value )|| 10)
+            return generateColorRange(customPalette.value[0] || palette[0], convertColorToHex(props.dataset.colors.to), (steps.value )|| 10)
         }
         if (!props.dataset.colors.to) {
-            return generateColorRange(convertColorToHex(props.dataset.colors.from), palette[1], (steps.value )|| 10)
+            return generateColorRange(convertColorToHex(props.dataset.colors.from), customPalette.value[1] || palette[1], (steps.value )|| 10)
         }
     }
     return generateColorRange(convertColorToHex(props.dataset.colors.from) , convertColorToHex(props.dataset.colors.to), (steps.value )|| 10)
