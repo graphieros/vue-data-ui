@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
 import { 
+    convertCustomPalette,
     createCsvContent, 
     createPolygonPath, 
     createUid, 
@@ -77,6 +78,10 @@ const moleculeConfig = computed(() => {
     });
 });
 
+const customPalette = computed(() => {
+    return convertCustomPalette(moleculeConfig.value.customPalette);
+})
+
 const mutableConfig = ref({
     showTable: moleculeConfig.value.table.show,
     showDataLabels: true
@@ -132,7 +137,7 @@ function processNodes(
             if (!node.parentNode) {
                 color = rootColor;
             } else if (!node.parentNode.parentNode) {
-                color = palette[paletteIndex] || rootColor;
+                color = customPalette.value[paletteIndex] || palette[paletteIndex] || rootColor;
                 paletteIndex += 1;
             } else {
                 color = node.parentNode.color || rootColor;
