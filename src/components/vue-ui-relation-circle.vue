@@ -7,11 +7,13 @@ convertCustomPalette,
     getMissingDatasetAttributes,
     objectIsEmpty, 
     palette,
+    themePalettes,
     XMLNS
 } from "../lib.js";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -44,10 +46,21 @@ const relationCircleChart = ref(null);
 const step = ref(0);
 
 const relationConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: defaultConfig.value
     });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_relation_circle[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 const customPalette = computed(() => {
@@ -485,7 +498,6 @@ defineExpose({
 svg.relation-circle{
     background: transparent;
     overflow: visible;
-    padding: 12px;
 }
 .vue-ui-relation-circle-plot, .vue-ui-relation-circle-legend {
     cursor: pointer;
