@@ -156,9 +156,20 @@ const model = ref([
 
 ])
 
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[3])
+
 const config = computed(() => {
     return {
         ...convertArrayToObject(model.value),
+        theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         xyPeriods: ['01-2025', '02-2025', '03-2025', '04-2025', '05-2025', '06-2025', '07-2025', '08-2025', '09-2025', '10-2025', '11-2025', '12-2025']
     }
@@ -179,6 +190,12 @@ function selectDatapoint(datapoint) {
 </script>
 
 <template>
+<div style="margin: 12px 0; color: white">
+    Theme:
+    <select v-model="currentTheme" @change="step += 1">
+        <option v-for="opt in themeOptions">{{ opt }}</option>
+    </select>
+</div>
 <select v-model="selectedSerie" @change="step += 1">
     <option v-for="key in Object.keys(datasets)">{{ key }}</option>
 </select>

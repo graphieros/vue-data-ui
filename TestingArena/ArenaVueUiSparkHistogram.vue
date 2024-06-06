@@ -139,7 +139,22 @@ const model = ref([
     { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'}
 ])
 
-const config = computed(() => convertArrayToObject(model.value))
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[2])
+
+const config = computed(() => {
+    return {
+        ...convertArrayToObject(model.value),
+        theme: currentTheme.value
+    }
+})
 
 const step = ref(0)
 
@@ -150,6 +165,12 @@ function selectDatapoint(datapoint) {
 </script>
 
 <template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
     <Box>
         <template #title>VueUiSparkHistogram</template>
 
