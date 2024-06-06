@@ -73,6 +73,18 @@
                             :y2="drawingArea.bottom" 
                             stroke-linecap="round"
                         />
+                        <g v-if="chartConfig.chart.grid.showHorizontalLines">
+                            <line 
+                                v-for="l in yLabels"
+                                :x1="drawingArea.left"
+                                :x2="drawingArea.right"
+                                :y1="l.y"
+                                :y2="l.y"
+                                :stroke="chartConfig.chart.grid.stroke"
+                                :stroke-width="0.5"
+                                stroke-linecap="round"
+                            />
+                        </g>
                     </template>
                     <template v-else-if="chartConfig.chart.grid.showHorizontalLines">
                         <g v-for="grid in allScales">
@@ -1057,8 +1069,11 @@ import {
     treeShake,
     error,
     objectIsEmpty,
+    themePalettes
 } from '../lib';
+import { useNestedProp } from '../useNestedProp';
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import DataTable from "../atoms/DataTable.vue";
 import Title from '../atoms/Title.vue';
 import Tooltip from "../atoms/Tooltip.vue";
@@ -1118,6 +1133,8 @@ export default {
         }
 
         return {
+            themePalettes,
+            themes,
             slicerStep: 0,
             selectedScale: null,
             CTX: null,
@@ -1249,14 +1266,25 @@ export default {
         chartConfig: {
             get: function() {
                 if(!Object.keys(this.config || {}).length) {
-                return this.defaultConfig
-            }
-                const reconcilied = this.treeShake({
-                    defaultConfig: this.defaultConfig,
-                    userConfig: this.config
+                    return this.defaultConfig
+                }
+
+                const mergedConfig = this.useNestedProp({
+                    userConfig: this.config,
+                    defaultConfig: this.defaultConfig
                 });
 
-                return this.convertConfigColors(reconcilied);
+                if (mergedConfig.theme) {
+                    return {
+                        ...useNestedProp({
+                            userConfig: this.themes.vue_ui_xy[mergedConfig.theme] || this.config,
+                            defaultConfig: mergedConfig
+                        }),
+                        customPalette: this.themePalettes[mergedConfig.theme] || this.palette
+                    }
+                } else {
+                    return mergedConfig
+                }
             },
             set: function (val) {
                 return val;
@@ -1964,6 +1992,7 @@ export default {
         error,
         objectIsEmpty,
         createTSpans,
+        useNestedProp,
         checkAutoScaleError(datapoint) {
             if (datapoint.autoScaling) {
                 if (!this.chartConfig.chart.grid.labels.yAxis.useIndividualScale) {
