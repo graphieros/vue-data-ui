@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import { calcMedian, 
     convertColorToHex, 
@@ -12,6 +13,7 @@ import { calcMedian,
     getMissingDatasetAttributes,
     objectIsEmpty,
     palette,
+    themePalettes
 } from "../lib";
 import SparkLine from "./vue-ui-sparkline.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
@@ -42,10 +44,21 @@ const isImaging = ref(false);
 const sparkStep = ref(0)
 
 const tableConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value,
+        defaultConfig: defaultConfig.value
     });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_table_sparkline[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 const customPalette = computed(() => {
