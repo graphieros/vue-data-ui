@@ -2,19 +2,19 @@
 // TODO: custom class prefix
 import { computed, ref, onMounted, nextTick } from "vue";
 import {
-    objectIsEmpty,
-    palette,
-    error,
-    createUid,
+    adaptColorToBackground,
+    calcMedian,
     createCsvContent,
+    createUid,
     downloadCsv,
+    error,
     interpolateColorHex,
-adaptColorToBackground,
-calcMedian
+    objectIsEmpty,
 } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Shape from "../atoms/Shape.vue";
@@ -44,10 +44,20 @@ const isFullscreen = ref(false);
 const step = ref(0);
 
 const tableConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: defaultConfig.value
     });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_table_heatmap[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            })
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 const breakpoint = computed(() => {
@@ -226,7 +236,7 @@ defineExpose({
             </caption>
     
             <thead>
-                <tr role="row" :style="`background:${tableConfig.table.head.backgroundColor}`">
+                <tr role="row" :style="`background:${tableConfig.table.head.backgroundColor};color:${tableConfig.table.head.color}`">
                     <th role="cell" v-for="(cell, i) in tableConfig.table.head.values">
                         <slot name="head" v-bind="{ value: cell, rowIndex: i, type: typeof cell, isResponsive }"></slot>
                     </th>
