@@ -14,9 +14,11 @@ import {
     isFunction,
     objectIsEmpty, 
     palette,
+    themePalettes,
     XMLNS
 } from "../lib";
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import Legend from "../atoms/Legend.vue";
 import Title from "../atoms/Title.vue";
@@ -84,10 +86,21 @@ const selectedSerie = ref(null);
 const step = ref(0);
 
 const galaxyConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: defaultConfig.value
     });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_galaxy[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 const customPalette = computed(() => {
