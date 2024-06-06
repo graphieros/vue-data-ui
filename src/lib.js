@@ -187,6 +187,128 @@ export function getPalette() {
     return palette;
 }
 
+export const themePalettes = {
+    default: palette,
+    concrete: [
+        "#4A6A75",
+        "#6C94A0",
+        "#7DA9B5",
+        "#8EBFCA",
+        "#9FD4E0",
+        "#B0E9F5",
+        "#C1FFFF",
+        "#5C6B5B",
+        "#6D7D6D",
+        "#7E8F7E",
+        "#8FA290",
+        "#A1B5A3",
+        "#B2C7B5",
+        "#C3DAC8",
+        "#D4ECDA",
+        "#E6FFF0",
+        "#8A9CA5",
+        "#9AA7B0",
+        "#ABB1BC",
+        "#BBCBC7",
+        "#CCD6D3",
+        "#DEE1DE",
+        "#EFECEC",
+        "#404C4D",
+        "#50605F",
+        "#617472",
+        "#718885",
+        "#829C98",
+        "#92B0AB",
+        "#A3C4BE",
+        "#B3D8D2",
+        "#C4EDE5",
+        "#D4F1E8",
+        "#404C5A",
+        "#50606C",
+        "#61747E",
+        "#718890",
+        "#829CA2",
+        "#92B0B5"
+    ],
+    hack: [
+        "#004C00",
+        "#006600",
+        "#008000",
+        "#009900",
+        "#00B300",
+        "#00CC00",
+        "#00E600",
+        "#00FF00",
+        "#33FF33",
+        "#33E633",
+        "#33CC33",
+        "#33B333",
+        "#339933",
+        "#338033",
+        "#336633",
+        "#334C33",
+        "#333333",
+        "#00AF19",
+        "#19E619",
+        "#19CC19",
+        "#19B319",
+        "#199919",
+        "#198019",
+        "#196619",
+        "#194C19",
+        "#193319",
+        "#191919",
+        "#66FF66",
+        "#66E666",
+        "#66CC66",
+        "#66B366",
+        "#669966",
+        "#668066",
+        "#666666",
+        "#4CFF4C",
+        "#4CE64C",
+        "#4CCC4C",
+        "#4CB34C"
+    ],
+    zen: [
+        "#B9B99D",
+        "#E0CFC3",
+        "#DFCA99",
+        "#DCB482",
+        "#C09E85",
+        "#8F837A",
+        "#858480",
+        "#B0B9A8",
+        "#606C5A",
+        "#5E5E5E",
+        "#4F5B75",
+        "#647393",
+        "#818EA9",
+        "#9FA9BE",
+        "#BBC4D3",
+        "#DCDFE7",
+        "#928A98",
+        "#8A9892",
+        "#B1A7AD",
+        "#C5B8A7",
+        "#EBD6CC",
+        "#D7E0D2",
+        "#E0D2D7",
+        "#E0DBD2",
+        "#D2E0DB",
+        "#DBD2E0",
+        "#C1B7A5",
+        "#A5AFC1",
+        "#E0DBD2",
+        "#D2D7E0",
+        "#F7EDE2",
+        "#97ACB7",
+        "#C4CBBC",
+        "#C3C5C5",
+        "#A0AC94"
+    ]
+};
+
 export const opacity = ["00", "03", "05", "08", "0A", "0D", "0F", "12", "14", "17", "1A", "1C", "1F", "21", "24", "26", "29", "2B", "2E", "30", "33", "36", "38", "3B", "3D", "40", "42", "45", "47", "4A", "4D", "4F", "52", "54", "57", "59", "5C", "5E", "61", "63", "66", "69", "6B", "6E", "70", "73", "75", "78", "7A", "7D", "80", "82", "85", "87", "8A", "8C", "8F", "91", "94", "96", "99", "9C", "9E", "A1", "A3", "A6", "A8", "AB", "AD", "B0", "B3", "B5", "B8", "BA", "BD", "BF", "C2", "C4", "C7", "C9", "CC", "CF", "D1", "D4", "D6", "D9", "DB", "DE", "E0", "E3", "E6", "E8", "EB", "ED", "F0", "F2", "F5", "F7", "FA", "FC", "FF"];
 
 export function convertColorToHex(color) {
@@ -722,7 +844,7 @@ export function makePath(plots, closed = true, bare = false) {
     plots.forEach(plot => {
         path += `${plot.x},${plot.y} `
     })
-    if(bare) {
+    if (bare) {
         return path.trim();
     } else {
         return `M${path}${closed ? 'Z' : ''}`;
@@ -1259,14 +1381,14 @@ export function calcTrend(numbers) {
     if (numbers.length < 2) {
         return 0;
     }
-    
+
     let totalPercentageChange = 0;
     let pairsCount = 0;
 
     for (let i = 1; i < numbers.length; i++) {
         const initial = numbers[i - 1];
         const final = numbers[i];
-        
+
         if ([null, undefined, 0, Infinity, -Infinity].includes(initial)) {
             continue;
         }
@@ -1296,18 +1418,18 @@ export function createTSpans({
     function chunk(text, len) {
         const words = text.split(" ");
         const chunks = [];
-        
+
         for (let i = 0; i < words.length; i += len) {
             chunks.push(words.slice(i, i + len).join(" "));
         }
-        
+
         return chunks;
     }
     let tspans = "";
     const chunks = chunk(content, maxWords);
 
     chunks.forEach((c, i) => {
-        const tspan = `<tspan x="${x}" y="${ y + (i * fontSize)}" fill="${ fill }">${ c }</tspan>`;
+        const tspan = `<tspan x="${x}" y="${y + (i * fontSize)}" fill="${fill}">${c}</tspan>`;
         tspans += tspan
     });
 
@@ -1315,7 +1437,7 @@ export function createTSpans({
 }
 
 export function convertCustomPalette(colors) {
-    if(!colors.length) {
+    if (!colors.length) {
         return []
     }
     return colors.map(c => convertColorToHex(c))
@@ -1371,6 +1493,7 @@ const lib = {
     rotateMatrix,
     shiftHue,
     sumByAttribute,
+    themePalettes,
     treeShake,
     XMLNS
 };
