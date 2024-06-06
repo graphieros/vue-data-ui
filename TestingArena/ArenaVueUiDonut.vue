@@ -17,7 +17,19 @@ const dataset = ref([
     {
         name: 'Serie 3',
         values: [25]
-    }
+    },
+    {
+        name: 'Serie 3',
+        values: [25]
+    },
+    {
+        name: 'Serie 3',
+        values: [25]
+    },
+    {
+        name: 'Serie 3',
+        values: [25]
+    },
 ]);
 
 const model = ref([
@@ -81,7 +93,7 @@ const model = ref([
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'title' },
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 6, max: 48, label: 'fontSize', category: 'title' },
     { key: 'style.chart.title.bold', def: true, type: 'checkbox', label: 'bold', category: 'title' },
-    { key: 'style.chart.title.subtitle.text', def: '', type: 'text', label: 'textContent', category: 'subtitle' },
+    { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sit amet', type: 'text', label: 'textContent', category: 'subtitle' },
     { key: 'style.chart.title.subtitle.color', def: '#A1A1A1', type: 'color', label: 'textColor', category: 'subtitle' },
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 6, max: 42, label: 'fontSize', category: 'subtitle' },
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox', label: 'bold', category: 'subtitle' },
@@ -110,6 +122,15 @@ const model = ref([
 ])
 
 const testCustomTooltip = ref(false);
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[3])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -133,7 +154,8 @@ const config = computed(() => {
     } else {
         return {
             ...c,
-            customPalette: ['#6376DD', "#DD3322", "#66DDAA"]
+            theme: currentTheme.value,
+            // customPalette: ['#6376DD', "#DD3322", "#66DDAA"]
         }
     }
 });
@@ -151,6 +173,12 @@ function selectDatapoint(datapoint) {
 </script>
 
 <template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
     <div style="margin: 12px 0">
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip"/>
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>

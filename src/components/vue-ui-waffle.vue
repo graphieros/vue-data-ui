@@ -17,11 +17,13 @@ import {
     opacity,
     palette,
     shiftHue,
+    themePalettes,
     XMLNS
 } from "../lib";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -87,10 +89,22 @@ const selectedSerie = ref(null);
 const step = ref(0);
 
 const waffleConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: defaultConfig.value
     });
+
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_waffle[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 const customPalette = computed(() => {

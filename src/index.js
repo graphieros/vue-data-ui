@@ -37,6 +37,7 @@ import VueUiTableSparkline from "./components/vue-ui-table-sparkline.vue";
 import Arrow from "./atoms/Arrow.vue"
 import VueUiMiniLoader from "./components/vue-ui-mini-loader.vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
+import getThemeConfig from "./getThemeConfig";
 import VueUiNestedDonuts from "./components/vue-ui-nested-donuts.vue";
 import VueUiSparkgauge from './components/vue-ui-sparkgauge.vue';
 import VueDataUi from "./components/vue-data-ui.vue";
@@ -93,6 +94,7 @@ export {
     VueUiMiniLoader,
     getPalette,
     getVueDataUiConfig,
+    getThemeConfig,
     VueUiNestedDonuts,
     VueUiSparkgauge,
     VueDataUi,

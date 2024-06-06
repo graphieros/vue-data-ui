@@ -7,7 +7,7 @@ import convertArrayToObject from "./convertModel";
 
 const scat1 = computed(() => {
     const arr = [];
-    for (let i = -200; i < 500; i += 1) {
+    for (let i = -100; i < 100; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.3 ? i / 3 : -i / 5),
             y: Math.random() * i / 20,
@@ -167,6 +167,17 @@ const model = ref([
 
 const testCustomTooltip = ref(false);
 
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[3])
+
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     if(testCustomTooltip.value) {
@@ -188,6 +199,7 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            theme: currentTheme.value,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }
     }

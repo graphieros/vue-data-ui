@@ -1,0 +1,4448 @@
+{
+    "vue_ui_xy": {
+        "default": {},
+        "hack":  {
+            "chart": {
+                "backgroundColor":"#1A1A1A",
+                "color": "#99AA99",
+                "zoom": {
+                    "color": "#5F6A5F",
+                    "highlightColor": "#66CC66"
+                },
+                "highlighter": {
+                    "color": "#66CC66"
+                },
+                "timeTag": {
+                    "backgroundColor":"#1A1A1A",
+                    "color": "#66CC66",
+                    "circleMarker": {
+                        "color": "#66CC66"
+                    }
+                },
+                "grid": {
+                    "stroke": "#5F6A5F",
+                    "showVerticalLines": false,
+                    "labels": {
+                        "color": "#99AA99",
+                        "xAxisLabels": {
+                            "color": "#99AA99"
+                        },
+                        "xAxis": {
+                            "showBaseline": false
+                        }
+                    }
+                },
+                "legend": {
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#2A2F2A",
+                    "color": "#AACCAA"
+                }
+            },
+            "bar": {
+                "borderRadius": 0,
+                "border": {
+                    "stroke": "#66CC66"
+                },
+                "labels": {
+                    "color": "#AACCAA"
+                },
+                "serieName": {
+                    "color": "#99CC99"
+                }
+            },
+            "line": {
+                "labels": {
+                    "color": "#AACCAA"
+                }
+            },
+            "plot": {
+                "labels": {
+                    "color": "#AACCAA"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "chart": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "zoom": {
+                    "color": "#E0CFC3",
+                    "highlightColor": "#8F837A"
+                },
+                "highlighter": {
+                    "color": "#8F837A"
+                },
+                "timeTag": {
+                    "backgroundColor":"#fbfafa",
+                    "color": "#8A9892",
+                    "circleMarker": {
+                        "color": "#8A9892"
+                    }
+                },
+                "grid": {
+                    "stroke": "transparent",
+                    "labels": {
+                        "show": false,
+                        "color": "#99AA99",
+                        "xAxisLabels": {
+                            "show": false,
+                            "color": "#99AA99"
+                        },
+                        "zeroLine": {
+                            "show": false
+                        },
+                        "yAxis": {
+                            "showBaseline": false
+                        }
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892"
+                }
+            },
+            "bar": {
+                "borderRadius": 4,
+                "border": {
+                    "stroke": "#D7E0D2"
+                },
+                "labels": {
+                    "color": "#8F837A"
+                },
+                "serieName": {
+                    "color": "#858480"
+                }
+            },
+            "line": {
+                "labels": {
+                    "color": "#8F837A"
+                }
+            },
+            "plot": {
+                "labels": {
+                    "color": "#8F837A"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "chart": {
+                "backgroundColor":"#f6f6fb",
+                "color": "#50606C",
+                "zoom": {
+                    "color": "#92B0AB",
+                    "highlightColor": "#50606C"
+                },
+                "highlighter": {
+                    "color": "#7DA9B5"
+                },
+                "timeTag": {
+                    "backgroundColor":"#f6f6fb",
+                    "color": "#50606C",
+                    "circleMarker": {
+                        "color": "#50606C"
+                    }
+                },
+                "grid": {
+                    "stroke": "#829C98",
+                    "showVerticalLines": true,
+                    "showHorizontalLines": true,
+                    "labels": {
+                        "color": "#50606C",
+                        "xAxisLabels": {
+                            "color": "#50606C"
+                        }
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#61747E"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C"
+                }
+            },
+            "bar": {
+                "borderRadius": 2,
+                "border": {
+                    "stroke": "#404C4D"
+                },
+                "labels": {
+                    "color": "#50606C"
+                },
+                "serieName": {
+                    "color": "#61747E"
+                }
+            },
+            "line": {
+                "labels": {
+                    "color": "#50606C"
+                }
+            },
+            "plot": {
+                "labels": {
+                    "color": "#50606C"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_donut": {
+        "default": {},
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "labels": {
+                            "percentage": {
+                                "color": "#61747E"
+                            },
+                            "name": {
+                                "color": "#8A9892"
+                            },
+                            "hollow": {
+                                "total": {
+                                    "color": "#8A9892",
+                                    "value": {
+                                        "color": "#61747E"
+                                    }
+                                },
+                                "average": {
+                                    "color": "#8A9892",
+                                    "value": {
+                                        "color": "#61747E"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        },
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "labels": {
+                            "percentage": {
+                                "color": "#AACCAA"
+                            },
+                            "name": {
+                                "color": "#99CC99"
+                            },
+                            "hollow": {
+                                "total": {
+                                    "color": "#99CC99",
+                                    "value": {
+                                        "color": "#AACCAA"
+                                    }
+                                },
+                                "average": {
+                                    "color": "#99CC99",
+                                    "value": {
+                                        "color": "#AACCAA"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "labels": {
+                            "percentage": {
+                                "color": "#A0AC94"
+                            },
+                            "name": {
+                                "color": "#8A9892"
+                            },
+                            "hollow": {
+                                "total": {
+                                    "color": "#8A9892",
+                                    "value": {
+                                        "color": "#A0AC94"
+                                    }
+                                },
+                                "average": {
+                                    "color": "#8A9892",
+                                    "value": {
+                                        "color": "#A0AC94"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        }
+    },
+    "vue_ui_treemap": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "rects": {
+                            "stroke": "#1A1A1A",
+                            "selected": {
+                                "stroke":"#1A1A1A"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor":"#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "rects": {
+                            "stroke": "#fbfafa",
+                            "strokeWidth": 2,
+                            "borderRadius": 12,
+                            "selected": {
+                                "stroke":"#fbfafa"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                    "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "rects": {
+                            "stroke": "#1A1A1A",
+                            "selected": {
+                                "stroke":"#1A1A1A"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_waffle": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "rect": {
+                            "rounded": false,
+                            "stroke": "#66CC66",
+                            "useGradient": false
+                        }
+                    },
+                    "legend": {
+                        "color": "#99AA99",
+                        "backgroundColor":"#1A1A1A"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "rect": {
+                            "rounding": 4,
+                            "stroke": "#fbfafa"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "rect": {
+                            "rounded": false,
+                            "stroke": "#404C5A",
+                            "useGradient": false
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_radar": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "outerPolygon": {
+                            "stroke": "#336633",
+                            "strokeWidth": 0
+                        },
+                        "grid": {
+                            "stroke": "#334C33",
+                            "graduations": 1
+                        },
+                        "labels": {
+                            "dataLabels": {
+                                "color": "#99AA99"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "color": "#99AA99",
+                        "backgroundColor":"#1A1A1A"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "outerPolygon": {
+                            "strokeWidth": 0
+                        },
+                        "grid": {
+                            "show": false
+                        },
+                        "labels": {
+                            "dataLabels": {
+                                "color": "#99AA99"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "outerPolygon": {
+                            "stroke": "#ABB1BC",
+                            "strokeWidth": 0.5
+                        },
+                        "grid": {
+                            "stroke": "#C3DAC8"
+                        },
+                        "labels": {
+                            "dataLabels": {
+                                "color": "#99AA99"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_quadrant": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "labels": {
+                            "quadrantLabels": {
+                                "tl": {
+                                    "color": "#99AA99"
+                                },
+                                "tr": {
+                                    "color": "#99AA99"
+                                },
+                                "br": {
+                                    "color": "#99AA99"
+                                },
+                                "bl": {
+                                    "color": "#99AA99"
+                                }
+                            },
+                            "plotLabels": {
+                                "color": "#99CC99"
+                            },
+                            "axisLabels": {
+                                "color": {
+                                    "positive": "#66CC66",
+                                    "negative": "#66CC66"
+                                }
+                            }
+                        },
+                        "grid": {
+                            "stroke": "#334C33",
+                            "graduations": {
+                                "stroke": "#333333",
+                                "roundingForce": 0,
+                                "fill": false
+                            }
+                        },
+                        "plots": {
+                            "outlineColor": "#1A1A1A"
+                        },
+                        "areas": {
+                            "opacity": 20
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "labels": {
+                            "quadrantLabels": {
+                                "tl": {
+                                    "color": "#8A9892"
+                                },
+                                "tr": {
+                                    "color": "#8A9892"
+                                },
+                                "br": {
+                                    "color": "#8A9892"
+                                },
+                                "bl": {
+                                    "color": "#8A9892"
+                                }
+                            },
+                            "plotLabels": {
+                                "color": "#8A9892"
+                            },
+                            "axisLabels": {
+                                "color": {
+                                    "positive": "#99AA99",
+                                    "negative": "#C09E85"
+                                }
+                            }
+                        },
+                        "grid": {
+                            "stroke": "#D2E0DB",
+                            "graduations": {
+                                "steps": 2,
+                                "color": "#D2E0DB",
+                                "stroke": "#D2E0DB",
+                                "roundingForce": 256
+                            }
+                        },
+                        "plots": {
+                            "outlineColor": "#fbfafa"
+                        },
+                        "areas": {
+                            "opacity": 40
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "labels": {
+                            "quadrantLabels": {
+                                "tl": {
+                                    "color": "#61747E"
+                                },
+                                "tr": {
+                                    "color": "#61747E"
+                                },
+                                "br": {
+                                    "color": "#61747E"
+                                },
+                                "bl": {
+                                    "color": "#61747E"
+                                }
+                            },
+                            "plotLabels": {
+                                "color": "#50606C"
+                            },
+                            "axisLabels": {
+                                "color": {
+                                    "positive": "#4A6A75",
+                                    "negative": "#7E8F7E"
+                                }
+                            }
+                        },
+                        "grid": {
+                            "stroke": "#9AA7B0",
+                            "graduations": {
+                                "color": "#DEE1DE",
+                                "stroke": "#DEE1DE",
+                                "roundingForce": 0
+                            }
+                        },
+                        "plots": {
+                            "outlineColor": "#fbfafa"
+                        },
+                        "areas": {
+                            "opacity": 40
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_gauge": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "track": {
+                            "useGradient": false
+                        },
+                        "markers": {
+                            "color": "#99CC99",
+                            "backgroundColor": "#1A1A1A",
+                            "stroke": "#66CC66"
+                        },
+                        "pointer": {
+                            "type": "pointy",
+                            "stroke": "#1A1A1A",
+                            "circle": {
+                                "stroke": "#66CC66",
+                                "strokeWidth": 1,
+                                "color": "#1A1A1A"
+                            }
+                        }
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "track": {
+                            "useGradient": false
+                        },
+                        "markers": {
+                            "color": "#A0AC94",
+                            "backgroundColor": "#fbfafa",
+                            "stroke": "#EBD6CC"
+                        },
+                        "pointer": {
+                            "stroke": "#fbfafa",
+                            "circle": {
+                                "stroke": "#EBD6CC",
+                                "strokeWidth": 1,
+                                "color": "#fbfafa"
+                            }
+                        }
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "track": {
+                            "useGradient": false
+                        },
+                        "markers": {
+                            "color": "#f6f6fb",
+                            "backgroundColor": "#4F5B75",
+                            "stroke": "#9FA9BE"
+                        },
+                        "pointer": {
+                            "type": "pointy",
+                            "stroke": "#f6f6fb",
+                            "circle": {
+                                "stroke": "#f6f6fb",
+                                "strokeWidth": 1,
+                                "color": "#4F5B75"
+                            }
+                        }
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_wheel": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "wheel": {
+                            "ticks": {
+                                "rounded": false,
+                                "inactiveColor": "#333333",
+                                "activeColor": "#66CC66",
+                                "gradient": {
+                                    "shiftHueIntensity": 15
+                                }
+                            }
+                        },
+                        "innerCircle": {
+                            "show": false
+                        }
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "wheel": {
+                            "ticks": {
+                                "inactiveColor": "#F7EDE2",
+                                "activeColor": "#B1A7AD",
+                                "gradient": {
+                                    "shiftHueIntensity": 100
+                                }
+                            }
+                        },
+                        "innerCircle": {
+                            "show": false
+                        }
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "wheel": {
+                            "ticks": {
+                                "rounded": false,
+                                "inactiveColor": "#BBCBC7",
+                                "activeColor": "#6C94A0",
+                                "gradient": {
+                                    "shiftHueIntensity": 10
+                                }
+                            }
+                        },
+                        "innerCircle": {
+                            "stroke": "#BBCBC7"
+                        }
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_tiremarks": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "crescendo": false,
+                        "inactiveColor": "#333333",
+                        "activeColor": "#66CC66",
+                        "ticks": {
+                            "gradient": {
+                                "shiftHueIntensity": 15
+                            }
+                        }
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "crescendo": true,
+                        "curved": true,
+                        "curveAngleX": 5,
+                        "curveAngleY": 5,
+                        "inactiveColor": "#F7EDE2",
+                        "activeColor": "#B1A7AD",
+                        "ticks": {
+                            "gradient": {
+                                "shiftHueIntensity": 15
+                            }
+                        }
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "crescendo": false,
+                        "inactiveColor": "#BBCBC7",
+                        "activeColor": "#6C94A0",
+                        "ticks": {
+                            "gradient": {
+                                "shiftHueIntensity": 10
+                            }
+                        }
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_chestnut": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "grandTotal": {
+                            "color": "#99CC99"
+                        },
+                        "roots": {
+                            "stroke": "#1A1A1A",
+                            "labels": {
+                                "name": {
+                                    "color": "#AACCAA"
+                                }
+                            }
+                        },
+                        "verticalSeparator": {
+                            "stroke": "#1A1A1A"
+                        },
+                        "branches": {
+                            "borderRadius": 0,
+                            "labels": {
+                                "color": "#AACCAA"
+                            }
+                        },
+                        "nuts": {
+                            "selected": {
+                                "labels": {
+                                    "dataLabels": {
+                                        "color": "#AACCAA"
+                                    },
+                                    "core": {
+                                        "total": {
+                                            "color": "#99CC99"
+                                        },
+                                        "value": {
+                                            "color": "#AACCAA"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "legend": {
+                            "color": "#99AA99"
+                        },
+                        "title": {
+                            "color": "#66CC66",
+                            "subtitle": {
+                                "color": "#99AA99"
+                            }
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "grandTotal": {
+                            "color": "#A0AC94"
+                        },
+                        "roots": {
+                            "stroke": "#fbfafa",
+                            "labels": {
+                                "name": {
+                                    "color": "#A0AC94"
+                                }
+                            }
+                        },
+                        "verticalSeparator": {
+                            "stroke": "#fbfafa"
+                        },
+                        "branches": {
+                            "borderRadius": 12,
+                            "labels": {
+                                "color": "#A0AC94"
+                            }
+                        },
+                        "nuts": {
+                            "selected": {
+                                "labels": {
+                                    "dataLabels": {
+                                        "color": "#A0AC94"
+                                    },
+                                    "core": {
+                                        "total": {
+                                            "color": "#8A9892"
+                                        },
+                                        "value": {
+                                            "color": "#A0AC94"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "legend": {
+                            "color": "#99AA99"
+                        },
+                        "title": {
+                            "color": "#8A9892",
+                            "subtitle": {
+                                "color": "#99AA99"
+                            }
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "grandTotal": {
+                            "color": "#61747E"
+                        },
+                        "roots": {
+                            "stroke": "#f6f6fb",
+                            "labels": {
+                                "name": {
+                                    "color": "#8A9892"
+                                }
+                            }
+                        },
+                        "verticalSeparator": {
+                            "stroke": "#f6f6fb"
+                        },
+                        "branches": {
+                            "borderRadius": 0,
+                            "labels": {
+                                "color": "#8A9892"
+                            }
+                        },
+                        "nuts": {
+                            "selected": {
+                                "labels": {
+                                    "dataLabels": {
+                                        "color": "#8A9892"
+                                    },
+                                    "core": {
+                                        "total": {
+                                            "color": "#8A9892"
+                                        },
+                                        "value": {
+                                            "color": "#61747E"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "legend": {
+                            "color": "#61747E"
+                        },
+                        "title": {
+                            "color": "#50606C",
+                            "subtitle": {
+                                "color": "#61747E"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_onion": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "useGradient": false,
+                    "color": "#99AA99",
+                    "layout": {
+                        "gutter": {
+                            "color": "#2A2A2A"
+                        },
+                        "labels": {
+                            "color": "#99CC99"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "useGradient": false,
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "gutter": {
+                            "color": "#F7EDE2"
+                        },
+                        "labels": {
+                            "color": "#A0AC94"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "useGradient": false,
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "gutter": {
+                            "color": "#DDDDDB"
+                        },
+                        "labels": {
+                            "color": "#61747E"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_vertical_bar": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "bars": {
+                            "borderRadius": 0,
+                            "useGradient": false,
+                            "dataLabels": {
+                                "color": "#AACCAA"
+                            },
+                            "nameLabels": {
+                                "color": "#99CC99"
+                            },
+                            "parentLabels": {
+                                "color": "#99CC99"
+                            }
+                        },
+                        "highlighter": {
+                            "color": "#66CC66"
+                        },
+                        "separators": {
+                            "show": false
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "bars": {
+                            "borderRadius": 8,
+                            "useGradient": true,
+                            "dataLabels": {
+                                "color": "#A0AC94"
+                            },
+                            "nameLabels": {
+                                "color": "#8A9892"
+                            },
+                            "parentLabels": {
+                                "color": "#8A9892"
+                            }
+                        },
+                        "highlighter": {
+                            "color": "#8F837A"
+                        },
+                        "separators": {
+                            "show": false
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "bars": {
+                            "borderRadius": 0,
+                            "useGradient": true,
+                            "dataLabels": {
+                                "color": "#61747E"
+                            },
+                            "nameLabels": {
+                                "color": "#8A9892"
+                            },
+                            "parentLabels": {
+                                "color": "#8A9892"
+                            }
+                        },
+                        "highlighter": {
+                            "color": "#50606C"
+                        },
+                        "separators": {
+                            "show": true,
+                            "color": "#DEE1DE"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_heatmap": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "layout": {
+                    "cells": {
+                        "colors": {
+                            "hot": "#008000",
+                            "cold": "#333333"
+                        },
+                        "spacing": 0.5,
+                        "selected": {
+                            "color": "#33FF33"
+                        }
+                    },
+                    "dataLabels": {
+                        "xAxis": {
+                            "color": "#AACCAA"
+                        },
+                        "yAxis": {
+                            "color": "#AACCAA"
+                        }
+                    }
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#2A2F2A",
+                    "color": "#AACCAA"
+                },
+                "legend": {
+                    "backgroundColor": "#2A2F2A",
+                    "color": "#AACCAA"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "layout": {
+                    "cells": {
+                        "colors": {
+                            "hot": "#DFCA99",
+                            "cold": "#BBC4D3"
+                        },
+                        "spacing": 0.5,
+                        "selected": {
+                            "color": "#4F5B75"
+                        }
+                    },
+                    "dataLabels": {
+                        "xAxis": {
+                            "color": "#A0AC94"
+                        },
+                        "yAxis": {
+                            "color": "#A0AC94"
+                        }
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "layout": {
+                    "cells": {
+                        "colors": {
+                            "hot": "#6D7D65",
+                            "cold": "#6C94A5"
+                        },
+                        "spacing": 0.5,
+                        "selected": {
+                            "color": "#404C4D"
+                        }
+                    },
+                    "dataLabels": {
+                        "xAxis": {
+                            "color": "#61747E"
+                        },
+                        "yAxis": {
+                            "color": "#61747E"
+                        }
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#61747E"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_scatter": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "layout": {
+                    "axis": {
+                        "stroke": "#334C33"
+                    },
+                    "marginalBars": {
+                        "fill": "#66CC66"
+                    },
+                    "plots": {
+                        "stroke": "#1A1A1A",
+                        "selectors": {
+                            "stroke": "#66CC66",
+                            "labels": {
+                                "color": "#AACCAA"
+                            },
+                            "markers": {
+                                "stroke": "#66CC66",
+                                "fill": "#1A1A1A"
+                            }
+                        }
+                    },
+                    "correlation": {
+                        "label": {
+                            "color": "#AACCAA"
+                        }
+                    },
+                    "dataLabels": {
+                        "xAxis": {
+                            "color": "#AACCAA"
+                        },
+                        "yAxis": {
+                            "color": "#AACCAA"
+                        }
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#2A2F2A",
+                    "color": "#AACCAA"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "layout": {
+                    "axis": {
+                        "stroke": "transparent"
+                    },
+                    "marginalBars": {
+                        "fill": "#B0B9A8"
+                    },
+                    "plots": {
+                        "stroke": "#fbfafa",
+                        "selectors": {
+                            "stroke": "#4F5B75",
+                            "labels": {
+                                "color": "#928A98"
+                            },
+                            "markers": {
+                                "stroke": "#4F5B75",
+                                "fill": "#fbfafa"
+                            }
+                        }
+                    },
+                    "correlation": {
+                        "label": {
+                            "color": "#928A98"
+                        }
+                    },
+                    "dataLabels": {
+                        "xAxis": {
+                            "color": "#928A98"
+                        },
+                        "yAxis": {
+                            "color": "#928A98"
+                        }
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "layout": {
+                    "axis": {
+                        "stroke": "#92B0B5"
+                    },
+                    "marginalBars": {
+                        "fill": "#ABB1BC"
+                    },
+                    "plots": {
+                        "stroke": "#fbfafa",
+                        "selectors": {
+                            "stroke": "#4F5B75",
+                            "labels": {
+                                "color": "#404C4D"
+                            },
+                            "markers": {
+                                "stroke": "#4F5B75",
+                                "fill": "#f6f6fb"
+                            }
+                        }
+                    },
+                    "correlation": {
+                        "label": {
+                            "color": "#61747E"
+                        }
+                    },
+                    "dataLabels": {
+                        "xAxis": {
+                            "color": "#61747E"
+                        },
+                        "yAxis": {
+                            "color": "#61747E"
+                        }
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#61747E"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_candlestick": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "layout": {
+                    "selector": {
+                        "color": "#7DA9B5"
+                    },
+                    "grid": {
+                        "stroke": "#334C33",
+                        "xAxis": {
+                            "dataLabels": {
+                                "color": "#99CC99"
+                            }
+                        },
+                        "yAxis": {
+                            "dataLabels": {
+                                "color": "#99CC99"
+                            }
+                        }
+                    },
+                    "wick": {
+                        "stroke": "#334C33",
+                        "extremity": {
+                            "color": "#334C33"
+                        }
+                    },
+                    "candle": {
+                        "stroke": "#1A1A1A",
+                        "colors": {
+                            "bullish": "#00FF00",
+                            "bearish": "#334C33"
+                        },
+                        "gradient": {
+                            "show": false
+                        }
+                    }
+                },
+                "zoom": {
+                    "color": "#5F6A5F",
+                    "highlightColor": "#66CC66"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#2A2F2A",
+                    "color": "#AACCAA"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                "layout": {
+                    "selector": {
+                        "color": "#8F837A"
+                    },
+                    "grid": {
+                        "stroke": "transparent",
+                        "xAxis": {
+                            "dataLabels": {
+                                "color": "#8A9892"
+                            }
+                        },
+                        "yAxis": {
+                            "dataLabels": {
+                                "color": "#8A9892"
+                            }
+                        }
+                    },
+                    "wick": {
+                        "stroke": "#D7E0D2",
+                        "extremity": {
+                            "shape": "circle",
+                            "size": 2,
+                            "color": "#C5B8A7"
+                        }
+                    },
+                    "candle": {
+                        "stroke": "#fbfafa",
+                        "colors": {
+                            "bullish": "#A0AC94",
+                            "bearish": "#C09E85"
+                        },
+                        "gradient": {
+                            "show": true
+                        }
+                    }
+                },
+                "zoom": {
+                    "color": "#E0CFC3",
+                    "highlightColor": "#8F837A"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "layout": {
+                    "selector": {
+                        "color": "#7DA9B5"
+                    },
+                    "grid": {
+                        "stroke": "#334C33",
+                        "xAxis": {
+                            "dataLabels": {
+                                "color": "#61747E"
+                            }
+                        },
+                        "yAxis": {
+                            "dataLabels": {
+                                "color": "#61747E"
+                            }
+                        }
+                    },
+                    "wick": {
+                        "stroke": "#61747E",
+                        "extremity": {
+                            "color": "#61747E"
+                        }
+                    },
+                    "candle": {
+                        "stroke": "#1A1A1A",
+                        "colors": {
+                            "bullish": "#92B0AB",
+                            "bearish": "#EFECEC"
+                        },
+                        "gradient": {
+                            "show": false
+                        }
+                    }
+                },
+                "zoom": {
+                    "color": "#92B0AB",
+                    "highlightColor": "#50606C"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_age_pyramid": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "layout": {
+                    "grid": {
+                        "stroke": "#5F6A5F"
+                    },
+                    "dataLabels": {
+                        "sideTitles": {
+                            "color": "#AACCAA"
+                        },
+                        "xAxis": {
+                            "color": "#5F6A5F"
+                        },
+                        "yAxis": {
+                            "color": "#5F6A5F"
+                        }
+                    },
+                    "bars": {
+                        "borderRadius": 0,
+                        "gap": 1,
+                        "left": {
+                            "color": "#668066"
+                        },
+                        "right": {
+                            "color": "#66CC66"
+                        },
+                        "gradient": {
+                            "show": false
+                        }
+                    }
+                },
+                "highlighter": {
+                    "color": "#66CC66"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#2A2F2A",
+                    "color": "#AACCAA"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "layout": {
+                    "grid": {
+                        "stroke": "#5F6A5F"
+                    },
+                    "dataLabels": {
+                        "sideTitles": {
+                            "color": "#8A9892"
+                        },
+                        "xAxis": {
+                            "show": false
+                        },
+                        "yAxis": {
+                            "show": false
+                        }
+                    },
+                    "bars": {
+                        "borderRadius": 6,
+                        "gap": 1,
+                        "left": {
+                            "color": "#DCB482"
+                        },
+                        "right": {
+                            "color": "#B9B99D"
+                        },
+                        "gradient": {
+                            "show": true
+                        }
+                    }
+                },
+                "highlighter": {
+                    "color": "#8F837A"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "layout": {
+                    "grid": {
+                        "stroke": "#5F6A5F"
+                    },
+                    "dataLabels": {
+                        "sideTitles": {
+                            "color": "#61747E"
+                        },
+                        "xAxis": {
+                            "color": "#61747E"
+                        },
+                        "yAxis": {
+                            "color": "#61747E"
+                        }
+                    },
+                    "bars": {
+                        "borderRadius": 0,
+                        "gap": 1,
+                        "left": {
+                            "color": "#A1B5A3"
+                        },
+                        "right": {
+                            "color": "#7DA9B5"
+                        },
+                        "gradient": {
+                            "show": true,
+                            "intensity": 10
+                        }
+                    }
+                },
+                "highlighter": {
+                    "color": "#7DA9B5"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C"
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_relation_circle": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "labels": {
+                    "color": "#AACCAA"
+                },
+                "circle": {
+                    "stroke": "#333333"
+                },
+                "plot": {
+                    "color": "#66CC66"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "labels": {
+                    "color": "#A0AC94"
+                },
+                "circle": {
+                    "stroke": "transparent"
+                },
+                "plot": {
+                    "color": "#C09E85"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "labels": {
+                    "color": "#61747E"
+                },
+                "circle": {
+                    "stroke": "#D2D7E0"
+                },
+                "plot": {
+                    "color": "#97ACB7"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_thermometer": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "graduations": {
+                        "stroke": "#1A1A1A",
+                        "strokeWidth": 6,
+                        "gradient": {
+                            "show": true
+                        }
+                    },
+                    "label": {
+                        "color": "#66CC66"
+                    }
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "graduations": {
+                        "show": false,
+                        "gradient": {
+                            "show": true
+                        }
+                    },
+                    "label": {
+                        "color": "#B9B99D"
+                    }
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "graduations": {
+                        "stroke": "#1A1A1A",
+                        "gradient": {
+                            "show": true
+                        }
+                    },
+                    "label": {
+                        "color": "#61747E"
+                    }
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_rings": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "rings": {
+                            "stroke": "#1A1A1A",
+                            "strokeWidth": 10
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "rings": {
+                            "stroke": "#fbfafa",
+                            "strokeWidth": 10
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "rings": {
+                            "stroke": "#fbfafa",
+                            "strokeWidth": 10
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_donut_evolution": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "zoom": {
+                        "color": "#5F6A5F",
+                        "highlightColor": "#66CC66"
+                    },
+                    "layout": {
+                        "grid": {
+                            "show": false,
+                            "stroke": "#5F6A5F",
+                            "yAxis": {
+                                "dataLabels": {
+                                    "color": "#AACCAA"
+                                }
+                            },
+                            "xAxis": {
+                                "dataLabels": {
+                                    "color": "#AACCAA"
+                                }
+                            }
+                        },
+                        "line": {
+                            "stroke": "#5F6A5F"
+                        },
+                        "highlighter": {
+                            "color": "#66CC66"
+                        },
+                        "dataLabels": {
+                            "color": "#AACCAA"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "zoom": {
+                        "color": "#E0CFC3",
+                        "highlightColor": "#8F837A"
+                    },
+                    "layout": {
+                        "grid": {
+                            "show": false,
+                            "yAxis": {
+                                "dataLabels": {
+                                    "show": false
+                                }
+                            },
+                            "xAxis": {
+                                "dataLabels": {
+                                    "show": false
+                                }
+                            }
+                        },
+                        "line": {
+                            "stroke": "#DCDFE7"
+                        },
+                        "highlighter": {
+                            "color": "#8F837A"
+                        },
+                        "dataLabels": {
+                            "color": "#A0AC94"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "zoom": {
+                        "color": "#92B0AB",
+                        "highlightColor": "#50606C"
+                    },
+                    "layout": {
+                        "grid": {
+                            "stroke": "#BBC4D3",
+                            "yAxis": {
+                                "dataLabels": {
+                                    "color": "#61747E"
+                                }
+                            },
+                            "xAxis": {
+                                "dataLabels": {
+                                    "color": "#61747E"
+                                }
+                            }
+                        },
+                        "line": {
+                            "stroke": "#92B0AB"
+                        },
+                        "highlighter": {
+                            "color": "#50606C"
+                        },
+                        "dataLabels": {
+                            "color": "#61747E"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_mood_radar": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "grid": {
+                            "stroke": "#333333"
+                        },
+                        "outerPolygon": {
+                            "stroke": "#334C33"
+                        },
+                        "dataPolygon": {
+                            "color": "#33B333",
+                            "stroke": "#00FF00"
+                        },
+                        "smileys": {
+                            "colors": {
+                                "1": "#336633",
+                                "2": "#338033",
+                                "3": "#339933",
+                                "4": "#33E633",
+                                "5": "#00FF00"
+                            }
+                        },
+                        "dataLabel": {
+                            "color": "#00FF00"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "grid": {
+                            "stroke": "#C5B8A7"
+                        },
+                        "outerPolygon": {
+                            "strokeWidth": 0
+                        },
+                        "dataPolygon": {
+                            "color": "#858480",
+                            "stroke": "#C09E85"
+                        },
+                        "smileys": {
+                            "colors": {
+                                "1": "#C09E85",
+                                "2": "#DCB482",
+                                "3": "#DFCA99",
+                                "4": "#E0CFC3",
+                                "5": "#B9B99D"
+                            }
+                        },
+                        "dataLabel": {
+                            "color": "#606C5A"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "grid": {
+                            "stroke": "#61747E"
+                        },
+                        "outerPolygon": {
+                            "stroke": "#50606C"
+                        },
+                        "dataPolygon": {
+                            "color": "#A3C4BE",
+                            "stroke": "#92B0B5"
+                        },
+                        "smileys": {
+                            "colors": {
+                                "1": "#5C6B5B",
+                                "2": "#4A6A75",
+                                "3": "#6C94A0",
+                                "4": "#7DA9B5",
+                                "5": "#8EBFCA"
+                            }
+                        },
+                        "dataLabel": {
+                            "color": "#50606C"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_molecule": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "nodes": {
+                        "stroke": "#1A1A1A",
+                        "strokeHovered": "#00FF00"
+                    },
+                    "links": {
+                        "stroke": "#333333"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "nodes": {
+                        "stroke": "#fbfafa",
+                        "strokeHovered": "#5E5E5E"
+                    },
+                    "links": {
+                        "stroke": "#e8ede1"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "nodes": {
+                        "stroke": "#61747E",
+                        "strokeHovered": "#404C4D"
+                    },
+                    "links": {
+                        "stroke": "#BBCBC7"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_nested_donuts": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "labels": {
+                            "dataLabels": {
+                                "color": "#AACCAA"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "labels": {
+                            "dataLabels": {
+                                "color": "#A0AC94"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "labels": {
+                            "dataLabels": {
+                                "color": "#61747E"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_galaxy": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "layout": {
+                        "arcs": {
+                            "gradient": {
+                                "color": "#1A1A1A"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "layout": {
+                        "arcs": {
+                            "gradient": {
+                                "color": "#fbfafa"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "layout": {
+                        "arcs": {
+                            "gradient": {
+                                "show": false
+                            }
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_strip_plot": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "grid": {
+                        "stroke": "#5F6A5F",
+                        "horizontalGrid": {
+                            "show": false
+                        },
+                        "verticalGrid": {
+                            "show": false
+                        }
+                    },
+                    "plots": {
+                        "stroke": "#00FF00"
+                    },
+                    "labels": {
+                        "bestPlotLabel": {
+                            "color": "#AACCAA"
+                        },
+                        "axis": {
+                            "color": "#99CC99"
+                        },
+                        "xAxisLabels": {
+                            "color": "#99CC99"
+                        },
+                        "yAxisLabels": {
+                            "color": "#99CC99"
+                        }
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "grid": {
+                        "show": false,
+                        "horizontalGrid": {
+                            "show": false
+                        },
+                        "verticalGrid": {
+                            "show": false
+                        }
+                    },
+                    "plots": {
+                        "stroke": "#fbfafa"
+                    },
+                    "labels": {
+                        "bestPlotLabel": {
+                            "color": "#A0AC94"
+                        },
+                        "axis": {
+                            "color": "#A0AC94"
+                        },
+                        "xAxisLabels": {
+                            "color": "#A0AC94"
+                        },
+                        "yAxisLabels": {
+                            "show": false,
+                            "color": "#A0AC94"
+                        }
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "grid": {
+                        "stroke": "#829C98",
+                        "horizontalGrid": {
+                            "stroke": "#829C98"
+                        },
+                        "verticalGrid": {
+                            "stroke": "#829C98"
+                        }
+                    },
+                    "plots": {
+                        "stroke": "#404C5A"
+                    },
+                    "labels": {
+                        "bestPlotLabel": {
+                            "color": "#61747E"
+                        },
+                        "axis": {
+                            "color": "#61747E"
+                        },
+                        "xAxisLabels": {
+                            "color": "#61747E"
+                        },
+                        "yAxisLabels": {
+                            "color": "#61747E"
+                        }
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_dumbbell": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "plots": {
+                        "startColor": "#008000",
+                        "endColor": "#00FF00",
+                        "stroke": "#1A1A1A"
+                    },
+                    "grid": {
+                        "horizontalGrid": {
+                            "stroke": "#5F6A5F"
+                        },
+                        "verticalGrid": {
+                            "stroke": "#5F6A5F"
+                        }
+                    },
+                    "labels": {
+                        "yAxisLabels": {
+                            "color": "#99CC99"
+                        },
+                        "xAxisLabels": {
+                            "color": "#99CC99"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "plots": {
+                        "startColor": "#DCB482",
+                        "endColor": "#B9B99D",
+                        "stroke": "#fbfafa"
+                    },
+                    "grid": {
+                        "horizontalGrid": {
+                            "show": false
+                        },
+                        "verticalGrid": {
+                            "show": false
+                        }
+                    },
+                    "labels": {
+                        "yAxisLabels": {
+                            "color": "#8A9892"
+                        },
+                        "xAxisLabels": {
+                            "show": false
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "plots": {
+                        "startColor": "#718885",
+                        "endColor": "#7DA9B5",
+                        "stroke": "#404C5A"
+                    },
+                    "grid": {
+                        "horizontalGrid": {
+                            "stroke": "#829C98"
+                        },
+                        "verticalGrid": {
+                            "stroke": "#829C98"
+                        }
+                    },
+                    "labels": {
+                        "yAxisLabels": {
+                            "color": "#61747E"
+                        },
+                        "xAxisLabels": {
+                            "color": "#61747E"
+                        }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_sparkline": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "line": {
+                    "color": "#66CC66"
+                },
+                "bar": {
+                    "color": "#66CC66",
+                    "borderRadius": 0
+                },
+                "zeroLine": {
+                    "color": "#5F6A5F"
+                },
+                "plot": {
+                    "stroke": "#1A1A1A"
+                },
+                "verticalIndicator": {
+                    "color": "#66CC66"
+                },
+                "dataLabel": {
+                    "color": "#AACCAA"
+                },
+                "title": {
+                    "color": "#66CC66"
+                },
+                "area": {
+                    "color": "#66CC66"
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "line": {
+                    "color": "#B9B99D",
+                    "smooth": true
+                },
+                "bar": {
+                    "color": "#B9B99D",
+                    "borderRadius": 3
+                },
+                "zeroLine": {
+                    "strokeWidth": 0
+                },
+                "plot": {
+                    "stroke": "#fbfafa"
+                },
+                "verticalIndicator": {
+                    "color": "#B9B99D"
+                },
+                "dataLabel": {
+                    "color": "#A0AC94"
+                },
+                "title": {
+                    "color": "#8A9892"
+                },
+                "area": {
+                    "color": "#B9B99D"
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "line": {
+                    "color": "#4A6A75"
+                },
+                "bar": {
+                    "color": "#4A6A75",
+                    "borderRadius": 0
+                },
+                "zeroLine": {
+                    "color": "#9FA9BE"
+                },
+                "plot": {
+                    "stroke": "#f6f6fb"
+                },
+                "verticalIndicator": {
+                    "color": "#4A6A75"
+                },
+                "dataLabel": {
+                    "color": "#61747E"
+                },
+                "title": {
+                    "color": "#50606C"
+                },
+                "area": {
+                    "color": "#4A6A75"
+                }
+            }
+        }
+    },
+    "vue_ui_sparkbar": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "gutter": {
+                    "backgroundColor": "#333333"
+                },
+                "bar": {
+                    "gradient": {
+                        "underlayerColor": "#1A1A1A"
+                    }
+                },
+                "labels": {
+                    "name": {
+                        "color": "#99CC99"
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "gutter": {
+                    "backgroundColor": "#f5f0eb"
+                },
+                "bar": {
+                    "gradient": {
+                        "underlayerColor": "#fbfafa"
+                    }
+                },
+                "labels": {
+                    "name": {
+                        "color": "#8A9892"
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "bar": {
+                    "gradient": {
+                        "underlayerColor": "#f6f6fb"
+                    }
+                },
+                "labels": {
+                    "name": {
+                        "color": "#50606C"
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_sparkstackbar": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "bar": {
+                    "gradient": {
+                        "underlayerColor": "#1A1A1A"
+                    }
+                },
+                "legend": {
+                    "name": {
+                        "color": "#99AA99"
+                    },
+                    "value": {
+                        "color": "#AACCAA"
+                    },
+                    "percentage": {
+                        "color": "#99CC99"
+                    }
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "bar": {
+                    "gradient": {
+                        "underlayerColor": "#fbfafa"
+                    }
+                },
+                "legend": {
+                    "name": {
+                        "color": "#8A9892"
+                    },
+                    "value": {
+                        "color": "#A0AC94"
+                    },
+                    "percentage": {
+                        "color": "#8A9892"
+                    }
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "bar": {
+                    "gradient": {
+                        "underlayerColor": "#f6f6fb"
+                    }
+                },
+                "legend": {
+                    "name": {
+                        "color": "#50606C"
+                    },
+                    "value": {
+                        "color": "#8A9892"
+                    },
+                    "percentage": {
+                        "color": "#61747E"
+                    }
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_sparkhistogram": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "bars": {
+                    "colors": {
+                        "positive": "#66CC66"
+                    }
+                },
+                "labels": {
+                    "value": {
+                        "color": "#AACCAA"
+                    },
+                    "valueLabel": {
+                        "color": "#99CC99"
+                    },
+                    "timeLabel": {
+                        "color": "#99AA99"
+                    }
+                },
+                "selector": {
+                    "stroke": "#00FF00"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "bars": {
+                    "colors": {
+                        "positive": "#B9B99D",
+                        "negative": "#C09E85"
+                    }
+                },
+                "labels": {
+                    "value": {
+                        "color": "#A0AC94"
+                    },
+                    "valueLabel": {
+                        "color": "#A0AC94"
+                    },
+                    "timeLabel": {
+                        "color": "#8A9892"
+                    }
+                },
+                "selector": {
+                    "stroke": "#BBC4D3"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "bars": {
+                    "colors": {
+                        "positive": "#4A6A75"
+                    }
+                },
+                "labels": {
+                    "value": {
+                        "color": "#61747E"
+                    },
+                    "valueLabel": {
+                        "color": "#8A9892"
+                    },
+                    "timeLabel": {
+                        "color": "#50606C"
+                    }
+                },
+                "selector": {
+                    "stroke": "#404C4D"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_sparkgauge": {
+        "default": {},
+        "hack": {
+            "style": {
+                "background": "#1A1A1A",
+                "title": {
+                    "color": "#66CC66"
+                },
+                "dataLabel": {
+                    "color": "#AACCAA"
+                },
+                "colors": {
+                    "min": "#334C33",
+                    "max": "#33CC33"
+                },
+                "track": {
+                    "color": "#33CC33"
+                },
+                "gutter": {
+                    "color": "#333333"
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "background": "#fbfafa",
+                "title": {
+                    "color": "#8A9892"
+                },
+                "dataLabel": {
+                    "color": "#A0AC94"
+                },
+                "colors": {
+                    "min": "#C09E85",
+                    "max": "#B9B99D"
+                },
+                "track": {
+                    "color": "#B9B99D"
+                },
+                "gutter": {
+                    "color": "#f5f0eb"
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "background": "#f6f6fb",
+                "title": {
+                    "color": "#50606C"
+                },
+                "dataLabel": {
+                    "color": "#61747E"
+                },
+                "colors": {
+                    "min": "#92B0AB",
+                    "max": "#4A6A75"
+                },
+                "track": {
+                    "color": "#4A6A75"
+                },
+                "gutter": {
+                    "color": "#e1e5e8"
+                }
+            }
+        }
+    },
+    "vue_ui_spark_trend": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "line": {
+                    "stroke": "#00FF00",
+                    "smooth": false
+                },
+                "dataLabel": {
+                    "color":"#AACCAA"
+                },
+                "trendLabel": {
+                    "color": "#99CC99"
+                },
+                "arrow": {
+                    "colors": {
+                        "positive": "#66CC66",
+                        "negative": "#196619"
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "line": {
+                    "stroke": "#B9B99D"
+                },
+                "dataLabel": {
+                    "color":"#8A9892"
+                },
+                "trendLabel": {
+                    "color": "#99CC99"
+                },
+                "arrow": {
+                    "colors": {
+                        "positive": "#B9B99D",
+                        "negative": "#C09E85",
+                        "neutral": "#A5AFC1"
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "line": {
+                    "stroke": "#4A6A75"
+                },
+                "dataLabel": {
+                    "color":"#61747E"
+                },
+                "trendLabel": {
+                    "color": "#8A9892"
+                },
+                "arrow": {
+                    "colors": {
+                        "positive": "#4A6A75",
+                        "negative": "#C09E85",
+                        "neutral": "#ABB1BC"
+                    }
+                }
+            }
+        }
+    },
+    "vue_ui_quick_chart": {
+        "default": {},
+        "hack": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#99AA99",
+            "xyAxisStroke": "#5F6A5F",
+            "xyGridStroke": "#333333",
+            "xyHighlighterColor": "#66CC66",
+            "zoomColor": "#5F6A5F",
+            "zoomHighlightColor": "#66CC66"
+        },
+        "zen": {
+            "backgroundColor": "#fbfafa",
+            "color": "#8A9892",
+            "xyAxisStroke": "transparent",
+            "xyGridStroke": "transparent",
+            "xyHighlighterColor": "#8F837A",
+            "zoomColor": "#E0CFC3",
+            "zoomHighlightColor": "#8F837A"
+        },
+        "concrete": {
+            "backgroundColor": "#f6f6fb",
+            "color": "#50606C",
+            "xyAxisStroke": "#829C98",
+            "xyGridStroke": "#CCD6D3",
+            "xyHighlighterColor": "#7DA9B5",
+            "zoomColor": "#92B0AB",
+            "zoomHighlightColor": "#50606C"
+        }
+    },
+    "vue_ui_3d_bar": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "bar": {
+                        "color": "#66CC66"
+                    },
+                    "box": {
+                        "stroke": "#333333"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "legend": {
+                        "color": "#99AA99"
+                    },
+                    "dataLabel": {
+                        "color": "#AACCAA"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "bar": {
+                        "color": "#B9B99D"
+                    },
+                    "box": {
+                        "stroke": "#DCDFE7"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "legend": {
+                        "color": "#99AA99"
+                    },
+                    "dataLabel": {
+                        "color": "#A0AC94"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "bar": {
+                        "color": "#4A6A75"
+                    },
+                    "box": {
+                        "stroke": "#DEE1DE"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "legend": {
+                        "color": "#61747E"
+                    },
+                    "dataLabel": {
+                        "color": "#61747E"
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
+    },
+    "vue_ui_table_sparkline": {
+        "default": {},
+        "hack": {
+            "title": {
+                "backgroundColor":"#1A1A1A",
+                "color": "#66CC66",
+                "subtitle": {
+                    "color": "#99AA99"
+                }
+            },
+            "thead": {
+                "backgroundColor":"#1A1A1A",
+                "color": "#99AA99"
+            },
+            "tbody": {
+                "backgroundColor":"#1A1A1A",
+                "color": "#99AA99"
+            }
+        },
+        "zen": {
+            "title": {
+                "backgroundColor":"#fbfafa",
+                "color": "#8A9892",
+                "subtitle": {
+                    "color": "#99AA99"
+                }
+            },
+            "thead": {
+                "backgroundColor":"#fbfafa",
+                "color": "#8A9892"
+            },
+            "tbody": {
+                "backgroundColor":"#fbfafa",
+                "color": "#A0AC94"
+            }
+        },
+        "concrete": {
+            "title": {
+                "backgroundColor":"#f6f6fb",
+                "color": "#50606C",
+                "subtitle": {
+                    "color": "#718890"
+                }
+            },
+            "thead": {
+                "backgroundColor":"#f6f6fb",
+                "color": "#50606C" 
+            },
+            "tbody": {
+                "backgroundColor":"#f6f6fb",
+                "color": "#50606C" 
+            }
+        }
+    },
+    "vue_ui_table_heatmap": {
+        "default": {},
+        "hack": {
+            "style": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "heatmapColors": {
+                    "min": "#333333",
+                    "max": "#66CC66"
+                }
+            },
+            "table": {
+                "head": {
+                    "backgroundColor": "#1A1A1A",
+                    "color":"#99AA99"
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "heatmapColors": {
+                    "max": "#C09E85",
+                    "min": "#DCDFE7"
+                }
+            },
+            "table": {
+                "head": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892"
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "heatmapColors": {
+                    "max": "#4A6A75",
+                    "min": "#EFECEC"
+                }
+            },
+            "table": {
+                "head": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C"
+                }
+            }
+        }
+    }
+}

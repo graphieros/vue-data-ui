@@ -16,17 +16,14 @@ const dataset = ref([
                     {
                         name: "break 1.1.1",
                         value: 50,
-                        color: "#F17171"
                     },
                     {
                         name: "break 1.1.2",
                         value: 25,
-                        color: "#ffc800"
                     },
                     {
                         name: "break 1.1.3",
                         value: 25,
-                        color: "#42d392"
                     },
                 ]
             },
@@ -37,17 +34,14 @@ const dataset = ref([
                     {
                         name: "break 1.2.1",
                         value: 10,
-                        color: "#F17171"
                     },
                     {
                         name: "break 1.2.2",
                         value: 20,
-                        color: "#ffc800"
                     },
                     {
                         name: "break 1.2.3",
                         value: 70,
-                        color: "#42d392"
                     },
                 ]
             },
@@ -58,17 +52,14 @@ const dataset = ref([
                     {
                         name: "break 1.3.1",
                         value: 90,
-                        color: "#F17171"
                     },
                     {
                         name: "break 1.3.2",
                         value: 10,
-                        color: "#ffc800"
                     },
                     {
                         name: "break 1.3.3",
                         value: 75,
-                        color: "#42d392"
                     },
                 ]
             },
@@ -85,17 +76,14 @@ const dataset = ref([
                     {
                         name: "break 2.1.1",
                         value: 150,
-                        color: "#F17171"
                     },
                     {
                         name: "break 2.1.2",
                         value: 25,
-                        color: "#ffc800"
                     },
                     {
                         name: "break 2.1.3",
                         value: 25,
-                        color: "#42d392"
                     },
                 ]
             },
@@ -106,17 +94,14 @@ const dataset = ref([
                     {
                         name: "break 2.2.1",
                         value: 100,
-                        color: "#F17171"
                     },
                     {
                         name: "break 2.2.2",
                         value: 10,
-                        color: "#ffc800"
                     },
                     {
                         name: "break 2.2.3",
                         value: 150,
-                        color: "#42d392"
                     },
                 ]
             },
@@ -127,17 +112,14 @@ const dataset = ref([
                     {
                         name: "break 2.3.1",
                         value: 80,
-                        color: "#F17171"
                     },
                     {
                         name: "break 2.3.2",
                         value: 20,
-                        color: "#ffc800"
                     },
                     {
                         name: "break 2.3.3",
                         value: 25,
-                        color: "#42d392"
                     },
                 ]
             },
@@ -153,17 +135,14 @@ const dataset = ref([
                     {
                         name: "break 3.1.1",
                         value: 100,
-                        color: "#F17171"
                     },
                     {
                         name: "break 3.1.2",
                         value: 10,
-                        color: "#ffc800"
                     },
                     {
                         name: "break 3.1.3",
                         value: 10,
-                        color: "#42d392"
                     },
                 ]
             },
@@ -174,17 +153,14 @@ const dataset = ref([
                     {
                         name: "break 3.2.1",
                         value: 30,
-                        color: "#F17171"
                     },
                     {
                         name: "break 3.2.2",
                         value: 30,
-                        color: "#ffc800"
                     },
                     {
                         name: "break 3.2.3",
                         value: 40,
-                        color: "#42d392"
                     },
                 ]
             },
@@ -195,17 +171,14 @@ const dataset = ref([
                     {
                         name: "break 3.3.1",
                         value: 90,
-                        color: "#F17171"
                     },
                     {
                         name: "break 3.3.2",
                         value: 200,
-                        color: "#ffc800"
                     },
                     {
                         name: "break 3.3.3",
                         value: 100,
-                        color: "#42d392"
                     },
                 ]
             }
@@ -329,9 +302,20 @@ const model = ref([
     { key: 'translations.of', def: 'of', type: 'text'}
 ])
 
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[3])
+
 const config = computed(() => {
     return {
         ...convertArrayToObject(model.value),
+        theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
     }
 });
@@ -353,6 +337,12 @@ function selectNut(nut) {
 </script>
 
 <template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
 <Box>
     <template #title>VueUiChestnut</template>
 

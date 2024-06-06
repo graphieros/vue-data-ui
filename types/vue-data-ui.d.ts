@@ -28,6 +28,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiTreemapConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         userOptions?: {
             show?: boolean;
@@ -186,6 +187,7 @@ declare module 'vue-data-ui' {
     export type VueUiGalaxyDatasetItem = VueUiDonutDatasetItem;
 
     export type VueUiGalaxyConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
@@ -307,6 +309,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiSparkgaugeConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             fontFamily?: string;
             background?: string;
@@ -409,6 +412,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiTableSparklineConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         responsiveBreakpoint?: number;
         showAverage?: boolean;
@@ -486,6 +490,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiMoleculeConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             fontFamily?: string;
             chart?: {
@@ -592,6 +597,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUi3dBarConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -697,6 +703,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiMoodRadarConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             fontFamily?: string;
             chart?: {
@@ -804,6 +811,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiDonutEvolutionConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -934,6 +942,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiTiremarksConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             fontFamily?: string;
             chart?: {
@@ -995,6 +1004,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiWheelConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1059,6 +1069,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRingsConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
@@ -1171,6 +1182,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiSparkHistogramConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -1269,6 +1281,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSparkStackBarConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         style?: {
             backgroundColor?: string;
@@ -1341,6 +1354,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiThermometerConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -1421,6 +1435,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRelationCircleConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         style?: {
             color?: string;
@@ -1612,6 +1627,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiSparkbarConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         style?: {
             backgroundColor?: string;
@@ -1661,6 +1677,7 @@ declare module 'vue-data-ui' {
     export type VueUiAgePyramidDataset = Array<Array<string | number>>;
 
     export type VueUiAgePyramidConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -1811,6 +1828,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiCandlestickConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         useCssAnimation?: boolean;
         style?: {
             backgroundColor?: string;
@@ -1979,6 +1997,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiScatterConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
@@ -2197,6 +2216,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiHeatmapConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -2339,6 +2359,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiXyConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         chart?: {
@@ -2629,6 +2650,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiDonutConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
@@ -2816,6 +2838,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiNestedDonutsConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
@@ -2967,6 +2990,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiWaffleConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useBlurOnHover?: boolean;
         useCustomCells?: boolean;
@@ -3110,6 +3134,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRadarConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
@@ -3286,6 +3311,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiQuadrantConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         useCssAnimation?: boolean;
         zoomAnimationFrames?: number;
         style?: {
@@ -3479,6 +3505,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiGaugeConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -3583,6 +3610,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiChestnutConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -3774,6 +3802,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiOnionConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
@@ -3928,6 +3957,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiVerticalBarConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
@@ -4112,6 +4142,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSparklineConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         type?: "line" | "bar";
         style?: {
             backgroundColor?: string;
@@ -4748,6 +4779,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiTableHeatmapConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -4767,6 +4799,7 @@ declare module 'vue-data-ui' {
             showMedian?: boolean;
             head?: {
                 backgroundColor?: string;
+                color?: string;
                 values?: string[];
             };
         };
@@ -4801,6 +4834,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiQuickChartConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         axisLabelsFontSize?: number;
         backgroundColor?: string;
         barGap?: number;
@@ -4912,6 +4946,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSparkTrendConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -4972,6 +5007,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiStripPlotConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         customPalette?: string[];
         useCssAnimation?: boolean;
         userOptions?: {
@@ -5128,6 +5164,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiDumbbellConfig = {
+        theme?: "" | "hack" | "zen" | "concrete";
         useAnimation?: boolean;
         animationSpeed?: number;
         userOptions?: {

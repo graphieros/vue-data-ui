@@ -5,7 +5,7 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref({ percentage: 66.6 })
+const dataset = ref({ percentage: 99 })
 
 const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
@@ -38,13 +38,34 @@ const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'}
 ])
 
-const config = computed(() => convertArrayToObject(model.value));
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[3])
+
+const config = computed(() => {
+    return {
+        ...convertArrayToObject(model.value),
+        theme: currentTheme.value
+    }
+});
 
 const step = ref(0)
 
 </script>
 
 <template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
     <Box>
         <template #title>VueUiWheel</template>
         

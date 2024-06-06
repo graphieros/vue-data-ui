@@ -15,6 +15,7 @@ import {
     XMLNS
 } from "../lib";
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import pdf from "../pdf";
 import img from "../img";
 import { useNestedProp } from "../useNestedProp";
@@ -66,10 +67,20 @@ const tableContainer = ref(null);
 const isResponsive = ref(false);
 
 const heatmapConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: defaultConfig.value
     });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_heatmap[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 const mutableConfig = ref({

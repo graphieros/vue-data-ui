@@ -84,36 +84,6 @@ const dataset = ref([
                                     { name: 'node2.1.6.3' },
                                     { name: 'node2.1.6.4' },
                                     { name: 'node2.1.6.5' },
-                                    {
-                                        name: 'node2.1.6.6', nodes: [
-                                            { name: 'node2.1.6.6.1' },
-                                            { name: 'node2.1.6.6.2' },
-                                            { name: 'node2.1.6.6.3' },
-                                            { name: 'node2.1.6.6.4' },
-                                            { name: 'node2.1.6.6.5' },
-                                            {
-                                                name: 'node2.1.6.6.6', nodes: [
-                                                    { name: 'node2.1.6.6.6.1' },
-                                                    { name: 'node2.1.6.6.6.2' },
-                                                    { name: 'node2.1.6.6.6.3' , nodes: [
-                                                        { name: 'node2.1.6.6.6.3.1' },
-                                                        { name: 'node2.1.6.6.6.3.2', nodes: [
-                                                            { name: 'node2.1.6.6.6.3.2.1' },
-                                                            { name: 'node2.1.6.6.6.3.2.2' },
-                                                            { name: 'node2.1.6.6.6.3.2.3' },
-                                                        ] },
-                                                        { name: 'node2.1.6.6.6.3.3' },
-                                                        { name: 'node2.1.6.6.6.3.4' },
-                                                        { name: 'node2.1.6.6.6.3.5' },
-                                                        { name: 'node2.1.6.6.6.3.6' },
-                                                    ]},
-                                                    { name: 'node2.1.6.6.6.4' },
-                                                    { name: 'node2.1.6.6.6.5' },
-                                                    { name: 'node2.1.6.6.6.6' },
-                                                ]
-                                            },
-                                        ]
-                                    },
                                 ]
                             },
                         ]
@@ -206,6 +176,16 @@ const model = ref([
 
 const testCustomTooltip = ref(false);
 
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[3])
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     if(testCustomTooltip.value) {
@@ -228,6 +208,7 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            theme: currentTheme.value,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }
     }
@@ -238,6 +219,12 @@ const step = ref(0);
 </script>
 
 <template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
     <div style="margin: 12px 0">
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip"/>
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>

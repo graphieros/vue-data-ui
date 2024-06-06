@@ -20,6 +20,7 @@ import img from "../img";
 import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
+import themes from "../themes.json";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
@@ -68,10 +69,20 @@ onMounted(() => {
 });
 
 const candlestickConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: defaultConfig.value
     });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_candlestick[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 const mutableConfig = ref({

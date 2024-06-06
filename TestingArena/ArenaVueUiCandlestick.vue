@@ -90,12 +90,12 @@ const model = ref([
     { key: 'style.tooltip.roundingValue', def: 0, type: 'number', min: 0, max: 6},
     { key: 'style.tooltip.prefix', def: 'P', type: 'text'},
     { key: 'style.tooltip.suffix', def: 'S', type: 'text'},
-    { key: 'translations.period', def: 'Period', def: 'text'},
-    { key: 'translations.open', def: 'Open', def: 'text'},
-    { key: 'translations.high', def: 'High', def: 'text'},
-    { key: 'translations.low', def: 'Low', def: 'text'},
-    { key: 'translations.last', def: 'Last', def: 'text'},
-    { key: 'translations.volume', def: 'Volume', def: 'text'},
+    { key: 'translations.period', def: 'Period', type: 'text'},
+    { key: 'translations.open', def: 'Open', type: 'text'},
+    { key: 'translations.high', def: 'High', type: 'text'},
+    { key: 'translations.low', def: 'Low', type: 'text'},
+    { key: 'translations.last', def: 'Last', type: 'text'},
+    { key: 'translations.volume', def: 'Volume', type: 'text'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
@@ -111,6 +111,16 @@ const model = ref([
 ])
 
 const testCustomTooltip = ref(false);
+
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[3])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -132,7 +142,8 @@ const config = computed(() => {
         }
     } else {
         return {
-            ...c
+            ...c,
+            theme: currentTheme.value
         }
     }
 });
@@ -142,6 +153,12 @@ const step = ref(0)
 </script>
 
 <template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
     <div style="margin: 12px 0">
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>

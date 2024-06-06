@@ -110,9 +110,20 @@ const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'}
 ])
 
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[3])
+
 const config = computed(() => {
     return {
         ...convertArrayToObject(model.value),
+        theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
     }
 })
@@ -122,6 +133,12 @@ const step = ref(0)
 </script>
 
 <template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
     <Box>
         <template #title>VueUiRelatioNCircle</template>
 

@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, onBeforeMount } from "vue";
+import { ref, computed } from "vue";
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import * as detector from "../chartDetector";
 import {
     calcMarkerOffsetX,
@@ -16,6 +17,7 @@ import {
     isFunction,
     makeDonut, 
     palette,
+    themePalettes,
     XMLNS
 } from "../lib";
 import pdf from "../pdf";
@@ -55,10 +57,21 @@ const step = ref(0);
 const slicerStep = ref(0);
 
 const quickConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: defaultConfig.value
     });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_quick_chart[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 const customPalette = computed(() => {

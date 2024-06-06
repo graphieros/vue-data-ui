@@ -168,6 +168,16 @@ const model = ref([
 
 const testCustomTooltip = ref(false);
 
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[3])
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     if(testCustomTooltip.value) {
@@ -192,6 +202,7 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            theme: currentTheme.value,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }
     }
@@ -214,6 +225,12 @@ function selectSide(side) {
 </script>
 
 <template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
     <div style="margin: 12px 0">
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>

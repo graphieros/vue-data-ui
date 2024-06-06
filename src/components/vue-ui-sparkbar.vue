@@ -9,10 +9,12 @@ import {
     objectIsEmpty,
     opacity, 
     palette, 
-    shiftHue, 
+    shiftHue,
+    themePalettes,
     XMLNS
 } from "../lib";
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import Skeleton from "./vue-ui-skeleton.vue";
 
@@ -39,10 +41,21 @@ const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_sparkbar);
 
 const sparkbarConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: defaultConfig.value
     });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_sparkbar[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 const customPalette = computed(() => {

@@ -11,6 +11,7 @@ import {
     XMLNS
 } from "../lib"
 import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import Skeleton from './vue-ui-skeleton.vue';
@@ -38,10 +39,20 @@ const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_spark_trend);
 
 const trendConfig = computed(() => {
-    return useNestedProp({
+    const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: defaultConfig.value
     });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_spark_trend[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            })
+        }
+    } else {
+        return mergedConfig;
+    }
 });
 
 function sanitize(arr) {
