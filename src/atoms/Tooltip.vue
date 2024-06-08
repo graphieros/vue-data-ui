@@ -31,6 +31,18 @@ const props = defineProps({
     fontSize: {
         type: [Number, String],
         default: 14
+    },
+    borderRadius: {
+        type: Number,
+        default: 4
+    },
+    borderColor: {
+        type: String,
+        default: '#e1e5e8'
+    },
+    borderWidth: {
+        type: Number,
+        default: 1
     }
 });
 
@@ -54,7 +66,7 @@ const position = computed(() => {
         data-cy="tooltip"
         :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
         v-if="show"
-        :style="`top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${backgroundColor};color:${color};max-width:${maxWidth};font-size:${props.fontSize}px`}`"
+        :style="`top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${backgroundColor};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};`"
     >
         <slot name="tooltip-before"/>
         <slot/>
@@ -65,8 +77,6 @@ const position = computed(() => {
 
 <style>
 .vue-data-ui-tooltip {
-    border: 1px solid #e1e5e8;
-    border-radius: 4px;
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
     position: fixed;
     padding:12px;
