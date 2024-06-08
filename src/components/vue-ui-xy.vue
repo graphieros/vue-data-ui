@@ -982,6 +982,9 @@
             :backgroundColor="chartConfig.chart.tooltip.backgroundColor"
             :color="chartConfig.chart.tooltip.color"
             :fontSize="chartConfig.chart.tooltip.fontSize"
+            :borderRadius="chartConfig.chart.tooltip.borderRadius"
+            :borderColor="chartConfig.chart.tooltip.borderColor"
+            :borderWidth="chartConfig.chart.tooltip.borderWidth"
             :parent="$refs.chart"
             :content="tooltipContent"
             :isCustom="chartConfig.chart.tooltip.customFormat && typeof chartConfig.chart.tooltip.customFormat === 'function'"
@@ -1833,7 +1836,7 @@ export default {
                 })
             } else {
                 if(time) {
-                    html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid #e1e5e8; width:100%">${time}</div>`;
+                    html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${this.chartConfig.chart.tooltip.borderColor}; width:100%">${time}</div>`;
                 }
                 this.selectedSeries.forEach(s => {
                     if(this.isSafeValue(s.value)) {
