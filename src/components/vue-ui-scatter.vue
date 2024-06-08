@@ -414,7 +414,7 @@ function useTooltip(plot, seriesIndex) {
             html += `<div>${plot.v.name}</div>`
         }
     
-        html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
+        html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid ${scatterConfig.value.style.tooltip.borderColor}">`;
 
         html += `<div>${scatterConfig.value.style.layout.dataLabels.xAxis.name} : <b>${isNaN(plot.v.x) ? '-' : dataLabel({
             p: scatterConfig.value.style.tooltip.prefix,
@@ -1062,6 +1062,9 @@ defineExpose({
             :show="scatterConfig.style.tooltip.show && isTooltip"
             :backgroundColor="scatterConfig.style.tooltip.backgroundColor"
             :color="scatterConfig.style.tooltip.color"
+            :borderRadius="scatterConfig.style.tooltip.borderRadius"
+            :borderColor="scatterConfig.style.tooltip.borderColor"
+            :borderWidth="scatterConfig.style.tooltip.borderWidth"
             :fontSize="scatterConfig.style.tooltip.fontSize"
             :parent="scatterChart"
             :content="tooltipContent"
