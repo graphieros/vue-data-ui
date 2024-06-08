@@ -242,7 +242,7 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
             config: galaxyConfig.value
         })
     } else {
-        html += `<div data-cy="galaxy-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div data-cy="galaxy-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${galaxyConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="galaxy-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
         if(galaxyConfig.value.style.chart.tooltip.showValue) {
@@ -553,6 +553,9 @@ defineExpose({
             :show="galaxyConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="galaxyConfig.style.chart.tooltip.backgroundColor"
             :color="galaxyConfig.style.chart.tooltip.color"
+            :borderRadius="galaxyConfig.style.chart.tooltip.borderRadius"
+            :borderColor="galaxyConfig.style.chart.tooltip.borderColor"
+            :borderWidth="galaxyConfig.style.chart.tooltip.borderWidth"
             :fontSize="galaxyConfig.style.chart.tooltip.fontSize"
             :parent="galaxyChart"
             :content="tooltipContent"
