@@ -362,7 +362,7 @@ function useTooltip({ datapoint, seriesIndex, show = true }) {
         const showPercentage = onionConfig.value.style.chart.tooltip.showPercentage;
         const showValue = onionConfig.value.style.chart.tooltip.showValue;
 
-        html += `<div style="width: 100%; border-bottom: 1px solid #ccc; padding-bottom: 6px;margin-bottom:3px;display:flex;flex-direction:row;gap:3px;align-items:center"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg><span></span>${datapoint.name}</span></div>`;
+        html += `<div style="width: 100%; border-bottom: 1px solid ${onionConfig.value.style.chart.tooltip.borderColor}; padding-bottom: 6px;margin-bottom:3px;display:flex;flex-direction:row;gap:3px;align-items:center"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg><span></span>${datapoint.name}</span></div>`;
         html += `<div style="width:100%;text-align:left;"><b>${showPercentage ? dataLabel({p: '', v: datapoint.percentage, s: '%', r: onionConfig.value.style.chart.tooltip.roundingPercentage}) : ''}</b> ${showPercentage && showValue ? '(' : ''}${showValue ? dataLabel({ p: datapoint.prefix || '', v: datapoint.value, s: datapoint.suffix || '', r: onionConfig.value.style.chart.tooltip.roundingValue }) : ''}${showPercentage && showValue ? ')' : ''}</div>`
 
         tooltipContent.value = `<div>${html}</div>`
@@ -617,6 +617,9 @@ defineExpose({
             :show="onionConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="onionConfig.style.chart.tooltip.backgroundColor"
             :color="onionConfig.style.chart.tooltip.color"
+            :borderRadius="onionConfig.style.chart.tooltip.borderRadius"
+            :borderColor="onionConfig.style.chart.tooltip.borderColor"
+            :borderWidth="onionConfig.style.chart.tooltip.borderWidth"
             :fontSize="onionConfig.style.chart.tooltip.fontSize"
             :parent="onionChart"
             :content="tooltipContent"
