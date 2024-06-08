@@ -269,7 +269,7 @@ function useTooltip(index, datapoint) {
   } else {
     let html = "";
   
-    html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
+    html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${ringsConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
   
     html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="waffle-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${selected.color}" /></svg>`;
     if (ringsConfig.value.style.chart.tooltip.showValue) {
@@ -615,6 +615,9 @@ defineExpose({
       "
       :backgroundColor="ringsConfig.style.chart.tooltip.backgroundColor"
       :color="ringsConfig.style.chart.tooltip.color"
+      :borderRadius="ringsConfig.style.chart.tooltip.borderRadius"
+      :borderColor="ringsConfig.style.chart.tooltip.borderColor"
+      :borderWidth="ringsConfig.style.chart.tooltip.borderWidth"
       :fontSize="ringsConfig.style.chart.tooltip.fontSize"
       :parent="ringsChart"
       :content="tooltipContent"
