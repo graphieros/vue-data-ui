@@ -251,7 +251,7 @@ function useTooltip(datapoint, seriesIndex) {
         })
     } else {
         html += `<div data-cy="heatmap-tootlip-name">${yAxisName} ${xAxisName ? `${xAxisName}` : ''}</div>`;
-        html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8;font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : dataLabel({p:heatmapConfig.value.style.layout.dataLabels.prefix, v: value, s: heatmapConfig.value.style.layout.dataLabels.suffix, r:heatmapConfig.value.style.tooltip.roundingValue })}</span></div>`
+        html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid ${heatmapConfig.value.style.tooltip.borderColor};font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(heatmapConfig.value.style.layout.cells.colors.cold, heatmapConfig.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : dataLabel({p:heatmapConfig.value.style.layout.dataLabels.prefix, v: value, s: heatmapConfig.value.style.layout.dataLabels.suffix, r:heatmapConfig.value.style.tooltip.roundingValue })}</span></div>`
         tooltipContent.value = `<div style="font-size:${heatmapConfig.value.style.tooltip.fontSize}px">${html}</div>`;
     }
 }
@@ -593,6 +593,9 @@ defineExpose({
             :show="heatmapConfig.style.tooltip.show && isTooltip"
             :backgroundColor="heatmapConfig.style.tooltip.backgroundColor"
             :color="heatmapConfig.style.tooltip.color"
+            :borderRadius="heatmapConfig.style.tooltip.borderRadius"
+            :borderColor="heatmapConfig.style.tooltip.borderColor"
+            :borderWidth="heatmapConfig.style.tooltip.borderWidth"
             :fontSize="heatmapConfig.style.tooltip.fontSize"
             :parent="heatmapChart"
             :content="tooltipContent"
