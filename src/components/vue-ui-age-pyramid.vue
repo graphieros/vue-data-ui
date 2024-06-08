@@ -257,12 +257,12 @@ function useTooltip(index, datapoint) {
         const selectedSet = drawableDataset.value[index];
         html += `<div><b>${selectedSet.segment}</b></div>`;
         html += `<div>${agePyramidConfig.value.translations.age} : ${selectedSet.age}</div>`
-        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
+        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${agePyramidConfig.value.style.tooltip.borderColor}">`;
         html += `<div style="display:flex; flex-direction:row;gap:12px">`;
         html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : agePyramidConfig.value.style.layout.bars.left.color}"/></svg><div>${agePyramidConfig.value.translations.female}</div><div><b>${selectedSet.left.value.toLocaleString()}</b></div></div>`;
         html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : agePyramidConfig.value.style.layout.bars.right.color}"/></svg><div>${agePyramidConfig.value.translations.male}</div><div><b>${selectedSet.right.value.toLocaleString()}</b></div></div>`;
         html += `</div>`;
-        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8"><div>${agePyramidConfig.value.translations.total}</div><div><b>${(selectedSet.left.value + selectedSet.right.value).toLocaleString()}</b></div></div>`
+        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${agePyramidConfig.value.style.tooltip.borderColor}"><div>${agePyramidConfig.value.translations.total}</div><div><b>${(selectedSet.left.value + selectedSet.right.value).toLocaleString()}</b></div></div>`
         html += `</div>`;
     
         tooltipContent.value = `<div>${html}</div>`;
@@ -667,6 +667,9 @@ defineExpose({
             :show="agePyramidConfig.style.tooltip.show && isTooltip"
             :backgroundColor="agePyramidConfig.style.tooltip.backgroundColor"
             :color="agePyramidConfig.style.tooltip.color"
+            :borderRadius="agePyramidConfig.style.tooltip.borderRadius"
+            :borderColor="agePyramidConfig.style.tooltip.borderColor"
+            :borderWidth="agePyramidConfig.style.tooltip.borderWidth"
             :fontSize="agePyramidConfig.style.tooltip.fontSize"
             :parent="agePyramid"
             :content="tooltipContent"
