@@ -101,6 +101,9 @@ declare module 'vue-data-ui' {
                     fontSize?: number;
                     roundingValue?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiTreemapDatapoint, VueUiTreemapSeriesItem[], VueUiTreemapConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
             };
         };
@@ -250,6 +253,9 @@ declare module 'vue-data-ui' {
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiGalaxyDatapoint, VueUiGalaxySeriesItem[], VueUiGalaxyConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
             };
         };
@@ -521,6 +527,9 @@ declare module 'vue-data-ui' {
                     backgroundColor?: string;
                     fontSize?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiMoleculeDatapoint, VueUiMoleculeDatapoint[], VueUiMoleculeConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
                 zoom?: {
                     speed?: number;
@@ -1127,6 +1136,9 @@ declare module 'vue-data-ui' {
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiRingsDatapoint, VueUiRingsDatapoint[], VueUiRingsConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
             };
         };
@@ -1766,6 +1778,9 @@ declare module 'vue-data-ui' {
                 fontSize?: number;
                 roundingValue?: number;
                 customFormat?: (params: VueUiTooltipParams<VueUiAgePyramidDatapoint, VueUiAgePyramidSeries[], VueUiAgePyramidConfig>) => string;
+                borderRadius?: number;
+                borderColor?: string;
+                borderWidth?: number;
             };
         };
         translations?: {
@@ -1929,6 +1944,9 @@ declare module 'vue-data-ui' {
                 prefix?: string;
                 suffix?: string;
                 customFormat?: (params: VueUiTooltipParams<VueUiCandlestickDatapoint, VueUiCandlestickDatapoint[], VueUiCandlestickConfig>) => string;
+                borderRadius?: number;
+                borderColor?: string;
+                borderWidth?: number;
             };
         };
         translations?: {
@@ -2140,7 +2158,10 @@ declare module 'vue-data-ui' {
                 showShape?: boolean;
                 prefix?: string;
                 suffix?: string;
-                customFormat?: (params: VueUiTooltipParams<VueUiScatterDatapoint, VueUiScatterSeries[], VueUiScatterConfig>) => string
+                customFormat?: (params: VueUiTooltipParams<VueUiScatterDatapoint, VueUiScatterSeries[], VueUiScatterConfig>) => string;
+                borderRadius?: number;
+                borderColor?: string;
+                borderWidth?: number;
             };
         };
         userOptions?: {
@@ -2301,6 +2322,9 @@ declare module 'vue-data-ui' {
                 fontSize?: number;
                 roundingValue?: number;
                 customFormat?: (params: VueUiTooltipParams<VueUiHeatmapDatapoint, VueUiHeatmapRow[], VueUiHeatmapConfig>) => string;
+                borderRadius?: number;
+                borderColor?: string;
+                borderWidth?: number;
             };
         };
         userOptions?: {
@@ -2490,6 +2514,9 @@ declare module 'vue-data-ui' {
                 roundingPercentage?: number;
                 fontSize?: number;
                 customFormat?: (params: VueUiTooltipParams<VueUiXyDatapointItem[], VueUiXySeries, VueUiXyConfig, VueUiXyDatasetBarItem[], VueUiXyDatasetLineItem[], VueUiXyDatasetPlotItem[]>) => string;
+                borderRadius?: number;
+                borderColor?: string;
+                borderWidth?: number;
             };
             userOptions?: {
                 show?: boolean;
@@ -2759,6 +2786,9 @@ declare module 'vue-data-ui' {
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiDonutDatapoint, VueUiDonutSeriesItem[], VueUiDonutConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
             };
         };
@@ -2915,6 +2945,9 @@ declare module 'vue-data-ui' {
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiNestedDonutsDatapoint, VueUiNestedDonutsSeriesItem[], VueUiNestedDonutsConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
             };
         };
@@ -3057,6 +3090,9 @@ declare module 'vue-data-ui' {
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiWaffleDatapoint, VueUiWaffleSerieItem[], VueUiWaffleConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
                 legend?: {
                     show?: boolean;
@@ -3198,6 +3234,9 @@ declare module 'vue-data-ui' {
                         animationFrames?: number;
                     };
                     customFormat?: (params: VueUiTooltipParams<VueUiRadarDatapoint, VueUiRadarSeries, VueUiRadarConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
                 legend?: {
                     show?: boolean;
@@ -3425,6 +3464,9 @@ declare module 'vue-data-ui' {
                     roundingValue?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiQuadrantDatapoint, VueUiQuadrantSerie[], VueUiQuadrantConfig>) => string;
                     showShape?: boolean;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
                 legend?: {
                     show?: boolean;
@@ -3869,6 +3911,9 @@ declare module 'vue-data-ui' {
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiOnionDatapoint, VueUiOnionSeriesItem[], VueUiOnionConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
             };
         };
@@ -4057,6 +4102,9 @@ declare module 'vue-data-ui' {
                     prefix?: string;
                     suffix?: string;
                     customFormat?: (params: VueUiTooltipParams<VueUiVerticalBarDatapoint, VueUiVerticalBarSerie[], VueUiVerticalBarConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number
                 };
             };
         };
@@ -4872,6 +4920,9 @@ declare module 'vue-data-ui' {
         titleFontSize?: number;
         titleTextAlign?: "center" | "left" | "right",
         tooltipCustomFormat?: any;
+        tooltipBorderRadius?: number;
+        tooltipBorderColor?: string;
+        tooltipBorderWidth?: number;
         useCustomLegend?: boolean;
         valuePrefix?: string;
         valueSuffix?: string;
@@ -5126,6 +5177,9 @@ declare module 'vue-data-ui' {
                     fontSize?: number;
                     roundingValue?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiStripPlotDatapoint, VueUiStripPlotSeriesItem[], VueUiStripPlotConfig>) => string;
+                    borderRadius?: number;
+                    borderColor?: string;
+                    borderWidth?: number;
                 };
             };
         };

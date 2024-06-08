@@ -295,7 +295,10 @@
                 "roundingValue": 0,
                 "roundingPercentage": 0,
                 "customFormat": null,
-                "fontSize": 14
+                "fontSize": 14,
+                "borderRadius": 4,
+                "borderColor":"#e1e5e8",
+                "borderWidth": 1
             },
             "userOptions": {
                 "show": true,
@@ -487,7 +490,10 @@
                     "showPercentage": true,
                     "roundingValue": 0,
                     "roundingPercentage": 0,
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 }
             }
         },
@@ -603,7 +609,10 @@
                     "showPercentage": true,
                     "roundingValue": 0,
                     "roundingPercentage": 0,
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 }
             }
         },
@@ -696,7 +705,10 @@
                     "showPercentage": true,
                     "roundingValue": 0,
                     "roundingPercentage": 0,
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 },
                 "legend": {
                     "show": true,
@@ -803,7 +815,10 @@
                     "animation": {
                         "show": true,
                         "animationFrames": 60
-                    }
+                    },
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 },
                 "legend": {
                     "show": true,
@@ -960,7 +975,10 @@
                     "fontSize": 14,
                     "roundingValue": 0,
                     "customFormat": null,
-                    "showShape": true
+                    "showShape": true,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 },
                 "legend": {
                     "show": true,
@@ -1328,7 +1346,10 @@
                     "showPercentage": true,
                     "roundingValue": 0,
                     "roundingPercentage": 0,
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 }
             }
         },
@@ -1462,7 +1483,10 @@
                     "roundingPercentage": 0,
                     "prefix":"",
                     "suffix":"",
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 }
             }
         },
@@ -1934,7 +1958,10 @@
                 "color": "#2D353C",
                 "fontSize": 14,
                 "roundingValue": 0,
-                "customFormat": null
+                "customFormat": null,
+                "borderRadius": 4,
+                "borderColor":"#e1e5e8",
+                "borderWidth": 1
             }
         },
         "userOptions": {
@@ -2109,7 +2136,10 @@
                 "customFormat": null,
                 "showShape": true,
                 "prefix": "",
-                "suffix": ""
+                "suffix": "",
+                "borderRadius": 4,
+                "borderColor":"#e1e5e8",
+                "borderWidth": 1
             }
         },
         "userOptions": {
@@ -2245,7 +2275,10 @@
                 "roundingValue": 0,
                 "prefix": "",
                 "suffix": "",
-                "customFormat": null
+                "customFormat": null,
+                "borderRadius": 4,
+                "borderColor":"#e1e5e8",
+                "borderWidth": 1
             }
         },
         "translations": {
@@ -2372,7 +2405,10 @@
                 "color": "#2D353C",
                 "fontSize": 14,
                 "roundingValue": 0,
-                "customFormat": null
+                "customFormat": null,
+                "borderRadius": 4,
+                "borderColor":"#e1e5e8",
+                "borderWidth": 1
             }
         },
         "translations": {
@@ -2897,7 +2933,10 @@
                     "showPercentage": true,
                     "roundingValue": 0,
                     "roundingPercentage": 0,
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 }
             }
         },
@@ -3384,7 +3423,10 @@
                     "color": "#2D353C",
                     "backgroundColor": "#FFFFFF",
                     "fontSize": 14,
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 },
                 "zoom": {
                     "speed": 1
@@ -3615,7 +3657,10 @@
                     "showPercentage": true,
                     "roundingValue": 0,
                     "roundingPercentage": 0,
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 }
             }
         },
@@ -3740,7 +3785,10 @@
                     "backgroundColor": "#FFFFFF",
                     "fontSize": 14,
                     "roundingValue": 1,
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 }
             }
         },
@@ -3849,6 +3897,9 @@
         "titleFontSize": 16,
         "titleTextAlign": "center",
         "tooltipCustomFormat": null,
+        "tooltipBorderRadius": 4,
+        "tooltipBorderColor":"#e1e5e8",
+        "tooltipBorderWidth": 1,
         "useCustomLegend": false,
         "valuePrefix": "",
         "valueSuffix": "",
@@ -4060,7 +4111,10 @@
                     "backgroundColor": "#FFFFFF",
                     "fontSize": 14,
                     "roundingValue": 0,
-                    "customFormat": null
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor":"#e1e5e8",
+                    "borderWidth": 1
                 }
             }
         },
