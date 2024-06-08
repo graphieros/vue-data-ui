@@ -301,14 +301,7 @@
                 "borderWidth": 1
             },
             "userOptions": {
-                "show": true,
-                "title": "options",
-                "labels": {
-                    "dataLabels": "Show datalabels",
-                    "titleInside": "Title inside",
-                    "legendInside": "Legend inside",
-                    "showTable": "Show table"
-                }
+                "show": true
             }
         },
         "bar": {
@@ -498,13 +491,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "dataLabels": "Show datalabels",
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "translations": {
             "total": "Total",
@@ -722,12 +709,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "table": {
             "show": false,
@@ -1005,13 +987,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table",
-                "showPlotLabels": "Show plot labels"
-            }
+            "show": true
         },
         "translations": {
             "category": "Category",
@@ -1089,12 +1065,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "translations": {
             "base": "Base"
@@ -1265,11 +1236,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "translations": {
             "total": "Total",
@@ -1354,12 +1321,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "table": {
             "show": false,
@@ -1491,13 +1453,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table",
-                "sort":"Sort desc"
-            }
+            "show": true
         },
         "table": {
             "show": false,
@@ -1965,13 +1921,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table",
-                "showPlotLabels": "Show plot labels"
-            }
+            "show": true
         },
         "table": {
             "show": false,
@@ -2143,13 +2093,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table",
-                "showPlotLabels": "Show plot labels"
-            }
+            "show": true
         },
         "table": {
             "show": false,
@@ -2290,13 +2234,7 @@
             "volume": "Volume"
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title inside",
-                "showTable": "Show table",
-                "showPlotLabels": "Show plot labels"
-            }
+            "show": true
         },
         "table": {
             "show": false,
@@ -2419,12 +2357,7 @@
             "year": "year"
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "table": {
             "show": false,
@@ -2673,8 +2606,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options"
+            "show": true
         }
     },
     "vue_ui_thermometer": {
@@ -2735,11 +2667,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title inside"
-            }
+            "show": true
         }
     },
     "vue_ui_sparkstackbar": {
@@ -2941,11 +2869,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "table": {
             "show": false,
@@ -3020,8 +2944,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options"
+            "show": true
         }
     },
     "vue_ui_tiremarks": {
@@ -3076,8 +2999,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options"
+            "show": true
         }
     },
     "vue_ui_donut_evolution": {
