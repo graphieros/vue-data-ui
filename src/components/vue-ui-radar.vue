@@ -423,7 +423,7 @@ function useTooltip(apex, i) {
             config: radarConfig.value
         })
     } else {
-        html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
+        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${radarConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
         for(let k = 0; k < apex.values.length; k += 1) {
             if(!segregated.value.includes(k)) {
                 sparkBarData.value.push({
@@ -754,6 +754,9 @@ defineExpose({
             :show="radarConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="radarConfig.style.chart.tooltip.backgroundColor"
             :color="radarConfig.style.chart.tooltip.color"
+            :borderRadius="radarConfig.style.chart.tooltip.borderRadius"
+            :borderColor="radarConfig.style.chart.tooltip.borderColor"
+            :borderWidth="radarConfig.style.chart.tooltip.borderWidth"
             :fontSize="radarConfig.style.chart.tooltip.fontSize"
             :parent="radarChart"
             :content="tooltipContent"
