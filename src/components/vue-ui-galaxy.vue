@@ -436,7 +436,6 @@ defineExpose({
             :color="galaxyConfig.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="galaxyConfig.userOptions.title"
             :uid="uid"
             hasImg
             hasTable

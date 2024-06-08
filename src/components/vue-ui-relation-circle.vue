@@ -359,7 +359,6 @@ defineExpose({
             :color="relationConfig.style.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="relationConfig.userOptions.title"
             :uid="uid"
             hasFullscreen
             :isFullscreen="isFullscreen"

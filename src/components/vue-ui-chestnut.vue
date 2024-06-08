@@ -528,7 +528,6 @@ defineExpose({
             :color="chestnutConfig.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="chestnutConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

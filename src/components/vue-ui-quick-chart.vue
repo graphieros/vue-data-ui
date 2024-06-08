@@ -771,7 +771,6 @@ defineExpose({
             :color="quickConfig.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="quickConfig.title"
             :uid="uid"
             hasImg
             hasFullscreen

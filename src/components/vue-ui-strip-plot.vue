@@ -437,7 +437,6 @@ defineExpose({
             :color="stripConfig.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="stripConfig.userOptions.title"
             :uid="uid"
             hasImg
             hasTable

@@ -314,7 +314,6 @@ defineExpose({
             :color="tiremarksConfig.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="tiremarksConfig.userOptions.title"
             :uid="uid"
             hasFullscreen
             :isFullscreen="isFullscreen"

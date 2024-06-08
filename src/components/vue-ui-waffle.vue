@@ -642,7 +642,6 @@ defineExpose({
             :color="waffleConfig.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="waffleConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

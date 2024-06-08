@@ -551,7 +551,6 @@ defineExpose({
             :color="barConfig.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="barConfig.userOptions.title"
             :uid="uid"
             hasImg
             hasFullscreen

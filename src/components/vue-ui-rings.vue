@@ -465,7 +465,6 @@ defineExpose({
         :color="ringsConfig.style.chart.color"
         :isPrinting="isPrinting"
         :isImaging="isImaging"
-        :title="ringsConfig.userOptions.title"
         :uid="uid"
         hasImg
         hasTable

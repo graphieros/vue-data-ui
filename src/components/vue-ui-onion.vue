@@ -416,7 +416,6 @@ defineExpose({
             :color="onionConfig.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="onionConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

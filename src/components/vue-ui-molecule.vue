@@ -545,7 +545,6 @@ defineExpose({
             :color="moleculeConfig.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="moleculeConfig.userOptions.title"
             :uid="uid"
             hasImg
             hasTable

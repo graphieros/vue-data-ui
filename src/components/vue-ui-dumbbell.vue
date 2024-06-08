@@ -408,7 +408,6 @@ defineExpose({
             :color="dumbConfig.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="dumbConfig.userOptions.title"
             :uid="uid"
             hasImg
             hasTable

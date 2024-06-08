@@ -539,7 +539,6 @@ defineExpose({
             :color="donutConfig.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="donutConfig.userOptions.title"
             :uid="uid"
             hasImg
             hasTable

@@ -608,7 +608,6 @@ defineExpose({
             :color="scatterConfig.style.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="scatterConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

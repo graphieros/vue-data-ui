@@ -971,7 +971,6 @@ defineExpose({
             :color="quadrantConfig.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="quadrantConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

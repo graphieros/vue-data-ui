@@ -409,7 +409,6 @@ defineExpose({
             :color="agePyramidConfig.style.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="agePyramidConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

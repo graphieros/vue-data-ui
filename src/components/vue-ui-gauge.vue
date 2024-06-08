@@ -418,7 +418,6 @@ defineExpose({
             :color="gaugeConfig.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="gaugeConfig.userOptions.title"
             :uid="uid"
             :hasXls="false"
             :hasImg="true"

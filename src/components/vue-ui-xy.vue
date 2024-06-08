@@ -31,7 +31,6 @@
             :color="chartConfig.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="chartConfig.chart.userOptions.title"
             :uid="uniqueId"
             hasImg
             hasLabel

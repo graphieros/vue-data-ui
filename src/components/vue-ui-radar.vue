@@ -549,7 +549,6 @@ defineExpose({
             :color="radarConfig.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="radarConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

@@ -448,7 +448,6 @@ defineExpose({
             :color="candlestickConfig.style.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="candlestickConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

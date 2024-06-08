@@ -550,7 +550,6 @@ defineExpose({
             :color="verticalBarConfig.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="verticalBarConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

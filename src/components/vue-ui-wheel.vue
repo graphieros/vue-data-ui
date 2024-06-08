@@ -217,7 +217,6 @@ defineExpose({
             :color="wheelConfig.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
-            :title="wheelConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             :hasXls="false"

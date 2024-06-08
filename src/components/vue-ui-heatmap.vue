@@ -381,7 +381,6 @@ defineExpose({
             :color="heatmapConfig.style.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="heatmapConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasTable

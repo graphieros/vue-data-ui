@@ -315,7 +315,6 @@ defineExpose({
             :color="thermoConfig.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
-            :title="thermoConfig.userOptions.title"
             :uid="uid"
             :hasImg="true"
             hasFullscreen
