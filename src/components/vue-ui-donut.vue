@@ -344,7 +344,7 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
             config: donutConfig.value
         })
     } else {
-        html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${donutConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
         if(donutConfig.value.style.chart.tooltip.showValue) {
@@ -873,6 +873,9 @@ defineExpose({
             :backgroundColor="donutConfig.style.chart.tooltip.backgroundColor"
             :color="donutConfig.style.chart.tooltip.color"
             :fontSize="donutConfig.style.chart.tooltip.fontSize"
+            :borderRadius="donutConfig.style.chart.tooltip.borderRadius"
+            :borderColor="donutConfig.style.chart.tooltip.borderColor"
+            :borderWidth="donutConfig.style.chart.tooltip.borderWidth"
             :parent="donutChart"
             :content="tooltipContent"
             :isCustom="isFunction(donutConfig.style.chart.tooltip.customFormat)"
