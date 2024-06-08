@@ -410,7 +410,7 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
             itemsAtIndex.forEach((item, i) => {
                 if(!item) return ''
                 html += `
-                    <div style="display:flex; flex-direction: column; justify-content:flex-start; align-items:flex-start;padding:6px 0; ${i < itemsAtIndex.length -1 ? 'border-bottom:1px solid #e1e5e8' : ''}">
+                    <div style="display:flex; flex-direction: column; justify-content:flex-start; align-items:flex-start;padding:6px 0; ${i < itemsAtIndex.length -1 ? `border-bottom:1px solid ${donutConfig.value.style.chart.tooltip.borderColor}` : ''}">
                         <div style="display:flex; flex-direction: row; gap: 3px; justify-content:flex-start; align-items:center;">
                             <svg viewBox="0 0 20 20" height="${donutConfig.value.style.chart.tooltip.fontSize}" width="${donutConfig.value.style.chart.tooltip.fontSize}">
                                 <circle cx="10" cy="10" r="10" fill="${item.color}"/>
@@ -427,7 +427,7 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
                 `;
             })
         } else {
-            html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${datapoint.arcOf ?? ''} - ${datapoint.name}</div>`;
+            html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${donutConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.arcOf ?? ''} - ${datapoint.name}</div>`;
 
             html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
@@ -825,6 +825,9 @@ defineExpose({
             :show="donutConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="donutConfig.style.chart.tooltip.backgroundColor"
             :color="donutConfig.style.chart.tooltip.color"
+            :borderRadius="donutConfig.style.chart.tooltip.borderRadius"
+            :borderColor="donutConfig.style.chart.tooltip.borderColor"
+            :borderWidth="donutConfig.style.chart.tooltip.borderWidth"
             :fontSize="donutConfig.style.chart.tooltip.fontSize"
             :parent="nestedDonutsChart"
             :content="tooltipContent"
