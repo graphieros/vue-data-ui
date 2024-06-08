@@ -325,7 +325,7 @@ function createTooltipContent(node) {
     
         html += `<div style="display:flex;align-items:center;gap:3px"><div style="color:${node.color}">⬤</div><div>${node.name}</div></div>`;
         if(node.details) {
-            html += `<div style="width:100%;border-top:1px solid #e1e5e8;margin-top: 2px">${node.details}</div>`
+            html += `<div style="width:100%;border-top:1px solid ${moleculeConfig.value.style.chart.tooltip.borderColor};margin-top: 2px">${node.details}</div>`
         }
     
         tooltipContent.value = `<div style="font-family:inherit">${html}</div>`;
@@ -624,6 +624,9 @@ defineExpose({
             :show="moleculeConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="moleculeConfig.style.chart.tooltip.backgroundColor"
             :color="moleculeConfig.style.chart.tooltip.color"
+            :borderRadius="moleculeConfig.style.chart.tooltip.borderRadius"
+            :borderColor="moleculeConfig.style.chart.tooltip.borderColor"
+            :borderWidth="moleculeConfig.style.chart.tooltip.borderWidth"
             :fontSize="moleculeConfig.style.chart.tooltip.fontSize"
             :parent="moleculeChart"
             :content="tooltipContent"
