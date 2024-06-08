@@ -286,7 +286,7 @@ function useTooltip(index, datapoint) {
                         ? candlestickConfig.value.style.layout.candle.colors.bullish 
                         : candlestickConfig.value.style.layout.candle.colors.bearish}"/></svg>${period}</div>`;
             html += `${tr_volume} : <b data-cy="candlestick-tooltip-volume">${ isNaN(volume) ? '-' : Number(volume.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()}</b>`;
-            html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e1e5e8">`;
+            html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${candlestickConfig.value.style.tooltip.borderColor}">`;
             html += `<div>${tr_open} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(open.value) ? '-' : Number(open.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
             html += `<div>${tr_high} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(high.value) ? '-' : Number(high.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
             html += `<div>${tr_low} : <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(low.value) ? '-' : Number(low.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
@@ -721,6 +721,9 @@ defineExpose({
             :show="candlestickConfig.style.tooltip.show && isTooltip"
             :backgroundColor="candlestickConfig.style.tooltip.backgroundColor"
             :color="candlestickConfig.style.tooltip.color"
+            :borderRadius="candlestickConfig.style.tooltip.borderRadius"
+            :borderColor="candlestickConfig.style.tooltip.borderColor"
+            :borderWidth="candlestickConfig.style.tooltip.borderWidth"
             :fontSize="candlestickConfig.style.tooltip.fontSize"
             :parent="candlestickChart"
             :content="tooltipContent"
