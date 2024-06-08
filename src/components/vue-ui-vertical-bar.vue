@@ -354,7 +354,7 @@ function useTooltip(bar, seriesIndex) {
             seriesIndex
         })
     } else {
-        html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;text-align:left;">
+        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${verticalBarConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;text-align:left;">
                 <div style="display:flex;align-items:center;gap:4px;"><svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" fill="${bar.color}"/></svg> ${ serieName }</div>
                 ${childName ? `<div>${childName}</div>` : ''}
             </div>`;
@@ -788,6 +788,9 @@ defineExpose({
             :show="verticalBarConfig.style.chart.tooltip.show && isTooltip && segregated.length < props.dataset.length"
             :backgroundColor="verticalBarConfig.style.chart.tooltip.backgroundColor"
             :color="verticalBarConfig.style.chart.tooltip.color"
+            :borderRadius="verticalBarConfig.style.chart.tooltip.borderRadius"
+            :borderColor="verticalBarConfig.style.chart.tooltip.borderColor"
+            :borderWidth="verticalBarConfig.style.chart.tooltip.borderWidth"
             :fontSize="verticalBarConfig.style.chart.tooltip.fontSize"
             :parent="verticalBarChart"
             :content="tooltipContent"
