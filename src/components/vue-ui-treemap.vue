@@ -365,7 +365,7 @@ function useTooltip({ datapoint, seriesIndex }) {
     } else {
         let html = '';
 
-        html += `<div data-cy="treemap-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div data-cy="treemap-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${treemapConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="treemap-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" fill="${datapoint.color}"/></svg>`;
 
@@ -629,6 +629,9 @@ defineExpose({
             :backgroundColor="treemapConfig.style.chart.tooltip.backgroundColor"
             :color="treemapConfig.style.chart.tooltip.color"
             :fontSize="treemapConfig.style.chart.tooltip.fontSize"
+            :borderRadius="treemapConfig.style.chart.tooltip.borderRadius"
+            :borderColor="treemapConfig.style.chart.tooltip.borderColor"
+            :borderWidth="treemapConfig.style.chart.tooltip.borderWidth"
             :parent="treemapChart"
             :content="tooltipContent"
             :isCustom="isFunction(treemapConfig.style.chart.tooltip.customFormat)"
