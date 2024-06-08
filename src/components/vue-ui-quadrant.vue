@@ -706,7 +706,7 @@ function useTooltip(category, plot, categoryIndex) {
             html += `<div style="color:${quadrantConfig.value.style.chart.layout.labels.quadrantLabels[plot.quadrantSide].color};font-weight:${quadrantConfig.value.style.chart.layout.labels.quadrantLabels[plot.quadrantSide].bold ? 'bold' : '400'}">${quadrantConfig.value.style.chart.layout.labels.quadrantLabels[plot.quadrantSide].text}</div>`;
         }
         html += `<div>${category.name}</div>`;
-        html += `<div style="padding-bottom:6px;border-bottom:1px solid #e1e5e8;margin-bottom:3px">${plot.name}</div>`;
+        html += `<div style="padding-bottom:6px;border-bottom:1px solid ${quadrantConfig.value.style.chart.tooltip.borderColor};margin-bottom:3px">${plot.name}</div>`;
         html += `<div>${quadrantConfig.value.style.chart.layout.grid.xAxis.name ? quadrantConfig.value.style.chart.layout.grid.xAxis.name : 'x'} : <b>${plot.xValue.toFixed(quadrantConfig.value.style.chart.tooltip.roundingValue)}</b></div>`;  
         html += `<div>${quadrantConfig.value.style.chart.layout.grid.yAxis.name ? quadrantConfig.value.style.chart.layout.grid.yAxis.name : 'y'} : <b>${plot.yValue.toFixed(quadrantConfig.value.style.chart.tooltip.roundingValue)}</b></div>`;  
     
@@ -1455,6 +1455,9 @@ defineExpose({
             :show="quadrantConfig.style.chart.tooltip.show && isTooltip"
             :backgroundColor="quadrantConfig.style.chart.tooltip.backgroundColor"
             :color="quadrantConfig.style.chart.tooltip.color"
+            :borderRadius="quadrantConfig.style.chart.tooltip.borderRadius"
+            :borderColor="quadrantConfig.style.chart.tooltip.borderColor"
+            :borderWidth="quadrantConfig.style.chart.tooltip.borderWidth"
             :fontSize="quadrantConfig.style.chart.tooltip.fontSize"
             :parent="quadrantChart"
             :content="tooltipContent"
