@@ -294,7 +294,7 @@ const donut = computed(() => {
             })
         } else {
             let html = '';
-            html += `<div style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+            html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${quickConfig.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
             html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
             html += `<b>${ dataLabel({p: quickConfig.value.valuePrefix, v: datapoint.value, s: quickConfig.value.valueSuffix, r: quickConfig.value.dataLabelRoundingValue})}</b>`;
@@ -484,7 +484,7 @@ const line = computed(() => {
             let html = '';
 
             if (quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
-                html += `<div style="border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
+                html += `<div style="border-bottom:1px solid ${quickConfig.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
             mappedSeries.forEach(s => {
@@ -663,7 +663,7 @@ const bar = computed(() => {
             let html = '';
 
             if (quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
-                html += `<div style="border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
+                html += `<div style="border-bottom:1px solid ${quickConfig.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
             mappedSeries.forEach(s => {
@@ -1414,6 +1414,9 @@ defineExpose({
             :show="quickConfig.showTooltip && isTooltip"
             :backgroundColor="quickConfig.backgroundColor"
             :color="quickConfig.color"
+            :borderRadius="quickConfig.tooltipBorderRadius"
+            :borderColor="quickConfig.tooltipBorderColor"
+            :borderWidth="quickConfig.tooltipBorderWidth"
             :parent="quickChart"
             :content="tooltipContent"
             :isCustom="isFunction(quickConfig.tooltipCustomFormat)"
