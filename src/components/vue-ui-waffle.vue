@@ -453,7 +453,7 @@ function useTooltip(index) {
     } else {
         let html = "";
     
-        html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
+        html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${waffleConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" rx="1" fill="${selected.color}" /></svg>`;
         if(waffleConfig.value.style.chart.tooltip.showValue) {
             html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:waffleConfig.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s: waffleConfig.value.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.value.style.chart.tooltip.roundingValue})}</b>`;
@@ -853,6 +853,9 @@ defineExpose({
             :show="waffleConfig.style.chart.tooltip.show && isTooltip && segregated.length < props.dataset.length"
             :backgroundColor="waffleConfig.style.chart.tooltip.backgroundColor"
             :color="waffleConfig.style.chart.tooltip.color"
+            :borderRadius="waffleConfig.style.chart.tooltip.borderRadius"
+            :borderColor="waffleConfig.style.chart.tooltip.borderColor"
+            :borderWidth="waffleConfig.style.chart.tooltip.borderWidth"
             :parent="waffleChart"
             :content="tooltipContent"
             :isCustom="waffleConfig.style.chart.tooltip.customFormat && typeof waffleConfig.style.chart.tooltip.customFormat === 'function'"
