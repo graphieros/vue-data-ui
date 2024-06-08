@@ -10,6 +10,57 @@ declare module 'vue-data-ui' {
         config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackBarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig;
     }>
 
+    export type ChartTitle = {
+        text?: string;
+        color?: string;
+        fontSize?: number;
+        bold?: boolean;
+        subtitle?: {
+            color?: string;
+            text?: string;
+            fontSize?: number;
+            bold?: boolean;
+        };
+    };
+
+    export type ChartPadding = {
+        top?: number;
+        right?: number;
+        bottom?: number;
+        left?: number;
+    }
+
+    export type ChartBaseLegend = {
+        color?: string;
+        show?: boolean;
+        fontSize?: number;
+        bold?: boolean;
+    }
+
+    export type ChartUserOptions = {
+        show?: boolean;
+    }
+
+    export type ChartTableCell = {
+        backgroundColor?: string;
+        color?: string;
+        outline?: string;
+    };
+
+    export type ChartTooltip = {
+        show?: boolean;
+        color?: string;
+        backgroundColor?: string;
+        fontSize?: number;
+        borderRadius?: number;
+        borderColor?: string;
+        borderWidth?: number;
+    }
+
+    export type Theme = "" | "zen" | "hack" | "concrete";
+    export type TextAlign = "left" | "center" | "right";
+
+
     export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar = any, TLine = any, TPlot = any> = {
         seriesIndex?: number;
         series?: TSeries;
@@ -28,11 +79,9 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiTreemapConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -40,12 +89,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 height?: number;
                 width?: number;
-                padding?: {
-                    top?: number;
-                    left?: number;
-                    bottom?: number;
-                    right?: number;
-                };
+                padding?: ChartPadding;
                 layout?: {
                     sorted?: boolean;
                     rects?: {
@@ -73,37 +117,15 @@ declare module 'vue-data-ui' {
                         rounding?: number;
                     };
                 };
-                legend?: {
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    show?: boolean;
-                    fontSize?: number;
-                    bold?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
-                    color?: string;
-                    backgroundColor?: string;
-                    fontSize?: number;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     roundingValue?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiTreemapDatapoint, VueUiTreemapSeriesItem[], VueUiTreemapConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
             };
         };
@@ -115,15 +137,8 @@ declare module 'vue-data-ui' {
                 value?: string;
                 percentage?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
@@ -190,7 +205,7 @@ declare module 'vue-data-ui' {
     export type VueUiGalaxyDatasetItem = VueUiDonutDatasetItem;
 
     export type VueUiGalaxyConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
@@ -222,40 +237,18 @@ declare module 'vue-data-ui' {
                         };
                     };
                 };
-                legend?: {
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    show?: boolean;
-                    fontSize?: number;
-                    bold?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
-                    color?: string;
-                    backgroundColor?: string;
-                    fontSize?: number;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     showValue?: boolean;
                     showPercentage: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiGalaxyDatapoint, VueUiGalaxySeriesItem[], VueUiGalaxyConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
             };
         };
@@ -267,22 +260,13 @@ declare module 'vue-data-ui' {
                 value?: string;
                 percentage?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
         };
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
     };
 
     export type VueUiGalaxyDatapoint = VueUiGalaxyDatasetItem & {
@@ -315,7 +299,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiSparkgaugeConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             fontFamily?: string;
             background?: string;
@@ -328,8 +312,8 @@ declare module 'vue-data-ui' {
             title?: {
                 show?: boolean;
                 fontSize?: number;
-                position?: "top" | "bottom",
-                textAlign?: "center" | "left" | "right",
+                position?: "top" | "bottom";
+                textAlign?: TextAlign;
                 bold?: boolean;
                 color?: string;
             };
@@ -365,32 +349,20 @@ declare module 'vue-data-ui' {
         config?: VueUiSparkgaugeConfig
     }>
 
+    export type VueUiMiniLoaderConfigType = {
+        gutterColor?: string;
+        gutterOpacity?: number;
+        gutterBlur?: number;
+        trackHueRotate?: number;
+        trackBlur?: number;
+        trackColor?: string;
+    }
+
     export type VueUiMiniLoaderConfig = {
         type?: "line" | "bar" | "onion";
-        onion?: {
-            gutterColor?: string;
-            gutterOpacity?: number;
-            gutterBlur?: number;
-            trackHueRotate?: number;
-            trackBlur?: number;
-            trackColor?: string;
-        };
-        line?: {
-            gutterColor?: string;
-            gutterOpacity?: number;
-            gutterBlur?: number;
-            trackHueRotate?: number;
-            trackBlur?: number;
-            trackColor?: string;
-        };
-        bar?: {
-            gutterColor?: string;
-            gutterOpacity?: number;
-            gutterBlur?: number;
-            trackHueRotate?: number;
-            trackBlur?: number;
-            trackColor?: string;
-        }
+        onion?: VueUiMiniLoaderConfigType;
+        line?: VueUiMiniLoaderConfigType;
+        bar?: VueUiMiniLoaderConfigType;
     }
 
     export const VueUiMiniLoader: DefineComponent<{
@@ -418,7 +390,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiTableSparklineConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         responsiveBreakpoint?: number;
         showAverage?: boolean;
@@ -455,7 +427,7 @@ declare module 'vue-data-ui' {
             fontSize?: number;
             color?: string;
             bold?: boolean;
-            textAlign?: "left" | "center" | "right";
+            textAlign?: TextAlign;
             subtitle?: {
                 text?: string;
                 color?: string;
@@ -463,25 +435,17 @@ declare module 'vue-data-ui' {
                 bold?: boolean;
             };
         };
-        thead?: {
-            backgroundColor?: string;
-            color?: string;
+        thead?: ChartTableCell & {
             fontSize?: number;
-            outline?: string;
-            textAlign?: "left" | "center" | "right";
+            textAlign?: TextAlign;
             bold?: boolean;
         },
-        tbody?: {
-            backgroundColor?: string;
-            color?: string;
+        tbody?: ChartTableCell & {
             fontSize?: number;
-            outline?: string;
-            textAlign?: "left" | "center" | "right";
+            textAlign?: TextAlign;
             bold?: boolean;
         };
-        userOptions?: {
-            show?: boolean;
-        }
+        userOptions?: ChartUserOptions;
     };
 
     export const VueUiTableSparkline: DefineComponent<{
@@ -496,7 +460,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiMoleculeConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -509,27 +473,9 @@ declare module 'vue-data-ui' {
                 links?: {
                     stroke?: string;
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
-                    color?: string;
-                    backgroundColor?: string;
-                    fontSize?: number;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     customFormat?: (params: VueUiTooltipParams<VueUiMoleculeDatapoint, VueUiMoleculeDatapoint[], VueUiMoleculeConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
                 zoom?: {
                     speed?: number;
@@ -539,25 +485,15 @@ declare module 'vue-data-ui' {
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
+            th?: ChartTableCell;
+            td?: ChartTableCell;
             translations?: {
                 nodeName?: string;
                 details?: string;
                 parentNode?: string;
             };
         };
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
     };
 
     export type VueUiMoleculeDatapoint = {
@@ -606,7 +542,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUi3dBarConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -639,24 +575,9 @@ declare module 'vue-data-ui' {
                         perspective?: number;
                     };
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                legend?: {
+                title?: ChartTitle;
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    show?: boolean;
-                    fontSize?: number;
-                    bold?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                     prefix?: string;
@@ -672,9 +593,7 @@ declare module 'vue-data-ui' {
                 };
             };
         };
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
@@ -683,15 +602,8 @@ declare module 'vue-data-ui' {
                 value?: string;
                 percentage?: string;
             },
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
@@ -712,7 +624,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiMoodRadarConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -755,24 +667,9 @@ declare module 'vue-data-ui' {
                         bold?: boolean;
                     };
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                legend?: {
-                    color?: string;
+                title?: ChartTitle;
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    bold?: boolean;
-                    show?: boolean;
-                    fontSize?: number;
                     roundingPercentage?: number;
                     roundingValue?: number;
                 };
@@ -786,22 +683,13 @@ declare module 'vue-data-ui' {
                 value?: string;
                 percentage?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
         };
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
     };
 
     export const VueUiMoodRadar: DefineComponent<{
@@ -820,7 +708,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiDonutEvolutionConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -837,12 +725,7 @@ declare module 'vue-data-ui' {
                 layout?: {
                     height?: number;
                     width?: number;
-                    padding?: {
-                        top?: number;
-                        left?: number;
-                        right?: number;
-                        bottom?: number;
-                    };
+                    padding?: ChartPadding;
                     grid?: {
                         show?: boolean;
                         stroke?: string;
@@ -891,24 +774,9 @@ declare module 'vue-data-ui' {
                         offsetY?: number;
                     };
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                legend?: {
-                    color?: string;
+                title?: ChartTitle;
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    bold?: boolean;
-                    show?: boolean;
-                    fontSize?: number;
                     roundingPercentage?: number;
                     roundingValue?: number;
                 };
@@ -921,22 +789,13 @@ declare module 'vue-data-ui' {
                 period?: string;
                 total?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
         };
-        userOptions?: {
-            show?: boolean;
-        }
+        userOptions?: ChartUserOptions;
     }
 
     export type VueUiDonutEvolutionDatasetItem = {
@@ -951,7 +810,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiTiremarksConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -987,18 +846,7 @@ declare module 'vue-data-ui' {
                     verticalPosition?: "bottom" | "top";
                     horizontalPosition?: "left" | "right";
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
+                title?: ChartTitle;
             };
         };
     };
@@ -1013,7 +861,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiWheelConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1048,24 +896,10 @@ declare module 'vue-data-ui' {
                         bold?: boolean;
                     };
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
+                title?: ChartTitle;
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-        };
+        userOptions?: ChartUserOptions;
     };
 
     export type VueUiWheelDataset = {
@@ -1078,7 +912,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRingsConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
@@ -1105,50 +939,22 @@ declare module 'vue-data-ui' {
                         useShadow?: boolean;
                     };
                 };
-                legend?: {
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    show?: boolean;
-                    fontSize?: number;
-                    bold?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
-                    color?: string;
-                    backgroundColor?: string;
-                    fontSize?: number;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     showValue?: boolean;
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiRingsDatapoint, VueUiRingsDatapoint[], VueUiRingsConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                showTable?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: string;
             responsiveBreakpoint?: number;
@@ -1157,15 +963,8 @@ declare module 'vue-data-ui' {
                 value?: string;
                 percentage?: string;
             }
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
@@ -1194,7 +993,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiSparkHistogramConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -1205,12 +1004,7 @@ declare module 'vue-data-ui' {
             layout?: {
                 height?: number;
                 width?: number;
-                padding?: {
-                    top?: number;
-                    right?: number;
-                    left?: number;
-                    bottom?: number;
-                };
+                padding?: ChartPadding;
             };
             bars?: {
                 shape?: "circle" | "triangle" | "square" | "diamond" | "pentagon" | "hexagon" | "star";
@@ -1254,7 +1048,7 @@ declare module 'vue-data-ui' {
                 borderRadius?: number;
             };
             title?: {
-                textAlign?: "left" | "right" | "center";
+                textAlign?: TextAlign;
                 text?: string;
                 color?: string;
                 fontSize?: number;
@@ -1293,7 +1087,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSparkStackBarConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         style?: {
             backgroundColor?: string;
@@ -1310,7 +1104,7 @@ declare module 'vue-data-ui' {
                 };
             };
             legend?: {
-                textAlign?: "left" | "right" | "center";
+                textAlign?: TextAlign;
                 show?: boolean;
                 margin?: string;
                 fontSize?: number;
@@ -1334,7 +1128,7 @@ declare module 'vue-data-ui' {
                 };
             };
             title?: {
-                textAlign?: "left" | "center" | "right";
+                textAlign?: TextAlign;
                 text?: string;
                 color?: string;
                 fontSize?: number;
@@ -1366,7 +1160,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiThermometerConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -1377,12 +1171,7 @@ declare module 'vue-data-ui' {
                 thermometer?: {
                     width?: number;
                 };
-                padding?: {
-                    top?: number;
-                    bottom?: number;
-                    left?: number;
-                    right?: number;
-                };
+                padding?: ChartPadding;
                 graduations?: {
                     show?: boolean;
                     sides?: "left" | "right" | "both" | "none";
@@ -1407,27 +1196,9 @@ declare module 'vue-data-ui' {
                     suffix?: string;
                 };
             };
-            title?: {
-                useDiv?: boolean;
-                text?: string;
-                color?: string;
-                fontSize?: number;
-                bold?: boolean;
-                subtitle?: {
-                    color?: string;
-                    text?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                };
-            };
+            title?: ChartTitle;
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
     };
 
     export type VueUiThermometerDataset = {
@@ -1447,7 +1218,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRelationCircleConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         style?: {
             color?: string;
@@ -1477,24 +1248,9 @@ declare module 'vue-data-ui' {
                 radius?: number;
                 color?: string;
             };
-            title?: {
-                useDiv?: boolean;
-                text?: string;
-                color?: string;
-                fontSize?: number;
-                bold?: boolean;
-                subtitle?: {
-                    color?: string;
-                    text?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                };
-            };
+            title?: ChartTitle;
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-        }
+        userOptions?: ChartUserOptions;
     };
 
     export type VueUiRelationCircleDatasetItem = {
@@ -1639,7 +1395,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiSparkbarConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         style?: {
             backgroundColor?: string;
@@ -1689,7 +1445,7 @@ declare module 'vue-data-ui' {
     export type VueUiAgePyramidDataset = Array<Array<string | number>>;
 
     export type VueUiAgePyramidConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -1698,12 +1454,7 @@ declare module 'vue-data-ui' {
             width?: number;
             layout?: {
                 useDiv?: boolean;
-                padding?: {
-                    top?: number;
-                    right?: number;
-                    bottom?: number;
-                    left?: number;
-                };
+                padding?: ChartPadding;
                 grid?: {
                     show?: boolean;
                     stroke?: string;
@@ -1759,28 +1510,10 @@ declare module 'vue-data-ui' {
                 color?: string;
                 opacity?: number;
             };
-            title?: {
-                text?: string;
-                color?: string;
-                fontSize?: number;
-                bold?: boolean;
-                subtitle?: {
-                    color?: string;
-                    text?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                };
-            };
-            tooltip?: {
-                show?: boolean;
-                backgroundColor?: string;
-                color?: string;
-                fontSize?: number;
+            title?: ChartTitle;
+            tooltip?: ChartTooltip & {
                 roundingValue?: number;
                 customFormat?: (params: VueUiTooltipParams<VueUiAgePyramidDatapoint, VueUiAgePyramidSeries[], VueUiAgePyramidConfig>) => string;
-                borderRadius?: number;
-                borderColor?: string;
-                borderWidth?: number;
             };
         };
         translations?: {
@@ -1790,26 +1523,11 @@ declare module 'vue-data-ui' {
             total?: string;
             year?: string;
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
+            th?: ChartTableCell;
+            td?: ChartTableCell;
         };
     };
 
@@ -1843,7 +1561,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiCandlestickConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         useCssAnimation?: boolean;
         style?: {
             backgroundColor?: string;
@@ -1853,12 +1571,7 @@ declare module 'vue-data-ui' {
             width?: number;
             layout?: {
                 useDiv?: boolean;
-                padding?: {
-                    top?: number;
-                    right?: number;
-                    bottom?: number;
-                    left?: number;
-                };
+                padding?: ChartPadding;
                 selector?: {
                     color?: string;
                     opacity?: number;
@@ -1923,30 +1636,12 @@ declare module 'vue-data-ui' {
                 fontSize?: number;
                 useResetSlot?: boolean;
             };
-            title?: {
-                text?: string;
-                color?: string;
-                fontSize?: number;
-                bold?: boolean;
-                subtitle?: {
-                    color?: string;
-                    text?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                };
-            };
-            tooltip?: {
-                show?: boolean;
-                backgroundColor?: string;
-                color?: string;
-                fontSize?: number;
+            title?: ChartTitle;
+            tooltip?: ChartTooltip & {
                 roundingValue?: number;
                 prefix?: string;
                 suffix?: string;
                 customFormat?: (params: VueUiTooltipParams<VueUiCandlestickDatapoint, VueUiCandlestickDatapoint[], VueUiCandlestickConfig>) => string;
-                borderRadius?: number;
-                borderColor?: string;
-                borderWidth?: number;
             };
         };
         translations?: {
@@ -1957,27 +1652,12 @@ declare module 'vue-data-ui' {
             last?: string;
             volume?: string;
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-                showPlotLabels?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 prefix?: string;
                 suffix?: string;
@@ -2015,7 +1695,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiScatterConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
@@ -2026,12 +1706,7 @@ declare module 'vue-data-ui' {
                 useDiv?: boolean;
                 height?: number;
                 width?: number;
-                padding?: {
-                    top?: number;
-                    right?: number;
-                    bottom?: number;
-                    left?: number;
-                };
+                padding?: ChartPadding;
                 axis?: {
                     show?: boolean;
                     stroke?: string;
@@ -2129,62 +1804,25 @@ declare module 'vue-data-ui' {
                     };
                 };
             };
-            title?: {
-                text?: string;
-                color?: string;
-                fontSize?: number;
-                bold?: boolean;
-                subtitle?: {
-                    color?: string;
-                    text?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                };
-            };
-            legend?: {
-                show?: boolean;
+            title?: ChartTitle;
+            legend?: ChartBaseLegend & {
                 backgroundColor?: string;
-                color?: string;
-                fontSize?: string;
-                bold?: boolean;
                 roundingValue?: number;
             };
-            tooltip?: {
-                show?: boolean;
-                backgroundColor?: string;
-                color?: string;
-                fontSize?: number;
+            tooltip?: ChartTooltip & {
                 roundingValue?: number;
                 showShape?: boolean;
                 prefix?: string;
                 suffix?: string;
                 customFormat?: (params: VueUiTooltipParams<VueUiScatterDatapoint, VueUiScatterSeries[], VueUiScatterConfig>) => string;
-                borderRadius?: number;
-                borderColor?: string;
-                borderWidth?: number;
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-                showPlotLabels?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingAverage?: number;
             };
@@ -2237,19 +1875,14 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiHeatmapConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             backgroundColor?: string;
             color?: string;
             fontFamily?: string;
             layout?: {
                 useDiv?: boolean;
-                padding?: {
-                    top?: number;
-                    right?: number;
-                    bottom?: number;
-                    left?: number;
-                };
+                padding?: ChartPadding;
                 cells?: {
                     height?: number;
                     value?: {
@@ -2293,64 +1926,27 @@ declare module 'vue-data-ui' {
                     };
                 };
             };
-            title?: {
-                text?: string;
-                color?: string;
-                fontSize?: number;
-                bold?: boolean;
-                subtitle?: {
-                    color?: string;
-                    text?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                };
-            };
-            legend?: {
-                show?: boolean;
+            title?: ChartTitle;
+            legend?: ChartBaseLegend & {
                 backgroundColor?: string;
-                color?: string;
-                fontSize?: number;
-                bold?: boolean;
                 roundingValue?: number;
                 position?: "right" | "bottom";
                 scaleBorderRadius?: number;
             };
-            tooltip?: {
-                show?: boolean;
-                backgroundColor?: string;
-                color?: string;
-                fontSize?: number;
+            tooltip?: ChartTooltip & {
                 roundingValue?: number;
                 customFormat?: (params: VueUiTooltipParams<VueUiHeatmapDatapoint, VueUiHeatmapRow[], VueUiHeatmapConfig>) => string;
-                borderRadius?: number;
-                borderColor?: string;
-                borderWidth?: number;
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-                showPlotLabels?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
             colNames?: {
                 xAxis?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
             };
         };
@@ -2383,7 +1979,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiXyConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         chart?: {
@@ -2399,12 +1995,7 @@ declare module 'vue-data-ui' {
                 fontSize?: number;
                 useResetSlot?: boolean;
             };
-            padding?: {
-                top?: number;
-                right?: number;
-                bottom?: number;
-                left?: number;
-            };
+            padding?: ChartPadding;
             highlighter?: {
                 color?: string;
                 opacity?: number;
@@ -2435,7 +2026,7 @@ declare module 'vue-data-ui' {
                     bold?: boolean;
                     offsetY?: boolean;
                     width?: "auto" | number;
-                    textAlign?: "left" | "center" | "right";
+                    textAlign?: TextAlign;
                 };
             };
             grid?: {
@@ -2504,30 +2095,14 @@ declare module 'vue-data-ui' {
                     text?: string;
                 };
             };
-            tooltip?: {
-                color?: string;
-                backgroundColor?: string;
-                show?: boolean;
+            tooltip?: ChartTooltip & {
                 showValue?: boolean;
                 showPercentage?: boolean;
                 roundingValue?: number;
                 roundingPercentage?: number;
-                fontSize?: number;
                 customFormat?: (params: VueUiTooltipParams<VueUiXyDatapointItem[], VueUiXySeries, VueUiXyConfig, VueUiXyDatasetBarItem[], VueUiXyDatasetLineItem[], VueUiXyDatasetPlotItem[]>) => string;
-                borderRadius?: number;
-                borderColor?: string;
-                borderWidth?: number;
             };
-            userOptions?: {
-                show?: boolean;
-                title?: string;
-                labels?: {
-                    dataLabels?: string;
-                    titleInside?: string;
-                    legendInside?: string;
-                    showTable?: string;
-                };
-            };
+            userOptions?: ChartUserOptions;
         };
         bar?: {
             borderRadius?: number;
@@ -2587,16 +2162,8 @@ declare module 'vue-data-ui' {
                 period?: string;
                 total?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
+            th?: ChartTableCell;
+            td?: ChartTableCell;
         };
         showTable?: boolean;
     };
@@ -2677,7 +2244,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiDonutConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
@@ -2755,52 +2322,22 @@ declare module 'vue-data-ui' {
                         strokeWidth?: number;
                     };
                 };
-                legend?: {
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    show?: boolean;
-                    fontSize?: number;
-                    bold?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
-                    color?: string;
-                    backgroundColor?: string;
-                    fontSize?: number;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     showValue?: boolean;
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiDonutDatapoint, VueUiDonutSeriesItem[], VueUiDonutConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                dataLabels?: string;
-                useDiv?: string;
-                showTable?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         translations?: {
             total?: string;
             average?: string;
@@ -2813,15 +2350,8 @@ declare module 'vue-data-ui' {
                 value?: string;
                 percentage?: string;
             },
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
@@ -2868,13 +2398,11 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiNestedDonutsConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -2913,41 +2441,19 @@ declare module 'vue-data-ui' {
                         spacingRatio?: number;
                     };
                 };
-                legend?: {
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    show?: boolean;
-                    fontSize?: number;
-                    bold?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     showAllItemsAtIndex?: boolean;
-                    color?: string;
-                    backgroundColor?: string;
-                    fontSize?: number;
                     showValue?: boolean;
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiNestedDonutsDatapoint, VueUiNestedDonutsSeriesItem[], VueUiNestedDonutsConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
             };
         };
@@ -2959,15 +2465,8 @@ declare module 'vue-data-ui' {
                 value?: string;
                 percentage?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
@@ -3023,7 +2522,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiWaffleConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useBlurOnHover?: boolean;
         useCustomCells?: boolean;
@@ -3068,51 +2567,22 @@ declare module 'vue-data-ui' {
                     };
                     useDiv?: boolean;
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
-                    backgroundColor?: string;
-                    color?: string;
-                    fontSize?: number;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     showValue?: boolean;
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiWaffleDatapoint, VueUiWaffleSerieItem[], VueUiWaffleConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
-                legend?: {
-                    show?: boolean;
-                    bold?: boolean;
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    fontSize?: number;
                     roundingValue?: number;
                     roundingPercentage?: number;
                 };
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
@@ -3121,15 +2591,8 @@ declare module 'vue-data-ui' {
                 value?: string;
                 percentage?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
@@ -3170,7 +2633,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRadarConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
@@ -3208,23 +2671,8 @@ declare module 'vue-data-ui' {
                         };
                     };
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
-                    backgroundColor?: string;
-                    color?: string;
-                    fontSize?: number;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     showValue?: boolean;
                     showPercentage?: boolean;
                     roundingValue?: number;
@@ -3234,16 +2682,9 @@ declare module 'vue-data-ui' {
                         animationFrames?: number;
                     };
                     customFormat?: (params: VueUiTooltipParams<VueUiRadarDatapoint, VueUiRadarSeries, VueUiRadarConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
-                legend?: {
-                    show?: boolean;
-                    bold?: boolean;
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    fontSize?: number;
                     roundingPercentage?: number;
                 };
             };
@@ -3251,27 +2692,13 @@ declare module 'vue-data-ui' {
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         translations?: {
             target?: string;
             value?: string;
@@ -3349,8 +2776,15 @@ declare module 'vue-data-ui' {
         series: VueUiQuadrantDatasetSerieItem[];
     };
 
+    export type VueUiQuadrantSideConfig = {
+        text?: string;
+        color?: string;
+        fontSize?: number;
+        bold?: boolean;
+    }
+
     export type VueUiQuadrantConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         useCssAnimation?: boolean;
         zoomAnimationFrames?: number;
         style?: {
@@ -3365,30 +2799,10 @@ declare module 'vue-data-ui' {
                     labels?: {
                         quadrantLabels?: {
                             show?: boolean;
-                            tl?: {
-                                text?: string;
-                                color?: string;
-                                fontSize?: number;
-                                bold?: boolean;
-                            };
-                            tr?: {
-                                text?: string;
-                                color?: string;
-                                fontSize?: number;
-                                bold?: boolean;
-                            };
-                            br?: {
-                                text?: string;
-                                color?: string;
-                                fontSize?: number;
-                                bold?: boolean;
-                            };
-                            bl?: {
-                                text?: string;
-                                color?: string;
-                                fontSize?: number;
-                                bold?: boolean;
-                            };
+                            tl?: VueUiQuadrantSideConfig;
+                            tr?: VueUiQuadrantSideConfig;
+                            br?: VueUiQuadrantSideConfig;
+                            bl?: VueUiQuadrantSideConfig;
                         };
                         plotLabels?: {
                             showAsTag?: boolean;
@@ -3444,63 +2858,26 @@ declare module 'vue-data-ui' {
                         useGradient?: boolean;
                     };
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
-                    backgroundColor?: string;
-                    color?: string;
-                    fontSize?: number;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     roundingValue?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiQuadrantDatapoint, VueUiQuadrantSerie[], VueUiQuadrantConfig>) => string;
                     showShape?: boolean;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
-                legend?: {
-                    show?: boolean;
-                    bold?: boolean;
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    fontSize?: number;
                 };
             };
         };
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-                showPlotLabels?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         translations?: {
             category?: string;
             item?: string;
@@ -3547,7 +2924,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiGaugeConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -3601,28 +2978,10 @@ declare module 'vue-data-ui' {
                     useRatingColor?: boolean;
                     color?: string;
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
+                title?: ChartTitle;
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         translations?: {
             base?: string;
         };
@@ -3652,7 +3011,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiChestnutConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         style?: {
             fontFamily?: string;
@@ -3788,10 +3147,7 @@ declare module 'vue-data-ui' {
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell & {
                 translations?: {
                     rootName?: string;
                     rootValue?: string;
@@ -3807,21 +3163,12 @@ declare module 'vue-data-ui' {
                     nutToTotal?: string;
                 };
             };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                showTable?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         translations?: {
             total?: string;
             proportionToTree?: string;
@@ -3844,7 +3191,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiOnionConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
@@ -3880,62 +3227,26 @@ declare module 'vue-data-ui' {
                         };
                     };
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                legend?: {
-                    show?: boolean;
-                    bold?: boolean;
+                title?: ChartTitle;
+                legend?: ChartBaseLegend & {
                     backgroundColor?: string;
-                    color?: string;
-                    fontSize?: number;
                     roundingValue?: number;
                     roundingPercentage?: number;
                 };
-                tooltip?: {
-                    show?: boolean;
-                    color?: string;
-                    backgroundColor?: string;
-                    fontSize?: number;
+                tooltip?: ChartTooltip & {
                     showValue?: boolean;
                     showPercentage?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiOnionDatapoint, VueUiOnionSeriesItem[], VueUiOnionConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             },
@@ -4002,7 +3313,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiVerticalBarConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         style?: {
@@ -4066,35 +3377,16 @@ declare module 'vue-data-ui' {
                         strokeWidth?: number;
                     };
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                legend?: {
+                title?: ChartTitle;
+                legend?: ChartBaseLegend & {
                     position?: "top" | "bottom";
-                    show?: boolean;
-                    fontSize?: number;
-                    color?: string;
                     backgroundColor?: string;
-                    bold?: boolean;
                     roundingValue?: number;
                     roundingPercentage?: number;
                     prefix?: string;
                     suffix?: string;
                 };
-                tooltip?: {
-                    show?: boolean;
-                    backgroundColor?: string;
-                    color?: string;
-                    fontSize?: number;
+                tooltip?: ChartTooltip & {
                     showValue?: boolean;
                     showPercentage?: boolean;
                     roundingValue?: number;
@@ -4102,33 +3394,15 @@ declare module 'vue-data-ui' {
                     prefix?: string;
                     suffix?: string;
                     customFormat?: (params: VueUiTooltipParams<VueUiVerticalBarDatapoint, VueUiVerticalBarSerie[], VueUiVerticalBarConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number
                 };
             };
         };
-        userOptions?: {
-            show?: boolean;
-            title?: string;
-            labels?: {
-                useDiv?: string;
-                showTable?: string;
-                sort?: string;
-            };
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
                 prefix?: string;
@@ -4190,7 +3464,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSparklineConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         type?: "line" | "bar";
         style?: {
             backgroundColor?: string;
@@ -4244,7 +3518,7 @@ declare module 'vue-data-ui' {
             };
             title?: {
                 show?: boolean;
-                textAlign?: "left" | "center" | "right";
+                textAlign?: TextAlign;
                 color?: string;
                 fontSize?: number;
                 bold?: boolean;
@@ -4294,10 +3568,7 @@ declare module 'vue-data-ui' {
         maxHeight?: number;
         rowsPerPage?: number;
         style?: {
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell & {
                 selected?: {
                     backgroundColor?: string;
                     color?: string;
@@ -4491,7 +3762,7 @@ declare module 'vue-data-ui' {
                 alt?: string;
             };
             title?: {
-                textAlign?: string;
+                textAlign?: TextAlign;
                 fontSize?: number;
                 color?: string;
                 bold?: boolean;
@@ -4514,16 +3785,9 @@ declare module 'vue-data-ui' {
                 offsetY?: number;
                 offsetX?: number;
             };
-            tooltip?: {
-                show?: boolean;
-                fontSize?: number;
+            tooltip?: ChartTooltip & {
                 offsetY?: number;
-                color?: string;
                 bold?: boolean;
-                backgroundColor?: string;
-                borderColor?: string;
-                borderRadius?: number;
-                boxShadow?: string;
             };
         };
     };
@@ -4549,7 +3813,7 @@ declare module 'vue-data-ui' {
                 useGradient?: boolean;
             };
             title?: {
-                textAlign?: string;
+                textAlign?: TextAlign;
                 fontSize?: number;
                 color?: string;
                 bold?: boolean;
@@ -4572,16 +3836,9 @@ declare module 'vue-data-ui' {
                 offsetY?: number;
                 offsetX?: number;
             };
-            tooltip?: {
-                show?: boolean;
-                fontSize?: number;
+            tooltip?: ChartTooltip & {
                 offsetY?: number;
-                color?: string;
                 bold?: boolean;
-                backgroundColor?: string;
-                borderColor?: string;
-                borderRadius?: number;
-                boxShadow?: string;
             };
         };
     };
@@ -4827,7 +4084,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiTableHeatmapConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -4851,9 +4108,7 @@ declare module 'vue-data-ui' {
                 values?: string[];
             };
         };
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
     };
 
     export const VueUiTableHeatmap: DefineComponent<{
@@ -4882,7 +4137,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiQuickChartConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         axisLabelsFontSize?: number;
         backgroundColor?: string;
         barGap?: number;
@@ -4918,7 +4173,7 @@ declare module 'vue-data-ui' {
         title?: string;
         titleBold?: boolean;
         titleFontSize?: number;
-        titleTextAlign?: "center" | "left" | "right",
+        titleTextAlign?: TextAlign;
         tooltipCustomFormat?: any;
         tooltipBorderRadius?: number;
         tooltipBorderColor?: string;
@@ -4997,7 +4252,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSparkTrendConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -5043,12 +4298,7 @@ declare module 'vue-data-ui' {
                     negative?: string;
                 };
             };
-            padding?: {
-                top?: number;
-                left?: number;
-                right?: number;
-                bottom?: number;
-            };
+            padding?: ChartPadding;
         };
     };
 
@@ -5058,12 +4308,10 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiStripPlotConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
@@ -5071,15 +4319,8 @@ declare module 'vue-data-ui' {
                 series?: string;
                 value?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
             };
         };
@@ -5090,12 +4331,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 height?: number;
                 stripWidth?: number;
-                padding?: {
-                    top?: number;
-                    left?: number;
-                    right?: number;
-                    bottom?: number;
-                };
+                padding?: ChartPadding;
                 grid?: {
                     show?: boolean;
                     stroke?: string;
@@ -5158,28 +4394,10 @@ declare module 'vue-data-ui' {
                         offsetX?: number;
                     };
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
-                tooltip?: {
-                    show?: boolean;
-                    color?: string;
-                    backgroundColor?: string;
-                    fontSize?: number;
+                title?: ChartTitle;
+                tooltip?: ChartTooltip & {
                     roundingValue?: number;
                     customFormat?: (params: VueUiTooltipParams<VueUiStripPlotDatapoint, VueUiStripPlotSeriesItem[], VueUiStripPlotConfig>) => string;
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
             };
         };
@@ -5217,13 +4435,19 @@ declare module 'vue-data-ui' {
         dataset: VueUiStripPlotDataset[]
     }>
 
+    export type VueUiDumbbellConfigLabel = {
+        color?: string;
+        fontSize?: number;
+        offsetY?: number;
+        rounding?: number;
+        show?: boolean;
+    }
+
     export type VueUiDumbbellConfig = {
-        theme?: "" | "hack" | "zen" | "concrete";
+        theme?: Theme;
         useAnimation?: boolean;
         animationSpeed?: number;
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -5231,12 +4455,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 width?: number;
                 rowHeight?: number;
-                padding?: {
-                    top?: number;
-                    left?: number;
-                    right?: number;
-                    bottom?: number;
-                };
+                padding?: ChartPadding;
                 plots?: {
                     startColor?: string;
                     endColor?: string;
@@ -5272,60 +4491,30 @@ declare module 'vue-data-ui' {
                     prefix?: string;
                     suffix?: string;
                     yAxisLabels?: {
-                        show?: boolean;
-                        fontSize?: number;
+                        bold?: boolean;
                         color?: string;
+                        fontSize?: number;
                         offsetX?: number;
-                        bold?: boolean;
+                        rounding?: number;
+                        show?: boolean;
                         showProgression?: boolean;
-                        rounding?: number;
                     };
-                    xAxisLabels?: {
-                        show?: boolean;
-                        fontSize?: number;
-                        color?: string;
-                        offsetY?: number;
+                    xAxisLabels?: VueUiDumbbellConfigLabel & {
                         bold?: boolean;
-                        rounding?: number;
                     };
-                    startLabels?: {
-                        show?: boolean;
-                        fontSize?: number;
-                        color?: string;
-                        offsetY?: number;
-                        rounding?: number;
+                    startLabels?: VueUiDumbbellConfigLabel & {
                         useStartColor?: boolean;
                     };
-                    endLabels?: {
-                        show?: boolean;
-                        fontSize?: number;
-                        color?: string;
-                        offsetY?: number;
-                        rounding?: number;
+                    endLabels?: VueUiDumbbellConfigLabel & {
                         useEndColor?: true;
                     };
                 };
-                legend?: {
-                    show?: boolean;
+                legend?: ChartBaseLegend & {
                     labelStart?: string;
                     labelEnd?: string;
                     backgroundColor?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
                 };
-                title?: {
-                    text?: string;
-                    color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    subtitle?: {
-                        color?: string;
-                        text?: string;
-                        fontSize?: number;
-                        bold?: boolean;
-                    };
-                };
+                title?: ChartTitle;
             };
         };
         table?: {
@@ -5337,15 +4526,8 @@ declare module 'vue-data-ui' {
                 end?: string;
                 progression?: string;
             };
-            th?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
-            };
-            td?: {
-                backgroundColor?: string;
-                color?: string;
-                outline?: string;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
                 roundingValue?: number;
                 roundingPercentage?: number;
             };
