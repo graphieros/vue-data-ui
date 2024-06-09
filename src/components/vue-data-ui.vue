@@ -6,7 +6,7 @@ import BaseIcon from '../atoms/BaseIcon.vue';
 
 const props = defineProps({
     component: { type: String },
-    dataset: { type: [Object, Array, Number] },
+    dataset: { type: [Object, Array, Number, String] },
     config: { type: Object }
 });
 
@@ -61,6 +61,7 @@ const components = {
     VueUiSparkTrend: defineAsyncComponent(() => import('./vue-ui-spark-trend.vue')),
     VueUiStripPlot: defineAsyncComponent(() => import('./vue-ui-strip-plot.vue')),
     VueUiDumbbell: defineAsyncComponent(() => import('./vue-ui-dumbbell.vue')),
+    VueUiWordCloud: defineAsyncComponent(() => import('./vue-ui-word-cloud.vue'))
 };
 
 const componentProps = {
@@ -112,6 +113,7 @@ const componentProps = {
     VueUiSparkTrend: ['config', 'dataset'],
     VueUiStripPlot: ['config', 'dataset'],
     VueUiDumbbell: ['config', 'dataset'],
+    VueUiWordCloud: ['config', 'dataset']
 };
 
 const emit = defineEmits([
