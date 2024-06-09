@@ -9,11 +9,11 @@
 # vue-data-ui
 
 ![npm](https://img.shields.io/npm/v/vue-data-ui)
+![Static Badge](https://img.shields.io/badge/components-50-blue)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 ![NPM](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-49-green)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -49,6 +49,7 @@ Available components
 - [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
 - [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
 - [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
+- [VueUiWordCloud](https://vue-data-ui.graphieros.com/docs#vue-ui-word-cloud)
 - [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
 
 ## Mini charts
@@ -330,9 +331,9 @@ Type definitions are available in the `vue-data-ui.d.ts` file in the `dist/types
 
 ### Universal component
 
-| Name        | dataset type           | config type            | emits / exposed methods | slots                  | custom tooltip         |
-| ----------- | ---------------------- | ---------------------- | ----------------------- | ---------------------- | ---------------------- |
-| `VueDataUi` | (depends on component) | (depends on component) | (depends on component)  | (depends on component) | (depends on component) |
+| Name        | dataset type           | config type            | emits / exposed methods | slots                  | custom tooltip         | themes                 |
+| ----------- | ---------------------- | ---------------------- | ----------------------- | ---------------------- | ---------------------- | ---------------------- |
+| `VueDataUi` | (depends on component) | (depends on component) | (depends on component)  | (depends on component) | (depends on component) | (depends on component) |
 
 ### Quick chart
 
@@ -355,33 +356,34 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Charts
 
-| Name                  | dataset type                       | config type                 | emits / exposed methods                                                                                 | slots                                                                   | custom tooltip | themes |
-| --------------------- | ---------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------- | ------ |
-| `VueUiAgePyramid`     | `Array<Array<string / number>>`    | `VueUiSparklineConfig`      | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiCandlestick`    | `Array<Array<string / number>>`    | `VueUiCandlestickConfig`    | `generatePdf`, `generateImage`, `generateCsv`                                                           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action` | ✅             | ✅     |
-| `VueUiChestnut`       | `VueUiChestnutDatasetRoot[]`       | `VueUiChestnutConfig`       | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`  | `#svg`, `#legend`                                                       | ❌             | ✅     |
-| `VueUiDonut`          | `VueUiDonutDatasetItem[]`          | `VueUiDonutConfig`          | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`    | ✅             | ✅     |
-| `VueUiDonutEvolution` | `VueUiDonutEvolutionDatasetItem[]` | `VueUiDonutEvolutionConfig` | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#reset-action`                                      | ❌             | ✅     |
-| `VueUiDumbbell`       | `VueUiDumbbellDataset[]`           | `VueUiDumbbellConfig`       | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`,                                                      | ❌             | ✅     |
-| `VueUiGalaxy`         | `VueUiGalaxyDatasetItem[]`         | `VueUiGalaxyConfig`         | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                   | ✅             | ✅     |
-| `VueUiGauge`          | `VueUiGaugeDataset`                | `VueUiGaugeConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`,                                                      | ❌             | ✅     |
-| `VueUiHeatmap`        | `VueUiHeatmapDatasetItem[]`        | `VueUiHeatmapConfig`        | `generatePdf`, `generateCsv`, `generateImage`                                                           | `#svg`, `#tooltip-before`, `#tooltip-after`                             | ✅             | ✅     |
-| `VueUiMolecule`       | `VueUiMoleculeDatasetNode[]`       | `VueUiMoleculeConfig`       | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#tooltip-before`, `#tooltip-after`                             | ✅             | ✅     |
-| `VueUiMoodRadar`      | `VueUiMoodRadarDataset`            | `VueUiMoodRadarConfig`      | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`                                                       | ❌             | ✅     |
-| `VueUiNestedDonuts`   | `VueUiNestedDonutsDatasetItem[]`   | `VueUiNestedDonutsConfig`   | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiOnion`          | `VueUiOnionDatasetItem[]`          | `VueUiOnionConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiQuadrant`       | `VueUiQuadrantDatasetItem[]`       | `VueUiQuadrantConfig`       | `@selectLegend`, `@selectPlot`, `@selectSide`, `getData`, `generatePdf`, `generateCsv`, `generateImage` | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiRadar`          | `VueUiRadarDataset`                | `VueUiRadarConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiRings`          | `VueUiRingsDatasetItem[]`          | `VueUiRingsConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiScatter`        | `VueUiScatterDatasetItem[]`        | `VueUiScatterConfig`        | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiStripPlot`      | `VueUiStripPlotDataset[]`          | `VueUiStripPlotConfig`      | `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                            | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiThermometer`    | `VueUiThermometerDataset`          | `VueUiThermometerConfig`    | `generatePdf`, `generateImage`                                                                          | `#svg`                                                                  | ❌             | ✅     |
-| `VueUiTiremarks`      | `VueUiTiremarksDataset`            | `VueUiTiremarksConfig`      | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ❌             | ✅     |
-| `VueUiTreemap`        | `VueUiTreemapDatasetItem[]`        | `VueUiTreemapConfig`        | `@selectLegend`, `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#rect`, `#legend`, `#tooltip-before`, `#tooltip-after`         | ✅             | ✅     |
-| `VueUiVerticalBar`    | `VueUiVerticalBarDatasetItem[]`    | `VueUiWheelConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiWaffle`         | `VueUiWaffleDatasetItem[]`         | `VueUiWaffleConfig`         | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
-| `VueUiWheel`          | `VueUiWheelDataset`                | `VueUiWheelConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`                                                                  | ❌             | ✅     |
-| `VueUiXy`             | `VueUiXyDatasetItem[]`             | `VueUiXyConfig`             | `@selectLegend`, `@selectX`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                   | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action` | ✅             | ✅     |
+| Name                  | dataset type                           | config type                 | emits / exposed methods                                                                                 | slots                                                                   | custom tooltip | themes |
+| --------------------- | -------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------- | ------ |
+| `VueUiAgePyramid`     | `Array<Array<string / number>>`        | `VueUiSparklineConfig`      | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiCandlestick`    | `Array<Array<string / number>>`        | `VueUiCandlestickConfig`    | `generatePdf`, `generateImage`, `generateCsv`                                                           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action` | ✅             | ✅     |
+| `VueUiChestnut`       | `VueUiChestnutDatasetRoot[]`           | `VueUiChestnutConfig`       | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`  | `#svg`, `#legend`                                                       | ❌             | ✅     |
+| `VueUiDonut`          | `VueUiDonutDatasetItem[]`              | `VueUiDonutConfig`          | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`    | ✅             | ✅     |
+| `VueUiDonutEvolution` | `VueUiDonutEvolutionDatasetItem[]`     | `VueUiDonutEvolutionConfig` | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#reset-action`                                      | ❌             | ✅     |
+| `VueUiDumbbell`       | `VueUiDumbbellDataset[]`               | `VueUiDumbbellConfig`       | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`,                                                      | ❌             | ✅     |
+| `VueUiGalaxy`         | `VueUiGalaxyDatasetItem[]`             | `VueUiGalaxyConfig`         | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                   | ✅             | ✅     |
+| `VueUiGauge`          | `VueUiGaugeDataset`                    | `VueUiGaugeConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`,                                                      | ❌             | ✅     |
+| `VueUiHeatmap`        | `VueUiHeatmapDatasetItem[]`            | `VueUiHeatmapConfig`        | `generatePdf`, `generateCsv`, `generateImage`                                                           | `#svg`, `#tooltip-before`, `#tooltip-after`                             | ✅             | ✅     |
+| `VueUiMolecule`       | `VueUiMoleculeDatasetNode[]`           | `VueUiMoleculeConfig`       | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#tooltip-before`, `#tooltip-after`                             | ✅             | ✅     |
+| `VueUiMoodRadar`      | `VueUiMoodRadarDataset`                | `VueUiMoodRadarConfig`      | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`                                                       | ❌             | ✅     |
+| `VueUiNestedDonuts`   | `VueUiNestedDonutsDatasetItem[]`       | `VueUiNestedDonutsConfig`   | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiOnion`          | `VueUiOnionDatasetItem[]`              | `VueUiOnionConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiQuadrant`       | `VueUiQuadrantDatasetItem[]`           | `VueUiQuadrantConfig`       | `@selectLegend`, `@selectPlot`, `@selectSide`, `getData`, `generatePdf`, `generateCsv`, `generateImage` | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiRadar`          | `VueUiRadarDataset`                    | `VueUiRadarConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiRings`          | `VueUiRingsDatasetItem[]`              | `VueUiRingsConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiScatter`        | `VueUiScatterDatasetItem[]`            | `VueUiScatterConfig`        | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiStripPlot`      | `VueUiStripPlotDataset[]`              | `VueUiStripPlotConfig`      | `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                            | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiThermometer`    | `VueUiThermometerDataset`              | `VueUiThermometerConfig`    | `generatePdf`, `generateImage`                                                                          | `#svg`                                                                  | ❌             | ✅     |
+| `VueUiTiremarks`      | `VueUiTiremarksDataset`                | `VueUiTiremarksConfig`      | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ❌             | ✅     |
+| `VueUiTreemap`        | `VueUiTreemapDatasetItem[]`            | `VueUiTreemapConfig`        | `@selectLegend`, `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#rect`, `#legend`, `#tooltip-before`, `#tooltip-after`         | ✅             | ✅     |
+| `VueUiVerticalBar`    | `VueUiVerticalBarDatasetItem[]`        | `VueUiWheelConfig`          | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiWaffle`         | `VueUiWaffleDatasetItem[]`             | `VueUiWaffleConfig`         | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`                  | ✅             | ✅     |
+| `VueUiWheel`          | `VueUiWheelDataset`                    | `VueUiWheelConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`                                                                  | ❌             | ✅     |
+| `VueUiWordCloud`      | `VueUiWordCloudDatasetItem[] / string` | `VueUiWordCloudConfig`      | `getData`, `generatePdf`, `generateImage`, `generateCsv`                                                | `#svg`                                                                  | ❌             | ✅     |
+| `VueUiXy`             | `VueUiXyDatasetItem[]`                 | `VueUiXyConfig`             | `@selectLegend`, `@selectX`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                   | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action` | ✅             | ✅     |
 
 ### 3D charts
 
@@ -456,6 +458,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiTreemap
 - VueUiVerticalBar
 - VueUiWaffle
+- VueUiWordCloud
 - VueUiXy
 
 If the array of colors provided in customPalette is too small for the dataset, remaining colors will be computed from the default internal palette.
