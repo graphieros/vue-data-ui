@@ -1444,9 +1444,17 @@ export function convertCustomPalette(colors) {
 }
 
 export function createWordCloudDatasetFromPlainText(text) {
-    const textWithoutPunctuation = text.replace(/[^\w\s]|_/g, ' ').replace(/\s+/g, ' ').toLowerCase();
-    const words = textWithoutPunctuation.split(' ').filter(word => word.length > 0);
-    const wordCountMap = words.reduce((map, word) => {
+    const textWithoutPunctuation = text.replace(/[\p{P}\p{S}]+/gu, ' ').trim();
+
+    const isCJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Tibetan}\p{Script=Myanmar}\p{Script=Devanagari}]/u.test(text);
+
+    const words = isCJK 
+        ? [...textWithoutPunctuation]
+        : textWithoutPunctuation.split(/\s+/);
+
+    const filteredWords = words.filter(word => word.trim().length > 0);
+
+    const wordCountMap = filteredWords.reduce((map, word) => {
         if (map[word]) {
             map[word] += 1;
         } else {

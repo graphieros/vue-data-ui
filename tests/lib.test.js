@@ -1070,7 +1070,7 @@ describe('convertCustomPalette', () => {
 })
 
 describe('createWordCloudDatasetFromPlainText', () => {
-    test('returns a word cloud dataset from a plain text input', () => {
+    test('returns a word cloud dataset from a plain text input with alphabetical characters', () => {
         const text = "Hello, world! This//?$$^¨#&-_[]{}@+= world is a world :)"
         const expected = [
             {
@@ -1093,6 +1093,383 @@ describe('createWordCloudDatasetFromPlainText', () => {
                 name:  'a',
                 value: 1
             }
+        ]
+        expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
+    })
+    test('returns a word cloud dataset from a plain text input with chinese characters', () => {
+        const text = "世界你好，这个世界是一个世界！"
+        const expected = [
+            {
+                name: "世",
+                value: 3
+            },
+            {
+                name: "界",
+                value: 3
+            },
+            {
+                name: "你",
+                value: 1
+            },
+            {
+                name: "好",
+                value: 1
+            },
+            {
+                name: "这",
+                value: 1
+            },
+            {
+                name: "个",
+                value: 2
+            },
+            {
+                name: "是",
+                value: 1
+            },
+            {
+                name: "一",
+                value: 1
+            },
+        ]
+        expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
+    })
+    test('returns a word cloud dataset from a plain text input with japanese characters', () => {
+        const text = "こんにちは、世界です、この世界は世界です！"
+        const expected = [
+            {
+                name: "こ",
+                value: 2
+            },
+            {
+                name: "ん",
+                value: 1
+            },
+            {
+                name: "に",
+                value: 1
+            },
+            {
+                name: "ち",
+                value: 1
+            },
+            {
+                name: "は",
+                value: 2
+            },
+            {
+                name: "世",
+                value: 3
+            },
+            {
+                name: "界",
+                value: 3
+            },
+            {
+                name: "で",
+                value: 2
+            },
+            {
+                name: "す",
+                value: 2
+            },
+            {
+                name: "の",
+                value: 1
+            }
+        ]
+        expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
+    })
+    test('returns a word cloud dataset from a plain text input with hangul characters', () => {
+        const text = "안녕하세요 세상, 이 세상은 세상입니다!";
+        const expected = [
+            {
+                name: "안",
+                value: 1
+            },
+            {
+                name: "녕",
+                value: 1
+            },
+            {
+                name: "하",
+                value: 1
+            },
+            {
+                name: "세",
+                value: 4
+            },
+            {
+                name: "요",
+                value: 1
+            },
+            {
+                name: "상",
+                value: 3
+            },
+            {
+                name: "이",
+                value: 1
+            },
+            {
+                name: "은",
+                value: 1
+            },
+            {
+                name: "입",
+                value: 1
+            },
+            {
+                name: "니",
+                value: 1
+            },
+            {
+                name: "다",
+                value: 1
+            },
+        ]
+        expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
+    })
+    test('returns a word cloud dataset from a plain text input with thai characters', () => {
+        const text = "สวัสดีชาวโลก โลกนี้คือโลก !"
+        const expected = [
+            {
+                name: "ส",
+                value: 2
+            },
+            {
+                name: "ว",
+                value: 2
+            },
+            {
+                name: "ั",
+                value: 1
+            },
+            {
+                name: "ด",
+                value: 1
+            },
+            {
+                name: "ี",
+                value: 2
+            },
+            {
+                name: "ช",
+                value: 1
+            },
+            {
+                name: "า",
+                value: 1
+            },
+            {
+                name: "โ",
+                value: 3
+            },
+            {
+                name: "ล",
+                value: 3
+            },
+            {
+                name: "ก",
+                value: 3
+            },
+            {
+                name: "น",
+                value: 1
+            },
+            {
+                name: "้",
+                value: 1
+            },
+            {
+                name: "ค",
+                value: 1
+            },
+            {
+                name:  "ื",
+                value: 1
+            },
+            {
+                name: "อ",
+                value: 1
+            },
+        ]
+        expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
+    })
+    test('returns a word cloud dataset from plain text input with khmer characters', () => {
+        const text = "សួស្តីពិភពលោក ពិភពលោកនេះគឺជាពិភពលោក!";
+
+        const expected = [
+            {
+                name: "ស",
+                value: 2
+            },
+            {
+                name: "ួ",
+                value: 1
+            },
+            {
+                name: "្",
+                value: 1
+            },
+            {
+                name: "ត",
+                value: 1
+            },
+            {
+                name: "ី",
+                value: 1
+            },
+            {
+                name: "ព",
+                value: 6
+            },
+            {
+                name: "ិ",
+                value: 3
+            },
+            {
+                name: "ភ",
+                value: 3
+            },
+            {
+                name: "ល",
+                value: 3
+            },
+            {
+                name: "ោ",
+                value: 3
+            },
+            {
+                name: "ក",
+                value: 3
+            },
+            {
+                name: "ន",
+                value: 1
+            },
+            {
+                name: "េ",
+                value: 1
+            },
+            {
+                name: "ះ",
+                value: 1
+            },
+            {
+                name: "គ",
+                value: 1
+            },
+            {
+                name: "ឺ",
+                value: 1
+            },
+            {
+                name: "ជ",
+                value: 1
+            },
+            {
+                name: "ា",
+                value: 1
+            },
+        ]
+        expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
+    })
+    test('returns a word cloud dataset from plain text input with lao characters', () => {
+        const text = "ສະບາຍດີໂລກ";
+        const expected = [
+            {
+                name: "ສ",
+                value: 1
+            },
+            {
+                name: "ະ",
+                value: 1
+            },
+            {
+                name: "ບ",
+                value: 1
+            },
+            {
+                name: "າ",
+                value: 1
+            },
+            {
+                name: "ຍ",
+                value: 1
+            },
+            {
+                name: "ດ",
+                value: 1
+            },
+            {
+                name: "ີ",
+                value: 1
+            },
+            {
+                name: "ໂ",
+                value: 1
+            },
+            {
+                name: "ລ",
+                value: 1
+            },
+            {
+                name: "ກ",
+                value: 1
+            },
+        ]
+        expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
+    })
+    test('returns a word cloud dataset from plain text input with arabic alphabet', () => {
+        const text = "أهلاً بالعالم، هذا العالم عالم!";
+        const expected = [
+            {
+                name: "أهلاً",
+                value: 1
+            },
+            {
+                name: "بالعالم",
+                value: 1
+            },
+            {
+                name: "هذا",
+                value: 1
+            },
+            {
+                name: "العالم",
+                value: 1
+            },
+            {
+                name: "عالم",
+                value: 1
+            },
+        ]
+        expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
+    })
+    test('returns a word cloud dataset from plain text input with hebrew alphabet', () => {
+        const text = "שלום עולם, העולם הזה הוא עולם!";
+        const expected = [
+            {
+                name: "שלום",
+                value: 1
+            },
+            {
+                name: "עולם",
+                value: 2
+            },
+            {
+                name: "העולם",
+                value: 1
+            },
+            {
+                name: "הזה",
+                value: 1
+            },
+            {
+                name: "הוא",
+                value: 1
+            },
         ]
         expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
     })
