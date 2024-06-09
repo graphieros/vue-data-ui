@@ -38,6 +38,10 @@ import ArenaVueUiDumbbell from "../TestingArena/ArenaVueUiDumbbell.vue";
 import ArenaVueUi3dBar from "../TestingArena/ArenaVueUi3dBar.vue";
 import ArenaVueUiTableSparkline from "../TestingArena/ArenaVueUiTableSparkline.vue";
 import ArenaVueUiTableHeatmap from "../TestingArena/ArenaVueUiTableHeatmap.vue";
+import ArenaVueUiWordCloud from "../TestingArena/ArenaVueUiWordCloud.vue";
+
+import WordCloud from './components/vue-ui-word-cloud.vue';
+import VueDataUi from "./components/vue-data-ui.vue";
 
 const showOldArena = ref(false);
 
@@ -78,10 +82,11 @@ const components = ref([
   /*______*/"VueUiDumbbell", // 33
   /*_________*/"VueUi3dBar", // 34
   /**/"VueUiTableSparkline", // 35
-  /*__*/"VueUiTableHeatmap"  // 36
+  /*__*/"VueUiTableHeatmap", // 36
+  /*____ */"VueUiWordCloud", // 37
 ]);
 
-const selectedComponent = ref(components.value[0]);
+const selectedComponent = ref(components.value[37]);
 
 </script>
 
@@ -93,6 +98,7 @@ const selectedComponent = ref(components.value[0]);
       </option>
     </select>
   </div>
+
   <TestingArena v-if="showOldArena"/>
 
   <!--  0 -->
@@ -205,4 +211,7 @@ const selectedComponent = ref(components.value[0]);
 
   <!-- 36 -->
   <ArenaVueUiTableHeatmap v-if="selectedComponent === 'VueUiTableHeatmap'" />
+
+  <!-- 37 -->
+  <ArenaVueUiWordCloud v-if="selectedComponent === 'VueUiWordCloud'" />
 </template>
