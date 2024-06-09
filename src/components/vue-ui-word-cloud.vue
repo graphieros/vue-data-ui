@@ -344,7 +344,7 @@ defineExpose({
 
         <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" v-if="isDataset"
             :xmlns="XMLNS" :viewBox="`0 0 ${wordCloudConfig.style.chart.width} ${wordCloudConfig.style.chart.height}`"
-            :style="`overflow:visible;background:${wordCloudConfig.style.chart.backgroundColor}; padding: 24px; max-width:calc(100% - 48px)`">
+            :style="`overflow:visible;background:${wordCloudConfig.style.chart.backgroundColor}; padding: 24px;`">
             <g
                 :transform="`translate(${wordCloudConfig.style.chart.width / 2}, ${wordCloudConfig.style.chart.height / 2})`">
                 <g v-for="(word, index) in positionedWords">
