@@ -354,6 +354,7 @@ defineExpose({
                         :x="word.x" :y="word.y" :dy="word.fontSize / 2" :font-size="word.fontSize"
                         :transform="`translate(${word.width / 2}, ${word.height / 2})`"
                         :style="`animation-delay:${index * wordCloudConfig.animationDelayMs}ms !important`"
+                        :class="{'animated': wordCloudConfig.useCssAnimation}"
                     >
                         {{ word.name }}
                     </text>
@@ -402,7 +403,7 @@ defineExpose({
     position: relative;
 }
 
-text {
+text.animated {
     opacity:0;
     user-select: none;
     animation: word-opacity 0.3s ease-in forwards;
