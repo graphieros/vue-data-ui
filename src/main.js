@@ -50,7 +50,8 @@ import {
     VueUiQuickChart,
     VueUiSparkTrend,
     VueUiStripPlot,
-    VueUiDumbbell
+    VueUiDumbbell,
+    VueUiWordCloud
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -104,4 +105,5 @@ app.component("VueUiQuickChart", VueUiQuickChart);
 app.component("VueUiSparkTrend", VueUiSparkTrend);
 app.component("VueUiStripPlot", VueUiStripPlot);
 app.component("VueUiDumbbell", VueUiDumbbell);
+app.component("VueUiWordCloud", VueUiWordCloud);
 app.mount('#app');

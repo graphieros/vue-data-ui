@@ -51,7 +51,8 @@ import VueUiCursor from "./components/vue-ui-cursor.vue";
 import VueUiSparkTrend from "./components/vue-ui-spark-trend.vue";
 import VueUiStripPlot from "./components/vue-ui-strip-plot.vue";
 import VueUiDumbbell from "./components/vue-ui-dumbbell.vue";
-import { getPalette } from "./lib";
+import VueUiWordCloud from "./components/vue-ui-word-cloud.vue";
+import { getPalette, createWordCloudDatasetFromPlainText } from "./lib";
 
 export { 
     VueUiXy, 
@@ -95,6 +96,7 @@ export {
     getPalette,
     getVueDataUiConfig,
     getThemeConfig,
+    createWordCloudDatasetFromPlainText,
     VueUiNestedDonuts,
     VueUiSparkgauge,
     VueDataUi,
@@ -107,5 +109,6 @@ export {
     VueUiCursor,
     VueUiSparkTrend,
     VueUiStripPlot,
-    VueUiDumbbell
+    VueUiDumbbell,
+    VueUiWordCloud
 };

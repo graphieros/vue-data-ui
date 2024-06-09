@@ -4462,5 +4462,80 @@
                 }
             }
         }
+    },
+    "vue_ui_word_cloud": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#1A1A1A",
+                    "color": "#99AA99",
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#f6f6fb",
+                    "color": "#50606C",
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    }
+                }
+            },
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            }
+        }
     }
 }

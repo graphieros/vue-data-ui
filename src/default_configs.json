@@ -4193,5 +4193,65 @@
                 "roundingPercentage": 1
             }
         }
+    },
+    "vue_ui_word_cloud": {
+        "theme": "",
+        "customPalette": [],
+        "useCssAnimation": true,
+        "animationDelayMs": 20,
+        "userOptions": {
+            "show": true
+        },
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor":"#FFFFFF",
+                "color":"#2D353C",
+                "height": 300,
+                "width": 512,
+                "words": {
+                    "maxFontSize": 100,
+                    "minFontSize": 10,
+                    "bold": false,
+                    "proximity": 10,
+                    "packingWeight": 1,
+                    "color":"#2D353C",
+                    "usePalette": true
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "responsiveBreakpoint": 300,
+            "columnNames": {
+                "series": "Word",
+                "value": "Value"
+            },
+            "th": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none",
+                "roundingValue": 0,
+                "prefix": "",
+                "suffix": ""
+            }
+        }
     }
 }
