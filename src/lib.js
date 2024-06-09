@@ -1443,6 +1443,24 @@ export function convertCustomPalette(colors) {
     return colors.map(c => convertColorToHex(c))
 }
 
+export function createWordCloudDatasetFromPlainText(text) {
+    const textWithoutPunctuation = text.replace(/[^\w\s]|_/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+    const words = textWithoutPunctuation.split(' ').filter(word => word.length > 0);
+    const wordCountMap = words.reduce((map, word) => {
+        if (map[word]) {
+            map[word] += 1;
+        } else {
+            map[word] = 1;
+        }
+        return map;
+    }, {});
+
+    return Object.keys(wordCountMap).map(word => ({
+        name: word.toLowerCase(),
+        value: wordCountMap[word],
+    }));
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -1468,6 +1486,7 @@ const lib = {
     createStar,
     createTSpans,
     createUid,
+    createWordCloudDatasetFromPlainText,
     darkenHexColor,
     dataLabel,
     degreesToRadians,

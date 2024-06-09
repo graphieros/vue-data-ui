@@ -23,6 +23,7 @@ import {
     createSpiralPath,
     createStar,
     createTSpans,
+    createWordCloudDatasetFromPlainText,
     dataLabel,
     degreesToRadians,
     error,
@@ -1065,5 +1066,34 @@ describe('convertCustomPalette', () => {
     })
     test('returns converted rgb colors', () => {
         expect(convertCustomPalette(['rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)'])).toStrictEqual(["#ff0000", "#00ff00", "#0000ff"])
+    })
+})
+
+describe('createWordCloudDatasetFromPlainText', () => {
+    test('returns a word cloud dataset from a plain text input', () => {
+        const text = "Hello, world! This//?$$^¨#&-_[]{}@+= world is a world :)"
+        const expected = [
+            {
+                name: 'hello',
+                value: 1
+            },
+            {
+                name: "world",
+                value: 3
+            },
+            {
+                name: 'this',
+                value: 1
+            },
+            {
+                name: 'is',
+                value: 1
+            },
+            {
+                name:  'a',
+                value: 1
+            }
+        ]
+        expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
     })
 })
