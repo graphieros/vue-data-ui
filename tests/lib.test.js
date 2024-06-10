@@ -1074,7 +1074,7 @@ describe('createWordCloudDatasetFromPlainText', () => {
         const text = "Hello, world! This//?$$^¨#&-_[]{}@+= world is a world :)"
         const expected = [
             {
-                name: 'hello',
+                name: 'Hello',
                 value: 1
             },
             {
@@ -1082,7 +1082,7 @@ describe('createWordCloudDatasetFromPlainText', () => {
                 value: 3
             },
             {
-                name: 'this',
+                name: 'This',
                 value: 1
             },
             {
@@ -1472,5 +1472,37 @@ describe('createWordCloudDatasetFromPlainText', () => {
             },
         ]
         expect(createWordCloudDatasetFromPlainText(text)).toStrictEqual(expected)
+    })
+    test('returns a word cloud dataset from a plain text input with a formatter callback', () => {
+        const text = "Hello, world !"
+        const expectedUC = [
+            {
+                name: 'HELLO',
+                value: 1
+            },
+            {
+                name: "WORLD",
+                value: 1
+            },
+        ]
+        const expectedLC = [
+            {
+                name: 'hello',
+                value: 1
+            },
+            {
+                name: "world",
+                value: 1
+            },
+        ]
+        function formatterUC(w) {
+            return w.toUpperCase()
+        }
+        function formatterLC(w) {
+            return w.toLowerCase()
+        }
+
+        expect(createWordCloudDatasetFromPlainText(text, formatterUC)).toStrictEqual(expectedUC)
+        expect(createWordCloudDatasetFromPlainText(text, formatterLC)).toStrictEqual(expectedLC)
     })
 })

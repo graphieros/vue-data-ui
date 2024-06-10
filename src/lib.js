@@ -1443,7 +1443,49 @@ export function convertCustomPalette(colors) {
     return colors.map(c => convertColorToHex(c))
 }
 
-export function createWordCloudDatasetFromPlainText(text) {
+/**
+ * Creates a dataset suitable for a word cloud from a plain text input.
+ * This function processes the text by removing punctuation, splitting into words,
+ * and counting the occurrences of each word. It also allows for a callback function
+ * to modify each word before it's included in the final dataset.
+ * 
+ * @param {string} text - The plain text input to process. The function will remove 
+ *                        punctuation, handle CJK characters appropriately, and count 
+ *                        word frequencies.
+ * 
+ * @param {function(string): string} [callback=null] - An optional callback function
+ *                                                     to transform each word. The function 
+ *                                                     takes a word as input and returns 
+ *                                                     a transformed word. If provided,
+ *                                                     the callback should return a string.
+ * 
+ * @returns {Array<Object>} A dataset for a word cloud, where each object contains:
+ *  - `name` (string): The word or its transformed version (if a callback is provided).
+ *  - `value` (number): The frequency of the word in the input text.
+ * 
+ * @example
+ * // Basic usage without a callback
+ * const text = "Hello world! Hello everyone.";
+ * const dataset = createWordCloudDatasetFromPlainText(text);
+ * console.log(dataset);
+ * // Output: [ { name: 'Hello', value: 2 }, { name: 'world', value: 1 }, { name: 'everyone', value: 1 } ]
+ * 
+ * @example
+ * // Using a callback to convert words to uppercase
+ * const text = "Hello world! Hello everyone.";
+ * const dataset = createWordCloudDatasetFromPlainText(text, word => word.toUpperCase());
+ * console.log(dataset);
+ * // Output: [ { name: 'HELLO', value: 2 }, { name: 'WORLD', value: 1 }, { name: 'EVERYONE', value: 1 } ]
+ * 
+ * @example
+ * // Handling CJK text
+ * const text = "你好，世界！你好，大家！";
+ * const dataset = createWordCloudDatasetFromPlainText(text);
+ * console.log(dataset);
+ * // Output: [ { name: '你', value: 2 }, { name: '好', value: 2 }, { name: '世', value: 1 }, { name: '界', value: 1 }, { name: '大', value: 1 }, { name: '家', value: 1 } ]
+ * 
+ */
+export function createWordCloudDatasetFromPlainText(text, callback = null) {
     const textWithoutPunctuation = text.replace(/[\p{P}\p{S}]+/gu, ' ').trim();
 
     const isCJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Tibetan}\p{Script=Myanmar}\p{Script=Devanagari}]/u.test(text);
@@ -1463,10 +1505,18 @@ export function createWordCloudDatasetFromPlainText(text) {
         return map;
     }, {});
 
-    return Object.keys(wordCountMap).map(word => ({
-        name: word.toLowerCase(),
-        value: wordCountMap[word],
-    }));
+    return Object.keys(wordCountMap).map(word => {
+        let w = word;
+
+        if(typeof callback === 'function' && typeof callback(word) === 'string') {
+            w = callback(word)
+        }
+
+        return {
+            name: w,
+            value: wordCountMap[word],
+        }
+    });
 }
 
 const lib = {
