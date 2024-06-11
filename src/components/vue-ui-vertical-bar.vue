@@ -121,7 +121,6 @@ function observeTable() {
 }
 
 const mutableConfig = ref({
-    inside: !verticalBarConfig.value.style.chart.layout.useDiv,
     showTable: verticalBarConfig.value.table.show,
     sortDesc: verticalBarConfig.value.style.chart.layout.bars.sort === "desc"
 });
@@ -220,10 +219,10 @@ const svg = computed(() => {
         width: 512,
         height: (verticalBarConfig.value.style.chart.layout.bars.height + verticalBarConfig.value.style.chart.layout.bars.gap) * barCount.value,
         padding: {
-            top: mutableConfig.value.inside ? 64 : 12,
+            top: 12,
             left: 128 + verticalBarConfig.value.style.chart.layout.bars.offsetX,
             right: 64 + verticalBarConfig.value.style.chart.layout.bars.paddingRight,
-            bottom: mutableConfig.value.inside ? 92 : 12,
+            bottom: 12,
         }
     }
 });
@@ -518,9 +517,8 @@ defineExpose({
 
 <template>
     <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${verticalBarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center;${!verticalBarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${verticalBarConfig.style.chart.backgroundColor}`">
-        
-        <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.title.text" :style="`width:100%;background:${verticalBarConfig.style.chart.backgroundColor};padding-bottom:12px`">
+    
+        <div v-if="verticalBarConfig.style.chart.title.text" :style="`width:100%;background:${verticalBarConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
@@ -570,7 +568,7 @@ defineExpose({
 
          <!-- LEGEND AS DIV : TOP -->
         <Legend
-            v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'top'"
+            v-if="verticalBarConfig.style.chart.legend.show && verticalBarConfig.style.chart.legend.position === 'top'"
             :legendSet="immutableDataset"
             :config="legendConfig"
             @clickMarker="({ legend }) => segregate(legend.id)"
@@ -594,34 +592,6 @@ defineExpose({
                     <stop offset="0%" :stop-color="bar.color" />
                     <stop offset="100%" :stop-color="`${shiftHue(bar.color, 0.03)}${opacity[100 - verticalBarConfig.style.chart.layout.bars.gradientIntensity]}`"/>
              </linearGradient>
-
-             <!-- TITLE AS G -->
-            <g v-if="verticalBarConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="vertical-bar-text-title"
-                    :font-size="verticalBarConfig.style.chart.title.fontSize"
-                    :fill="verticalBarConfig.style.chart.title.color"
-                    :x="svg.width / 2"
-                    :y="verticalBarConfig.style.chart.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${verticalBarConfig.style.chart.title.bold ? 'bold' : ''}`"
-                >
-                    {{ verticalBarConfig.style.chart.title.text }}
-                </text>
-                <text
-                    data-cy="vertical-bar-text-subtitle"
-                    v-if="verticalBarConfig.style.chart.title.subtitle.text"
-                    :font-size="verticalBarConfig.style.chart.title.subtitle.fontSize"
-                    :fill="verticalBarConfig.style.chart.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="verticalBarConfig.style.chart.title.fontSize * 2"
-                    text-anchor="middle"
-                    :style="`font-weight:${verticalBarConfig.style.chart.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ verticalBarConfig.style.chart.title.subtitle.text }}
-                </text>
-            </g>
-            
 
             <g v-for="(serie, i) in bars">
                 <!-- UNDERLAYER -->
@@ -725,28 +695,6 @@ defineExpose({
                     @mouseleave="hoveredBar = null; isTooltip = false; selectedBarId = null"
                 />
             </g>
-
-            <!-- LEGEND AS G -->
-            <foreignObject
-                v-if="verticalBarConfig.style.chart.legend.show && mutableConfig.inside && !isPrinting"
-                :x="0"
-                :y="drawableArea.bottom + 24"
-                width="100%"
-                :height="drawableArea.fullHeight - drawableArea.bottom - 24"
-                style="overflow: visible;"
-            >
-                <Legend
-                    :legendSet="immutableDataset"
-                    :config="legendConfig"
-                    @clickMarker="({ legend }) => segregate(legend.id)"
-                >
-                    <template #item="{ legend }">
-                        <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                            {{ legend.name }} : {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
-                        </div>
-                    </template>
-                </Legend>
-            </foreignObject>
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -768,7 +716,7 @@ defineExpose({
 
          <!-- LEGEND AS DIV : BOTTOM -->
          <Legend
-            v-if="verticalBarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting) && verticalBarConfig.style.chart.legend.position === 'bottom'"
+            v-if="verticalBarConfig.style.chart.legend.show && verticalBarConfig.style.chart.legend.position === 'bottom'"
             :legendSet="immutableDataset"
             :config="legendConfig"
             @clickMarker="({ legend }) => segregate(legend.id)"

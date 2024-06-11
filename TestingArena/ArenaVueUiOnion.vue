@@ -36,7 +36,6 @@ const model = ref([
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
     { key: 'style.chart.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'general' },
     { key: 'style.chart.gradientIntensity', def: 20, min: 10, max: 40, type: 'range', label: 'gradientIntensity', category: 'general' },
-    { key: 'style.chart.layout.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
     { key: 'style.chart.layout.gutter.color', def: '#e1e5e8', type: 'color'},
     { key: 'style.chart.layout.gutter.width', def: 0.62, type: 'range', min: 0.1, max: 1, step: 0.01},
     { key: 'style.chart.layout.track.width', def: 0.62, type: 'range', min: 0.1, max: 1, step: 0.01},

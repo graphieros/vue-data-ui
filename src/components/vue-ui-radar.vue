@@ -100,7 +100,6 @@ const mutableConfig = ref({
     dataLabels: {
         show: radarConfig.value.style.chart.layout.labels.dataLabels.show,
     },
-    inside: !radarConfig.value.style.chart.layout.useDiv,
     showTable: radarConfig.value.table.show
 });
 
@@ -127,9 +126,8 @@ const sparkBarConfig = computed(() => {
 })
 
 const svg = computed(() => {
-    const height = mutableConfig.value.inside ? 412 : 312;
     return {
-        height,
+        height: 312,
         width: 512,
     }
 });
@@ -519,7 +517,7 @@ defineExpose({
         :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${!radarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${radarConfig.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div v-if="radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
@@ -576,33 +574,6 @@ defineExpose({
                     <stop offset="100%" :stop-color="d.color + opacity[radarConfig.style.chart.layout.dataPolygon.opacity]" />
                 </radialGradient>
             </defs>
-
-            <!-- TITLE AS G -->
-            <g v-if="radarConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="radar-text-title"
-                    :font-size="radarConfig.style.chart.title.fontSize"
-                    :fill="radarConfig.style.chart.title.color"
-                    :x="svg.width / 2"
-                    :y="radarConfig.style.chart.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${radarConfig.style.chart.title.bold ? 'bold' : ''}`"
-                >
-                    {{ radarConfig.style.chart.title.text }}
-                </text>
-                <text
-                    data-cy="radar-text-subtitle"
-                    v-if="radarConfig.style.chart.title.subtitle.text"
-                    :font-size="radarConfig.style.chart.title.subtitle.fontSize"
-                    :fill="radarConfig.style.chart.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="radarConfig.style.chart.title.fontSize * 2"
-                    text-anchor="middle"
-                    :style="`font-weight:${radarConfig.style.chart.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ radarConfig.style.chart.title.subtitle.text }}
-                </text>
-            </g>
 
             <!-- GRID -->
             <g v-if="radarConfig.style.chart.layout.grid.show">
@@ -689,28 +660,6 @@ defineExpose({
                     />
                 </g>
             </g>
-
-            <!-- LEGEND AS G -->
-            <foreignObject
-                v-if="radarConfig.style.chart.legend.show && mutableConfig.inside && !isPrinting"
-                :x="0"
-                :y="340"
-                width="100%"
-                height="60"
-                style="overflow: visible;"
-            >
-                <Legend
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                    @clickMarker="({i}) => segregate(i)"
-                >
-                    <template #item="{ legend, index }">
-                        <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                            {{ legend.name }} : {{ (legend.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%
-                        </div>
-                    </template>
-                </Legend>
-            </foreignObject>
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -734,7 +683,7 @@ defineExpose({
 
         <!-- LEGEND AS DIV -->
         <Legend
-            v-if="radarConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
+            v-if="radarConfig.style.chart.legend.show"
             :legendSet="legendSet"
             :config="legendConfig"
             @clickMarker="({i}) => segregate(i)"

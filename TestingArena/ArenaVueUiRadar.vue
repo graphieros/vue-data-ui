@@ -35,7 +35,6 @@ const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
     { key: 'style.chart.layout.plots.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.plots.radius', def: 2, type: 'range', min: 0, max: 24},
     { key: 'style.chart.layout.outerPolygon.stroke', def: '#CCCCCC', type: 'color'},

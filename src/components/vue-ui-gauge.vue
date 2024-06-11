@@ -74,10 +74,6 @@ const customPalette = computed(() => {
     return convertCustomPalette(gaugeConfig.value.customPalette);
 })
 
-const mutableConfig = ref({
-    inside: !gaugeConfig.value.style.chart.layout.useDiv,
-});
-
 const mutableDataset = computed(() => {
 
     if (!isDataset.value || objectIsEmpty(props.dataset.series || {})) {
@@ -112,11 +108,11 @@ const mutableDataset = computed(() => {
 
 const svg = computed(() => {
     return {
-        height: mutableConfig.value.inside ? 512 : 358.4,
+        height: 358.4,
         width: 512,
-        top: mutableConfig.value.inside ? 76.8 : 0,
-        bottom: mutableConfig.value.inside ? 435.2 : 358.4,
-        centerX: mutableConfig.value.inside ? 256 : 179.2,
+        top: 0,
+        bottom: 358.4,
+        centerX: 179.2,
         centerY: 256
     }
 });
@@ -397,7 +393,7 @@ defineExpose({
         :style="`font-family:${gaugeConfig.style.fontFamily};width:100%; text-align:center;background:${gaugeConfig.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && gaugeConfig.style.chart.title.text" :style="`width:100%;background:${gaugeConfig.style.chart.backgroundColor};padding-bottom:12px;${gaugeConfig.userOptions.show ? 'padding-top:36px' : ''}`">
+        <div v-if="gaugeConfig.style.chart.title.text" :style="`width:100%;background:${gaugeConfig.style.chart.backgroundColor};padding-bottom:12px;${gaugeConfig.userOptions.show ? 'padding-top:36px' : ''}`">
             <div data-cy="gauge-div-title" :style="`width:100%;text-align:center;color:${gaugeConfig.style.chart.title.color};font-size:${gaugeConfig.style.chart.title.fontSize}px;font-weight:${gaugeConfig.style.chart.title.bold ? 'bold': ''}`">
                 {{ gaugeConfig.style.chart.title.text }}
             </div>
@@ -446,45 +442,6 @@ defineExpose({
                     <feColorMatrix type="saturate" values="0" />
                 </filter>
             </defs>
-
-            <!-- TITLE AS G -->
-            <g v-if="gaugeConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="gauge-text-title"
-                    :font-size="(gaugeConfig.style.chart.title.fontSize * 1.5)"
-                    :fill="gaugeConfig.style.chart.title.color"
-                    :x="svg.width / 2"
-                    :y="(gaugeConfig.style.chart.title.fontSize * 1.5) + 20"
-                    text-anchor="middle"
-                    :style="`font-weight:${gaugeConfig.style.chart.title.bold ? 'bold' : ''}`"
-                >
-                    {{ gaugeConfig.style.chart.title.text }}
-                </text>
-                <text
-                    data-cy="gauge-text-subtitle"
-                    v-if="gaugeConfig.style.chart.title.subtitle.text"
-                    :font-size="(gaugeConfig.style.chart.title.subtitle.fontSize * 1.5)"
-                    :fill="gaugeConfig.style.chart.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="(gaugeConfig.style.chart.title.fontSize * 1.5) * 2 + 20"
-                    text-anchor="middle"
-                    :style="`font-weight:${gaugeConfig.style.chart.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ gaugeConfig.style.chart.title.subtitle.text }}
-                </text>
-                <text
-                    data-cy="gauge-text-base"
-                    v-if="!isNaN(dataset.base)"
-                    :font-size="(gaugeConfig.style.chart.title.subtitle.fontSize * 1.5)"
-                    :fill="gaugeConfig.style.chart.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="gaugeConfig.style.chart.title.subtitle.text ? (gaugeConfig.style.chart.title.fontSize * 2.3) * 2 + 20 : (gaugeConfig.style.chart.title.fontSize * 1.5) * 2 + 20"
-                    text-anchor="middle"
-                    :style="`font-weight:${gaugeConfig.style.chart.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ gaugeConfig.translations.base }} : {{ dataset.base }}
-                </text>
-            </g>
 
             <!-- ARC STEPS -->
             <path 

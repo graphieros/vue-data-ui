@@ -327,8 +327,8 @@ defineExpose({
 
 <template>
     <div ref="relationCircleChart" class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor};text-align:center`" :id="`relation_circle_${uid}`"> 
-     <!-- TITLE AS DIV -->
-        <div v-if="relationConfig.style.title.useDiv && relationConfig.style.title.text" :style="`width:100%;background:${relationConfig.style.backgroundColor}`">
+
+        <div v-if="relationConfig.style.title.text" :style="`width:100%;background:${relationConfig.style.backgroundColor}`">
             <Title
                 :config="{
                     title: {
@@ -377,31 +377,6 @@ defineExpose({
             width="100%"
             :style="`user-select:none; background:${relationConfig.style.backgroundColor}`"
         >
-            <!-- TITLE AS G -->
-            <g v-if="relationConfig.style.title.text && !relationConfig.style.title.useDiv">
-                <text
-                    :font-size="relationConfig.style.title.fontSize"
-                    :fill="relationConfig.style.title.color"
-                    :x="size / 2"
-                    :y="relationConfig.style.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${relationConfig.style.title.bold ? 'bold' : ''}`"
-                >
-                    {{ relationConfig.style.title.text }}
-                </text>
-                <text
-                    v-if="relationConfig.style.title.subtitle.text"
-                    :font-size="relationConfig.style.title.subtitle.fontSize"
-                    :fill="relationConfig.style.title.subtitle.color"
-                    :x="size / 2"
-                    :y="relationConfig.style.title.fontSize * 2"
-                    text-anchor="middle"
-                    :style="`font-weight:${relationConfig.style.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ relationConfig.style.title.subtitle.text }}
-                </text>
-            </g>
-
             <circle
                 data-cy="relation-circle" 
                 :cx="size/2" 

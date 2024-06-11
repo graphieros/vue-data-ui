@@ -40,7 +40,6 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "layout": {
-                    "useDiv": false,
                     "labels": {
                         "dataLabels": {
                             "show": true,
@@ -131,13 +130,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "dataLabels": "Show datalabels",
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "translations": {
             "total": "Total",

@@ -84,7 +84,6 @@ const heatmapConfig = computed(() => {
 });
 
 const mutableConfig = ref({
-    inside: !heatmapConfig.value.style.layout.useDiv,
     showTable: heatmapConfig.value.table.show
 })
 
@@ -108,7 +107,7 @@ const maxX = computed(() => {
 });
 
 const svg = computed(() => {
-    const height = heatmapConfig.value.style.layout.padding.top + heatmapConfig.value.style.layout.padding.bottom + (props.dataset.length * heatmapConfig.value.style.layout.cells.height) + (mutableConfig.value.inside ? 92 : 0);
+    const height = heatmapConfig.value.style.layout.padding.top + heatmapConfig.value.style.layout.padding.bottom + (props.dataset.length * heatmapConfig.value.style.layout.cells.height);
     const width= heatmapConfig.value.style.layout.padding.left + heatmapConfig.value.style.layout.padding.right + ((maxX.value < props.dataset.length ? props.dataset.length : maxX.value) * heatmapConfig.value.style.layout.cells.height);
     const heightWithLegend = height + (heatmapConfig.value.style.legend.show ? (heatmapConfig.value.style.legend.position === 'right' ? 0 : ((heatmapConfig.value.style.layout.cells.height * 2))) : 0)
 
@@ -125,7 +124,7 @@ const legendPosition = computed(() => {
 
 const drawingArea = computed(() => {
     return {
-        top: heatmapConfig.value.style.layout.padding.top + (mutableConfig.value.inside ? 36 : 0) ,
+        top: heatmapConfig.value.style.layout.padding.top,
         left: heatmapConfig.value.style.layout.padding.left,
         right: svg.value.width - heatmapConfig.value.style.layout.padding.right - (legendPosition.value === "right" && heatmapConfig.value.style.legend.show ? 92 : 0),
         bottom: svg.value.height - heatmapConfig.value.style.layout.padding.bottom,
@@ -351,7 +350,7 @@ defineExpose({
 
 <template>
      <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center;${!heatmapConfig.style.title.text ? 'padding-top:36px' : ''};background:${heatmapConfig.style.backgroundColor}`" :id="`heatmap__${uid}`">
-        <div v-if="(!mutableConfig.inside || isPrinting) && heatmapConfig.style.title.text" :style="`width:100%;background:${heatmapConfig.style.backgroundColor}`">
+        <div v-if="heatmapConfig.style.title.text" :style="`width:100%;background:${heatmapConfig.style.backgroundColor}`">
             <Title
                 :config="{
                     title: {
@@ -396,32 +395,6 @@ defineExpose({
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.heightWithLegend}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
-            <!-- TITLE AS G -->
-            <g v-if="heatmapConfig.style.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="heatmap-text-title"
-                    :font-size="heatmapConfig.style.title.fontSize"
-                    :fill="heatmapConfig.style.title.color"
-                    :x="svg.width / 2"
-                    :y="0"
-                    text-anchor="middle"
-                    :style="`font-weight:${heatmapConfig.style.title.bold ? 'bold' : ''}`"
-                >
-                    {{ heatmapConfig.style.title.text }}
-                </text>
-                <text
-                    data-cy="heatmap-text-subtitle"
-                    v-if="heatmapConfig.style.title.subtitle.text"
-                    :font-size="heatmapConfig.style.title.subtitle.fontSize"
-                    :fill="heatmapConfig.style.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="heatmapConfig.style.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${heatmapConfig.style.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ heatmapConfig.style.title.subtitle.text }}
-                </text>
-            </g>
 
             <g v-for="(serie, i) in mutableDataset">
                 <g v-for="(cell, j) in serie.temperatures">

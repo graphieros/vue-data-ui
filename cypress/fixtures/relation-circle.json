@@ -224,7 +224,6 @@
                 "color": "#2D353C"
             },
             "title": {
-                "useDiv": true,
                 "text": "Title",
                 "color": "#2D353C",
                 "fontSize": 20,

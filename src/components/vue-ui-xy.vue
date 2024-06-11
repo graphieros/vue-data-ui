@@ -2,7 +2,7 @@
 <template>
     <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${!chartConfig.chart.title.text ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily}`">
         <!-- TITLE AS OUTSIDE DIV -->
-        <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show && (!mutableConfig.titleInside || isPrinting)" :style="`font-family:${chartConfig.chart.fontFamily}`">
+        <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <Title
                 :config="{
                     title: {
@@ -769,65 +769,6 @@
                         {{ chartConfig.chart.grid.labels.axis.xLabel }}
                     </text>
                 </g>
-
-                <!-- TITLE AS FOREIGNOBJECT -->
-                <g v-if="chartConfig.chart.title.show && mutableConfig.titleInside && !isPrinting">
-                    <foreignObject
-                        x="0"
-                        y="0"
-                        width="100%"
-                        height="40px"
-                        style="overflow: visible"
-                    >
-                        <div class="vue-ui-xy-title" :style="`font-family:${chartConfig.chart.fontFamily}`">
-                            <div data-cy="xy-foreignObject-title" class="vue-ui-xy-title-main" :style="`font-size:${chartConfig.chart.title.fontSize * 0.6}px; color:${chartConfig.chart.title.color}; font-weight:${chartConfig.chart.title.bold ? 'bold': '400'}`">
-                                {{ chartConfig.chart.title.text }}
-                            </div>
-                            <div data-cy="xy-foreignObject-subtitle" class="vue-ui-xy-title-subtitle" v-if="chartConfig.chart.title.subtitle.text" :style="`font-size:${chartConfig.chart.title.subtitle.fontSize * 0.6}px; color:${chartConfig.chart.title.subtitle.color}`">
-                                {{ chartConfig.chart.title.subtitle.text }}
-                            </div>
-                        </div>
-                    </foreignObject>
-                </g>
-
-                <!-- LEGEND AS FOREIGNOBJECT -->
-                <g v-if="chartConfig.chart.legend.show && mutableConfig.legendInside && !isPrinting">
-                    <foreignObject
-                        data-cy="xy-foreignObject-legend"
-                        x="0"
-                        :y="drawingArea.bottom + chartConfig.chart.padding.bottom / 3 + 12"
-                        :width="`100%`"
-                        height="20px"
-                        :style="`overflow:visible; font-size:${chartConfig.chart.legend.fontSize * 0.6}px`"
-                    >
-                        <div class="vue-ui-xy-legend">
-                            <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-foreignObject-legend-item-${i}`" :key="`div_legend_item_${i}`" @click="segregate(legendItem)" :class="{'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated' : segregatedSeries.includes(legendItem.id)}">
-                                <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
-                                        <rect x="0" y="7" rx="3" stroke="none" height="4" width="20" :fill="legendItem.color" />
-                                        <Shape
-                                            :plot="{x: 10, y:9}"
-                                            :radius="4"
-                                            :color="legendItem.color"
-                                            :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
-                                            :stroke="chartConfig.chart.backgroundColor"
-                                            :strokeWidth="1"
-                                        />
-                                </svg>
-                                <svg v-else viewBox="0 0 12 12" height="14" width="14">
-                                    <rect v-if="icons[legendItem.type] === 'bar'" x="0" y="0" rx="1" height="12" width="12" stroke="none" :fill="legendItem.color" />
-                                    <Shape v-else
-                                        :plot="{x: 6, y:6}"
-                                        :radius="5"
-                                        :color="legendItem.color"
-                                        :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
-                                    />
-                                </svg>
-                                <span :style="`color:${chartConfig.chart.legend.color}`">{{legendItem.name}}</span>
-                            </div>
-                        </div>
-                    </foreignObject>
-                </g>
-
                 
                 <!-- TIME LABELS -->
                 <g v-if="chartConfig.chart.grid.labels.xAxisLabels.show">
@@ -947,7 +888,7 @@
         </Slicer>
 
         <!-- LEGEND AS OUTSIDE DIV -->
-        <div data-cy="xy-div-legend" v-if="chartConfig.chart.legend.show && (!mutableConfig.legendInside || isPrinting)" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
+        <div data-cy="xy-div-legend" v-if="chartConfig.chart.legend.show" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
             <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`" :key="`div_legend_item_${i}`" @click="segregate(legendItem)" :class="{'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated' : segregatedSeries.includes(legendItem.id)}">
                 <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
                         <rect x="0" y="7" rx="3" stroke="none" height="4" width="20" :fill="legendItem.color" />
@@ -1159,7 +1100,6 @@ export default {
                 plot: "plot"
             },
             isFullscreen: false,
-            isInsideCanvas: false,
             isPrinting: false,
             isImaging: false,
             isTooltip: false,
@@ -1167,8 +1107,6 @@ export default {
                 dataLabels: {
                     show: true,
                 },
-                titleInside: true,
-                legendInside: true,
                 showTable: false,
             },
             selectedSerieIndex: null,
@@ -1964,8 +1902,6 @@ export default {
             dataLabels: {
                 show: true,
             },
-            titleInside: !this.chartConfig.chart.title.useDiv,
-            legendInside: !this.chartConfig.chart.legend.useDiv,
             showTable: this.chartConfig.showTable === true
         }
     },

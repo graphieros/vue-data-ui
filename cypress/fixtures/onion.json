@@ -43,7 +43,6 @@
                 "useGradient": false,
                 "gradientIntensity": 20,
                 "layout": {
-                    "useDiv": true,
                     "gutter": {
                         "color": "#e1e5e8",
                         "width": 0.62
@@ -92,12 +91,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "table": {
             "show": false,

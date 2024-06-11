@@ -98,7 +98,6 @@ const model = ref([
     { key: 'style.circle.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.plot.radius', def: 2, type: 'number', min: 0, max: 24},
     { key: 'style.plot.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.title.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
     { key: 'style.title.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
     { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.title.fontSize', def: 20, type: 'number', min: 8, max: 48},

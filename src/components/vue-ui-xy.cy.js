@@ -121,11 +121,9 @@ describe('<VueUiXy />', () => {
             ...fixture.config.chart,
             title: {
               ...fixture.config.chart.title,
-              useDiv: false,
             },
             legend: {
               ...fixture.config.legend,
-              useDiv: false
             }
           }
         }
@@ -138,19 +136,6 @@ describe('<VueUiXy />', () => {
             config: modifiedConfig
           }
         });
-
-      cy.get('[data-cy="xy-foreignObject-title"]')
-        .should('exist')
-        .contains(fixture.config.chart.title.text);
-      cy.get('[data-cy="xy-foreignObject-subtitle"]')
-        .should('exist')
-        .contains(fixture.config.chart.title.subtitle.text);
-
-      cy.get('[data-cy="xy-foreignObject-legend"]').should('exist');
-
-      for (let i = 0; i < 4; i += 1) {
-        cy.get(`[data-cy="xy-foreignObject-legend-item-${i}"]`).should('exist');
-      }
 
       for(let i = 0; i < 21; i += 1) {
         cy.get(`[data-cy="xy-time-label-${i}"]`)

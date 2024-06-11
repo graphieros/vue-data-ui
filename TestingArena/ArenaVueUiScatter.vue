@@ -50,7 +50,6 @@ const model = ref([
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
     { key: 'style.layout.height', def: 316, type: 'number', min: 100, max: 1000},
     { key: 'style.layout.width', def: 512, type: 'number', min: 100, max: 1000},
     { key: 'style.layout.padding.top', def: 36, type: 'number', min: 0, max: 100},

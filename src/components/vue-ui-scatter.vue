@@ -104,7 +104,6 @@ const customPalette = computed(() => {
 })
 
 const mutableConfig = ref({
-    inside: !scatterConfig.value.style.layout.useDiv,
     showTable: scatterConfig.value.table.show,
 });
 
@@ -577,7 +576,7 @@ defineExpose({
 <template>
     <div :class="`vue-ui-scatter ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${scatterConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center;${!scatterConfig.style.title.text ? 'padding-top:36px' : ''};background:${scatterConfig.style.backgroundColor}`">
         
-        <div v-if="(!mutableConfig.inside || isPrinting) && scatterConfig.style.title.text" :style="`width:100%;background:${scatterConfig.style.backgroundColor}`">
+        <div v-if="scatterConfig.style.title.text" :style="`width:100%;background:${scatterConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
@@ -623,33 +622,6 @@ defineExpose({
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
-
-            <!-- TITLE AS G -->
-            <g v-if="scatterConfig.style.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="scatter-text-title"
-                    :font-size="scatterConfig.style.title.fontSize"
-                    :fill="scatterConfig.style.title.color"
-                    :x="svg.width / 2"
-                    :y="0"
-                    text-anchor="middle"
-                    :style="`font-weight:${scatterConfig.style.title.bold ? 'bold' : ''}`"
-                >
-                    {{ scatterConfig.style.title.text }}
-                </text>
-                <text
-                    data-cy="scatter-text-subtitle"
-                    v-if="scatterConfig.style.title.subtitle.text"
-                    :font-size="scatterConfig.style.title.subtitle.fontSize"
-                    :fill="scatterConfig.style.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="scatterConfig.style.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${scatterConfig.style.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ scatterConfig.style.title.subtitle.text }}
-                </text>
-            </g>
 
             <!-- AXIS -->
             <g v-if="scatterConfig.style.layout.axis.show">
@@ -997,28 +969,6 @@ defineExpose({
                     </text>
                 </g>
             </g>
-
-            <!-- LEGEND AS G -->
-            <foreignObject 
-                v-if="scatterConfig.style.legend.show && mutableConfig.inside && !isPrinting"
-                :x="0"
-                :y="drawingArea.bottom"
-                width="100%"
-                :height="svg.height - drawingArea.bottom"
-                style="overflow:visible"
-            >
-                <Legend
-                    :legendSet="datasetWithId"
-                    :config="legendConfig"
-                    @clickMarker="({ legend }) => segregate(legend.id)"
-                >
-                    <template #item="{ legend }">
-                        <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                            {{ legend.name }}
-                        </div>
-                    </template>
-                </Legend>
-            </foreignObject>
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -1043,7 +993,7 @@ defineExpose({
 
         <!-- LEGEND AS DIV -->
         <Legend
-            v-if="scatterConfig.style.legend.show && (!mutableConfig.inside || isPrinting)"
+            v-if="scatterConfig.style.legend.show"
             :legendSet="datasetWithId"
             :config="legendConfig"
             @clickMarker="({ legend }) => segregate(legend.id)"

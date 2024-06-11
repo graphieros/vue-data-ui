@@ -57,7 +57,6 @@ const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
     { key: 'style.chart.layout.bars.sort', def: 'desc', type: 'select', options: ['asc', 'desc']},
     { key: 'style.chart.layout.bars.useStroke', def: false, type: 'checkbox'},
     { key: 'style.chart.layout.bars.strokeWidth', def: 2, type: 'number', min: 0, max: 12},

@@ -92,7 +92,6 @@ describe('<VueUiDonut />', () => {
             ...fixture.config.style.chart,
             layout: {
               ...fixture.config.style.chart.layout,
-              useDiv: true
             }
           }
         }

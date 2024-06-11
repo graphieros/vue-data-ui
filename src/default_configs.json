@@ -268,12 +268,10 @@
             "legend": {
                 "color": "#2D353C",
                 "show": true,
-                "useDiv": true,
                 "fontSize": 16
             },
             "title": {
                 "show": true,
-                "useDiv": true,
                 "color": "#2D353C",
                 "text": "",
                 "fontSize": 20,
@@ -668,8 +666,7 @@
                         "strokeWidth": 1,
                         "useGradient": true,
                         "gradientIntensity": 40
-                    },
-                    "useDiv": true
+                    }
                 },
                 "title": {
                     "text": "",
@@ -743,7 +740,6 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "layout": {
-                    "useDiv": true,
                     "plots": {
                         "show": true,
                         "radius": 2
@@ -829,12 +825,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "translations": {
             "target": "Target",
@@ -855,7 +846,6 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "layout": {
-                    "useDiv": true,
                     "labels": {
                         "quadrantLabels": {
                             "show": true,
@@ -1009,7 +999,6 @@
                     "acceleration": 1
                 },
                 "layout": {
-                    "useDiv": false,
                     "track": {
                         "size": 1,
                         "useGradient": true,
@@ -1257,7 +1246,6 @@
                 "useGradient": true,
                 "gradientIntensity": 20,
                 "layout": {
-                    "useDiv": true,
                     "gutter": {
                         "color": "#e1e5e8",
                         "width": 0.62
@@ -1355,7 +1343,6 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "layout": {
-                    "useDiv": true,
                     "bars": {
                         "sort": "desc",
                         "useStroke": false,
@@ -1836,7 +1823,6 @@
             "color":"#2D353C",
             "fontFamily":"inherit",
             "layout": {
-                "useDiv": true,
                 "padding": {
                     "top": 36,
                     "right": 12,
@@ -1951,7 +1937,6 @@
             "color":"#2D353C",
             "fontFamily":"inherit",
             "layout": {
-                "useDiv": true,
                 "height": 316,
                 "width": 512,
                 "padding": {
@@ -2128,7 +2113,6 @@
             "height": 316,
             "width": 500,
             "layout": {
-                "useDiv": true,
                 "padding": {
                     "top": 36,
                     "right": 48,
@@ -2263,7 +2247,6 @@
             "height": 500,
             "width": 500,
             "layout": {
-                "useDiv": true,
                 "padding": {
                     "top": 36,
                     "right": 12,
@@ -2592,7 +2575,6 @@
                 "color":"#2D353C"
             },
             "title": {
-                "useDiv": true,
                 "text": "",
                 "color": "#2D353C",
                 "fontSize": 20,
@@ -2653,7 +2635,6 @@
                 }
             },
             "title": {
-                "useDiv": true,
                 "text": "",
                 "color": "#2D353C",
                 "fontSize": 20,

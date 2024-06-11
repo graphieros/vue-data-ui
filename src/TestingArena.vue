@@ -1623,7 +1623,6 @@ const relationConfig = ref({
       radius: 2
     },
     title: {
-      useDiv: false,
       text: "Title",
       color: "#2D353C",
       fontSize: 20,
@@ -1778,7 +1777,6 @@ const thermoConfig = ref({
       }
     },
     title: {
-      useDiv: true,
       text: "Title",
       color: "#FAFAFA",
       fontSize: 20,
@@ -1792,11 +1790,7 @@ const thermoConfig = ref({
     }
   },
   userOptions: {
-    show: true,
-    title: "options",
-    labels: {
-      useDiv: "Title inside"
-    }
+    show: true
   }
 });
 

@@ -130,7 +130,6 @@
             "height": 316,
             "width": 500,
             "layout": {
-                "useDiv": true,
                 "padding": {
                     "top": 36,
                     "right": 48,
@@ -228,13 +227,7 @@
             "volume": "Volume"
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title inside",
-                "showTable": "Show table",
-                "showPlotLabels": "Show plot labels"
-            }
+            "show": true
         },
         "table": {
             "show": false,

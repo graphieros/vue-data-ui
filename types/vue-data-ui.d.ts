@@ -1453,7 +1453,6 @@ declare module 'vue-data-ui' {
             height?: number;
             width?: number;
             layout?: {
-                useDiv?: boolean;
                 padding?: ChartPadding;
                 grid?: {
                     show?: boolean;
@@ -1570,7 +1569,6 @@ declare module 'vue-data-ui' {
             height?: number;
             width?: number;
             layout?: {
-                useDiv?: boolean;
                 padding?: ChartPadding;
                 selector?: {
                     color?: string;
@@ -1703,7 +1701,6 @@ declare module 'vue-data-ui' {
             color?: string;
             fontFamily?: string;
             layout?: {
-                useDiv?: boolean;
                 height?: number;
                 width?: number;
                 padding?: ChartPadding;
@@ -1881,7 +1878,6 @@ declare module 'vue-data-ui' {
             color?: string;
             fontFamily?: string;
             layout?: {
-                useDiv?: boolean;
                 padding?: ChartPadding;
                 cells?: {
                     height?: number;
@@ -2077,12 +2073,10 @@ declare module 'vue-data-ui' {
             legend?: {
                 color?: string;
                 show?: boolean;
-                useDiv?: boolean;
                 fontSize?: number;
             };
             title?: {
                 show?: boolean;
-                useDiv?: boolean;
                 color?: string;
                 text?: string;
                 fontSize?: number;
@@ -2256,7 +2250,6 @@ declare module 'vue-data-ui' {
                 backgroundColor?: string;
                 color?: string;
                 layout?: {
-                    useDiv?: boolean;
                     labels?: {
                         dataLabels?: {
                             show?: boolean;
@@ -2565,7 +2558,6 @@ declare module 'vue-data-ui' {
                         useGradient?: boolean;
                         gradientIntensity?: number;
                     };
-                    useDiv?: boolean;
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -2642,7 +2634,6 @@ declare module 'vue-data-ui' {
                 backgroundColor?: string;
                 color?: string;
                 layout?: {
-                    useDiv?: boolean;
                     plots?: {
                         show?: boolean;
                         radius?: number;
@@ -2795,7 +2786,6 @@ declare module 'vue-data-ui' {
                 backgroundColor?: string;
                 color?: string;
                 layout?: {
-                    useDiv?: boolean;
                     labels?: {
                         quadrantLabels?: {
                             show?: boolean;
@@ -2937,7 +2927,6 @@ declare module 'vue-data-ui' {
                     acceleration?: number;
                 };
                 layout?: {
-                    useDiv?: boolean;
                     track?: {
                         size?: number;
                         useGradient?: boolean;
@@ -3202,7 +3191,6 @@ declare module 'vue-data-ui' {
                 useGradient?: boolean;
                 gradientIntensity?: number;
                 layout?: {
-                    useDiv?: boolean;
                     gutter?: {
                         color?: string;
                         width?: number;
@@ -3322,7 +3310,6 @@ declare module 'vue-data-ui' {
                 backgroundColor?: string;
                 color?: string;
                 layout?: {
-                    useDiv?: boolean;
                     bars?: {
                         sort?: "desc" | "asc";
                         useStroke?: boolean;

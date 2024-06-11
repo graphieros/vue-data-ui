@@ -38,7 +38,6 @@ const model = ref([
     { key: 'style.chart.label.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.label.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.label.suffix', def: 'S', type: 'text'},
-    { key: 'style.title.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
     { key: 'style.title.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
     { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.title.fontSize', def: 20, type: 'number', min: 8, max: 48},

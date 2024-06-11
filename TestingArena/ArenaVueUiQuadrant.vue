@@ -89,7 +89,6 @@ const model = ref([
     { key: 'style.chart.width', def: 512, type: 'number', min: 100, max: 1000},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
     { key: 'style.chart.layout.labels.quadrantLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.quadrantLabels.tl.text', def: 'Top left label', type: 'text'},
     { key: 'style.chart.layout.labels.quadrantLabels.tl.color', def: '#FFAA00', type: 'color'},

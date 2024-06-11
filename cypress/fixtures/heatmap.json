@@ -406,7 +406,6 @@
             "color":"#2D353C",
             "fontFamily":"inherit",
             "layout": {
-                "useDiv": true,
                 "padding": {
                     "top": 36,
                     "right": 12,
@@ -483,13 +482,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table",
-                "showPlotLabels": "Show plot labels"
-            }
+            "show": true
         },
         "table": {
             "show": false,

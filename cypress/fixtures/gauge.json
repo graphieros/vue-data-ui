@@ -32,7 +32,6 @@
                     "acceleration": 1
                 },
                 "layout": {
-                    "useDiv": false,
                     "track": {
                         "size": 1,
                         "useGradient": true,
@@ -87,12 +86,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "translations": {
             "base": "Base"

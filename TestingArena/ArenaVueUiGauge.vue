@@ -21,7 +21,6 @@ const model = ref([
     { key: 'style.chart.animation.use', def: true, type: 'checkbox'},
     { key: 'style.chart.animation.speed', def: 1, type: 'range', min: 0, max: 100},
     { key: 'style.chart.animation.acceleration', def: 1, type: 'range', min: 0, max: 10},
-    { key: 'style.chart.layout.useDiv', def: false, type: 'checkbox'}, // DEPRECATED
     { key: 'style.chart.layout.track.size', def: 1, type: 'range', min: 0.5, max: 2, step: 0.01},
     { key: 'style.chart.layout.track.useGradient', def: true, type:  'checkbox'},
     { key: 'style.chart.layout.track.gradientIntensity', def: 20, type: 'range', min: 10, max: 30},

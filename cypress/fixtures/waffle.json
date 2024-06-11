@@ -49,8 +49,7 @@
                         "strokeWidth": 1,
                         "useGradient": true,
                         "gradientIntensity": 40
-                    },
-                    "useDiv": true
+                    }
                 },
                 "title": {
                     "text": "Title",
@@ -86,12 +85,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table"
-            }
+            "show": true
         },
         "table": {
             "show": false,

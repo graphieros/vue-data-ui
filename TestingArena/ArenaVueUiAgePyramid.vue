@@ -20,7 +20,6 @@ const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.height', def: 200, type: 'number', min: 200, max: 1000},
     { key: 'style.width', def: 500, type: 'number', min: 200, max: 1000},
-    { key: 'style.layout.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
     { key: 'style.layout.padding.top', def: 36, type: 'number', min: 0, max: 100},
     { key: 'style.layout.padding.right', def: 24, type: 'number', min: 0, max: 100},
     { key: 'style.layout.padding.bottom', def: 48, type: 'number', min: 0, max: 100},

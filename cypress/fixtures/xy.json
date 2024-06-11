@@ -193,12 +193,10 @@
             "legend": {
                 "color": "#2D353C",
                 "show": true,
-                "useDiv": true,
                 "fontSize": 16
             },
             "title": {
                 "show": true,
-                "useDiv": true,
                 "color": "#2D353C",
                 "text": "Title",
                 "fontSize": 20,

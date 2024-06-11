@@ -94,28 +94,16 @@ const baseWidth = computed(() => {
     return thermoConfig.value.style.chart.thermometer.width;
 });
 
-const mutableConfig = ref({
-    inside: !thermoConfig.value.style.title.useDiv,
-});
-
 const steps = computed(() => {
     return props.dataset.steps || 10;
 })
 
 const usablePadding = ref({
-        top: mutableConfig.inside ? thermoConfig.value.style.chart.padding.top + 64 : thermoConfig.value.style.chart.padding.top,
+        top: thermoConfig.value.style.chart.padding.top,
         left: thermoConfig.value.style.chart.padding.left,
         right: thermoConfig.value.style.chart.padding.right,
         bottom: thermoConfig.value.style.chart.padding.bottom
 });
-
-function setPaddingTop() {
-    if (mutableConfig.value.inside) {
-        usablePadding.value.top = thermoConfig.value.style.chart.padding.top + 48;
-    } else {
-        usablePadding.value.top = thermoConfig.value.style.chart.padding.top
-    }
-}
 
 function generateColorRange(startColor, endColor, steps) {
   const colors = [];
@@ -246,7 +234,6 @@ function generatePdf(){
             fileName: thermoConfig.value.style.title.text || 'vue-ui-thermometer'
         }).finally(() => {
             isPrinting.value = false;
-            setPaddingTop();
         });
     }, 100)
 }
@@ -285,7 +272,7 @@ defineExpose({
 <template>
     <div ref="thermoChart" :class="`vue-ui-thermometer ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`width:100%;background:${thermoConfig.style.chart.backgroundColor};color:${thermoConfig.style.chart.color};font-family:${thermoConfig.style.fontFamily}`" :id="`thermometer__${uid}`">
         <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && thermoConfig.style.title.text" :style="`width:100%`">
+        <div v-if="thermoConfig.style.title.text" :style="`width:100%`">
             <Title
                 :config="{
                     title: {
@@ -348,33 +335,6 @@ defineExpose({
                     <stop offset="100%" :stop-color="graduation.color"/>
                 </linearGradient>
             </defs>
-
-            <!-- TITLE AS G -->
-            <g v-if="thermoConfig.style.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="thermometer-text-title"
-                    :font-size="thermoConfig.style.title.fontSize"
-                    :fill="thermoConfig.style.title.color"
-                    :x="drawingArea.width / 2"
-                    :y="24"
-                    text-anchor="middle"
-                    :style="`font-weight:${thermoConfig.style.title.bold ? 'bold' : ''}`"
-                >
-                    {{ thermoConfig.style.title.text }}
-                </text>
-                <text
-                    data-cy="thermometer-text-subtitle"
-                    v-if="thermoConfig.style.title.subtitle.text"
-                    :font-size="thermoConfig.style.title.subtitle.fontSize"
-                    :fill="thermoConfig.style.title.subtitle.color"
-                    :x="drawingArea.width / 2"
-                    :y="24 + thermoConfig.style.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${thermoConfig.style.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ thermoConfig.style.title.subtitle.text }}
-                </text>
-            </g>
 
             <g clip-path="url(#vueUiPill)">
                 <rect

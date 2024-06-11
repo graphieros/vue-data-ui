@@ -90,12 +90,11 @@ const customPalette = computed(() => {
 })
 
 const mutableConfig = ref({
-    inside: !onionConfig.value.style.chart.layout.useDiv,
     showTable: onionConfig.value.table.show
 });
 
 const svg = computed(() => {
-    const p = mutableConfig.value.inside  ? 80 : 64;
+    const p = 64;
     return {
         height: 512,
         width: 512,
@@ -385,8 +384,7 @@ defineExpose({
         :id="`vue-ui-onion_${uid}`"
         :style="`font-family:${onionConfig.style.fontFamily};width:100%; text-align:center;background:${onionConfig.style.chart.backgroundColor}`"
     >
-        <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
+        <div v-if="onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
             <Title
                 :config="{
                     title: {
@@ -431,33 +429,6 @@ defineExpose({
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
-
-            <!-- TITLE AS G -->
-            <g v-if="onionConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="onion-text-title"
-                    :font-size="onionConfig.style.chart.title.fontSize"
-                    :fill="onionConfig.style.chart.title.color"
-                    :x="svg.width / 2"
-                    :y="onionConfig.style.chart.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${onionConfig.style.chart.title.bold ? 'bold' : ''}`"
-                >
-                    {{ onionConfig.style.chart.title.text }}
-                </text>
-                <text
-                    data-cy="onion-text-subtitle"
-                    v-if="onionConfig.style.chart.title.subtitle.text"
-                    :font-size="onionConfig.style.chart.title.subtitle.fontSize"
-                    :fill="onionConfig.style.chart.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="onionConfig.style.chart.title.fontSize * 2"
-                    text-anchor="middle"
-                    :style="`font-weight:${onionConfig.style.chart.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ onionConfig.style.chart.title.subtitle.text }}
-                </text>
-            </g>
 
             <!-- GUTTERS -->
             <circle 
@@ -555,30 +526,6 @@ defineExpose({
                     </text>
                 </g>
             </g>
-
-            <!-- LEGEND AS G -->
-            <foreignObject 
-                v-if="onionConfig.style.chart.legend.show && mutableConfig.inside && !isPrinting"
-                :x="0"
-                :y="drawableArea.bottom + onionConfig.style.chart.legend.offsetY"
-                width="100%"
-                :height="svg.height - drawableArea.bottom"
-                style="overflow:visible"
-            >
-                <Legend
-                    :legendSet="immutableDataset"
-                    :config="legendConfig"
-                    @clickMarker="({legend}) => segregate(legend.id)"
-                >
-                    <template #item="{ legend }">
-                        <div @click="legend.segregate" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                            {{ legend.name }} : {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
-
-
-                        </div>
-                    </template>
-                </Legend>
-            </foreignObject>
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -597,7 +544,7 @@ defineExpose({
 
         <!-- LEGEND AS DIV -->
         <Legend
-            v-if="onionConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
+            v-if="onionConfig.style.chart.legend.show"
             :legendSet="immutableDataset"
             :config="legendConfig"
             @clickMarker="({legend}) => segregate(legend.id)"

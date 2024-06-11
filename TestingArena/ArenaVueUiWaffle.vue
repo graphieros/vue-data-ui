@@ -49,7 +49,6 @@ const model = ref([
     { key: 'style.chart.layout.rect.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
     { key: 'style.chart.layout.rect.useGradient', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.rect.gradientIntensity', def: 40, type: 'range', min: 0, max: 100},
-    { key: 'style.chart.layout.useDiv', def: true, type: 'checkbox'}, // DEPRECATED
     { key: 'style.chart.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 48},

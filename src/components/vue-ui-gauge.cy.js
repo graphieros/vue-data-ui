@@ -23,21 +23,6 @@ describe('<VueUiGauge />', () => {
         }
       });
 
-
-
-      cy.get(`[data-cy="gauge-text-title"]`)
-        .should('exist')
-        .contains(`${fixture.config.style.chart.title.text}`);
-
-      cy.get(`[data-cy="gauge-text-subtitle"]`)
-        .should('exist')
-        .contains(`${fixture.config.style.chart.title.subtitle.text}`);
-
-      cy.get(`[data-cy="gauge-text-base"]`)
-        .should('exist')
-        .contains(`${fixture.config.translations.base} : ${fixture.dataset.base}`);
-
-
       for (let i = 0; i < fixture.dataset.series.length; i += 1) {
         cy.get(`[data-cy="gauge-arc-${i}"]`).then(($arc) => {
           cy.wrap($arc)

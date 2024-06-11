@@ -63,7 +63,6 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "layout": {
-                    "useDiv": true,
                     "labels": {
                         "quadrantLabels": {
                             "show": true,
@@ -188,13 +187,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table",
-                "showPlotLabels": "Show plot labels"
-            }
+            "show": true
         },
         "translations": {
             "category": "Category",

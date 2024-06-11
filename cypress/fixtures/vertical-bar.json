@@ -58,7 +58,6 @@
                 "backgroundColor": "#FFFFFF",
                 "color": "#2D353C",
                 "layout": {
-                    "useDiv": true,
                     "bars": {
                         "sort": "desc",
                         "useStroke": false,
@@ -152,13 +151,7 @@
             }
         },
         "userOptions": {
-            "show": true,
-            "title": "options",
-            "labels": {
-                "useDiv": "Title & legend inside",
-                "showTable": "Show table",
-                "sort": "Sort desc"
-            }
+            "show": true
         },
         "table": {
             "show": false,

@@ -208,31 +208,22 @@ const mutableConfig = ref({
     plotLabels: {
         show: quadrantConfig.value.style.chart.layout.labels.plotLabels.show,
     },
-    inside: !quadrantConfig.value.style.chart.layout.useDiv,
     showTable: quadrantConfig.value.table.show
 });
 
-const isInside = computed(() => mutableConfig.value.inside);
-
-watch(isInside, (_) => {
-    positionAxisLabels();
-})
-
 const svg = computed(() => {
-    const offsetTop = mutableConfig.value.inside ? 100 : 0;
-    const offsetBottom = mutableConfig.value.inside ? 100 : 0;
     const padding = 48;
     return {
-        height: quadrantConfig.value.style.chart.height + offsetTop + offsetBottom,
+        height: quadrantConfig.value.style.chart.height,
         usableHeight: quadrantConfig.value.style.chart.height - padding * 2,
         width: quadrantConfig.value.style.chart.width,
         usableWidth: quadrantConfig.value.style.chart.width - padding * 2,
-        top: offsetTop + padding,
+        top: padding,
         left: padding,
         right: quadrantConfig.value.style.chart.width - padding,
-        bottom: quadrantConfig.value.style.chart.height + offsetTop - padding,
+        bottom: quadrantConfig.value.style.chart.height - padding,
         centerX: quadrantConfig.value.style.chart.width / 2,
-        centerY: quadrantConfig.value.style.chart.height + offsetTop - (quadrantConfig.value.style.chart.height / 2),
+        centerY: quadrantConfig.value.style.chart.height - (quadrantConfig.value.style.chart.height / 2),
         padding
     }
 });
@@ -941,7 +932,7 @@ defineExpose({
     <div :class="`vue-ui-quadrant ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${quadrantConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="quadrantChart" :id="`vue-ui-quadrant_${uid}`" :style="`font-family:${quadrantConfig.style.fontFamily};width:100%; text-align:center;${!quadrantConfig.style.chart.title.text ? 'padding-top: 36px' : ''};background:${quadrantConfig.style.chart.backgroundColor}`">
 
         <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && quadrantConfig.style.chart.title.text" :style="`width:100%;background:${quadrantConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div v-if="quadrantConfig.style.chart.title.text" :style="`width:100%;background:${quadrantConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
@@ -1000,33 +991,6 @@ defineExpose({
                     <stop offset="100%" :stop-color="d.color + opacity[quadrantConfig.style.chart.layout.areas.opacity]" />
                 </radialGradient>
             </defs>
-
-            <!-- TITLE AS G -->
-            <g v-if="quadrantConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="quadrant-text-title"
-                    :font-size="quadrantConfig.style.chart.title.fontSize"
-                    :fill="quadrantConfig.style.chart.title.color"
-                    :x="svg.width / 2"
-                    :y="quadrantConfig.style.chart.title.fontSize + 6"
-                    text-anchor="middle"
-                    :style="`font-weight:${quadrantConfig.style.chart.title.bold ? 'bold' : ''}`"
-                >
-                    {{ quadrantConfig.style.chart.title.text }}
-                </text>
-                <text
-                    data-cy="quadrant-text-subtitle"
-                    v-if="quadrantConfig.style.chart.title.subtitle.text"
-                    :font-size="quadrantConfig.style.chart.title.subtitle.fontSize"
-                    :fill="quadrantConfig.style.chart.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="quadrantConfig.style.chart.title.fontSize * 2 + 6"
-                    text-anchor="middle"
-                    :style="`font-weight:${quadrantConfig.style.chart.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ quadrantConfig.style.chart.title.subtitle.text }}
-                </text>
-            </g>
 
             <!-- GRID -->            
             <!-- GRADUATIONS-->
@@ -1334,28 +1298,6 @@ defineExpose({
                 </text>
             </g>
 
-            <!-- LEGEND AS G -->
-            <foreignObject
-                v-if="quadrantConfig.style.chart.legend.show && mutableConfig.inside && !isPrinting"
-                :x="0"
-                :y="svg.bottom + 36"
-                width="100%"
-                height="90"
-                style="overflow: visible;"
-            >
-                <Legend
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                    @clickMarker="({legend}) => segregate(legend.id)"
-                >
-                    <template #item="{ legend }">
-                        <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                            {{ legend.name }} 
-                        </div>
-                    </template>
-                </Legend>
-            </foreignObject>
-
             <!-- MINI MAP -->
             <g v-if="isZoom && selectedSide">
                 <rect
@@ -1433,9 +1375,8 @@ defineExpose({
             }"
         />
 
-        <!-- LEGEND AS DIV -->
         <Legend
-            v-if="quadrantConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
+            v-if="quadrantConfig.style.chart.legend.show"
             :legendSet="legendSet"
             :config="legendConfig"
             @clickMarker="({legend}) => segregate(legend.id)"

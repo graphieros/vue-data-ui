@@ -82,7 +82,6 @@ const agePyramidConfig = computed(() => {
 });
 
 const mutableConfig = ref({
-    inside: !agePyramidConfig.value.style.layout.useDiv,
     showTable: agePyramidConfig.value.table.show,
 });
 
@@ -379,7 +378,7 @@ defineExpose({
 <template>
     <div :class="`vue-ui-age-pyramid ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center;${!agePyramidConfig.style.title.text ? 'padding-top:36px' : ''};background:${agePyramidConfig.style.backgroundColor}`">
     
-        <div v-if="(!mutableConfig.inside || isPrinting) && agePyramidConfig.style.title.text" :style="`width:100%;background:${agePyramidConfig.style.backgroundColor}`">
+        <div v-if="agePyramidConfig.style.title.text" :style="`width:100%;background:${agePyramidConfig.style.backgroundColor}`">
             <Title
                 :config="{
                     title: {
@@ -452,31 +451,6 @@ defineExpose({
                     />
                 </linearGradient>
             </defs>
-
-            <!-- TITLE AS G -->
-            <g v-if="agePyramidConfig.style.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    :font-size="agePyramidConfig.style.title.fontSize"
-                    :fill="agePyramidConfig.style.title.color"
-                    :x="svg.width / 2"
-                    :y="0"
-                    text-anchor="middle"
-                    :style="`font-weight:${agePyramidConfig.style.title.bold ? 'bold' : ''}`"
-                >
-                    {{ agePyramidConfig.style.title.text }}
-                </text>
-                <text
-                    v-if="agePyramidConfig.style.title.subtitle.text"
-                    :font-size="agePyramidConfig.style.title.subtitle.fontSize"
-                    :fill="agePyramidConfig.style.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="agePyramidConfig.style.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${agePyramidConfig.style.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ agePyramidConfig.style.title.subtitle.text }}
-                </text>
-            </g>
 
             <g v-for="(segment, i) in drawableDataset">
                 <rect

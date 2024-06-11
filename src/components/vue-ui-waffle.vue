@@ -113,12 +113,11 @@ const customPalette = computed(() => {
 
 
 const mutableConfig = ref({
-    inside: !waffleConfig.value.style.chart.layout.useDiv,
     showTable: waffleConfig.value.table.show
 })
 
 const svg = computed(() => {
-    const height = mutableConfig.value.inside ? 704 : 512;
+    const height = 512;
     return {
         height,
         width: 512,
@@ -127,7 +126,7 @@ const svg = computed(() => {
 
 const drawingArea = computed(() => {
     return {
-        top: !mutableConfig.value.inside ? 0 : 64,
+        top: 0,
         left: 0,
         height: 512,
         width: 512,
@@ -612,7 +611,7 @@ defineExpose({
         :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center;${!waffleConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${waffleConfig.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
-        <div v-if="(!mutableConfig.inside || isPrinting) && waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div v-if="waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
@@ -666,33 +665,6 @@ defineExpose({
                 </radialGradient>
             </defs>
 
-            <!-- TITLE AS G -->
-            <g v-if="waffleConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="waffle-text-title"
-                    :font-size="waffleConfig.style.chart.title.fontSize"
-                    :fill="waffleConfig.style.chart.title.color"
-                    :x="svg.width / 2"
-                    :y="waffleConfig.style.chart.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${waffleConfig.style.chart.title.bold ? 'bold' : ''}`"
-                >
-                    {{ waffleConfig.style.chart.title.text }}
-                </text>
-                <text
-                    data-cy="waffle-text-subtitle"
-                    v-if="waffleConfig.style.chart.title.subtitle.text"
-                    :font-size="waffleConfig.style.chart.title.subtitle.fontSize"
-                    :fill="waffleConfig.style.chart.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="waffleConfig.style.chart.title.fontSize * 2"
-                    text-anchor="middle"
-                    :style="`font-weight:${waffleConfig.style.chart.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ waffleConfig.style.chart.title.subtitle.text }}
-                </text>
-            </g>
-
             <!-- RECTS -->
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
@@ -700,6 +672,7 @@ defineExpose({
                     <feColorMatrix type="saturate" values="0" />
                 </filter>
             </defs>
+
             <!-- CUSTOM CELLS SLOTS -->
             <template v-if="waffleConfig.useCustomCells">
                 <foreignObject 
@@ -781,34 +754,6 @@ defineExpose({
                 fill="transparent"
                 stroke="none"
             />
-
-            <!-- LEGEND AS G -->
-            <foreignObject
-                v-if="waffleConfig.style.chart.legend.show && mutableConfig.inside && !isPrinting"
-                :x="0"
-                :y="512 + 64"
-                width="100%"
-                height="100"
-                style="overflow: visible;"
-            >
-                <Legend
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                    @clickMarker="({legend}) => segregate(legend.uid)"
-                >
-                    <template #item="{ legend }">
-                        <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                            {{ legend.name }} : {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue}) }}
-                            <span v-if="!segregated.includes(legend.uid)">
-                                ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(waffleConfig.style.chart.legend.roundingPercentage)}}%)
-                            </span>
-                            <span v-else>
-                                ( - % )
-                            </span>
-                        </div>
-                    </template>
-                </Legend>
-            </foreignObject>
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -827,7 +772,7 @@ defineExpose({
 
         <!-- LEGEND AS DIV -->
         <Legend
-            v-if="waffleConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
+            v-if="waffleConfig.style.chart.legend.show"
             :legendSet="legendSet"
             :config="legendConfig"
             @clickMarker="({legend}) => segregate(legend.uid)"

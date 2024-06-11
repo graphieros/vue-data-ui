@@ -121,12 +121,11 @@ const mutableConfig = ref({
     dataLabels: {
         show: donutConfig.value.style.chart.layout.labels.dataLabels.show,
     },
-    inside: donutConfig.value.style.chart.layout.useDiv,
     showTable: donutConfig.value.table.show,
 });
 
 const svg = computed(() => {
-    const height = mutableConfig.value.inside || isPrinting.value ? 512: 360;
+    const height = isPrinting.value ? 512: 360;
     return {
         height,
         width: 512
@@ -508,7 +507,7 @@ defineExpose({
 
 <template>
     <div ref="donutChart" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${!donutConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutConfig.style.chart.backgroundColor}`" :id="`donut__${uid}`">
-        <div v-if="(!mutableConfig.inside || isPrinting) && donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        <div v-if="donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
@@ -564,33 +563,6 @@ defineExpose({
                     <stop offset="100%" :stop-color="`${convertColorToHex(donutConfig.style.chart.backgroundColor)}00`" />
                 </radialGradient>
             </defs>
-
-            <!-- TITLE AS G -->
-            <g v-if="donutConfig.style.chart.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="donut-text-title"
-                    :font-size="donutConfig.style.chart.title.fontSize"
-                    :fill="donutConfig.style.chart.title.color"
-                    :x="svg.width / 2"
-                    :y="24"
-                    text-anchor="middle"
-                    :style="`font-weight:${donutConfig.style.chart.title.bold ? 'bold' : ''}`"
-                >
-                    {{ donutConfig.style.chart.title.text }}
-                </text>
-                <text
-                    data-cy="donut-text-subtitle"
-                    v-if="donutConfig.style.chart.title.subtitle.text"
-                    :font-size="donutConfig.style.chart.title.subtitle.fontSize"
-                    :fill="donutConfig.style.chart.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="24 + donutConfig.style.chart.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${donutConfig.style.chart.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ donutConfig.style.chart.title.subtitle.text }}
-                </text>
-            </g>
 
             <!-- LABEL CONNECTOR -->
             <defs>
@@ -789,39 +761,6 @@ defineExpose({
                     </text>
                 </g>
             </g>
-
-            <!-- LEGEND AS G -->
-            <foreignObject 
-                v-if="donutConfig.style.chart.legend.show && mutableConfig.inside && !isPrinting"
-                :x="0"
-                :y="svg.height / 2 + 150"
-                width="100%"
-                height="100"
-                style="overflow:visible"
-            >
-                <Legend
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                    @clickMarker="({i}) => segregate(i)"
-                >
-                    <template #item="{ legend, index }">
-                        <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                            {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
-                            <span v-if="!segregated.includes(index)">
-                                ({{ isNaN(legend.value / total) ? '-' : dataLabel({
-                                    v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
-                                    s: '%',
-                                    r: donutConfig.style.chart.legend.roundingPercentage
-                                })}})
-                            </span>
-                            <span v-else>
-                                ( {{ dashLabel(legend.proportion * 100) }} % )
-                            </span>
-                        </div>
-                    </template>
-                </Legend>
-            </foreignObject>
-
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -839,10 +778,8 @@ defineExpose({
             }"
         />
 
-        <!-- LEGEND AS DIV -->
-
         <Legend
-            v-if="donutConfig.style.chart.legend.show && (!mutableConfig.inside || isPrinting)"
+            v-if="donutConfig.style.chart.legend.show"
             :legendSet="legendSet"
             :config="legendConfig"
             @clickMarker="({i}) => segregate(i)"

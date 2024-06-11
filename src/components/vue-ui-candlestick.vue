@@ -86,7 +86,6 @@ const candlestickConfig = computed(() => {
 });
 
 const mutableConfig = ref({
-    inside: !candlestickConfig.value.style.layout.useDiv,
     showTable: candlestickConfig.value.table.show
 });
 
@@ -417,7 +416,7 @@ defineExpose({
 
 <template>
     <div ref="candlestickChart" :class="`vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`position:relative;font-family:${candlestickConfig.style.fontFamily}; text-align:center;${!candlestickConfig.style.title.text ? 'padding-top:36px' : ''};background:${candlestickConfig.style.backgroundColor}`" :id="`vue-ui-candlestick_${uid}`">
-        <div v-if="(!mutableConfig.inside || isPrinting) && candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
+        <div v-if="candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
@@ -479,33 +478,6 @@ defineExpose({
                     <stop offset="100%" :stop-color="`${shiftHue(candlestickConfig.style.layout.candle.colors.bullish, 0.05)}66`"/>
                 </linearGradient>
             </defs>
-
-            <!-- TITLE AS G -->
-            <g v-if="candlestickConfig.style.title.text && mutableConfig.inside && !isPrinting">
-                <text
-                    data-cy="candlestick-text-title"
-                    :font-size="candlestickConfig.style.title.fontSize"
-                    :fill="candlestickConfig.style.title.color"
-                    :x="svg.width / 2"
-                    :y="0"
-                    text-anchor="middle"
-                    :style="`font-weight:${candlestickConfig.style.title.bold ? 'bold' : ''}`"
-                >
-                    {{ candlestickConfig.style.title.text }}
-                </text>
-                <text
-                    data-cy="candlestick-text-subtitle"
-                    v-if="candlestickConfig.style.title.subtitle.text"
-                    :font-size="candlestickConfig.style.title.subtitle.fontSize"
-                    :fill="candlestickConfig.style.title.subtitle.color"
-                    :x="svg.width / 2"
-                    :y="candlestickConfig.style.title.fontSize"
-                    text-anchor="middle"
-                    :style="`font-weight:${candlestickConfig.style.title.subtitle.bold ? 'bold' : ''}`"
-                >
-                    {{ candlestickConfig.style.title.subtitle.text }}
-                </text>
-            </g>
 
             <!-- AXIS -->
             <g v-if="candlestickConfig.style.layout.grid.show">
