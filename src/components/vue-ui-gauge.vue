@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { 
     addVector, 
     convertColorToHex, 
@@ -122,6 +122,11 @@ const min = ref(0);
 
 const activeRating = ref(gaugeConfig.value.style.chart.animation.use ? 0 : props.dataset.value);
 
+watch(() => props.dataset.value, () => {
+    activeRating.value = gaugeConfig.value.style.chart.animation.use ? 0 : props.dataset.value
+    useAnimation()
+})
+
 const pointer = computed(() => {
     const x = svg.value.width / 2;
     const y = svg.value.height * 0.69;
@@ -203,6 +208,10 @@ onMounted(() => {
 
         }
     }
+    useAnimation()
+});
+
+function useAnimation() {
     const arr = [];
     (mutableDataset.value.series || []).forEach(serie => {
         arr.push(serie.from || 0);
@@ -227,7 +236,7 @@ onMounted(() => {
         activeRating.value = min.value;
         animate();
     }
-});
+}
 
 function createArc([cx, cy], [rx, ry], [position, ratio], phi) {
     ratio = ratio % Math.PI;
