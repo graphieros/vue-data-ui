@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
@@ -94,6 +94,11 @@ const bounds = computed(() => {
 
 const currentScore = ref(sparkgaugeConfig.value.style.animation.show ? bounds.value.min : props.dataset.value);
 
+watch(() => props.dataset.value, () => {
+    currentScore.value = ref(sparkgaugeConfig.value.style.animation.show ? bounds.value.min : props.dataset.value)
+    useAnimation()
+})
+
 const controlScore = computed(() => {
     if (currentScore.value > bounds.value.max) {
         return bounds.value.max;
@@ -109,6 +114,10 @@ const animationTick = computed(() => {
 })
 
 onMounted(() => {
+    useAnimation()
+})
+
+function useAnimation() {
     function animate() {
         currentScore.value += animationTick.value;
         if(currentScore.value < props.dataset.value) {
@@ -121,7 +130,7 @@ onMounted(() => {
         currentScore.value = bounds.value.min;
         animate();
     }
-})
+}
 
 const nameLabel = computed(() => {
     return props.dataset.title ?? ''
