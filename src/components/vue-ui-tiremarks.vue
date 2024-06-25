@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import pdf from "../pdf";
 import img from "../img";
 import { useNestedProp } from "../useNestedProp";
@@ -63,6 +63,11 @@ const tiremarksConfig = computed(() => {
 
 const activeValue = ref(tiremarksConfig.value.style.chart.animation.use ? 0 : props.dataset.percentage);
 
+watch(() => props.dataset.percentage, () => {
+    activeValue.value = ref(tiremarksConfig.value.style.chart.animation.use ? 0 : props.dataset.percentage);
+    useAnimation()
+})
+
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
         error({
@@ -71,6 +76,10 @@ onMounted(() => {
         })
     }
 
+    useAnimation()
+});
+
+function useAnimation() {
     let acceleration = 0;
     let speed = tiremarksConfig.value.style.chart.animation.speed;
     let incr = (0.005) * tiremarksConfig.value.style.chart.animation.acceleration;
@@ -88,7 +97,7 @@ onMounted(() => {
         activeValue.value = 0;
         animate();
     }
-});
+}
 
 const isVertical = computed(() => {
     return tiremarksConfig.value.style.chart.layout.display === 'vertical';
