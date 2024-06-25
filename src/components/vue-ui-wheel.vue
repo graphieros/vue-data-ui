@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import pdf from "../pdf";
 import img from "../img";
 import mainConfig from "../default_configs.json";
@@ -85,6 +85,11 @@ function calcTickStart(angle, distance = 1) {
 
 const activeValue = ref(wheelConfig.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
 
+watch(() => props.dataset.percentage, () => {
+    activeValue.value = ref(wheelConfig.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
+    useAnimation()
+})
+
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
         error({
@@ -92,7 +97,10 @@ onMounted(() => {
             type: 'dataset'
         })
     }
+    useAnimation()
+})
 
+function useAnimation() {
     let acceleration = 0;
     let speed = wheelConfig.value.style.chart.animation.speed;
     let incr = (0.005) * wheelConfig.value.style.chart.animation.acceleration;
@@ -110,7 +118,7 @@ onMounted(() => {
         activeValue.value = 0;
         animate()
     }
-})
+}
 
 const ticks = computed(() => {
     const tickArray = [];
