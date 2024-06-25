@@ -1,24 +1,35 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiGauge from '../src/components/vue-ui-gauge.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref({
+const source = ref({
     base: 100,
     value: 25,
     series: [
         { from: -100, to: 0 },
         { from: 0, to: 100 }
     ]
-});
+})
+
+const dataset = computed(() => {
+    return source.value
+})
+
+onMounted(() => {
+    setTimeout(() => {
+        source.value.value = -30
+        step.value += 1
+    }, 3000)
+})
 
 const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.animation.use', def: true, type: 'checkbox'},
+    { key: 'style.chart.animation.use', def: false, type: 'checkbox'},
     { key: 'style.chart.animation.speed', def: 1, type: 'range', min: 0, max: 100},
     { key: 'style.chart.animation.acceleration', def: 1, type: 'range', min: 0, max: 10},
     { key: 'style.chart.layout.track.size', def: 1, type: 'range', min: 0.5, max: 2, step: 0.01},

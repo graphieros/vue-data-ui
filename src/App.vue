@@ -86,7 +86,7 @@ const components = ref([
   /*____ */"VueUiWordCloud", // 37
 ]);
 
-const selectedComponent = ref(components.value[37]);
+const selectedComponent = ref(components.value[8]);
 
 </script>
 

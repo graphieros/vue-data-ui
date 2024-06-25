@@ -1,11 +1,18 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiWheel from '../src/components/vue-ui-wheel.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
 const dataset = ref({ percentage: 99 })
+
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value.percentage = 10
+    }, 3000)
+})
 
 const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},

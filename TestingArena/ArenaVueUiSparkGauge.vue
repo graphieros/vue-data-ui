@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiSparkgauge from '../src/components/vue-ui-sparkgauge.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -11,6 +11,12 @@ const dataset = ref({
     max: 10,
     title: 'KPI 1'
 });
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value.value = 3
+    }, 3000)
+})
 
 const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
