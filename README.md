@@ -12,7 +12,7 @@
 ![Static Badge](https://img.shields.io/badge/components-50-blue)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
-![NPM](https://img.shields.io/npm/l/vue-data-ui)
+![npm](https://img.shields.io/npm/l/vue-data-ui)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
