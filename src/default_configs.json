@@ -4234,5 +4234,37 @@
                 "suffix": ""
             }
         }
+    },
+    "vue_ui_xy_canvas": {
+        "customPalette": [],
+        "style": {
+            "chart": {
+                "aspectRatio": "12 / 9",
+                "stacked": false,
+                "scale": {
+                    "ticks": 5
+                },
+                "grid": {
+                    "y": {
+                        "showAxis": true,
+                        "axisColor": "#2D353C",
+                        "axisThickness": 2
+                    },
+                    "x": {
+                        "showAxis": true,
+                        "axisColor": "#2D353C",
+                        "axisThickness": 2
+                    }
+                },
+                "paddingProportions": {
+                    "top": 0.1,
+                    "left": 0.05,
+                    "right": 0.05,
+                    "bottom": 0.1
+                },
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C"
+            }
+        }
     }
 }

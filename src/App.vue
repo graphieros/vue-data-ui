@@ -39,6 +39,7 @@ import ArenaVueUi3dBar from "../TestingArena/ArenaVueUi3dBar.vue";
 import ArenaVueUiTableSparkline from "../TestingArena/ArenaVueUiTableSparkline.vue";
 import ArenaVueUiTableHeatmap from "../TestingArena/ArenaVueUiTableHeatmap.vue";
 import ArenaVueUiWordCloud from "../TestingArena/ArenaVueUiWordCloud.vue";
+import ArenaVueUiXyCanvas from "../TestingArena/ArenaVueUiXyCanvas.vue";
 
 import WordCloud from './components/vue-ui-word-cloud.vue';
 import VueDataUi from "./components/vue-data-ui.vue";
@@ -84,9 +85,10 @@ const components = ref([
   /**/"VueUiTableSparkline", // 35
   /*__*/"VueUiTableHeatmap", // 36
   /*____ */"VueUiWordCloud", // 37
+  /*______*/"VueUiXyCanvas", // 38
 ]);
 
-const selectedComponent = ref(components.value[8]);
+const selectedComponent = ref(components.value[0]);
 
 </script>
 
@@ -214,4 +216,7 @@ const selectedComponent = ref(components.value[8]);
 
   <!-- 37 -->
   <ArenaVueUiWordCloud v-if="selectedComponent === 'VueUiWordCloud'" />
+
+  <!-- 38 -->
+  <ArenaVueUiXyCanvas v-if="selectedComponent === 'VueUiXyCanvas'" />
 </template>
