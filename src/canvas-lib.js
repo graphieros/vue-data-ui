@@ -7,6 +7,7 @@
  * @param {number} radius - The radius of the circle.
  * @param {Object} [options] - Optional drawing options.
  * @param {string} [options.color] - Stroke color for the circle.
+ * @param {string} [options.fillStyle] - Fill color for the circle.
  * @param {number} [options.lineWidth] - Width of the circle's stroke.
  * @param {string} [options.lineCap] - Line cap style.
  * @param {string} [options.lineJoin] - Line join style.
@@ -31,7 +32,8 @@ export function circle(ctx, center, radius, options = {}) {
         shadowColor = null,
         shadowBlur = 0,
         shadowOffsetX = 0,
-        shadowOffsetY = 0
+        shadowOffsetY = 0,
+        fillStyle = '#FFFFFF'
     } = options;
 
     ctx.beginPath();
@@ -56,6 +58,12 @@ export function circle(ctx, center, radius, options = {}) {
     if (shadowBlur) {
         ctx.shadowBlur = shadowBlur;
     }
+
+    if (fillStyle) {
+        ctx.fillStyle = fillStyle;
+    }
+
+    if (ctx.fillStyle) ctx.fill();
 
     ctx.stroke();
     ctx.restore();
@@ -410,9 +418,69 @@ export function text(ctx, text, x, y, options = {}) {
     ctx.restore();
 }
 
+/**
+ * Debounces a function so that it will only execute after a specified delay 
+ * since the last time it was invoked.
+ * 
+ * @param {Function} func - The function to debounce.
+ * @param {number} wait - The number of milliseconds to wait before invoking the function.
+ * @param {boolean} [immediate=false] - If true, trigger the function on the leading edge instead of the trailing.
+ * @returns {Function} - The debounced function.
+ */
+export function debounce(func, wait, immediate = false) {
+    let timeout;
+
+    return function(...args) {
+        const context = this;
+        const later = function() {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
+
+        const callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+
+        if (callNow) func.apply(context, args);
+    };
+}
+
+export function cloneCanvas(oldCanvas) {
+    const newCanvas = document.createElement('canvas');
+    const context = newCanvas.getContext('2d');
+    newCanvas.width = oldCanvas.width;
+    newCanvas.height = oldCanvas.height;
+    context.drawImage(oldCanvas, 0, 0);
+    return newCanvas;
+}
+
+export function fillStackRatios(ds) {
+    let totalRatio = ds.reduce((sum, obj) => sum + (obj.stackRatio || 0), 0);
+
+    let countWithoutRatio = ds.filter(obj => obj.stackRatio === undefined).length;
+
+    if (countWithoutRatio === 0 && totalRatio !== 1) {
+        throw new Error("Provided ratios do not sum to 1.");
+    }
+
+    let remainingRatio = 1 - totalRatio;
+
+    let defaultRatio = remainingRatio / countWithoutRatio;
+
+    return ds.map(d => {
+        if (d.stackRatio === undefined) {
+            return { ...d, stackRatio: defaultRatio };
+        }
+        return d;
+    });
+}
+
 const lib = {
     circle,
+    cloneCanvas,
+    debounce,
     line,
+    fillStackRatios,
     polygon,
     rect,
     text
