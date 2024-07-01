@@ -32,6 +32,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    hasStack: {
+        type: Boolean,
+        default: false,
+    },
     color: {
         type: String,
     },
@@ -63,10 +67,14 @@ const props = defineProps({
     isFullscreen: {
         type: Boolean,
         default: false,
+    },
+    isStacked:  {
+        type: Boolean,
+        default: false
     }
 });
 
-const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen']);
+const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack']);
 
 function generatePdf() {
     emit('generatePdf');
@@ -116,6 +124,13 @@ function toggleLabels() {
 
 function toggleSort() {
     emit('toggleSort')
+}
+
+const isItStacked = ref(props.isStacked);
+
+function toggleStack() {
+    isItStacked.value = !isItStacked.value;
+    emit('toggleStack')
 }
 
 const isFullscreen = ref(false);
@@ -183,6 +198,11 @@ onBeforeUnmount(() => {
 
             <button tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
                 <BaseIcon name="sort" :stroke="color"/>
+            </button>
+
+            <button tabindex="0" v-if="hasStack" class="vue-ui-user-options-button" @click="toggleStack">
+                <BaseIcon v-if="isItStacked" name="unstack" :stroke="color"/>
+                <BaseIcon v-else name="stack" :stroke="color"/>
             </button>
 
             <button tabindex="0" v-if="hasFullscreen" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
