@@ -61,7 +61,8 @@ const components = {
     VueUiSparkTrend: defineAsyncComponent(() => import('./vue-ui-spark-trend.vue')),
     VueUiStripPlot: defineAsyncComponent(() => import('./vue-ui-strip-plot.vue')),
     VueUiDumbbell: defineAsyncComponent(() => import('./vue-ui-dumbbell.vue')),
-    VueUiWordCloud: defineAsyncComponent(() => import('./vue-ui-word-cloud.vue'))
+    VueUiWordCloud: defineAsyncComponent(() => import('./vue-ui-word-cloud.vue')),
+    VueUiXyCanvas: defineAsyncComponent(() => import('./vue-ui-xy-canvas.vue')),
 };
 
 const componentProps = {
@@ -113,7 +114,8 @@ const componentProps = {
     VueUiSparkTrend: ['config', 'dataset'],
     VueUiStripPlot: ['config', 'dataset'],
     VueUiDumbbell: ['config', 'dataset'],
-    VueUiWordCloud: ['config', 'dataset']
+    VueUiWordCloud: ['config', 'dataset'],
+    VueUiXyCanvas: ['config', 'dataset']
 };
 
 const emit = defineEmits([

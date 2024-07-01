@@ -52,6 +52,7 @@ import VueUiSparkTrend from "./components/vue-ui-spark-trend.vue";
 import VueUiStripPlot from "./components/vue-ui-strip-plot.vue";
 import VueUiDumbbell from "./components/vue-ui-dumbbell.vue";
 import VueUiWordCloud from "./components/vue-ui-word-cloud.vue";
+import VueUiXyCanvas from "./components/vue-ui-xy-canvas.vue";
 import { getPalette, createWordCloudDatasetFromPlainText } from "./lib";
 
 export { 
@@ -110,5 +111,6 @@ export {
     VueUiSparkTrend,
     VueUiStripPlot,
     VueUiDumbbell,
-    VueUiWordCloud
+    VueUiWordCloud,
+    VueUiXyCanvas
 };

@@ -9,19 +9,19 @@ function refresh() {
     <button class="reset" @click="refresh">RESET</button>
     <h1><slot name="title"/></h1>
     <div class="box">
-        <div style="width:100%; max-width: 600px">
+        <div style="width:100%;">
             <p>Local</p>
             <slot name="local"/>
         </div>
-        <div style="width:100%; max-width: 600px">
+        <div style="width:100%;">
             <p>VueDataUi Local</p>
             <slot name="VDUI-local"/>
         </div>
-        <div style="width: 100%; max-width: 600px">
+        <div style="width: 100%;">
             <p>Build</p>
             <slot name="build"/>
         </div>
-        <div style="width: 100%; max-width: 600px">
+        <div style="width: 100%;">
             <p>VueDataUi build</p>
             <slot name="VDUI-build"/>
         </div>
@@ -51,7 +51,7 @@ h1, p {
     justify-items: center;
     gap: 12px;
     width: 100%;
-    max-width: 1300px;
+    max-width: 1600px;
     margin: 0 auto;
 }
 .config {
@@ -59,13 +59,13 @@ h1, p {
     margin: 24px 0;
     padding: 0 24px;
     width: 100%;
-    max-width: 1300px;
+    max-width: 1600px;
     margin: 0 auto;
 }
 .knobs {
     margin: 0 auto;
     width: 100%;
-    max-width: 1300px;
+    max-width: 1600px;
     padding: 0 24px;
     margin-top: 24px;
 }
