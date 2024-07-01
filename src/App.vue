@@ -88,7 +88,7 @@ const components = ref([
   /*______*/"VueUiXyCanvas", // 38
 ]);
 
-const selectedComponent = ref(components.value[0]);
+const selectedComponent = ref(components.value[38]);
 
 </script>
 
