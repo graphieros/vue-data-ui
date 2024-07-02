@@ -221,7 +221,7 @@ const formattedDataset = computed(() => {
         .map((ds, i) => {
             const min = Math.min(...ds.series);
             const max = Math.max(...ds.series);
-            const localScale = calculateNiceScale(min < 0 ? min : 0, max === min ? min + 1 : max, ds.scaleSteps || xyConfig.value.style.chart.scale.ticks);
+            const localScale = calculateNiceScale(min < 0 ? min : 0, max === min ? min + 1 < 0 ? 0 : min + 1 : max < 0 ? 0 : max, ds.scaleSteps || xyConfig.value.style.chart.scale.ticks);
             const localMin = localScale.min < 0 ? Math.abs(localScale.min) : 0;
             const localZero = drawingArea.value.bottom - (hUnit * i) - ((hUnit * stackGapRatio.value) * (localMin / ((localScale.max) + localMin)));
             const localYLabels = localScale.ticks.map(t => {
