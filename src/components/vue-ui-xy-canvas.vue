@@ -1255,6 +1255,8 @@ defineExpose({
             </template>
         </Legend>
 
+        <slot name="legend" v-bind:legend="legendSet" />
+
         <Accordion v-if="slicer.end - slicer.start < 200" hideDetails :config="{
             open: mutableConfig.showTable,
             maxHeight: 10000,
