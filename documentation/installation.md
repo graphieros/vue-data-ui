@@ -168,6 +168,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiWheel`          | `VueUiWheelDataset`                    | `VueUiWheelConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`                                                                  | ❌             | ✅     |
 | `VueUiWordCloud`      | `VueUiWordCloudDatasetItem[] / string` | `VueUiWordCloudConfig`      | `getData`, `generatePdf`, `generateImage`, `generateCsv`                                                | `#svg`                                                                  | ❌             | ✅     |
 | `VueUiXy`             | `VueUiXyDatasetItem[]`                 | `VueUiXyConfig`             | `@selectLegend`, `@selectX`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                   | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action` | ✅             | ✅     |
+| `VueUiXyCanvas`       | `VueUiXyCanvasDatasetItem[]`           | `VueUiXyCanvasConfig`       | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`         | ✅             | ✅     |
 
 ### 3D charts
 
@@ -244,6 +245,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiWaffle
 - VueUiWordCloud
 - VueUiXy
+- VueUiXyCanvas
 
 If the array of colors provided in customPalette is too small for the dataset, remaining colors will be computed from the default internal palette.
 Accepted color formats: HEX, RGB, HSL, named colors.

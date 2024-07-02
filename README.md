@@ -9,7 +9,7 @@
 # vue-data-ui
 
 ![npm](https://img.shields.io/npm/v/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-50-blue)
+![Static Badge](https://img.shields.io/badge/components-51-blue)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
@@ -51,6 +51,7 @@ Available components
 - [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
 - [VueUiWordCloud](https://vue-data-ui.graphieros.com/docs#vue-ui-word-cloud)
 - [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
+- [VueUiXyCanvas](https://vue-data-ui.graphieros.com/docs#vue-ui-xy-canvas)
 
 ## Mini charts
 
@@ -244,6 +245,7 @@ The following charts bear these slots:
 - VueUiVerticalBar
 - VueUiXy \*
 - VueUiwaffle
+- VueUiXyCanvas
 
 \* VueUiXy slots specifically expose the following additional attributes:
 
@@ -384,6 +386,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiWheel`          | `VueUiWheelDataset`                    | `VueUiWheelConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`                                                                  | ❌             | ✅     |
 | `VueUiWordCloud`      | `VueUiWordCloudDatasetItem[] / string` | `VueUiWordCloudConfig`      | `getData`, `generatePdf`, `generateImage`, `generateCsv`                                                | `#svg`                                                                  | ❌             | ✅     |
 | `VueUiXy`             | `VueUiXyDatasetItem[]`                 | `VueUiXyConfig`             | `@selectLegend`, `@selectX`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                   | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action` | ✅             | ✅     |
+| `VueUiXyCanvas`       | `VueUiXyCanvasDatasetItem[]`           | `VueUiXyCanvasConfig`       | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`         | ✅             | ✅     |
 
 ### 3D charts
 
@@ -460,6 +463,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiWaffle
 - VueUiWordCloud
 - VueUiXy
+- VueUiXyCanvas
 
 If the array of colors provided in customPalette is too small for the dataset, remaining colors will be computed from the default internal palette.
 Accepted color formats: HEX, RGB, HSL, named colors.
