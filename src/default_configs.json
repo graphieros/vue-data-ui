@@ -4361,7 +4361,7 @@
                 "line": {
                     "plots": {
                         "show": true,
-                        "radiusRatio": 0
+                        "radiusRatio": 1
                     }
                 },
                 "area": {

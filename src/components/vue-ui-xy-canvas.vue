@@ -416,7 +416,8 @@ function setupChart() {
                     label.y,
                     {
                         align: 'right',
-                        font: `${w.value / 40 * xyConfig.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`
+                        font: `${w.value / 40 * xyConfig.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`,
+                        color: xyConfig.value.style.chart.grid.y.axisLabels.color
                     }
                 );
             });
