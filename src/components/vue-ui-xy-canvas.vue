@@ -162,9 +162,9 @@ function createDatapointCoordinates({ series, min, max, scale, stackIndex = null
 }
 
 const absoluteExtremes = computed(() => {
-    const min = Math.min(...props.dataset.filter((_, i) => !segregated.value.includes(i)).flatMap(ds => ds.series));
-    const max = Math.max(...props.dataset.filter((_, i) => !segregated.value.includes(i)).flatMap(ds => ds.series));
-    const scale = calculateNiceScale(min, max === min ? min + 1 : max, xyConfig.value.style.chart.scale.ticks);
+    const min = Math.min(...props.dataset.filter((_, i) => !segregated.value.includes(i)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
+    const max = Math.max(...props.dataset.filter((_, i) => !segregated.value.includes(i)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
+    const scale = calculateNiceScale(min < 0 ? min : 0, max === min ? min + 1 < 0 ? 0 : min + 1 : max < 0 ? 0 : max, xyConfig.value.style.chart.scale.ticks);
 
     const absoluteMin = scale.min < 0 ? Math.abs(scale.min) : 0;
     const zero = drawingArea.value.bottom - (drawingArea.value.height * (absoluteMin / ((scale.max) + absoluteMin)));
@@ -1148,7 +1148,7 @@ defineExpose({
 </script>
 
 <template>
-    <div style="width:100%; position: relative" ref="xy" :id="`xy_canvas_${uid}`">    
+    <div style="width:100%; position: relative" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`">    
         <div v-if="xyConfig.style.chart.title.text"
             :style="`width:100%;background:${xyConfig.style.chart.backgroundColor};`">
             <Title :config="{
