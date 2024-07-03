@@ -190,7 +190,7 @@ const absoluteExtremes = computed(() => {
 const tootlipDataset = computed(() => {
     return formattedDataset.value.map(ds => {
         return `
-            <div>
+            <div style="display:flex;flex-direction:row;gap:6px;align-items:center;">
                 <svg viewBox="0 0 10 10" height="12" width="12">
                     <circle cx="5" cy="5" r="5" fill="${ds.color}"/>
                 </svg>
