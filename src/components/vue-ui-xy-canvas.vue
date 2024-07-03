@@ -782,7 +782,7 @@ function drawLineOrArea(ds) {
             [{ x: ds.coordinatesLine[0].x, y: absoluteExtremes.value.zero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: absoluteExtremes.value.zero }],
             {
                 fillColor: ds.color + opacity[xyConfig.value.style.chart.area.opacity],
-                strokeColor: 'transparent'
+                strokeColor: 'transparent',
             }
         );
     } else {
@@ -1079,7 +1079,7 @@ const dataTable = computed(() => {
             return ds.series[i] ?? 0
         }).reduce((a,b ) => a + b, 0)
 
-        body.push([xyConfig.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? '-'].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(xyConfig.value.table.rounding))).concat((sum ?? 0).toFixed(xyConfig.value.table.rounding)))
+        body.push([xyConfig.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(xyConfig.value.table.rounding))).concat((sum ?? 0).toFixed(xyConfig.value.table.rounding)))
     }
 
     const config = {
@@ -1114,13 +1114,13 @@ const tableCsv = computed(() => {
 
     const body = [];
 
-    xyConfig.value.style.chart.grid.y.timeLabels.values.forEach((t, i) => {
-        const row = [t];
+    for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
+        const row = [xyConfig.value.style.chart.grid.y.timeLabels.values[i] || i + 1];
         formattedDataset.value.forEach(s => {
             row.push(Number((s.series[i] || 0).toFixed(xyConfig.value.table.rounding)))
         });
         body.push(row);
-    })
+    }
 
     return { head, body};
 })
