@@ -35,6 +35,8 @@
             hasImg
             hasLabel
             hasTable
+            :hasStack="dataset.length > 1"
+            :isStacked="mutableConfig.isStacked"
             hasFullscreen
             :isFullscreen="isFullscreen"
             :chartElement="$refs.chart"
@@ -44,6 +46,7 @@
             @generateImage="generateImage"
             @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
             @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
+            @toggleStack="toggleStack"
         />
         
         <svg xmlns="http://www.w3.org/2000/svg" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
@@ -60,7 +63,7 @@
                         :y2="drawingArea.bottom"
                         stroke-linecap="round"
                     />
-                    <template v-if="!chartConfig.chart.grid.labels.yAxis.useIndividualScale">
+                    <template v-if="!mutableConfig.useIndividualScale">
                         <line
                             v-if="chartConfig.chart.grid.labels.yAxis.showBaseline"
                             data-cy="xy-grid-line-y"
@@ -179,9 +182,9 @@
                                 :data-cy="`xy-bar-${i}-${j}`"
                                 v-if="canShowValue(plot.value)"
                                 :x="calcRectX(plot)"
-                                :y="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
-                                :height="chartConfig.chart.grid.labels.yAxis.useIndividualScale ? calcIndividualHeight(plot) : calcRectHeight(plot)"
-                                :width="calcRectWidth() - (chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? 0 : barPeriodGap)"
+                                :y="mutableConfig.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
+                                :height="mutableConfig.useIndividualScale ? calcIndividualHeight(plot) : calcRectHeight(plot)"
+                                :width="calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap)"
                                 :rx="chartConfig.bar.borderRadius"
                                 :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                                 :stroke="chartConfig.bar.border.useSerieColor ? serie.color : chartConfig.bar.border.stroke"
@@ -229,7 +232,7 @@
                 </template>
 
                 <!-- ZERO LINE (AFTER BAR DATASETS, BEFORE LABELS) -->
-                <template v-if="!chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.zeroLine.show">
+                <template v-if="!mutableConfig.useIndividualScale && chartConfig.chart.grid.labels.zeroLine.show">
                     <line
                         data-cy="xy-grid-line-x"
                         :stroke="chartConfig.chart.grid.stroke" 
@@ -333,7 +336,7 @@
                     <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea && serie.plots.length > 1">
                         <path 
                             v-if="serie.smooth" 
-                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"
+                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"
                         />
                         <path v-else :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
                     </g>
@@ -424,7 +427,7 @@
                             <text
                                 :data-cy="`xy-bar-label-x-${i}-${j}`"
                                 v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && chartConfig.bar.labels.show"
-                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : calcRectX(plot) + calcRectWidth() / 2 - barPeriodGap / 2"
+                                :x="mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : calcRectX(plot) + calcRectWidth() / 2 - barPeriodGap / 2"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.labels.offsetY : - chartConfig.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="chartConfig.chart.labels.fontSize"
@@ -434,7 +437,7 @@
                             </text>
                             <text 
                                 v-if="plot && chartConfig.bar.serieName.show"
-                                :x="chartConfig.chart.grid.labels.yAxis.useIndividualScale && chartConfig.chart.grid.labels.yAxis.stacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1"
+                                :x="mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.serieName.offsetY : - chartConfig.bar.serieName.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="chartConfig.chart.labels.fontSize"
@@ -657,13 +660,13 @@
 
                 <!-- Y LABELS -->
                 <g v-if="chartConfig.chart.grid.labels.show">
-                    <template v-if="chartConfig.chart.grid.labels.yAxis.useIndividualScale">
+                    <template v-if="mutableConfig.useIndividualScale">
                         <g v-for="el in allScales">
                             <line 
                                 :x1="el.x"
                                 :x2="el.x"
-                                :y1="chartConfig.chart.grid.labels.yAxis.stacked ? (drawingArea.bottom - el.yOffset - el.individualHeight) : drawingArea.top"
-                                :y2="chartConfig.chart.grid.labels.yAxis.stacked ? (drawingArea.bottom - el.yOffset) : drawingArea.bottom"
+                                :y1="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset - el.individualHeight) : drawingArea.top"
+                                :y2="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset) : drawingArea.bottom"
                                 :stroke="el.color"
                                 :stroke-width="chartConfig.chart.grid.stroke"
                                 stroke-linecap="round"
@@ -675,7 +678,7 @@
                                 :fill="el.color"
                                 :font-size="chartConfig.chart.grid.labels.fontSize"
                                 text-anchor="middle"
-                                :transform="`translate(${el.x - chartConfig.chart.grid.labels.yAxis.labelWidth + 5}, ${chartConfig.chart.grid.labels.yAxis.stacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                                :transform="`translate(${el.x - chartConfig.chart.grid.labels.yAxis.labelWidth + 5}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                             >
                                 {{ el.name }} {{ el.scaleLabel ? `- ${el.scaleLabel}` : '' }}
                             </text>
@@ -731,7 +734,7 @@
                 </g>
 
                 <!-- Y LABELS MOUSE TRAPS -->
-                <template v-if="chartConfig.chart.grid.labels.yAxis.useIndividualScale && !chartConfig.chart.grid.labels.yAxis.stacked">
+                <template v-if="mutableConfig.useIndividualScale && !mutableConfig.isStacked">
                     <rect 
                         v-for="trap in allScales"
                         :x="trap.x - chartConfig.chart.grid.labels.yAxis.labelWidth"
@@ -748,7 +751,7 @@
                 <g>
                     <text 
                         data-cy="xy-axis-yLabel" 
-                        v-if="chartConfig.chart.grid.labels.axis.yLabel && ! chartConfig.chart.grid.labels.yAxis.useIndividualScale" 
+                        v-if="chartConfig.chart.grid.labels.axis.yLabel && ! mutableConfig.useIndividualScale" 
                         :font-size="chartConfig.chart.grid.labels.axis.fontSize" 
                         :fill="chartConfig.chart.grid.labels.color"
                         :transform="`translate(${chartConfig.chart.grid.labels.axis.fontSize + chartConfig.chart.grid.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
@@ -1108,6 +1111,8 @@ export default {
                     show: true,
                 },
                 showTable: false,
+                isStacked: false,
+                useIndividualScale: false
             },
             selectedSerieIndex: null,
             selectedRowIndex: null,
@@ -1186,7 +1191,7 @@ export default {
                     scale: el.scale,
                     yOffset: el.yOffset,
                     individualHeight: el.individualHeight,
-                    x: this.chartConfig.chart.grid.labels.yAxis.stacked ? this.drawingArea.left : (this.drawingArea.left / len) * (i+1),
+                    x: this.mutableConfig.isStacked ? this.drawingArea.left : (this.drawingArea.left / len) * (i+1),
                     yLabels: el.scaleYLabels || el.scale.ticks.map(t => {
                         return {
                             y: t >= 0 ? el.zero - (el.individualHeight * (t / el.max)) : el.zero + (el.individualHeight * Math.abs(t) / el.max),
@@ -1345,9 +1350,9 @@ export default {
                 const individualMax = individualScale.max + individualZero;
                 const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
 
-                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
+                const yOffset = this.mutableConfig.isStacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
 
-                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
 
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
                 const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
@@ -1355,8 +1360,8 @@ export default {
                 const barLen = this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length;
 
                 const plots = datapoint.series.map((plot, j) => {
-                    const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
-                    const x = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked 
+                    const yRatio = this.mutableConfig.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
+                    const x = this.mutableConfig.useIndividualScale && this.mutableConfig.isStacked 
                         ? this.drawingArea.left + (this.drawingArea.width / this.maxSeries * j) 
                         // : (this.drawingArea.left - this.slot.bar / 2 + (this.slot.bar) * i) + ((this.slot.bar) * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length);
                         : this.drawingArea.left
@@ -1386,7 +1391,7 @@ export default {
                 })
 
                 const autoScalePlots = datapoint.series.map((plot, j) => {
-                    const x = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked 
+                    const x = this.mutableConfig.useIndividualScale && this.mutableConfig.isStacked 
                         ? this.drawingArea.left + (this.drawingArea.width / this.maxSeries * j) 
                         : (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length);
                     return {
@@ -1466,16 +1471,16 @@ export default {
                 const individualMax = individualScale.max + Math.abs(individualZero);
                 const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
 
-                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
+                const yOffset = this.mutableConfig.isStacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
 
-                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
                 
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
 
                 const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
 
                 const plots = datapoint.series.map((plot, j) => {
-                    const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale 
+                    const yRatio = this.mutableConfig.useIndividualScale 
                         ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) 
                         : this.ratioToMax(plot)
 
@@ -1532,7 +1537,7 @@ export default {
                     zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
                     curve: datapoint.autoScaling ? autoScaleCurve : curve,
                     plots: datapoint.autoScaling ? autoScalePlots : plots,
-                    area: !datapoint.useArea ? '' : this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? this.createIndividualArea(datapoint.autoScaling ? autoScalePlots: plots, datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition) :  this.createArea(plots)
+                    area: !datapoint.useArea ? '' : this.mutableConfig.useIndividualScale ? this.createIndividualArea(datapoint.autoScaling ? autoScalePlots: plots, datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition) :  this.createArea(plots)
                 }
             })
         },
@@ -1566,15 +1571,15 @@ export default {
                 const individualMax = individualScale.max + individualZero;
                 const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
                 
-                const yOffset = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
+                const yOffset = this.mutableConfig.isStacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
 
-                const individualHeight = this.chartConfig.chart.grid.labels.yAxis.stacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
 
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
                 const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
 
                 const plots = datapoint.series.map((plot, j) => {
-                    const yRatio = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
+                    const yRatio = this.mutableConfig.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
                     return {
                         x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
                         y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
@@ -1627,7 +1632,7 @@ export default {
             })
         },
         drawingArea() {
-            const individualScalesPadding = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.show ? this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)).length * (this.chartConfig.chart.grid.labels.yAxis.stacked ? 0 : this.chartConfig.chart.grid.labels.yAxis.labelWidth) : 0;
+            const individualScalesPadding = this.mutableConfig.useIndividualScale && this.chartConfig.chart.grid.labels.show ? this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)).length * (this.mutableConfig.isStacked ? 0 : this.chartConfig.chart.grid.labels.yAxis.labelWidth) : 0;
             return {
                 top: this.chartConfig.chart.padding.top,
                 right: this.chartConfig.chart.width - this.chartConfig.chart.padding.right,
@@ -1902,7 +1907,9 @@ export default {
             dataLabels: {
                 show: true,
             },
-            showTable: this.chartConfig.showTable === true
+            showTable: this.chartConfig.showTable === true,
+            isStacked: this.chartConfig.chart.grid.labels.yAxis.stacked,
+            useIndividualScale: this.chartConfig.chart.grid.labels.yAxis.useIndividualScale
         }
     },
     methods: {
@@ -1931,12 +1938,20 @@ export default {
         objectIsEmpty,
         createTSpans,
         useNestedProp,
+        toggleStack() {
+            this.mutableConfig.isStacked = !this.mutableConfig.isStacked
+            if (!this.mutableConfig.isStacked) {
+                this.mutableConfig.useIndividualScale = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale;
+            } else {
+                this.mutableConfig.useIndividualScale = true
+            }
+        },
         checkAutoScaleError(datapoint) {
             if (datapoint.autoScaling) {
-                if (!this.chartConfig.chart.grid.labels.yAxis.useIndividualScale) {
+                if (!this.mutableConfig.useIndividualScale) {
                     console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.useIndividualScale is set to true`)
                 }
-                if (!this.chartConfig.chart.grid.labels.yAxis.stacked) {
+                if (!this.mutableConfig.isStacked) {
                     console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.stacked is set to true`)
                 }
             }
@@ -2014,13 +2029,13 @@ export default {
             }
         },
         calcRectWidth() {
-            if(this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked) {
+            if(this.mutableConfig.useIndividualScale && this.mutableConfig.isStacked) {
                 return this.slot.line - ((this.drawingArea.width / this.maxSeries) * 0.1);
             }
             return this.slot.bar;
         },
         calcRectX(plot) {
-            if (this.chartConfig.chart.grid.labels.yAxis.useIndividualScale && this.chartConfig.chart.grid.labels.yAxis.stacked) {
+            if (this.mutableConfig.useIndividualScale && this.mutableConfig.isStacked) {
                 return plot.x + ((this.drawingArea.width / this.maxSeries) * 0.05)
             }
             return plot.x + (this.slot.bar / 2);
