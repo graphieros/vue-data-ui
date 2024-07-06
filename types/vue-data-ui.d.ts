@@ -2313,6 +2313,8 @@ declare module 'vue-data-ui' {
                     donut?: {
                         borderWidth?: number;
                         strokeWidth?: number;
+                        useShadow?: boolean;
+                        shadowColor?: string;
                     };
                 };
                 legend?: ChartBaseLegend & {
