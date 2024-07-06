@@ -349,12 +349,14 @@ defineExpose({
                 :transform="`translate(${wordCloudConfig.style.chart.width / 2}, ${wordCloudConfig.style.chart.height / 2})`">
                 <g v-for="(word, index) in positionedWords">
                     <text 
-                        :fill="word.color" text-anchor="middle"
+                        :fill="word.color" 
                         :font-weight="wordCloudConfig.style.chart.words.bold ? 'bold' : 'normal'" :key="index"
-                        :x="word.x" :y="word.y" :dy="word.fontSize / 2" :font-size="word.fontSize"
+                        :x="word.x" :y="word.y" :font-size="word.fontSize"
                         :transform="`translate(${word.width / 2}, ${word.height / 2})`"
                         :style="`animation-delay:${index * wordCloudConfig.animationDelayMs}ms !important`"
                         :class="{'animated': wordCloudConfig.useCssAnimation}"
+                        text-anchor="middle"
+                        dominant-baseline="middle"
                     >
                         {{ word.name }}
                     </text>
