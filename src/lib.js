@@ -183,8 +183,20 @@ export const palette = [
     "#e7969c", "#7b4173", "#a55194", "#ce6dbd", "#de9ed6"
 ];
 
-export function getPalette() {
-    return palette;
+export function getPalette(palette = 'default') {
+    switch (palette) {
+        case 'hack':
+            return themePalettes.hack;
+
+        case 'zen':
+            return themePalettes.zen;
+    
+        case 'concrete':
+            return themePalettes.concrete;
+
+        default:
+            return themePalettes.default;
+    }
 }
 
 export const themePalettes = {
