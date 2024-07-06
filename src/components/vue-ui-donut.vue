@@ -570,6 +570,10 @@ defineExpose({
                     <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
                     <feColorMatrix type="saturate" values="0" />
                 </filter>
+
+                <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
+                    <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5" :flood-color="donutConfig.style.chart.layout.donut.shadowColor" />
+                </filter>
             </defs>
 
             <g v-for="(arc, i) in currentDonut">
@@ -590,6 +594,7 @@ defineExpose({
                 :cy="svg.height / 2"
                 :r="130"
                 :fill="donutConfig.style.chart.backgroundColor"
+                :filter="donutConfig.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
             />
 
             <path 
