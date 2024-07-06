@@ -448,7 +448,9 @@
                     },
                     "donut": {
                         "strokeWidth": 64,
-                        "borderWidth": 1
+                        "borderWidth": 1,
+                        "useShadow": false,
+                        "shadowColor": "#2D353C"
                     }
                 },
                 "legend": {
