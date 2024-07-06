@@ -82,6 +82,8 @@ const model = ref([
     { key: 'style.chart.layout.labels.hollow.average.value.rounding', def: 0, type: 'number', min: 0, max: 6, label: ['hollow', 'average', 'value', 'is', 'rounding'], category: 'labels' },
     { key: 'style.chart.layout.donut.strokeWidth', def: 64, type: 'range', min: 3, max: 130, label: 'thickness', category: 'donut' },
     { key: 'style.chart.layout.donut.borderWidth', def: 1, type: 'range', min: 0, max: 36, label: ['border', 'is', 'thickness'], category: 'donut' },
+    { key: 'style.chart.layout.donut.useShadow', def: true,  type: 'checkbox' },
+    { key: 'style.chart.layout.donut.shadowColor', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.legend.show', def: true, type: 'checkbox', label: 'show', category: 'legend' },
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'legend' },
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'legend' },
