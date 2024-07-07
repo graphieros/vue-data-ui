@@ -89,7 +89,7 @@ const datasets = ref({
 })
 
 
-const selectedSerie = ref('longArray');
+const selectedSerie = ref('donut');
 
 const model = ref([
     { key: 'axisLabelsFontSize', def: 12, type: 'number', min: 8, max: 24},
@@ -109,6 +109,8 @@ const model = ref([
     { key: 'donutThicknessRatio', def: 0.18, type: 'range', min: 0.01, max: 0.4, step: 0.01},
     { key: 'donutTotalLabelFontSize', def: 24, type: 'number', min: 8, max: 42},
     { key: 'donutTotalLabelText', def: 'Total', type: 'text'},
+    { key: 'donutUseShadow', def: true, type: 'checkbox'},
+    { key: 'donutShadowColor', def: '#1A1A1A', type: 'color'},
     { key: 'fontFamily', def:'inherit', type: 'text'},
     { key: 'height', def: 338, type: 'number', min: 100, max: 1000},
     { key: 'legendFontSize', def: 12, type: 'number', min: 8, max: 48},
