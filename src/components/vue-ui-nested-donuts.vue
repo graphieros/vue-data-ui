@@ -328,6 +328,7 @@ const donuts = computed(() => {
         const sizeRatio = i * donutSize.value / immutableDataset.value.length;
         return {
             ...ds,
+            radius: donutSize.value - sizeRatio,
             donut: makeDonut(
                 { series: ds.series },
                 svg.value.width / 2,
@@ -682,6 +683,37 @@ defineExpose({
         />
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+            <!-- GRADIENTS -->
+            <defs>
+                <radialGradient v-for="(gradient, i) in gradientSets" :id="`radial_${uid}_${i}`" cx="50%" cy="50%" r="50%" :fr="30 - (1 * (i+1)) + '%'">
+                    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+                    <stop :offset="70 - (20 * i) + '%'" stop-color="#FFFFFF" :stop-opacity="donutConfig.style.chart.gradientIntensity / 100"/>
+                    <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+                </radialGradient>
+            </defs>
+
+            <!-- FILTERS -->
+            <defs>
+                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
+                    <feColorMatrix type="saturate" values="0" />
+                </filter>
+
+                <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
+                    <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5" :flood-color="donutConfig.style.chart.layout.donut.shadowColor" />
+                </filter>
+            </defs>
+            
+            <!-- UNDERLAYER CIRCLES -->
+            <circle
+                v-for="c in donuts"
+                :cx="svg.width / 2"
+                :cy="svg.height / 2"
+                :r="c.radius"
+                :fill="donutConfig.style.chart.backgroundColor"
+                :filter="donutConfig.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
+            />
+           
             <!-- NESTED DONUTS -->
             <g v-for="(item, i) in donuts">
                 <g v-for="(arc, j) in item.donut">
@@ -695,22 +727,6 @@ defineExpose({
                     />
                 </g>
             </g>
-
-            <!-- GRADIENTS -->
-            <defs>
-                <radialGradient v-for="(gradient, i) in gradientSets" :id="`radial_${uid}_${i}`" cx="50%" cy="50%" r="50%" :fr="30 - (1 * (i+1)) + '%'">
-                    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
-                    <stop :offset="70 - (20 * i) + '%'" stop-color="#FFFFFF" :stop-opacity="donutConfig.style.chart.gradientIntensity / 100"/>
-                    <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-                </radialGradient>
-            </defs>
-
-            <defs>
-                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
-                    <feColorMatrix type="saturate" values="0" />
-                </filter>
-            </defs>
 
             <g v-if="donutConfig.style.chart.useGradient">
                 <g v-for="(gradient, i) in gradientSets">
