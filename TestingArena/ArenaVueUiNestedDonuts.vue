@@ -73,6 +73,8 @@ const model = ref([
     { key: 'style.chart.layout.labels.dataLabels.donutNameOffsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.layout.donut.strokeWidth', def: 200, type: 'number', min: 50, max: 400},
     { key: 'style.chart.layout.donut.borderWidth', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.layout.donut.useShadow', def: true, type: 'checkbox' },
+    { key: 'style.chart.layout.donut.shadowColor', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.layout.donut.spacingRatio', def: 0.5, type: 'number', min: 0, max: 1, step: 0.01},
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color'},
