@@ -257,7 +257,7 @@
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="chartConfig.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : serie.color"
                             :plot="{ x: plot.x, y: plot.y }"
-                            :radius="chartConfig.plot.radius"
+                            :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (chartConfig.plot.radius || 6) * 1.5 : chartConfig.plot.radius || 6 : chartConfig.plot.radius || 6"
                             :stroke="chartConfig.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
@@ -376,7 +376,7 @@
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="chartConfig.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
                             :plot="{ x: plot.x, y: plot.y }"
-                            :radius="chartConfig.plot.radius"
+                            :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (chartConfig.plot.radius || 6) * 1.5 : chartConfig.plot.radius : chartConfig.plot.radius"
                             :stroke="chartConfig.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
