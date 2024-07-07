@@ -328,6 +328,10 @@ const donut = computed(() => {
         }
     })
 
+    const cx = (quickConfig.value.width || defaultSizes.value.donut.width) / 2;
+    const cy = (quickConfig.value.height || defaultSizes.value.donut.height) / 2;
+    const radius = (quickConfig.value.height || defaultSizes.value.donut.height) * quickConfig.value.donutRadiusRatio;
+
     return {
         dataset: legend.filter(s => !segregated.value.includes(s.id)),
         legend,
@@ -338,12 +342,15 @@ const donut = computed(() => {
         killTooltip,
         getSpaces,
         total,
+        cx,
+        cy,
+        radius,
         chart: makeDonut(
             { series: ds.filter(s => !segregated.value.includes(s.id)) },
-            (quickConfig.value.width || defaultSizes.value.donut.width) / 2,
-            (quickConfig.value.height || defaultSizes.value.donut.height) / 2,
-            (quickConfig.value.height || defaultSizes.value.donut.height) * quickConfig.value.donutRadiusRatio,
-            (quickConfig.value.height || defaultSizes.value.donut.height) * quickConfig.value.donutRadiusRatio,
+            cx,
+            cy,
+            radius,
+            radius,
             1.99999,
             2,
             1,
@@ -795,6 +802,10 @@ defineExpose({
                     <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
                     <feColorMatrix type="saturate" values="0" />
                 </filter>
+
+                <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
+                    <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5" :flood-color="quickConfig.donutShadowColor" />
+                </filter>
             </defs>
 
             <template v-if="chartType === detector.chartType.DONUT">
@@ -818,7 +829,16 @@ defineExpose({
                     :cy="(quickConfig.height || defaultSizes.donut.height) /2"
                     :r="(quickConfig.height || defaultSizes.donut.height) * quickConfig.donutRadiusRatio"
                     :fill="quickConfig.backgroundColor"
-                /> 
+                />
+
+                <circle
+                    :cx="donut.cx"
+                    :cy="donut.cy"
+                    :r="donut.radius"
+                    :fill="quickConfig.backgroundColor"
+                    :filter="quickConfig.donutUseShadow ? `url(#shadow_${uid})` : ''"
+                />
+
                 <g class="donut">
                     <path
                         v-for="(arc, i) in donut.chart"
