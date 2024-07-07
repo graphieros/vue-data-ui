@@ -562,7 +562,9 @@
                     "donut": {
                         "strokeWidth": 200,
                         "borderWidth": 2,
-                        "spacingRatio": 0.5
+                        "spacingRatio": 0.5,
+                        "useShadow": false,
+                        "shadowColor": "#2D353C"
                     }
                 },
                 "legend": {
@@ -3803,6 +3805,8 @@
         "donutTotalLabelFontSize": 24,
         "donutTotalLabelOffsetY": 0,
         "donutTotalLabelText": "Total",
+        "donutUseShadow": false,
+        "donutShadowColor": "#2D353C",
         "fontFamily": "inherit",
         "height": 338,
         "legendFontSize": 12,
