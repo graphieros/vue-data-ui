@@ -817,7 +817,7 @@
                         :stroke-width="chartConfig.chart.highlighter.lineWidth"
                         :stroke-dasharray="chartConfig.chart.highlighter.lineDasharray"
                         stroke-linecap="round"
-                        style="transition:none !important; animation: none !important"
+                        style="transition:none !important; animation: none !important; pointer-events: none;"
                     />
                 </g>
 
