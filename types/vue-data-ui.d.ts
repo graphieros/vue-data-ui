@@ -2434,6 +2434,8 @@ declare module 'vue-data-ui' {
                         strokeWidth?: number;
                         borderWidth?: number;
                         spacingRatio?: number;
+                        useShadow?: boolean;
+                        shadowColor?: string;
                     };
                 };
                 legend?: ChartBaseLegend & {
@@ -4147,6 +4149,8 @@ declare module 'vue-data-ui' {
         donutTotalLabelFontSize?: number;
         donutTotalLabelOffsetY?: number;
         donutTotalLabelText?: string;
+        donutUseShadow?: boolean;
+        donutShadowColor?: string;
         fontFamily?: string;
         height?: number | null;
         legendFontSize?: number;
@@ -4739,7 +4743,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 outline?: string;
             };
-            td:? {
+            td?: {
                 backgroundColor?: string;
                 color?: string;
                 outline?: string;
