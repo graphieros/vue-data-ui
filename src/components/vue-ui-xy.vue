@@ -1948,10 +1948,10 @@ export default {
         },
         checkAutoScaleError(datapoint) {
             if (datapoint.autoScaling) {
-                if (!this.mutableConfig.useIndividualScale) {
+                if (!this.chartConfig.chart.grid.labels.yAxis.useIndividualScale) {
                     console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.useIndividualScale is set to true`)
                 }
-                if (!this.mutableConfig.isStacked) {
+                if (!this.chartConfig.chart.grid.labels.yAxis.stacked) {
                     console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.stacked is set to true`)
                 }
             }
