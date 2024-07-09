@@ -4614,7 +4614,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 aspectRatio?: string;
                 stacked?: boolean;
-                stackGapRatio?: number;
+                stackGap?: number;
                 scale?: {
                     ticks?: number;
                 };
