@@ -258,11 +258,11 @@ const formattedDataset = computed(() => {
                 localScale = calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
             }
 
-            const yOffset = xyConfig.value.style.chart.stacked ? drawingArea.value.height * (1 - ds.cumulatedStackRatio) : 0;
+            const yOffset = mutableConfig.value.stacked ? drawingArea.value.height * (1 - ds.cumulatedStackRatio) : 0;
 
-            const gap = xyConfig.value.style.chart.stacked ? drawingArea.value.height / xyConfig.value.style.chart.stackGap : 0;
+            const gap = mutableConfig.value.stacked ? drawingArea.value.height / xyConfig.value.style.chart.stackGap : 0;
 
-            const individualHeight = xyConfig.value.style.chart.stacked ? (drawingArea.value.height * ds.stackRatio) - gap : drawingArea.value.height;
+            const individualHeight = mutableConfig.value.stacked ? (drawingArea.value.height * ds.stackRatio) - gap : drawingArea.value.height;
 
             const localMin = localScale.min < 0 ? Math.abs(localScale.min) : 0;
             const localZero = drawingArea.value.bottom - yOffset - ((individualHeight) * (localMin / ((localScale.max) + localMin)));
