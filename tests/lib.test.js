@@ -3,6 +3,7 @@ import {
     abbreviate,
     adaptColorToBackground,
     addVector,
+    assignStackRatios,
     calcLinearProgression,
     calcMedian,
     calcPercentageTrend,
@@ -1504,5 +1505,75 @@ describe('createWordCloudDatasetFromPlainText', () => {
 
         expect(createWordCloudDatasetFromPlainText(text, formatterUC)).toStrictEqual(expectedUC)
         expect(createWordCloudDatasetFromPlainText(text, formatterLC)).toStrictEqual(expectedLC)
+    })
+})
+
+describe('assignStackRatios', () => {
+    const ds = [
+        {
+            name: "A",
+            series: [1, 2, 3],
+            stackRatio: 0.5
+        },
+        {
+            name: 'B',
+            series: [1, 2, 3]
+        },
+        {
+            name: 'C',
+            series: [1, 2, 3]
+        }
+    ]
+
+    const expectedResult = [
+        {
+            name: "A",
+            series: [1, 2, 3],
+            stackRatio: 0.5,
+            cumulatedStackRatio: 0.5
+        },
+        {
+            name: 'B',
+            series: [1, 2, 3],
+            stackRatio: 0.25,
+            cumulatedStackRatio: 0.75
+        },
+        {
+            name: 'C',
+            series: [1, 2, 3],
+            stackRatio: 0.25,
+            cumulatedStackRatio: 1
+        }
+    ]
+
+    const dsEmpty = [
+        {
+            name: 'A',
+            series: [1, 2, 3],
+        },
+        {
+            name: 'A',
+            series: [1, 2, 3]
+        }
+    ]
+
+    const expectedResultEmpty = [
+        {
+            name: 'A',
+            series: [1, 2, 3],
+            stackRatio: 0.5,
+            cumulatedStackRatio: 0.5
+        },
+        {
+            name: 'A',
+            series: [1, 2, 3],
+            stackRatio: 0.5,
+            cumulatedStackRatio: 1
+        }
+    ]
+
+    test('sets stackRatios and cumulatedStackRatios to all datapoints', () => {
+        expect(assignStackRatios(ds)).toStrictEqual(expectedResult)
+        expect(assignStackRatios(dsEmpty)).toStrictEqual(expectedResultEmpty)
     })
 })

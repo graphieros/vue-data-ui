@@ -1531,10 +1531,33 @@ export function createWordCloudDatasetFromPlainText(text, callback = null) {
     });
 }
 
+export function assignStackRatios(arr) {
+    let providedRatioSum = arr.reduce((sum, item) => sum + (item.stackRatio || 0), 0);
+    let itemsWithoutRatio = arr.filter(item => item.stackRatio === undefined).length;
+    let remainingRatio = 1 - providedRatioSum;
+    let defaultRatio = itemsWithoutRatio > 0 ? remainingRatio / itemsWithoutRatio : 0;
+
+    let output = arr.map(item => ({
+        ...item,
+        stackRatio: item.stackRatio !== undefined ? item.stackRatio : defaultRatio
+    }));
+    
+    let cumulatedRatio = 0;
+    output = output.map(item => {
+        cumulatedRatio += item.stackRatio;
+        return {
+            ...item,
+            cumulatedStackRatio: cumulatedRatio
+        };
+    });
+    return output;
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
     addVector,
+    assignStackRatios,
     calcLinearProgression,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
