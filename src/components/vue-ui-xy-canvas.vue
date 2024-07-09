@@ -925,17 +925,10 @@ function draw() {
     datasetHasChanged.value = false;
 }
 
-const debounceCanvasResize = () => {
-    if (maxSeries.value > 200) {
-        debounce(() => {
-            tooltipHasChanged.value = true;
-            resizeCanvas()
-        }, 200, !tooltipHasChanged.value);
-    } else {
-        tooltipHasChanged.value = true;
-        resizeCanvas()
-    }
-}
+const debounceCanvasResize = debounce(() => {
+    tooltipHasChanged.value = true;
+    resizeCanvas()
+}, maxSeries.value > 200 ? 10 : 1, !tooltipHasChanged.value);
 
 function handleMousemove(e) {
     const { left } = canvas.value.getBoundingClientRect()
