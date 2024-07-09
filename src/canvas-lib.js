@@ -209,18 +209,18 @@ export function polygon(ctx, coordinates, options = {}) {
         let grd;
         if (gradient.type === 'linear') {
             grd = ctx.createLinearGradient(
-                gradient.start.x,
-                gradient.start.y,
-                gradient.end.x,
-                gradient.end.y
+                secureGradient(gradient.start.x, Number.MIN_VALUE),
+                secureGradient(gradient.start.y, Number.MIN_VALUE),
+                secureGradient(gradient.end.x, Number.MIN_VALUE * 2),
+                secureGradient(gradient.end.y, Number.MIN_VALUE * 2)
             );
         } else if (gradient.type === 'radial') {
             grd = ctx.createRadialGradient(
-                gradient.start.x,
-                gradient.start.y,
+                secureGradient(gradient.start.x, Number.MIN_VALUE),
+                secureGradient(gradient.start.y, Number.MIN_VALUE),
                 gradient.start.r || 0,
-                gradient.end.x,
-                gradient.end.y,
+                secureGradient(gradient.end.x, Number.MIN_VALUE * 2),
+                secureGradient(gradient.end.y, Number.MIN_VALUE * 2),
                 gradient.end.r || 0
             );
         }
@@ -316,18 +316,18 @@ export function rect(ctx, coordinates, options = {}) {
         let grd;
         if (gradient.type === 'linear') {
             grd = ctx.createLinearGradient(
-                gradient.start.x,
-                gradient.start.y,
-                gradient.end.x,
-                gradient.end.y
+                secureGradient(gradient.start.x, Number.MIN_VALUE),
+                secureGradient(gradient.start.y, Number.MIN_VALUE),
+                secureGradient(gradient.end.x, Number.MIN_VALUE * 2),
+                secureGradient(gradient.end.y, Number.MIN_VALUE * 2)
             );
         } else if (gradient.type === 'radial') {
             grd = ctx.createRadialGradient(
-                gradient.start.x,
-                gradient.start.y,
+                secureGradient(gradient.start.x, Number.MIN_VALUE),
+                secureGradient(gradient.start.y, Number.MIN_VALUE),
                 gradient.start.r || 0,
-                gradient.end.x,
-                gradient.end.y,
+                secureGradient(gradient.end.x, Number.MIN_VALUE * 2),
+                secureGradient(gradient.end.y, Number.MIN_VALUE * 2),
                 gradient.end.r || 0
             );
         }
@@ -475,6 +475,10 @@ export function fillStackRatios(ds) {
     });
 }
 
+export function secureGradient(val, fallback) {
+    return [null, undefined, NaN, Infinity, -Infinity].includes(val) ? fallback : val
+}
+
 const lib = {
     circle,
     cloneCanvas,
@@ -483,6 +487,7 @@ const lib = {
     fillStackRatios,
     polygon,
     rect,
+    secureGradient,
     text
 }
 
