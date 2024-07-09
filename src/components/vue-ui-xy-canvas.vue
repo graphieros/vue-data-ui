@@ -6,6 +6,7 @@ import {
     watch
 } from "vue";
 import {
+    assignStackRatios,
     calculateNiceScale,
     convertColorToHex,
     convertCustomPalette,
@@ -117,7 +118,7 @@ const customPalette = computed(() => {
 });
 
 const maxSeries = computed(() => {
-    return Math.max(...props.dataset.filter((_, i) => !segregated.value.includes(i)).map(ds => ds.series.length))
+    return Math.max(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).map(ds => ds.series.length))
 });
 
 const drawingArea = computed(() => {
@@ -139,18 +140,25 @@ function proportionToMax(p, m) {
     return p / m;
 }
 
-function createDatapointCoordinates({ series, min, max, scale, stackIndex = null }) {
+function createDatapointCoordinates({ hasAutoScale, series, min, max, scale, yOffset, individualHeight, stackIndex = null }) {
     return series.map((s, i) => {
         const absMin = scale.min < 0 ? Math.abs(scale.min) : 0;
         const pToMax = proportionToMax(s + absMin, absMin + scale.max)
-        
+    
+        let autoScaleMin;
+        let autoScalePtoMax;
+
+        if (hasAutoScale) {
+            autoScaleMin = Math.abs(min);
+            autoScalePtoMax = proportionToMax(Math.abs(s) - autoScaleMin, Math.abs(scale.max) - (autoScaleMin))
+        }
+
         let y = 0;
 
         if (stackIndex === null) {
-            y = drawingArea.value.bottom - (drawingArea.value.height * pToMax);
+            y = drawingArea.value.bottom - (drawingArea.value.height * (hasAutoScale ? autoScalePtoMax : pToMax));
         } else {
-            const hUnit = (drawingArea.value.height / props.dataset.filter((_,i) => !segregated.value.includes(i)).length);
-            y = drawingArea.value.bottom - (hUnit * stackIndex) - ((hUnit * stackGapRatio.value /* TODO: config, should be 1 when all but 1 are segregated */) * pToMax)
+            y = drawingArea.value.bottom - yOffset - ((individualHeight /* TODO: config, should be 1 when all but 1 are segregated */) * (hasAutoScale ? autoScalePtoMax : pToMax))
         }
 
         return {
@@ -162,8 +170,8 @@ function createDatapointCoordinates({ series, min, max, scale, stackIndex = null
 }
 
 const absoluteExtremes = computed(() => {
-    const min = Math.min(...props.dataset.filter((_, i) => !segregated.value.includes(i)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
-    const max = Math.max(...props.dataset.filter((_, i) => !segregated.value.includes(i)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
+    const min = Math.min(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
+    const max = Math.max(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
     const scale = calculateNiceScale(min < 0 ? min : 0, max === min ? min + 1 < 0 ? 0 : min + 1 : max < 0 ? 0 : max, xyConfig.value.style.chart.scale.ticks);
 
     const absoluteMin = scale.min < 0 ? Math.abs(scale.min) : 0;
@@ -206,50 +214,89 @@ const tootlipDataset = computed(() => {
     });
 });
 
-const formattedDataset = computed(() => {
-    const hUnit = (drawingArea.value.height / props.dataset.filter((_,i) => !segregated.value.includes(i)).length);
+const dsCopy = computed(() => {
+    return props.dataset.map((ds, i) => {
+        return {
+            ...ds,
+            absoluteIndex: i,
+            color: convertColorToHex(ds.color || customPalette.value[i] || palette[i] || palette[i % palette.length]),
+        }
+    });
+});
 
-    return props.dataset
+const formattedDataset = computed(() => {
+    return assignStackRatios(dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)))
         .map((ds, i) => {
             return {
                 ...ds,
                 series: ds.series.slice(slicer.value.start, slicer.value.end),
-                absoluteIndex: i
             }
         })
-        .filter((_, i) => !segregated.value.includes(i))
         .map((ds, i) => {
-            const min = Math.min(...ds.series);
-            const max = Math.max(...ds.series);
-            const localScale = calculateNiceScale(min < 0 ? min : 0, max === min ? min + 1 < 0 ? 0 : min + 1 : max < 0 ? 0 : max, ds.scaleSteps || xyConfig.value.style.chart.scale.ticks);
+            let min = Math.min(...ds.series) || 0;
+            let max = Math.max(...ds.series) || 1;
+
+            if (min === max) {
+                min = min >= 0 ? max - 1 : min;
+                max = max >= 0 ? max : min + 1;
+            }
+
+            const autoScaledRatios = ds.series.filter(v => ![null, undefined].includes(v)).map(v => (v - min) / (max - min));
+            const autoScale = {
+                ratios: autoScaledRatios,
+                valueMin: min,
+                valueMax: max
+            }
+
+            const scaleSteps = ds.scaleSteps || xyConfig.value.style.chart.scale.ticks;
+
+            let localScale;
+
+            if (ds.autoScaling) {
+                localScale = calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps)
+            } else {
+                localScale = calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
+            }
+
+            const yOffset = xyConfig.value.style.chart.stacked ? drawingArea.value.height * (1 - ds.cumulatedStackRatio) : 0;
+
+            const gap = xyConfig.value.style.chart.stacked ? drawingArea.value.height / xyConfig.value.style.chart.stackGap : 0;
+
+            const individualHeight = xyConfig.value.style.chart.stacked ? (drawingArea.value.height * ds.stackRatio) - gap : drawingArea.value.height;
+
             const localMin = localScale.min < 0 ? Math.abs(localScale.min) : 0;
-            const localZero = drawingArea.value.bottom - (hUnit * i) - ((hUnit * stackGapRatio.value) * (localMin / ((localScale.max) + localMin)));
-            const localYLabels = localScale.ticks.map(t => {
+            const localZero = drawingArea.value.bottom - yOffset - ((individualHeight) * (localMin / ((localScale.max) + localMin)));
+
+            const localYLabels = localScale.ticks.map((t, k) => {
                 return {
-                    y: drawingArea.value.bottom - (hUnit * i) - ((hUnit * stackGapRatio.value) * ((t + localMin) / ((localScale.max) + localMin))),
+                    y: drawingArea.value.bottom - yOffset - (individualHeight * (k / (localScale.ticks.length - 1))),
                     x: drawingArea.value.left - 8,
                     value: t
                 }
             });
 
             const coordinatesLine = createDatapointCoordinates({
+                hasAutoScale: ds.autoScaling,
                 series: ds.series,
                 min: mutableConfig.value.stacked ? min : absoluteExtremes.value.min,
                 max: mutableConfig.value.stacked ? max : absoluteExtremes.value.max,
                 scale: mutableConfig.value.stacked ? localScale : absoluteExtremes.value.scale,
+                yOffset,
+                individualHeight,
                 stackIndex: mutableConfig.value.stacked ? i : null
             });
 
             return {
                 ...ds,
-                color: convertColorToHex(ds.color || customPalette.value[ds.absoluteIndex] || palette[ds.absoluteIndex] || palette[ds.absoluteIndex % palette.length]),
                 coordinatesLine,
                 min,
                 max,
                 localScale,
                 localZero,
                 localMin,
-                localYLabels
+                localYLabels,
+                yOffset,
+                individualHeight
             }
         });
 });
@@ -267,26 +314,17 @@ function refreshSlicer() {
     slicerStep.value += 1;
 }
 
-const isSingleSerie = computed(() => {
-    return props.dataset.length - segregated.value.length === 1
-})
-
-const stackGapRatio = computed(() => {
-    if (isSingleSerie.value) return 1;
-    return xyConfig.value.style.chart.stackGapRatio;
-})
-
 const lineAndPlotTypes = computed(() => {
     return formattedDataset.value.filter(ds => {
         return ['line', 'plot', undefined].includes(ds.type)
-    })
+    });
 });
 
 const barTypes = computed(() => {
     return formattedDataset.value.filter(ds => {
         return ds.type === 'bar'
-    })
-})
+    });
+});
 
 function resizeCanvas() {
     const containerWidth = container.value.offsetWidth;
@@ -353,7 +391,7 @@ function setupChart() {
                         {
                             color: xyConfig.value.style.chart.grid.x.horizontalLines.color
                         }
-                    )
+                    );
                 });
             }
         }
@@ -398,7 +436,7 @@ function setupChart() {
                     color: xyConfig.value.style.chart.grid.zeroLine.color,
                     lineDash: xyConfig.value.style.chart.grid.zeroLine.dashed ? [10, 10] : [0, 0]
                 }
-            )
+            );
         }
 
         // AXES LABELS
@@ -425,7 +463,6 @@ function setupChart() {
     } else {
         // STACKED
         // VERTICAL LINES
-        const hUnit = (drawingArea.value.height / props.dataset.filter((_,i) => !segregated.value.includes(i)).length);
 
         if (xyConfig.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) < xyConfig.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
             formattedDataset.value.forEach((ds, i) => {
@@ -435,11 +472,11 @@ function setupChart() {
                         [
                             { 
                                 x: drawingArea.value.left + drawingArea.value.slot * k,
-                                y: drawingArea.value.bottom - (hUnit * i) - (hUnit * stackGapRatio.value)
+                                y: drawingArea.value.bottom - ds.yOffset - ds.individualHeight
                             },
                             {
                                 x: drawingArea.value.left + drawingArea.value.slot * k,
-                                y: drawingArea.value.bottom - (hUnit * i)
+                                y: drawingArea.value.bottom - ds.yOffset
                             }
                         ],
                         {
@@ -503,19 +540,29 @@ function setupChart() {
                         color: xyConfig.value.style.chart.grid.zeroLine.color,
                         lineDash: xyConfig.value.style.chart.grid.zeroLine.dashed ? [10, 10] : [0, 0]
                     }
-                )
-            })
+                );
+            });
         }
 
         // AXES LABELS
         if (xyConfig.value.style.chart.grid.y.axisLabels.show) {
             formattedDataset.value.forEach((ds, i) => {
-
+                // INDIVIDUAL Y AXES
                 line(
                     ctx.value,
                     [
-                        { x: drawingArea.value.left, y: drawingArea.value.bottom - (hUnit * i) },
-                        { x: drawingArea.value.left, y: drawingArea.value.bottom - (hUnit * i) - (hUnit * stackGapRatio.value)}
+                        { x: drawingArea.value.left, y: drawingArea.value.bottom - ds.yOffset },
+                        { x: drawingArea.value.left, y: drawingArea.value.bottom - ds.yOffset - ds.individualHeight }
+                    ],
+                    {
+                        color: ds.color
+                    }
+                );
+                line(
+                    ctx.value,
+                    [
+                        { x: drawingArea.value.right, y: drawingArea.value.bottom - ds.yOffset },
+                        { x: drawingArea.value.right, y: drawingArea.value.bottom - ds.yOffset - ds.individualHeight }
                     ],
                     {
                         color: ds.color
@@ -549,7 +596,7 @@ function setupChart() {
                 ctx.value,
                 ds.name,
                 w.value / 35,
-                drawingArea.value.bottom - (hUnit * i) - ((hUnit * stackGapRatio.value) / 2),
+                drawingArea.value.bottom - ds.yOffset - (ds.individualHeight / 2),
                 {
                     align: 'center',
                     rotation: -90,
@@ -573,7 +620,7 @@ function setupChart() {
                 align: 'center',
                 rotation: 90
             }
-        )
+        );
     }
 
     if (xyConfig.value.style.chart.grid.x.axisName) {
@@ -587,16 +634,17 @@ function setupChart() {
                 color: xyConfig.value.style.chart.color,
                 align: 'center'
             }
-        )
+        );
     }
 }
 
 function drawPlots(ds) {
     for (let i = 0; i < ds.coordinatesLine.length; i += 1) {
+        const radius = (tooltipIndex.value === i ? w.value / 150 : xyConfig.value.style.chart.line.plots.show ? w.value / 200 : 0) * xyConfig.value.style.chart.line.plots.radiusRatio;
         circle(
             ctx.value,
             { x: ds.coordinatesLine[i].x, y: ds.coordinatesLine[i].y },
-            (tooltipIndex.value === i ? w.value / 100 : w.value / 200) * xyConfig.value.style.chart.line.plots.radiusRatio,
+            radius,
             {
                 color: xyConfig.value.style.chart.backgroundColor,
                 fillStyle: ds.color,
@@ -649,37 +697,19 @@ function drawTimeLabels() {
 }
 
 function drawSelector() {
-    const hUnit = (drawingArea.value.height / props.dataset.filter((_,i) => !segregated.value.includes(i)).length);
-
-    if (mutableConfig.value.stacked) {
-        formattedDataset.value.forEach((_, i) => {
-            line(
-                ctx.value,
-                [
-                    { x: drawingArea.value.left + (drawingArea.value.slot * tooltipIndex.value) + (drawingArea.value.slot / 2), y: drawingArea.value.bottom - (hUnit * i) },
-                    { x: drawingArea.value.left + (drawingArea.value.slot * tooltipIndex.value) + (drawingArea.value.slot / 2), y: drawingArea.value.bottom - (hUnit * i) - (hUnit * stackGapRatio.value)}
-                ],
-                {
-                    color: xyConfig.value.style.chart.selector.color,
-                    lineDash: xyConfig.value.style.chart.selector.dashed ? [8, 8] : [0, 0],
-                    lineWidth: 2
-                }
-            )
-        })
-    } else {
-        line(
-            ctx.value,
-            [
-                { x: drawingArea.value.left + (drawingArea.value.slot * tooltipIndex.value) + (drawingArea.value.slot / 2), y: drawingArea.value.top },
-                { x: drawingArea.value.left + (drawingArea.value.slot * tooltipIndex.value) + (drawingArea.value.slot / 2), y: drawingArea.value.bottom },
-            ],
-            {
-                color: xyConfig.value.style.chart.selector.color,
-                lineDash: xyConfig.value.style.chart.selector.dashed ? [8, 8] : [0, 0],
-                lineWidth: 2
-            }
-        );
-    }
+    line(
+        ctx.value,
+        [
+            { x: drawingArea.value.left + (drawingArea.value.slot * tooltipIndex.value) + (drawingArea.value.slot / 2), y: drawingArea.value.top },
+            { x: drawingArea.value.left + (drawingArea.value.slot * tooltipIndex.value) + (drawingArea.value.slot / 2), y: drawingArea.value.bottom },
+        ],
+        {
+            color: xyConfig.value.style.chart.selector.color,
+            lineDash: xyConfig.value.style.chart.selector.dashed ? [8, 8] : [0, 0],
+            lineWidth: 2,
+            linceCap: 'round'
+        }
+    );
 }
 
 function drawBars() {
@@ -767,7 +797,7 @@ function drawBars() {
                             strokeColor: xyConfig.value.style.chart.backgroundColor,
                             lineWidth: 0.8
                         }
-                    )
+                    );
                 }
             }
         }
@@ -794,16 +824,15 @@ function drawLineOrArea(ds) {
 }
 
 function drawXBaseLineStacked() {
-    const hUnit = (drawingArea.value.height / props.dataset.filter((_,i) => !segregated.value.includes(i)).length);
     formattedDataset.value.forEach((ds, i) => {
         line(
             ctx.value,
             [
-                { x: drawingArea.value.left, y: drawingArea.value.bottom - (hUnit * i) },
-                { x: drawingArea.value.right, y: drawingArea.value.bottom - (hUnit * i) },
+                { x: drawingArea.value.left, y: drawingArea.value.bottom - ds.yOffset },
+                { x: drawingArea.value.right, y: drawingArea.value.bottom - ds.yOffset },
             ],
             {
-                color: ds.color,
+                color: xyConfig.value.style.chart.grid.x.horizontalLines.color,
                 lineWidth: 1,
             }
         );
@@ -827,7 +856,7 @@ function draw() {
 
             if (tooltipHasChanged.value) {
                 // PLOTS
-                (xyConfig.value.style.chart.line.plots.show || ds.type === 'plot') && drawPlots(ds);
+                drawPlots(ds);
                 // DATALABELS
                 if (mutableConfig.value.showDataLabels) {
                     ([true, undefined].includes(ds.dataLabels)) && drawDataLabels(ds);
@@ -835,7 +864,7 @@ function draw() {
             }
         });
 
-        clonedCanvas.value = cloneCanvas(canvas.value)
+        clonedCanvas.value = cloneCanvas(canvas.value);
     } else {
         ctx.value.drawImage(clonedCanvas.value, 0, 0)
 
@@ -846,7 +875,7 @@ function draw() {
         // PLOT HIGHLIGHTS
         if (tooltipHasChanged.value && tooltipIndex.value !== null) {
             formattedDataset.value.forEach(ds => {
-                if (((ds.type === 'line' || !ds.type) && xyConfig.value.style.chart.line.plots.show) || ds.type === 'plot') {
+                if (((ds.type === 'line' || !ds.type)) || ds.type === 'plot') {
                     if (ds.coordinatesLine[tooltipIndex.value].x !== undefined && ds.coordinatesLine[tooltipIndex.value].y !== undefined) {
                         circle(
                             ctx.value,
@@ -854,13 +883,13 @@ function draw() {
                                 x: ds.coordinatesLine[tooltipIndex.value].x,
                                 y: ds.coordinatesLine[tooltipIndex.value].y
                             },
-                            w.value / 100 * xyConfig.value.style.chart.line.plots.radiusRatio,
+                            w.value / 150 * xyConfig.value.style.chart.line.plots.radiusRatio,
                             {
                                 color: xyConfig.value.style.chart.backgroundColor,
                                 fillStyle: ds.color,
                                 strokeColor: 'transparent'
                             }
-                        )
+                        );
                     }
                 }
             });
@@ -869,17 +898,15 @@ function draw() {
 
     // TIME LABELS
     xyConfig.value.style.chart.grid.y.timeLabels.show && drawTimeLabels();
-
     datasetHasChanged.value = false;
 }
 
 const debounceCanvasResize = debounce(() => {
     tooltipHasChanged.value = true;
     resizeCanvas()
-}, maxSeries.value > 200 ? 10 : 1, !tooltipHasChanged.value)
+}, maxSeries.value > 200 ? 10 : 1, !tooltipHasChanged.value);
 
 function handleMousemove(e) {
-
     const { left } = canvas.value.getBoundingClientRect()
     const mouseX = e.clientX - left;
 
@@ -937,23 +964,23 @@ function handleMousemove(e) {
     tooltipHasChanged.value = false;
 }
 
-watch(() => tooltipIndex.value, () => {
-    debounceCanvasResize()
+watch(() => tooltipIndex.value, (_) => {
+    debounceCanvasResize();
 });
 
-watch(() => slicer.value, () => {
-    datasetHasChanged.value = true
-    draw()
+watch(() => slicer.value, (_) => {
+    datasetHasChanged.value = true;
+    draw();
 }, {
     deep: true
 });
 
-watch(() => mutableConfig.value.showDataLabels, () => {
+watch(() => mutableConfig.value.showDataLabels, (_) => {
     datasetHasChanged.value = true;
     draw()
 });
 
-watch(() => mutableConfig.value.stacked, (v) => {
+watch(() => mutableConfig.value.stacked, (_) => {
     datasetHasChanged.value = true;
     tooltipHasChanged.value = true;
     debounceCanvasResize()
@@ -982,7 +1009,7 @@ onMounted(() => {
         for (const entry of entries) {
             if (entry.contentBoxSize && container.value) {
                 datasetHasChanged.value = true;
-                debounceCanvasResize()
+                debounceCanvasResize();
             }
         }
     });
@@ -991,7 +1018,7 @@ onMounted(() => {
 });
 
 function segregate(index) {
-    emit('selectLegend', formattedDataset.value[index])
+    emit('selectLegend', formattedDataset.value.find(el => el.absoluteIndex === index));
     if (segregated.value.includes(index)) {
         segregated.value = segregated.value.filter(i => i !== index);
     } else {
@@ -1002,8 +1029,9 @@ function segregate(index) {
 }
 
 const legendSet = computed(() => {
-    return props.dataset.map((ds, i) => {
+    return dsCopy.value.map((ds, i) => {
         return {
+            ...ds,
             name: ds.name,
             color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             shape: ds.shape || 'circle',
@@ -1011,12 +1039,12 @@ const legendSet = computed(() => {
             suffix: ds.suffix || '',
             rounding: ds.rounding || 0
         }
-    }).map((ds, i) => {
+    }).map((ds) => {
         return {
             ...ds,
-            opacity: segregated.value.includes(i) ? 0.5 : 1,
-            segregate: () => segregate(i),
-            isSegregated: segregated.value.includes(i)
+            opacity: segregated.value.includes(ds.absoluteIndex) ? 0.5 : 1,
+            segregate: () => segregate(ds.absoluteIndex),
+            isSegregated: segregated.value.includes(ds.absoluteIndex)
         }
     });
 });
@@ -1070,16 +1098,16 @@ function generateImage() {
 }
 
 const dataTable = computed(() => {
-    const head = [''].concat(formattedDataset.value.map(ds => ds.name)).concat(` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`)
+    const head = [''].concat(formattedDataset.value.map(ds => ds.name)).concat(` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`);
 
     let body = [];
 
     for (let i = 0; i < maxSeries.value; i += 1) {
         const sum = formattedDataset.value.map(ds => {
             return ds.series[i] ?? 0
-        }).reduce((a,b ) => a + b, 0)
+        }).reduce((a,b ) => a + b, 0);
 
-        body.push([xyConfig.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(xyConfig.value.table.rounding))).concat((sum ?? 0).toFixed(xyConfig.value.table.rounding)))
+        body.push([xyConfig.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(xyConfig.value.table.rounding))).concat((sum ?? 0).toFixed(xyConfig.value.table.rounding)));
     }
 
     const config = {
@@ -1096,10 +1124,10 @@ const dataTable = computed(() => {
         breakpoint: xyConfig.value.table.responsiveBreakpoint
     }
 
-    const colNames = [xyConfig.value.table.columnNames.period].concat(formattedDataset.value.map(ds => ds.name)).concat(xyConfig.value.table.columnNames.total)
+    const colNames = [xyConfig.value.table.columnNames.period].concat(formattedDataset.value.map(ds => ds.name)).concat(xyConfig.value.table.columnNames.total);
 
-    return { head, body: body.slice(0, slicer.value.end - slicer.value.start), config, colNames}
-})
+    return { head, body: body.slice(0, slicer.value.end - slicer.value.start), config, colNames }
+});
 
 const tableCsv = computed(() => {
     if(formattedDataset.value.length === 0) return { head: [], body: [], config: {}, columnNames: []};
@@ -1110,28 +1138,28 @@ const tableCsv = computed(() => {
             color: s.color,
             type: s.type
         }
-    })
+    });
 
     const body = [];
 
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
         const row = [xyConfig.value.style.chart.grid.y.timeLabels.values[i] || i + 1];
         formattedDataset.value.forEach(s => {
-            row.push(Number((s.series[i] || 0).toFixed(xyConfig.value.table.rounding)))
+            row.push(Number((s.series[i] || 0).toFixed(xyConfig.value.table.rounding)));
         });
         body.push(row);
     }
 
     return { head, body};
-})
+});
 
 function generateCsv() {
     const title = [[xyConfig.value.style.chart.title.text], [xyConfig.value.style.chart.title.subtitle.text], [""]];
-    const head = ["",...tableCsv.value.head.map(h => h.label)]
-    const body = tableCsv.value.body
+    const head = ["",...tableCsv.value.head.map(h => h.label)];
+    const body = tableCsv.value.body;
     const table = title.concat([head]).concat(body);
     const csvContent = createCsvContent(table);
-    downloadCsv({ csvContent, title: xyConfig.value.style.chart.title.text || 'vue-ui-xy-canvas'})
+    downloadCsv({ csvContent, title: xyConfig.value.style.chart.title.text || 'vue-ui-xy-canvas'});
 }
 
 function getData() {
@@ -1143,7 +1171,7 @@ defineExpose({
     generateCsv,
     generatePdf,
     generateImage
-})
+});
 
 </script>
 
