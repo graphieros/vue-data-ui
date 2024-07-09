@@ -4272,7 +4272,7 @@
                 "color": "#2D353C",
                 "aspectRatio": "12 / 9",
                 "stacked": false,
-                "stackGapRatio": 0.8,
+                "stackGap": 20,
                 "scale": {
                     "ticks": 10
                 },
