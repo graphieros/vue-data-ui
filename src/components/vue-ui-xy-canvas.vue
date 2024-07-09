@@ -3,7 +3,8 @@ import {
     ref,
     computed,
     onMounted,
-    watch
+    watch,
+nextTick
 } from "vue";
 import {
     assignStackRatios,
@@ -149,8 +150,8 @@ function createDatapointCoordinates({ hasAutoScale, series, min, max, scale, yOf
         let autoScalePtoMax;
 
         if (hasAutoScale) {
-            autoScaleMin = Math.abs(min);
-            autoScalePtoMax = proportionToMax(Math.abs(s) - autoScaleMin, Math.abs(scale.max) - (autoScaleMin))
+            autoScaleMin = Math.abs(scale.min);
+            autoScalePtoMax = proportionToMax(s + autoScaleMin, scale.max + autoScaleMin)
         }
 
         let y = 0;
@@ -158,7 +159,7 @@ function createDatapointCoordinates({ hasAutoScale, series, min, max, scale, yOf
         if (stackIndex === null) {
             y = drawingArea.value.bottom - (drawingArea.value.height * (hasAutoScale ? autoScalePtoMax : pToMax));
         } else {
-            y = drawingArea.value.bottom - yOffset - ((individualHeight /* TODO: config, should be 1 when all but 1 are segregated */) * (hasAutoScale ? autoScalePtoMax : pToMax))
+            y = drawingArea.value.bottom - yOffset - ((individualHeight) * (hasAutoScale ? autoScalePtoMax : pToMax))
         }
 
         return {
@@ -255,7 +256,7 @@ const formattedDataset = computed(() => {
             if (ds.autoScaling) {
                 localScale = calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps)
             } else {
-                localScale = calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
+                localScale = calculateNiceScale(autoScale.valueMin < 0 ? autoScale.valueMin : 0, autoScale.valueMax <= 0 ? 0 : autoScale.valueMax, scaleSteps);
             }
 
             const yOffset = mutableConfig.value.stacked ? drawingArea.value.height * (1 - ds.cumulatedStackRatio) : 0;
@@ -265,7 +266,19 @@ const formattedDataset = computed(() => {
             const individualHeight = mutableConfig.value.stacked ? (drawingArea.value.height * ds.stackRatio) - gap : drawingArea.value.height;
 
             const localMin = localScale.min < 0 ? Math.abs(localScale.min) : 0;
-            const localZero = drawingArea.value.bottom - yOffset - ((individualHeight) * (localMin / ((localScale.max) + localMin)));
+
+            let localZero;
+
+            if (ds.autoScaling && mutableConfig.value.stacked) {
+                if (max <= 0) {
+                    localZero = drawingArea.value.bottom - yOffset - individualHeight;
+                } else {
+                    localZero = drawingArea.value.bottom - yOffset - ((individualHeight) * (localMin / ((localScale.max) + localMin)));
+                }
+            } else {
+                localZero = drawingArea.value.bottom - yOffset - ((individualHeight) * (localMin / ((localScale.max) + localMin)));
+            }
+
 
             const localYLabels = localScale.ticks.map((t, k) => {
                 return {
@@ -276,7 +289,7 @@ const formattedDataset = computed(() => {
             });
 
             const coordinatesLine = createDatapointCoordinates({
-                hasAutoScale: ds.autoScaling,
+                hasAutoScale: mutableConfig.value.stacked && ds.autoScaling,
                 series: ds.series,
                 min: mutableConfig.value.stacked ? min : absoluteExtremes.value.min,
                 max: mutableConfig.value.stacked ? max : absoluteExtremes.value.max,
@@ -807,14 +820,25 @@ function drawBars() {
 function drawLineOrArea(ds) {
     if (ds.useArea) {
         // AREA
-        polygon(
-            ctx.value,
-            [{ x: ds.coordinatesLine[0].x, y: absoluteExtremes.value.zero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: absoluteExtremes.value.zero }],
-            {
-                fillColor: ds.color + opacity[xyConfig.value.style.chart.area.opacity],
-                strokeColor: 'transparent',
-            }
-        );
+        if (mutableConfig.value.stacked) {
+            polygon(
+                ctx.value,
+                [{ x: ds.coordinatesLine[0].x, y: ds.localZero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: ds.localZero }],
+                {
+                    fillColor: ds.color + opacity[xyConfig.value.style.chart.area.opacity],
+                    strokeColor: 'transparent',
+                }
+            );
+        } else {
+            polygon(
+                ctx.value,
+                [{ x: ds.coordinatesLine[0].x, y: absoluteExtremes.value.zero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: absoluteExtremes.value.zero }],
+                {
+                    fillColor: ds.color + opacity[xyConfig.value.style.chart.area.opacity],
+                    strokeColor: 'transparent',
+                }
+            );
+        }
     } else {
         line(ctx.value, ds.coordinatesLine, {
             color: ds.color,
@@ -901,10 +925,17 @@ function draw() {
     datasetHasChanged.value = false;
 }
 
-const debounceCanvasResize = debounce(() => {
-    tooltipHasChanged.value = true;
-    resizeCanvas()
-}, maxSeries.value > 200 ? 10 : 1, !tooltipHasChanged.value);
+const debounceCanvasResize = () => {
+    if (maxSeries.value > 200) {
+        debounce(() => {
+            tooltipHasChanged.value = true;
+            resizeCanvas()
+        }, 200, !tooltipHasChanged.value);
+    } else {
+        tooltipHasChanged.value = true;
+        resizeCanvas()
+    }
+}
 
 function handleMousemove(e) {
     const { left } = canvas.value.getBoundingClientRect()
@@ -1015,6 +1046,7 @@ onMounted(() => {
     });
 
     resizeObserver.observe(container.value);
+
 });
 
 function segregate(index) {
