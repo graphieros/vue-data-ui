@@ -897,7 +897,9 @@ function draw() {
 
         clonedCanvas.value = cloneCanvas(canvas.value);
     } else {
-        ctx.value.drawImage(clonedCanvas.value, 0, 0)
+        if (clonedCanvas.value) {
+            ctx.value.drawImage(clonedCanvas.value, 0, 0)
+        }
 
         if (tooltipHasChanged.value) {
             (tooltipIndex.value !== null && xyConfig.value.style.chart.selector.show) && drawSelector();
