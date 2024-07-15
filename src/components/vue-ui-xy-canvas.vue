@@ -3,8 +3,7 @@ import {
     ref,
     computed,
     onMounted,
-    watch,
-nextTick
+    watch
 } from "vue";
 import {
     assignStackRatios,
@@ -45,6 +44,7 @@ import Slicer from "../atoms/Slicer.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import DataTable from "../atoms/DataTable.vue";
+import Skeleton from "./vue-ui-skeleton.vue"
 
 const props = defineProps({
     dataset: {
@@ -82,6 +82,10 @@ const step = ref(0);
 const isPrinting = ref(false);
 const isImaging = ref(false);
 const isFullscreen = ref(false);
+
+const isDataset = computed(() => {
+    return !!props.dataset && props.dataset.length;
+});
 
 const emit = defineEmits(['selectLegend'])
 
@@ -340,6 +344,9 @@ const barTypes = computed(() => {
 });
 
 function resizeCanvas() {
+    if(!canvas.value) {
+        return
+    }
     const containerWidth = container.value.offsetWidth;
     const containerHeight = container.value.offsetHeight;
     canvas.value.width = containerWidth * dpr.value * 2;
@@ -1225,7 +1232,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="xyConfig.userOptions.show"
+            v-if="xyConfig.userOptions.show && isDataset"
             :backgroundColor="xyConfig.style.chart.backgroundColor"
             :color="xyConfig.style.chart.color"
             :isPrinting="isPrinting"
@@ -1251,8 +1258,33 @@ defineExpose({
         <div class="vue-ui-xy-canvas" :style="`position: relative; aspect-ratio: ${xyConfig.style.chart.aspectRatio}`"
         ref="container">
     
-            <canvas ref="canvas" style="width:100%; height:100%" @mousemove="handleMousemove($event)"
-                @mouseleave="handleMouseLeave"></canvas>
+            <canvas 
+                v-if="isDataset" 
+                ref="canvas" 
+                style="width:100%; 
+                height:100%" 
+                @mousemove="handleMousemove($event)"
+                @mouseleave="handleMouseLeave"
+            />
+            
+            <Skeleton 
+                v-else
+                :config="{
+                    type: 'line',
+                    style: {
+                        backgroundColor: xyConfig.style.chart.backgroundColor,
+                        line: {
+                            axis: {
+                                color: '#CCCCCC',
+                            },
+                            path: {
+                                color: '#CCCCCC',
+                                strokeWidth: 0.5
+                            }
+                        }
+                    }
+            }"
+        />
     
             <!-- TOOLTIP -->
             <Tooltip :show="xyConfig.style.chart.tooltip.show && isTooltip"
@@ -1300,7 +1332,7 @@ defineExpose({
         </div>
     
     
-        <Legend v-if="xyConfig.style.chart.legend.show" :legendSet="legendSet" :config="legendConfig"
+        <Legend v-if="xyConfig.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig"
             @clickMarker="({ i }) => segregate(i)">
             <template #item="{ legend, index }">
                 <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
