@@ -1,0 +1,122 @@
+<script setup>
+import { ref, computed } from "vue";
+import LocalVueUiFlow from '../src/components/vue-ui-flow.vue';
+import LocalVueDataUi from '../src/components/vue-data-ui.vue';
+import Box from "./Box.vue";
+import convertArrayToObject from "./convertModel";
+
+const dataset = ref([
+    [ 'A1', 'B1', 10 ],
+    [ 'A1', 'B2', 10 ],
+    [ 'B1', 'C1', 5 ],
+    [ 'B1', 'C2', 5 ],
+    [ 'B1', 'C3', 5 ],
+    [ 'B1', 'C4', 5 ],
+    [ 'A2', 'B1', 10],
+    [ 'B2', 'C5', 10],
+    [ 'C3', 'D1', 2],
+    [ 'C4', 'D1', 2],
+    [ 'C5', 'D1', 2],
+    [ 'C2', 'D2', 2],
+    [ 'C3', 'D2', 1],
+]);
+    
+const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox' },
+    { key: 'style.fontFamily', def: 'inherit', type: 'text' },
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
+    { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
+    { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.left', def: 24, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.title.text', def: 'Lorem ipsum dolor', type: 'text' },
+    { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color' },
+    { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 42 },
+    { key: 'style.chart.title.bold', def: true, type: 'checkbox' },
+    { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sit amet', type: 'text' },
+    { key: 'style.chart.title.subtitle.color', def: '#CCCCCC', type: 'color' },
+    { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 42 },
+    { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox' },
+    { key: 'style.chart.nodes.gap', def: 10, type: 'number', min: 0, max: 40 },
+    { key: 'style.chart.nodes.minHeight', def: 20, type: 'number', min: 5, max: 100 },
+    { key: 'style.chart.nodes.width', def: 40, type: 'number', min: 10, max: 100 },
+    { key: 'style.chart.nodes.labels.fontSize', def: 14, type: 'number', min: 8, max: 42 },
+    { key: 'style.chart.nodes.labels.abbreviation.use', def: true, type: 'checkbox' },
+    { key: 'style.chart.nodes.labels.abbreviation.length', def: 3, type: 'number', min: 1, max: 12 },
+    { key: 'style.chart.nodes.stroke', def: '#FFFFFF', type: 'color' },
+    { key: 'style.chart.nodes.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.links.opacity', def: 0.8, type: 'number', min: 0, max: 1, step: 0.1 },
+    { key: 'style.chart.links.stroke', def: '#FFFFFF', type: 'color' },
+    { key: 'style.chart.links.strokeWidth', def: 1, type: 'number', min: 0, max: 12 },
+    { key: 'style.chart.links.width', def: 200, type: 'number', min: 40, max: 300 }
+])
+
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default"
+])
+
+const currentTheme = ref(themeOptions.value[1])
+
+const config = computed(() => {
+    const c = convertArrayToObject(model.value);
+
+    return {
+        theme: currentTheme.value,
+        ...c
+    }
+})
+
+const step = ref(0);
+
+</script>
+
+<template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
+
+    <Box>
+        <template #title>VueUiFlow</template>
+
+        <template #local>
+            <LocalVueUiFlow :dataset="dataset" :config="config" :key="`local_${step}`"></LocalVueUiFlow>
+        </template>
+
+        <template #VDUI-local>
+            <LocalVueDataUi component="VueUiFlow" :dataset="dataset" :config="config" :key="`VDUI_local_${step}`"></LocalVueDataUi>
+        </template>
+
+        <template #build>
+            <VueUiFlow :dataset="dataset" :config="config" :key="`build_${step}`"></VueUiFlow>
+        </template>
+
+        <template #VDUI-build>
+            <VueDataUi component="VueUiFlow" :dataset="dataset" :config="config" :key="`VDUI_build_${step}`"></VueDataUi>
+        </template>
+
+        <template #knobs>
+            <div
+                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
+                <div v-for="knob in model">
+                    <label style="font-size: 10px">{{ knob.key }}</label>
+                    <div
+                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
+                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type"
+                            :min="knob.min ?? 0" :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
+                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
+                            <option v-for="opt in knob.options">{{ opt }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </Box>
+</template>
