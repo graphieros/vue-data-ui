@@ -53,6 +53,7 @@ import VueUiStripPlot from "./components/vue-ui-strip-plot.vue";
 import VueUiDumbbell from "./components/vue-ui-dumbbell.vue";
 import VueUiWordCloud from "./components/vue-ui-word-cloud.vue";
 import VueUiXyCanvas from "./components/vue-ui-xy-canvas.vue";
+import VueUiFlow from "./components/vue-ui-flow.vue";
 import { getPalette, createWordCloudDatasetFromPlainText } from "./lib";
 
 export { 
@@ -112,5 +113,6 @@ export {
     VueUiStripPlot,
     VueUiDumbbell,
     VueUiWordCloud,
-    VueUiXyCanvas
+    VueUiXyCanvas,
+    VueUiFlow
 };
