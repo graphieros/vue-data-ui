@@ -4407,5 +4407,79 @@
                 "outline": "none"
             }
         }
+    },
+    "vue_ui_flow": {
+        "theme": "",
+        "customPalette": [],
+        "userOptions": {
+            "show": true
+        },
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "padding": {
+                    "top": 0,
+                    "left": 24,
+                    "right": 24,
+                    "bottom": 0
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "nodes": {
+                    "gap": 10,
+                    "minHeight": 20,
+                    "width": 40,
+                    "labels": {
+                        "fontSize": 14,
+                        "abbreviation": {
+                            "use": true,
+                            "length": 3
+                        },
+                        "prefix": "",
+                        "suffix": "",
+                        "rounding": 0
+                    },
+                    "stroke": "#FFFFFF",
+                    "strokeWidth": 1
+                },
+                "links": {
+                    "width": 200,
+                    "opacity": 0.8,
+                    "stroke": "#FFFFFF",
+                    "strokeWidth": 1
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "responsiveBreakpoint": 400,
+            "columnNames": {
+                "source": "Source",
+                "target": "Target",
+                "value": "Value"
+            },
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "none"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none"
+            }
+        }
     }
 }
