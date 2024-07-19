@@ -148,6 +148,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiDonut`          | `VueUiDonutDatasetItem[]`              | `VueUiDonutConfig`          | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`    | ✅             | ✅     |
 | `VueUiDonutEvolution` | `VueUiDonutEvolutionDatasetItem[]`     | `VueUiDonutEvolutionConfig` | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#reset-action`                                      | ❌             | ✅     |
 | `VueUiDumbbell`       | `VueUiDumbbellDataset[]`               | `VueUiDumbbellConfig`       | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`,                                                      | ❌             | ✅     |
+| `VueUiFlow`           | `VueUiFlowDatasetItem[]`               | `VueUiFlowConfig`           | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`,                                                                 | ❌             | ✅     |
 | `VueUiGalaxy`         | `VueUiGalaxyDatasetItem[]`             | `VueUiGalaxyConfig`         | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                   | ✅             | ✅     |
 | `VueUiGauge`          | `VueUiGaugeDataset`                    | `VueUiGaugeConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`,                                                      | ❌             | ✅     |
 | `VueUiHeatmap`        | `VueUiHeatmapDatasetItem[]`            | `VueUiHeatmapConfig`        | `generatePdf`, `generateCsv`, `generateImage`                                                           | `#svg`, `#tooltip-before`, `#tooltip-after`                             | ✅             | ✅     |
@@ -224,6 +225,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiChestnut
 - VueUiDonut
 - VueUiDonutEvolution
+- VueUiFlow
 - VueUiGalaxy
 - VueUiGauge
 - VueUiMolecule

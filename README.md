@@ -9,7 +9,7 @@
 # vue-data-ui
 
 ![npm](https://img.shields.io/npm/v/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-51-blue)
+![Static Badge](https://img.shields.io/badge/components-52-blue)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
@@ -29,6 +29,7 @@ Available components
 - [VueUiDonutEvolution](https://vue-data-ui.graphieros.com/docs#vue-ui-donut-evolution)
 - [VueUiDonut](https://vue-data-ui.graphieros.com/docs#vue-ui-donut)
 - [VueUiDumbbell](https://vue-data-ui.graphieros.com/docs#vue-ui-dumbbell)
+- [VueUiFlow](https://vue-data-ui.graphieros.com/docs#vue-ui-flow)
 - [VueUiGalaxy](https://vue-data-ui.graphieros.com/docs#vue-ui-galaxy)
 - [VueUiGauge](https://vue-data-ui.graphieros.com/docs#vue-ui-gauge)
 - [VueUiHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-heatmap)
@@ -50,8 +51,8 @@ Available components
 - [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
 - [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
 - [VueUiWordCloud](https://vue-data-ui.graphieros.com/docs#vue-ui-word-cloud)
-- [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
 - [VueUiXyCanvas](https://vue-data-ui.graphieros.com/docs#vue-ui-xy-canvas)
+- [VueUiXy](https://vue-data-ui.graphieros.com/docs#vue-ui-xy)
 
 ## Mini charts
 
@@ -187,6 +188,7 @@ The svg slot also works when using the VueDataUi universal component, if the com
 
 All charts expose a #legend slot except for:
 
+- VueUiFlow
 - VueUiHeatmap
 - VueUiRelationCircle
 - VueUiSparkHistogram
@@ -366,6 +368,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiDonut`          | `VueUiDonutDatasetItem[]`              | `VueUiDonutConfig`          | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`    | ✅             | ✅     |
 | `VueUiDonutEvolution` | `VueUiDonutEvolutionDatasetItem[]`     | `VueUiDonutEvolutionConfig` | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`                               | `#svg`, `#legend`, `#reset-action`                                      | ❌             | ✅     |
 | `VueUiDumbbell`       | `VueUiDumbbellDataset[]`               | `VueUiDumbbellConfig`       | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`, `#legend`,                                                      | ❌             | ✅     |
+| `VueUiFlow`           | `VueUiFlowDatasetItem[]`               | `VueUiFlowConfig`           | `getData`, `generatePdf`, `generateCsv`, `generateImage`                                                | `#svg`,                                                                 | ❌             | ✅     |
 | `VueUiGalaxy`         | `VueUiGalaxyDatasetItem[]`             | `VueUiGalaxyConfig`         | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                   | ✅             | ✅     |
 | `VueUiGauge`          | `VueUiGaugeDataset`                    | `VueUiGaugeConfig`          | `generatePdf`, `generateImage`                                                                          | `#svg`, `#legend`,                                                      | ❌             | ✅     |
 | `VueUiHeatmap`        | `VueUiHeatmapDatasetItem[]`            | `VueUiHeatmapConfig`        | `generatePdf`, `generateCsv`, `generateImage`                                                           | `#svg`, `#tooltip-before`, `#tooltip-after`                             | ✅             | ✅     |
@@ -442,6 +445,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiChestnut
 - VueUiDonut
 - VueUiDonutEvolution
+- VueUiFlow
 - VueUiGalaxy
 - VueUiGauge
 - VueUiMolecule
