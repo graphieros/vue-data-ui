@@ -63,6 +63,7 @@ const components = {
     VueUiDumbbell: defineAsyncComponent(() => import('./vue-ui-dumbbell.vue')),
     VueUiWordCloud: defineAsyncComponent(() => import('./vue-ui-word-cloud.vue')),
     VueUiXyCanvas: defineAsyncComponent(() => import('./vue-ui-xy-canvas.vue')),
+    VueUiFlow: defineAsyncComponent(() => import('./vue-ui-flow.vue'))
 };
 
 const componentProps = {
@@ -115,7 +116,8 @@ const componentProps = {
     VueUiStripPlot: ['config', 'dataset'],
     VueUiDumbbell: ['config', 'dataset'],
     VueUiWordCloud: ['config', 'dataset'],
-    VueUiXyCanvas: ['config', 'dataset']
+    VueUiXyCanvas: ['config', 'dataset'],
+    VueUiFlow: ['config', 'dataset']
 };
 
 const emit = defineEmits([
