@@ -52,7 +52,8 @@ import {
     VueUiStripPlot,
     VueUiDumbbell,
     VueUiWordCloud,
-    VueUiXyCanvas
+    VueUiXyCanvas,
+    VueUiFlow
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -108,4 +109,5 @@ app.component("VueUiStripPlot", VueUiStripPlot);
 app.component("VueUiDumbbell", VueUiDumbbell);
 app.component("VueUiWordCloud", VueUiWordCloud);
 app.component("VueUiXyCanvas", VueUiXyCanvas);
+app.component("VueUiFlow", VueUiFlow);
 app.mount('#app');
