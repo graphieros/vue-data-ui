@@ -44,9 +44,11 @@ const timeout = ref(null);
 
 function createOverlay() {
     const o = document.createElement("DIV");
+    const { innerWidth, innerHeight } = window;
+
     o.style.position = 'fixed';
-    o.style.top = '200px';
-    o.style.left = '100px';
+    o.style.top = `${innerHeight ? (innerHeight / 2) - (screenshotConfig.value.style.captureArea.initialHeight / 2) : 200}px`;
+    o.style.left = `${innerWidth ? (innerWidth / 2) - (screenshotConfig.value.style.captureArea.initialWidth / 2) : 100}px`;
     o.style.width = `${screenshotConfig.value.style.captureArea.initialWidth}px`;
     o.style.height = `${screenshotConfig.value.style.captureArea.initialHeight}px`;
     o.style.background = screenshotConfig.value.style.captureArea.background;
