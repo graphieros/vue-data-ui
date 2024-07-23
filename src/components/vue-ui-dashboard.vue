@@ -24,6 +24,12 @@ const dashboardConfig = computed(() => {
 
 const uid = ref(`vue-ui-dashboard-${Math.random()}`);
 
+const isLocked = ref(dashboardConfig.value.locked);
+
+function toggleLock() {
+    isLocked.value = !isLocked.value;
+}
+
 const gridSize = 20;
 const items = ref(props.dataset);
 const dragging = ref(null);
@@ -46,6 +52,7 @@ function generatePdf(){
 }
 
 function startDrag (index) {
+    if(isLocked.value) return;
     isDragOrResize.value = true;
     changeIndex.value = index;
     if (resizing.value === null) {
@@ -121,6 +128,7 @@ function checkDirection(item, deltaX, deltaY) {
 }
 
 function onMouseMove(event) {
+    if (isLocked.value) return;
     isDragOrResize.value = true;
     if (dragging.value !== null) {
         const item = items.value[dragging.value];
@@ -175,6 +183,7 @@ function stopDragResize() {
 };
 
 function onTouchStart(index) {
+    if (isLocked.value) return;
     isDragOrResize.value = true;
     changeIndex.value = index;
     if (resizing.value === null) {
@@ -206,6 +215,7 @@ function onTouchResizeMove(event) {
 };
 
 function onTouchMove(event) {
+    if (isLocked.value) return;
     isDragOrResize.value = true;
     event.preventDefault();
     if (dragging.value !== null) {
@@ -264,7 +274,8 @@ function getItemsPositions() {
 
 defineExpose({
     generatePdf,
-    getItemsPositions
+    getItemsPositions,
+    toggleLock
 })
 
 </script>
@@ -298,7 +309,7 @@ defineExpose({
                 <div
                     v-for="(item, index) in items"
                     :key="item.id"
-                    class="vue-ui-dashboard-grid-item"
+                    :class="{'vue-ui-dashboard-grid-item': true, 'vue-ui-dashboard-grid-item--locked': isLocked }"
                     :style="{
                         width: `${item.width}%`,
                         height: `${item.height}%`,
@@ -312,34 +323,36 @@ defineExpose({
                     @mousedown="startDrag(index)"
                     @touchstart="onTouchStart(index)"
                 >
-                    <div
-                        class="vue-ui-dashboard-resize-handle vue-ui-dashboard-top-left"
-                        @mousedown="startResize(index, 'top-left')"
-                        @touchstart="onTouchResizeStart(index, 'top-left', $event)"
-                        @touchmove="onTouchResizeMove($event)"
-                        @touchend="onTouchEnd"
-                    ></div>
-                    <div
-                        class="vue-ui-dashboard-resize-handle vue-ui-dashboard-top-right"
-                        @mousedown="startResize(index, 'top-right')"
-                        @touchstart="onTouchResizeStart(index, 'top-right', $event)"
-                        @touchmove="onTouchResizeMove($event)"
-                        @touchend="onTouchEnd"
-                    ></div>
-                    <div
-                        class="vue-ui-dashboard-resize-handle vue-ui-dashboard-bottom-left"
-                        @mousedown="startResize(index, 'bottom-left')"
-                        @touchstart="onTouchResizeStart(index, 'bottom-left', $event)"
-                        @touchmove="onTouchResizeMove($event)"
-                        @touchend="onTouchEnd"
-                    ></div>
-                    <div
-                        class="vue-ui-dashboard-resize-handle vue-ui-dashboard-bottom-right"
-                        @mousedown="startResize(index, 'bottom-right')"
-                        @touchstart="onTouchResizeStart(index, 'bottom-right', $event)"
-                        @touchmove="onTouchResizeMove($event)"
-                        @touchend="onTouchEnd"
-                    ></div>
+                    <template v-if="!isLocked">                    
+                        <div
+                            class="vue-ui-dashboard-resize-handle vue-ui-dashboard-top-left"
+                            @mousedown="startResize(index, 'top-left')"
+                            @touchstart="onTouchResizeStart(index, 'top-left', $event)"
+                            @touchmove="onTouchResizeMove($event)"
+                            @touchend="onTouchEnd"
+                        ></div>
+                        <div
+                            class="vue-ui-dashboard-resize-handle vue-ui-dashboard-top-right"
+                            @mousedown="startResize(index, 'top-right')"
+                            @touchstart="onTouchResizeStart(index, 'top-right', $event)"
+                            @touchmove="onTouchResizeMove($event)"
+                            @touchend="onTouchEnd"
+                        ></div>
+                        <div
+                            class="vue-ui-dashboard-resize-handle vue-ui-dashboard-bottom-left"
+                            @mousedown="startResize(index, 'bottom-left')"
+                            @touchstart="onTouchResizeStart(index, 'bottom-left', $event)"
+                            @touchmove="onTouchResizeMove($event)"
+                            @touchend="onTouchEnd"
+                        ></div>
+                        <div
+                            class="vue-ui-dashboard-resize-handle vue-ui-dashboard-bottom-right"
+                            @mousedown="startResize(index, 'bottom-right')"
+                            @touchstart="onTouchResizeStart(index, 'bottom-right', $event)"
+                            @touchmove="onTouchResizeMove($event)"
+                            @touchend="onTouchEnd"
+                        ></div>
+                    </template>
                     <slot name="content" :item="item" :index="index" :left="item.left" :top="item.top" :height="item.height" :width="item.width"></slot>
                 </div>
             </div>
@@ -376,6 +389,11 @@ defineExpose({
 
 .vue-ui-dashboard-grid-item:hover {
     border: 2px dashed v-bind(itemBorder);
+}
+
+.vue-ui-dashboard-grid-item--locked {
+    border: none !important;
+    cursor: default !important;
 }
 
 .vue-ui-dashboard-grid-item:hover .vue-ui-dashboard-resize-handle {
