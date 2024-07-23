@@ -1348,6 +1348,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiDashboardConfig = {
+        locked?: boolean;
         style?: {
             board?: {
                 backgroundColor?: string;
