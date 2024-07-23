@@ -134,7 +134,8 @@ const emit = defineEmits([
     'rate',
     'postImage',
     'hoverIndex',
-    'selectX'
+    'selectX',
+    'toggleLock'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -159,6 +160,7 @@ const shoot = ref(() => null);
 const close = ref(() => null);
 const restoreOrder = ref(() => null);
 const recalculateHeight = ref(() => null);
+const toggleLock = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -194,7 +196,10 @@ watch(currentComponentRef, async (newRef) => {
             restoreOrder.value = newRef.restoreOrder;
         }
         if (newRef.recalculateHeight) {
-            recalculateHeight.value = newRef.recalculateHeight
+            recalculateHeight.value = newRef.recalculateHeight;
+        }
+        if (newRef.toggleLock) {
+            toggleLock.value = newRef.toggleLock;
         }
     }
 })
@@ -214,7 +219,8 @@ const getEventHandlers = () => {
         'rate',
         'postImage',
         'hoverIndex',
-        'selectX'
+        'selectX',
+        'toggleLock'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -245,7 +251,8 @@ defineExpose({
     shoot,
     close,
     restoreOrder,
-    recalculateHeight
+    recalculateHeight,
+    toggleLock
 });
 </script>
 
