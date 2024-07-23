@@ -1418,6 +1418,7 @@ function toggleRead() {
 }
 
 const dashboardConfig = ref({
+  locked: false,
   style: {
     board: {
       backgroundColor: "#FFFFFF",
@@ -1435,6 +1436,14 @@ const dashboardConfig = ref({
   },
   allowPrint: true,
 });
+
+const dashTest = ref(null)
+
+function toggleLock() { 
+  if(dashTest.value) {
+    dashTest.value.toggleLock()
+  }
+}
 
 const comps = ref([
   {
@@ -5433,7 +5442,7 @@ function testGetData() {
           {{ PROD_CONFIG.vue_ui_waffle }}
         </template>
       </Box>
-      
+    
       <Box @copy="copyConfig(PROD_CONFIG.vue_ui_annotator)">
         <template #title>
           <BaseIcon name="annotator"/>
@@ -5499,9 +5508,10 @@ function testGetData() {
           VueUiDashboard
         </template>
         <template #dev>
+          <button @click="toggleLock">TOGGLE LOCK</button>
           <VueDataUiTest
             component="VueUiDashboard"
-            ref="dash"
+            ref="dashTest"
             :dataset="comps"
             @change="testchange"
             :config="dashboardConfig"
