@@ -2404,6 +2404,7 @@
         }
     },
     "vue_ui_dashboard": {
+        "locked": false,
         "style": {
             "board": {
                 "backgroundColor": "#FFFFFF",
