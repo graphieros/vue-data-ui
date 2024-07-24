@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, watch } from "vue";
 import { 
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
@@ -148,6 +148,8 @@ const immutableSet = computed(() => {
 });
 
 const mutableSet = ref(immutableSet.value)
+
+watch(() => immutableSet.value, (val) => mutableSet.value = val)
 
 function getData() {
     return immutableSet.value.map(ds => {
