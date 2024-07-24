@@ -42,6 +42,13 @@ const dataset = ref([
     },
 ])
 
+function addDatapoint() {
+    dataset.value[0].series.push({
+        name: 'Serie N',
+        values: [10]
+    })
+}
+
 const model = ref([
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
@@ -179,6 +186,7 @@ function selectDatapoint(datapoint) {
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
+    <button @click="addDatapoint">ADD DATAPOINT</button>
     <Box>
         <template #title>VueUiNestedDonuts</template>
 
