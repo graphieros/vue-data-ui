@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, watch } from "vue";
 import {
     abbreviate,
     calcMarkerOffsetX, 
@@ -226,6 +226,9 @@ function checkSegregation(sourceArray, n, targetArray) {
 }
 
 const mutableDataset = ref(md.value);
+
+watch(() => md.value, (val) => mutableDataset.value = val);
+
 const rafUp = ref(null);
 const rafDown = ref(null);
 
