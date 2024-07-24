@@ -172,6 +172,13 @@ function selectDatapoint(datapoint) {
     console.log({ datapoint })
 }
 
+function addDatapoint() {
+    dataset.value.push({
+        name: 'Serie N',
+        values: [10]
+    })
+}
+
 </script>
 
 <template>
@@ -185,6 +192,7 @@ function selectDatapoint(datapoint) {
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip"/>
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
+    <button @click="addDatapoint">ADD DATAPOINT</button>
     <Box>
         <template #title>VueUiDonut</template>
 
