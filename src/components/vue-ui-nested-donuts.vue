@@ -235,7 +235,8 @@ const rafDown = ref(null);
 function segregateDonut(item) {
     emit('selectLegend', item);
     const target = immutableDataset.value.flatMap(d => d.series).find(el => el.id === item.id);
-    const source = mutableDataset.value.flatMap(d => d.series).find(el => el.id === item.id).value;
+    const sourceEl = mutableDataset.value.flatMap(d => d.series).find(el => el.id === item.id);
+    const source = sourceEl ? sourceEl.value : 0;
     let initVal = source;
 
     const allParentDonutIds = immutableDataset.value.find(el => el.id === target.arcOfId).series.map(s => s.id);
