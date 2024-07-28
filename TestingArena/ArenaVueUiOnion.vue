@@ -28,8 +28,16 @@ const dataset = ref([
     }
 ])
 
+function mutate() {
+    dataset.value[0].percentage = Math.random() * 100
+    dataset.value[1].percentage = Math.random() * 100
+    dataset.value[2].percentage = Math.random() * 100
+    dataset.value[3].percentage = Math.random() * 100
+}
+
 const model = ref([
     { key: 'useCssAnimation', def: true, type: 'checkbox' },
+    { key: 'useStartAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text', label: "fontFamily", category: 'general' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
@@ -141,6 +149,7 @@ const step = ref(0)
 </script>
 
 <template>
+    <button @click="mutate">MUTATE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
