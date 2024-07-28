@@ -1241,6 +1241,7 @@
         "theme": "",
         "customPalette": [],
         "useCssAnimation": true,
+        "useStartAnimation": true,
         "useBlurOnHover": true,
         "style": {
             "fontFamily": "inherit",
@@ -1250,6 +1251,7 @@
                 "useGradient": true,
                 "gradientIntensity": 20,
                 "layout": {
+                    "maxThickness": 64,
                     "gutter": {
                         "color": "#e1e5e8",
                         "width": 0.62
