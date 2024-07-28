@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, watch } from "vue";
 import { 
     convertColorToHex, 
     convertCustomPalette, 
@@ -66,6 +66,7 @@ const details = ref(null);
 const step = ref(0);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
+const segregated = ref([]);
 
 const onionConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -150,6 +151,7 @@ const immutableDataset = computed(() => {
         return {
             ...onion,
             percentage: onion.percentage || 0,
+            targetPercentage: onion.percentage || 0,
             color: convertColorToHex(onion.color) || customPalette.value[i] || palette[i],
             id,
             shape: 'circle',
@@ -160,6 +162,51 @@ const immutableDataset = computed(() => {
         }
     })
 });
+
+const animDataset = ref(immutableDataset.value)
+
+const isAnimated = computed(() => onionConfig.value.useStartAnimation)
+const raf = ref(null)
+const maxPercentage = computed(() => Math.max(...immutableDataset.value.map(ds => ds.percentage)))
+const isLoaded = ref(false);
+
+watch(() => immutableDataset.value, anim, { immediate: true })
+
+function anim() {
+    if (isAnimated.value && !isLoaded.value) {
+        animDataset.value = immutableDataset.value.map(ds => {
+            return {
+                ...ds,
+                percentage: 0
+            }
+        })
+
+        let counter = 0;
+
+        function animUp() {
+            if (counter >= maxPercentage.value) {
+                cancelAnimationFrame(raf.value);
+                animDataset.value = immutableDataset.value
+                isLoaded.value = true;
+            } else {
+                animDataset.value = immutableDataset.value.map(ds => {
+                    return {
+                        ...ds,
+                        percentage: counter < ds.targetPercentage ? counter: ds.targetPercentage,
+                    }
+                })
+                counter += 1;
+                requestAnimationFrame(animUp)
+                    isLoaded.value = true;
+            }
+        }
+
+        animUp()
+
+    } else {
+        animDataset.value = immutableDataset.value
+    }
+}
 
 const legendConfig = computed(() => {
     return {
@@ -172,21 +219,21 @@ const legendConfig = computed(() => {
     }
 })
 
-const segregated = ref([]);
-
 const mutableCount = computed(() => {
     return immutableDataset.value.filter(onion => !segregated.value.includes(onion.id)).length;
 });
 
 const onionSkin = computed(() => {
+    const baseThickness = drawableArea.value.width / 2 / immutableDataset.value.length;
+
     return {
-        gutter: drawableArea.value.width / 2 / immutableDataset.value.length * onionConfig.value.style.chart.layout.gutter.width,
-        track: drawableArea.value.width / 2 / immutableDataset.value.length * onionConfig.value.style.chart.layout.track.width,
+        gutter: (baseThickness > onionConfig.value.style.chart.layout.maxThickness ? onionConfig.value.style.chart.layout.maxThickness : baseThickness) * onionConfig.value.style.chart.layout.gutter.width,
+        track: (baseThickness > onionConfig.value.style.chart.layout.maxThickness ? onionConfig.value.style.chart.layout.maxThickness : baseThickness) * onionConfig.value.style.chart.layout.track.width,
     }
 });
 
 const mutableDataset = computed(() => {
-    return immutableDataset.value
+    return animDataset.value
         .filter(onion => !segregated.value.includes(onion.id))
         .map((onion, i) => {
             const radius = (((drawableArea.value.maxRadius - onionSkin.value.track) / mutableCount.value) / 2) * (1+i);
