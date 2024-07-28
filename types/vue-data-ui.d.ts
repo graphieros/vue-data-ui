@@ -3188,6 +3188,7 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        useStartAnimation?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -3196,6 +3197,7 @@ declare module 'vue-data-ui' {
                 useGradient?: boolean;
                 gradientIntensity?: number;
                 layout?: {
+                    maxThickness?: number;
                     gutter?: {
                         color?: string;
                         width?: number;
