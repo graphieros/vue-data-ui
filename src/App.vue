@@ -41,6 +41,7 @@ import ArenaVueUiTableHeatmap from "../TestingArena/ArenaVueUiTableHeatmap.vue";
 import ArenaVueUiWordCloud from "../TestingArena/ArenaVueUiWordCloud.vue";
 import ArenaVueUiXyCanvas from "../TestingArena/ArenaVueUiXyCanvas.vue";
 import ArenaVueUiFlow from "../TestingArena/ArenaVueUiFlow.vue";
+import ArenaVueUiParallelCoordinatePlot from "../TestingArena/ArenaVueUiParallelCoordinatePlot.vue";
 
 import WordCloud from './components/vue-ui-word-cloud.vue';
 import VueDataUi from "./components/vue-data-ui.vue";
@@ -48,49 +49,50 @@ import VueDataUi from "./components/vue-data-ui.vue";
 const showOldArena = ref(false);
 
 const components = ref([
-  /*____________*/"VueUiXy", //  0
-  /*_________*/"VueUiDonut", //  1
-  /*_______*/"VueUiTreemap", //  2
-  /*________*/"VueUiWaffle", //  3
-  /*_________*/"VueUiRadar", //  4
-  /*______*/"VueUiQuadrant", //  5
-  /*_________*/"VueUiGauge", //  6
-  /*_________*/"VueUiWheel", //  7
-  /*_____*/"VueUiTiremarks", //  8
-  /*______*/"VueUiChestnut", //  9
-  /*_________*/"VueUiOnion", // 10
-  /*___*/"VueUiVerticalBar", // 11
-  /*_______*/"VueUiHeatmap", // 12
-  /*_______*/"VueUiScatter", // 13
-  /*___*/"VueUiCandlestick", // 14
-  /*_____*/"VueUiSparkline", // 15
-  /*______*/"VueUiSparkbar", // 16
-  /*_*/"VueUiSparkStackbar", // 17
-  /**/"VueUiSparkHistogram", // 18
-  /*____*/"VueUiSparkgauge", // 19
-  /*____*/"VueUiSparkTrend", // 20
-  /*____*/"VueUiQuickChart", // 21
-  /*____*/"VueUiAgePyramid", // 22
-  /**/"VueUiRelationCircle", // 23
-  /*___*/"VueUiThermometer", // 24
-  /*_________*/"VueUiRings", // 25
-  /**/"VueUiDonutEvolution", // 26
-  /*__________*/"VueUiIcon", // 27
-  /*_____*/"VueUiMoodRadar", // 28
-  /*______*/"VueUiMolecule", // 29
-  /*__*/"VueUiNestedDonuts", // 30
-  /*________*/"VueUiGalaxy", // 31
-  /*_____*/"VueUiStripPlot", // 32
-  /*______*/"VueUiDumbbell", // 33
-  /*_________*/"VueUi3dBar", // 34
-  /**/"VueUiTableSparkline", // 35
-  /*__*/"VueUiTableHeatmap", // 36
-  /*____ */"VueUiWordCloud", // 37
-  /*______*/"VueUiXyCanvas", // 38
-  /*__________*/"VueUiFlow", // 39
+  /*____________________*/"VueUiXy", //  0
+  /*_________________*/"VueUiDonut", //  1
+  /*_______________*/"VueUiTreemap", //  2
+  /*________________*/"VueUiWaffle", //  3
+  /*_________________*/"VueUiRadar", //  4
+  /*______________*/"VueUiQuadrant", //  5
+  /*_________________*/"VueUiGauge", //  6
+  /*_________________*/"VueUiWheel", //  7
+  /*_____________*/"VueUiTiremarks", //  8
+  /*______________*/"VueUiChestnut", //  9
+  /*_________________*/"VueUiOnion", // 10
+  /*___________*/"VueUiVerticalBar", // 11
+  /*_______________*/"VueUiHeatmap", // 12
+  /*_______________*/"VueUiScatter", // 13
+  /*___________*/"VueUiCandlestick", // 14
+  /*_____________*/"VueUiSparkline", // 15
+  /*______________*/"VueUiSparkbar", // 16
+  /*_________*/"VueUiSparkStackbar", // 17
+  /*________*/"VueUiSparkHistogram", // 18
+  /*____________*/"VueUiSparkgauge", // 19
+  /*____________*/"VueUiSparkTrend", // 20
+  /*____________*/"VueUiQuickChart", // 21
+  /*____________*/"VueUiAgePyramid", // 22
+  /*________*/"VueUiRelationCircle", // 23
+  /*___________*/"VueUiThermometer", // 24
+  /*_________________*/"VueUiRings", // 25
+  /*________*/"VueUiDonutEvolution", // 26
+  /*__________________*/"VueUiIcon", // 27
+  /*_____________*/"VueUiMoodRadar", // 28
+  /*______________*/"VueUiMolecule", // 29
+  /*__________*/"VueUiNestedDonuts", // 30
+  /*________________*/"VueUiGalaxy", // 31
+  /*_____________*/"VueUiStripPlot", // 32
+  /*______________*/"VueUiDumbbell", // 33
+  /*_________________*/"VueUi3dBar", // 34
+  /*________*/"VueUiTableSparkline", // 35
+  /*__________*/"VueUiTableHeatmap", // 36
+  /*____________ */"VueUiWordCloud", // 37
+  /*______________*/"VueUiXyCanvas", // 38
+  /*__________________*/"VueUiFlow", // 39
+  /**/"VueUiParallelCoordinatePlot", // 40
 ]);
 
-const selectedComponent = ref(components.value[39]);
+const selectedComponent = ref(components.value[40]);
 
 </script>
 
@@ -224,4 +226,7 @@ const selectedComponent = ref(components.value[39]);
 
   <!-- 39 -->
   <ArenaVueUiFlow v-if="selectedComponent === 'VueUiFlow'" />
+
+  <!-- 40 -->
+  <ArenaVueUiParallelCoordinatePlot v-if="selectedComponent === 'VueUiParallelCoordinatePlot'" />
 </template>
