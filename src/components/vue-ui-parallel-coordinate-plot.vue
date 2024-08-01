@@ -1,0 +1,744 @@
+<script setup>
+import { ref, computed, onMounted } from "vue";
+import { 
+    XMLNS,
+    calculateNiceScale, 
+    convertColorToHex, 
+    convertCustomPalette, 
+    createCsvContent, 
+    createSmoothPath, 
+    createUid, 
+    dataLabel, 
+    downloadCsv, 
+    error, 
+    functionReturnsString, 
+    getMissingDatasetAttributes, 
+    isFunction, 
+    objectIsEmpty, 
+    palette, 
+    themePalettes, 
+} from "../lib";
+import mainConfig from "../default_configs.json";
+import themes from "../themes.json";
+import { useNestedProp } from "../useNestedProp";
+import Title from "../atoms/Title.vue";
+import Legend from "../atoms/Legend.vue";
+import Tooltip from "../atoms/Tooltip.vue";
+import Shape from "../atoms/Shape.vue";
+import UserOptions from "../atoms/UserOptions.vue";
+import DataTable from "../atoms/DataTable.vue";
+import Accordion from "./vue-ui-accordion.vue";
+import pdf from "../pdf";
+import img from "../img";
+
+const props = defineProps({
+    config: {
+        type: Object,
+        default() {
+            return {}
+        }
+    },
+    dataset: {
+        type: Array,
+        default() {
+            return []
+        }
+    },
+});
+
+const isDataset = computed({
+    get() {
+        return !!props.dataset && props.dataset.length
+    },
+    set(bool) {
+        return bool
+    }
+});
+
+const pcpChart = ref(null);
+const isPrinting = ref(false);
+const isImaging = ref(false);
+const step = ref(0);
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiParallelCoordinatePlot',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['name', 'series']
+            }).forEach(attr => {
+                isDataset.value = false;
+                error({
+                    componentName: 'VueUiParallelCoordinatePlot',
+                    type: 'datasetSerieAttribute',
+                    property: attr,
+                    index: i
+                });
+            });
+        });
+    }
+});
+
+const uid = ref(createUid());
+const defaultConfig = ref(mainConfig.vue_ui_parallel_coordinate_plot);
+
+const isFullscreen = ref(false)
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+    step.value += 1;
+}
+
+const pcpConfig = computed(() => {
+    const mergedConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
+    });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_parallel_coordinate_plot[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
+});
+
+const drawingArea = computed(() => {
+    const { top: p_top, right: p_right, bottom: p_bottom, left: p_left } = pcpConfig.value.style.chart.padding;
+    const chartHeight = pcpConfig.value.style.chart.height;
+    const chartWidth = pcpConfig.value.style.chart.width;
+    return {
+        chartHeight,
+        chartWidth,
+        height: chartHeight - p_top - p_bottom,
+        width: chartWidth - p_left - p_right,
+        top: p_top,
+        left: p_left,
+        right: chartWidth - p_right,
+        bottom: chartHeight - p_bottom
+    }
+})
+
+const customPalette = computed(() => {
+    return convertCustomPalette(pcpConfig.value.customPalette);
+})
+
+const mutableConfig = ref({
+    dataLabels: {
+        show: pcpConfig.value.style.chart.yAxis.labels.datapoints.show
+    },
+    showTable: pcpConfig.value.table.show,
+});
+
+const segregated = ref([]);
+
+function segregate(id) {
+    if (segregated.value.includes(id)) {
+        segregated.value = segregated.value.filter(el => el !== id);
+    } else {
+        segregated.value.push(id);
+    }
+}
+
+const immutableDataset = computed(() => {
+    return props.dataset.map((ds, i) => {
+        return {
+            ...ds,
+            series: ds.series.map(s => {
+                return {
+                    ...s,
+                    id: createUid()
+                }
+            }),
+            seriesIndex: i,
+            color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
+            id: createUid(),
+            shape: ds.shape || 'circle'
+        }
+    })
+});
+
+const legendSet = computed(() => {
+    return immutableDataset.value.map(ds => {
+        return {
+            ...ds,
+            opacity: segregated.value.includes(ds.id) ? 0.5 : 1,
+            segregate: () => segregate(ds.id),
+            isSegregated: segregated.value.includes(ds.id)
+        }
+    })
+});
+
+const axisNames = computed(() => {
+    if (!pcpConfig.value.style.chart.yAxis.labels.axisNames.length) {
+        return immutableDataset.value.map((_, i) => {
+            return `Y-${i}`
+        })
+    } else {
+        return pcpConfig.value.style.chart.yAxis.labels.axisNames
+    }
+})
+
+
+const legendConfig = computed(() => {
+    return {
+        cy: 'pcp-div-legend',
+        backgroundColor: pcpConfig.value.style.chart.legend.backgroundColor,
+        color: pcpConfig.value.style.chart.legend.color,
+        fontSize: pcpConfig.value.style.chart.legend.fontSize,
+        paddingBottom: 12,
+        fontWeight: pcpConfig.value.style.chart.legend.bold ? 'bold' : ''
+    }
+})
+
+const maxSeries = computed(() => {
+    return Math.max(...immutableDataset.value
+        .filter(ds => !segregated.value.includes(ds.id))
+        .map(ds => Math.max(...ds.series.flatMap(s => s.values.length)))
+    );
+});
+
+const slot = computed(() => {
+    return drawingArea.value.width / maxSeries.value;
+});
+
+const filteredDs = computed(() => {
+    return immutableDataset.value.filter(ds => !segregated.value.includes(ds.id));
+});
+
+const scales = computed(() => {
+    let s = [];
+    for (let i = 0; i < maxSeries.value; i += 1 ) {
+        const min = Math.min(...filteredDs.value.flatMap(ds => ds.series.map(s => s.values[i]) || 0));
+        const max = Math.max(...filteredDs.value.flatMap(ds => ds.series.map(s => s.values[i]) || 0));
+        const opMin = max === min ? min / 4 : min;
+        const opMax = max === min ? max * 2 : max;
+        const scale = calculateNiceScale(opMin, opMax, pcpConfig.value.style.chart.yAxis.scaleTicks);
+        const ticks = scale.ticks.map((t, k) => {
+            const senseValue = scale.min < 0 ? t + Math.abs(scale.min) : t - Math.abs(scale.min);
+            const senseMax = scale.min < 0 ? scale.max + Math.abs(scale.min) : scale.max - Math.abs(scale.min);
+            return {
+                y: drawingArea.value.bottom - (drawingArea.value.height * (senseValue / senseMax)),
+                x: drawingArea.value.left + (slot.value * i) + (slot.value / 2),
+                value: t
+            }
+        });
+        s.push({
+            scale,
+            ticks,
+            name: pcpConfig.value.style.chart.yAxis.labels.axisNames[i] || `Y-${i + 1}`
+        });
+    }
+    return s;
+});
+
+function createStraightPath(points) {
+    let arr = [];
+    for (let i = 0; i < points.length; i += 1) {
+        arr.push(`${points[i].x},${points[i].y} `)
+    }
+    return arr.join(' ').trim()
+}
+
+const mutableDataset = computed(() => {
+    return filteredDs.value
+        .map(ds => {
+            return {
+                ...ds,
+                series: ds.series.map(s => {
+                    return {
+                        ...s,
+                        datapoints: s.values.map((v, k) => {
+                            const senseValue = scales.value[k].scale.min < 0 ? (v || 0) + Math.abs(scales.value[k].scale.min) : (v || 0) - Math.abs(scales.value[k].scale.min);
+                            const senseMax = scales.value[k].scale.min < 0 ? scales.value[k].scale.max + Math.abs(scales.value[k].scale.min) : scales.value[k].scale.max - Math.abs(scales.value[k].scale.min);
+                            return {
+                                name: s.name,
+                                seriesName: ds.name,
+                                value: v,
+                                x: drawingArea.value.left + (slot.value * k) + (slot.value / 2),
+                                y: drawingArea.value.bottom - (drawingArea.value.height * (senseValue / senseMax))
+                            }
+                        })
+                    }
+                })
+            }
+        })
+        .map(ds => {
+            return {
+                ...ds,
+                series: ds.series.map(s => {
+                    return {
+                        ...s,
+                        smoothPath: createSmoothPath(s.datapoints, 0.12),
+                        straightPath: createStraightPath(s.datapoints)
+                    }
+                })
+            }
+        })
+})
+
+function makeDataLabel({ value, index }) {
+    return dataLabel({
+        p: pcpConfig.value.style.chart.yAxis.labels.prefixes[index] || '',
+        v: value,
+        s: pcpConfig.value.style.chart.yAxis.labels.suffixes[index] || '',
+        r: pcpConfig.value.style.chart.yAxis.labels.roundings[index] || 0
+    });
+}
+
+const selectedItem = ref(null);
+const dataTooltipSlot = ref(null);
+const isTooltip = ref(false);
+const tooltipContent = ref("");
+
+function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex }) {
+    dataTooltipSlot.value = { serie, relativeIndex, seriesIndex, series: immutableDataset.value, scales: scales.value };
+    isTooltip.value = true;
+    selectedItem.value = serie.id;
+    let html = ""
+
+    const customFormat = pcpConfig.value.style.chart.tooltip.customFormat;
+
+    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
+        serie,
+        seriesIndex: serie.seriesIndex,
+        series: immutableDataset.value,
+        config: pcpConfig.value,
+        scales: scales.value
+    }))) {
+        tooltipContent.value = customFormat({
+            serie,
+            seriesIndex: serie.seriesIndex,
+            series: immutableDataset.value,
+            config: pcpConfig.value,
+            scales: scales.value
+        });
+    } else {
+        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${pcpConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${serieName ? serieName + ' - ' : ''}${serie.name}</div>`;
+        scales.value.map(s => s.name).forEach((s, i) => {
+            html += `
+                <div class="vue-ui-tooltip-item" style="text-align:left">
+                    <span>${s} : </span>
+                    <span>
+                        ${dataLabel({
+                            p: pcpConfig.value.style.chart.yAxis.labels.prefixes[i] || '',
+                            v: serie.datapoints[i].value,
+                            s: pcpConfig.value.style.chart.yAxis.labels.suffixes[i] || '',
+                            r: pcpConfig.value.style.chart.yAxis.labels.roundings[i] || '',
+                        })}    
+                    </span>
+                </div>
+            `
+        })
+        tooltipContent.value = `<div>${html}</div>`;
+    }
+}
+
+function getData() {
+    return immutableDataset.value
+}
+
+const __to__ = ref(null);
+
+function showSpinnerPdf() {
+    isPrinting.value = true;
+}
+
+function generatePdf(){
+    showSpinnerPdf();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        pdf({
+            domElement: document.getElementById(`pcp_${uid.value}`),
+            fileName: pcpConfig.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot'
+        }).finally(() => {
+            isPrinting.value = false;
+        });
+    }, 100)
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function generateImage() {
+    showSpinnerImage();
+    clearTimeout(__to__.value);
+    __to__.value = setTimeout(() => {
+        img({
+            domElement: document.getElementById(`pcp_${uid.value}`),
+            fileName: pcpConfig.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot',
+            format: 'png'
+        }).finally(() => {
+            isImaging.value = false;
+        })
+    }, 100)
+}
+
+const dataTable = computed(() => {
+    const head = [pcpConfig.value.table.columnNames.series].concat([pcpConfig.value.table.columnNames.item]).concat(scales.value.map(s => s.name));
+    const body = mutableDataset.value.flatMap((ds, i) => {
+        return ds.series.map(s => {
+            return [ds.name].concat([s.name]).concat(s.values)
+        })
+    });
+
+    const config = {
+        th: {
+            backgroundColor: pcpConfig.value.table.th.backgroundColor,
+            color: pcpConfig.value.table.th.color,
+            outline: pcpConfig.value.table.th.outline
+        },
+        td: {
+            backgroundColor: pcpConfig.value.table.td.backgroundColor,
+            color: pcpConfig.value.table.td.color,
+            outline: pcpConfig.value.table.td.outline
+        },
+        breakpoint: pcpConfig.value.table.responsiveBreakpoint
+    }
+
+    const colNames = [pcpConfig.value.table.columnNames.series].concat([pcpConfig.value.table.columnNames.item]).concat(scales.value.map(s => s.name))
+
+    return {
+        body,
+        head,
+        config,
+        colNames
+    }
+});
+
+const tableCsv = computed(() => {
+    if (mutableDataset.value.length === 0) return { head: [], body: [], config: {}, columnNames: []};
+
+    return {
+        head: dataTable.value.head,
+        body: dataTable.value.body
+    }
+});
+
+function generateCsv() {
+    const title = [[pcpConfig.value.style.chart.title.text], [pcpConfig.value.style.chart.title.subtitle.text], [""]];
+    const head = tableCsv.value.head
+    const body = tableCsv.value.body;
+    const table = title.concat([head]).concat(body);
+    const csvContent = createCsvContent(table);
+    downloadCsv({ csvContent, title: pcpConfig.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot'});
+}
+
+const emit = defineEmits(['selectLegend', 'selectDatapoint'])
+
+function selectDatapoint(datapoint) {
+    emit('selectDatapoint', datapoint)
+}
+
+function selectLegend(legend) {
+    emit('selectLegend', legend)
+}
+
+defineExpose({
+    getData,
+    generateCsv,
+    generatePdf,
+    generateImage,
+})
+
+</script>
+
+<template>
+    <div
+        ref="pcpChart"
+        :class="`vue-ui-pcp ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${pcpConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" 
+        :style="`font-family:${pcpConfig.style.fontFamily};width:100%; text-align:center;${!pcpConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${pcpConfig.style.chart.backgroundColor}`" 
+        :id="`pcp_${uid}`"
+    >
+
+        <div v-if="pcpConfig.style.chart.title.text" :style="`width:100%;background:${pcpConfig.style.chart.backgroundColor};padding-bottom:24px`">
+            <Title
+                :config="{
+                    title: {
+                        cy: 'pcp-div-title',
+                        text: pcpConfig.style.chart.title.text,
+                        color: pcpConfig.style.chart.title.color,
+                        fontSize: pcpConfig.style.chart.title.fontSize,
+                        bold: pcpConfig.style.chart.title.bold
+                    },
+                    subtitle: {
+                        cy: 'pcp-div-subtitle',
+                        text: pcpConfig.style.chart.title.subtitle.text,
+                        color: pcpConfig.style.chart.title.subtitle.color,
+                        fontSize: pcpConfig.style.chart.title.subtitle.fontSize,
+                        bold: pcpConfig.style.chart.title.subtitle.bold
+                    }
+                }"
+            />
+        </div>
+
+        <UserOptions
+            ref="details"
+            :key="`user_options_${step}`"
+            v-if="pcpConfig.userOptions.show && isDataset"
+            :backgroundColor="pcpConfig.style.chart.backgroundColor"
+            :color="pcpConfig.style.chart.color"
+            :isPrinting="isPrinting"
+            :isImaging="isImaging"
+            :uid="uid"
+            hasImg
+            hasTable
+            hasLabel
+            hasFullscreen
+            :isFullscreen="isFullscreen"
+            :chartElement="pcpChart"
+            @toggleFullscreen="toggleFullscreen"
+            @generatePdf="generatePdf"
+            @generateCsv="generateCsv"
+            @generateImage="generateImage"
+            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+            @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
+        />
+
+        <svg 
+            :xmlns="XMLNS" 
+            v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.chartWidth} ${drawingArea.chartHeight}`" 
+            :style="`max-width:100%; overflow: visible; background:${pcpConfig.style.chart.backgroundColor};color:${pcpConfig.style.chart.color}`"
+        >
+
+            <!-- SCALES -->
+            <g v-for="(scale, i) in scales" style="pointer-events: none;">
+                <!-- AXIS -->
+                <line
+                    :x1="drawingArea.left + (slot * i) + (slot / 2)"
+                    :x2="drawingArea.left + (slot * i) + (slot / 2)"
+                    :y1="drawingArea.top"
+                    :y2="drawingArea.bottom"
+                    :stroke="pcpConfig.style.chart.yAxis.stroke"
+                    :stroke-width="pcpConfig.style.chart.yAxis.strokeWidth"
+                />
+
+                <!-- AXIS NAMES -->
+                <text
+                    :x="drawingArea.left + (slot * i) + (slot / 2)"
+                    :y="drawingArea.top - 24"
+                    :fill="pcpConfig.style.chart.yAxis.labels.axisNamesColor"
+                    :font-size="pcpConfig.style.chart.yAxis.labels.axisNamesFontSize"
+                    :font-weight="pcpConfig.style.chart.yAxis.labels.axisNamesBold ? 'bold' : ''"
+                    text-anchor="middle"
+                >
+                    {{ scale.name }}
+                </text>
+
+
+                <template v-if="pcpConfig.style.chart.yAxis.labels.ticks.show">                
+                    <!-- TICKS -->
+                    <line v-for="tick in scale.ticks"
+                        :x1="tick.x"
+                        :x2="tick.x - 10"
+                        :y1="tick.y"
+                        :y2="tick.y"
+                        :stroke="pcpConfig.style.chart.yAxis.stroke"
+                        :stroke-width="pcpConfig.style.chart.yAxis.strokeWidth"
+                    />
+                    
+                    <!-- TICK LABELS -->
+                    <text 
+                        v-for="(tick) in scale.ticks"
+                        :x="tick.x - 12 + pcpConfig.style.chart.yAxis.labels.ticks.offsetX"
+                        :y="tick.y + pcpConfig.style.chart.yAxis.labels.ticks.offsetY + (pcpConfig.style.chart.yAxis.labels.ticks.fontSize / 3)"
+                        :fill="pcpConfig.style.chart.yAxis.labels.ticks.color"
+                        text-anchor="end"
+                        :font-size="pcpConfig.style.chart.yAxis.labels.ticks.fontSize"
+                        :font-weight="pcpConfig.style.chart.yAxis.labels.ticks.bold ? 'bold' : 'normal'"
+                    >
+                        {{ makeDataLabel({ value: tick.value, index: i }) }}
+                    </text>
+                </template>
+            </g>
+            <g v-for="serie in mutableDataset">
+                <!-- DATAPOINTS -->
+                <g v-for="(serieSet, i) in serie.series">
+                    <!-- PLOTS -->
+                    <g v-if="pcpConfig.style.chart.plots.show">
+                        <Shape 
+                            v-for="dp in serieSet.datapoints"
+                            :plot="{ x: dp.x, y: dp.y }"
+                            :color="serie.color"
+                            :shape="serie.shape"
+                            :radius="serie.shape === 'triangle' ? pcpConfig.style.chart.plots.radius * 1.2 : pcpConfig.style.chart.plots.radius"
+                            :stroke="pcpConfig.style.chart.backgroundColor"
+                            :strokeWidth="0.5"
+                            @mouseenter="useTooltip({
+                                shape: serie.shape,
+                                serieName: serie.name,
+                                serie: serieSet,
+                                relativeIndex: i,
+                                seriesIndex: serieSet.seriesIndex
+                            })"
+                            @mouseleave="selectedItem = null; isTooltip = false;"
+                            :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? pcpConfig.style.chart.plots.opacity : 0.2 : pcpConfig.style.chart.plots.opacity}`"
+                            @click="() => selectDatapoint(dp)"
+                        />
+                    </g>
+
+                    <!-- LABELS -->
+                    <template v-if="mutableConfig.dataLabels.show || (selectedItem && selectedItem === serieSet.id)">
+                        <text 
+                            v-for="(dp, k) in serieSet.datapoints"
+                            :x="dp.x + 12 + pcpConfig.style.chart.yAxis.labels.datapoints.offsetX"
+                            :y="dp.y + pcpConfig.style.chart.yAxis.labels.datapoints.offsetY + (pcpConfig.style.chart.yAxis.labels.datapoints.fontSize / 3)"
+                            :fill="pcpConfig.style.chart.yAxis.labels.datapoints.useSerieColor ? serie.color : pcpConfig.style.chart.yAxis.labels.datapoints.color"
+                            text-anchor="start"
+                            :font-weight="pcpConfig.style.chart.yAxis.labels.datapoints.bold ? 'bold' : 'normal'"
+                            :class="{ 'vue-ui-pcp-animated': false, 'vue-ui-pcp-transition': true }"
+                            @mouseenter="useTooltip({
+                                shape: serie.shape,
+                                serieName: serie.name,
+                                serie: serieSet,
+                                relativeIndex: i,
+                                seriesIndex: serieSet.seriesIndex
+                            })"
+                            @mouseleave="selectedItem = null; isTooltip = false;"
+                            :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? 1 : 0.2 : 1}`"
+                        >
+                            {{ makeDataLabel({ value: dp.value, index: k }) }}
+                        </text>
+                    </template>
+
+                    <!-- LINES -->
+                    <path 
+                        :d="`M${pcpConfig.style.chart.lines.smooth ? serieSet.smoothPath : serieSet.straightPath}`" 
+                        :stroke="serie.color" 
+                        :stroke-width="pcpConfig.style.chart.lines.strokeWidth"
+                        fill="none"
+                        :class="{ 'vue-ui-pcp-animated': pcpConfig.useCssAnimation, 'vue-ui-pcp-transition': true  }"
+                        @mouseenter="useTooltip({
+                            shape: serie.shape,
+                            serieName: serie.name,
+                            serie: serieSet,
+                            relativeIndex: i,
+                            seriesIndex: serieSet.seriesIndex
+                        })"
+                        @mouseleave="selectedItem = null; isTooltip = false;"
+                        :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? pcpConfig.style.chart.lines.opacity : 0.2 : pcpConfig.style.chart.lines.opacity}`"
+                    />
+                </g>
+            </g>
+            <slot name="svg" :svg="drawingArea"/>
+        </svg>
+
+        <Legend
+            v-if="pcpConfig.style.chart.legend.show"
+            :legendSet="legendSet"
+            :config="legendConfig"
+            @clickMarker="({ legend }) => { segregate(legend.id); selectLegend(legend) }"
+        >
+            <template #item="{ legend, index }">
+                <div :data-cy="`legend-item-${index}`" @click="legend.segregate(); selectLegend(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    {{ legend.name }}
+                </div>
+            </template>
+
+        </Legend>
+
+        <slot name="legend" v-bind:legend="immutableDataset"/>
+
+        <Tooltip
+            :show="pcpConfig.style.chart.tooltip.show && isTooltip"
+            :backgroundColor="pcpConfig.style.chart.tooltip.backgroundColor"
+            :color="pcpConfig.style.chart.tooltip.color"
+            :fontSize="pcpConfig.style.chart.tooltip.fontSize"
+            :borderRadius="pcpConfig.style.chart.tooltip.borderRadius"
+            :borderColor="pcpConfig.style.chart.tooltip.borderColor"
+            :borderWidth="pcpConfig.style.chart.tooltip.borderWidth"
+            :parent="pcpChart"
+            :content="tooltipContent"
+            :isCustom="isFunction(pcpConfig.style.chart.tooltip.customFormat)"
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+        </Tooltip>
+
+        <Accordion 
+            v-if="isDataset"
+            hideDetails
+            :config="{
+                open: mutableConfig.showTable,
+                maxHeight: 10000,
+                body: {
+                    backgroundColor: pcpConfig.style.chart.backgroundColor,
+                    color: pcpConfig.style.chart.color
+                },
+                head: {
+                    backgroundColor: pcpConfig.style.chart.backgroundColor,
+                    color: pcpConfig.style.chart.color
+                }
+            }"
+        >
+            <template #content>
+                <DataTable
+                    :colNames="dataTable.colNames"
+                    :head="dataTable.head"
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="`${pcpConfig.style.chart.title.text}${pcpConfig.style.chart.title.subtitle.text ? ` : ${pcpConfig.style.chart.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false"
+                >
+                    <template #th="{ th }">
+                        <div v-html="th"/>
+                    </template>
+                    <template #td="{ td }">
+                        {{ td }}
+                    </template>
+                </DataTable>
+            </template>
+        </Accordion>
+
+    </div>
+</template>
+
+<style scoped>
+@import "../vue-data-ui.css";
+
+.vue-ui-pcp *{
+    transition: unset;
+}
+.vue-ui-pcp {
+    user-select: none;
+    position: relative;
+}
+
+.vue-ui-pcp-transition {
+    transition: all 0.2s ease-in-out;
+}
+
+.vue-ui-pcp-animated {
+    animation: xyAnimation 0.5s ease-in-out;
+    transform-origin: center;
+}
+
+@keyframes xyAnimation {
+    0% {
+        transform: scale(0.9,0.9);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.02,1.02);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1,1);
+        opacity: 1;
+    }
+}
+
+</style>
