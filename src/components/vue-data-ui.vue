@@ -63,7 +63,8 @@ const components = {
     VueUiDumbbell: defineAsyncComponent(() => import('./vue-ui-dumbbell.vue')),
     VueUiWordCloud: defineAsyncComponent(() => import('./vue-ui-word-cloud.vue')),
     VueUiXyCanvas: defineAsyncComponent(() => import('./vue-ui-xy-canvas.vue')),
-    VueUiFlow: defineAsyncComponent(() => import('./vue-ui-flow.vue'))
+    VueUiFlow: defineAsyncComponent(() => import('./vue-ui-flow.vue')),
+    VueUiParallelCoordinatePlot: defineAsyncComponent(() => import('./vue-ui-parallel-coordinate-plot.vue'))
 };
 
 const componentProps = {
@@ -117,7 +118,8 @@ const componentProps = {
     VueUiDumbbell: ['config', 'dataset'],
     VueUiWordCloud: ['config', 'dataset'],
     VueUiXyCanvas: ['config', 'dataset'],
-    VueUiFlow: ['config', 'dataset']
+    VueUiFlow: ['config', 'dataset'],
+    VueUiParallelCoordinatePlot: ['config', 'dataset']
 };
 
 const emit = defineEmits([
