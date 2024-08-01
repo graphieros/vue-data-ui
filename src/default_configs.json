@@ -4484,5 +4484,118 @@
                 "outline": "none"
             }
         }
+    },
+    "vue_ui_parallel_coordinate_plot": {
+        "theme": "",
+        "useCssAnimation": true,
+        "customPalette": [],
+        "variables": [],
+        "userOptions": {
+            "show": true
+        },
+        "style": {
+            "fontFamily": "inherit",
+            "chart": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "height": 600,
+                "width": 1000,
+                "padding": {
+                    "top": 24,
+                    "left": 36,
+                    "right": 24,
+                    "bottom": 36
+                },
+                "lines": {
+                    "smooth": true,
+                    "strokeWidth": 2,
+                    "opacity": 0.8
+                },
+                "plots": {
+                    "show": true,
+                    "radius": 6,
+                    "opacity": 0.8
+                },
+                "yAxis": {
+                    "scaleTicks": 10,
+                    "stroke":"#2D353C",
+                    "strokeWidth": 1,
+                    "labels": {
+                        "showAxisNames": true,
+                        "axisNames": [],
+                        "axisNamesColor": "#2D353C",
+                        "axisNamesFontSize": 16,
+                        "axisNamesBold": true,
+                        "roundings": [],
+                        "prefixes": [],
+                        "suffixes": [],
+                        "ticks": {
+                            "show": true,
+                            "fontSize": 14,
+                            "color": "#2D353C",
+                            "bold": false,
+                            "offsetX": 0,
+                            "offsetY": 0
+                        },
+                        "datapoints": {
+                            "show": true,
+                            "fontSize": 14,
+                            "useSerieColor": true,
+                            "color": "#2D353C",
+                            "offsetX": 0,
+                            "offsetY": 0,
+                            "bold": true
+                        }
+                    }
+                },
+                "title": {
+                    "text": "",
+                    "color": "#2D353C",
+                    "fontSize": 20,
+                    "bold": true,
+                    "subtitle": {
+                        "color": "#A1A1A1",
+                        "text": "",
+                        "fontSize": 16,
+                        "bold": false
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#FFFFFF",
+                    "color": "#2D353C",
+                    "show": true,
+                    "fontSize": 16,
+                    "bold": false
+                },
+                "tooltip": {
+                    "show": true,
+                    "color": "#2D353C",
+                    "backgroundColor": "#FFFFFF",
+                    "fontSize": 14,
+                    "customFormat": null,
+                    "borderRadius": 4,
+                    "borderColor": "#e1e5e8",
+                    "borderWidth": 1
+                }
+            }
+        },
+        "table": {
+            "show": false,
+            "responsiveBreakpoint": 400,
+            "columnNames": {
+                "series": "Series",
+                "item": "Item"
+            },
+            "th": {
+                "backgroundColor": "#FAFAFA",
+                "color": "#2D353C",
+                "outline": "none"
+            },
+            "td": {
+                "backgroundColor": "#FFFFFF",
+                "color": "#2D353C",
+                "outline": "none"
+            }
+        }
     }
 }
