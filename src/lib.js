@@ -693,8 +693,7 @@ export function calcMedian(arr) {
     return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
 }
 
-export function createSmoothPath(points) {
-    const smoothing = 0.2;
+export function createSmoothPath(points, smoothing = 0.2) {
     function line(pointA, pointB) {
         const lengthX = pointB.x - pointA.x;
         const lengthY = pointB.y - pointA.y;

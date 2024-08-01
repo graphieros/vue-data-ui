@@ -54,6 +54,7 @@ import VueUiDumbbell from "./components/vue-ui-dumbbell.vue";
 import VueUiWordCloud from "./components/vue-ui-word-cloud.vue";
 import VueUiXyCanvas from "./components/vue-ui-xy-canvas.vue";
 import VueUiFlow from "./components/vue-ui-flow.vue";
+import VueUiParallelCoordinatePlot from "./components/vue-ui-parallel-coordinate-plot.vue";
 import { getPalette, createWordCloudDatasetFromPlainText } from "./lib";
 
 export { 
@@ -114,5 +115,6 @@ export {
     VueUiDumbbell,
     VueUiWordCloud,
     VueUiXyCanvas,
-    VueUiFlow
+    VueUiFlow,
+    VueUiParallelCoordinatePlot
 };
