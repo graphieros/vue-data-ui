@@ -142,6 +142,14 @@ const config = computed(() => {
 })
 
 const step = ref(0)
+
+function selectLegend(l) {
+    console.log(l)
+}
+
+function selectDatapoint(dp) {
+    console.log(dp)
+}
     
 </script>
 
@@ -156,21 +164,21 @@ const step = ref(0)
         <template #title>VueUiParallelCoordinatePlot</template>
 
         <template #local>
-            <LocalVueUiParallelCoordinatePlot :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiParallelCoordinatePlot :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
             </LocalVueUiParallelCoordinatePlot>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config" :key="`VDUI_local_${step}`">
+            <LocalVueDataUi @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config" :key="`VDUI_local_${step}`">
             </LocalVueDataUi>
         </template>
 
         <template #build>
-            <VueUiParallelCoordinatePlot :dataset="dataset" :config="config"/>
+            <VueUiParallelCoordinatePlot @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" :dataset="dataset" :config="config"/>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config"/>
+            <VueDataUi @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config"/>
         </template>
 
         <template #knobs>
