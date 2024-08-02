@@ -250,10 +250,10 @@ function createStraightPath(points) {
 
 const mutableDataset = computed(() => {
     return filteredDs.value
-        .map(ds => {
+        .map((ds, i) => {
             return {
                 ...ds,
-                series: ds.series.map(s => {
+                series: ds.series.map((s, j) => {
                     return {
                         ...s,
                         datapoints: s.values.map((v, k) => {
@@ -262,6 +262,9 @@ const mutableDataset = computed(() => {
                             return {
                                 name: s.name,
                                 seriesName: ds.name,
+                                axisIndex: k,
+                                datapointIndex: j,
+                                seriesIndex: i,
                                 value: v,
                                 x: drawingArea.value.left + (slot.value * k) + (slot.value / 2),
                                 y: drawingArea.value.bottom - (drawingArea.value.height * (senseValue / senseMax))
@@ -440,7 +443,11 @@ function selectDatapoint(datapoint) {
 }
 
 function selectLegend(legend) {
-    emit('selectLegend', legend)
+    emit('selectLegend', {
+        ...legend,
+        isSegregated: !legend.isSegregated,
+        opacity: legend.isSegregated ? 1 : 0.5
+    })
 }
 
 defineExpose({
