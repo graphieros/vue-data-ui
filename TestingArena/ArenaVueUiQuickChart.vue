@@ -89,11 +89,12 @@ const datasets = ref({
 })
 
 
-const selectedSerie = ref('donut');
+const selectedSerie = ref('shortObjectMixed');
 
 const model = ref([
     { key: 'axisLabelsFontSize', def: 12, type: 'number', min: 8, max: 24},
     { key: 'barGap', def: 12, type: 'range', min: 0, max: 48},
+    { key: 'barAnimated', def: true, type: 'checkbox' },
     { key: 'barStrokeWidth', def: 1, type: 'number', min: 0, max: 6},
     { key: 'blurOnHover', def: true, type: 'checkbox'},
     { key: 'chartIsBarUnderDatasetLength', def: 6, type: 'number', min: 2, max: 12},
@@ -117,6 +118,7 @@ const model = ref([
     { key: 'legendIcon', def: 'starFill', type: 'text'},
     { key: 'legendIconSize', def: 12, type: 'number', min: 8, max: 48},
     { key: 'lineSmooth', def: true, type: 'checkbox'},
+    { key: 'lineAnimated', def: false, type: 'checkbox' },
     { key: 'lineStrokeWidth', def: 2, type:'number', min: 0.5, max: 12, step: 0.5},
     { key: 'paletteStartIndex', def: 0, type: 'number', min: 0},
     { key: 'showDataLabels', def: true, type: 'checkbox'},
@@ -145,7 +147,7 @@ const model = ref([
     { key: 'xyPaddingRight', def: 12, type: 'number', min: 0, max: 100},
     { key: 'xyPaddingTop', def: 12, type: 'number', min: 0, max: 100},
     { key: 'xyPeriodLabelsRotation', def: 0, type: 'number', min: -360, max: 360},
-    { key: 'xyScaleSegments', def: 10, type: 'number', min: 2, max: 20},
+    { key: 'xyScaleSegments', def: 15, type: 'number', min: 2, max: 20},
     { key: 'xyShowAxis', def: true, type: 'checkbox'},
     { key: 'xyShowGrid', def: true, type: 'checkbox'},
     { key: 'xyShowScale', def: true, type: 'checkbox'},
