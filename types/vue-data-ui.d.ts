@@ -4134,6 +4134,7 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         axisLabelsFontSize?: number;
         backgroundColor?: string;
+        barAnimated?: boolean;
         barGap?: number;
         barStrokeWidth?: number;
         blurOnHover?: boolean;
@@ -4159,6 +4160,7 @@ declare module 'vue-data-ui' {
         legendFontSize?: number;
         legendIcon?: VueUiIconName;
         legendIconSize?: number;
+        lineAnimated?: boolean;
         lineSmooth?: boolean;
         lineStrokeWidth?: number;
         paletteStartIndex?: number;
