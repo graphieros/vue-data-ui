@@ -587,10 +587,9 @@ const bar = computed(() => {
     }
 
     const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, quickConfig.value.xyScaleSegments)
-    const absoluteMin = extremes.min < 0 ? Math.abs(extremes.min) : 0;
+    const absoluteMin = scale.min < 0 ? Math.abs(scale.min) : 0;
     const absoluteZero = drawingArea.bottom - (absoluteMin / (scale.max + absoluteMin) * drawingArea.height)
     const slotSize = drawingArea.width / extremes.maxSeries;
-
 
     const yLabels = scale.ticks.map(t => {
         return {
@@ -1029,7 +1028,7 @@ defineExpose({
                                     :stroke-width="quickConfig.lineStrokeWidth + 1"
                                     stroke-linecap="round"
                                     fill="none"
-                                    class="quick-animation"
+                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': quickConfig.lineAnimated }"
                                     style="transition: all 0.3s ease-in-out"
                                 />
                                 <path
@@ -1038,9 +1037,10 @@ defineExpose({
                                     :stroke-width="quickConfig.lineStrokeWidth"
                                     stroke-linecap="round"
                                     fill="none"
-                                    class="quick-animation"
+                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': quickConfig.lineAnimated }"
                                     style="transition: all 0.3s ease-in-out"
-                                />
+                                >
+                            </path>
                             </template>
                             <template v-else>
                                 <path
@@ -1049,7 +1049,7 @@ defineExpose({
                                     :stroke-width="quickConfig.lineStrokeWidth + 1"
                                     stroke-linecap="round"
                                     fill="none"
-                                    class="quick-animation"
+                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': quickConfig.lineAnimated }"
                                     style="transition: all 0.3s ease-in-out"
                                 />
                                 <path
@@ -1058,7 +1058,7 @@ defineExpose({
                                     :stroke-width="quickConfig.lineStrokeWidth"
                                     stroke-linecap="round"
                                     fill="none"
-                                    class="quick-animation"
+                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': quickConfig.lineAnimated }"
                                     style="transition: all 0.3s ease-in-out"
                                 />
                             </template>
@@ -1219,15 +1219,30 @@ defineExpose({
                         <rect 
                             v-for="(plot, j) in ds.coordinates"
                             :x="plot.x"
-                            :y="plot.y"
                             :width="plot.width"
                             :height="plot.height"
+                            :y="plot.y"
                             :fill="ds.color"
                             :stroke="quickConfig.backgroundColor"
                             :stroke-width="quickConfig.barStrokeWidth"
                             stroke-linecap="round"
-                            style="transition: all 0.3s ease-in-out"
-                        />
+                            :class="{'vue-data-ui-bar-animated': quickConfig.barAnimated && plot.value < 0}"
+                            >
+                            <animate
+                                v-if="quickConfig.barAnimated && plot.value > 0"
+                                attributeName="height"
+                                :from="0"
+                                :to="plot.height"
+                                dur="0.5s"
+                            />
+                            <animate
+                                v-if="quickConfig.barAnimated && plot.value > 0"
+                                attributeName="y"
+                                :from="bar.absoluteZero"
+                                :to="bar.absoluteZero - plot.height"
+                                dur="0.5s"
+                            />
+                            </rect>
                     </template>
                 </g>
                 <g class="dataLabels" v-if="quickConfig.showDataLabels">
@@ -1513,6 +1528,28 @@ defineExpose({
     to {
         transform: scale(1,1);
         opacity: 1;
+    }
+}
+
+.vue-data-ui-line-animated {
+    stroke-dasharray: 2000;  
+    stroke-dashoffset: 2000; 
+    animation: vueDataUiLineAnimation 0.5s cubic-bezier(0.790, 0.210, 0.790, 0.210) forwards; 
+}
+
+@keyframes vueDataUiLineAnimation {
+    to {
+        stroke-dashoffset: 0;
+      }
+}
+
+.vue-data-ui-bar-animated {
+    animation: vueDataUiBarAnimation 0.5s cubic-bezier(0.790, 0.210, 0.790, 0.210) forwards;
+}
+
+@keyframes vueDataUiBarAnimation {
+    from {
+        height: 0;
     }
 }
 </style>
