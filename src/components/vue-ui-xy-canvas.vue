@@ -1200,11 +1200,26 @@ function getData() {
     return formattedDataset.value;
 }
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function toggleLabels() {
+    mutableConfig.value.showDataLabels = !mutableConfig.value.showDataLabels;
+}
+
+function toggleStack() {
+    mutableConfig.value.stacked = !mutableConfig.value.stacked;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generatePdf,
-    generateImage
+    generateImage,
+    toggleTable,
+    toggleLabels,
+    toggleStack
 });
 
 </script>
@@ -1252,9 +1267,9 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
-            @toggleLabels="mutableConfig.showDataLabels = !mutableConfig.showDataLabels"
-            @toggleStack="mutableConfig.stacked = !mutableConfig.stacked"
+            @toggleTable="toggleTable"
+            @toggleLabels="toggleLabels"
+            @toggleStack="toggleStack"
         />
 
         <div class="vue-ui-xy-canvas" :style="`position: relative; aspect-ratio: ${xyConfig.style.chart.aspectRatio}`"
