@@ -508,11 +508,16 @@ const dataTable = computed(() => {
     }
 });
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
 defineExpose({
     generateCsv,
     generatePdf,
     generateImage,
-    getData
+    getData,
+    toggleTable
 });
 
 
@@ -561,7 +566,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+            @toggleTable="toggleTable"
         />
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="3d-bar-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${barConfig.style.chart.backgroundColor};color:${barConfig.style.chart.color}`">
