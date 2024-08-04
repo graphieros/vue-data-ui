@@ -305,11 +305,16 @@ function getData() {
     return positionedWords.value;
 }
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generatePdf,
-    generateImage
+    generateImage,
+    toggleTable
 });
 
 </script>
@@ -340,7 +345,7 @@ defineExpose({
             :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" hasImg hasTable hasFullscreen
             :isFullscreen="isFullscreen" :chartElement="wordCloudChart" @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf" @generateCsv="generateCsv" @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable" />
+            @toggleTable="toggleTable" />
 
         <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" v-if="isDataset"
             :xmlns="XMLNS" :viewBox="`0 0 ${wordCloudConfig.style.chart.width} ${wordCloudConfig.style.chart.height}`"
