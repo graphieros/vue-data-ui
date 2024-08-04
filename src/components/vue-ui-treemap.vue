@@ -453,11 +453,16 @@ function getData() {
     return squarified.value
 }
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generateImage,
-    generatePdf
+    generatePdf,
+    toggleTable
 })
 
 </script>
@@ -505,11 +510,11 @@ defineExpose({
             hasFullscreen
             :isFullscreen="isFullscreen"
             :chartElement="treemapChart"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @toggleTable="toggleTable"
         />
 
         <!-- CHART -->
