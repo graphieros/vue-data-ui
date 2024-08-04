@@ -693,6 +693,14 @@ export function calcMedian(arr) {
     return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
 }
 
+export function createStraightPath(points) {
+    let arr = [];
+    for (let i = 0; i < points.length; i += 1) {
+        arr.push(`${points[i].x},${points[i].y} `)
+    }
+    return arr.join(' ').trim()
+}
+
 export function createSmoothPath(points, smoothing = 0.2) {
     function line(pointA, pointB) {
         const lengthX = pointB.x - pointA.x;
@@ -1552,6 +1560,111 @@ export function assignStackRatios(arr) {
     return output;
 }
 
+export function getPathLengthFromCoordinates(d) {
+    function distance(x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function bezierLength(p0, p1, p2, p3) {
+        const steps = 100;
+        let length = 0;
+        let prevX = p0.x;
+        let prevY = p0.y;
+
+        for (let i = 1; i <= steps; i += 1) {
+            const t = i / steps;
+            const oneMinusT = 1 - t;
+            const oneMinusTSquared = oneMinusT * oneMinusT;
+            const tSquared = t * t;
+
+            const x = oneMinusTSquared * oneMinusT * p0.x +
+                      3 * oneMinusTSquared * t * p1.x +
+                      3 * oneMinusT * tSquared * p2.x +
+                      tSquared * t * p3.x;
+            const y = oneMinusTSquared * oneMinusT * p0.y +
+                      3 * oneMinusTSquared * t * p1.y +
+                      3 * oneMinusT * tSquared * p2.y +
+                      tSquared * t * p3.y;
+            length += distance(prevX, prevY, x, y);
+            prevX = x;
+            prevY = y;
+        }
+
+        return length;
+    }
+
+    const commands = d.match(/[a-zA-Z][^a-zA-Z]*/g);
+    let currentX = 0, currentY = 0;
+    let startX = 0, startY = 0;
+    let totalLength = 0;
+
+    commands.forEach(command => {
+        const type = command[0];
+        const values = command.slice(1).trim().split(/[\s,]+/).map(Number);
+        let i = 0;
+
+        switch (type) {
+            case 'M':
+                currentX = values[i++];
+                currentY = values[i++];
+                startX = currentX;
+                startY = currentY;
+                while (i < values.length) {
+                    totalLength += distance(currentX, currentY, values[i], values[i + 1]);
+                    currentX = values[i++];
+                    currentY = values[i++];
+                }
+                break;
+
+            case 'L':
+                while (i < values.length) {
+                    totalLength += distance(currentX, currentY, values[i], values[i + 1]);
+                    currentX = values[i++];
+                    currentY = values[i++];
+                }
+                break;
+
+            case 'H':
+                while (i < values.length) {
+                    totalLength += distance(currentX, currentY, values[i], currentY);
+                    currentX = values[i++];
+                }
+                break;
+
+            case 'V':
+                while (i < values.length) {
+                    totalLength += distance(currentX, currentY, currentX, values[i]);
+                    currentY = values[i++];
+                }
+                break;
+
+            case 'C':
+                while (i < values.length) {
+                    totalLength += bezierLength(
+                        { x: currentX, y: currentY },
+                        { x: values[i], y: values[i + 1] },
+                        { x: values[i + 2], y: values[i + 3] },
+                        { x: values[i + 4], y: values[i + 5] }
+                    );
+                    currentX = values[i + 4];
+                    currentY = values[i + 5];
+                    i += 6;
+                }
+                break;
+
+            case 'Z':
+                totalLength += distance(currentX, currentY, startX, startY);
+                currentX = startX;
+                currentY = startY;
+                break;
+        }
+    });
+
+    return totalLength;
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -1574,6 +1687,7 @@ const lib = {
     createCsvContent,
     createPolygonPath,
     createSmoothPath,
+    createStraightPath,
     createSpiralPath,
     createStar,
     createTSpans,

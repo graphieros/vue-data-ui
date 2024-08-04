@@ -21,6 +21,7 @@ import {
     createArc,
     createPolygonPath,
     createSmoothPath,
+    createStraightPath,
     createSpiralPath,
     createStar,
     createTSpans,
@@ -44,7 +45,8 @@ import {
     rotateMatrix,
     shiftHue,
     sumByAttribute,
-    treeShake
+    treeShake,
+    getPathLengthFromCoordinates
 } from "../src/lib"
 
 describe('calcTrend', () => {
@@ -1577,3 +1579,15 @@ describe('assignStackRatios', () => {
         expect(assignStackRatios(dsEmpty)).toStrictEqual(expectedResultEmpty)
     })
 })
+
+describe('getPathLengthFromCoordinates', () => {
+    const straightLine = 'M 0 0 10 0';
+    test('returns a path length from coordinates', () => {
+        expect(getPathLengthFromCoordinates(straightLine)).toBe(10);
+    });
+    
+    const hypothenuse = 'M 0 0 10 10';
+    test('returns hypothenuse length', () => {
+        expect(getPathLengthFromCoordinates(hypothenuse)).toBe(14.142135623730951);
+    });
+});
