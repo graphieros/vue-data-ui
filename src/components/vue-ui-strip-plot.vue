@@ -136,8 +136,12 @@ const customPalette = computed(() => {
 })
 
 const animationActive = ref(stripConfig.value.useCssAnimation);
+
 const mutableConfig = ref({
     showTable: stripConfig.value.table.show,
+    dataLabels: {
+        show: stripConfig.value.style.chart.labels.bestPlotLabel.show
+    }
 });
 
 const drawingArea = computed(() => {
@@ -395,11 +399,21 @@ function getData() {
     return mutableDataset.value
 }
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function toggleLabels() {
+    mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
-    generateImage
+    generateImage,
+    toggleTable,
+    toggleLabels
 });
 
 </script>
@@ -441,14 +455,15 @@ defineExpose({
             hasImg
             hasTable
             hasFullscreen
+            hasLabel
             :isFullscreen="isFullscreen"
             :chartElement="stripPlotChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
-            @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
+            @toggleTable="toggleTable"
+            @toggleLabels="toggleLabels"
         />
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.absoluteWidth} ${drawingArea.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${stripConfig.style.chart.backgroundColor};color:${stripConfig.style.chart.color}`">
@@ -612,7 +627,7 @@ defineExpose({
                 />
 
                 <!-- BEST PLOT LABELS -->
-                <g v-if="stripConfig.style.chart.labels.bestPlotLabel.show">
+                <g v-if="mutableConfig.dataLabels.show">
                     <template v-for="(plot, i) in ds.plots">
                         <text 
                             v-if="i === ds.plots.length - 1"
