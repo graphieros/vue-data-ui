@@ -457,11 +457,16 @@ function getData() {
     return mutableDataset.value;
 }
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generateImage,
-    generatePdf
+    generatePdf,
+    toggleTable
 })
 
 </script>
@@ -513,7 +518,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+            @toggleTable="toggleTable"
         />
 
         <svg
