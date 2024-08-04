@@ -594,11 +594,16 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
-    generateImage
+    generateImage,
+    toggleTable
 });
 
 </script>
@@ -651,7 +656,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
+            @toggleTable="toggleTable"
         />
 
         <!-- CHART -->
