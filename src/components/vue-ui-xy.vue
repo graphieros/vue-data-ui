@@ -44,8 +44,8 @@
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
-            @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
+            @toggleTable="toggleTable"
+            @toggleLabels="toggleLabels"
             @toggleStack="toggleStack"
         />
         
@@ -1947,6 +1947,12 @@ export default {
             } else {
                 this.mutableConfig.useIndividualScale = true
             }
+        },
+        toggleTable() {
+            this.mutableConfig.showTable = !this.mutableConfig.showTable;
+        },
+        toggleLabels() {
+            this.mutableConfig.dataLabels.show = !this.mutableConfig.dataLabels.show;
         },
         checkAutoScaleError(datapoint) {
             if (datapoint.autoScaling) {
