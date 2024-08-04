@@ -4,6 +4,9 @@ import LocalVueUiDonutEvolution from '../src/components/vue-ui-donut-evolution.v
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
     {
@@ -158,6 +161,7 @@ const step = ref(0)
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -168,7 +172,7 @@ const step = ref(0)
         <template #title>VueUiDonutEvolution</template>
 
         <template #local>
-            <LocalVueUiDonutEvolution :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend">
+            <LocalVueUiDonutEvolution :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -186,7 +190,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiDonutEvolution" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" @selectLegend="selectLegend">
+            <LocalVueDataUi component="VueUiDonutEvolution" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -204,7 +208,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiDonutEvolution :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend">
+            <VueUiDonutEvolution :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -222,7 +226,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiDonutEvolution" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" @selectLegend="selectLegend">
+            <VueDataUi component="VueUiDonutEvolution" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

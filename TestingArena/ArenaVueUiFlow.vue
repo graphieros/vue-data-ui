@@ -4,6 +4,9 @@ import LocalVueUiFlow from '../src/components/vue-ui-flow.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
     [ 'A1', 'B1', 10 ],
@@ -76,6 +79,7 @@ const step = ref(0);
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -87,19 +91,19 @@ const step = ref(0);
         <template #title>VueUiFlow</template>
 
         <template #local>
-            <LocalVueUiFlow :dataset="dataset" :config="config" :key="`local_${step}`"></LocalVueUiFlow>
+            <LocalVueUiFlow :dataset="dataset" :config="config" :key="`local_${step}`" ref="local"></LocalVueUiFlow>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiFlow" :dataset="dataset" :config="config" :key="`VDUI_local_${step}`"></LocalVueDataUi>
+            <LocalVueDataUi component="VueUiFlow" :dataset="dataset" :config="config" :key="`VDUI_local_${step}`" ref="vduiLocal"></LocalVueDataUi>
         </template>
 
         <template #build>
-            <VueUiFlow :dataset="dataset" :config="config" :key="`build_${step}`"></VueUiFlow>
+            <VueUiFlow :dataset="dataset" :config="config" :key="`build_${step}`" ref="build"></VueUiFlow>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiFlow" :dataset="dataset" :config="config" :key="`VDUI_build_${step}`"></VueDataUi>
+            <VueDataUi component="VueUiFlow" :dataset="dataset" :config="config" :key="`VDUI_build_${step}`" ref="vduiBuild"></VueDataUi>
         </template>
 
         <template #knobs>

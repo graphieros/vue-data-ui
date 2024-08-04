@@ -123,9 +123,18 @@ const config = computed(() => {
 
 const step = ref(0);
 
+const local= ref(null);
+const build = ref(null);
+
+function toggleTable() {
+    local.value.toggleTable();
+    build.value.toggleTable();
+}
+
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -141,7 +150,7 @@ const step = ref(0);
         <template #title>VueUiAgePyramid</template>
 
         <template #local>
-            <LocalVueUiAgePyramid :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiAgePyramid :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -162,7 +171,7 @@ const step = ref(0);
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiAgePyramid" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiAgePyramid" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

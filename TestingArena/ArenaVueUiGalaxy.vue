@@ -4,6 +4,9 @@ import LocalVueUiGalaxy from '../src/components/vue-ui-galaxy.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
     {
@@ -127,6 +130,7 @@ function selectDatapoint(datapoint) {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -141,7 +145,7 @@ function selectDatapoint(datapoint) {
         <template #title>VueUiGalaxy</template>
 
         <template #local>
-            <LocalVueUiGalaxy :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <LocalVueUiGalaxy :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -162,7 +166,7 @@ function selectDatapoint(datapoint) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiGalaxy" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <LocalVueDataUi component="VueUiGalaxy" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -183,7 +187,7 @@ function selectDatapoint(datapoint) {
         </template>
 
         <template #build>
-            <VueUiGalaxy :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <VueUiGalaxy :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -204,7 +208,7 @@ function selectDatapoint(datapoint) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiGalaxy" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <VueDataUi component="VueUiGalaxy" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

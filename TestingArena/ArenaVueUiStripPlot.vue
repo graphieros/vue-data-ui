@@ -4,6 +4,9 @@ import LocalVueUiStripPlot from '../src/components/vue-ui-strip-plot.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
 const dataset = ref([
     {
@@ -209,6 +212,8 @@ const step = ref(0)
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleLabels">TOGGLE LABELS</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -223,7 +228,7 @@ const step = ref(0)
         <template #title>VueUiStripPlot</template>
 
         <template #local>
-            <LocalVueUiStripPlot :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiStripPlot :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -238,7 +243,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiStripPlot" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" >
+            <LocalVueDataUi component="VueUiStripPlot" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -253,7 +258,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiStripPlot :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiStripPlot :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -268,7 +273,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiStripPlot" :dataset="dataset" :config="config" :key="`vdui_build_${step}`">
+            <VueDataUi component="VueUiStripPlot" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

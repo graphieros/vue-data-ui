@@ -4,6 +4,9 @@ import LocalVueUiHeatmap from '../src/components/vue-ui-heatmap.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = computed(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -147,6 +150,7 @@ const step = ref(0)
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -161,7 +165,7 @@ const step = ref(0)
         <template #title>VueUiHeatmap</template>
         
         <template #local>
-            <LocalVueUiHeatmap :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiHeatmap :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -182,7 +186,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiHeatmap" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiHeatmap" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -203,7 +207,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiHeatmap :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiHeatmap :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -224,7 +228,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiHeatmap" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiHeatmap" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

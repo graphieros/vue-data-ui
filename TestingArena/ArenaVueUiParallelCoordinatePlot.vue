@@ -4,6 +4,9 @@ import LocalVueUiParallelCoordinatePlot from '../src/components/vue-ui-parallel-
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
 const dataset = ref([
     {
@@ -154,6 +157,8 @@ function selectDatapoint(dp) {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleLabels">TOGGLE LABELS</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -164,21 +169,21 @@ function selectDatapoint(dp) {
         <template #title>VueUiParallelCoordinatePlot</template>
 
         <template #local>
-            <LocalVueUiParallelCoordinatePlot :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
+            <LocalVueUiParallelCoordinatePlot :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="local">
             </LocalVueUiParallelCoordinatePlot>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config" :key="`VDUI_local_${step}`">
+            <LocalVueDataUi @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config" :key="`VDUI_local_${step}`" ref="vduiLocal">
             </LocalVueDataUi>
         </template>
 
         <template #build>
-            <VueUiParallelCoordinatePlot @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" :dataset="dataset" :config="config"/>
+            <VueUiParallelCoordinatePlot @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" :dataset="dataset" :config="config" ref="build"/>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config"/>
+            <VueDataUi @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config" ref="vduiBuild"/>
         </template>
 
         <template #knobs>

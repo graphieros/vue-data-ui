@@ -4,6 +4,9 @@ import LocalVueUiMoodRadar from '../src/components/vue-ui-mood-radar.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref({
     "1": 96,
@@ -90,6 +93,7 @@ const step = ref(0)
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -100,7 +104,7 @@ const step = ref(0)
         <template #title>VueUiMoodRadar</template>
 
         <template #local>
-            <LocalVueUiMoodRadar :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiMoodRadar :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -115,7 +119,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiMoodRadar" :dataset="dataset" :config="config" :key="`vdui_local_${step}`">
+            <LocalVueDataUi component="VueUiMoodRadar" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -130,7 +134,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiMoodRadar :dataset="dataset" :config="config" :key="`build_${step}`" >
+            <VueUiMoodRadar :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -145,7 +149,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiMoodRadar" :dataset="dataset" :config="config" :key="`vdui_build_${step}`">
+            <VueDataUi component="VueUiMoodRadar" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

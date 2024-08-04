@@ -4,6 +4,9 @@ import LocalVueUi3dBar from '../src/components/vue-ui-3d-bar.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const datasets = ref({
     simple: {
@@ -140,6 +143,7 @@ const dataset = computed(() => datasets.value[selectedDataset.value])
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -151,22 +155,22 @@ const dataset = computed(() => datasets.value[selectedDataset.value])
         <template #title>VueUi3dBar</template>
 
         <template #local>
-            <LocalVueUi3dBar :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUi3dBar :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
             </LocalVueUi3dBar>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUi3dBar" :dataset="dataset" :config="config" :key="`vdui_local_${step}`">
+            <LocalVueDataUi component="VueUi3dBar" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" ref="vduiLocal">
             </LocalVueDataUi>
         </template>
 
         <template #build>
-            <VueUi3dBar :dataset="dataset" :config="config" :key="`build_${step}`" >
+            <VueUi3dBar :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
             </VueUi3dBar>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUi3dBar" :dataset="dataset" :config="config" :key="`vdui_build_${step}`">
+            <VueDataUi component="VueUi3dBar" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" ref="vduiBuild">
             </VueDataUi>
         </template>
 

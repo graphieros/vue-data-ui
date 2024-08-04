@@ -4,6 +4,9 @@ import LocalVueUiOnion from '../src/components/vue-ui-onion.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
     {
@@ -149,6 +152,7 @@ const step = ref(0)
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <button @click="mutate">MUTATE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
@@ -165,7 +169,7 @@ const step = ref(0)
         <template #title>VueUiOnion</template>
 
         <template #local>
-            <LocalVueUiOnion :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend">
+            <LocalVueUiOnion :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -186,7 +190,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend">
+            <LocalVueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -207,7 +211,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiOnion :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend">
+            <VueUiOnion :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -228,7 +232,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend">
+            <VueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

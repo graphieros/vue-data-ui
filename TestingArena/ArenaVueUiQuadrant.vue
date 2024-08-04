@@ -4,6 +4,9 @@ import LocalVueUiQuadrant from '../src/components/vue-ui-quadrant.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
 const dataset = ref([
     {
@@ -224,6 +227,8 @@ function selectSide(side) {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleLabels">TOGGLE LABELS</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -239,7 +244,7 @@ function selectSide(side) {
         <template #title>VueUiQuadrant</template>
 
         <template #local>
-            <LocalVueUiQuadrant :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide">
+            <LocalVueUiQuadrant :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -260,7 +265,7 @@ function selectSide(side) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiQuadrant" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide">
+            <LocalVueDataUi component="VueUiQuadrant" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -281,7 +286,7 @@ function selectSide(side) {
         </template>
 
         <template #build>
-            <VueUiQuadrant :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide">
+            <VueUiQuadrant :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -302,7 +307,7 @@ function selectSide(side) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiQuadrant" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide">
+            <VueDataUi component="VueUiQuadrant" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

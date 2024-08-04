@@ -4,6 +4,9 @@ import LocalVueUiScatter from '../src/components/vue-ui-scatter.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const scat1 = computed(() => {
     const arr = [];
@@ -213,6 +216,7 @@ function selectLegend(legend) {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0">
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
@@ -222,7 +226,7 @@ function selectLegend(legend) {
         <template #title>VueUiScatter</template>
         
         <template #local>
-            <LocalVueUiScatter :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiScatter :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -243,7 +247,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiScatter" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiScatter" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -264,7 +268,7 @@ function selectLegend(legend) {
         </template>
 
         <template #build>
-            <VueUiScatter :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiScatter :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -285,7 +289,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiScatter" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiScatter" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

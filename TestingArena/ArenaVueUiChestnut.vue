@@ -4,6 +4,9 @@ import LocalVueUiChestnut from '../src/components/vue-ui-chestnut.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
     {
@@ -337,6 +340,8 @@ function selectNut(nut) {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
+
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -347,7 +352,7 @@ function selectNut(nut) {
     <template #title>VueUiChestnut</template>
 
     <template #local>
-        <LocalVueUiChestnut :dataset="dataset" :config="config" :key="`local_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut">
+        <LocalVueUiChestnut :dataset="dataset" :config="config" :key="`local_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="local">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -362,7 +367,7 @@ function selectNut(nut) {
     </template>
     
     <template #VDUI-local>
-        <LocalVueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut">
+        <LocalVueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiLocal">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -377,7 +382,7 @@ function selectNut(nut) {
     </template>
     
     <template #build>
-        <VueUiChestnut :dataset="dataset" :config="config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut">
+        <VueUiChestnut :dataset="dataset" :config="config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="build">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -392,7 +397,7 @@ function selectNut(nut) {
     </template>
     
     <template #VDUI-build>
-        <VueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut">
+        <VueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiBuild">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

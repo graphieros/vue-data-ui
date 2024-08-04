@@ -4,6 +4,9 @@ import LocalVueUiVerticalBar from '../src/components/vue-ui-vertical-bar.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable, toggleSort } = useArena()
 
 const dataset = ref([
     {
@@ -189,6 +192,8 @@ function selectLegend(legend) {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleSort">TOGGLE SORT</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -204,7 +209,7 @@ function selectLegend(legend) {
         <template #title>VueUiVerticalBar</template>
 
         <template #local>
-            <LocalVueUiVerticalBar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend">
+            <LocalVueUiVerticalBar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -230,7 +235,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiVerticalBar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend">
+            <LocalVueDataUi component="VueUiVerticalBar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -256,7 +261,7 @@ function selectLegend(legend) {
         </template>
 
         <template #build>
-            <VueUiVerticalBar :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend">
+            <VueUiVerticalBar :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -282,7 +287,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiVerticalBar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend">
+            <VueDataUi component="VueUiVerticalBar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

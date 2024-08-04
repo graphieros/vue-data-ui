@@ -4,6 +4,9 @@ import LocalVueUiTreemap from '../src/components/vue-ui-treemap.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
     {
@@ -223,6 +226,7 @@ function selectDatapoint(datapoint) {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -237,7 +241,7 @@ function selectDatapoint(datapoint) {
         <template #title>VueUiTreemap</template>
 
         <template #local>
-            <LocalVueUiTreemap :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
+            <LocalVueUiTreemap :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -264,7 +268,7 @@ function selectDatapoint(datapoint) {
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiTreemap" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
+            <LocalVueDataUi component="VueUiTreemap" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -291,7 +295,7 @@ function selectDatapoint(datapoint) {
         </template>
         
         <template #build>
-            <VueUiTreemap :dataset="dataset" :config="config" :key="`build_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
+            <VueUiTreemap :dataset="dataset" :config="config" :key="`build_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -318,7 +322,7 @@ function selectDatapoint(datapoint) {
         </template>
         
         <template #VDUI-build>
-            <VueDataUi component="VueUiTreemap" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend">
+            <VueDataUi component="VueUiTreemap" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

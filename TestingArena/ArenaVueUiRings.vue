@@ -4,6 +4,9 @@ import LocalVueUiRings from '../src/components/vue-ui-rings.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
     {
@@ -132,6 +135,7 @@ const step = ref(0)
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -146,7 +150,7 @@ const step = ref(0)
         <template #title>VueUiRings</template>
 
         <template #local>
-            <LocalVueUiRings :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" >
+            <LocalVueUiRings :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -167,7 +171,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiRings" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" @selectLegend="selectLegend" >
+            <LocalVueDataUi component="VueUiRings" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -188,7 +192,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiRings :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" >
+            <VueUiRings :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -209,7 +213,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiRings" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" @selectLegend="selectLegend" >
+            <VueDataUi component="VueUiRings" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

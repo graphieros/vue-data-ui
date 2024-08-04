@@ -4,6 +4,9 @@ import LocalVueUiRadar from '../src/components/vue-ui-radar.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref({
     categories: [
@@ -137,6 +140,7 @@ function selectLegend(legend) {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -152,7 +156,7 @@ function selectLegend(legend) {
         <template #title>VueUiRadar</template>
 
         <template #local>
-            <LocalVueUiRadar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend">
+            <LocalVueUiRadar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -173,7 +177,7 @@ function selectLegend(legend) {
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend">
+            <LocalVueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -194,7 +198,7 @@ function selectLegend(legend) {
         </template>
         
         <template #build>
-            <VueUiRadar :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend">
+            <VueUiRadar :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -215,7 +219,7 @@ function selectLegend(legend) {
         </template>
         
         <template #VDUI-build>
-            <VueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend">
+            <VueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

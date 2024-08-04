@@ -4,6 +4,9 @@ import LocalVueUiWaffle from '../src/components/vue-ui-waffle.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
     {
@@ -130,6 +133,7 @@ function selectLegend(legend) {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -144,7 +148,7 @@ function selectLegend(legend) {
         <template #title>VueUiWaffle</template>
 
         <template #local>
-            <LocalVueUiWaffle :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend">
+            <LocalVueUiWaffle :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
@@ -187,7 +191,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend">
+            <LocalVueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
@@ -230,7 +234,7 @@ function selectLegend(legend) {
         </template>
 
         <template #build>
-            <VueUiWaffle :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend">
+            <VueUiWaffle :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
@@ -273,7 +277,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend">
+            <VueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon

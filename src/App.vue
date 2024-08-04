@@ -92,7 +92,7 @@ const components = ref([
   /**/"VueUiParallelCoordinatePlot", // 40
 ]);
 
-const selectedComponent = ref(components.value[40]);
+const selectedComponent = ref(components.value[34]);
 
 </script>
 

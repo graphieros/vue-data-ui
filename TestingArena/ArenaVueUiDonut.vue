@@ -179,9 +179,24 @@ function addDatapoint() {
     })
 }
 
+const localDonut = ref(null)
+const localVdui = ref(null)
+
+function toggleTable() {
+    localDonut.value.toggleTable();
+    localVdui.value.toggleTable();
+}
+
+function toggleLabels() {
+    localDonut.value.toggleLabels();
+    localVdui.value.toggleLabels();
+}
+
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleLabels">TOGGLE LABELS</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -197,7 +212,7 @@ function addDatapoint() {
         <template #title>VueUiDonut</template>
 
         <template #local>
-            <LocalVueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <LocalVueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localDonut">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -223,7 +238,7 @@ function addDatapoint() {
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localVdui">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

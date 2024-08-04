@@ -4,6 +4,9 @@ import LocalVueUiXyCanvas from '../src/components/vue-ui-xy-canvas.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
 const crazyDs = [];
 const crazyDs2 = [];
@@ -226,6 +229,9 @@ const config = computed(() => {
 </script>
 
 <template>
+    <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleLabels">TOGGLE LABELS</button>
+    <button @click="toggleStack">TOGGLE STACK</button>
     <div style="margin: 12px 0; color: white">Z
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -236,22 +242,22 @@ const config = computed(() => {
         <template #title>VueUiXyCanvas</template>
 
         <template #local>
-            <LocalVueUiXyCanvas :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiXyCanvas :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
             </LocalVueUiXyCanvas>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiXyCanvas" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiXyCanvas" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
 
             </LocalVueDataUi>
         </template>
 
         <template #build>
-            <VueUiXyCanvas :dataset="dataset" :config="config" :key="`build_${step}`"></VueUiXyCanvas>
+            <VueUiXyCanvas :dataset="dataset" :config="config" :key="`build_${step}`" ref="build"></VueUiXyCanvas>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiXyCanvas" :dataset="dataset" :config="config" :key="`VDUI_build_${step}`">
+            <VueDataUi component="VueUiXyCanvas" :dataset="dataset" :config="config" :key="`VDUI_build_${step}`" ref="vduiBuild">
             </VueDataUi>
         </template>
 
