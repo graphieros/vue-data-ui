@@ -6,7 +6,8 @@ import {
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
-    createSmoothPath, 
+    createSmoothPath,
+    createStraightPath,
     createUid, 
     dataLabel, 
     downloadCsv, 
@@ -16,7 +17,8 @@ import {
     isFunction, 
     objectIsEmpty, 
     palette, 
-    themePalettes, 
+    themePalettes,
+    getPathLengthFromCoordinates
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
@@ -177,17 +179,6 @@ const legendSet = computed(() => {
     })
 });
 
-const axisNames = computed(() => {
-    if (!pcpConfig.value.style.chart.yAxis.labels.axisNames.length) {
-        return immutableDataset.value.map((_, i) => {
-            return `Y-${i}`
-        })
-    } else {
-        return pcpConfig.value.style.chart.yAxis.labels.axisNames
-    }
-})
-
-
 const legendConfig = computed(() => {
     return {
         cy: 'pcp-div-legend',
@@ -240,14 +231,6 @@ const scales = computed(() => {
     return s;
 });
 
-function createStraightPath(points) {
-    let arr = [];
-    for (let i = 0; i < points.length; i += 1) {
-        arr.push(`${points[i].x},${points[i].y} `)
-    }
-    return arr.join(' ').trim()
-}
-
 const mutableDataset = computed(() => {
     return filteredDs.value
         .map((ds, i) => {
@@ -278,15 +261,20 @@ const mutableDataset = computed(() => {
             return {
                 ...ds,
                 series: ds.series.map(s => {
+                    const straightPath = createStraightPath(s.datapoints);
+                    const smoothPath = createSmoothPath(s.datapoints, 0.12);
+                    const pathLength = getPathLengthFromCoordinates(pcpConfig.value.style.chart.lines.smooth ? `M ${smoothPath}`: `M ${straightPath}`) 
                     return {
                         ...s,
-                        smoothPath: createSmoothPath(s.datapoints, 0.12),
-                        straightPath: createStraightPath(s.datapoints)
+                        smoothPath,
+                        straightPath,
+                        pathLength
                     }
                 })
             }
-        })
-})
+        });
+});
+
 
 function makeDataLabel({ value, index }) {
     return dataLabel({
@@ -346,7 +334,7 @@ function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex }) {
 }
 
 function getData() {
-    return immutableDataset.value
+    return immutableDataset.value;
 }
 
 const __to__ = ref(null);
@@ -455,7 +443,7 @@ defineExpose({
     generateCsv,
     generatePdf,
     generateImage,
-})
+});
 
 </script>
 
@@ -623,7 +611,7 @@ defineExpose({
                         :stroke="serie.color" 
                         :stroke-width="pcpConfig.style.chart.lines.strokeWidth"
                         fill="none"
-                        :class="{ 'vue-ui-pcp-animated': pcpConfig.useCssAnimation, 'vue-ui-pcp-transition': true  }"
+                        :class="{ 'vue-ui-pcp-animated vue-data-ui-line-animated': pcpConfig.useCssAnimation, 'vue-ui-pcp-transition': true  }"
                         @mouseenter="useTooltip({
                             shape: serie.shape,
                             serieName: serie.name,
@@ -632,7 +620,8 @@ defineExpose({
                             seriesIndex: serieSet.seriesIndex
                         })"
                         @mouseleave="selectedItem = null; isTooltip = false;"
-                        :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? pcpConfig.style.chart.lines.opacity : 0.2 : pcpConfig.style.chart.lines.opacity}`"
+                        :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? pcpConfig.style.chart.lines.opacity : 0.2 : pcpConfig.style.chart.lines.opacity}; stroke-dasharray:${serieSet.pathLength}; stroke-dashoffset: ${pcpConfig.useCssAnimation ? serieSet.pathLength : 0}`"
+                        
                     />
                 </g>
             </g>
@@ -729,8 +718,8 @@ defineExpose({
 }
 
 .vue-ui-pcp-animated {
-    animation: xyAnimation 0.5s ease-in-out;
     transform-origin: center;
+    animation: xyAnimation 0.7s ease-in-out, vueDataUiLineAnimation 0.7s ease-in-out forwards; 
 }
 
 @keyframes xyAnimation {
@@ -746,6 +735,12 @@ defineExpose({
         transform: scale(1,1);
         opacity: 1;
     }
+}
+
+@keyframes vueDataUiLineAnimation {
+    to {
+        stroke-dashoffset: 0;
+      }
 }
 
 </style>
