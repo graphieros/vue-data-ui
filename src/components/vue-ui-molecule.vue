@@ -499,11 +499,21 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function toggleLabels() {
+    mutableConfig.value.showDataLabels = !mutableConfig.value.showDataLabels;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
-    generateImage
+    generateImage,
+    toggleTable,
+    toggleLabels
 });
 
 </script>
@@ -555,8 +565,8 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
-            @toggleLabels="mutableConfig.showDataLabels = !mutableConfig.showDataLabels"
+            @toggleTable="toggleTable"
+            @toggleLabels="toggleLabels"
         />
 
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="cluster-svg" :viewBox="dynamicViewBox"
