@@ -438,11 +438,21 @@ function selectLegend(legend) {
     })
 }
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function toggleLabels() {
+    mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generatePdf,
     generateImage,
+    toggleTable,
+    toggleLabels
 });
 
 </script>
@@ -495,8 +505,8 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
-            @toggleLabels="mutableConfig.dataLabels.show = !mutableConfig.dataLabels.show"
+            @toggleTable="toggleTable"
+            @toggleLabels="toggleLabels"
         />
 
         <svg 
