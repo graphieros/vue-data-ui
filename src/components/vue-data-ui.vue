@@ -163,6 +163,10 @@ const close = ref(() => null);
 const restoreOrder = ref(() => null);
 const recalculateHeight = ref(() => null);
 const toggleLock = ref(() => null);
+const toggleTable = ref(() => null);
+const toggleLabels = ref(() => null);
+const toggleSort = ref(() => null);
+const toggleStack = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -203,6 +207,18 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.toggleLock) {
             toggleLock.value = newRef.toggleLock;
         }
+        if (newRef.toggleTable) {
+            toggleTable.value = newRef.toggleTable;
+        }
+        if (newRef.toggleLabels) {
+            toggleLabels.value = newRef.toggleLabels;
+        }
+        if (newRef.toggleSort) {
+            toggleSort.value = newRef.toggleSort;
+        }
+        if (newRef.toggleStack) {
+            toggleStack.value = newRef.toggleStack;
+        }
     }
 })
 
@@ -222,7 +238,7 @@ const getEventHandlers = () => {
         'postImage',
         'hoverIndex',
         'selectX',
-        'toggleLock'
+        'toggleLock',
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -254,7 +270,11 @@ defineExpose({
     close,
     restoreOrder,
     recalculateHeight,
-    toggleLock
+    toggleLock,
+    toggleTable,
+    toggleLabels,
+    toggleSort,
+    toggleStack
 });
 </script>
 
