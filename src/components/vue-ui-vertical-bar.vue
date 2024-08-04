@@ -15,7 +15,7 @@ import {
     shiftHue,
     themePalettes,
     XMLNS,
-convertCustomPalette
+    convertCustomPalette
 } from "../lib.js";
 import pdf from "../pdf.js";
 import img from "../img.js";
@@ -505,12 +505,23 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function toggleSort() {
+    mutableConfig.value.sortDesc = !mutableConfig.value.sortDesc;
+    recalculateHeight()
+}
+
 defineExpose({
     getData,
     recalculateHeight,
     generatePdf,
     generateCsv,
-    generateImage
+    generateImage,
+    toggleTable,
+    toggleSort
 });
 
 </script>
@@ -559,11 +570,8 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-            @toggleTable="mutableConfig.showTable = !mutableConfig.showTable"
-            @toggleSort="() => {
-                mutableConfig.sortDesc = !mutableConfig.sortDesc;
-                recalculateHeight()
-            }"
+            @toggleTable="toggleTable"
+            @toggleSort="toggleSort"
         />
 
          <!-- LEGEND AS DIV : TOP -->
