@@ -122,7 +122,7 @@ watch(
 </script>
 
 <template>
-    <div>
+    <div data-html2canvas-ignore>
         <div class="vue-data-ui-slicer-labels">
             <div class="vue-data-ui-slicer-label-left"
                 :style="{ fontSize: `${props.fontSize}px`, color: props.textColor }">
