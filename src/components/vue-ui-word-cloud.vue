@@ -1,6 +1,5 @@
 <script setup>
 import { ref, watch, computed, nextTick, onMounted } from 'vue';
-import { useNestedProp } from '../useNestedProp';
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue';
@@ -17,10 +16,10 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import pdf from '../pdf';
-import img from "../img";
 import Accordion from "./vue-ui-accordion.vue";
 import DataTable from '../atoms/DataTable.vue';
+import { useNestedProp } from '../useNestedProp';
+import { usePrinter } from '../usePrinter';
 
 const props = defineProps({
     config: {
@@ -74,8 +73,6 @@ onMounted(() => {
 });
 
 const uid = ref(createUid());
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const wordCloudChart = ref(null);
 const step = ref(0);
 
@@ -97,7 +94,12 @@ const wordCloudConfig = computed(() => {
     } else {
         return mergedConfig;
     }
-})
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `wordCloud_${uid.value}`,
+    fileName: wordCloudConfig.value.style.chart.title.text || 'vue-ui-word-cloud'
+});
 
 const mutableConfig = ref({
     showTable: wordCloudConfig.value.table.show,
@@ -187,43 +189,6 @@ function generateWordCloud() {
     });
 
     positionedWords.value = positionWords(scaledWords, svgWidth, svgHeight).sort((a, b) => b.fontSize - a.fontSize);
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf() {
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`wordCloud_${uid.value}`),
-            fileName: wordCloudConfig.value.style.chart.title.text || 'vue-ui-word-cloud'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`wordCloud_${uid.value}`),
-            fileName: wordCloudConfig.value.style.chart.title.text || 'vue-ui-word-cloud',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const table = computed(() => {

@@ -18,11 +18,8 @@ import {
     XMLNS,
 convertCustomPalette
 } from "../lib";
-import pdf from "../pdf.js";
-import img from "../img.js";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
@@ -31,6 +28,8 @@ import Legend from "../atoms/Legend.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -49,14 +48,11 @@ const props = defineProps({
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
-})
+});
 
 const uid = ref(createUid());
 const emit = defineEmits(['selectPlot', 'selectSide', 'selectLegend']);
 const defaultConfig = ref(mainConfig.vue_ui_quadrant);
-
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const quadrantChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -198,6 +194,11 @@ const quadrantConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-quadrant_${uid.value}`,
+    fileName: quadrantConfig.value.style.chart.title.text || 'vue-ui-quadrant'
 });
 
 const customPalette = computed(() => {
@@ -844,7 +845,7 @@ const miniMap = computed(() => {
             }
         },
     }
-})
+});
 
 function getData() {
     return drawableDataset.value.map(ds => {
@@ -863,43 +864,6 @@ function getData() {
             }),
         }
     });
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`vue-ui-quadrant_${uid.value}`),
-            fileName: quadrantConfig.value.style.chart.title.text || 'vue-ui-quadrant'
-        }).finally(() => {
-            isPrinting.value = false;
-        })
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`vue-ui-quadrant_${uid.value}`),
-            fileName: quadrantConfig.value.style.chart.title.text || 'vue-ui-quadrant',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 function generateCsv() {

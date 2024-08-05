@@ -1,10 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import { 
@@ -15,6 +12,8 @@ import {
     XMLNS
 } from "../lib";
 import Skeleton from "./vue-ui-skeleton.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -37,9 +36,6 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_wheel);
-
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const wheelChart = ref(null);
 const details = ref(null);
 const step = ref(0);
@@ -59,6 +55,11 @@ const wheelConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: uid.value,
+    fileName: wheelConfig.value.style.chart.title.text || 'vue-ui-wheel'
 });
 
 const svg = ref({
@@ -136,44 +137,7 @@ const ticks = computed(() => {
         })
     }
     return tickArray
-})
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`${uid.value}`),
-            fileName: wheelConfig.value.style.chart.title.text || 'vue-ui-wheel'
-        }).finally(() => {
-            isPrinting.value = false;
-        })
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`${uid.value}`),
-            fileName: wheelConfig.value.style.chart.title.text || 'vue-ui-wheel',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
+});
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {

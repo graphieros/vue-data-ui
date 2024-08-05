@@ -19,16 +19,15 @@ import {
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Legend from "../atoms/Legend.vue";
 import Title from "../atoms/Title.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import UserOptions from "../atoms/UserOptions.vue";
-import pdf from "../pdf";
-import img from "../img";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -75,9 +74,6 @@ onMounted(() => {
 const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_galaxy);
-
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const galaxyChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -103,6 +99,11 @@ const galaxyConfig = computed(() => {
     }
 });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `galaxy_${uid.value}`,
+    fileName: galaxyConfig.value.style.chart.title.text || 'vue-ui-galaxy'
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(galaxyConfig.value.customPalette);
 })
@@ -114,16 +115,12 @@ const mutableConfig = ref({
     showTable: galaxyConfig.value.table.show,
 });
 
-const innerGradientIntensity = computed(() => {
-    return `${galaxyConfig.value.style.chart.layout.arcs.gradient.intensity}%`;
-})
-
 const svg = ref({
     height: 180, // or 250 if non fibo
     width: 250
-})
+});
 
-const emit = defineEmits(['selectLegend', 'selectDatapoint'])
+const emit = defineEmits(['selectLegend', 'selectDatapoint']);
 
 const segregated = ref([]);
 
@@ -175,7 +172,7 @@ const maxPath = ref(190);
 
 const segregatedSet = computed(() => {
     return immutableSet.value.filter(ds => !segregated.value.includes(ds.id))
-})
+});
 
 const galaxySet = computed(() => {
 
@@ -284,44 +281,7 @@ const legendConfig = computed(() => {
         paddingBottom: 12,
         fontWeight: galaxyConfig.value.style.chart.legend.bold ? 'bold' : ''
     }
-})
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`galaxy_${uid.value}`),
-            fileName: galaxyConfig.value.style.chart.title.text || 'vue-ui-galaxy'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`galaxy_${uid.value}`),
-            fileName: galaxyConfig.value.style.chart.title.text || 'vue-ui-galaxy',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
+});
 
 const table = computed(() => {
     const head = galaxySet.value.map(ds => {

@@ -22,7 +22,6 @@ import {
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import Legend from "../atoms/Legend.vue";
 import Tooltip from "../atoms/Tooltip.vue";
@@ -30,8 +29,8 @@ import Shape from "../atoms/Shape.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Accordion from "./vue-ui-accordion.vue";
-import pdf from "../pdf";
-import img from "../img";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -58,8 +57,6 @@ const isDataset = computed({
 });
 
 const pcpChart = ref(null);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const step = ref(0);
 
 onMounted(() => {
@@ -111,6 +108,11 @@ const pcpConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `pcp_${uid.value}`,
+    fileName: pcpConfig.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot'
 });
 
 const drawingArea = computed(() => {
@@ -335,43 +337,6 @@ function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex }) {
 
 function getData() {
     return immutableDataset.value;
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`pcp_${uid.value}`),
-            fileName: pcpConfig.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`pcp_${uid.value}`),
-            fileName: pcpConfig.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const dataTable = computed(() => {

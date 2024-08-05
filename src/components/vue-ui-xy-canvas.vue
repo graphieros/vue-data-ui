@@ -32,9 +32,6 @@ import {
     rect,
     text,
 } from "../canvas-lib";
-import img from "../img";
-import pdf from "../pdf";
-import { useNestedProp } from "../useNestedProp";
 import mainConfig from "../default_configs.json"
 import themes from "../themes.json";
 import Tooltip from "../atoms/Tooltip.vue";
@@ -45,6 +42,8 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue"
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     dataset: {
@@ -79,8 +78,6 @@ const tooltipHasChanged = ref(true);
 const clonedCanvas = ref(null);
 const slicerStep = ref(0);
 const step = ref(0);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const isFullscreen = ref(false);
 
 const isDataset = computed(() => {
@@ -105,6 +102,11 @@ const xyConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `xy_canvas_${uid.value}`,
+    fileName: xyConfig.value.style.chart.title.text || 'vue-ui-xy-canvas'
 });
 
 const mutableConfig = ref({
@@ -1034,7 +1036,7 @@ onMounted(() => {
     } else {
         // TODO: check for missing ds attrs
         if (canvas.value) {
-            ctx.value = canvas.value.getContext('2d');
+            ctx.value = canvas.value.getContext('2d', { willReadFrequently: true });
         }
     }
 
@@ -1093,43 +1095,6 @@ const legendConfig = computed(() => {
         fontWeight: xyConfig.value.style.chart.legend.bold ? 'bold' : ''
     }
 });
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`xy_canvas_${uid.value}`),
-            fileName: xyConfig.value.style.chart.title.text || 'vue-ui-xy-canvas'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`xy_canvas_${uid.value}`),
-            fileName: xyConfig.value.style.chart.title.text || 'vue-ui-xy-canvas',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
 
 const dataTable = computed(() => {
     const head = [''].concat(formattedDataset.value.map(ds => ds.name)).concat(` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`);

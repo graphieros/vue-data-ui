@@ -21,18 +21,17 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Slicer from "../atoms/Slicer.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -93,9 +92,6 @@ onMounted(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_donut_evolution);
-
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const segregated = ref([]);
 const hoveredIndex = ref(null);
 const hoveredDatapoint = ref(null);
@@ -125,13 +121,18 @@ const donutEvolutionConfig = computed(() => {
     }
 });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: uid.value,
+    fileName: donutEvolutionConfig.value.style.chart.title.text || 'vue-ui-donut-evolution'
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(donutEvolutionConfig.value.customPalette);
-})
+});
 
 const mutableConfig = ref({
     showTable: donutEvolutionConfig.value.table.show
-})
+});
 
 const padding = computed(() => {
     return {
@@ -140,7 +141,7 @@ const padding = computed(() => {
         bottom: donutEvolutionConfig.value.style.chart.layout.padding.bottom,
         left: donutEvolutionConfig.value.style.chart.layout.padding.left,
     }
-})
+});
 
 const svg = computed(() => {
     const absoluteHeight = donutEvolutionConfig.value.style.chart.layout.height;
@@ -155,7 +156,7 @@ const svg = computed(() => {
         height,
         width,
     }
-})
+});
 
 const convertedDataset = computed(() => {
     props.dataset.forEach((ds, i) => {
@@ -175,7 +176,7 @@ const convertedDataset = computed(() => {
                 index: i
             })
         }
-    })
+    });
     
     return props.dataset.map((ds, i) => {
         return {
@@ -185,7 +186,7 @@ const convertedDataset = computed(() => {
             length: (ds.values || []).length,
             uid: createUid(),
         }
-    })
+    });
 });
 
 const mutableDataset = computed(() => {
@@ -195,15 +196,15 @@ const mutableDataset = computed(() => {
             values: ds.values.filter((_v, k) => k >= slicer.value.start && k <= slicer.value.end)
         }
     })
-})
+});
 
 const maxLength = computed(() => {
     return Math.max(...mutableDataset.value.map(ds => ds.length))
-})
+});
 
 const slit = computed(() => {
     return svg.value.width / (slicer.value.end - slicer.value.start);
-})
+});
 
 const drawableDataset = computed(() => {
     const arr = [];
@@ -268,12 +269,11 @@ const drawableDataset = computed(() => {
             }, svg.value.centerX, svg.value.centerY, svg.value.height / 3.6, svg.value.height / 3.6, 1.99999, 2, 1, 360, 105.25, svg.value.height / 6),
         }
     })
-})
+});
 
 function labellizeValue(val) {
     return `${donutEvolutionConfig.value.style.chart.layout.dataLabels.prefix}${isNaN(val) ? '-' : Number(val.toFixed(donutEvolutionConfig.value.style.chart.layout.dataLabels.rounding)).toLocaleString()}${donutEvolutionConfig.value.style.chart.layout.dataLabels.suffix}`;
 }
-
 
 const extremes = computed(() => {
     return {
@@ -335,12 +335,6 @@ function unfixDatapoint() {
     fixedDatapointIndex.value = null;
 }
 
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
 const legendSet = computed(() => {
     return convertedDataset.value
         .map((serie, i) => {
@@ -353,7 +347,7 @@ const legendSet = computed(() => {
             }
         })
         .sort((a,b) => b.value - a.value)
-        .map((el, i) => {
+        .map((el) => {
             return {
                 ...el,
                 opacity: segregated.value.includes(el.uid) ? 0.5 : 1,
@@ -376,7 +370,7 @@ const legendConfig = computed(() => {
         paddingBottom: 12,
         fontWeight: donutEvolutionConfig.value.style.chart.legend.bold ? 'bold' : ''
     }
-})
+});
 
 function segregate(id) {
     if(segregated.value.includes(id)) {
@@ -390,38 +384,6 @@ function segregate(id) {
     if(fixedDatapoint.value) {
         fixDatapoint(drawableDataset.value.find((_, i) => i === fixedDatapointIndex.value))
     }
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(uid.value),
-            fileName: donutEvolutionConfig.value.style.chart.title.text || 'vue-ui-donut-evolution'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-    
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(uid.value),
-            fileName: donutEvolutionConfig.value.style.chart.title.text || 'vue-ui-donut-evolution',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const table = computed(() => {

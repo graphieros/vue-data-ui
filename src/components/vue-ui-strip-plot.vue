@@ -19,18 +19,17 @@ import {
     palette,
     themePalettes
 } from "../lib";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Shape from "../atoms/Shape.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -106,8 +105,6 @@ onMounted(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_strip_plot);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const stripPlotChart = ref(null);
 const step = ref(0);
 const isTooltip = ref(false);
@@ -129,6 +126,11 @@ const stripConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `strip-plot_${uid.value}`,
+    fileName: stripConfig.value.style.chart.title.text || 'vue-ui-strip-plot'
 });
 
 const customPalette = computed(() => {
@@ -272,44 +274,6 @@ function useTooltip({ datapoint, seriesIndex }) {
         tooltipContent.value = `<div>${html}</div>`
     }
 }
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`strip-plot_${uid.value}`),
-            fileName: stripConfig.value.style.chart.title.text || 'vue-ui-strip-plot'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`strip-plot_${uid.value}`),
-            fileName: stripConfig.value.style.chart.title.text || 'vue-ui-strip-plot',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
-
 
 const table = computed(() => {
     const head = mutableDataset.value.flatMap(ds => {

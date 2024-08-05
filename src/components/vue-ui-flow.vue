@@ -16,13 +16,12 @@ import {
     palette, 
     themePalettes,
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Accordion from "./vue-ui-accordion.vue";
-import pdf from "../pdf";
-import img from "../img";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -55,8 +54,6 @@ onMounted(() => {
 const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_flow);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const flowChart = ref(null);
 const step = ref(0);
 
@@ -82,6 +79,11 @@ const flowConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `flow_${uid.value}`,
+    fileName: flowConfig.value.style.chart.title.text || 'vue-ui-flow'
 });
 
 const customPalette = computed(() => {
@@ -320,43 +322,6 @@ function selectNode(node) {
 function unselectNode() {
     selectedNodes.value = null;
     selectedSource.value = null;
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`flow_${uid.value}`),
-            fileName: flowConfig.value.style.chart.title.text || 'vue-ui-flow'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`flow_${uid.value}`),
-            fileName: flowConfig.value.style.chart.title.text || 'vue-ui-flow',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const table = computed(() => {

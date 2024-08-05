@@ -19,18 +19,17 @@ import {
     themePalettes,
     XMLNS, 
 } from '../lib';
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -62,8 +61,6 @@ onMounted(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_nested_donuts);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const nestedDonutsChart = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref('');
@@ -94,9 +91,14 @@ const donutConfig = computed(() => {
     }
 });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `nested_donuts_${uid.value}`,
+    fileName: donutConfig.value.style.chart.title.text || 'vue-ui-nested-donuts'
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(donutConfig.value.customPalette);
-})
+});
 
 const mutableConfig = ref({
     dataLabels: {
@@ -189,7 +191,7 @@ const immutableDataset = computed(() => {
                 }
             })
         }
-    })
+    });
 });
 
 const donutSize = computed(() => donutConfig.value.style.chart.layout.donut.strokeWidth)
@@ -212,7 +214,7 @@ const md = computed(() => {
                 }
             }),
         }
-    })
+    });
 });
 
 function checkSegregation(sourceArray, n, targetArray) {
@@ -370,7 +372,7 @@ const gradientSets = computed(() => {
                 donutSize.value / immutableDataset.value.length * donutConfig.value.style.chart.layout.donut.spacingRatio
             )[0]
         }
-    })
+    });
 });
 
 const selectedDonut = ref(null);
@@ -502,8 +504,8 @@ const legendSets = computed(() => {
                 isSegregated: segregated.value.includes(s.id)
             }
         })
-    })
-})
+    });
+});
 
 const legendConfig = computed(() => {
     return {
@@ -514,42 +516,7 @@ const legendConfig = computed(() => {
         paddingBottom: 12,
         fontWeight: donutConfig.value.style.chart.legend.bold ? 'bold' : ''
     }
-})
-
-const __to__ = ref(null);
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`nested_donuts_${uid.value}`),
-            fileName: donutConfig.value.style.chart.title.text || 'vue-ui-nested-donuts'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`nested_donuts_${uid.value}`),
-            fileName: donutConfig.value.style.chart.title.text || 'vue-ui-nested-donuts',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
+});
 
 const table = computed(() => {
     const head = mutableDataset.value.flatMap(ds => {

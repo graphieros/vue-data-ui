@@ -15,13 +15,12 @@ import {
     themePalettes,
     XMLNS
 } from "../lib.js";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config:{
@@ -40,14 +39,10 @@ const props = defineProps({
 
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
-})
+});
 
 const uid = ref(createUid());
-
 const defaultConfig = ref(mainConfig.vue_ui_gauge);
-
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const gaugeChart = ref(null);
 const details = ref(null);
 const step = ref(0);
@@ -70,9 +65,14 @@ const gaugeConfig = computed(() => {
     }
 });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-gauge_${uid.value}`,
+    fileName: gaugeConfig.value.style.chart.title.text || 'vue-ui-gauge'
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(gaugeConfig.value.customPalette);
-})
+});
 
 const mutableDataset = computed(() => {
 
@@ -342,43 +342,6 @@ function calcMarkerFontSize(value) {
         return 15;
     }
     return 20;
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`vue-ui-gauge_${uid.value}`),
-            fileName: gaugeConfig.value.style.chart.title.text || 'vue-ui-gauge'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`vue-ui-gauge_${uid.value}`),
-            fileName: gaugeConfig.value.style.chart.title.text || 'vue-ui-gauge',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const isFullscreen = ref(false)

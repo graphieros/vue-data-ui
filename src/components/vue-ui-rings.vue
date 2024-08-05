@@ -18,18 +18,17 @@ import {
   themePalettes,
   XMLNS
 } from "../lib";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
   config: {
@@ -75,9 +74,6 @@ onMounted(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_rings);
-
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const ringsChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -103,9 +99,14 @@ const ringsConfig = computed(() => {
     }
 });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `rings_${uid.value}`,
+    fileName: ringsConfig.value.style.chart.title.text || 'vue-ui-rings'
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(ringsConfig.value.customPalette);
-})
+});
 
 const mutableConfig = ref({
     showTable: ringsConfig.value.table.show,
@@ -118,7 +119,7 @@ const svg = computed(() => {
   };
 });
 
-const emit = defineEmits(['selectLegend'])
+const emit = defineEmits(['selectLegend']);
 
 const segregated = ref([]);
 
@@ -293,44 +294,6 @@ function useTooltip(index, datapoint) {
   }
   
   isTooltip.value = true;
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`rings_${uid.value}`),
-            fileName: ringsConfig.value.style.chart.title.text || 'vue-ui-rings'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-    
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`rings_${uid.value}`),
-            fileName: ringsConfig.value.style.chart.title.text || 'vue-ui-rings',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const table = computed(() => {

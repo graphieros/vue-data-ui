@@ -20,13 +20,12 @@ import {
     themePalettes,
     XMLNS
 } from "../lib";
-import pdf from "../pdf";
-import img from "../img";
-import { useNestedProp } from "../useNestedProp";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Slicer from "../atoms/Slicer.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -51,8 +50,6 @@ const tooltipContent = ref('');
 const selectedDatapoint = ref(null)
 const defaultConfig = ref(mainConfig.vue_ui_quick_chart);
 const segregated = ref([]);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const step = ref(0);
 const slicerStep = ref(0);
 
@@ -97,6 +94,11 @@ const isProcessable = computed(() => {
 
 const chartType = computed(() => {
     return formattedDataset.value ? formattedDataset.value.type : null
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `${chartType.value}_${uid.value}`,
+    fileName: quickConfig.value.title || chartType.value
 });
 
 const defaultSizes = ref({
@@ -710,43 +712,6 @@ const bar = computed(() => {
     }
 });
 
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`${chartType.value}_${uid.value}`),
-            fileName: quickConfig.value.title || chartType.value
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`${chartType.value}_${uid.value}`),
-            fileName: quickConfig.value.title || chartType.value,
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
-
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
@@ -1229,14 +1194,14 @@ defineExpose({
                             :class="{'vue-data-ui-bar-animated': quickConfig.barAnimated && plot.value < 0}"
                             >
                             <animate
-                                v-if="quickConfig.barAnimated && plot.value > 0"
+                                v-if="quickConfig.barAnimated && plot.value > 0 && !isPrinting && !isImaging"
                                 attributeName="height"
                                 :from="0"
                                 :to="plot.height"
                                 dur="0.5s"
                             />
                             <animate
-                                v-if="quickConfig.barAnimated && plot.value > 0"
+                                v-if="quickConfig.barAnimated && plot.value > 0 && !isPrinting && !isImaging"
                                 attributeName="y"
                                 :from="bar.absoluteZero"
                                 :to="bar.absoluteZero - plot.height"

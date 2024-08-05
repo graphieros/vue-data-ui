@@ -10,14 +10,13 @@ convertCustomPalette,
     themePalettes,
     XMLNS
 } from "../lib.js";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     dataset: {
@@ -40,8 +39,6 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_relation_circle);
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const relationCircleChart = ref(null);
 const step = ref(0);
 
@@ -61,6 +58,11 @@ const relationConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `relation_circle_${uid.value}`,
+    fileName: relationConfig.value.style.title.text || 'vue-ui-relation-circle'
 });
 
 const customPalette = computed(() => {
@@ -273,43 +275,6 @@ function selectPlot(plot) {
 
 function calcLinkWidth(plot) {
     return plot.weight / maxWeight.value * relationConfig.value.style.links.maxWidth;
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`relation_circle_${uid.value}`),
-            fileName: relationConfig.value.style.title.text || 'vue-ui-relation-circle'
-        }).finally(() => {
-            isPrinting.value = false;
-        })
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`relation_circle_${uid.value}`),
-        fileName: relationConfig.value.style.title.text || 'vue-ui-relation-circle',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const isFullscreen = ref(false)

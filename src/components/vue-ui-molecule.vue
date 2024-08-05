@@ -15,12 +15,9 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
@@ -30,6 +27,8 @@ import RecursiveLabels from "../atoms/RecursiveLabels.vue";
 import BaseDirectionPad from "../atoms/BaseDirectionPad.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -61,8 +60,6 @@ onMounted(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_molecule);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -89,6 +86,11 @@ const moleculeConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `cluster_${uid.value}`,
+    fileName: moleculeConfig.value.style.chart.title.text || 'vue-ui-molecule'
 });
 
 const customPalette = computed(() => {
@@ -362,44 +364,6 @@ function move(direction) {
         zoomReference.value.polygonPath.coordinates[0].y += zoomReference.value.circleRadius;
     }
     zoomOnNode(zoomReference.value);
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`cluster_${uid.value}`),
-            fileName: moleculeConfig.value.style.chart.title.text || 'vue-ui-molecule'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-    
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`cluster_${uid.value}`),
-            fileName: moleculeConfig.value.style.chart.title.text || 'vue-ui-molecule',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 function convertDatasetToCSVFormat(dataset) {

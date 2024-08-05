@@ -15,11 +15,8 @@ import {
     themePalettes,
     XMLNS
 } from "../lib.js";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Legend from "../atoms/Legend.vue";
@@ -27,6 +24,8 @@ import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -45,7 +44,7 @@ const props = defineProps({
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
-})
+});
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -54,13 +53,10 @@ onMounted(() => {
             type: 'dataset'
         })
     }
-})
+});
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_onion);
-
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const onionChart = ref(null);
 const details = ref(null);
 const step = ref(0);
@@ -86,9 +82,14 @@ const onionConfig = computed(() => {
     }
 });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-onion_${uid.value}`,
+    fileName: onionConfig.value.style.chart.title.text || 'vue-ui-onion'
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(onionConfig.value.customPalette);
-})
+});
 
 const mutableConfig = ref({
     showTable: onionConfig.value.table.show
@@ -315,44 +316,7 @@ const dataTable = computed(() => {
     }
 
     return { head, body, config, colNames: head}
-})
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`vue-ui-onion_${uid.value}`),
-            fileName: onionConfig.value.style.chart.title.text || 'vue-ui-onion'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`vue-ui-onion_${uid.value}`),
-            fileName: onionConfig.value.style.chart.title.text || 'vue-ui-onion',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
+});
 
 function generateCsv() {
     nextTick(() => {

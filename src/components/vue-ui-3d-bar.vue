@@ -20,16 +20,15 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -50,14 +49,10 @@ const emits = defineEmits(['selectDatapoint'])
 
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
-})
+});
 
 const uid = ref(createUid());
-
 const defaultConfig = ref(mainConfig.vue_ui_3d_bar);
-
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const details = ref(null);
 const bar3dChart = ref(null);
 const selectionIsFixed = ref(false);
@@ -80,13 +75,18 @@ const barConfig = computed(() => {
     }
 });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `3d_bar_${uid.value}`,
+    fileName: barConfig.value.style.chart.title.text || 'vue-ui-3d-bar'
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(barConfig.value.customPalette);
-})
+});
 
 const mutableConfig = ref({
     showTable: barConfig.value.table.show
-})
+});
 
 const hasStack = computed(() => {
     return props.dataset.series && props.dataset.series.length;
@@ -358,44 +358,6 @@ function displayArcPercentage(arc, stepBreakdown, numOnly = false) {
 
 function sumValues(source) {
     return [...source].map(s => s.value).reduce((a, b) => a + b, 0);
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`3d_bar_${uid.value}`),
-            fileName: barConfig.value.style.chart.title.text || 'vue-ui-3d-bar'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-    
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`3d_bar_${uid.value}`),
-            fileName: barConfig.value.style.chart.title.text || 'vue-ui-3d-bar',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const isFullscreen = ref(false)

@@ -12,11 +12,8 @@ import {
     shiftHue,
     XMLNS
 } from "../lib";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Legend from "../atoms/Legend.vue";
@@ -24,6 +21,8 @@ import BaseIcon from "../atoms/BaseIcon.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -55,9 +54,6 @@ onMounted(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_mood_radar);
-
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const moodRadarChart = ref(null);
 const details = ref(null);
 const selectedKey = ref(null)
@@ -77,6 +73,11 @@ const radarConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: uid.value,
+    fileName: radarConfig.value.style.chart.title.text || 'vue-ui-mood-radar'
 });
 
 const mutableConfig = ref({
@@ -181,44 +182,6 @@ function selectKey(key) {
     } else {
         selectedKey.value = key
     }
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`${uid.value}`),
-            fileName: radarConfig.value.style.chart.title.text || 'vue-ui-mood-radar'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-    
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`${uid.value}`),
-            fileName: radarConfig.value.style.chart.title.text || 'vue-ui-mood-radar',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const table = computed(() => {

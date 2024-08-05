@@ -12,17 +12,16 @@ import {
     shiftHue,
     XMLNS
 } from '../lib';
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -41,7 +40,7 @@ const props = defineProps({
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length
-})
+});
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -50,13 +49,10 @@ onMounted(() => {
             type: 'dataset'
         })
     }
-})
+});
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_age_pyramid);
-
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const agePyramid = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -79,6 +75,11 @@ const agePyramidConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-age-pyramid_${uid.value}`,
+    fileName: agePyramidConfig.value.style.title.text || 'vue-ui-age-pyramid'
 });
 
 const mutableConfig = ref({
@@ -268,43 +269,6 @@ function useTooltip(index, datapoint) {
     }
 
     isTooltip.value = true;
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`vue-ui-age-pyramid_${uid.value}`),
-            fileName: agePyramidConfig.value.style.title.text || 'vue-ui-age-pyramid'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`vue-ui-age-pyramid_${uid.value}`),
-            fileName: agePyramidConfig.value.style.title.text || 'vue-ui-age-pyramid',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 function generateCsv() {

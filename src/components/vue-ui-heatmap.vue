@@ -16,15 +16,14 @@ import {
 } from "../lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import pdf from "../pdf";
-import img from "../img";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -54,9 +53,6 @@ if(objectIsEmpty(props.dataset)) {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_heatmap);
-
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const heatmapChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -81,6 +77,11 @@ const heatmapConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `heatmap__${uid.value}`,
+    fileName: heatmapConfig.value.style.title.text || 'vue-ui-heatmap'
 });
 
 const mutableConfig = ref({
@@ -257,48 +258,11 @@ function useTooltip(datapoint, seriesIndex) {
 
 const sideLegendIndicatorY = computed(() => {
     return drawingArea.value.top + (sideLegendHeight.value * (1 - hoveredValue.value / maxValue.value))
-})
+});
 
 const bottomLegendIndicatorX = computed(() => {
     return drawingArea.value.left + ((svg.value.width - drawingArea.value.left - heatmapConfig.value.style.layout.padding.right) * (hoveredValue.value / maxValue.value))
-})
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`heatmap__${uid.value}`),
-            fileName: heatmapConfig.value.style.title.text || 'vue-ui-heatmap'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`heatmap__${uid.value}`),
-            fileName: heatmapConfig.value.style.title.text || 'vue-ui-heatmap',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
+});
 
 const table = computed(() => {
     const head = props.dataset.map(ds => {

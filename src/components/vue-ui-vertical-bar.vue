@@ -17,11 +17,8 @@ import {
     XMLNS,
     convertCustomPalette
 } from "../lib.js";
-import pdf from "../pdf.js";
-import img from "../img.js";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
@@ -29,6 +26,8 @@ import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -52,8 +51,6 @@ const isDataset = computed(() => {
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_vertical_bar);
 
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const verticalBarChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -80,6 +77,11 @@ const verticalBarConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-vertical-bar_${uid.value}`,
+    fileName: verticalBarConfig.value.style.chart.title.text || 'vue-ui-vertical-bar'
 });
 
 const customPalette = computed(() => {
@@ -387,43 +389,6 @@ function makeDataLabel(value) {
     const percentage = `(${calcProportionToTotal(value, true, verticalBarConfig.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)})`;
 
     return `${label}${verticalBarConfig.value.style.chart.layout.bars.dataLabels.percentage.show ? ` ${percentage}` : ''}`;
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`vue-ui-vertical-bar_${uid.value}`),
-            fileName: verticalBarConfig.value.style.chart.title.text || 'vue-ui-vertical-bar'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`vue-ui-vertical-bar_${uid.value}`),
-            fileName: verticalBarConfig.value.style.chart.title.text || 'vue-ui-vertical-bar',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
 }
 
 const table = computed(() => {

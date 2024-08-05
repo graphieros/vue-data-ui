@@ -18,11 +18,8 @@ import {
 dataLabel,
 convertCustomPalette
 } from '../lib';
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
@@ -31,6 +28,8 @@ import Shape from "../atoms/Shape.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -53,9 +52,6 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_scatter);
-
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const scatterChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -97,6 +93,11 @@ const scatterConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-scatter_${uid.value}`,
+    fileName: scatterConfig.value.style.title.text || 'vue-ui-scatter',
 });
 
 const customPalette = computed(() => {
@@ -458,44 +459,6 @@ function segregate(id) {
             segregated.value.push(id)
         }
     }
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`vue-ui-scatter_${uid.value}`),
-            fileName: scatterConfig.value.style.title.text || 'vue-ui-scatter'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`vue-ui-scatter_${uid.value}`),
-                fileName: scatterConfig.value.style.title.text || 'vue-ui-scatter',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100);
-
 }
 
 function generateCsv() {

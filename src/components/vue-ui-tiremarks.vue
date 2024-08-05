@@ -1,7 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import pdf from "../pdf";
-import img from "../img";
 import { useNestedProp } from "../useNestedProp";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
@@ -15,6 +13,7 @@ import {
     XMLNS
 } from "../lib";
 import Skeleton from "./vue-ui-skeleton.vue";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -36,12 +35,8 @@ const isDataset = computed(() => {
 })
 
 const uid = ref(createUid());
-
 const defaultConfig = ref(mainConfig.vue_ui_tiremarks);
 const tiremarksChart = ref(null)
-
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const step = ref(0);
 
 const tiremarksConfig = computed(() => {
@@ -59,6 +54,11 @@ const tiremarksConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: uid.value,
+    fileName: tiremarksConfig.value.style.chart.title.text || 'vue-ui-tiremarks'
 });
 
 const activeValue = ref(tiremarksConfig.value.style.chart.animation.use ? 0 : props.dataset.percentage);
@@ -239,44 +239,7 @@ const dataLabel = computed(() => {
         fontSize: tiremarksConfig.value.style.chart.percentage.fontSize,
         fill: tiremarksConfig.value.style.chart.percentage.color
     }
-})
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`${uid.value}`),
-            fileName: tiremarksConfig.value.style.chart.title.text || 'vue-ui-tiremarks'
-        }).finally(() => {
-            isPrinting.value = false;
-        })
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`${uid.value}`),
-            fileName: tiremarksConfig.value.style.chart.title.text || 'vue-ui-tiremarks',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
+});
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {

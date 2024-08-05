@@ -20,11 +20,8 @@ import {
     themePalettes,
     XMLNS
 } from "../lib";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
@@ -32,6 +29,8 @@ import DataTable from "../atoms/DataTable.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -78,9 +77,6 @@ onMounted(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_waffle);
-
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const waffleChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -105,6 +101,11 @@ const waffleConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-waffle_${uid.value}`,
+    fileName: waffleConfig.value.style.chart.title.text || 'vue-ui-waffle'
 });
 
 const customPalette = computed(() => {
@@ -142,16 +143,16 @@ const absoluteRectDimension = computed(() => {
 })
 
 function calculateProportions(numbers) {
-  const totalSum = numbers.reduce((a, b) => a + b, 0);
-  const proportions = numbers.map(num => Math.round((num / totalSum) * 100) / 100);
-  const roundedSum = proportions.reduce((a, b) => a + b, 0);
+    const totalSum = numbers.reduce((a, b) => a + b, 0);
+    const proportions = numbers.map(num => Math.round((num / totalSum) * 100) / 100);
+    const roundedSum = proportions.reduce((a, b) => a + b, 0);
 
-  if (roundedSum !== 1) {
-    const lastIndex = proportions.length - 1;
-    proportions[lastIndex] += (1 - roundedSum);
-    proportions[lastIndex] = Math.round(proportions[lastIndex] * 100) / 100;
-  }
-  return proportions;
+    if (roundedSum !== 1) {
+        const lastIndex = proportions.length - 1;
+        proportions[lastIndex] += (1 - roundedSum);
+        proportions[lastIndex] = Math.round(proportions[lastIndex] * 100) / 100;
+    }
+    return proportions;
 }
 
 const datasetCopyReference = computed(() => {
@@ -371,7 +372,7 @@ function segregate(uid) {
                 rafDown.value = requestAnimationFrame(animDown)
             }
         }
-        animDown()
+        animDown();
     }
     emit('selectLegend', waffleSet.value.map(w => {
         return {
@@ -414,7 +415,7 @@ const legendConfig = computed(() => {
         paddingBottom: 12,
         fontWeight: waffleConfig.value.style.chart.legend.bold ? 'bold' : ''
     }
-})
+});
 
 const total = computed(() => {
     return waffleSet.value.map(s => s.value).reduce((a,b) => a + b, 0);
@@ -466,7 +467,6 @@ function useTooltip(index) {
         }
         tooltipContent.value = html;
     }
-
 }
 
 const emit = defineEmits(['selectLegend']);
@@ -485,46 +485,9 @@ const table = computed(() => {
 function getBlurFilter(index) {
     if (waffleConfig.value.useBlurOnHover && ![null, undefined].includes(selectedSerie.value) && selectedSerie.value !== index) {
         return `url(#blur_${uid.value})`;
-      } else {
+    } else {
         return '';
-      }
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`vue-ui-waffle_${uid.value}`),
-            fileName: waffleConfig.value.style.chart.title.text || 'vue-ui-waffle'
-        }).finally(() => {
-            isPrinting.value = false;
-        })
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`vue-ui-waffle_${uid.value}`),
-            fileName: waffleConfig.value.style.chart.title.text || 'vue-ui-waffle',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
+    }
 }
 
 function generateCsv() {

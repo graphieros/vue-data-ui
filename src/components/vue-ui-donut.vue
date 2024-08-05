@@ -21,18 +21,17 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -86,8 +85,6 @@ const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_donut);
 
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const donutChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -113,9 +110,14 @@ const donutConfig = computed(() => {
     }
 });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `donut__${uid.value}`,
+    fileName: donutConfig.value.style.chart.title.text || 'vue-ui-donut'
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(donutConfig.value.customPalette);
-})
+});
 
 const mutableConfig = ref({
     dataLabels: {
@@ -367,46 +369,9 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
 function getBlurFilter(index) {
     if (donutConfig.value.useBlurOnHover && ![null, undefined].includes(selectedSerie.value) && selectedSerie.value !== index) {
         return `url(#blur_${uid.value})`;
-      } else {
+    } else {
         return '';
-      }
-}
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`donut__${uid.value}`),
-            fileName: donutConfig.value.style.chart.title.text || 'vue-ui-donut'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`donut__${uid.value}`),
-            fileName: donutConfig.value.style.chart.title.text || 'vue-ui-donut',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
+    }
 }
 
 const table = computed(() => {

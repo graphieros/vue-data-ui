@@ -1,11 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue';
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
-import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
@@ -32,6 +29,8 @@ import {
 import {
     generateTreemap,
 } from '../treemap';
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from '../usePrinter';
 
 const props = defineProps({
     config: {
@@ -69,8 +68,6 @@ const isSafari = computed(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_treemap);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const treemapChart = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -96,6 +93,11 @@ const treemapConfig = computed(() => {
     }
 });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `treemap_${uid.value}`,
+    fileName: treemapConfig.value.style.chart.title.text || 'vue-ui-treemap'
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(treemapConfig.value.customPalette);
 })
@@ -118,17 +120,17 @@ const svg = computed(() => {
 });
 
 function addIdsToTree(tree) {
-  tree.forEach((node, i) => {
-    node.id = createUid();
-    node.color = convertColorToHex(node.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
-    if (node.children) {
-        node.children.forEach(c => {
-            c.parentId = node.id,
-            c.color = node.color
-        })
-      addIdsToTree(node.children);
-    }
-  });
+    tree.forEach((node, i) => {
+        node.id = createUid();
+        node.color = convertColorToHex(node.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
+        if (node.children) {
+            node.children.forEach(c => {
+                c.parentId = node.id,
+                c.color = node.color
+            })
+        addIdsToTree(node.children);
+        }
+    });
 }
 
 const immutableDataset = ref(props.dataset);
@@ -136,7 +138,7 @@ onMounted(() => {
     addIdsToTree(immutableDataset.value)
 })
 
-const currentSet = ref(immutableDataset.value)
+const currentSet = ref(immutableDataset.value);
         
 const datasetCopy = computed(() => {
     return currentSet.value.map((ds, i) => {
@@ -164,7 +166,7 @@ const orderedDataset = computed({
     set(val) {
         return val;
     },
-})
+});
 
 function calcRectProportion(rect, totalValue) {
     return rect.value / totalValue;
@@ -221,43 +223,6 @@ function calcFontSize(rect) {
     return adapted;
 }
 
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`treemap_${uid.value}`),
-            fileName: treemapConfig.value.style.chart.title.text || 'vue-ui-treemap'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`treemap_${uid.value}`),
-            fileName: treemapConfig.value.style.chart.title.text || 'vue-ui-treemap',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
-
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -268,24 +233,24 @@ const viewBox = ref({
     startY: 0,
     width: svg.value.vbWidth,
     height: svg.value.vbHeight,
-})
+});
+
 const isZoom = ref(false);
 
 function findNodeById(id, nodes = immutableDataset.value) {
-  for (const node of nodes) {
-    if (node.id === id) {
-      return node;
+    for (const node of nodes) {
+        if (node.id === id) {
+        return node;
+        }
+        if (node.children) {
+        const foundNode = findNodeById(id, node.children);
+        if (foundNode) {
+            return foundNode;
+        }
+        }
     }
-    if (node.children) {
-      const foundNode = findNodeById(id, node.children);
-      if (foundNode) {
-        return foundNode;
-      }
-    }
-  }
-  return null;
+    return null;
 };
-
 
 function zoom(rect) {
     if(isZoom.value) {

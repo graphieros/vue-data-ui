@@ -13,14 +13,13 @@ import {
     themePalettes,
     XMLNS
 } from "../lib.js";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
-import { useNestedProp } from "../useNestedProp";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import { useNestedProp } from "../useNestedProp";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     dataset: {
@@ -63,8 +62,6 @@ onMounted(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_thermometer);
-const isImaging = ref(false);
-const isPrinting = ref(false);
 const thermoChart = ref(null);
 const step = ref(0);
 
@@ -84,6 +81,11 @@ const thermoConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `thermometer__${uid.value}`,
+    fileName: thermoConfig.value.style.title.text || 'vue-ui-thermometer'
 });
 
 const customPalette = computed(() => {
@@ -106,30 +108,30 @@ const usablePadding = ref({
 });
 
 function generateColorRange(startColor, endColor, steps) {
-  const colors = [];
+    const colors = [];
 
-  const start = parseColor(startColor);
-  const end = parseColor(endColor);
+    const start = parseColor(startColor);
+    const end = parseColor(endColor);
 
-  for (let i = 0; i < steps; i++) {
-    const redValue = interpolate(start.red, end.red, i, steps);
-    const greenValue = interpolate(start.green, end.green, i, steps);
-    const blueValue = interpolate(start.blue, end.blue, i, steps);
+    for (let i = 0; i < steps; i++) {
+        const redValue = interpolate(start.red, end.red, i, steps);
+        const greenValue = interpolate(start.green, end.green, i, steps);
+        const blueValue = interpolate(start.blue, end.blue, i, steps);
 
-    const hexColor = `#${toHex(redValue)}${toHex(greenValue)}${toHex(blueValue)}`;
-    colors.push(hexColor);
-  }
+        const hexColor = `#${toHex(redValue)}${toHex(greenValue)}${toHex(blueValue)}`;
+        colors.push(hexColor);
+    }
 
-  return colors;
+    return colors;
 }
 
 function parseColor(color) {
-  const hex = color.slice(1);
-  return {
-    red: parseInt(hex.slice(0, 2), 16),
-    green: parseInt(hex.slice(2, 4), 16),
-    blue: parseInt(hex.slice(4, 6), 16),
-  };
+    const hex = color.slice(1);
+    return {
+        red: parseInt(hex.slice(0, 2), 16),
+        green: parseInt(hex.slice(2, 4), 16),
+        blue: parseInt(hex.slice(4, 6), 16),
+    };
 }
 
 function interpolate(start, end, step, totalSteps) {
@@ -137,7 +139,7 @@ function interpolate(start, end, step, totalSteps) {
 }
 
 function toHex(value) {
-  return value.toString(16).padStart(2, '0');
+    return value.toString(16).padStart(2, '0');
 }
 
 const drawingArea = computed(() => {
@@ -155,7 +157,7 @@ const drawingArea = computed(() => {
 
 const svg = computed(() => {
     return drawingArea.value;
-})
+});
 
 const temperature = computed(() => {
     const from = props.dataset.from < 0 ? Math.abs(props.dataset.from) : props.dataset.from;
@@ -217,44 +219,6 @@ const graduations = computed(() => {
     }
     return grads;
 });
-
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-    usablePadding.value.top = thermoConfig.value.style.chart.padding.top;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`thermometer__${uid.value}`),
-            fileName: thermoConfig.value.style.title.text || 'vue-ui-thermometer'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`thermometer__${uid.value}`),
-        fileName: thermoConfig.value.style.title.text || 'vue-ui-thermometer',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
