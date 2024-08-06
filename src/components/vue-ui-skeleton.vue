@@ -290,6 +290,24 @@ const ticks = computed(() => {
 
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${skeletonConfig.style.backgroundColor};color:${skeletonConfig.style.color};display:flex;align-items:center;justify-content:center;`">
+        <template v-if="type === 'flow'">
+            <svg :xmlns="XMLNS" width="100%" viewBox="0 0 80 60" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path 
+                    d="M 5 5 L 5 55 M 75 5 L 75 55 M 28 5 L 28 55 M 52 5 L 52 55 M 5 8 L 28 12 L 52 9 L 75 8 L 75 12 L 52 12 L 28 21 L 5 29 Z M 5 34 L 28 35 L 52 24 L 75 21 L 75 27 L 52 30 L 28 44 L 52 39 L 75 41 L 75 47 L 52 45 L 28 52 L 5 52 Z"
+                    :stroke="skeletonConfig.style.flow.color" :stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" :fill="skeletonConfig.style.flow.color"
+                />
+            </svg>
+        </template>
+
+        <template v-if="type === 'parallelCoordinatePlot'">
+            <svg :xmlns="XMLNS" width="100%" viewBox="0 0 80 60" :style="`background:${skeletonConfig.style.backgroundColor}`">
+                <path 
+                    d="M 5 5 L 5 55 M 75 5 L 75 55 M 28 5 L 28 55 M 52 5 L 52 55 M 5 10 A 1 1 0 0 0 5 12 A 1 1 0 0 0 5 10 M 28 15 A 1 1 0 0 0 28 17 A 1 1 0 0 0 28 15 M 52 8 A 1 1 0 0 0 52 10 A 1 1 0 0 0 52 8 M 75 11 A 1 1 0 0 0 75 13 A 1 1 0 0 0 75 11 M 6 11 L 27 16 M 29 16 L 51 9 M 53 9 L 74 12 M 5 50 A 1 1 0 0 0 5 48 A 1 1 0 0 0 5 50 M 28 39 A 1 1 0 0 0 28 41 A 1 1 0 0 0 28 39 M 52 45 A 1 1 0 0 0 52 47 A 1 1 0 0 0 52 45 M 75 45 A 1 1 0 0 0 75 47 A 1 1 0 0 0 75 45 M 6 49 L 27 40 M 29 40 L 51 46 M 53 46 L 74 46 M 5 25 A 1 1 0 0 0 5 27 A 1 1 0 0 0 5 25 M 28 31 A 1 1 0 0 0 28 33 A 1 1 0 0 0 28 31 M 52 23 A 1 1 0 0 0 52 25 A 1 1 0 0 0 52 23 M 75 21 A 1 1 0 0 0 75 23 A 1 1 0 0 0 75 21 M 6 26 L 27 32 M 29 32 L 51 24 M 53 24 L 74 22"
+                    :stroke="skeletonConfig.style.parallelCoordinatePlot.color" :stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" :fill="skeletonConfig.style.parallelCoordinatePlot.color"
+                />
+            </svg>
+        </template>
+        
         <!-- DUMBBELL -->
         <template v-if="type === 'dumbbell'">
             <svg :xmlns="XMLNS" data-cy="skeleton-line" width="100%" viewBox="0 0 100 55" :style="`background:${skeletonConfig.style.backgroundColor}`">
