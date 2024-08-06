@@ -29,6 +29,7 @@ import Shape from "../atoms/Shape.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 
@@ -603,8 +604,18 @@ defineExpose({
             <slot name="svg" :svg="drawingArea"/>
         </svg>
 
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'parallelCoordinatePlot',
+                style: {
+                    backgroundColor: pcpConfig.style.chart.backgroundColor,
+                }
+            }"
+        />
+
         <Legend
-            v-if="pcpConfig.style.chart.legend.show"
+            v-if="pcpConfig.style.chart.legend.show && isDataset"
             :legendSet="legendSet"
             :config="legendConfig"
             @clickMarker="({ legend }) => { segregate(legend.id); selectLegend(legend) }"
