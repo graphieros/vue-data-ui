@@ -20,6 +20,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Accordion from "./vue-ui-accordion.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 
@@ -560,6 +561,16 @@ defineExpose({
 
             <slot name="svg" :svg="drawingArea"/>
         </svg>
+
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'flow',
+                style: {
+                    backgroundColor: flowConfig.style.chart.backgroundColor,
+                }
+            }"
+        />
 
         <Accordion hideDetails v-if="isDataset" :config="{
             open: mutableConfig.showTable,
