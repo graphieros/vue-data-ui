@@ -1597,6 +1597,12 @@
             "color": "#2D353C",
             "maxHeight": 500,
             "animated": true,
+            "flow": {
+                "color": "#e1e5e8"
+            },
+            "parallelCoordinatePlot": {
+                "color": "#e1e5e8"
+            },
             "treemap": {
                 "color": "#E1E5E8"
             },
