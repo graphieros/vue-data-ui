@@ -3904,11 +3904,17 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution" | "tiremarks" | "molecule" | "relationCircle" | "thermometer" | "sparkbar" | "sparkStackbar" | "sparkHistogram" | "bar3d" | "galaxy" | "treemap" | "stripPlot" | "dumbbell";
+        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution" | "tiremarks" | "molecule" | "relationCircle" | "thermometer" | "sparkbar" | "sparkStackbar" | "sparkHistogram" | "bar3d" | "galaxy" | "treemap" | "stripPlot" | "dumbbell" | "parallelCoordinatePlot" | "flow";
         style?: {
             backgroundColor?: string;
             color?: string;
             animated?: boolean;
+            flow?: {
+                color?: string;
+            },
+            parallelCoordinatePlot?: {
+                color?: string;
+            };
             treemap?: {
                 color?: string;
             };
