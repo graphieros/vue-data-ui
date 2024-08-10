@@ -461,10 +461,12 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            hasTable
-            hasLabel
-            hasFullscreen
+            :hasPdf="pcpConfig.userOptions.buttons.pdf"
+            :hasXls="pcpConfig.userOptions.buttons.csv"
+            :hasImg="pcpConfig.userOptions.buttons.img"
+            :hasTable="pcpConfig.userOptions.buttons.table"
+            :hasLabel="pcpConfig.userOptions.buttons.labels"
+            :hasFullscreen="pcpConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="pcpChart"
             @toggleFullscreen="toggleFullscreen"
@@ -473,7 +475,26 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template #labels v-if="$slots.labels">
+                <slot name="labels" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg 
             :xmlns="XMLNS" 
