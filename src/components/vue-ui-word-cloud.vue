@@ -305,12 +305,44 @@ defineExpose({
             }" />
         </div>
 
-        <UserOptions ref="details" :key="`user_option_${step}`" v-if="wordCloudConfig.userOptions.show && isDataset"
-            :backgroundColor="wordCloudConfig.style.chart.backgroundColor" :color="wordCloudConfig.style.chart.color"
-            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" hasImg hasTable hasFullscreen
-            :isFullscreen="isFullscreen" :chartElement="wordCloudChart" @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf" @generateCsv="generateCsv" @generateImage="generateImage"
-            @toggleTable="toggleTable" />
+        <UserOptions 
+            ref="details" 
+            :key="`user_option_${step}`" 
+            v-if="wordCloudConfig.userOptions.show && isDataset"
+            :backgroundColor="wordCloudConfig.style.chart.backgroundColor" 
+            :color="wordCloudConfig.style.chart.color"
+            :isPrinting="isPrinting" 
+            :isImaging="isImaging" 
+            :uid="uid"
+            :hasPdf="wordCloudConfig.userOptions.buttons.pdf"
+            :hasXls="wordCloudConfig.userOptions.buttons.csv"
+            :hasImg="wordCloudConfig.userOptions.buttons.img" 
+            :hasTable="wordCloudConfig.userOptions.buttons.table" 
+            :hasFullscreen="wordCloudConfig.userOptions.buttons.fullscreen"
+            :isFullscreen="isFullscreen" 
+            :chartElement="wordCloudChart" 
+            @toggleFullscreen="toggleFullscreen"
+            @generatePdf="generatePdf" 
+            @generateCsv="generateCsv" 
+            @generateImage="generateImage"
+            @toggleTable="toggleTable" 
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" v-if="isDataset"
             :xmlns="XMLNS" :viewBox="`0 0 ${wordCloudConfig.style.chart.width} ${wordCloudConfig.style.chart.height}`"
