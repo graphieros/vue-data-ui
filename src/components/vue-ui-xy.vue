@@ -32,12 +32,14 @@
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uniqueId"
-            hasImg
-            hasLabel
-            hasTable
-            :hasStack="dataset.length > 1"
+            :hasPdf="chartConfig.chart.userOptions.buttons.pdf"
+            :hasXls="chartConfig.chart.userOptions.buttons.csv"
+            :hasImg="chartConfig.chart.userOptions.buttons.img"
+            :hasLabel="chartConfig.chart.userOptions.buttons.labels"
+            :hasTable="chartConfig.chart.userOptions.buttons.table"
+            :hasStack="dataset.length > 1 && chartConfig.chart.userOptions.buttons.stack"
+            :hasFullscreen="chartConfig.chart.userOptions.buttons.fullscreen"
             :isStacked="mutableConfig.isStacked"
-            hasFullscreen
             :isFullscreen="isFullscreen"
             :chartElement="$refs.chart"
             @toggleFullscreen="toggleFullscreen"
@@ -47,7 +49,29 @@
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
             @toggleStack="toggleStack"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template #labels v-if="$slots.labels">
+                <slot name="labels" />
+            </template>
+            <template #stack v-if="$slots.stack">
+                <slot name="stack"/>
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
         
         <svg xmlns="http://www.w3.org/2000/svg" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
             <g v-if="maxSeries > 0"> 
