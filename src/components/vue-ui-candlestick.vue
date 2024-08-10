@@ -407,8 +407,8 @@ defineExpose({
             />
         </div>
 
-         <!-- OPTIONS -->
-         <UserOptions
+        <!-- OPTIONS -->
+        <UserOptions
             ref="details"
             :key="`user_options_${step}`"
             v-if="candlestickConfig.userOptions.show && isDataset"
@@ -417,9 +417,11 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasImg="true"
-            hasTable
-            hasFullscreen
+            :hasPdf="candlestickConfig.userOptions.buttons.pdf"
+            :hasImg="candlestickConfig.userOptions.buttons.img"
+            :hasXls="candlestickConfig.userOptions.buttons.csv"
+            :hasTable="candlestickConfig.userOptions.buttons.table"
+            :hasFullscreen="candlestickConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="candlestickChart"
             @toggleFullscreen="toggleFullscreen"
@@ -427,8 +429,24 @@ defineExpose({
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
-         />
-         
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
+        
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
             <g v-if="drawableDataset.length > 0">
