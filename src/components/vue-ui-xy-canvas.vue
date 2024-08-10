@@ -1220,11 +1220,13 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            :hasTable="(slicer.end - slicer.start < 200)"
-            hasLabel
-            :hasStack="dataset.length > 1"
-            hasFullscreen
+            :hasPdf="xyConfig.userOptions.buttons.pdf"
+            :hasImg="xyConfig.userOptions.buttons.img"
+            :hasXls="xyConfig.userOptions.buttons.csv"
+            :hasLabel="xyConfig.userOptions.buttons.labels"
+            :hasStack="dataset.length > 1 && xyConfig.userOptions.buttons.stack"
+            :hasFullscreen="xyConfig.userOptions.buttons.fullscreen"
+            :hasTable="(slicer.end - slicer.start < 200) && xyConfig.userOptions.buttons.table"
             :isFullscreen="isFullscreen"
             :chartElement="xy"
             :isStacked="mutableConfig.stacked"
@@ -1235,7 +1237,29 @@ defineExpose({
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
             @toggleStack="toggleStack"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template #labels v-if="$slots.labels">
+                <slot name="labels" />
+            </template>
+            <template #stack v-if="$slots.stack">
+                <slot name="stack"/>
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <div class="vue-ui-xy-canvas" :style="`position: relative; aspect-ratio: ${xyConfig.style.chart.aspectRatio}`"
         ref="container">
