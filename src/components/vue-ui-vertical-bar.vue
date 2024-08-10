@@ -525,10 +525,12 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasImg="true"
-            hasTable
-            hasSort
-            hasFullscreen
+            :hasPdf="verticalBarConfig.userOptions.buttons.pdf"
+            :hasImg="verticalBarConfig.userOptions.buttons.img"
+            :hasXls="verticalBarConfig.userOptions.buttons.csv"
+            :hasTable="verticalBarConfig.userOptions.buttons.table"
+            :hasSort="verticalBarConfig.userOptions.buttons.sort"
+            :hasFullscreen="verticalBarConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="verticalBarChart"
             @toggleFullscreen="toggleFullscreen"
@@ -537,7 +539,29 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleSort="toggleSort"
-        />
+        >
+        <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template #labels v-if="$slots.labels">
+                <slot name="labels" />
+            </template>
+            <template #sort v-if="$slots.sort">
+                <slot name="sort"/>
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
          <!-- LEGEND AS DIV : TOP -->
         <Legend
