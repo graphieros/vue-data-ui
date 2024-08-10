@@ -649,10 +649,12 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            hasTable
-            hasLabel
-            hasFullscreen
+            :hasPdf="donutConfig.userOptions.buttons.pdf"
+            :hasXls="donutConfig.userOptions.buttons.csv"
+            :hasImg="donutConfig.userOptions.buttons.img"
+            :hasTable="donutConfig.userOptions.buttons.table"
+            :hasLabel="donutConfig.userOptions.buttons.labels"
+            :hasFullscreen="donutConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="nestedDonutsChart"
             @toggleFullscreen="toggleFullscreen"
@@ -661,7 +663,26 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template #labels v-if="$slots.labels">
+                <slot name="labels" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             <!-- GRADIENTS -->
