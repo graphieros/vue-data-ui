@@ -333,14 +333,14 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateImage="generateImage"
         >
-            <template #pdf v-if="$slots.pdf">
-                <slot name="pdf" />
+            <template #optionPdf v-if="$slots.optionPdf">
+                <slot name="optionPdf" />
             </template>
-            <template #img v-if="$slots.img">
-                <slot name="img" />
+            <template #optionImg v-if="$slots.optionImg">
+                <slot name="optionImg" />
             </template>
-            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
             </template>
         </UserOptions>
 

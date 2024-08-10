@@ -251,7 +251,7 @@ function selectSide(side) {
 
         <template #local>
             <LocalVueUiQuadrant :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">

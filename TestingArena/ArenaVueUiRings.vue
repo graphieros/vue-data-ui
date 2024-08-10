@@ -156,7 +156,7 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiRings :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">

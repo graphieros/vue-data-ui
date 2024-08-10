@@ -86,7 +86,7 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiTiremarks :dataset="dataset" :config="config" :key="`local_${step}`">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
             </LocalVueUiTiremarks>

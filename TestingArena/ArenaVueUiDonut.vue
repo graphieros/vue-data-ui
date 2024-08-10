@@ -219,22 +219,22 @@ function toggleLabels() {
 
         <template #local>
             <LocalVueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localDonut">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
-                <template #csv>
+                <template #optionCsv>
                     DOWNLOAD CSV
                 </template>
-                <template #img>
+                <template #optionImg>
                     DOWNLOAD IMAGE
                 </template>
-                <template #table>
+                <template #optionTable>
                     TOGGLE TABLE
                 </template>
-                <template #labels>
+                <template #optionLabels>
                     TOGGLE LABELS
                 </template>
-                <template #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <template template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                     <button @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">FULLSCREEN</button>
                 </template>
                 <template #svg="{ svg }">
@@ -263,6 +263,24 @@ function toggleLabels() {
         
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localVdui">
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #optionCsv>
+                    DOWNLOAD CSV
+                </template>
+                <template #optionImg>
+                    DOWNLOAD IMAGE
+                </template>
+                <template #optionTable>
+                    TOGGLE TABLE
+                </template>
+                <template #optionLabels>
+                    TOGGLE LABELS
+                </template>
+                <template template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+                    <button @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">FULLSCREEN</button>
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -289,6 +307,24 @@ function toggleLabels() {
         
         <template #build>
             <VueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #optionCsv>
+                    DOWNLOAD CSV
+                </template>
+                <template #optionImg>
+                    DOWNLOAD IMAGE
+                </template>
+                <template #optionTable>
+                    TOGGLE TABLE
+                </template>
+                <template #optionLabels>
+                    TOGGLE LABELS
+                </template>
+                <template template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+                    <button @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">FULLSCREEN</button>
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -315,6 +351,24 @@ function toggleLabels() {
 
         <template #VDUI-build>
             <VueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #optionCsv>
+                    DOWNLOAD CSV
+                </template>
+                <template #optionImg>
+                    DOWNLOAD IMAGE
+                </template>
+                <template #optionTable>
+                    TOGGLE TABLE
+                </template>
+                <template #optionLabels>
+                    TOGGLE LABELS
+                </template>
+                <template template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+                    <button @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">FULLSCREEN</button>
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

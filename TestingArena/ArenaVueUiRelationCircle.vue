@@ -146,7 +146,7 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiRelationCircle :dataset="dataset" :config="config" :key="`local_${step}`">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">

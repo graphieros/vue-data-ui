@@ -100,7 +100,7 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiTableHeatmap :dataset="dataset" :config="config" :key="`local_${step}`">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #caption>

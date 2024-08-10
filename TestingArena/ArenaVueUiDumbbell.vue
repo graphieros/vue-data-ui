@@ -147,7 +147,7 @@ const step = ref(0);
         <template #title>VueUiDumbbell</template>
         <template #local>
             <LocalVueUiDumbbell :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">

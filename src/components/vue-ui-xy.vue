@@ -50,26 +50,26 @@
             @toggleLabels="toggleLabels"
             @toggleStack="toggleStack"
         >
-            <template #pdf v-if="$slots.pdf">
-                <slot name="pdf" />
+            <template #optionPdf v-if="$slots.optionPdf">
+                <slot name="optionPdf" />
             </template>
-            <template #csv v-if="$slots.csv">
-                <slot name="csv" />
+            <template #optionCsv v-if="$slots.optionCsv">
+                <slot name="optionCsv" />
             </template>
-            <template #img v-if="$slots.img">
-                <slot name="img" />
+            <template #optionImg v-if="$slots.optionImg">
+                <slot name="optionImg" />
             </template>
-            <template #table v-if="$slots.table">
-                <slot name="table" />
+            <template #optionTable v-if="$slots.optionTable">
+                <slot name="optionTable" />
             </template>
-            <template #labels v-if="$slots.labels">
-                <slot name="labels" />
+            <template #optionLabels v-if="$slots.optionLabels">
+                <slot name="optionLabels" />
             </template>
-            <template #stack v-if="$slots.stack">
-                <slot name="stack"/>
+            <template #optionStack v-if="$slots.optionStack">
+                <slot name="optionStack"/>
             </template>
-            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
             </template>
         </UserOptions>
         

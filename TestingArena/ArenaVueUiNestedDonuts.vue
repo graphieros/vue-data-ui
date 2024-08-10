@@ -204,7 +204,7 @@ function selectDatapoint(datapoint) {
 
         <template #local>
             <LocalVueUiNestedDonuts :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">

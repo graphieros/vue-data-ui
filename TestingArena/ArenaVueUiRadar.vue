@@ -163,7 +163,7 @@ function selectLegend(legend) {
 
         <template #local>
             <LocalVueUiRadar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">

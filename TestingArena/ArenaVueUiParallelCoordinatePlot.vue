@@ -177,7 +177,7 @@ function selectDatapoint(dp) {
 
         <template #local>
             <LocalVueUiParallelCoordinatePlot :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
             </LocalVueUiParallelCoordinatePlot>
@@ -194,7 +194,7 @@ function selectDatapoint(dp) {
 
         <template #VDUI-build>
             <VueDataUi @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config" ref="vduiBuild">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
             </VueDataUi>

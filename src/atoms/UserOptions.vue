@@ -175,8 +175,8 @@ onBeforeUnmount(() => {
         <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}`">
 
             <button tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf">
-                <template v-if="$slots.pdf">
-                    <slot name="pdf"/>
+                <template v-if="$slots.optionPdf">
+                    <slot name="optionPdf"/>
                 </template>
                 <template v-else>
                     <BaseIcon v-if="isPrinting" name="spin" isSpin />
@@ -185,8 +185,8 @@ onBeforeUnmount(() => {
             </button>
             
             <button tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateCsv">
-                <template v-if="$slots.csv">
-                    <slot name="csv"/>
+                <template v-if="$slots.optionCsv">
+                    <slot name="optionCsv"/>
                 </template>
                 <template v-else>
                     <BaseIcon name="excel" :stroke="color" />
@@ -194,8 +194,8 @@ onBeforeUnmount(() => {
             </button>
 
             <button tabindex="0" v-if="hasImg" data-cy="user-options-img" class="vue-ui-user-options-button" @click="generateImage">
-                <template v-if="$slots.img">
-                    <slot name="img"/>
+                <template v-if="$slots.optionImg">
+                    <slot name="optionImg"/>
                 </template>
                 <template v-else>
                     <BaseIcon v-if="isImaging" name="spin" isSpin />
@@ -204,8 +204,8 @@ onBeforeUnmount(() => {
             </button>
 
             <button tabindex="0" v-if="hasTable" data-cy="user-options-table" class="vue-ui-user-options-button" @click="toggleTable">
-                <template v-if="$slots.table">
-                    <slot name="table"/>
+                <template v-if="$slots.optionTable">
+                    <slot name="optionTable"/>
                 </template>
                 <template v-else>
                     <BaseIcon :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" />
@@ -213,8 +213,8 @@ onBeforeUnmount(() => {
             </button>
 
             <button tabindex="0" v-if="hasLabel" data-cy="user-options-label" class="vue-ui-user-options-button" @click="toggleLabels">
-                <template v-if="$slots.labels">
-                    <slot name="labels"/>
+                <template v-if="$slots.optionLabels">
+                    <slot name="optionLabels"/>
                 </template>
                 <template v-else>
                     <BaseIcon :name="isLabel ? 'labelClose' : 'labelOpen'" :stroke="color"/>
@@ -222,8 +222,8 @@ onBeforeUnmount(() => {
             </button>
 
             <button tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
-                <template v-if="$slots.sort">
-                    <slot name="sort"/>
+                <template v-if="$slots.optionSort">
+                    <slot name="optionSort"/>
                 </template>
                 <template v-else>
                     <BaseIcon name="sort" :stroke="color"/>
@@ -231,8 +231,8 @@ onBeforeUnmount(() => {
             </button>
 
             <button tabindex="0" v-if="hasStack" class="vue-ui-user-options-button" @click="toggleStack">
-                <template v-if="$slots.stack">
-                    <slot name="stack"/>
+                <template v-if="$slots.optionStack">
+                    <slot name="optionStack"/>
                 </template>
                 <template v-else>
                     <BaseIcon v-if="isItStacked" name="unstack" :stroke="color"/>
@@ -241,8 +241,8 @@ onBeforeUnmount(() => {
             </button>
 
             <button tabindex="0" v-if="hasFullscreen" data-cy="user-options-sort" class="vue-ui-user-options-button">
-                <template v-if="$slots.fullscreen">
-                    <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+                <template v-if="$slots.optionFullscreen">
+                    <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
                 </template>
                 <template v-else>
                     <BaseIcon v-if="isFullscreen" name="exitFullscreen" :stroke="color" @click="toggleFullscreen('out')"/>

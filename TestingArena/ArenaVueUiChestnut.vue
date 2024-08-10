@@ -358,7 +358,7 @@ function selectNut(nut) {
 
     <template #local>
         <LocalVueUiChestnut :dataset="dataset" :config="config" :key="`local_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="local">
-            <template #pdf>
+            <template #optionPdf>
                 PRINT PDF
             </template>
             <template #svg="{ svg }">

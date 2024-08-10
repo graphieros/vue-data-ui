@@ -250,7 +250,7 @@ const config = computed(() => {
 
         <template #local>
             <LocalVueUiXyCanvas :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
             </LocalVueUiXyCanvas>

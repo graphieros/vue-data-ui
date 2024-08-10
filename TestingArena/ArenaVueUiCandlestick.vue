@@ -177,7 +177,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
         <template #local>
             <LocalVueUiCandlestick :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">

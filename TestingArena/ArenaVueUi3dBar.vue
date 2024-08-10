@@ -161,7 +161,7 @@ const dataset = computed(() => datasets.value[selectedDataset.value])
 
         <template #local>
             <LocalVueUi3dBar :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
             </LocalVueUi3dBar>

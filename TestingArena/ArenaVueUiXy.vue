@@ -336,8 +336,11 @@ onMounted(() => {
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template> -->
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
+                </template>
+                <template #optionStack>
+                    STACK IT
                 </template>
                 <template #legend="{ legend }">
                     #LEGEND

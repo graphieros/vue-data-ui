@@ -235,7 +235,7 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiStripPlot :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
-                <template #labels>
+                <template #optionLabels>
                     SHOW LABELS
                 </template>
                 <template #svg="{ svg }">

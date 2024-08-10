@@ -216,7 +216,7 @@ function selectLegend(legend) {
 
         <template #local>
             <LocalVueUiVerticalBar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
-                <template #sort>
+                <template #optionSort>
                     SORT
                 </template>
                 <template #svg="{ svg }">

@@ -110,7 +110,7 @@ const step = ref(0);
 
         <template #local :key="`local_${step}`">
             <LocalVueUiGauge :dataset="dataset" :config="config">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">

@@ -232,7 +232,7 @@ function selectLegend(legend) {
         
         <template #local>
             <LocalVueUiScatter :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">

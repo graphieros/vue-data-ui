@@ -97,7 +97,7 @@ const step = ref(0);
 
         <template #local>
             <LocalVueUiFlow :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
-                <template #pdf>
+                <template #optionPdf>
                     PRINT PDF
                 </template>
             </LocalVueUiFlow>
