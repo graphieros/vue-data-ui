@@ -379,9 +379,11 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            hasTable
-            hasFullscreen
+            :hasPdf="dumbConfig.userOptions.buttons.pdf"
+            :hasXls="dumbConfig.userOptions.buttons.csv"
+            :hasImg="dumbConfig.userOptions.buttons.img"
+            :hasTable="dumbConfig.userOptions.buttons.table"
+            :hasFullscreen="dumbConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="dumbbellChart"
             @toggleFullscreen="toggleFullscreen"
@@ -389,7 +391,23 @@ defineExpose({
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.absoluteWidth} ${drawingArea.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${dumbConfig.style.chart.backgroundColor};color:${dumbConfig.style.chart.color}`">
             <!-- VERTICAL GRID -->
