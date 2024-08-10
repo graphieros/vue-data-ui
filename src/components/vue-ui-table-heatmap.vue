@@ -11,13 +11,12 @@ import {
     interpolateColorHex,
     objectIsEmpty,
 } from "../lib";
-import pdf from "../pdf";
-import img from "../img";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Shape from "../atoms/Shape.vue";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -38,8 +37,6 @@ const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_table_heatmap);
 const isResponsive = ref(false);
 const tableContainer = ref(null);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const isFullscreen = ref(false);
 const step = ref(0);
 
@@ -58,6 +55,11 @@ const tableConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `table_heatmap_${uid.value}`,
+    fileName: 'vue-ui-table-heatmap'
 });
 
 const breakpoint = computed(() => {
@@ -142,46 +144,9 @@ const borderWidth = computed(() => {
     return `${tableConfig.value.table.borderWidth}px`;
 });
 
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`table_heatmap_${uid.value}`),
-            fileName: 'vue-ui-table-heatmap'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`table_heatmap_${uid.value}`),
-            fileName: 'vue-ui-table-heatmap',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
-
 function generateCsv() {
     nextTick(() => {
-        const labels = formattedDataset.value.map((ds, i) => {
+        const labels = formattedDataset.value.map((ds) => {
             return [
                 [ ds.name ],
                 ds.displayValues,
@@ -221,15 +186,31 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            hasFullscreen
+            :hasPdf="tableConfig.userOptions.buttons.pdf"
+            :hasXls="tableConfig.userOptions.buttons.csv"
+            :hasImg="tableConfig.userOptions.buttons.img"
+            :hasFullscreen="tableConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="tableContainer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
-        />    
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
+
         <table :class="{'vue-ui-table-heatmap': true}" :style="`width:100%;font-family:${tableConfig.style.fontFamily};background:${tableConfig.style.backgroundColor};`">
             <caption>
                 <slot name="caption"></slot>
