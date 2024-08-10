@@ -340,7 +340,7 @@ defineExpose({
             />
         </div>
         
-         <!-- OPTIONS -->
+        <!-- OPTIONS -->
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
@@ -350,9 +350,11 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasImg="true"
-            hasTable
-            hasFullscreen
+            :hasPdf="heatmapConfig.userOptions.buttons.pdf"
+            :hasImg="heatmapConfig.userOptions.buttons.img"
+            :hasXls="heatmapConfig.userOptions.buttons.csv"
+            :hasTable="heatmapConfig.userOptions.buttons.table"
+            :hasFullscreen="heatmapConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="heatmapChart"
             @toggleFullscreen="toggleFullscreen"
@@ -360,7 +362,23 @@ defineExpose({
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.heightWithLegend}`" :style="`max-width:100%;overflow:visible;background:${heatmapConfig.style.backgroundColor};color:${heatmapConfig.style.color}`" >
