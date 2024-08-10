@@ -743,15 +743,26 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            hasFullscreen
+            :hasPdf="quickConfig.userOptionsButtons.pdf"
+            :hasImg="quickConfig.userOptionsButtons.img"
+            :hasFullscreen="quickConfig.userOptionsButtons.fullscreen"
             :hasXls="false"
             :isFullscreen="isFullscreen"
             :chartElement="quickChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <div class="vue-ui-quick-chart-title" v-if="quickConfig.title" :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color};font-size:${quickConfig.titleFontSize}px;font-weight:${quickConfig.titleBold ? 'bold': 'normal'};text-align:${quickConfig.titleTextAlign}`">
             {{ quickConfig.title }}
