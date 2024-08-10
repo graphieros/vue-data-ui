@@ -287,15 +287,26 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasFullscreen
+            :hasPdf="tiremarksConfig.userOptions.buttons.pdf"
+            :hasImg="tiremarksConfig.userOptions.buttons.img"
+            :hasFullscreen="tiremarksConfig.userOptions.buttons.fullscreen"
+            :hasXls="false"
             :isFullscreen="isFullscreen"
             @toggleFullscreen="toggleFullscreen"
             :chartElement="tiremarksChart"
-            :hasImg="true"
-            :hasXls="false"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${tiremarksConfig.style.chart.backgroundColor};color:${tiremarksConfig.style.chart.color}`">
             <g v-if="tiremarksConfig.style.chart.layout.curved">
