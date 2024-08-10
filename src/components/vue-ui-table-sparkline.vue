@@ -18,8 +18,7 @@ import { calcMedian,
 import SparkLine from "./vue-ui-sparkline.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import UserOptions from "../atoms/UserOptions.vue";
-import img from "../img";
-import pdf from "../pdf";
+import { usePrinter } from "../usePrinter";
 
 const props = defineProps({
     config: {
@@ -39,8 +38,6 @@ const props = defineProps({
 const uid = ref(createUid());
 const step = ref(0);
 const defaultConfig = ref(mainConfig.vue_ui_table_sparkline);
-const isPrinting = ref(false);
-const isImaging = ref(false);
 const sparkStep = ref(0)
 
 const tableConfig = computed(() => {
@@ -59,6 +56,11 @@ const tableConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `table_${uid.value}`,
+    fileName: tableConfig.value.title.text || 'vue-ui-table-sparkline'
 });
 
 const customPalette = computed(() => {
@@ -241,43 +243,6 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-const __to__ = ref(null);
-
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function generatePdf(){
-    showSpinnerPdf();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        pdf({
-            domElement: document.getElementById(`table_${uid.value}`),
-            fileName: tableConfig.value.title.text || 'vue-ui-table-sparkline'
-        }).finally(() => {
-            isPrinting.value = false;
-        });
-    }, 100)
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
-function generateImage() {
-    showSpinnerImage();
-    clearTimeout(__to__.value);
-    __to__.value = setTimeout(() => {
-        img({
-            domElement: document.getElementById(`table_${uid.value}`),
-            fileName: tableConfig.value.title.text || 'vue-ui-table-sparkline',
-            format: 'png'
-        }).finally(() => {
-            isImaging.value = false;
-        })
-    }, 100)
-}
-
 function generateCsv() {
     nextTick(() => {
         const thead = [tableConfig.value.translations.serie].concat(colNames.value)
@@ -368,15 +333,30 @@ defineExpose({
                                 :isPrinting="isPrinting"
                                 :isImaging="isImaging"
                                 :uid="uid"
-                                hasImg
-                                hasFullscreen
+                                :hasPdf="tableConfig.userOptions.buttons.pdf"
+                                :hasXls="tableConfig.userOptions.buttons.csv"
+                                :hasImg="tableConfig.userOptions.buttons.img"
+                                :hasFullscreen="tableConfig.userOptions.buttons.fullscreen"
                                 :isFullscreen="isFullscreen"
                                 :chartElement="tableContainer"
                                 @toggleFullscreen="toggleFullscreen"
                                 @generatePdf="generatePdf"
                                 @generateImage="generateImage"
                                 @generateCsv="generateCsv"
-                            />
+                            >
+                                <template #pdf v-if="$slots.pdf">
+                                    <slot name="pdf" />
+                                </template>
+                                <template #csv v-if="$slots.csv">
+                                    <slot name="csv" />
+                                </template>
+                                <template #img v-if="$slots.img">
+                                    <slot name="img" />
+                                </template>
+                                <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                                    <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+                                </template>
+                            </UserOptions>
                         </th>
                     </tr>
                 </thead>
@@ -455,7 +435,7 @@ defineExpose({
                                 style: {
                                     backgroundColor: tableConfig.tbody.backgroundColor,
                                     animation: {
-                                        show: tableConfig.sparkline.animation.show,
+                                        show: tableConfig.sparkline.animation.show && !isPrinting && !isImaging,
                                         animationFrames: tableConfig.sparkline.animation.animationFrames
                                     },
                                     line: {
