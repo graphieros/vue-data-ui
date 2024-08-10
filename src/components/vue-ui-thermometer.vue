@@ -267,15 +267,26 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasImg="true"
-            hasFullscreen
+            :hasPdf="thermoConfig.userOptions.buttons.pdf"
+            :hasImg="thermoConfig.userOptions.buttons.img"
+            :hasFullscreen="thermoConfig.userOptions.buttons.fullscreen"
+            :hasXls="false"
             :isFullscreen="isFullscreen"
             :chartElement="thermoChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
-            :hasXls="false"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" :style="`background:${thermoConfig.style.chart.backgroundColor}`">
             <defs>
