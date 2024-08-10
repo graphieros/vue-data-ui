@@ -39,6 +39,16 @@ declare module 'vue-data-ui' {
 
     export type ChartUserOptions = {
         show?: boolean;
+        buttons?: {
+            pdf?: boolean;
+            csv?: boolean;
+            img?: boolean;
+            table?: boolean;
+            labels?: boolean;
+            fullscreen?: boolean;
+            stack?: boolean;
+            sort?: boolean;
+        }
     }
 
     export type ChartTableCell = {
@@ -4616,9 +4626,7 @@ declare module 'vue-data-ui' {
     export type VueUiXyCanvasConfig = {
         theme?: Theme;
         customPalette?: string[];
-        userOptions?: {
-            show?: boolean
-        };
+        userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -4773,9 +4781,7 @@ declare module 'vue-data-ui' {
     export type VueUiFlowConfig = {
         theme?: Theme;
         customPalette?: string[];
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -4855,9 +4861,7 @@ declare module 'vue-data-ui' {
         useCssAnimation?: boolean;
         customPalette?: string[];
         variables?: string[];
-        userOptions?: {
-            show?: boolean;
-        };
+        userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
