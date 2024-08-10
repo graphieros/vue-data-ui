@@ -416,10 +416,12 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            hasTable
-            hasFullscreen
-            hasLabel
+            :hasPdf="stripConfig.userOptions.buttons.pdf"
+            :hasXls="stripConfig.userOptions.buttons.csv"
+            :hasImg="stripConfig.userOptions.buttons.img"
+            :hasTable="stripConfig.userOptions.buttons.table"
+            :hasLabel="stripConfig.userOptions.buttons.labels"
+            :hasFullscreen="stripConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="stripPlotChart"
             @toggleFullscreen="toggleFullscreen"
@@ -428,7 +430,26 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template #labels v-if="$slots.labels">
+                <slot name="labels" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.absoluteWidth} ${drawingArea.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${stripConfig.style.chart.backgroundColor};color:${stripConfig.style.chart.color}`">
             
