@@ -57,6 +57,12 @@ const datasets = ref({
 })
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.shape', def: 'bar', type: 'select', options: ['bar', 'tube']},
     { key: 'style.chart.animation.use', def: true, type: 'checkbox'},
@@ -100,7 +106,6 @@ const model = ref([
     { key: 'style.chart.dataLabel.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.dataLabel.fontSize', def: 12, type: 'number'},
     { key: 'style.chart.dataLabel.rounding', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 300, type: 'number', min: 300, max: 800},
     { key: 'table.ccolumnNames.series', def: 'Series', type: 'text'},
@@ -156,6 +161,9 @@ const dataset = computed(() => datasets.value[selectedDataset.value])
 
         <template #local>
             <LocalVueUi3dBar :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
             </LocalVueUi3dBar>
         </template>
 

@@ -47,6 +47,13 @@ const dataset = ref([
 ])
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.labels', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useCssAnimation', def: true, type: 'checkbox' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
@@ -170,6 +177,9 @@ function selectDatapoint(dp) {
 
         <template #local>
             <LocalVueUiParallelCoordinatePlot :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
             </LocalVueUiParallelCoordinatePlot>
         </template>
 
@@ -183,7 +193,11 @@ function selectDatapoint(dp) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config" ref="vduiBuild"/>
+            <VueDataUi @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" component="VueUiParallelCoordinatePlot" :dataset="dataset" :config="config" ref="vduiBuild">
+                <template #pdf>
+                    PRINT PDF
+                </template>
+            </VueDataUi>
         </template>
 
         <template #knobs>

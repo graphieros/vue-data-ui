@@ -39,6 +39,12 @@ function mutate() {
 }
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useCssAnimation', def: true, type: 'checkbox' },
     { key: 'useStartAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
@@ -85,7 +91,6 @@ const model = ref([
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6 },
     { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox' },
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color' },
@@ -170,6 +175,9 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiOnion :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

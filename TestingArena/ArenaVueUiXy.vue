@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiXy from '../src/components/vue-ui-xy.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -47,6 +47,15 @@ const dataset = ref([
     ])
 
 const model = ref([
+    { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
+    { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.buttons.labels', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.buttons.stack', def: true, type: 'checkbox'},
+
     { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
@@ -138,8 +147,6 @@ const model = ref([
     { key: 'chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'tooltip' },
     { key: 'chart.tooltip.fontSize', def: 14, type: 'range', min: 8, max: 48},
 
-    { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
-
     { key: 'bar.borderRadius', def: 2, type: 'number', min: 0, max: 120, label: 'borderRadius', category: 'bar' },
     { key: 'bar.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'bar' },
     { key: 'bar.labels.show', def: true, type: 'checkbox', label: 'showDataLabels', category: 'bar' },
@@ -201,6 +208,11 @@ const themeOptions = ref([
 
 const currentTheme = ref(themeOptions.value[2])
 
+const size = ref({
+    height: 600,
+            width: 1000
+})
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     if (testCustomTooltip.value) {
@@ -208,6 +220,8 @@ const config = computed(() => {
             ...c,
             chart: {
                 ...c.chart,
+                height: size.value.height,
+                width: size.value.width,
                 tooltip: {
                     ...c.tooltip,
                     customFormat: ({ datapoint }) => {
@@ -268,6 +282,23 @@ function selectX(selectedX) {
     console.log({ selectedX })
 }
 
+const resizable = ref(null);
+
+onMounted(() => {
+    const { height, width } = resizable.value.getBoundingClientRect();
+
+    size.value.height = height;
+    size.value.width = width;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+        for(const entry of entries) {
+            size.value.height = entry.contentBoxSize[0].blockSize;
+            size.value.width = entry.contentBoxSize[0].inlineSize;
+        }
+    })
+    resizeObserver.observe(resizable.value)
+})
+
 </script>
 
 <template>
@@ -284,6 +315,17 @@ function selectX(selectedX) {
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
+
+    <div ref="resizable" style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <VueDataUi component="VueUiXy" :dataset="dataset" :config="{
+            ...config,
+            chart: {
+                ...config.chart,
+                height: size.height - 100,
+                width: size.width
+            }
+        }"/>
+    </div>
     <Box>
         <template #title>VueUiXy</template>
 
@@ -294,6 +336,9 @@ function selectX(selectedX) {
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template> -->
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">

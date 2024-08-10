@@ -85,6 +85,13 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.labels', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'zoomAnimationFrames', def: 20, type: 'range', min: 0, max: 100},
     { key: 'style.fontFamily', def: 'inherit', type: "text"},
@@ -165,7 +172,6 @@ const model = ref([
     { key: 'table.td.color', def: '#1A1A1A', type: 'color'},
     { key: 'table.td.outline', def: 'none', type: 'text'},
     { key: 'table.td.roundingValue', def: 2, type: 'range', min: 0, max: 12},
-    { key: 'userOptions.show', def: true, type: 'checkbox'}
 ])
 
 const testCustomTooltip = ref(false);
@@ -245,6 +251,9 @@ function selectSide(side) {
 
         <template #local>
             <LocalVueUiQuadrant :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

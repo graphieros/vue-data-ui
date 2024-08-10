@@ -24,6 +24,12 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
     { key: 'useCustomCells', def: false, type: 'checkbox'},
     { key: 'useAnimation', def: true, type: 'checkbox'},
@@ -68,7 +74,6 @@ const model = ref([
     { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.roundingValue', def: 0, type: 'range', min: 0, max: 12},
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'range', min: 0, max: 12},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.columnNames.series', def: 'Series', type: 'text' },
@@ -149,6 +154,9 @@ function selectLegend(legend) {
 
         <template #local>
             <LocalVueUiWaffle :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon

@@ -15,6 +15,12 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
@@ -74,7 +80,6 @@ const model = ref([
     { key: 'translations.female', def: 'female', type: 'text'},
     { key: 'translations.total', def: 'total', type: 'text'},
     { key: 'translations.year', def: 'year', type: 'text'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -151,6 +156,9 @@ function toggleTable() {
 
         <template #local>
             <LocalVueUiAgePyramid :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

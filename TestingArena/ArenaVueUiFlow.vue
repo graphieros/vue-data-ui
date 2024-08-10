@@ -26,6 +26,11 @@ const dataset = ref([
     
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
@@ -91,7 +96,11 @@ const step = ref(0);
         <template #title>VueUiFlow</template>
 
         <template #local>
-            <LocalVueUiFlow :dataset="dataset" :config="config" :key="`local_${step}`" ref="local"></LocalVueUiFlow>
+            <LocalVueUiFlow :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
+            </LocalVueUiFlow>
         </template>
 
         <template #VDUI-local>

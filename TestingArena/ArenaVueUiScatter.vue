@@ -49,6 +49,12 @@ const dataset = computed(() => {
 });
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -150,7 +156,6 @@ const model = ref([
     { key: 'style.tooltip.showShape', def: true, type: 'checkbox' },
     { key: 'style.tooltip.prefix', def: 'P', type: 'text'},
     { key: 'style.tooltip.suffix', def: 'S', type: 'text'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color' },
@@ -227,6 +232,9 @@ function selectLegend(legend) {
         
         <template #local>
             <LocalVueUiScatter :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

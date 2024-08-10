@@ -92,6 +92,9 @@ const datasets = ref({
 const selectedSerie = ref('shortObjectMixed');
 
 const model = ref([
+    { key: 'userOptionsButtons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptionsButtons.img', def: true, type: 'checkbox'},
+    { key: 'userOptionsButtons.fullscreen', def: true, type: 'checkbox'},
     { key: 'axisLabelsFontSize', def: 12, type: 'number', min: 8, max: 24},
     { key: 'barGap', def: 12, type: 'range', min: 0, max: 48},
     { key: 'barAnimated', def: true, type: 'checkbox' },
@@ -208,6 +211,9 @@ function selectDatapoint(datapoint) {
 
     <template #local>
         <LocalVueUiQuickChart :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <template #pdf>
+                PRINT PDF
+            </template>
             <template #legend="{ legend }">
                 #LEGEND
                 <div style="font-size: 8px">

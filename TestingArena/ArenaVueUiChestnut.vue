@@ -190,6 +190,12 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
@@ -299,7 +305,6 @@ const model = ref([
     { key: 'table.td.outline', def: 'none', type: 'text'},
     { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 12},
     { key: 'table.td.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'translations.total', def: 'Total', type: 'text'},
     { key: 'translations.proportionToTree', def: 'of grand total', type: 'text'},
     { key: 'translations.of', def: 'of', type: 'text'}
@@ -353,6 +358,9 @@ function selectNut(nut) {
 
     <template #local>
         <LocalVueUiChestnut :dataset="dataset" :config="config" :key="`local_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="local">
+            <template #pdf>
+                PRINT PDF
+            </template>
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

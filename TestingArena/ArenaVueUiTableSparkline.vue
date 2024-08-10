@@ -29,6 +29,11 @@ const dataset = ref([
 ])
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'responsiveBreakpoint', def: 500, type: 'number', min: 300, max: 800},
     { key: 'showAverage', def: true, type: 'checkbox'},
     { key: 'showMedian', def: true, type: 'checkbox'},
@@ -73,7 +78,6 @@ const model = ref([
     { key: 'tbody.outline', def: 'none', type: 'text'},
     { key: 'tbody.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
     { key: 'tbody.bold', def: false, type: 'checkbox'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'}
 ])
 
 const themeOptions = ref([
@@ -110,6 +114,9 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiTableSparkline :dataset="dataset" :config="config" :key="`local_${step}`">
+                <template #pdf>
+                    PDF
+                </template>
             </LocalVueUiTableSparkline>
         </template>
 

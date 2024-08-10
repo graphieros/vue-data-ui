@@ -144,6 +144,13 @@ const dataset = ref([
 ])
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.labels', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
@@ -163,7 +170,6 @@ const model = ref([
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.tooltip.fontSize', def: 14, type: 'number', min: 8, max: 24},
     { key: 'style.chart.zoom.speed', def: 1, type: 'number', min: 0, max: 2, step: 0.01},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type:'number', min: 300, max: 800},
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -239,6 +245,9 @@ const step = ref(0);
 
         <template #local>
             <LocalVueUiMolecule :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

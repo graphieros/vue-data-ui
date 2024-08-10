@@ -53,9 +53,15 @@ function addDatapoint() {
 }
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.labels', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.useGradient', def: true, type: 'checkbox'},
     { key: 'style.chart.gradientIntensity', def: 40, type: 'range', min: 0, max: 100},
@@ -198,6 +204,9 @@ function selectDatapoint(datapoint) {
 
         <template #local>
             <LocalVueUiNestedDonuts :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

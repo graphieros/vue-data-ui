@@ -33,6 +33,13 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.labels', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'useBlurOnHover', def: true, type: 'checkbox', label: "useBlurOnHover", category: 'general' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text', label: "fontFamily", category: 'general' },
@@ -99,7 +106,6 @@ const model = ref([
     { key: 'style.chart.title.subtitle.color', def: '#A1A1A1', type: 'color', label: 'textColor', category: 'subtitle' },
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 6, max: 42, label: 'fontSize', category: 'subtitle' },
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox', label: 'bold', category: 'subtitle' },
-    { key: 'userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800, label: 'responsiveBreakpoint', category: 'table' },
     { key: 'table.columnNames.series', def: 'Series', type: 'text', label: ['columnName', 'is', 'series'], category: 'table' },
@@ -213,6 +219,24 @@ function toggleLabels() {
 
         <template #local>
             <LocalVueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localDonut">
+                <template #pdf>
+                    PRINT PDF
+                </template>
+                <template #csv>
+                    DOWNLOAD CSV
+                </template>
+                <template #img>
+                    DOWNLOAD IMAGE
+                </template>
+                <template #table>
+                    TOGGLE TABLE
+                </template>
+                <template #labels>
+                    TOGGLE LABELS
+                </template>
+                <template #fullscreen="{ toggleFullscreen, isFullscreen }">
+                    <button @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">FULLSCREEN</button>
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

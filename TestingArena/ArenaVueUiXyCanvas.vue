@@ -66,6 +66,13 @@ const dataset = ref([
 
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.labels', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.stack', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'Arial', type: 'text' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
@@ -243,6 +250,9 @@ const config = computed(() => {
 
         <template #local>
             <LocalVueUiXyCanvas :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
             </LocalVueUiXyCanvas>
         </template>
 

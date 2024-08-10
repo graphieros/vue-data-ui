@@ -39,6 +39,11 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
@@ -52,7 +57,6 @@ const model = ref([
     { key: 'table.showAverage', def: true, type: 'checkbox'},
     { key: 'table.showMedian', def: true, type: 'checkbox'},
     { key: 'table.head.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'}
 ])
 
 const themeOptions = ref([
@@ -96,6 +100,9 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiTableHeatmap :dataset="dataset" :config="config" :key="`local_${step}`">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #caption>
                     <div style="width: 100%; height: 40px" class="pb-8 font-black text-2xl text-left pl-2">
                         TITLE

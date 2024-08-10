@@ -113,6 +113,11 @@ const dataset = ref([
 
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},

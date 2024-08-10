@@ -15,9 +15,14 @@ Maecenas convallis libero at nisl lacinia facilisis. Nulla facilisi. Sed bibendu
 const dataset = ref(createWordCloudDatasetFromPlainText(plainTextDataset.value))
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'animationDelayMs', def: 20, type: 'number', min: 0, max: 100},
-    { key: 'userOptions.show', def: true, type: 'checkbox' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.height', def: 300, type: 'number', min: 200, max: 1000},
@@ -88,6 +93,9 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiWordCloud :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

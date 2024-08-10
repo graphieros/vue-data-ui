@@ -56,6 +56,13 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.sort', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -126,7 +133,6 @@ const model = ref([
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6 },
     { key: 'style.chart.tooltip.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.tooltip.suffix', def: 'S', type: 'text'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColorHeader', category: 'table' },
@@ -210,6 +216,9 @@ function selectLegend(legend) {
 
         <template #local>
             <LocalVueUiVerticalBar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+                <template #sort>
+                    SORT
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

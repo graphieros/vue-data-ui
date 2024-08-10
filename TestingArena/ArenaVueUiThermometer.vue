@@ -13,6 +13,10 @@ const dataset = ref({
 })
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
@@ -46,7 +50,6 @@ const model = ref([
     { key: 'style.title.subtitle.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
     { key: 'style.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 48},
     { key: 'style.title.subtitle.bold', def: false, type: 'checkbox' },
-    { key: 'userOptions.show', def: true, type: 'checkbox'}
 ])
 
 const themeOptions = ref([
@@ -83,6 +86,9 @@ const step = ref(0);
 
         <template #local>
             <LocalVueUiThermometer :dataset="dataset" :config="config" :key="`local_${step}`">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

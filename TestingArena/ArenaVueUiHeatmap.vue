@@ -27,6 +27,12 @@ const dataset = computed(() => {
 });
 
 const model = ref([
+    { key: 'userOptions.show', def: true, type: 'checkbox'},
+    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
@@ -81,7 +87,6 @@ const model = ref([
     { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.tooltip.fontSize', def: 12, type: 'range', min: 8, max: 48},
     { key: 'style.tooltip.roundingValue', def: 0, type: 'range', min: 0, max: 12},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.colNames.xAxis', def: 'X AXIS', type: 'text'},
@@ -166,6 +171,9 @@ const step = ref(0)
         
         <template #local>
             <LocalVueUiHeatmap :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <template #pdf>
+                    PRINT PDF
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
