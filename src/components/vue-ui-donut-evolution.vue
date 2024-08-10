@@ -500,9 +500,11 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            hasTable
-            hasFullscreen
+            :hasPdf="donutEvolutionConfig.userOptions.buttons.pdf"
+            :hasImg="donutEvolutionConfig.userOptions.buttons.img"
+            :hasXls="donutEvolutionConfig.userOptions.buttons.csv"
+            :hasTable="donutEvolutionConfig.userOptions.buttons.table"
+            :hasFullscreen="donutEvolutionConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             @toggleFullscreen="toggleFullscreen"
             :chartElement="donutEvolutionChart"
@@ -510,7 +512,23 @@ defineExpose({
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
         
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-evolution-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${donutEvolutionConfig.style.chart.backgroundColor};color:${donutEvolutionConfig.style.chart.color}`">
 
