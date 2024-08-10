@@ -520,10 +520,12 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            hasTable
-            hasLabel
-            hasFullscreen
+            :hasPdf="moleculeConfig.userOptions.buttons.pdf"
+            :hasXls="moleculeConfig.userOptions.buttons.csv"
+            :hasImg="moleculeConfig.userOptions.buttons.img"
+            :hasTable="moleculeConfig.userOptions.buttons.table"
+            :hasLabel="moleculeConfig.userOptions.buttons.labels"
+            :hasFullscreen="moleculeConfig.userOptions.buttons.fullscreen"
             :chartElement="moleculeChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -531,7 +533,26 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template #labels v-if="$slots.labels">
+                <slot name="labels" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="cluster-svg" :viewBox="dynamicViewBox"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
