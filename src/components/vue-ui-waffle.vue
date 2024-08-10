@@ -610,9 +610,11 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasImg="true"
-            hasTable
-            hasFullscreen
+            :hasPdf="waffleConfig.userOptions.buttons.pdf"
+            :hasImg="waffleConfig.userOptions.buttons.img"
+            :hasXls="waffleConfig.userOptions.buttons.csv"
+            :hasTable="waffleConfig.userOptions.buttons.table"
+            :hasFullscreen="waffleConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="waffleChart"
             @toggleFullscreen="toggleFullscreen"
@@ -620,7 +622,23 @@ defineExpose({
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="waffle-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >
