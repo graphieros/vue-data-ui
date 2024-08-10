@@ -388,14 +388,25 @@ defineExpose({
             :isPrinting="isPrinting"
             :uid="uid"
             :hasXls="false"
-            :hasImg="true"
-            hasFullscreen
+            :hasPdf="gaugeConfig.userOptions.buttons.pdf"
+            :hasImg="gaugeConfig.userOptions.buttons.img"
+            :hasFullscreen="gaugeConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="gaugeChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset"  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:hidden !important;background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">
