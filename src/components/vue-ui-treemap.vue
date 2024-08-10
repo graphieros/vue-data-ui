@@ -470,9 +470,11 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasImg
-            hasTable
-            hasFullscreen
+            :hasPdf="treemapConfig.userOptions.buttons.pdf"
+            :hasXls="treemapConfig.userOptions.buttons.csv"
+            :hasImg="treemapConfig.userOptions.buttons.img"
+            :hasTable="treemapConfig.userOptions.buttons.table"
+            :hasFullscreen="treemapConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="treemapChart"
             @toggleFullscreen="toggleFullscreen"
@@ -480,7 +482,23 @@ defineExpose({
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset"
