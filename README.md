@@ -440,6 +440,98 @@ Tailor made icons are available through the VueUiIcon component:
 
 All names of available icons are available in the vue-data-ui.d.ts file under the `VueUiIconName` type.
 
+# User options
+
+User options menu is accessible in the burger menu located on the top right of charts, and visible by default.
+To hide user options menu, set config.userOptions.show to false:
+
+```js
+const config = ref({
+  userOptions: {
+    show: false
+  },
+  ...
+})
+```
+
+Predefined actions in user options menu depend on the type of chart. Some charts have more or less actions available. Action buttons contain an predefined icons by default.
+
+To hide a given action, set the userOption.buttons, for example:
+
+```js
+const config = ref({
+  userOptions: {
+    show: true,
+    buttons: {
+      pdf: false,
+      fullscreen: false,
+      // all other actions will be visible by default (list of all actions below)
+    },
+  },
+});
+```
+
+You can use slots to override the content of action buttons.
+What happens when the button is clicked is taken care of by the component, except for the optionFullscreen slot.
+
+```html
+<VueUiDonut :config="config" :dataset="dataset">
+  <template #optionPdf> GENERATE PDF </template>
+
+  <!-- This is the only action where scoped content is provided -->
+  <template template #optionFullscreen="{ isFullscreen, toggleFullscreen }">
+    <div @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">
+      TOGGLE FULLSCREEN
+    </div>
+  </template>
+</VueUiDonut>
+```
+
+User options actions available per chart:
+
+| Chart name                  | User options actions slot names                                                           |
+| --------------------------- | ----------------------------------------------------------------------------------------- |
+| VueUiDonut                  | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiXy                     | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack |
+| VueUiXyCanvas               | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack |
+| VueUiTreemap                | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiWaffle                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiRadar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiQuadrant               | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiGauge                  | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiWheel                  | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiTiremarks              | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiOnion                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiVerticalBar            | optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen                |
+| VueUiHeatmap                | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiScatter                | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiCandlestick            | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiSparkline              | (no user options menu)                                                                    |
+| VueUiSparkbar               | (no user options menu)                                                                    |
+| VueUiSparkStackbar          | (no user options menu)                                                                    |
+| VueUiSparkHistogram         | (no user options menu)                                                                    |
+| VueUiSparkgauge             | (no user options menu)                                                                    |
+| VueUiSparkTrend             | (no user options menu)                                                                    |
+| VueUiQuickChart             | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiAgePyramid             | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiRelationCircle         | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiThermometer            | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiRings                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiMoodRadar              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiMolecule               | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiNestedDonuts           | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiGalaxy                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiStripPlot              | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUi3dBar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiTableSparkline         | optionPdf, optionImg, optionCsv, optionFullscreen                                         |
+| VueUiTableHeatmap           | optionPdf, optionImg, optionCsv, optionFullscreen                                         |
+| VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiFlow                   | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiParallelCoordinatePlot | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+
 # Custom palette
 
 It is possible to provide a custom palette in the config prop through config.customPalette (string[]) for the following components:
