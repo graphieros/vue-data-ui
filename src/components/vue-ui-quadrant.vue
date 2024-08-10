@@ -937,10 +937,12 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasImg="true"
-            hasTable
-            hasLabel
-            hasFullscreen
+            :hasPdf="quadrantConfig.userOptions.buttons.pdf"
+            :hasImg="quadrantConfig.userOptions.buttons.img"
+            :hasXls="quadrantConfig.userOptions.buttons.csv"
+            :hasTable="quadrantConfig.userOptions.buttons.table"
+            :hasLabel="quadrantConfig.userOptions.buttons.labels"
+            :hasFullscreen="quadrantConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="quadrantChart"
             @toggleFullscreen="toggleFullscreen"
@@ -949,7 +951,26 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template #labels v-if="$slots.labels">
+                <slot name="labels" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`" :style="`max-width:100%;overflow:${isZoom ? 'hidden' : 'visible'};background:${quadrantConfig.style.chart.backgroundColor};color:${quadrantConfig.style.chart.color}`"  :id="`svg_${uid}`">
