@@ -497,9 +497,11 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasImg="true"
-            hasTable
-            hasFullscreen
+            :hasPdf="chestnutConfig.userOptions.buttons.pdf"
+            :hasImg="chestnutConfig.userOptions.buttons.img"
+            :hasXls="chestnutConfig.userOptions.buttons.csv"
+            :hasTable="chestnutConfig.userOptions.buttons.table"
+            :hasFullscreen="chestnutConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="chestnutChart"
             @toggleFullscreen="toggleFullscreen"
@@ -507,7 +509,23 @@ defineExpose({
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
-       />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #csv v-if="$slots.csv">
+                <slot name="csv" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template #table v-if="$slots.table">
+                <slot name="table" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg :xmlns="XMLNS" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
 
