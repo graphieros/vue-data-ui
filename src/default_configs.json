@@ -299,7 +299,16 @@
                 "borderWidth": 1
             },
             "userOptions": {
-                "show": true
+                "show": true,
+                "buttons": {
+                    "pdf": true,
+                    "csv": true,
+                    "img": true,
+                    "table": true,
+                    "labels": true,
+                    "fullscreen": true,
+                    "stack": true
+                }
             }
         },
         "bar": {
@@ -491,7 +500,15 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "labels": true,
+                "fullscreen": true
+            }
         },
         "translations": {
             "total": "Total",
@@ -525,7 +542,15 @@
         "useCssAnimation": true,
         "useBlurOnHover": true,
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "labels": true,
+                "fullscreen": true
+            }
         },
         "style": {
             "fontFamily": "inherit",
@@ -710,7 +735,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "table": {
             "show": false,
@@ -829,7 +861,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "translations": {
             "target": "Target",
@@ -981,7 +1020,15 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "labels": true,
+                "fullscreen": true
+            }
         },
         "translations": {
             "category": "Category",
@@ -1058,7 +1105,12 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "img": true,
+                "fullscreen": true
+            }
         },
         "translations": {
             "base": "Base"
@@ -1229,7 +1281,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "translations": {
             "total": "Total",
@@ -1315,7 +1374,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "table": {
             "show": false,
@@ -1446,7 +1512,15 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "sort": true,
+                "fullscreen": true
+            }
         },
         "table": {
             "show": false,
@@ -1919,7 +1993,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "table": {
             "show": false,
@@ -2090,7 +2171,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "table": {
             "show": false,
@@ -2230,7 +2318,14 @@
             "volume": "Volume"
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "table": {
             "show": false,
@@ -2352,7 +2447,14 @@
             "year": "year"
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "table": {
             "show": false,
@@ -2619,7 +2721,12 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "img": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_thermometer": {
@@ -2679,7 +2786,12 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "img": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_sparkstackbar": {
@@ -2881,7 +2993,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "table": {
             "show": false,
@@ -2956,7 +3075,12 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "img": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_tiremarks": {
@@ -3011,7 +3135,12 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "img": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_donut_evolution": {
@@ -3130,7 +3259,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_mood_radar": {
@@ -3222,7 +3358,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_3d_bar": {
@@ -3292,7 +3435,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "table": {
             "show": false,
@@ -3387,7 +3537,15 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "labels": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_table_sparkline": {
@@ -3453,7 +3611,13 @@
             "bold": false
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_mini_loader": {
@@ -3620,7 +3784,14 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_kpi": {
@@ -3650,7 +3821,14 @@
         "theme": "",
         "customPalette": [],
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "style": {
             "fontFamily": "inherit",
@@ -3774,7 +3952,13 @@
             }
         },
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "fullscreen": true
+            }
         }
     },
     "vue_ui_accordion": {
@@ -3830,6 +4014,11 @@
         "showLegend": true,
         "showTooltip": true,
         "showUserOptions": true,
+        "userOptionsButtons": {
+            "pdf": true,
+            "img": true,
+            "fullscreen": true
+        },
         "title": "",
         "titleBold": true,
         "titleFontSize": 16,
@@ -3954,7 +4143,15 @@
         "customPalette": [],
         "useCssAnimation": true,
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "labels": true,
+                "fullscreen": true
+            }
         },
         "style": {
             "fontFamily": "inherit",
@@ -4081,7 +4278,14 @@
         "useAnimation": true,
         "animationSpeed": 2,
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "style": {
             "fontFamily": "inherit",
@@ -4216,7 +4420,14 @@
         "useCssAnimation": true,
         "animationDelayMs": 20,
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "style": {
             "fontFamily": "inherit",
@@ -4274,7 +4485,16 @@
         "theme": "",
         "customPalette": [],
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "labels": true,
+                "fullscreen": true,
+                "stack": true
+            }
         },
         "style": {
             "fontFamily": "Arial",
@@ -4423,7 +4643,14 @@
         "theme": "",
         "customPalette": [],
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "fullscreen": true
+            }
         },
         "style": {
             "fontFamily": "inherit",
@@ -4499,7 +4726,15 @@
         "customPalette": [],
         "variables": [],
         "userOptions": {
-            "show": true
+            "show": true,
+            "buttons": {
+                "pdf": true,
+                "csv": true,
+                "img": true,
+                "table": true,
+                "labels": true,
+                "fullscreen": true
+            }
         },
         "style": {
             "fontFamily": "inherit",
