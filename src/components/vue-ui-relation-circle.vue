@@ -318,20 +318,31 @@ defineExpose({
             ref="details"
             :key="`user_options_${step}`"
             v-if="relationConfig.userOptions.show && isDataset"
-            :hasXls="false"
-            :hasImg="true"
             :backgroundColor="relationConfig.style.backgroundColor"
             :color="relationConfig.style.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            hasFullscreen
+            :hasPdf="relationConfig.userOptions.buttons.pdf"
+            :hasImg="relationConfig.userOptions.buttons.img"
+            :hasFullscreen="relationConfig.userOptions.buttons.img"
+            :hasXls="false"
             :isFullscreen="isFullscreen"
             :chartElement="relationCircleChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
-        />
+        >
+            <template #pdf v-if="$slots.pdf">
+                <slot name="pdf" />
+            </template>
+            <template #img v-if="$slots.img">
+                <slot name="img" />
+            </template>
+            <template v-if="$slots.fullscreen" #fullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+        </UserOptions>
 
         <svg
             :xmlns="XMLNS"
