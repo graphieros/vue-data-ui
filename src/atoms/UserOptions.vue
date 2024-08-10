@@ -168,46 +168,86 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`width: 34px; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; right:${isFullscreen ? '12px': '0'}; padding: 4px; background:transparent; z-index: 1`">
-        <div tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${backgroundColor};`" @click.stop="toggle" @keypress.enter="toggle">
+    <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; right:${isFullscreen ? '12px': '0'}; padding: 4px; background:transparent; z-index: 1`">
+        <div tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:${backgroundColor};`" @click.stop="toggle" @keypress.enter="toggle">
             <BaseIcon  :name="isOpen ? 'close' : 'menu'" stroke="#CCCCCC" :stroke-width="2" />
         </div>
         <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}`">
 
             <button tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf">
-                <BaseIcon v-if="isPrinting" name="spin" isSpin />
-                <BaseIcon v-else name="pdf" :stroke="color" />
+                <template v-if="$slots.pdf">
+                    <slot name="pdf"/>
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isPrinting" name="spin" isSpin />
+                    <BaseIcon v-else name="pdf" :stroke="color" />
+                </template>
             </button>
             
             <button tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateCsv">
-                <BaseIcon name="excel" :stroke="color" />
+                <template v-if="$slots.csv">
+                    <slot name="csv"/>
+                </template>
+                <template v-else>
+                    <BaseIcon name="excel" :stroke="color" />
+                </template>
             </button>
 
             <button tabindex="0" v-if="hasImg" data-cy="user-options-img" class="vue-ui-user-options-button" @click="generateImage">
-                <BaseIcon v-if="isImaging" name="spin" isSpin />
-                <BaseIcon v-else name="image" :stroke="color" />
+                <template v-if="$slots.img">
+                    <slot name="img"/>
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isImaging" name="spin" isSpin />
+                    <BaseIcon v-else name="image" :stroke="color" />
+                </template>
             </button>
 
             <button tabindex="0" v-if="hasTable" data-cy="user-options-table" class="vue-ui-user-options-button" @click="toggleTable">
-                <BaseIcon :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" />
+                <template v-if="$slots.table">
+                    <slot name="table"/>
+                </template>
+                <template v-else>
+                    <BaseIcon :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" />
+                </template>
             </button>
 
             <button tabindex="0" v-if="hasLabel" data-cy="user-options-label" class="vue-ui-user-options-button" @click="toggleLabels">
-                <BaseIcon :name="isLabel ? 'labelClose' : 'labelOpen'" :stroke="color"/>
+                <template v-if="$slots.labels">
+                    <slot name="labels"/>
+                </template>
+                <template v-else>
+                    <BaseIcon :name="isLabel ? 'labelClose' : 'labelOpen'" :stroke="color"/>
+                </template>
             </button>
 
             <button tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
-                <BaseIcon name="sort" :stroke="color"/>
+                <template v-if="$slots.sort">
+                    <slot name="sort"/>
+                </template>
+                <template v-else>
+                    <BaseIcon name="sort" :stroke="color"/>
+                </template>
             </button>
 
             <button tabindex="0" v-if="hasStack" class="vue-ui-user-options-button" @click="toggleStack">
-                <BaseIcon v-if="isItStacked" name="unstack" :stroke="color"/>
-                <BaseIcon v-else name="stack" :stroke="color"/>
+                <template v-if="$slots.stack">
+                    <slot name="stack"/>
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isItStacked" name="unstack" :stroke="color"/>
+                    <BaseIcon v-else name="stack" :stroke="color"/>
+                </template>
             </button>
 
-            <button tabindex="0" v-if="hasFullscreen" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
-                <BaseIcon v-if="isFullscreen" name="exitFullscreen" :stroke="color" @click="toggleFullscreen('out')"/>
-                <BaseIcon v-if="!isFullscreen" name="fullscreen" :stroke="color" @click="toggleFullscreen('in')"/>
+            <button tabindex="0" v-if="hasFullscreen" data-cy="user-options-sort" class="vue-ui-user-options-button">
+                <template v-if="$slots.fullscreen">
+                    <slot name="fullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isFullscreen" name="exitFullscreen" :stroke="color" @click="toggleFullscreen('out')"/>
+                    <BaseIcon v-if="!isFullscreen" name="fullscreen" :stroke="color" @click="toggleFullscreen('in')"/>
+                </template>
             </button>
 
         </div>
@@ -266,15 +306,16 @@ onBeforeUnmount(() => {
 
 .vue-ui-user-options-button {
     all: unset;
-    padding: 0 3px;
+    padding: 3px;
     border-radius: 3px;
-    height: 30px;
+    height: auto;
     border: 1px solid transparent;
     background: inherit;
     display: flex;
     align-items:center;
     justify-content: center;
-    width: fit-content;
+    /* width: fit-content; */
+    white-space: nowrap;
     cursor: pointer;
 }
 .vue-ui-user-options-button:hover {
