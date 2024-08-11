@@ -1986,6 +1986,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiXyConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -2249,6 +2250,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiDonutConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -2404,6 +2406,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiNestedDonutsConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -3195,6 +3198,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiOnionConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -4147,6 +4151,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiQuickChartConfig = {
+        responsive?: boolean;
         theme?: Theme;
         axisLabelsFontSize?: number;
         backgroundColor?: string;
