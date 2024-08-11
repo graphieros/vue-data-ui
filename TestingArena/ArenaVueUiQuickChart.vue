@@ -92,6 +92,7 @@ const datasets = ref({
 const selectedSerie = ref('shortObjectMixed');
 
 const model = ref([
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptionsButtons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptionsButtons.img', def: true, type: 'checkbox'},
     { key: 'userOptionsButtons.fullscreen', def: true, type: 'checkbox'},
@@ -206,6 +207,14 @@ function selectDatapoint(datapoint) {
 <select v-model="selectedSerie" @change="step += 1">
     <option v-for="key in Object.keys(datasets)">{{ key }}</option>
 </select>
+
+<div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiQuickChart :key="`responsive_${step}`" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
+    </div>
+
 <Box>
     <template #title>VueUiQuickChart</template>
 

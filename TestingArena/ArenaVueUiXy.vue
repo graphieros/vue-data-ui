@@ -47,6 +47,7 @@ const dataset = ref([
     ])
 
 const model = ref([
+    { key: 'responsive', def: true, type: 'checkbox'},
     { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'chart.userOptions.buttons.csv', def: true, type: 'checkbox'},
@@ -206,7 +207,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[2])
+const currentTheme = ref(themeOptions.value[4])
 
 const size = ref({
     height: 600,
@@ -282,22 +283,22 @@ function selectX(selectedX) {
     console.log({ selectedX })
 }
 
-const resizable = ref(null);
+// const resizable = ref(null);
 
-onMounted(() => {
-    const { height, width } = resizable.value.getBoundingClientRect();
+// onMounted(() => {
+//     const { height, width } = resizable.value.getBoundingClientRect();
 
-    size.value.height = height;
-    size.value.width = width;
+//     size.value.height = height;
+//     size.value.width = width;
 
-    const resizeObserver = new ResizeObserver((entries) => {
-        for(const entry of entries) {
-            size.value.height = entry.contentBoxSize[0].blockSize;
-            size.value.width = entry.contentBoxSize[0].inlineSize;
-        }
-    })
-    resizeObserver.observe(resizable.value)
-})
+//     const resizeObserver = new ResizeObserver((entries) => {
+//         for(const entry of entries) {
+//             size.value.height = entry.contentBoxSize[0].blockSize;
+//             size.value.width = entry.contentBoxSize[0].inlineSize;
+//         }
+//     })
+//     resizeObserver.observe(resizable.value)
+// })
 
 </script>
 
@@ -316,13 +317,20 @@ onMounted(() => {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <div ref="resizable" style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <VueDataUi component="VueUiXy" :dataset="dataset" :config="{
+    <div style="width: 400px; height: 500px">
+        <LocalVueUiXy component="VueUiXy" :dataset="dataset" :config="{
             ...config,
             chart: {
                 ...config.chart,
-                height: size.height - 100,
-                width: size.width
+            }
+        }"/>
+    </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiXy component="VueUiXy" :dataset="dataset" :config="{
+            ...config,
+            chart: {
+                ...config.chart,
             }
         }"/>
     </div>

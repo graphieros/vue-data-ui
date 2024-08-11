@@ -9,19 +9,19 @@ function refresh() {
     <button class="reset" @click="refresh">RESET</button>
     <h1><slot name="title"/></h1>
     <div class="box">
-        <div style="width:100%;">
+        <div style="width:auto; max-height: 600px;">
             <p>Local</p>
             <slot name="local"/>
         </div>
-        <div style="width:100%;">
+        <div style="width:100%; max-height: 600px">
             <p>VueDataUi Local</p>
             <slot name="VDUI-local"/>
         </div>
-        <div style="width: 100%;">
+        <div style="width: 100%; max-height: 600px">
             <p>Build</p>
             <slot name="build"/>
         </div>
-        <div style="width: 100%;">
+        <div style="width: 100%; max-height: 600px">
             <p>VueDataUi build</p>
             <slot name="VDUI-build"/>
         </div>

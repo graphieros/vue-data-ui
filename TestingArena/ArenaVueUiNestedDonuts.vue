@@ -53,6 +53,7 @@ function addDatapoint() {
 }
 
 const model = ref([
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
@@ -199,6 +200,14 @@ function selectDatapoint(datapoint) {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
     <button @click="addDatapoint">ADD DATAPOINT</button>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiNestedDonuts :key="`responsive_${step}`" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
+    </div>
+
     <Box>
         <template #title>VueUiNestedDonuts</template>
 
