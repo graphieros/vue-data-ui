@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from "vue";
+import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
 import { 
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
@@ -21,6 +21,7 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -32,6 +33,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -57,6 +59,11 @@ const isDataset = computed({
     }
 })
 
+const donutChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
+const resizeObserver = ref(null);
+
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
         error({
@@ -79,13 +86,30 @@ onMounted(() => {
             })
         })
     }
-})
+
+    if (donutConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: donutChart.value,
+                title: donutConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: donutConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(donutChart.value.parentNode);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
 
 const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_donut);
-
-const donutChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -126,12 +150,15 @@ const mutableConfig = ref({
     showTable: donutConfig.value.table.show,
 });
 
-const svg = computed(() => {
-    const height = isPrinting.value ? 512: 360;
-    return {
-        height,
-        width: 512
-    }
+const svg = ref({
+    height: 360,
+    width: 512
+});
+
+const donutThickness = computed(() => {
+    const baseRatio = donutConfig.value.style.chart.layout.donut.strokeWidth / 512;
+    const resultSize = svg.value.width * baseRatio
+    return resultSize > donutConfig.value.style.chart.layout.donut.strokeWidth ? donutConfig.value.style.chart.layout.donut.strokeWidth : resultSize;
 });
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
@@ -300,8 +327,13 @@ const legendConfig = computed(() => {
     }
 })
 
+const minSize = computed(()  => {
+    const val = Math.min(svg.value.width / 3, svg.value.height / 3);
+    return val < 55 ? 55 : val;
+})
+
 const currentDonut = computed(() => {
-    return makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, 130, 130, 1.99999, 2, 1, 360, 105.25, donutConfig.value.style.chart.layout.donut.strokeWidth)
+    return makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, minSize.value, minSize.value, 1.99999, 2, 1, 360, 105.25, donutThickness.value)
 });
 
 function isArcBigEnough(arc) {
@@ -487,7 +519,7 @@ defineExpose({
         
         <slot name="userConfig"></slot>
         
-        <div v-if="donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        <div ref="chartTitle" v-if="donutConfig.style.chart.title.text" :style="`width:100%;background:${donutConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
@@ -556,7 +588,7 @@ defineExpose({
 
 
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             
             <!-- DEFS -->
             <defs>
@@ -582,7 +614,7 @@ defineExpose({
             <g v-for="(arc, i) in currentDonut">
                 <path
                     v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                    :d="calcNutArrowPath(arc, {x: svg.width / 2, y: svg.height / 2}, 16, 16, false, false, defaultConfig.style.chart.layout.donut.strokeWidth)"
+                    :d="calcNutArrowPath(arc, {x: svg.width / 2, y: svg.height / 2}, 16, 16, false, false, donutThickness)"
                     :stroke="arc.color"
                     stroke-width="1"
                     stroke-linecap="round"
@@ -595,7 +627,7 @@ defineExpose({
             <circle
                 :cx="svg.width / 2"
                 :cy="svg.height / 2"
-                :r="130"
+                :r="minSize <= 0 ? 10 : minSize"
                 :fill="donutConfig.style.chart.backgroundColor"
                 :filter="donutConfig.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
             />
@@ -623,7 +655,7 @@ defineExpose({
                 v-if="donutConfig.style.chart.useGradient"
                 :cx="svg.width / 2"
                 :cy="svg.height / 2"
-                :r="136"
+                :r="/* This might require adjustments */minSize <= 0 ? 10 : minSize"
                 :fill="`url(#gradient_${uid})`"
             />
 
@@ -648,7 +680,7 @@ defineExpose({
                 v-if="donutConfig.style.chart.layout.labels.hollow.show"
                 :cx="svg.width / 2" 
                 :cy="svg.height / 2" 
-                :r="svg.width - 400 - donutConfig.style.chart.layout.donut.strokeWidth / 2"
+                :r="/* This might require adjustments */(minSize - donutThickness) <= 0 ? 10: minSize - donutThickness"
                 :fill="donutConfig.style.chart.backgroundColor"/>
 
             <!-- HOLLOW LABELS -->
@@ -780,36 +812,38 @@ defineExpose({
                     backgroundColor: donutConfig.style.chart.backgroundColor,
                     donut: {
                         color: '#CCCCCC',
-                        strokeWidth: donutConfig.style.chart.layout.donut.strokeWidth * 0.8
+                        strokeWidth: donutThickness * 0.8
                     }
                 }
             }"
         />
 
-        <Legend
-            v-if="donutConfig.style.chart.legend.show"
-            :legendSet="legendSet"
-            :config="legendConfig"
-            @clickMarker="({i}) => segregate(i)"
-        >
-            <template #item="{ legend, index }">
-                <div :data-cy="`legend-item-${index}`" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
-                    <span v-if="!segregated.includes(index)" style="font-variant-numeric: tabular-nums;">
-                        ({{ isNaN(legend.value / total) ? '-' : dataLabel({
-                            v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
-                            s: '%',
-                            r: donutConfig.style.chart.legend.roundingPercentage
-                        })}})
-                    </span>
-                    <span v-else>
-                        ( {{ dashLabel(legend.proportion * 100) }} % )
-                    </span>
-                </div>
-            </template>
-        </Legend>
+        <div ref="chartLegend">        
+            <Legend
+                v-if="donutConfig.style.chart.legend.show"
+                :legendSet="legendSet"
+                :config="legendConfig"
+                @clickMarker="({i}) => segregate(i)"
+            >
+                <template #item="{ legend, index }">
+                    <div :data-cy="`legend-item-${index}`" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                        {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
+                        <span v-if="!segregated.includes(index)" style="font-variant-numeric: tabular-nums;">
+                            ({{ isNaN(legend.value / total) ? '-' : dataLabel({
+                                v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
+                                s: '%',
+                                r: donutConfig.style.chart.legend.roundingPercentage
+                            })}})
+                        </span>
+                        <span v-else>
+                            ( {{ dashLabel(legend.proportion * 100) }} % )
+                        </span>
+                    </div>
+                </template>
+            </Legend>
+            <slot name="legend" v-bind:legend="legendSet" />
+        </div>
 
-        <slot name="legend" v-bind:legend="legendSet" />
 
         <!-- TOOLTIP -->
         <Tooltip
