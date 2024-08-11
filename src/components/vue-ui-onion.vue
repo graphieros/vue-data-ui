@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from "vue";
+import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
 import { 
     convertColorToHex, 
     convertCustomPalette, 
@@ -15,6 +15,7 @@ import {
     themePalettes,
     XMLNS
 } from "../lib.js";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -26,6 +27,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -46,23 +48,16 @@ const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 });
 
-onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiOnion',
-            type: 'dataset'
-        })
-    }
-});
-
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_onion);
-const onionChart = ref(null);
 const details = ref(null);
 const step = ref(0);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const segregated = ref([]);
+const onionChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
 
 const onionConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -95,22 +90,55 @@ const mutableConfig = ref({
     showTable: onionConfig.value.table.show
 });
 
-const svg = computed(() => {
-    const p = 64;
-    return {
-        height: 512,
-        width: 512,
-        padding: {
-            top: p,
-            left: p,
-            right: p,
-            bottom: p,
-        }
+const svg = ref({
+    height: 512,
+    width: 512,
+    padding: {
+        top: 64,
+        left: 64,
+        right: 64,
+        bottom: 64
+    },
+    minRadius: 64
+});
+
+const resizeObserver = ref(null);
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiOnion',
+            type: 'dataset'
+        })
+    }
+
+    if (onionConfig.value.responsive) {
+        const paddingRatio = 64 / 512;
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: onionChart.value,
+                title: onionConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: onionConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+            svg.value.padding.top = Math.max(width, height) * paddingRatio;
+            svg.value.padding.right = Math.max(width, height) * paddingRatio;
+            svg.value.padding.bottom = Math.max(width, height) * paddingRatio;
+            svg.value.padding.left = Math.max(width, height) * paddingRatio;
+            svg.value.minRadius = Math.min(width, height) * paddingRatio;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(onionChart.value.parentNode);
     }
 });
 
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
+
 const drawableArea = computed(() => {
-    const minRadius = 64;
     return {
         top: svg.value.padding.top,
         left: svg.value.padding.left,
@@ -120,11 +148,10 @@ const drawableArea = computed(() => {
         centerY: svg.value.height / 2,
         width: svg.value.width - svg.value.padding.right - svg.value.padding.left,
         height: svg.value.height - svg.value.padding.bottom - svg.value.padding.top,
-        minRadius,
-        maxRadius: (svg.value.width - svg.value.padding.right - svg.value.padding.left)
+        minRadius: svg.value.minRadius,
+        maxRadius: Math.min(svg.value.width, svg.value.height) - (svg.value.padding.top * 2)
     }
 });
-
 
 const immutableDataset = computed(() => {
 
@@ -225,7 +252,7 @@ const mutableCount = computed(() => {
 });
 
 const onionSkin = computed(() => {
-    const baseThickness = drawableArea.value.width / 2 / immutableDataset.value.length;
+    const baseThickness = Math.min(drawableArea.value.width, drawableArea.value.height) / 2 / immutableDataset.value.length;
 
     return {
         gutter: (baseThickness > onionConfig.value.style.chart.layout.maxThickness ? onionConfig.value.style.chart.layout.maxThickness : baseThickness) * onionConfig.value.style.chart.layout.gutter.width,
@@ -238,7 +265,7 @@ const mutableDataset = computed(() => {
         .filter(onion => !segregated.value.includes(onion.id))
         .map((onion, i) => {
             const radius = (((drawableArea.value.maxRadius - onionSkin.value.track) / mutableCount.value) / 2) * (1+i);
-            const labelY = (drawableArea.value.centerY) - ((drawableArea.value.centerY - drawableArea.value.top - onionConfig.value.style.chart.layout.labels.fontSize) / mutableCount.value * (i + 1));
+            const labelY = (drawableArea.value.centerY) - radius
             return {
                 percentage: onion.percentage || 0,
                 ...onion,
@@ -400,7 +427,7 @@ defineExpose({
         :id="`vue-ui-onion_${uid}`"
         :style="`font-family:${onionConfig.style.fontFamily};width:100%; text-align:center;background:${onionConfig.style.chart.backgroundColor}`"
     >
-        <div v-if="onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
+        <div ref="chartTitle" v-if="onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
             <Title
                 :config="{
                     title: {
@@ -462,7 +489,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 0.0001 : svg.width} ${svg.height <= 0 ? 0.0001 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
 
             <!-- GUTTERS -->
             <circle 
@@ -470,7 +497,7 @@ defineExpose({
                 :data-cy="`onion-track-${i}`"
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
-                :r="onion.radius" 
+                :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
                 :stroke="onionConfig.style.chart.layout.gutter.color" 
                 :stroke-width="onionSkin.gutter" 
                 fill="none"
@@ -486,7 +513,7 @@ defineExpose({
                 v-for="(onion, i) in mutableDataset" 
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
-                :r="onion.radius" 
+                :r="onion.radius < 0 ? 0.0001 : onion.radius" 
                 :stroke="`${onion.color}`" 
                 :stroke-width="onionSkin.track" 
                 fill="none"
@@ -509,7 +536,7 @@ defineExpose({
                     v-for="(onion, i) in mutableDataset" 
                     :cx="drawableArea.centerX" 
                     :cy="drawableArea.centerY" 
-                    :r="onion.radius" 
+                    :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
                     :stroke="`white`" 
                     :stroke-width="onionSkin.track / 3" 
                     fill="none"
@@ -527,7 +554,7 @@ defineExpose({
                 :data-cy="`onion-track-${i}`"
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
-                :r="onion.radius" 
+                :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
                 stroke="transparent" 
                 :stroke-width="Math.max(onionSkin.track, onionSkin.gutter)" 
                 fill="none"
@@ -577,20 +604,22 @@ defineExpose({
         />
 
         <!-- LEGEND AS DIV -->
-        <Legend
-            v-if="onionConfig.style.chart.legend.show"
-            :legendSet="immutableDataset"
-            :config="legendConfig"
-            @clickMarker="({legend}) => segregate(legend.id)"
-        >
-            <template #item="{ legend }">
-                <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name ? legend.name + ' : ' : '' }} {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
-                </div>
-            </template>
-        </Legend>
+        <div ref="chartLegend">
+            <Legend
+                v-if="onionConfig.style.chart.legend.show"
+                :legendSet="immutableDataset"
+                :config="legendConfig"
+                @clickMarker="({legend}) => segregate(legend.id)"
+            >
+                <template #item="{ legend }">
+                    <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                        {{ legend.name ? legend.name + ' : ' : '' }} {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
+                    </div>
+                </template>
+            </Legend>
+            <slot v-else name="legend" v-bind:legend="immutableDataset"></slot>
+        </div>
 
-        <slot name="legend" v-bind:legend="immutableDataset"></slot>
 
         <!-- TOOLTIP -->
         <Tooltip
