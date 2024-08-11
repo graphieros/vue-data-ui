@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import * as detector from "../chartDetector";
@@ -20,12 +20,16 @@ import {
     themePalettes,
     XMLNS
 } from "../lib";
+import {
+    throttle
+} from "../canvas-lib"
 import BaseIcon from "../atoms/BaseIcon.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Slicer from "../atoms/Slicer.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -43,6 +47,9 @@ const props = defineProps({
 });
 
 const quickChart = ref(null);
+const quickChartTitle = ref(null);
+const quickChartLegend = ref(null);
+const quickChartSlicer = ref(null);
 const uid = ref(createUid());
 const isTooltip = ref(false);
 const dataTooltipSlot = ref(null);
@@ -102,33 +109,47 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 });
 
 const defaultSizes = ref({
-    donut: {
-        width: 512,
-        height: 338
-    },
-    line: {
-        width: 512,
-        height: 338
-    },
-    bar: {
-        width: 512,
-        height: 338
+    width: quickConfig.value.width,
+    height: quickConfig.value.height
+})
+
+const resizeObserver = ref(null);
+
+onMounted(() => {
+    if (quickConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: quickChart.value,
+                title: quickConfig.value.title ? quickChartTitle.value : null,
+                legend: quickConfig.value.showLegend ? quickChartLegend.value : null,
+                slicer: [detector.chartType.BAR, detector.chartType.LINE].includes(chartType.value) && quickConfig.value.zoomXy && formattedDataset.value.maxSeriesLength > 1 ? quickChartSlicer.value : null
+            });
+            defaultSizes.value.width = width;
+            defaultSizes.value.height = height;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(quickChart.value.parentNode);
     }
 })
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
 
 const viewBox = computed(() => {
     switch (chartType.value) {
         case detector.chartType.LINE:
-            return `0 0 ${quickConfig.value.width || defaultSizes.value.line.width} ${quickConfig.value.height || defaultSizes.value.line.height}`;
+            return `0 0 ${defaultSizes.value.width <= 0 ? 10 : defaultSizes.value.width} ${defaultSizes.value.height <= 0 ? 10 : defaultSizes.value.height}`;
         
         case detector.chartType.BAR:
-        return `0 0 ${quickConfig.value.width || defaultSizes.value.bar.width} ${quickConfig.value.height || defaultSizes.value.bar.height}`;
+            return `0 0 ${defaultSizes.value.width <= 0 ? 10 : defaultSizes.value.width} ${defaultSizes.value.height <= 0 ? 10 : defaultSizes.value.height}`;
 
         case detector.chartType.DONUT:
-            return `0 0 ${quickConfig.value.width || defaultSizes.value.donut.width} ${quickConfig.value.height || defaultSizes.value.donut.height}`;
+            return `0 0 ${defaultSizes.value.width <= 0 ? 10 : defaultSizes.value.width} ${defaultSizes.value.height <= 0 ? 10 : defaultSizes.value.height}`;
     
         default:
-            return `0 0 ${quickConfig.value.width || defaultSizes.value.donut.width} ${quickConfig.value.height || defaultSizes.value.donut.height}`;
+            return `0 0 ${defaultSizes.value.width <= 0 ? 10 : defaultSizes.value.width} ${defaultSizes.value.height <= 0 ? 10 : defaultSizes.value.height}`;
     }
 });
 
@@ -315,8 +336,8 @@ const donut = computed(() => {
     }
 
     const drawingArea = {
-        centerX: (quickConfig.value.width || defaultSizes.value.donut.width) / 2,
-        centerY: (quickConfig.value.height || defaultSizes.value.donut.height) / 2
+        centerX: (defaultSizes.value.width) / 2,
+        centerY: (defaultSizes.value.height) / 2
     }
     
     const total = ds.filter(d => !segregated.value.includes(d.id)).map(d => d.value||0).reduce((a,b) => a + b, 0);
@@ -330,9 +351,9 @@ const donut = computed(() => {
         }
     })
 
-    const cx = (quickConfig.value.width || defaultSizes.value.donut.width) / 2;
-    const cy = (quickConfig.value.height || defaultSizes.value.donut.height) / 2;
-    const radius = (quickConfig.value.height || defaultSizes.value.donut.height) * quickConfig.value.donutRadiusRatio;
+    const cx = (defaultSizes.value.width) / 2;
+    const cy = (defaultSizes.value.height) / 2;
+    const radius = (defaultSizes.value.height) * quickConfig.value.donutRadiusRatio;
 
     return {
         dataset: legend.filter(s => !segregated.value.includes(s.id)),
@@ -358,7 +379,7 @@ const donut = computed(() => {
             1,
             360,
             105.25,
-            (quickConfig.value.height || defaultSizes.value.donut.height) * quickConfig.value.donutThicknessRatio
+            (defaultSizes.value.height) * quickConfig.value.donutThicknessRatio
         )
     }
 });
@@ -380,8 +401,8 @@ const line = computed(() => {
     if(chartType.value !== detector.chartType.LINE) return null;
 
     const chartDimensions = {
-        height: quickConfig.value.height || defaultSizes.value.line.height,
-        width: quickConfig.value.width || defaultSizes.value.donut.width
+        height: defaultSizes.value.height,
+        width: defaultSizes.value.width
     }
 
     const drawingArea = {
@@ -537,8 +558,8 @@ const bar = computed(() => {
     if(chartType.value !== detector.chartType.BAR) return null;
 
     const chartDimensions = {
-        height: quickConfig.value.height || defaultSizes.value.bar.height,
-        width: quickConfig.value.width || defaultSizes.value.bar.width
+        height: defaultSizes.value.height,
+        width: defaultSizes.value.width
     };
 
     const drawingArea = {
@@ -764,7 +785,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <div class="vue-ui-quick-chart-title" v-if="quickConfig.title" :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color};font-size:${quickConfig.titleFontSize}px;font-weight:${quickConfig.titleBold ? 'bold': 'normal'};text-align:${quickConfig.titleTextAlign}`">
+        <div ref="quickChartTitle" class="vue-ui-quick-chart-title" v-if="quickConfig.title" :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color};font-size:${quickConfig.titleFontSize}px;font-weight:${quickConfig.titleBold ? 'bold': 'normal'};text-align:${quickConfig.titleTextAlign}`">
             {{ quickConfig.title }}
         </div>
         <svg
@@ -788,7 +809,7 @@ defineExpose({
                     <template v-for="(arc, i) in donut.chart">
                         <path
                             v-if="donut.isArcBigEnough(arc)"
-                            :d="calcNutArrowPath(arc, {x: (quickConfig.width || defaultSizes.donut.width) / 2, y: (quickConfig.height || defaultSizes.donut.height) /2}, 16, 16, false, false, quickConfig.donutLabelMarkerStrokeWidth)"
+                            :d="calcNutArrowPath(arc, {x: (quickConfig.width || defaultSizes.width) / 2, y: (quickConfig.height || defaultSizes.height) /2}, 16, 16, false, false, quickConfig.donutLabelMarkerStrokeWidth)"
                             :stroke="arc.color"
                             :stroke-width="quickConfig.donutLabelMarkerStrokeWidth"
                             stroke-linecap="round"
@@ -800,9 +821,9 @@ defineExpose({
                 </g>
                 <circle
                     class="donut-hollow"
-                    :cx="(quickConfig.width || defaultSizes.donut.width) / 2"
-                    :cy="(quickConfig.height || defaultSizes.donut.height) /2"
-                    :r="(quickConfig.height || defaultSizes.donut.height) * quickConfig.donutRadiusRatio"
+                    :cx="(quickConfig.width || defaultSizes.width) / 2"
+                    :cy="(quickConfig.height || defaultSizes.height) /2"
+                    :r="(quickConfig.height || defaultSizes.height) * quickConfig.donutRadiusRatio"
                     :fill="quickConfig.backgroundColor"
                 />
 
@@ -1079,8 +1100,8 @@ defineExpose({
                         v-for="(_, i) in line.extremes.maxSeries"
                         :x="line.drawingArea.left + (i * line.slotSize)"
                         :y="line.drawingArea.top"
-                        :height="line.drawingArea.height"
-                        :width="line.slotSize"
+                        :height="line.drawingArea.height <= 0 ? 0.00001 : line.drawingArea.height"
+                        :width="line.slotSize <= 0 ? 0.00001 : line.slotSize"
                         :fill="selectedDatapoint === i ? quickConfig.xyHighlighterColor : 'transparent'"
                         :style="`opacity:${quickConfig.xyHighlighterOpacity}`"
                         @mouseenter="line.useTooltip(i)"
@@ -1195,8 +1216,8 @@ defineExpose({
                         <rect 
                             v-for="(plot, j) in ds.coordinates"
                             :x="plot.x"
-                            :width="plot.width"
-                            :height="plot.height"
+                            :width="plot.width <= 0 ? 0.00001 : plot.width"
+                            :height="plot.height <= 0 ? 0.00001 : plot.height"
                             :y="plot.y"
                             :fill="ds.color"
                             :stroke="quickConfig.backgroundColor"
@@ -1246,8 +1267,8 @@ defineExpose({
                         v-for="(_, i) in bar.extremes.maxSeries"
                         :x="bar.drawingArea.left + (i * bar.slotSize)"
                         :y="bar.drawingArea.top"
-                        :height="bar.drawingArea.height"
-                        :width="bar.slotSize"
+                        :height="bar.drawingArea.height <= 0 ? 0.00001 : bar.drawingArea.height"
+                        :width="bar.slotSize <= 0 ? 0.00001 : bar.slotSize"
                         :fill="selectedDatapoint === i ? quickConfig.xyHighlighterColor : 'transparent'"
                         :style="`opacity:${quickConfig.xyHighlighterOpacity}`"
                         @mouseenter="bar.useTooltip(i)"
@@ -1270,7 +1291,7 @@ defineExpose({
                             :fill="quickConfig.color" 
                             text-anchor="middle"
                             :x="line.drawingArea.left + (line.drawingArea.width / 2)"
-                            :y="defaultSizes.line.height - (quickConfig.axisLabelsFontSize / 3)"
+                            :y="defaultSizes.height - (quickConfig.axisLabelsFontSize / 3)"
                         >
                             {{ quickConfig.xAxisLabel }}
                         </text>
@@ -1281,7 +1302,7 @@ defineExpose({
                             :fill="quickConfig.color" 
                             text-anchor="middle"
                             :x="bar.drawingArea.left + (bar.drawingArea.width / 2)"
-                            :y="defaultSizes.bar.height - (quickConfig.axisLabelsFontSize / 3)"
+                            :y="defaultSizes.height - (quickConfig.axisLabelsFontSize / 3)"
                         >
                             {{ quickConfig.xAxisLabel }}
                         </text>
@@ -1310,33 +1331,36 @@ defineExpose({
             </template>
         </svg>
 
-        <Slicer 
-            v-if="[detector.chartType.BAR, detector.chartType.LINE].includes(chartType) && quickConfig.zoomXy && formattedDataset.maxSeriesLength > 1"
-            :key="`slicer_${slicerStep}`"
-            :background="quickConfig.zoomColor"
-            :borderColor="quickConfig.backgroundColor"
-            :fontSize="quickConfig.zoomFontSize"
-            :useResetSlot="quickConfig.zoomUseResetSlot"
-            :labelLeft="quickConfig.xyPeriods[slicer.start] ? quickConfig.xyPeriods[slicer.start] : ''"
-            :labelRight="quickConfig.xyPeriods[slicer.end-1] ? quickConfig.xyPeriods[slicer.end-1] : ''"
-            :textColor="quickConfig.color"
-            :inputColor="quickConfig.zoomColor"
-            :selectColor="quickConfig.zoomHighlightColor"
-            :max="formattedDataset.maxSeriesLength"
-            :min="0"
-            :valueStart="slicer.start"
-            :valueEnd="slicer.end"
-            v-model:start="slicer.start"
-            v-model:end="slicer.end"
-            @reset="refreshSlicer"
-        >
-            <template #reset-action="{ reset }">
-                <slot name="reset-action" v-bind="{ reset }"/>
-            </template>
-        </Slicer>
+        <div v-if="[detector.chartType.BAR, detector.chartType.LINE].includes(chartType) && quickConfig.zoomXy && formattedDataset.maxSeriesLength > 1"
+            :key="`slicer_${slicerStep}`" ref="quickChartSlicer">        
+            <Slicer
+                :key="`slicer_${slicerStep}`"
+                :background="quickConfig.zoomColor"
+                :borderColor="quickConfig.backgroundColor"
+                :fontSize="quickConfig.zoomFontSize"
+                :useResetSlot="quickConfig.zoomUseResetSlot"
+                :labelLeft="quickConfig.xyPeriods[slicer.start] ? quickConfig.xyPeriods[slicer.start] : ''"
+                :labelRight="quickConfig.xyPeriods[slicer.end-1] ? quickConfig.xyPeriods[slicer.end-1] : ''"
+                :textColor="quickConfig.color"
+                :inputColor="quickConfig.zoomColor"
+                :selectColor="quickConfig.zoomHighlightColor"
+                :max="formattedDataset.maxSeriesLength"
+                :min="0"
+                :valueStart="slicer.start"
+                :valueEnd="slicer.end"
+                v-model:start="slicer.start"
+                v-model:end="slicer.end"
+                @reset="refreshSlicer"
+            >
+                <template #reset-action="{ reset }">
+                    <slot name="reset-action" v-bind="{ reset }"/>
+                </template>
+            </Slicer>
+        </div>
         
-        <div 
+        <div
             v-if="quickConfig.showLegend"
+            ref="quickChartLegend"
             class="vue-ui-quick-chart-legend" 
             :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color}`"
         >
