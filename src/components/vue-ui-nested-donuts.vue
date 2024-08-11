@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from "vue";
+import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
 import {
     abbreviate,
     calcMarkerOffsetX, 
@@ -19,6 +19,7 @@ import {
     themePalettes,
     XMLNS, 
 } from '../lib';
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -30,6 +31,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -50,22 +52,15 @@ const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 });
 
-onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiNestedDonuts',
-            type: 'dataset'
-        })
-    }
-});
-
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_nested_donuts);
-const nestedDonutsChart = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref('');
 const selectedSerie = ref(null);
 const step = ref(0);
+const nestedDonutsChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -91,6 +86,36 @@ const donutConfig = computed(() => {
     }
 });
 
+const resizeObserver = ref(null);
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiNestedDonuts',
+            type: 'dataset'
+        })
+    }
+
+    if (donutConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: nestedDonutsChart.value,
+                title: donutConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: donutConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(nestedDonutsChart.value.parentNode);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
+
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `nested_donuts_${uid.value}`,
     fileName: donutConfig.value.style.chart.title.text || 'vue-ui-nested-donuts'
@@ -107,11 +132,10 @@ const mutableConfig = ref({
     showTable: donutConfig.value.table.show,
 });
 
-const svg = computed(() => {
-    return {
-        height: 512,
-        width: 512
-    }
+
+const svg = ref({
+    height: 512,
+    width: 512
 });
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint']);
@@ -194,12 +218,14 @@ const immutableDataset = computed(() => {
     });
 });
 
-const donutSize = computed(() => donutConfig.value.style.chart.layout.donut.strokeWidth)
+const baseDonutSize = ref(donutConfig.value.style.chart.layout.donut.strokeWidth);
+
+const donutSize = computed(() => {
+    return Math.min(svg.value.height, svg.value.width) * (donutConfig.value.style.chart.layout.donut.strokeWidth / 512);
+});
 
 const md = computed(() => {
     return [...immutableDataset.value].map((ds, i) => {
-        const sizeRatio = i * donutSize.value / immutableDataset.value.length;
-
         const total = ds.series.filter(serie => !segregated.value.includes(serie.id)).map(s => {
             return s.value
         }).reduce((a, b) => a +b, 0)
@@ -620,24 +646,27 @@ defineExpose({
 
 <template>
     <div ref="nestedDonutsChart" :class="`vue-ui-nested-donuts ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${(!donutConfig.style.chart.title.text && donutConfig.userOptions.show) ? 'padding-top:36px' : ''};background:${donutConfig.style.chart.backgroundColor}`" :id="`nested_donuts_${uid}`">
-        <Title
-            :config="{
-                title: {
-                    cy: 'donut-div-title',
-                    text: donutConfig.style.chart.title.text,
-                    color: donutConfig.style.chart.title.color,
-                    fontSize: donutConfig.style.chart.title.fontSize,
-                    bold: donutConfig.style.chart.title.bold
-                },
-                subtitle: {
-                    cy: 'donut-div-subtitle',
-                    text: donutConfig.style.chart.title.subtitle.text,
-                    color: donutConfig.style.chart.title.subtitle.color,
-                    fontSize: donutConfig.style.chart.title.subtitle.fontSize,
-                    bold: donutConfig.style.chart.title.subtitle.bold
-                }
-            }"
-        />
+        
+        <div ref="chartTitle" v-if="donutConfig.style.chart.title.text">        
+            <Title
+                :config="{
+                    title: {
+                        cy: 'donut-div-title',
+                        text: donutConfig.style.chart.title.text,
+                        color: donutConfig.style.chart.title.color,
+                        fontSize: donutConfig.style.chart.title.fontSize,
+                        bold: donutConfig.style.chart.title.bold
+                    },
+                    subtitle: {
+                        cy: 'donut-div-subtitle',
+                        text: donutConfig.style.chart.title.subtitle.text,
+                        color: donutConfig.style.chart.title.subtitle.color,
+                        fontSize: donutConfig.style.chart.title.subtitle.fontSize,
+                        bold: donutConfig.style.chart.title.subtitle.bold
+                    }
+                }"
+            />
+        </div>
 
         <!-- OPTIONS -->
         <UserOptions
@@ -684,10 +713,10 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 0.001 : svg.width} ${svg.height < 0 ? 0.001 : svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             <!-- GRADIENTS -->
             <defs>
-                <radialGradient v-for="(gradient, i) in gradientSets" :id="`radial_${uid}_${i}`" cx="50%" cy="50%" r="50%" :fr="30 - (1 * (i+1)) + '%'">
+                <radialGradient v-for="(_, i) in gradientSets" :id="`radial_${uid}_${i}`" cx="50%" cy="50%" r="50%" :fr="30 - (1 * (i+1)) + '%'">
                     <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
                     <stop :offset="70 - (20 * i) + '%'" stop-color="#FFFFFF" :stop-opacity="donutConfig.style.chart.gradientIntensity / 100"/>
                     <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
@@ -711,7 +740,7 @@ defineExpose({
                 v-for="c in donuts"
                 :cx="svg.width / 2"
                 :cy="svg.height / 2"
-                :r="c.radius"
+                :r="c.radius < 0 ? 0.00001 : c.radius "
                 :fill="donutConfig.style.chart.backgroundColor"
                 :filter="donutConfig.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
             />
@@ -859,7 +888,7 @@ defineExpose({
         </Tooltip>
 
         <!-- LEGENDS -->
-        <div v-if="donutConfig.style.chart.legend.show" :class="{ 'vue-ui-nested-donuts-legend' : legendSets.length > 1 }">
+        <div ref="chartLegend" v-if="donutConfig.style.chart.legend.show" :class="{ 'vue-ui-nested-donuts-legend' : legendSets.length > 1 }">
             <Legend 
                 v-for="legendSet in legendSets"
                 :legendSet="legendSet"
@@ -885,7 +914,9 @@ defineExpose({
             </Legend>
         </div>
 
-        <slot name="legend" v-bind:legend="legendSets"></slot>
+        <div ref="chartLegend" v-if="!donutConfig.style.chart.legend.show">
+            <slot name="legend" v-bind:legend="legendSets"></slot>
+        </div>
 
         <!-- DATA TABLE -->
         <Accordion hideDetails v-if="isDataset" :config="{
