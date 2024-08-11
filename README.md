@@ -567,3 +567,23 @@ It is possible to provide a custom palette in the config prop through config.cus
 
 If the array of colors provided in customPalette is too small for the dataset, remaining colors will be computed from the default internal palette.
 Accepted color formats: HEX, RGB, HSL, named colors.
+
+# Responsive charts
+
+By default, all charts will scale to the width of their container.
+However the folowing charts can be made fully responsive, making them better to use in resizable containers:
+
+- VueUiQuickChart
+- VueUiXy
+- VueUiDonut
+- VueUiNestedDonuts
+- VueUiOnion
+
+To activate responsiveness, set the config.responsive attribute to true:
+
+```js
+const config = ref({
+  responsive: true,
+  // rest of your config
+});
+```
