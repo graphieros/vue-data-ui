@@ -1665,6 +1665,18 @@ export function getPathLengthFromCoordinates(d) {
     return totalLength;
 }
 
+export function translateSize({
+    relator,
+    adjuster,
+    source,
+    threshold = 0,
+    fallback
+}) {
+    return relator / (adjuster / source) < threshold 
+        ? fallback 
+        : relator / (adjuster / source);
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
@@ -1719,6 +1731,7 @@ const lib = {
     shiftHue,
     sumByAttribute,
     themePalettes,
+    translateSize,
     treeShake,
     XMLNS
 };

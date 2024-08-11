@@ -418,6 +418,18 @@ export function text(ctx, text, x, y, options = {}) {
     ctx.restore();
 }
 
+export function throttle(func, limit = 20) {
+    let inThrottle;
+    return function (...args) {
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
 /**
  * Debounces a function so that it will only execute after a specified delay 
  * since the last time it was invoked.
@@ -488,7 +500,8 @@ const lib = {
     polygon,
     rect,
     secureGradient,
-    text
+    text,
+    throttle
 }
 
 export default lib

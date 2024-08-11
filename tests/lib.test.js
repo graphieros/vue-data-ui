@@ -45,6 +45,7 @@ import {
     rotateMatrix,
     shiftHue,
     sumByAttribute,
+    translateSize,
     treeShake,
     getPathLengthFromCoordinates
 } from "../src/lib"
@@ -1591,3 +1592,21 @@ describe('getPathLengthFromCoordinates', () => {
         expect(getPathLengthFromCoordinates(hypothenuse)).toBe(14.142135623730951);
     });
 });
+
+describe('translateSize', () => {
+    test('returns a translated dimension', () => {
+        expect(translateSize({
+            relator: 1000,
+            adjuster: 500,
+            source: 20,
+            fallback: 10
+        })).toBe(40);
+
+        expect(translateSize({
+            relator: -100,
+            adjuster: 500,
+            source: 10,
+            fallback: 5
+        })).toBe(5)
+    })
+})
