@@ -2,7 +2,7 @@
 <template>
     <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${!chartConfig.chart.title.text ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily}`">
         <!-- TITLE AS OUTSIDE DIV -->
-        <div class="vue-ui-xy-title" v-if="chartConfig.chart.title.show" :style="`font-family:${chartConfig.chart.fontFamily}`">
+        <div ref="chartTitle" class="vue-ui-xy-title" v-if="chartConfig.chart.title.show" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <Title
                 :config="{
                     title: {
@@ -207,8 +207,8 @@
                                 v-if="canShowValue(plot.value)"
                                 :x="calcRectX(plot)"
                                 :y="mutableConfig.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
-                                :height="mutableConfig.useIndividualScale ? calcIndividualHeight(plot) : calcRectHeight(plot)"
-                                :width="calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap)"
+                                :height="mutableConfig.useIndividualScale ? Math.abs(calcIndividualHeight(plot)) : Math.abs(calcRectHeight(plot))"
+                                :width="calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap)"
                                 :rx="chartConfig.bar.borderRadius"
                                 :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                                 :stroke="chartConfig.bar.border.useSerieColor ? serie.color : chartConfig.bar.border.stroke"
@@ -242,7 +242,7 @@
                                 text-anchor="middle"
                                 :x="calcLinearProgression(serie.plots).x2"
                                 :y="calcLinearProgression(serie.plots).y2 - 6"
-                                :font-size="chartConfig.chart.labels.fontSize"
+                                :font-size="fontSizes.plotLabels"
                                 :fill="serie.color"
                             >
                                 {{  dataLabel({
@@ -281,7 +281,7 @@
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="chartConfig.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : serie.color"
                             :plot="{ x: plot.x, y: plot.y }"
-                            :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (chartConfig.plot.radius || 6) * 1.5 : chartConfig.plot.radius || 6 : chartConfig.plot.radius || 6"
+                            :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (plotRadii.plot || 6) * 1.5 : plotRadii.plot || 6 : plotRadii.plot || 6"
                             :stroke="chartConfig.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
@@ -313,7 +313,7 @@
                             text-anchor="middle"
                             :x="calcLinearProgression(serie.plots).x2"
                             :y="calcLinearProgression(serie.plots).y2 - 6"
-                            :font-size="chartConfig.chart.labels.fontSize"
+                            :font-size="fontSizes.plotLabels"
                             :fill="serie.color"
                         >
                             {{  dataLabel({
@@ -400,7 +400,7 @@
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="chartConfig.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
                             :plot="{ x: plot.x, y: plot.y }"
-                            :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (chartConfig.plot.radius || 6) * 1.5 : chartConfig.plot.radius : chartConfig.plot.radius"
+                            :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (plotRadii.line || 6) * 1.5 : plotRadii.line : plotRadii.line"
                             :stroke="chartConfig.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
@@ -432,7 +432,7 @@
                             text-anchor="middle"
                             :x="calcLinearProgression(serie.plots).x2"
                             :y="calcLinearProgression(serie.plots).y2 - 6"
-                            :font-size="chartConfig.chart.labels.fontSize"
+                            :font-size="fontSizes.plotLabels"
                             :fill="serie.color"
                         >
                             {{  dataLabel({
@@ -454,7 +454,7 @@
                                 :x="mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : calcRectX(plot) + calcRectWidth() / 2 - barPeriodGap / 2"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.labels.offsetY : - chartConfig.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
-                                :font-size="chartConfig.chart.labels.fontSize"
+                                :font-size="fontSizes.plotLabels"
                                 :fill="chartConfig.bar.labels.color"
                             >
                                 {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.bar.labels.rounding}) : '' }}
@@ -464,7 +464,7 @@
                                 :x="mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.bar.serieName.offsetY : - chartConfig.bar.serieName.offsetY * 3)"
                                 text-anchor="middle"
-                                :font-size="chartConfig.chart.labels.fontSize"
+                                :font-size="fontSizes.plotLabels"
                                 :fill="chartConfig.bar.serieName.useSerieColor ? serie.color : chartConfig.bar.serieName.color"
                                 :font-weight="chartConfig.bar.serieName.bold ? 'bold' : 'normal'"
                             >
@@ -484,7 +484,7 @@
                                 :x="plot.x"
                                 :y="plot.y + chartConfig.plot.labels.offsetY"
                                 text-anchor="middle"
-                                :font-size="chartConfig.chart.labels.fontSize"
+                                :font-size="fontSizes.plotLabels"
                                 :fill="chartConfig.plot.labels.color"
                             >
                                 {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.plot.labels.rounding}) : '' }}
@@ -498,20 +498,20 @@
                                 width="150"
                                 style="overflow: visible"
                             >
-                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${chartConfig.chart.labels.fontSize}px;border-radius: 2px;`">
+                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
                                 </div>
                             </foreignObject>
                             <foreignObject
                                 :data-cy="`xy-plot-tag-end-${i}`"
                                 v-if="plot && j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
-                                :x="plot.x - serie.name.length * (chartConfig.chart.labels.fontSize / 2)"
+                                :x="plot.x - serie.name.length * (fontSizes.plotLabels / 2)"
                                 :y="plot.y - 20"
                                 :height="24"
                                 width="150"
                                 style="overflow: visible"
                             >
-                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${chartConfig.chart.labels.fontSize}px;border-radius: 2px;`">
+                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
                                 </div>
                             </foreignObject>
@@ -529,7 +529,7 @@
                                 :x="plot.x"
                                 :y="plot.y + (plot.value > 0 ? chartConfig.line.labels.offsetY : - chartConfig.line.labels.offsetY * 3)"
                                 text-anchor="middle"
-                                :font-size="chartConfig.chart.labels.fontSize"
+                                :font-size="fontSizes.plotLabels"
                                 :fill="chartConfig.line.labels.color"
                             >
                                 {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.line.labels.rounding}) : '' }}
@@ -543,20 +543,20 @@
                                 width="150"
                                 style="overflow: visible"
                             >
-                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${chartConfig.chart.labels.fontSize}px;border-radius: 2px;`">
+                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
                                 </div>
                             </foreignObject>
                             <foreignObject
                                 :data-cy="`xy-line-tag-end-${i}`"
                                 v-if="plot && j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
-                                :x="plot.x - serie.name.length * (chartConfig.chart.labels.fontSize / 2)"
+                                :x="plot.x - serie.name.length * (fontSizes.plotLabels / 2)"
                                 :y="plot.y - 20"
                                 :height="24"
                                 width="150"
                                 style="overflow: visible"
                             >
-                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${chartConfig.chart.labels.fontSize}px;border-radius: 2px;`">
+                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
                                 </div>
                             </foreignObject>
@@ -570,8 +570,8 @@
                         data-cy="xy-highlight-area"
                         :x="drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))"
                         :y="drawingArea.top"
-                        :height="drawingArea.height"
-                        :width="(drawingArea.width / maxSeries) * highlightAreaSpan"
+                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
+                        :width="(drawingArea.width / maxSeries) * highlightAreaSpan < 0 ? 0.00001 : (drawingArea.width / maxSeries) * highlightAreaSpan"
                         :fill="`${chartConfig.chart.highlightArea.color}${opacity[chartConfig.chart.highlightArea.opacity]}`"
                     />
                     <foreignObject v-if="chartConfig.chart.highlightArea.caption.text"
@@ -594,14 +594,14 @@
                         :x="0"
                         :y="drawingArea.top"
                         :width="chartConfig.chart.padding.left - 1"
-                        :height="drawingArea.height"
+                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                         :fill="chartConfig.chart.backgroundColor"
                     />
                     <rect
                         :x="drawingArea.right + 1"
                         :y="drawingArea.top"
                         :width="chartConfig.chart.padding.right"
-                        :height="drawingArea.height"
+                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                         :fill="chartConfig.chart.backgroundColor"
                     />
                 </g>
@@ -611,32 +611,32 @@
                     <g v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                         <text 
                             v-if="plot && j === 0 && serie.showSerieName && serie.showSerieName === 'start'"
-                            :x="plot.x - chartConfig.chart.labels.fontSize"
+                            :x="plot.x - fontSizes.plotLabels"
                             :y="plot.y"
-                            :font-size="chartConfig.chart.labels.fontSize"
+                            :font-size="fontSizes.plotLabels"
                             text-anchor="end"
                             :fill="serie.color"
                             v-html="createTSpans({
                                 content: serie.name,
-                                fontSize: chartConfig.chart.labels.fontSize,
+                                fontSize: fontSizes.plotLabels,
                                 fill: serie.color,
-                                x: plot.x - chartConfig.chart.labels.fontSize,
+                                x: plot.x - fontSizes.plotLabels,
                                 y: plot.y,
                                 maxWords: 2
                             })"
                         />
                         <text 
                             v-if="plot && j === serie.plots.length - 1 && serie.showSerieName && serie.showSerieName === 'end'"
-                            :x="plot.x + chartConfig.chart.labels.fontSize"
+                            :x="plot.x + fontSizes.plotLabels"
                             :y="plot.y"
-                            :font-size="chartConfig.chart.labels.fontSize"
+                            :font-size="fontSizes.plotLabels"
                             text-anchor="start"
                             :fill="serie.color"
                             v-html="createTSpans({
                                 content: serie.name,
-                                fontSize: chartConfig.chart.labels.fontSize,
+                                fontSize: fontSizes.plotLabels,
                                 fill: serie.color,
-                                x: plot.x + chartConfig.chart.labels.fontSize,
+                                x: plot.x + fontSizes.plotLabels,
                                 y: plot.y,
                                 maxWords: 2
                             })"
@@ -649,32 +649,32 @@
                     <g v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                         <text 
                             v-if="plot && j === 0 && serie.showSerieName && serie.showSerieName === 'start'"
-                            :x="plot.x - chartConfig.chart.labels.fontSize"
+                            :x="plot.x - fontSizes.plotLabels"
                             :y="plot.y"
-                            :font-size="chartConfig.chart.labels.fontSize"
+                            :font-size="fontSizes.plotLabels"
                             text-anchor="end"
                             :fill="serie.color"
                             v-html="createTSpans({
                                 content: serie.name,
-                                fontSize: chartConfig.chart.labels.fontSize,
+                                fontSize: fontSizes.plotLabels,
                                 fill: serie.color,
-                                x: plot.x - chartConfig.chart.labels.fontSize,
+                                x: plot.x - fontSizes.plotLabels,
                                 y: plot.y,
                                 maxWords: 2
                             })"
                         />
                         <text
                             v-if="plot && j === serie.plots.length - 1 && serie.showSerieName && serie.showSerieName === 'end'"
-                            :x="plot.x + chartConfig.chart.labels.fontSize"
+                            :x="plot.x + fontSizes.plotLabels"
                             :y="plot.y"
-                            :font-size="chartConfig.chart.labels.fontSize"
+                            :font-size="fontSizes.plotLabels"
                             text-anchor="start"
                             :fill="serie.color"
                             v-html="createTSpans({
                                 content: serie.name,
-                                fontSize: chartConfig.chart.labels.fontSize,
+                                fontSize: fontSizes.plotLabels,
                                 fill: serie.color,
-                                x: plot.x + chartConfig.chart.labels.fontSize,
+                                x: plot.x + fontSizes.plotLabels,
                                 y: plot.y,
                                 maxWords: 2
                             })"
@@ -700,7 +700,7 @@
                         <g v-for="el in allScales" :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
                             <text
                                 :fill="el.color"
-                                :font-size="chartConfig.chart.grid.labels.fontSize"
+                                :font-size="fontSizes.dataLabels"
                                 text-anchor="middle"
                                 :transform="`translate(${el.x - chartConfig.chart.grid.labels.yAxis.labelWidth + 5}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                             >
@@ -720,7 +720,7 @@
                                 v-for="(yLabel, j) in el.yLabels"
                                 :x="el.x - 5" 
                                 :y="yLabel.y" 
-                                :font-size="chartConfig.chart.grid.labels.fontSize" 
+                                :font-size="fontSizes.dataLabels" 
                                 text-anchor="end"
                                 :fill="el.color"
                             >
@@ -746,8 +746,8 @@
                                 :data-cy="`xy-label-y-${i}`"
                                 v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
                                 :x="drawingArea.left - 7" 
-                                :y="yLabel.y + chartConfig.chart.labels.fontSize / 3" 
-                                :font-size="chartConfig.chart.grid.labels.fontSize" 
+                                :y="yLabel.y + fontSizes.dataLabels / 3" 
+                                :font-size="fontSizes.dataLabels" 
                                 text-anchor="end"
                                 :fill="chartConfig.chart.grid.labels.color"
                             >
@@ -764,7 +764,7 @@
                         :x="trap.x - chartConfig.chart.grid.labels.yAxis.labelWidth"
                         :y="drawingArea.top"
                         :width="chartConfig.chart.grid.labels.yAxis.labelWidth"
-                        :height="drawingArea.height"
+                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                         :fill="selectedScale === trap.id ? `${trap.color}20` : 'transparent'"
                         @mouseenter="selectedScale = trap.id"
                         @mouseleave="selectedScale = null"
@@ -776,9 +776,9 @@
                     <text 
                         data-cy="xy-axis-yLabel" 
                         v-if="chartConfig.chart.grid.labels.axis.yLabel && ! mutableConfig.useIndividualScale" 
-                        :font-size="chartConfig.chart.grid.labels.axis.fontSize" 
+                        :font-size="fontSizes.yAxis" 
                         :fill="chartConfig.chart.grid.labels.color"
-                        :transform="`translate(${chartConfig.chart.grid.labels.axis.fontSize + chartConfig.chart.grid.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                        :transform="`translate(${fontSizes.yAxis + chartConfig.chart.grid.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                         text-anchor="middle" 
                         style="transition: none"
                     >
@@ -788,9 +788,9 @@
                         data-cy="xy-axis-xLabel"
                         v-if="chartConfig.chart.grid.labels.axis.xLabel" 
                         text-anchor="middle"
-                        :x="chartConfig.chart.width / 2"
-                        :y="drawingArea.bottom + chartConfig.chart.grid.labels.axis.fontSize + (chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3) + chartConfig.chart.grid.labels.axis.xLabelOffsetY"
-                        :font-size="chartConfig.chart.grid.labels.axis.fontSize"
+                        :x="width / 2"
+                        :y="drawingArea.bottom + fontSizes.yAxis + (fontSizes.xAxis * 1.3) + chartConfig.chart.grid.labels.axis.xLabelOffsetY"
+                        :font-size="fontSizes.yAxis"
                         :fill="chartConfig.chart.grid.labels.color"
                     >
                         {{ chartConfig.chart.grid.labels.axis.xLabel }}
@@ -804,9 +804,9 @@
                             :data-cy="`xy-time-label-${i}`"
                             v-if="(label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1)) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i)"
                             :text-anchor="chartConfig.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : chartConfig.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
-                            :font-size="chartConfig.chart.grid.labels.xAxisLabels.fontSize"
+                            :font-size="fontSizes.xAxis"
                             :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
-                            :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + chartConfig.chart.grid.labels.xAxisLabels.fontSize * 1.3 + chartConfig.chart.grid.labels.xAxisLabels.yOffset}), rotate(${chartConfig.chart.grid.labels.xAxisLabels.rotation})`"
+                            :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + chartConfig.chart.grid.labels.xAxisLabels.yOffset}), rotate(${chartConfig.chart.grid.labels.xAxisLabels.rotation})`"
                         >
                             {{ label || "" }}
                         </text>
@@ -821,8 +821,8 @@
                             data-cy-trap
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
                             :y="drawingArea.top"
-                            :height="drawingArea.height"
-                            :width="drawingArea.width / maxSeries"
+                            :height="drawingArea.height < 0 ? 10 : drawingArea.height"
+                            :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
                             :fill="selectedSerieIndex === i || selectedRowIndex === i ? `${chartConfig.chart.highlighter.color}${opacity[chartConfig.chart.highlighter.opacity]}` : 'transparent'"
                             @mouseenter="toggleTooltip(true, i)"
                             @mouseleave="toggleTooltip(false)"
@@ -890,6 +890,7 @@
         />
 
         <Slicer
+            ref="chartSlicer"
             v-if="chartConfig.chart.zoom.show && maxX > 6 && isDataset"
             :key="`slicer_${slicerStep}`"
             :background="chartConfig.chart.zoom.color"
@@ -915,7 +916,7 @@
         </Slicer>
 
         <!-- LEGEND AS OUTSIDE DIV -->
-        <div data-cy="xy-div-legend" v-if="chartConfig.chart.legend.show" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
+        <div ref="chartLegend" data-cy="xy-div-legend" v-if="chartConfig.chart.legend.show" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
             <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`" :key="`div_legend_item_${i}`" @click="segregate(legendItem)" :class="{'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated' : segregatedSeries.includes(legendItem.id)}">
                 <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
                         <rect x="0" y="7" rx="3" stroke="none" height="4" width="20" :fill="legendItem.color" />
@@ -941,7 +942,10 @@
             </div>
         </div>
 
-        <slot name="legend" v-bind:legend="absoluteDataset"/>
+        <div v-else ref="chartLegend">
+            <slot name="legend" v-bind:legend="absoluteDataset"/>
+        </div>
+
 
         <!-- TOOLTIP -->
         <Tooltip
@@ -1040,7 +1044,8 @@ import {
     treeShake,
     error,
     objectIsEmpty,
-    themePalettes
+    themePalettes,
+    translateSize
 } from '../lib';
 import { useNestedProp } from '../useNestedProp';
 import mainConfig from "../default_configs.json";
@@ -1114,6 +1119,9 @@ export default {
             useSafeValues: true,
             palette,
             defaultConfig: mainConfig.vue_ui_xy,
+            height: 600,
+            width: 1000,
+            viewBox: '0 0 1000 600',
             clientPosition: {
                 x:0,
                 y:0,
@@ -1149,7 +1157,17 @@ export default {
             maxX,
             showSparklineTable: true,
             segregateStep: 0,
-            sliderId
+            sliderId,
+            fontSizes: {
+                xAxis: 18,
+                yAxis: 12,
+                dataLabels: 20,
+                plotLabels: 10
+            },
+            plotRadii: {
+                plot: 3,
+                line: 3
+            }
         }
     },
     computed: {
@@ -1660,11 +1678,11 @@ export default {
             const individualScalesPadding = this.mutableConfig.useIndividualScale && this.chartConfig.chart.grid.labels.show ? this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)).length * (this.mutableConfig.isStacked ? 0 : this.chartConfig.chart.grid.labels.yAxis.labelWidth) : 0;
             return {
                 top: this.chartConfig.chart.padding.top,
-                right: this.chartConfig.chart.width - this.chartConfig.chart.padding.right,
-                bottom: this.chartConfig.chart.height - this.chartConfig.chart.padding.bottom,
+                right: this.width - this.chartConfig.chart.padding.right,
+                bottom: this.height - this.chartConfig.chart.padding.bottom,
                 left: this.chartConfig.chart.padding.left + individualScalesPadding,
-                height: this.chartConfig.chart.height - (this.chartConfig.chart.padding.top + this.chartConfig.chart.padding.bottom),
-                width: this.chartConfig.chart.width - (this.chartConfig.chart.padding.right + this.chartConfig.chart.padding.left + individualScalesPadding)
+                height: this.height - (this.chartConfig.chart.padding.top + this.chartConfig.chart.padding.bottom),
+                width: this.width - (this.chartConfig.chart.padding.right + this.chartConfig.chart.padding.left + individualScalesPadding)
             }
         },
         max(){
@@ -1873,12 +1891,9 @@ export default {
         },
         svg() {
             return {
-                height: this.chartConfig.chart.height,
-                width: this.chartConfig.chart.width
+                height: this.height,
+                width: this.width
             }
-        },
-        viewBox() {
-            return `0 0 ${this.chartConfig.chart.width} ${this.chartConfig.chart.height}`;
         },
         yLabels() {
             return this.niceScale.ticks.map(t => {
@@ -1936,6 +1951,72 @@ export default {
             isStacked: this.chartConfig.chart.grid.labels.yAxis.stacked,
             useIndividualScale: this.chartConfig.chart.grid.labels.yAxis.useIndividualScale
         }
+
+
+        if (this.chartConfig.responsive) {
+            const chart = this.$refs.chart;
+            // Parent container (must have fixed height or max-height. Setting 100% will result in infinite height growth which looks aweful on top of being useless)
+            const parent = chart.parentNode;
+            const { height, width } = parent.getBoundingClientRect();
+
+            // Title height to substract
+            let title = null;
+            let titleHeight = 0;
+            if (this.chartConfig.chart.title.show) {
+                title = this.$refs.chartTitle;
+                titleHeight = title.getBoundingClientRect().height;
+            }
+
+            // Slicer height to substract
+            let slicer = null;
+            let slicerHeight = 0;
+            if (this.chartConfig.chart.zoom.show && this.maxX > 6 && this.isDataset) {
+                slicer = this.$refs.chartSlicer.$el;
+                slicerHeight = slicer.getBoundingClientRect().height;
+            }
+
+            // Legend height to substract
+            let legend = null;
+            let legendHeight = 0
+            if (this.chartConfig.chart.legend.show) {
+                legend = this.$refs.chartLegend;
+                legendHeight = legend.getBoundingClientRect().height;
+            }
+
+            this.height = height - titleHeight - legendHeight - slicerHeight;
+            this.width = width;
+            this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
+            this.convertSizes();
+
+            const resizeObserver = new ResizeObserver((entries) => {
+                for(const entry of entries) {
+                    if (title) {
+                        titleHeight = title.getBoundingClientRect().height;
+                    }
+                    if (slicer) {
+                        slicerHeight = slicer.getBoundingClientRect().height;
+                    }
+                    if (legend) {
+                        legendHeight = legend.getBoundingClientRect().height;
+                    }
+                    this.height = entry.contentBoxSize[0].blockSize - titleHeight - legendHeight - slicerHeight - 24;
+                    this.width = entry.contentBoxSize[0].inlineSize;
+                    this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
+                    this.convertSizes();
+                }
+            })
+
+            resizeObserver.observe(parent);
+
+        } else {
+            this.viewBox = `0 0 ${this.chartConfig.chart.width} ${this.chartConfig.chart.height}`
+            this.fontSizes.dataLabels = this.chartConfig.chart.grid.labels.fontSize;
+            this.fontSizes.yAxis = this.chartConfig.chart.grid.labels.axis.fontSize;
+            this.fontSizes.xAxis =  this.chartConfig.chart.grid.labels.xAxisLabels.fontSize;
+            this.fontSizes.plotLabels = this.chartConfig.chart.labels.fontSize;
+            this.plotRadii.plot = this.chartConfig.plot.radius;
+            this.plotRadii.line = this.chartConfig.line.radius;
+        }
     },
     methods: {
         abbreviate,
@@ -1964,6 +2045,52 @@ export default {
         objectIsEmpty,
         createTSpans,
         useNestedProp,
+        translateSize,
+        convertSizes() {
+            // Adaptative sizes in responsive mode
+            this.fontSizes.dataLabels = this.translateSize({
+                relator: this.height,
+                adjuster: 400,
+                source: this.chartConfig.chart.grid.labels.fontSize,
+                threshold: 10,
+                fallback: 10
+            });
+            this.fontSizes.yAxis = this.translateSize({
+                relator: this.width,
+                adjuster: 1000,
+                source: this.chartConfig.chart.grid.labels.axis.fontSize,
+                threshold: 10,
+                fallback: 10
+            });
+            this.fontSizes.xAxis = this.translateSize({
+                relator: this.width,
+                adjuster: 1000,
+                source: this.chartConfig.chart.grid.labels.xAxisLabels.fontSize,
+                threshold: 10,
+                fallback: 10
+            });
+            this.fontSizes.plotLabels = this.translateSize({
+                relator: this.width,
+                adjuster: 800,
+                source: this.chartConfig.chart.labels.fontSize,
+                threshold: 10,
+                fallback: 10
+            });
+            this.plotRadii.plot = this.translateSize({
+                relator: this.width,
+                adjuster: 800,
+                source: this.chartConfig.plot.radius,
+                threshold: 1,
+                fallback: 1
+            });
+            this.plotRadii.line = this.translateSize({
+                relator: this.width,
+                adjuster: 800,
+                source: this.chartConfig.line.radius,
+                threshold: 1,
+                fallback: 1
+            })
+        },
         toggleStack() {
             this.mutableConfig.isStacked = !this.mutableConfig.isStacked
             if (!this.mutableConfig.isStacked) {
@@ -2027,16 +2154,16 @@ export default {
         },
         calcRectHeight(plot) {
             if(plot.value >= 0) {
-                return this.zero - plot.y;
+                return this.zero - plot.y <= 0 ? 0.00001 : this.zero - plot.y;
             } else {
-                return plot.y - this.zero;
+                return plot.y - this.zero <= 0 ? 0.00001 : plot.y - this.zero;
             }
         },
         calcIndividualHeight(plot) {
             if(plot.value >= 0) {
-                return plot.zeroPosition - plot.y
+                return plot.zeroPosition - plot.y <= 0 ? 0.00001 : plot.zeroPosition - plot.y
             } else {
-                return plot.y - plot.zeroPosition
+                return plot.y - plot.zeroPosition <= 0 ? 0.00001 : plot.zeroPosition - plot.y
             }
         },
         calcRectWidth() {
