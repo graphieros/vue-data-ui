@@ -89,6 +89,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiTreemapConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
@@ -922,6 +923,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRingsConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -2643,6 +2645,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRadarConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -4862,6 +4865,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiParallelCoordinatePlotConfig = {
+        responsive?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
         customPalette?: string[];
