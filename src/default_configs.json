@@ -770,6 +770,7 @@
         }
     },
     "vue_ui_radar": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "useCssAnimation": true,
@@ -2932,6 +2933,7 @@
         }
     },
     "vue_ui_rings": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "useCssAnimation": true,
@@ -3822,6 +3824,7 @@
         "valueRounding": 0
     },
     "vue_ui_treemap": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "userOptions": {
@@ -4726,6 +4729,7 @@
         }
     },
     "vue_ui_parallel_coordinate_plot": {
+        "responsive": false,
         "theme": "",
         "useCssAnimation": true,
         "customPalette": [],
