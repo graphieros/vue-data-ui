@@ -1670,11 +1670,18 @@ export function translateSize({
     adjuster,
     source,
     threshold = 0,
-    fallback
+    fallback,
+    max = 24
 }) {
-    return relator / (adjuster / source) < threshold 
+    const computedVal = relator / (adjuster / source);
+
+    if (computedVal > max) {
+        return max
+    }
+
+    return computedVal < threshold 
         ? fallback 
-        : relator / (adjuster / source);
+        : computedVal;
 }
 
 const lib = {

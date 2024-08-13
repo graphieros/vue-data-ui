@@ -1600,7 +1600,15 @@ describe('translateSize', () => {
             adjuster: 500,
             source: 20,
             fallback: 10
-        })).toBe(40);
+        })).toBe(24);
+
+        expect(translateSize({
+            relator: 1000,
+            adjuster: 500,
+            source: 20,
+            fallback: 10,
+            max: 12
+        })).toBe(12);
 
         expect(translateSize({
             relator: -100,
