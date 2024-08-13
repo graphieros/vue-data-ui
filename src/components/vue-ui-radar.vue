@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { 
     convertColorToHex, 
     convertCustomPalette, 
@@ -20,6 +20,7 @@ import {
     themePalettes,
     XMLNS
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -32,6 +33,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -52,23 +54,16 @@ const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length
 })
 
-onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiRadar',
-            type: 'dataset'
-        })
-    }
-})
-
 const uid = ref(createUid());
 
 const defaultConfig = ref(mainConfig.vue_ui_radar);
-const radarChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const step = ref(0);
+const radarChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
 
 const radarConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -86,6 +81,36 @@ const radarConfig = computed(() => {
     } else {
         return mergedConfig;
     }
+});
+
+const resizeObserver = ref(null);
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiRadar',
+            type: 'dataset'
+        })
+    }
+
+    if (radarConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: radarChart.value,
+                title: radarConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: radarConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(radarChart.value.parentNode);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -126,12 +151,10 @@ const sparkBarConfig = computed(() => {
     }
 })
 
-const svg = computed(() => {
-    return {
-        height: 312,
-        width: 512,
-    }
-});
+const svg = ref({
+    height: 312,
+    width: 512,
+})
 
 const emit = defineEmits(['selectLegend']);
 
@@ -259,10 +282,14 @@ const apexes = computed(() => {
     return seriesCopy.value.length;
 });
 
+const polygonRadius = computed(() => {
+    return Math.min(svg.value.width, svg.value.height) / 3
+})
+
 const outerPolygon = computed(() => {
     return createPolygonPath({
-        plot: { x: 256, y: svg.value.height / 2},
-        radius: 128,
+        plot: { x: svg.value.width / 2, y: svg.value.height / 2},
+        radius: polygonRadius.value,
         sides: apexes.value,
         rotation: 0,
     })
@@ -270,7 +297,7 @@ const outerPolygon = computed(() => {
 
 const innerPolygons = computed(() => {
     const polygons = [];
-    for (let i = 0; i < 128; i += (128 / radarConfig.value.style.chart.layout.grid.graduations)) {
+    for (let i = 0; i < polygonRadius.value; i += (polygonRadius.value / radarConfig.value.style.chart.layout.grid.graduations)) {
          polygons.push(i)
     }
     return polygons;
@@ -485,7 +512,7 @@ defineExpose({
         :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${!radarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${radarConfig.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
-        <div v-if="radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div ref="chartTitle" v-if="radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
@@ -547,7 +574,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`" >
 
             <!-- DEFS -->
             <defs>
@@ -577,7 +604,7 @@ defineExpose({
                     <path 
                         v-for="radius in innerPolygons"
                         :d="createPolygonPath({
-                            plot: { x: 256, y: svg.height / 2 },
+                            plot: { x: svg.width / 2, y: svg.height / 2 },
                             radius: radius,
                             sides: apexes,
                             rotation: 0
@@ -668,20 +695,22 @@ defineExpose({
         />
 
         <!-- LEGEND AS DIV -->
-        <Legend
-            v-if="radarConfig.style.chart.legend.show"
-            :legendSet="legendSet"
-            :config="legendConfig"
-            @clickMarker="({i}) => segregate(i)"
-        >
-            <template #item="{ legend, index }">
-                <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{ (legend.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%
-                </div>
-            </template>
-        </Legend>
+        <div ref="chartLegend">
+            <Legend
+                v-if="radarConfig.style.chart.legend.show"
+                :legendSet="legendSet"
+                :config="legendConfig"
+                @clickMarker="({i}) => segregate(i)"
+            >
+                <template #item="{ legend, index }">
+                    <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                        {{ legend.name }} : {{ (legend.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%
+                    </div>
+                </template>
+            </Legend>
+            <slot v-else name="legend" v-bind:legend="legendSet"></slot>
+        </div>
 
-        <slot name="legend" v-bind:legend="legendSet"></slot>
 
         <!-- TOOLTIP -->
         <Tooltip
