@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { 
     XMLNS,
     calculateNiceScale, 
@@ -18,8 +18,10 @@ import {
     objectIsEmpty, 
     palette, 
     themePalettes,
-    getPathLengthFromCoordinates
+    getPathLengthFromCoordinates,
+    translateSize
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -32,6 +34,7 @@ import Accordion from "./vue-ui-accordion.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -57,32 +60,10 @@ const isDataset = computed({
     }
 });
 
-const pcpChart = ref(null);
 const step = ref(0);
-
-onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiParallelCoordinatePlot',
-            type: 'dataset'
-        })
-    } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['name', 'series']
-            }).forEach(attr => {
-                isDataset.value = false;
-                error({
-                    componentName: 'VueUiParallelCoordinatePlot',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i
-                });
-            });
-        });
-    }
-});
+const pcpChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_parallel_coordinate_plot);
@@ -111,15 +92,98 @@ const pcpConfig = computed(() => {
     }
 });
 
+const resizeObserver = ref(null);
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiParallelCoordinatePlot',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['name', 'series']
+            }).forEach(attr => {
+                isDataset.value = false;
+                error({
+                    componentName: 'VueUiParallelCoordinatePlot',
+                    type: 'datasetSerieAttribute',
+                    property: attr,
+                    index: i
+                });
+            });
+        });
+    }
+
+    if (pcpConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: pcpChart.value,
+                title: pcpConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: pcpConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+            chartDimensions.value.width = width;
+            chartDimensions.value.height = height;
+            chartDimensions.value.plotSize = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: pcpConfig.value.style.chart.plots.radius,
+                threshold: 2,
+                fallback: 2
+            });
+            chartDimensions.value.ticksFontSize = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: pcpConfig.value.style.chart.yAxis.labels.ticks.fontSize,
+                threshold: 10,
+                fallback: 10
+            });
+            chartDimensions.value.datapointFontSize = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: pcpConfig.value.style.chart.yAxis.labels.datapoints.fontSize,
+                threshold: 10,
+                fallback: 10
+            });
+            chartDimensions.value.axisNameFontSize = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: pcpConfig.value.style.chart.yAxis.labels.axisNamesFontSize,
+                threshold: 12,
+                fallback: 12
+            })
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(pcpChart.value.parentNode);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
+
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `pcp_${uid.value}`,
     fileName: pcpConfig.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot'
 });
 
+const chartDimensions = ref({
+    height: pcpConfig.value.style.chart.height,
+    width: pcpConfig.value.style.chart.width,
+    plotSize: pcpConfig.value.style.chart.plots.radius, // ratio 100
+    ticksFontSize: pcpConfig.value.style.chart.yAxis.labels.ticks.fontSize, // ratio 42.85
+    datapointFontSize: pcpConfig.value.style.chart.yAxis.labels.datapoints.fontSize,
+    axisNameFontSize: pcpConfig.value.style.chart.yAxis.labels.axisNamesFontSize
+
+})
+
 const drawingArea = computed(() => {
     const { top: p_top, right: p_right, bottom: p_bottom, left: p_left } = pcpConfig.value.style.chart.padding;
-    const chartHeight = pcpConfig.value.style.chart.height;
-    const chartWidth = pcpConfig.value.style.chart.width;
+    const chartHeight = chartDimensions.value.height;
+    const chartWidth = chartDimensions.value.width;
     return {
         chartHeight,
         chartWidth,
@@ -431,7 +495,7 @@ defineExpose({
         :id="`pcp_${uid}`"
     >
 
-        <div v-if="pcpConfig.style.chart.title.text" :style="`width:100%;background:${pcpConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        <div ref="chartTitle" v-if="pcpConfig.style.chart.title.text" :style="`width:100%;background:${pcpConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <Title
                 :config="{
                     title: {
@@ -498,7 +562,7 @@ defineExpose({
 
         <svg 
             :xmlns="XMLNS" 
-            v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.chartWidth} ${drawingArea.chartHeight}`" 
+            v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`" 
             :style="`max-width:100%; overflow: visible; background:${pcpConfig.style.chart.backgroundColor};color:${pcpConfig.style.chart.color}`"
         >
 
@@ -519,7 +583,7 @@ defineExpose({
                     :x="drawingArea.left + (slot * i) + (slot / 2)"
                     :y="drawingArea.top - 24"
                     :fill="pcpConfig.style.chart.yAxis.labels.axisNamesColor"
-                    :font-size="pcpConfig.style.chart.yAxis.labels.axisNamesFontSize"
+                    :font-size="chartDimensions.axisNameFontSize"
                     :font-weight="pcpConfig.style.chart.yAxis.labels.axisNamesBold ? 'bold' : ''"
                     text-anchor="middle"
                 >
@@ -542,10 +606,10 @@ defineExpose({
                     <text 
                         v-for="(tick) in scale.ticks"
                         :x="tick.x - 12 + pcpConfig.style.chart.yAxis.labels.ticks.offsetX"
-                        :y="tick.y + pcpConfig.style.chart.yAxis.labels.ticks.offsetY + (pcpConfig.style.chart.yAxis.labels.ticks.fontSize / 3)"
+                        :y="tick.y + pcpConfig.style.chart.yAxis.labels.ticks.offsetY + (chartDimensions.ticksFontSize / 3)"
                         :fill="pcpConfig.style.chart.yAxis.labels.ticks.color"
                         text-anchor="end"
-                        :font-size="pcpConfig.style.chart.yAxis.labels.ticks.fontSize"
+                        :font-size="chartDimensions.ticksFontSize"
                         :font-weight="pcpConfig.style.chart.yAxis.labels.ticks.bold ? 'bold' : 'normal'"
                     >
                         {{ makeDataLabel({ value: tick.value, index: i }) }}
@@ -562,7 +626,7 @@ defineExpose({
                             :plot="{ x: dp.x, y: dp.y }"
                             :color="serie.color"
                             :shape="serie.shape"
-                            :radius="serie.shape === 'triangle' ? pcpConfig.style.chart.plots.radius * 1.2 : pcpConfig.style.chart.plots.radius"
+                            :radius="serie.shape === 'triangle' ? chartDimensions.plotSize * 1.2 : chartDimensions.plotSize"
                             :stroke="pcpConfig.style.chart.backgroundColor"
                             :strokeWidth="0.5"
                             @mouseenter="useTooltip({
@@ -583,11 +647,12 @@ defineExpose({
                         <text 
                             v-for="(dp, k) in serieSet.datapoints"
                             :x="dp.x + 12 + pcpConfig.style.chart.yAxis.labels.datapoints.offsetX"
-                            :y="dp.y + pcpConfig.style.chart.yAxis.labels.datapoints.offsetY + (pcpConfig.style.chart.yAxis.labels.datapoints.fontSize / 3)"
+                            :y="dp.y + pcpConfig.style.chart.yAxis.labels.datapoints.offsetY + (chartDimensions.datapointFontSize / 3)"
                             :fill="pcpConfig.style.chart.yAxis.labels.datapoints.useSerieColor ? serie.color : pcpConfig.style.chart.yAxis.labels.datapoints.color"
                             text-anchor="start"
                             :font-weight="pcpConfig.style.chart.yAxis.labels.datapoints.bold ? 'bold' : 'normal'"
                             :class="{ 'vue-ui-pcp-animated': false, 'vue-ui-pcp-transition': true }"
+                            :font-size="chartDimensions.datapointFontSize"
                             @mouseenter="useTooltip({
                                 shape: serie.shape,
                                 serieName: serie.name,
@@ -634,22 +699,23 @@ defineExpose({
                 }
             }"
         />
-
-        <Legend
-            v-if="pcpConfig.style.chart.legend.show && isDataset"
-            :legendSet="legendSet"
-            :config="legendConfig"
-            @clickMarker="({ legend }) => { segregate(legend.id); selectLegend(legend) }"
-        >
-            <template #item="{ legend, index }">
-                <div :data-cy="`legend-item-${index}`" @click="legend.segregate(); selectLegend(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }}
-                </div>
-            </template>
-
-        </Legend>
-
-        <slot name="legend" v-bind:legend="immutableDataset"/>
+        
+        <div ref="chartLegend">
+            <Legend
+                v-if="pcpConfig.style.chart.legend.show && isDataset"
+                :legendSet="legendSet"
+                :config="legendConfig"
+                @clickMarker="({ legend }) => { segregate(legend.id); selectLegend(legend) }"
+            >
+                <template #item="{ legend, index }">
+                    <div :data-cy="`legend-item-${index}`" @click="legend.segregate(); selectLegend(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                        {{ legend.name }}
+                    </div>
+                </template>
+            </Legend>
+    
+            <slot v-else name="legend" v-bind:legend="immutableDataset"/>
+        </div>
 
         <Tooltip
             :show="pcpConfig.style.chart.tooltip.show && isTooltip"
