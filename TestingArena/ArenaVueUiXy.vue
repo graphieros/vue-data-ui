@@ -47,7 +47,7 @@ const dataset = ref([
     ])
 
 const model = ref([
-    { key: 'responsive', def: true, type: 'checkbox'},
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'chart.userOptions.buttons.csv', def: true, type: 'checkbox'},
@@ -317,8 +317,9 @@ function selectX(selectedX) {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <div style="width: 400px; height: 500px">
+    <div style="width: 100%">
         <LocalVueUiXy component="VueUiXy" :dataset="dataset" :config="{
+            responsive: false,
             ...config,
             chart: {
                 ...config.chart,
@@ -329,9 +330,7 @@ function selectX(selectedX) {
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
         <LocalVueUiXy component="VueUiXy" :dataset="dataset" :config="{
             ...config,
-            chart: {
-                ...config.chart,
-            }
+            responsive: true,
         }"/>
     </div>
     <Box>

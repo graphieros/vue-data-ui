@@ -9,7 +9,7 @@ function refresh() {
     <button class="reset" @click="refresh">RESET</button>
     <h1><slot name="title"/></h1>
     <div class="box">
-        <div style="width:auto; max-height: 600px;">
+        <div style="width:100%; max-height: 600px;">
             <p>Local</p>
             <slot name="local"/>
         </div>
