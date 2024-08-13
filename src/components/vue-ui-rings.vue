@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, nextTick, onMounted } from "vue";
+import { computed, ref, nextTick, onMounted, onBeforeUnmount } from "vue";
 import {
   convertColorToHex,
   convertCustomPalette,
@@ -18,6 +18,7 @@ import {
   themePalettes,
   XMLNS
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -29,6 +30,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
   config: {
@@ -45,9 +47,42 @@ const props = defineProps({
   },
 });
 
+const isLoaded = ref(false);
+
 const isDataset = computed(() => {
   return !!props.dataset && props.dataset.length;
 });
+
+const uid = ref(createUid());
+const defaultConfig = ref(mainConfig.vue_ui_rings);
+const details = ref(null);
+const isTooltip = ref(false);
+const tooltipContent = ref("");
+const selectedSerie = ref(null);
+const step = ref(0);
+const ringsChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
+
+const ringsConfig = computed(() => {
+  const mergedConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
+    });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_rings[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
+});
+
+const resizeObserver = ref(null);
 
 onMounted(() => {
   if(objectIsEmpty(props.dataset)) {
@@ -70,33 +105,28 @@ onMounted(() => {
       });
     })
   }
-})
 
-const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_rings);
-const ringsChart = ref(null);
-const details = ref(null);
-const isTooltip = ref(false);
-const tooltipContent = ref("");
-const selectedSerie = ref(null);
-const step = ref(0);
+  if (ringsConfig.value.responsive) {
+    const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: ringsChart.value,
+                title: ringsConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: ringsConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+        });
 
-const ringsConfig = computed(() => {
-  const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: defaultConfig.value
-    });
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_rings[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
-        }
-    } else {
-        return mergedConfig;
-    }
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(ringsChart.value.parentNode);
+  }
+  setTimeout(() => {
+    isLoaded.value = true;
+  }, 600)
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -112,12 +142,14 @@ const mutableConfig = ref({
     showTable: ringsConfig.value.table.show,
 });
 
-const svg = computed(() => {
-  return {
+const svg = ref({
     height: 360,
     width: 360,
-  };
 });
+
+const chartRadius = computed(() => {
+  return Math.min(svg.value.height, svg.value.width);
+})
 
 const emit = defineEmits(['selectLegend']);
 
@@ -236,7 +268,7 @@ function getData() {
 }
 
 const maxHeight = computed(() => {
-  return svg.value.height - ringsConfig.value.style.chart.layout.rings.strokeWidth * 2;
+  return chartRadius.value - ringsConfig.value.style.chart.layout.rings.strokeWidth * 2;
 });
 
 const dataTooltipSlot = ref(null);
@@ -400,6 +432,7 @@ defineExpose({
     "
   >
     <div
+      ref="chartTitle"
       v-if="ringsConfig.style.chart.title.text"
       :style="`width:100%;background:${ringsConfig.style.chart.backgroundColor}`"
     >
@@ -470,7 +503,7 @@ defineExpose({
       v-if="isDataset"
       :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
       data-cy="rings-svg"
-      :viewBox="`0 0 ${svg.width} ${svg.height}`"
+      :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
       :style="`max-width:100%;overflow:visible;background:${ringsConfig.style.chart.backgroundColor};color:${ringsConfig.style.chart.color}`"
     >
       <!-- DEFS ? -->
@@ -496,24 +529,22 @@ defineExpose({
       <g v-for="(ring, i) in convertedDataset">
         <circle
           :class="{
-            'vue-ui-rings-item': ringsConfig.useCssAnimation,
+            'vue-ui-rings-item': isLoaded && ringsConfig.useCssAnimation,
+            'vue-rings-item-onload': !isLoaded && ringsConfig.useCssAnimation,
             'vue-ui-rings-opacity': selectedSerie !== null && selectedSerie !== i,
           }"
           :style="`animation-delay:${i * 100}ms`"
           :stroke="ringsConfig.style.chart.layout.rings.stroke"
           :cx="svg.width / 2"
-          :cy="
-            svg.height * 0.95 -
-            (maxHeight * 0.9 * ring.proportion) / 2 -
-            ring.strokeWidth / 2
-          "
-          :r="((maxHeight * ring.proportion) / 2) * 0.9"
+          :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
+          :r="((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9"
           :fill="ringsConfig.style.chart.layout.rings.gradient.underlayerColor"
         />
         <circle
         :data-cy="`ring-${i}`"
           :class="{
-            'vue-ui-rings-item': ringsConfig.useCssAnimation,
+            'vue-ui-rings-item': isLoaded && ringsConfig.useCssAnimation,
+            'vue-rings-item-onload': !isLoaded && ringsConfig.useCssAnimation,
             'vue-ui-rings-shadow': ringsConfig.style.chart.layout.rings.useShadow,
             'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
           }"
@@ -521,12 +552,8 @@ defineExpose({
           stroke="none"
           :stroke-width="ring.strokeWidth < 0.5 ? 0.5 : ring.strokeWidth"
           :cx="svg.width / 2"
-          :cy="
-            svg.height * 0.95 -
-            (maxHeight * 0.9 * ring.proportion) / 2 -
-            ring.strokeWidth / 2
-          "
-          :r="((maxHeight * ring.proportion) / 2) * 0.9"
+          :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
+          :r="((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9"
           :fill="
             ringsConfig.style.chart.layout.rings.gradient.show
               ? `url(#gradient_${uid}_${i})`
@@ -538,12 +565,8 @@ defineExpose({
           data-cy-trap
           stroke="none"
           :cx="svg.width / 2"
-          :cy="
-            svg.height * 0.95 -
-            (maxHeight * 0.9 * ring.proportion) / 2 -
-            ring.strokeWidth / 2
-          "
-          :r="((maxHeight * ring.proportion) / 2) * 0.9"
+          :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
+          :r="((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9"
           fill="transparent"
           @mouseenter="useTooltip(i, ring)"
           @mouseleave="
@@ -569,26 +592,28 @@ defineExpose({
     />
 
     <!-- LEGEND AS DIV -->
-    <Legend
-      v-if="ringsConfig.style.chart.legend.show"
-      :legendSet="legendSet"
-      :config="legendConfig"
-      @clickMarker="({legend}) => segregate(legend.uid)"
-    >
-      <template #item="{legend}">
-          <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-              {{ legend.name }} : {{ dataLabel({p:ringsConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: ringsConfig.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.style.chart.legend.roundingValue}) }}
-              <span v-if="!segregated.includes(legend.uid)">
-                  ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(ringsConfig.style.chart.legend.roundingPercentage)}}%)
-              </span>
-              <span v-else>
-                  ( - % )
-              </span>
-          </div>
-      </template>
-    </Legend>
+    <div ref="chartLegend">
+      <Legend
+        v-if="ringsConfig.style.chart.legend.show"
+        :legendSet="legendSet"
+        :config="legendConfig"
+        @clickMarker="({legend}) => segregate(legend.uid)"
+      >
+        <template #item="{legend}">
+            <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                {{ legend.name }} : {{ dataLabel({p:ringsConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: ringsConfig.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.style.chart.legend.roundingValue}) }}
+                <span v-if="!segregated.includes(legend.uid)">
+                    ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(ringsConfig.style.chart.legend.roundingPercentage)}}%)
+                </span>
+                <span v-else>
+                    ( - % )
+                </span>
+            </div>
+        </template>
+      </Legend>
+      <slot v-else name="legend" v-bind:legend="legendSet"></slot>
+    </div>
 
-    <slot name="legend" v-bind:legend="legendSet"></slot>
 
     <!-- TOOLTIP -->
     <Tooltip
@@ -674,9 +699,13 @@ defineExpose({
 }
 
 .vue-ui-rings-item {
+  transition: all 0.2s ease-in-out;
+}
+
+.vue-rings-item-onload {
+  transform-origin: bottom;
   transform: scale(0, 0);
   animation: ring-appear 0.5s ease-in forwards;
-  transform-origin: bottom;
 }
 
 @keyframes ring-appear {
