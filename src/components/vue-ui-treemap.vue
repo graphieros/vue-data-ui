@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue';
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -26,11 +26,13 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
+import { throttle } from '../canvas-lib';
 import {
     generateTreemap,
 } from '../treemap';
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from '../usePrinter';
+import { useResponsive } from '../useResponsive';
 
 const props = defineProps({
     config: {
@@ -53,27 +55,20 @@ const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 });
 
-onMounted(() => {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiTreemap',
-            type: 'dataset'
-        })
-    }
-});
-
 const isSafari = computed(() => {
     return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 })
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_treemap);
-const treemapChart = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const isFullscreen = ref(false);
 const step = ref(0);
 const segregated = ref([]);
+const treemapChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
 
 const treemapConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -106,16 +101,21 @@ const mutableConfig = ref({
     showTable: treemapConfig.value.table.show,
 });
 
+const chartDimensions = ref({
+    height: treemapConfig.value.style.chart.height,
+    width: treemapConfig.value.style.chart.width
+})
+
 const svg = computed(() => {
     return {
-        bottom: treemapConfig.value.style.chart.height - treemapConfig.value.style.chart.padding.bottom,
-        height: treemapConfig.value.style.chart.height - treemapConfig.value.style.chart.padding.top - treemapConfig.value.style.chart.padding.bottom,
+        bottom: chartDimensions.value.height - treemapConfig.value.style.chart.padding.bottom,
+        height: chartDimensions.value.height - treemapConfig.value.style.chart.padding.top - treemapConfig.value.style.chart.padding.bottom,
         left: treemapConfig.value.style.chart.padding.left,
-        right: treemapConfig.value.style.chart.width - treemapConfig.value.style.chart.padding.right,
+        right: chartDimensions.value.width - treemapConfig.value.style.chart.padding.right,
         top: treemapConfig.value.style.chart.padding.top,
-        vbHeight: treemapConfig.value.style.chart.height,
-        vbWidth: treemapConfig.value.style.chart.width,
-        width: treemapConfig.value.style.chart.width - treemapConfig.value.style.chart.padding.left - treemapConfig.value.style.chart.padding.right,
+        vbHeight: chartDimensions.value.height,
+        vbWidth: chartDimensions.value.width,
+        width: chartDimensions.value.width - treemapConfig.value.style.chart.padding.left - treemapConfig.value.style.chart.padding.right,
     }
 });
 
@@ -134,9 +134,38 @@ function addIdsToTree(tree) {
 }
 
 const immutableDataset = ref(props.dataset);
+
+const resizeObserver = ref(null);
+
 onMounted(() => {
-    addIdsToTree(immutableDataset.value)
-})
+    if (objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiTreemap',
+            type: 'dataset'
+        });
+    }
+
+    addIdsToTree(immutableDataset.value);
+
+    if (treemapConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: treemapChart.value,
+                title: treemapConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: treemapConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+            chartDimensions.value.width = width;
+            chartDimensions.value.height = height;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(treemapChart.value.parentNode);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
 
 const currentSet = ref(immutableDataset.value);
         
@@ -210,11 +239,11 @@ const squarified = computed(() => {
 });
 
 function getHeight({ y0, y1 }) {
-    return y1 - y0;
+    return y1 - y0 <= 0 ? 0.0001 : y1 - y0;
 }
 
 function getWidth({ x0, x1 }) {
-    return x1 - x0;
+    return x1 - x0 <= 0 ? 0.0001 : x1 - x0;
 }
 
 function calcFontSize(rect) {
@@ -228,12 +257,14 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-const viewBox = ref({
-    startX: 0,
-    startY: 0,
-    width: svg.value.vbWidth,
-    height: svg.value.vbHeight,
-});
+const viewBox = computed(() => {
+    return {
+        startX: 0,
+        startY: 0,
+        width: svg.value.vbWidth,
+        height: svg.value.vbHeight,
+    }
+})
 
 const isZoom = ref(false);
 
@@ -439,7 +470,7 @@ defineExpose({
         :id="`treemap_${uid}`">
         
         <!-- TITLE -->
-        <div v-if="treemapConfig.style.chart.title.text" :style="`width:100%;background:${treemapConfig.style.chart.backgroundColor};padding-bottom:6px`">
+        <div ref="chartTitle" v-if="treemapConfig.style.chart.title.text" :style="`width:100%;background:${treemapConfig.style.chart.backgroundColor};padding-bottom:6px`">
             <Title
                 :config="{
                     title: {
@@ -503,7 +534,7 @@ defineExpose({
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
-            data-cy="treemap-svg" :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width} ${viewBox.height}`"
+            data-cy="treemap-svg" :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
             :style="`max-width:100%; overflow: hidden; background:${treemapConfig.style.chart.backgroundColor};color:${treemapConfig.style.chart.color}`">
 
             <g v-for="(rect, i) in squarified">            
@@ -588,28 +619,30 @@ defineExpose({
         />
 
         <!-- LEGEND & LEGEND SLOT -->
-        <Legend
-            v-if="treemapConfig.style.chart.legend.show"
-            :legendSet="legendSet"
-            :config="legendConfig"
-            :id="`treemap_legend_${uid}`"
-            @clickMarker="({legend}) => segregate(legend)"
-        >
-            <template #item="{ legend, index }">
-                <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{ dataLabel({p: treemapConfig.style.chart.layout.labels.prefix, v: legend.value, s: treemapConfig.style.chart.layout.labels.suffix, r: treemapConfig.style.chart.legend.roundingValue}) }}
-                    <span v-if="!segregated.includes(legend.id)">
-                        ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(treemapConfig.style.chart.legend.roundingPercentage)}}%)
-                    </span>
-                    <span v-else>
-                        ( - % )
-                    </span>
+        <div ref="chartLegend">
+            <Legend
+                v-if="treemapConfig.style.chart.legend.show"
+                :legendSet="legendSet"
+                :config="legendConfig"
+                :id="`treemap_legend_${uid}`"
+                @clickMarker="({legend}) => segregate(legend)"
+            >
+                <template #item="{ legend, index }">
+                    <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                        {{ legend.name }} : {{ dataLabel({p: treemapConfig.style.chart.layout.labels.prefix, v: legend.value, s: treemapConfig.style.chart.layout.labels.suffix, r: treemapConfig.style.chart.legend.roundingValue}) }}
+                        <span v-if="!segregated.includes(legend.id)">
+                            ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(treemapConfig.style.chart.legend.roundingPercentage)}}%)
+                        </span>
+                        <span v-else>
+                            ( - % )
+                        </span>
+    
+                    </div>
+                </template>
+            </Legend>
+            <slot v-else name="legend" v-bind:legend="legendSet" />
+        </div>
 
-                </div>
-            </template>
-        </Legend>
-
-        <slot name="legend" v-bind:legend="legendSet" />
 
         <!-- TOOLTIP -->
         <Tooltip
