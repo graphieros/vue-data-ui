@@ -491,46 +491,46 @@ User options actions available per chart:
 
 | Chart name                  | User options actions slot names                                                           |
 | --------------------------- | ----------------------------------------------------------------------------------------- |
+| VueUi3dBar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiAgePyramid             | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiCandlestick            | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
 | VueUiDonut                  | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiFlow                   | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiGalaxy                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiGauge                  | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiHeatmap                | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiMolecule               | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiMoodRadar              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiNestedDonuts           | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiOnion                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiParallelCoordinatePlot | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiQuadrant               | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiQuickChart             | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiRadar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiRelationCircle         | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiRings                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiScatter                | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiSparkHistogram         | (no user options menu)                                                                    |
+| VueUiSparkStackbar          | (no user options menu)                                                                    |
+| VueUiSparkTrend             | (no user options menu)                                                                    |
+| VueUiSparkbar               | (no user options menu)                                                                    |
+| VueUiSparkgauge             | (no user options menu)                                                                    |
+| VueUiSparkline              | (no user options menu)                                                                    |
+| VueUiStripPlot              | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
+| VueUiTableHeatmap           | optionPdf, optionImg, optionCsv, optionFullscreen                                         |
+| VueUiTableSparkline         | optionPdf, optionImg, optionCsv, optionFullscreen                                         |
+| VueUiThermometer            | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiTiremarks              | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiTreemap                | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiVerticalBar            | optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen                |
+| VueUiWaffle                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiWheel                  | optionPdf, optionImg, optionFullscreen                                                    |
+| VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
 | VueUiXy                     | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack |
 | VueUiXyCanvas               | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack |
-| VueUiTreemap                | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiWaffle                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiRadar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiQuadrant               | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiGauge                  | optionPdf, optionImg, optionFullscreen                                                    |
-| VueUiWheel                  | optionPdf, optionImg, optionFullscreen                                                    |
-| VueUiTiremarks              | optionPdf, optionImg, optionFullscreen                                                    |
-| VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiOnion                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiVerticalBar            | optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen                |
-| VueUiHeatmap                | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiScatter                | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiCandlestick            | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiSparkline              | (no user options menu)                                                                    |
-| VueUiSparkbar               | (no user options menu)                                                                    |
-| VueUiSparkStackbar          | (no user options menu)                                                                    |
-| VueUiSparkHistogram         | (no user options menu)                                                                    |
-| VueUiSparkgauge             | (no user options menu)                                                                    |
-| VueUiSparkTrend             | (no user options menu)                                                                    |
-| VueUiQuickChart             | optionPdf, optionImg, optionFullscreen                                                    |
-| VueUiAgePyramid             | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiRelationCircle         | optionPdf, optionImg, optionFullscreen                                                    |
-| VueUiThermometer            | optionPdf, optionImg, optionFullscreen                                                    |
-| VueUiRings                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiMoodRadar              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiMolecule               | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiNestedDonuts           | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiGalaxy                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiStripPlot              | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUi3dBar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiTableSparkline         | optionPdf, optionImg, optionCsv, optionFullscreen                                         |
-| VueUiTableHeatmap           | optionPdf, optionImg, optionCsv, optionFullscreen                                         |
-| VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiFlow                   | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiParallelCoordinatePlot | optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
 
 # Custom palette
 
@@ -587,3 +587,49 @@ const config = ref({
   // rest of your config
 });
 ```
+
+The responsive attribute will be added to all charts that would require it when placed in a resizable context.
+The following table lays out the current state of this rollout:
+
+| Component                   | Responsive feature implemented | Will most probably be implemented |
+| --------------------------- | ------------------------------ | --------------------------------- |
+| VueUi3dBar                  | ❌                             | ✅                                |
+| VueUiAgePyramid             | ❌                             | ✅                                |
+| VueUiCandlestick            | ❌                             | ✅                                |
+| VueUiChestnut               | ❌                             | ✅                                |
+| VueUiDonut                  | ✅                             | Done in v2.2.52                   |
+| VueUiDonutEvolution         | ❌                             | ✅                                |
+| VueUiDumbbell               | ❌                             | ✅                                |
+| VueUiFlow                   | ❌                             | ✅                                |
+| VueUiGalaxy                 | ❌                             | ✅                                |
+| VueUiGauge                  | ❌                             | ✅                                |
+| VueUiHeatmap                | ❌                             | ❌                                |
+| VueUiMolecule               | ❌                             | ❌                                |
+| VueUiMoodRadar              | ❌                             | ✅                                |
+| VueUiNestedDonuts           | ✅                             | Done in v2.2.52                   |
+| VueUiOnion                  | ✅                             | Done in v2.2.52                   |
+| VueUiParallelCoordinatePlot | ✅                             | Done in v2.2.53                   |
+| VueUiQuadrant               | ❌                             | ✅                                |
+| VueUiQuickChart             | ✅                             | Done in v2.2.52                   |
+| VueUiRadar                  | ✅                             | Done in v2.2.53                   |
+| VueUiRelationCircle         | ❌                             | ✅                                |
+| VueUiRings                  | ✅                             | Done in v2.2.53                   |
+| VueUiScatter                | ❌                             | ✅                                |
+| VueUiSparkHistogram         | ❌                             | ❌                                |
+| VueUiSparkStackbar          | ❌                             | ❌                                |
+| VueUiSparkTrend             | ❌                             | ❌                                |
+| VueUiSparkbar               | ❌                             | ❌                                |
+| VueUiSparkgauge             | ❌                             | ❌                                |
+| VueUiSparkline              | ❌                             | ❌                                |
+| VueUiStripPlot              | ❌                             | ✅                                |
+| VueUiTableHeatmap           | ❌                             | ❌                                |
+| VueUiTableSparkline         | ❌                             | ❌                                |
+| VueUiThermometer            | ❌                             | ✅                                |
+| VueUiTiremarks              | ❌                             | ✅                                |
+| VueUiTreemap                | ✅                             | Done in v2.2.53                   |
+| VueUiVerticalBar            | ❌                             | ✅                                |
+| VueUiWaffle                 | ❌                             | ✅                                |
+| VueUiWheel                  | ❌                             | ✅                                |
+| VueUiWordCloud              | ❌                             | ✅                                |
+| VueUiXy                     | ✅                             | Done in v2.2.52                   |
+| VueUiXyCanvas               | ❌                             | ✅                                |
