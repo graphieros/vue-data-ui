@@ -594,8 +594,8 @@ The following table lays out the current state of this rollout:
 | Component                   | Responsive feature implemented | Will most probably be implemented |
 | --------------------------- | ------------------------------ | --------------------------------- |
 | VueUi3dBar                  | ❌                             | ✅                                |
-| VueUiAgePyramid             | ❌                             | ✅                                |
-| VueUiCandlestick            | ❌                             | ✅                                |
+| VueUiAgePyramid             | ✅                             | Done in v2.2.54                   |
+| VueUiCandlestick            | ✅                             | Done in v2.2.54                   |
 | VueUiChestnut               | ❌                             | ✅                                |
 | VueUiDonut                  | ✅                             | Done in v2.2.52                   |
 | VueUiDonutEvolution         | ❌                             | ✅                                |
