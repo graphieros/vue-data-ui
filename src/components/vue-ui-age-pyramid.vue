@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { 
     createCsvContent, 
     createUid, 
@@ -12,6 +12,7 @@ import {
     shiftHue,
     XMLNS
 } from '../lib';
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -22,6 +23,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -42,23 +44,15 @@ const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length
 });
 
-onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiAgePyramid',
-            type: 'dataset'
-        })
-    }
-});
-
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_age_pyramid);
-const agePyramid = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const selectedIndex = ref(null);
 const step = ref(0);
+const agePyramid = ref(null);
+const chartTitle = ref(null);
 
 const agePyramidConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -77,6 +71,31 @@ const agePyramidConfig = computed(() => {
     }
 });
 
+const resizeObserver = ref(null);
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiAgePyramid',
+            type: 'dataset'
+        })
+    }
+
+    if (agePyramidConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: agePyramid.value,
+                title: agePyramidConfig.value.style.title.text ? chartTitle.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(agePyramid.value.parentNode);
+    }
+});
+
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-age-pyramid_${uid.value}`,
     fileName: agePyramidConfig.value.style.title.text || 'vue-ui-age-pyramid'
@@ -86,12 +105,10 @@ const mutableConfig = ref({
     showTable: agePyramidConfig.value.table.show,
 });
 
-const svg = computed(() => {
-    return {
-        height: agePyramidConfig.value.style.height,
-        width: agePyramidConfig.value.style.width
-    }
-});
+const svg = ref({
+    height: agePyramidConfig.value.style.height,
+    width: agePyramidConfig.value.style.width
+})
 
 const drawingArea = computed(() => {
     const width = svg.value.width - agePyramidConfig.value.style.layout.padding.right - agePyramidConfig.value.style.layout.padding.left;
@@ -347,7 +364,7 @@ defineExpose({
 <template>
     <div :class="`vue-ui-age-pyramid ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center;${!agePyramidConfig.style.title.text ? 'padding-top:36px' : ''};background:${agePyramidConfig.style.backgroundColor}`">
     
-        <div v-if="agePyramidConfig.style.title.text" :style="`width:100%;background:${agePyramidConfig.style.backgroundColor}`">
+        <div ref="chartTitle" v-if="agePyramidConfig.style.title.text" :style="`width:100%;background:${agePyramidConfig.style.backgroundColor}`">
             <Title
                 :config="{
                     title: {
@@ -409,7 +426,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" >
             <defs>
                 <linearGradient 
                     :id="`age_pyramid_left_${uid}`"
@@ -443,32 +460,32 @@ defineExpose({
                 <rect
                     :x="segment.left.x"
                     :y="segment.left.y"
-                    :width="segment.left.width"
-                    :height="segment.left.height"
+                    :width="segment.left.width <= 0 ? 0.0001 : segment.left.width"
+                    :height="segment.left.height <= 0 ? 0.0001 : segment.left.height"
                     :fill="agePyramidConfig.style.layout.bars.gradient.underlayer"
                     :rx="agePyramidConfig.style.layout.bars.borderRadius"
                 />
                 <rect
                     :x="segment.left.x"
                     :y="segment.left.y"
-                    :width="segment.left.width"
-                    :height="segment.left.height"
+                    :width="segment.left.width <= 0 ? 0.0001 : segment.left.width"
+                    :height="segment.left.height <= 0 ? 0.0001 : segment.left.height"
                     :fill="agePyramidConfig.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid})` : segment.left.color"
                     :rx="agePyramidConfig.style.layout.bars.borderRadius"
                 />
                 <rect
                     :x="segment.right.x"
                     :y="segment.right.y"
-                    :width="segment.right.width"
-                    :height="segment.right.height"
+                    :width="segment.right.width <= 0 ? 0.0001 : segment.right.width"
+                    :height="segment.right.height <= 0 ? 0.0001 : segment.right.height"
                     :fill="agePyramidConfig.style.layout.bars.gradient.underlayer"
                     :rx="agePyramidConfig.style.layout.bars.borderRadius"
                 />
                 <rect
                     :x="segment.right.x"
                     :y="segment.right.y"
-                    :width="segment.right.width"
-                    :height="segment.right.height"
+                    :width="segment.right.width <= 0 ? 0.0001 : segment.right.width"
+                    :height="segment.right.height <= 0 ? 0.0001 : segment.right.height"
                     :fill="agePyramidConfig.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid})` : segment.right.color"
                     :rx="agePyramidConfig.style.layout.bars.borderRadius"
                 />
@@ -596,8 +613,8 @@ defineExpose({
                 <rect
                     :x="drawingArea.left"
                     :y="drawingArea.top + (drawingArea.height / len) * i - agePyramidConfig.style.layout.bars.gap / 2"
-                    :width="drawingArea.width"
-                    :height="drawingArea.height / len"
+                    :width="drawingArea.width <= 0 ? 0.0001 : drawingArea.width"
+                    :height="drawingArea.height / len <= 0 ? 0.0001 : drawingArea.height / len"
                     :fill="selectedIndex !== null && selectedIndex === i ? `${agePyramidConfig.style.highlighter.color}${opacity[agePyramidConfig.style.highlighter.opacity]}` : 'transparent'"
                     @mouseover="useTooltip(i, datapoint)"
                     @mouseleave="selectedIndex = null; isTooltip = false"
