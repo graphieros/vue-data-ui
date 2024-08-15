@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, onBeforeUnmount } from "vue";
 import { 
     calculateNiceScale, 
     canShowValue, 
@@ -12,8 +12,10 @@ import {
     objectIsEmpty,
     opacity, 
     shiftHue,
+    translateSize,
     XMLNS
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -25,6 +27,7 @@ import Slicer from "../atoms/Slicer.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -50,19 +53,13 @@ const defaultConfig = ref(mainConfig.vue_ui_candlestick);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
-const candlestickChart = ref(null);
 const hoveredIndex = ref(undefined);
 const step = ref(0);
 const slicerStep = ref(0);
-
-onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiCandlestick',
-            type: 'dataset'
-        })
-    }
-});
+const candlestickChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
+const chartSlicer = ref(null);
 
 const candlestickConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -81,6 +78,58 @@ const candlestickConfig = computed(() => {
     }
 });
 
+const svg = ref({
+    height: candlestickConfig.value.style.height,
+    width: candlestickConfig.value.style.width,
+    xAxisFontSize: candlestickConfig.value.style.layout.grid.xAxis.dataLabels.fontSize,
+    yAxisFontSize: candlestickConfig.value.style.layout.grid.yAxis.dataLabels.fontSize
+})
+
+const resizeObserver = ref(null);
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiCandlestick',
+            type: 'dataset'
+        })
+    }
+
+    if (candlestickConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: candlestickChart.value,
+                title: candlestickConfig.value.style.title.text ? chartTitle.value : null,
+                slicer: chartSlicer.value,
+                legend: chartLegend.value
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+            svg.value.xAxisFontSize = translateSize({
+                relator: Math.min(width, height),
+                adjuster: candlestickConfig.value.style.width,
+                source: candlestickConfig.value.style.layout.grid.xAxis.dataLabels.fontSize,
+                threshold: 6,
+                fallback: 6
+            })
+            svg.value.yAxisFontSize = translateSize({
+                relator: Math.min(width, height),
+                adjuster: candlestickConfig.value.style.width,
+                source: candlestickConfig.value.style.layout.grid.yAxis.dataLabels.fontSize,
+                threshold: 6,
+                fallback: 6
+            })
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(candlestickChart.value.parentNode);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
+
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-candlestick_${uid.value}`,
     fileName: candlestickConfig.value.style.title.text || 'vue-ui-candlestick'
@@ -88,13 +137,6 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 
 const mutableConfig = ref({
     showTable: candlestickConfig.value.table.show
-});
-
-const svg = computed(() => {
-    return {
-        height: candlestickConfig.value.style.height,
-        width: candlestickConfig.value.style.width
-    }
 });
 
 const drawingArea = computed(() => {
@@ -385,7 +427,7 @@ defineExpose({
 
 <template>
     <div ref="candlestickChart" :class="`vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`position:relative;font-family:${candlestickConfig.style.fontFamily}; text-align:center;${!candlestickConfig.style.title.text ? 'padding-top:36px' : ''};background:${candlestickConfig.style.backgroundColor}`" :id="`vue-ui-candlestick_${uid}`">
-        <div v-if="candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
+        <div ref="chartTitle" v-if="candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
@@ -448,7 +490,7 @@ defineExpose({
         </UserOptions>
         
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
             <g v-if="drawableDataset.length > 0">
                 <!-- DEFS -->
             <defs>
@@ -507,8 +549,8 @@ defineExpose({
                     <text 
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
                         :x="drawingArea.left - 8 + candlestickConfig.style.layout.grid.yAxis.dataLabels.offsetX" 
-                        :y="yLabel.y + candlestickConfig.style.layout.grid.yAxis.dataLabels.fontSize / 3" 
-                        :font-size="candlestickConfig.style.layout.grid.yAxis.dataLabels.fontSize" 
+                        :y="yLabel.y + svg.yAxisFontSize / 3" 
+                        :font-size="svg.yAxisFontSize" 
                         text-anchor="end"
                         :fill="candlestickConfig.style.layout.grid.yAxis.dataLabels.color"
                         :font-weight="candlestickConfig.style.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
@@ -522,9 +564,9 @@ defineExpose({
                 <g v-for="(xLabel, i) in xLabels">
                     <text
                         :data-cy="`candlestick-time-label-${i}`"
-                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + candlestickConfig.style.layout.grid.xAxis.dataLabels.fontSize * 2 + candlestickConfig.style.layout.grid.xAxis.dataLabels.offsetY}), rotate(${candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation})`"
+                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + svg.xAxisFontSize * 2 + candlestickConfig.style.layout.grid.xAxis.dataLabels.offsetY}), rotate(${candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation})`"
                         :text-anchor="candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
-                        :font-size="candlestickConfig.style.layout.grid.xAxis.dataLabels.fontSize"
+                        :font-size="svg.xAxisFontSize"
                         :fill="candlestickConfig.style.layout.grid.xAxis.dataLabels.color"
                         :font-weight="candlestickConfig.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
                     >
@@ -591,8 +633,8 @@ defineExpose({
                     :data-cy="`candlestick-rect-underlayer-${i}`"
                     :x="candle.open.x - slot / 2 + (slot * (1 - candlestickConfig.style.layout.candle.widthRatio) / 2)"
                     :y="candle.isBullish ? candle.last.y : candle.open.y"
-                    :height="Math.abs(candle.last.y - candle.open.y)"
-                    :width="slot * candlestickConfig.style.layout.candle.widthRatio"
+                    :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
+                    :width="slot * candlestickConfig.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * candlestickConfig.style.layout.candle.widthRatio"
                     :fill="candlestickConfig.style.layout.candle.gradient.underlayer"
                     :rx="candlestickConfig.style.layout.candle.borderRadius"
                     stroke="none"
@@ -602,8 +644,8 @@ defineExpose({
                     :data-cy="`candlestick-rect-${i}`"
                     :x="candle.open.x - slot / 2 + (slot * (1 - candlestickConfig.style.layout.candle.widthRatio) / 2)"
                     :y="candle.isBullish ? candle.last.y : candle.open.y"
-                    :height="Math.abs(candle.last.y - candle.open.y)"
-                    :width="slot * candlestickConfig.style.layout.candle.widthRatio"
+                    :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
+                    :width="slot * candlestickConfig.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * candlestickConfig.style.layout.candle.widthRatio"
                     :fill="candle.isBullish ? candlestickConfig.style.layout.candle.gradient.show ? `url(#bullish_gradient_${uid})` : candlestickConfig.style.layout.candle.colors.bullish : candlestickConfig.style.layout.candle.gradient.show ? `url(#bearish_gradient_${uid})` : candlestickConfig.style.layout.candle.colors.bearish"
                     :rx="candlestickConfig.style.layout.candle.borderRadius"
                     :stroke="candlestickConfig.style.layout.candle.stroke"
@@ -620,8 +662,8 @@ defineExpose({
                     :data-cy="`candlestick-trap-${i}`"
                     :x="drawingArea.left + i * slot"
                     :y="drawingArea.top"
-                    :height="drawingArea.height"
-                    :width="slot"
+                    :height="drawingArea.height <= 0 ? 0.0001 : drawingArea.height"
+                    :width="slot <= 0 ? 0.0001 : slot"
                     :fill="hoveredIndex === i ? `${candlestickConfig.style.layout.selector.color}${opacity[candlestickConfig.style.layout.selector.opacity]}` : 'transparent'"
                     @mouseover="useTooltip(i,rect)"
                     @mouseleave="hoveredIndex = undefined; isTooltip = false"
@@ -649,30 +691,35 @@ defineExpose({
             }"
         />
 
-        <Slicer v-if="candlestickConfig.style.zoom.show && isDataset"
-            :key="`slicer_${slicerStep}`"
-            :background="candlestickConfig.style.zoom.color"
-            :borderColor="candlestickConfig.style.backgroundColor"
-            :fontSize="candlestickConfig.style.zoom.fontSize"
-            :useResetSlot="candlestickConfig.style.zoom.useResetSlot"
-            :labelLeft="dataset[slicer.start] ? dataset[slicer.start][0] : dataset[0][0]"
-            :labelRight="dataset[slicer.end-1] ? dataset[slicer.end-1][0] : dataset.at(-1)[0]"
-            :textColor="candlestickConfig.style.color"
-            :inputColor="candlestickConfig.style.zoom.color"
-            :selectColor="candlestickConfig.style.zoom.highlightColor"
-            :max="len"
-            :min="0"
-            :valueStart="slicer.start"
-            :valueEnd="slicer.end"
-            v-model:start="slicer.start"
-            v-model:end="slicer.end"
-            @reset="refreshSlicer"
-        >
-            <template #reset-action="{ reset }">
-                <slot name="reset-action" v-bind="{ reset }"/>
-            </template>
-        </Slicer>
-        <slot name="legend" v-bind:legend="drawableDataset"></slot>
+        <div ref="chartSlicer" v-if="candlestickConfig.style.zoom.show && isDataset">
+            <Slicer 
+                :key="`slicer_${slicerStep}`"
+                :background="candlestickConfig.style.zoom.color"
+                :borderColor="candlestickConfig.style.backgroundColor"
+                :fontSize="candlestickConfig.style.zoom.fontSize"
+                :useResetSlot="candlestickConfig.style.zoom.useResetSlot"
+                :labelLeft="dataset[slicer.start] ? dataset[slicer.start][0] : dataset[0][0]"
+                :labelRight="dataset[slicer.end-1] ? dataset[slicer.end-1][0] : dataset.at(-1)[0]"
+                :textColor="candlestickConfig.style.color"
+                :inputColor="candlestickConfig.style.zoom.color"
+                :selectColor="candlestickConfig.style.zoom.highlightColor"
+                :max="len"
+                :min="0"
+                :valueStart="slicer.start"
+                :valueEnd="slicer.end"
+                v-model:start="slicer.start"
+                v-model:end="slicer.end"
+                @reset="refreshSlicer"
+            >
+                <template #reset-action="{ reset }">
+                    <slot name="reset-action" v-bind="{ reset }"/>
+                </template>
+            </Slicer>
+        </div>
+
+        <div ref="chartLegend">
+            <slot name="legend" v-bind:legend="drawableDataset"></slot>
+        </div>
 
         <!-- TOOLTIP -->
         <Tooltip
