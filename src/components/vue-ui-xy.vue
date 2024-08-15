@@ -1,6 +1,6 @@
 
 <template>
-    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${!chartConfig.chart.title.text ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily}`">
+    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${!chartConfig.chart.title.text ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily};${chartConfig.responsive ? 'height: 100%' : ''}`">
         <!-- TITLE AS OUTSIDE DIV -->
         <div ref="chartTitle" class="vue-ui-xy-title" v-if="chartConfig.chart.title.show" :style="`font-family:${chartConfig.chart.fontFamily}`">
             <Title
