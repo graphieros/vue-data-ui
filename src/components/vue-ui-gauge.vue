@@ -13,6 +13,7 @@ import {
     palette, 
     rotateMatrix,
     themePalettes,
+    makeDonut,
     XMLNS
 } from "../lib.js";
 import mainConfig from "../default_configs.json";
@@ -134,8 +135,8 @@ const pointer = computed(() => {
     return {
         x1: x,
         y1: y,
-        x2: x + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size) * Math.cos(angle),
-        y2: y + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size) * Math.sin(angle)
+        x2: x + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size * 0.9) * Math.cos(angle),
+        y2: y + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size * 0.9) * Math.sin(angle)
     }
 });
 
@@ -143,8 +144,8 @@ const pointyPointerPath = computed(() => {
     const centerX = svg.value.width / 2;
     const centerY = svg.value.height * 0.69;
     const angle = Math.PI * ((activeRating.value + 0 - min.value) / (max.value - min.value)) + Math.PI;
-    const tipX = centerX + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size) * Math.cos(angle);
-    const tipY = centerY + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size) * Math.sin(angle);
+    const tipX = centerX + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size * 0.9) * Math.cos(angle);
+    const tipY = centerY + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size * 0.9) * Math.sin(angle);
     const baseLength = gaugeConfig.value.style.chart.layout.pointer.circle.radius;
     const baseX1 = centerX + baseLength * Math.cos(angle + (Math.PI / 2));
     const baseY1 = centerY + baseLength * Math.sin(angle + (Math.PI / 2));
@@ -238,95 +239,39 @@ function useAnimation() {
     }
 }
 
-function createArc([cx, cy], [rx, ry], [position, ratio], phi) {
-    ratio = ratio % Math.PI;
-    const rotMatrix = rotateMatrix(phi);
-    const [sX, sY] = addVector(
-    matrixTimes(rotMatrix, [
-        rx * Math.cos(position),
-        ry * Math.sin(position),
-    ]),
-    [cx, cy]
+const arcs = computed(() => {
+    const donut = makeDonut(
+        {series: mutableDataset.value.series},
+        svg.value.width / 2,
+        svg.value.height * 0.7,
+        svg.value.width / 2.5,
+        svg.value.width / 2.5,
+        1,
+        1,
+        1,
+        180,
+        109.9495,
+        40 * gaugeConfig.value.style.chart.layout.track.size
     );
-    const [eX, eY] = addVector(
-    matrixTimes(rotMatrix, [
-        rx * Math.cos(position + ratio),
-        ry * Math.sin(position + ratio),
-    ]),
-    [cx, cy]
-    );
-    const fA = ratio > Math.PI ? 1 : 0;
-    const fS = ratio > 0 ? 1 : 0;
-    return {
-        startX: sX,
-        startY: sY,
-        endX: eX,
-        endY: eY,
-        path: `M${sX} ${sY} A ${[
-            rx,
-            ry,
-            (phi / (2 * Math.PI)) * 180,
-            fA,
-            fS,
-            eX,
-            eY,
-        ].join(" ")}`,
-    };
-}
+    return donut
+})
 
-function makeDonut(item, cx, cy, rx, ry) {
-    let { series } = item;
-    if(!item.base) {
-        item.base = 1;
-    }
-    if (!series || item.base === 0)
-        return {
-            ...series,
-            proportion: 0,
-            ratio: 0,
-            path: "",
-            startX: 0,
-            startY: 0,
-            endX: 0,
-            center: {},
-        };
-        const sum = [...series]
-        .map((serie) => serie.value)
-        .reduce((a, b) => a + b, 0);
-        
-        const ratios = [];
-        let acc = 0;
-        for (let i = 0; i < series.length; i += 1) {
-        let proportion = series[i].value / sum;
-        const ratio = proportion * (Math.PI * 0.975);
-        const midProportion = series[i].value / 2 / sum;
-        const midRatio = midProportion * (Math.PI);
-        const { startX, startY, endX, endY, path } = createArc(
-            [cx, cy],
-            [rx, ry],
-            [acc, ratio],
-            110
-        );
-        ratios.push({
-            ...series[i],
-            proportion,
-            ratio: ratio,
-            path,
-            startX,
-            startY,
-            endX,
-            endY,
-            center: createArc(
-            [cx, cy],
-            [rx, ry],
-            [acc, midRatio],
-            110
-            ),
-        });
-        acc += ratio;
-        }
-    return ratios;
-}
+const gradientArcs = computed(() => {
+    const donut = makeDonut(
+        {series: mutableDataset.value.series},
+        svg.value.width / 2,
+        svg.value.height * 0.7,
+        svg.value.width / 2.75,
+        svg.value.width / 2.75,
+        1,
+        1,
+        1,
+        180,
+        109.9495,
+        2 * gaugeConfig.value.style.chart.layout.track.size
+    );
+    return donut
+})
 
 function calcMarkerPositionY(index, y, value) {
     const isBig = String(value).length > 2;
@@ -421,64 +366,50 @@ defineExpose({
 
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / gaugeConfig.style.chart.layout.track.gradientIntensity"/>
-                    <feColorMatrix type="saturate" values="0" />
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / gaugeConfig.style.chart.layout.track.gradientIntensity" />
                 </filter>
             </defs>
 
             <!-- ARC STEPS -->
             <path 
-                v-for="(arc, i) in makeDonut(mutableDataset, svg.width / 2, svg.height * 0.7, svg.width / 2.5, svg.width / 2.5)" 
+                v-for="(arc, i) in arcs" 
                 :data-cy="`gauge-arc-${i}`"
                 :key="`arc_${i}`"
-                :d="arc.path"
-                fill="none"
-                :stroke="arc.color"
+                :d="arc.arcSlice"
+                :fill="arc.color"
+                :stroke="gaugeConfig.style.chart.backgroundColor"
                 stroke-linecap="round"
-                :stroke-width="(svg.width / 16) * gaugeConfig.style.chart.layout.track.size"
             />
 
-            <!-- GRADIENT -->
-            <g v-if="gaugeConfig.style.chart.layout.track.useGradient">                
-                <path 
-                    v-for="(arc, i) in makeDonut(mutableDataset, svg.width / 2, svg.height * 0.7, svg.width / 2.5, svg.width / 2.5)" 
-                    :key="`arc_${i}`"
-                    :d="arc.path"
-                    fill="none"
-                    :stroke="'white'"
-                    stroke-linecap="round"
-                    :stroke-width="(svg.width / 64) * gaugeConfig.style.chart.layout.track.size"
-                    :filter="`url(#blur_${uid})`"
-                />
-            </g>
+            <!-- ARC STEPS GRADIENTS-->
+            <path 
+                v-for="(arc, i) in gradientArcs" 
+                :data-cy="`gauge-arc-${i}`"
+                :key="`arc_${i}`"
+                :d="arc.arcSlice"
+                fill="#FFFFFF"
+                stroke="none"
+                stroke-linecap="round"
+                :filter="`url(#blur_${uid})`"
+            />
+
+            <!-- HIDER -->
+            <rect
+                :x="0"
+                :y="svg.height * 0.7"
+                :width="svg.width"
+                :height="svg.height * 0.3"
+                :fill="gaugeConfig.style.chart.backgroundColor"
+            />
 
             <!-- STEP MARKERS -->
-            <circle 
-                v-for="(arc, i) in makeDonut(mutableDataset, svg.width / 2, svg.height * 0.7, svg.width / 2.5, svg.width / 2.5)"
-                :data-cy="`gauge-step-marker-${i}`"
-                :cx="arc.center.startX"
-                :cy="i === 0 ? arc.center.startY + 5 : arc.center.startY"
-                :r="(svg.width / 31) * gaugeConfig.style.chart.layout.track.size * gaugeConfig.style.chart.layout.markers.size"
-                :fill="gaugeConfig.style.chart.layout.markers.backgroundColor"
-                :stroke="gaugeConfig.style.chart.layout.markers.stroke"
-                :stroke-width="gaugeConfig.style.chart.layout.markers.strokeWidth"
-            />
-            <circle
-                data-cy="gauge-step-marker-last"
-                :cx="svg.width * 0.9"
-                :cy="svg.height * 0.69"
-                :r="(svg.width / 31) * gaugeConfig.style.chart.layout.track.size * gaugeConfig.style.chart.layout.markers.size"
-                :fill="gaugeConfig.style.chart.layout.markers.backgroundColor"
-                :stroke="gaugeConfig.style.chart.layout.markers.stroke"
-                :stroke-width="gaugeConfig.style.chart.layout.markers.strokeWidth"
-            />
             <text
-                v-for="(arc, i) in makeDonut(mutableDataset, svg.width / 2, svg.height * 0.7, svg.width / 2.5, svg.width / 2.5)"
+                v-for="(arc, i) in arcs"
                 :data-cy="`gauge-step-marker-label-${i}`"
                 :x="arc.center.startX"
-                :y="calcMarkerPositionY(i, arc.center.startY, arc.from) + gaugeConfig.style.chart.layout.markers.offsetY"
-                text-anchor="middle"
-                :font-size="calcMarkerFontSize(arc.from) * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
+                :y="arc.center.startY + gaugeConfig.style.chart.layout.markers.offsetY"
+                :text-anchor="arc.center.startX < (svg.width / 2 - 5) ? 'end' : arc.center.startX > (svg.width / 2 + 5) ? 'start' : 'middle'"
+                :font-size="18 * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
                 :font-weight="`${gaugeConfig.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
                 :fill="gaugeConfig.style.chart.layout.markers.color"
             >
@@ -486,10 +417,10 @@ defineExpose({
             </text>
             <text
                 data-cy="gauge-step-marker-label-last"
-                :x="svg.width * 0.9"
-                :y="calcMarkerPositionY(1, svg.height * 0.69, max) + gaugeConfig.style.chart.layout.markers.offsetY"
-                text-anchor="middle"
-                :font-size="calcMarkerFontSize(max) * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
+                :x="arcs.at(-1).endX"
+                :y="arcs.at(-1).endY + gaugeConfig.style.chart.layout.markers.offsetY"
+                text-anchor="start"
+                :font-size="18 * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
                 :font-weight="`${gaugeConfig.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
                 :fill="gaugeConfig.style.chart.layout.markers.color"
             >
