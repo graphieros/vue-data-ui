@@ -10,7 +10,8 @@ const source = ref({
     value: 25,
     series: [
         { from: -100, to: 0 },
-        { from: 0, to: 100 }
+        { from: 0, to: 50 },
+        { from: 50, to: 100 }
     ]
 })
 
@@ -40,18 +41,18 @@ const model = ref([
     { key: 'style.chart.layout.track.size', def: 1, type: 'range', min: 0.5, max: 2, step: 0.01},
     { key: 'style.chart.layout.track.useGradient', def: true, type:  'checkbox'},
     { key: 'style.chart.layout.track.gradientIntensity', def: 20, type: 'range', min: 10, max: 30},
-    { key: 'style.chart.layout.markers.size', def: 1, type: 'range', min: 0.5, max: 2, step: 0.01},
     { key: 'style.chart.layout.markers.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.markers.stroke', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.markers.strokeWidth', def: 1, type: 'range', min: 0, max: 12, step: 0.1},
-    { key: 'style.chart.layout.markers.backgroundColor', def: '#FFFFFF', type: 'color'},
+    /* DEPRECATED */ { key: 'style.chart.layout.markers.size', def: 1, type: 'range', min: 0.5, max: 2, step: 0.01},
+    /* DEPRECATED */ { key: 'style.chart.layout.markers.stroke', def: '#1A1A1A', type: 'color'},
+    /* DEPRECATED */ { key: 'style.chart.layout.markers.strokeWidth', def: 1, type: 'range', min: 0, max: 12, step: 0.1},
+    /* DEPRECATED */ { key: 'style.chart.layout.markers.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.layout.markers.bold', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.markers.fontSizeRatio', def: 1, type: 'range', min: 0, max: 2, step:0.01},
     { key: 'style.chart.layout.markers.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.layout.markers.roundingVale', def: 0, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.layout.pointer.type', def: 'rounded', type: 'select', options: ['rounded', 'pointy']},
+    { key: 'style.chart.layout.pointer.type', def: 'pointy', type: 'select', options: ['rounded', 'pointy']},
     { key: 'style.chart.layout.pointer.size', def: 1, type: 'range', min: 0.2, max: 1.5, step: 0.01},
-    { key: 'style.chart.layout.pointer.stroke', def: '#1A1A1A', type: 'color'},
+    { key: 'style.chart.layout.pointer.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.layout.pointer.strokeWidth', def: 12, type: 'range', min: 1, max: 48, step: 0.5},
     { key: 'style.chart.layout.pointer.useRatingColor', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.pointer.color', def: '#CCCCCC', type: 'color'},
@@ -85,7 +86,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     return {

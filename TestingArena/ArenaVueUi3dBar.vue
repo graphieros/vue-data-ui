@@ -57,6 +57,7 @@ const datasets = ref({
 })
 
 const model = ref([
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
@@ -129,7 +130,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[1])
 
 const config = computed(() => {
     return {
@@ -156,6 +157,14 @@ const dataset = computed(() => datasets.value[selectedDataset.value])
         </select>
     </div>
     <select v-model="selectedDataset" @change="step += 1"><option>simple</option><option>stacked</option></select>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUi3dBar :key="`responsive_${step}`" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
+    </div>
+
     <Box>
         <template #title>VueUi3dBar</template>
 

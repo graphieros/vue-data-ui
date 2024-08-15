@@ -26,6 +26,7 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
@@ -48,13 +49,13 @@ const model = ref([
     { key: 'style.layout.grid.stroke', def: '#e1e5e8', type: 'color'},
     { key: 'style.layout.grid.strokeWidth', def: 0.5, type: 'range', min: 0, max: 12, step: 0.5},
     { key: 'style.layout.grid.xAxis.dataLabels.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.grid.xAxis.dataLabels.fontSize', def: 4, type: 'number', min: 4, max: 12},
+    { key: 'style.layout.grid.xAxis.dataLabels.fontSize', def: 10, type: 'number', min: 4, max: 12},
     { key: 'style.layout.grid.xAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.grid.xAxis.dataLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.layout.grid.xAxis.dataLabels.bold', def: false, type: 'checkbox'},
     { key: 'style.layout.grid.xAxis.dataLabels.rotation', def: -20, type: 'number', min: -360, max: 360},
     { key: 'style.layout.grid.yAxis.dataLabels.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.grid.yAxis.dataLabels.fontSize', def: 4, type: 'number', min: 4, max: 12},
+    { key: 'style.layout.grid.yAxis.dataLabels.fontSize', def: 10, type: 'number', min: 4, max: 12},
     { key: 'style.layout.grid.yAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.grid.yAxis.dataLabels.offsetX', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.layout.grid.yAxis.dataLabels.bold', def: false, type: 'checkbox'},
@@ -125,7 +126,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[1])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -170,6 +171,13 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
     <div style="margin: 12px 0">
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
+    </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiCandlestick :key="`responsive_${step}`" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
     </div>
 
     <Box>

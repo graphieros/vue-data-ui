@@ -18,6 +18,7 @@ const dataset =  ref([
 ])
 
 const model = ref([
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
@@ -121,7 +122,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[1])
 
 const config = computed(() => {
     return {
@@ -143,6 +144,14 @@ const step = ref(0);
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiDumbbell :key="`responsive_${step}`" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
+    </div>
+
     <Box>
         <template #title>VueUiDumbbell</template>
         <template #local>
