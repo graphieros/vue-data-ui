@@ -1458,6 +1458,7 @@ declare module 'vue-data-ui' {
     export type VueUiAgePyramidDataset = Array<Array<string | number>>;
 
     export type VueUiAgePyramidConfig = {
+        responsive?: boolean;
         theme?: Theme;
         style?: {
             backgroundColor?: string;
@@ -1573,6 +1574,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiCandlestickConfig = {
+        responsive?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
         style?: {
@@ -2954,11 +2956,7 @@ declare module 'vue-data-ui' {
                         gradientIntensity?: number;
                     };
                     markers?: {
-                        size?: number;
                         color?: string;
-                        strokeWidth?: number;
-                        stroke?: string;
-                        backgroundColor?: string;
                         bold?: boolean;
                         fontSizeRatio?: number;
                         offsetY?: number;
