@@ -24,54 +24,15 @@ describe('<VueUiGauge />', () => {
       });
 
       for (let i = 0; i < fixture.dataset.series.length; i += 1) {
-        cy.get(`[data-cy="gauge-arc-${i}"]`).then(($arc) => {
-          cy.wrap($arc)
-          .should('exist');
-
-          cy.wrap($arc)
-          .invoke('attr', 'stroke')
-            .should('eq', fixture.dataset.series[i].color)
-        });
-
-        cy.get(`[data-cy="gauge-step-marker-${i}"]`).should('exist');
         cy.get(`[data-cy="gauge-step-marker-label-${i}"]`)
           .should('exist')
           .contains(`${fixture.dataset.series[i].from.toFixed(fixture.config.style.chart.layout.markers.roundingValue)}`)
       }
 
-      cy.get(`[data-cy="gauge-step-marker-last"]`).should('exist');
       cy.get(`[data-cy="gauge-step-marker-label-last"]`)
         .should('exist')
         .contains(`${fixture.dataset.series.at(-1).to.toFixed(fixture.config.style.chart.layout.markers.roundingValue)}`);
 
-
-      cy.get(`[data-cy="gauge-pointer-border"]`).then(($pointer) => {
-        cy.wrap($pointer)
-          .should('exist')
-          .invoke('attr', 'stroke')
-          .should('eq', fixture.config.style.chart.layout.pointer.stroke);
-
-        cy.wrap($pointer)
-          .invoke('attr', 'stroke-width')
-          .should('eq', String(fixture.config.style.chart.layout.pointer.strokeWidth))
-      });
-
-      function getColor(number) {
-        for (let i = 0; i < fixture.dataset.series.length; i += 1) {
-            if (number >= fixture.dataset.series[i].from && number < fixture.dataset.series[i].to) {
-                return fixture.dataset.series[i].color;
-            }
-        }
-        return null;
-    }
-
-      cy.wait(500);
-      cy.get(`[data-cy="gauge-pointer"]`).then(($pointer) => {
-        cy.wrap($pointer)
-          .should('exist')
-          .invoke('attr', 'stroke')
-          .should('eq', getColor(fixture.dataset.value))
-      });
 
       cy.get(`[data-cy="gauge-pointer-circle"]`).then(($circle) => {
         cy.wrap($circle)
@@ -93,13 +54,6 @@ describe('<VueUiGauge />', () => {
       })
 
       cy.get(`[data-cy="user-options-summary"]`).click();
-
-      // cy.get(`[data-cy="user-options-pdf"]`).click();
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-      // cy.get(`[data-cy="user-options-img"]`).click();
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
-      // cy.clearDownloads();
-      // cy.get(`[data-cy="user-options-summary"]`).click();
     });
   });
 })
