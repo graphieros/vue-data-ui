@@ -1401,6 +1401,7 @@
                             "stroke": "#EBD6CC"
                         },
                         "pointer": {
+                            "type": "rounded",
                             "stroke": "#fbfafa",
                             "circle": {
                                 "stroke": "#EBD6CC",
@@ -1428,7 +1429,7 @@
                             "useGradient": false
                         },
                         "markers": {
-                            "color": "#f6f6fb",
+                            "color": "#4F5B75",
                             "backgroundColor": "#4F5B75",
                             "stroke": "#9FA9BE"
                         },
