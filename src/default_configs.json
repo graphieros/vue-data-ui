@@ -1060,20 +1060,16 @@
                         "gradientIntensity": 20
                     },
                     "markers": {
-                        "size": 1,
                         "color": "#2D353C",
-                        "strokeWidth": 1,
-                        "stroke": "#2D353C",
-                        "backgroundColor": "#FFFFFF",
                         "bold": true,
                         "fontSizeRatio": 1,
                         "offsetY": 0,
                         "roundingValue": 0
                     },
                     "pointer": {
-                        "type": "rounded",
+                        "type": "pointy",
                         "size": 1,
-                        "stroke": "#2D353C",
+                        "stroke": "#FFFFFF",
                         "strokeWidth": 12,
                         "useRatingColor": true,
                         "color": "#CCCCCC",
@@ -2209,6 +2205,7 @@
         }
     },
     "vue_ui_candlestick": {
+        "responsive": false,
         "theme": "",
         "useCssAnimation": true,
         "style": {
@@ -2235,7 +2232,7 @@
                     "xAxis": {
                         "dataLabels": {
                             "show": true,
-                            "fontSize": 4,
+                            "fontSize": 10,
                             "color": "#2D353C",
                             "offsetY": 0,
                             "bold": false,
@@ -2351,6 +2348,7 @@
         }
     },
     "vue_ui_age_pyramid": {
+        "responsive": false,
         "theme": "",
         "style": {
             "backgroundColor": "#FFFFFF",
