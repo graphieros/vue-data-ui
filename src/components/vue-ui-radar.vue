@@ -509,7 +509,7 @@ defineExpose({
         :class="`vue-ui-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${radarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
         ref="radarChart"
         :id="`vue-ui-radar_${uid}`"
-        :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${!radarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${radarConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${radarConfig.style.fontFamily};width:100%; ${radarConfig.responsive ? 'height: 100%;' : ''} text-align:center;${!radarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${radarConfig.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
         <div ref="chartTitle" v-if="radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">

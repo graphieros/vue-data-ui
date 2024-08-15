@@ -752,7 +752,7 @@ defineExpose({
         :id="`${chartType}_${uid}`"
         ref="quickChart"
         :class="{'vue-ui-quick-chart': true, 'vue-data-ui-wrapper-fullscreen' : isFullscreen }" 
-        :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color};font-family:${quickConfig.fontFamily}; position: relative`"
+        :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color};font-family:${quickConfig.fontFamily}; position: relative; ${quickConfig.responsive ? 'height: 100%' : ''}`"
     >
 
         <UserOptions

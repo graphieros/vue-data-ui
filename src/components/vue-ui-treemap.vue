@@ -466,7 +466,7 @@ defineExpose({
 <template>
     <div ref="treemapChart"
         :class="`vue-ui-treemap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${treemapConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
-        :style="`font-family:${treemapConfig.style.fontFamily};width:100%; text-align:center;${!treemapConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${treemapConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${treemapConfig.style.fontFamily};width:100%; ${treemapConfig.responsive ? 'height: 100%;' : ''} text-align:center;${!treemapConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${treemapConfig.style.chart.backgroundColor}`"
         :id="`treemap_${uid}`">
         
         <!-- TITLE -->

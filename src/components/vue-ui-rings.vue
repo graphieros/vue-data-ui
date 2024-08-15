@@ -424,7 +424,7 @@ defineExpose({
   <div
     ref="ringsChart"
     :class="`vue-ui-rings ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${ringsConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
-    :style="`font-family:${ringsConfig.style.fontFamily};text-align:center;width:100%;background:${ringsConfig.style.chart.backgroundColor}`"
+    :style="`font-family:${ringsConfig.style.fontFamily};text-align:center;width:100%;background:${ringsConfig.style.chart.backgroundColor};${ringsConfig.responsive ? 'height: 100%' : ''}`"
     :id="`rings_${uid}`"
     @mouseleave="
       selectedSerie = null;

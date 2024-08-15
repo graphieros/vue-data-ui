@@ -491,7 +491,7 @@ defineExpose({
     <div
         ref="pcpChart"
         :class="`vue-ui-pcp ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${pcpConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" 
-        :style="`font-family:${pcpConfig.style.fontFamily};width:100%; text-align:center;${!pcpConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${pcpConfig.style.chart.backgroundColor}`" 
+        :style="`font-family:${pcpConfig.style.fontFamily};width:100%; text-align:center;${!pcpConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${pcpConfig.style.chart.backgroundColor};${pcpConfig.responsive ? 'height:100%' : ''}`" 
         :id="`pcp_${uid}`"
     >
 

@@ -425,7 +425,7 @@ defineExpose({
         :class="`vue-ui-onion ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${onionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" 
         ref="onionChart" 
         :id="`vue-ui-onion_${uid}`"
-        :style="`font-family:${onionConfig.style.fontFamily};width:100%; text-align:center;background:${onionConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${onionConfig.style.fontFamily};width:100%; ${onionConfig.responsive ? 'height: 100%;' : ''} text-align:center;background:${onionConfig.style.chart.backgroundColor}`"
     >
         <div ref="chartTitle" v-if="onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
             <Title
