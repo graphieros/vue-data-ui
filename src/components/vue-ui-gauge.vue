@@ -382,25 +382,27 @@ defineExpose({
             />
 
             <!-- ARC STEPS GRADIENTS-->
-            <path 
-                v-for="(arc, i) in gradientArcs" 
-                :data-cy="`gauge-arc-${i}`"
-                :key="`arc_${i}`"
-                :d="arc.arcSlice"
-                fill="#FFFFFF"
-                stroke="none"
-                stroke-linecap="round"
-                :filter="`url(#blur_${uid})`"
-            />
+            <template v-if="gaugeConfig.style.chart.layout.track.useGradient">            
+                <path 
+                    v-for="(arc, i) in gradientArcs" 
+                    :data-cy="`gauge-arc-${i}`"
+                    :key="`arc_${i}`"
+                    :d="arc.arcSlice"
+                    fill="#FFFFFF"
+                    stroke="none"
+                    stroke-linecap="round"
+                    :filter="`url(#blur_${uid})`"
+                />
+                <!-- HIDER -->
+                <rect
+                    :x="0"
+                    :y="svg.height * 0.7"
+                    :width="svg.width"
+                    :height="svg.height * 0.3"
+                    :fill="gaugeConfig.style.chart.backgroundColor"
+                />
+            </template>
 
-            <!-- HIDER -->
-            <rect
-                :x="0"
-                :y="svg.height * 0.7"
-                :width="svg.width"
-                :height="svg.height * 0.3"
-                :fill="gaugeConfig.style.chart.backgroundColor"
-            />
 
             <!-- STEP MARKERS -->
             <text
