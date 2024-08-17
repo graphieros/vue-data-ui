@@ -24,6 +24,7 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
@@ -149,6 +150,14 @@ function selectLegend(legend) {
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiWaffle :key="`responsive_${step}`" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
+    </div>
+
     <Box>
         <template #title>VueUiWaffle</template>
 

@@ -49,6 +49,7 @@ const dataset = computed(() => {
 });
 
 const model = ref([
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
@@ -182,7 +183,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[1])
 
 
 const config = computed(() => {
@@ -225,6 +226,13 @@ function selectLegend(legend) {
     <div style="margin: 12px 0">
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
+    </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiScatter :key="`responsive_${step}`" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
     </div>
 
     <Box>
