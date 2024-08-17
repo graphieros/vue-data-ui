@@ -1230,6 +1230,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiRelationCircleConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -1708,6 +1709,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiScatterConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -2537,6 +2539,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiWaffleConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useBlurOnHover?: boolean;
@@ -2798,6 +2801,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiQuadrantConfig = {
+        responsive?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
         zoomAnimationFrames?: number;
@@ -4328,6 +4332,7 @@ declare module 'vue-data-ui' {
     }>
 
     export type VueUiStripPlotConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
