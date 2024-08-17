@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { 
     createCsvContent, 
     createUid, 
@@ -18,6 +18,7 @@ import {
 dataLabel,
 convertCustomPalette
 } from '../lib';
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -30,6 +31,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -52,30 +54,13 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_scatter);
-const scatterChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const step = ref(0);
-
-onMounted(() => {
-    if(objectIsEmpty(props.dataset)){
-        error({ 
-            componentName: 'VueUiScatter',
-            type: 'dataset'
-        })
-    }
-
-    const xLabel = document.getElementById(`vue-ui-scatter-xAxis-label-${uid.value}`);
-        if(xLabel) {
-            const bboxY = xLabel.getBBox();
-            const xPosition = bboxY.height / 2 + drawingArea.value.left / 5;
-            const yPosition =  drawingArea.value.top + (drawingArea.value.height / 2);
-            xLabel.setAttributeNS(null, "transform", `rotate(-90, ${xPosition}, ${yPosition})`);
-            xLabel.setAttributeNS(null, "x", xPosition);
-            xLabel.setAttributeNS(null, "y", yPosition);
-        }
-});
+const scatterChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
 
 const scatterConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -95,6 +80,36 @@ const scatterConfig = computed(() => {
     }
 });
 
+const resizeObserver = ref(null);
+
+onMounted(() => {
+    if(objectIsEmpty(props.dataset)){
+        error({ 
+            componentName: 'VueUiScatter',
+            type: 'dataset'
+        })
+    }
+
+    if (scatterConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: scatterChart.value,
+                title: scatterConfig.value.style.title.text ? chartTitle.value : null,
+                legend: scatterConfig.value.style.legend.show ? chartLegend.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(scatterChart.value.parentNode);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
+
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-scatter_${uid.value}`,
     fileName: scatterConfig.value.style.title.text || 'vue-ui-scatter',
@@ -108,12 +123,10 @@ const mutableConfig = ref({
     showTable: scatterConfig.value.table.show,
 });
 
-const svg = computed(() => {
-    return {
-        height: scatterConfig.value.style.layout.height,
-        width: scatterConfig.value.style.layout.width,
-    }
-});
+const svg = ref({
+    height: scatterConfig.value.style.layout.height,
+    width: scatterConfig.value.style.layout.width,
+})
 
 const marginalSize = computed(() => {
     if(!scatterConfig.value.style.layout.marginalBars.show) {
@@ -542,9 +555,9 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-scatter ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${scatterConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center;${!scatterConfig.style.title.text ? 'padding-top:36px' : ''};background:${scatterConfig.style.backgroundColor}`">
+    <div :class="`vue-ui-scatter ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${scatterConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center;${!scatterConfig.style.title.text ? 'padding-top:36px' : ''};background:${scatterConfig.style.backgroundColor};${scatterConfig.responsive ? 'height: 100%' : ''}`">
         
-        <div v-if="scatterConfig.style.title.text" :style="`width:100%;background:${scatterConfig.style.backgroundColor}`">
+        <div ref="chartTitle" v-if="scatterConfig.style.title.text" :style="`width:100%;background:${scatterConfig.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
@@ -607,7 +620,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
 
             <!-- AXIS -->
             <g v-if="scatterConfig.style.layout.axis.show">
@@ -700,8 +713,8 @@ defineExpose({
                         v-if="x && marginalBars.avgX[i]"
                         :x="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
                         :y="drawingArea.top - scatterConfig.style.layout.marginalBars.offset - x / marginalBars.maxX * scatterConfig.style.layout.marginalBars.size"
-                        :width="drawingArea.width / scale"
-                        :height="x / marginalBars.maxX * scatterConfig.style.layout.marginalBars.size"
+                        :width="drawingArea.width / scale <= 0 ? 0.0001 : drawingArea.width / scale"
+                        :height="x / marginalBars.maxX * scatterConfig.style.layout.marginalBars.size <= 0 ? 0.0001 : x / marginalBars.maxX * scatterConfig.style.layout.marginalBars.size"
                         :fill="scatterConfig.style.layout.marginalBars.useGradient ? `url(#marginal_x_${uid})` : scatterConfig.style.layout.marginalBars.fill"
                         :style="`opacity:${scatterConfig.style.layout.marginalBars.opacity}`"
                         :stroke="scatterConfig.style.backgroundColor"
@@ -714,8 +727,8 @@ defineExpose({
                         v-if="y && marginalBars.avgY[i]"
                         :x="drawingArea.right + scatterConfig.style.layout.marginalBars.offset"
                         :y="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
-                        :height="drawingArea.height / scale"
-                        :width="y / marginalBars.maxY * scatterConfig.style.layout.marginalBars.size"
+                        :height="drawingArea.height / scale <= 0 ? 0.0001 : drawingArea.height / scale"
+                        :width="y / marginalBars.maxY * scatterConfig.style.layout.marginalBars.size <= 0 ? 0.0001 : y / marginalBars.maxY * scatterConfig.style.layout.marginalBars.size"
                         :fill="scatterConfig.style.layout.marginalBars.useGradient ? `url(#marginal_y_${uid})` : scatterConfig.style.layout.marginalBars.fill"
                         :style="`opacity:${scatterConfig.style.layout.marginalBars.opacity}`"
                         :stroke="scatterConfig.style.backgroundColor"
@@ -874,7 +887,8 @@ defineExpose({
                 </text>
                 <text
                     data-cy="scatter-x-label-name"
-                    :id="`vue-ui-scatter-xAxis-label-${uid}`" 
+                    :id="`vue-ui-scatter-xAxis-label-${uid}`"
+                    :transform="`translate(${scatterConfig.style.layout.dataLabels.xAxis.fontSize * 2}, ${drawingArea.top + drawingArea.height / 2}), rotate(-90)`" 
                     text-anchor="middle"
                     :font-size="scatterConfig.style.layout.dataLabels.xAxis.fontSize"
                     :font-weight="scatterConfig.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
@@ -922,8 +936,8 @@ defineExpose({
                 <rect
                     :x="drawingArea.left"
                     :y="drawingArea.top"
-                    :width="drawingArea.width"
-                    :height="drawingArea.height"
+                    :width="drawingArea.width <= 0 ? 0.0001 : drawingArea.width"
+                    :height="drawingArea.height <= 0 ? 0.0001 : drawingArea.height"
                 />
             </clipPath>
 
@@ -978,19 +992,21 @@ defineExpose({
         />
 
         <!-- LEGEND AS DIV -->
-        <Legend
-            v-if="scatterConfig.style.legend.show"
-            :legendSet="datasetWithId"
-            :config="legendConfig"
-            @clickMarker="({ legend }) => segregate(legend.id)"
-        >
-            <template #item="{ legend }">
-                <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }}
-                </div>
-            </template>
-        </Legend>
-        <slot name="legend" v-bind:legend="datasetWithId"></slot>
+        <div ref="chartLegend">
+            <Legend
+                v-if="scatterConfig.style.legend.show"
+                :legendSet="datasetWithId"
+                :config="legendConfig"
+                @clickMarker="({ legend }) => segregate(legend.id)"
+            >
+                <template #item="{ legend }">
+                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                        {{ legend.name }}
+                    </div>
+                </template>
+            </Legend>
+            <slot v-else name="legend" v-bind:legend="datasetWithId"></slot>
+        </div>
 
         <!-- TOOLTIP -->
         <Tooltip
