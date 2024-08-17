@@ -701,7 +701,7 @@ function drawDataLabels(ds) {
 
 function drawTimeLabels() {
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
-        if ((slicer.value.end - slicer.value.start) < 12 || ((slicer.value.end - slicer.value.start) >= 12 && (i % Math.floor((slicer.value.end - slicer.value.start) / 12) === 0 || i === (tooltipIndex.value + slicer.value.start)))) {
+        if ((slicer.value.end - slicer.value.start) < xyConfig.value.style.chart.grid.y.timeLabels.modulo || ((slicer.value.end - slicer.value.start) >= xyConfig.value.style.chart.grid.y.timeLabels.modulo && (i % Math.floor((slicer.value.end - slicer.value.start) / xyConfig.value.style.chart.grid.y.timeLabels.modulo) === 0 || i === (tooltipIndex.value + slicer.value.start)))) {
             text(
                 ctx.value,
                 xyConfig.value.style.chart.grid.y.timeLabels.values[i] || i + 1,
