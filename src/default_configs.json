@@ -4587,7 +4587,8 @@
                             "values": [],
                             "rotation": 0,
                             "offsetY": 30,
-                            "color": "#2D353C"
+                            "color": "#2D353C",
+                            "modulo": 12
                         }
                     },
                     "x": {
