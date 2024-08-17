@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { 
     XMLNS,
     calculateNiceScale,
@@ -17,8 +17,10 @@ import {
     lightenHexColor,
     objectIsEmpty,
     palette,
-    themePalettes
+    themePalettes,
+translateSize
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -30,6 +32,7 @@ import Shape from "../atoms/Shape.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -57,7 +60,35 @@ const isDataset = computed({
     }
 });
 
+
+const uid = ref(createUid());
+const defaultConfig = ref(mainConfig.vue_ui_strip_plot);
+const step = ref(0);
+const isTooltip = ref(false);
+const tooltipContent = ref("");
+const stripPlotChart = ref(null);
+const chartTitle = ref(null);
 const animationStarted = ref(false);
+
+const stripConfig = computed(() => {
+    const mergedConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
+    });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_strip_plot[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
+});
+
+const resizeObserver = ref(null);
 
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
@@ -97,36 +128,42 @@ onMounted(() => {
             }
         })
     }
+
+    if (stripConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: stripPlotChart.value,
+                title: stripConfig.value.style.chart.title.text ? chartTitle.value : null,
+            });
+            absoluteHeight.value = height;
+
+            svg.value.width = width;
+            svg.value.height = height;
+            
+            stripWidth.value = (width - padding.value.left - padding.value.right) / props.dataset.length;
+            plotRadius.value = translateSize({
+                relator: Math.min(height, width),
+                adjuster: 600,
+                source: stripConfig.value.style.chart.plots.radius,
+                threshold: 6,
+                fallback: 6
+            });
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(stripPlotChart.value.parentNode);
+    }
+
     animationStarted.value = true;
     setTimeout(() => {
         animationActive.value = false;
     }, maxSeries.value * 50)
 });
 
-const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_strip_plot);
-const stripPlotChart = ref(null);
-const step = ref(0);
-const isTooltip = ref(false);
-const tooltipContent = ref("");
-
-const stripConfig = computed(() => {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: defaultConfig.value
-    });
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_strip_plot[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
-        }
-    } else {
-        return mergedConfig;
-    }
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
 });
+
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `strip-plot_${uid.value}`,
@@ -146,20 +183,35 @@ const mutableConfig = ref({
     }
 });
 
+const padding = ref({
+    top: stripConfig.value.style.chart.padding.top,
+    bottom: stripConfig.value.style.chart.padding.bottom,
+    left: stripConfig.value.style.chart.padding.left,
+    right: stripConfig.value.style.chart.padding.right
+})
+
+const stripWidth = ref(stripConfig.value.style.chart.stripWidth);
+const absoluteHeight = ref(stripConfig.value.style.chart.height);
+const plotRadius = ref(stripConfig.value.style.chart.plots.radius);
+
+const svg = ref({
+    width: stripWidth.value * props.dataset.length + padding.value.left + padding.value.right,
+    height:stripConfig.value.style.chart.height
+})
+
+
 const drawingArea = computed(() => {
-    const stripWidth = stripConfig.value.style.chart.stripWidth;
-    const absoluteWidth = stripWidth * props.dataset.length + stripConfig.value.style.chart.padding.left + stripConfig.value.style.chart.padding.right;
-    const absoluteHeight = stripConfig.value.style.chart.height;
+    const absoluteWidth = stripWidth.value * props.dataset.length + padding.value.left + padding.value.right;
 
     return {
-        left: stripConfig.value.style.chart.padding.left,
-        right: absoluteWidth - stripConfig.value.style.chart.padding.right,
-        top: stripConfig.value.style.chart.padding.top,
-        bottom: absoluteHeight - stripConfig.value.style.chart.padding.bottom,
-        width: stripWidth * props.dataset.length,
-        height: absoluteHeight - stripConfig.value.style.chart.padding.top - stripConfig.value.style.chart.padding.bottom,
-        stripWidth,
-        absoluteHeight,
+        left: padding.value.left,
+        right: absoluteWidth - padding.value.right,
+        top: padding.value.top,
+        bottom: absoluteHeight.value - padding.value.bottom,
+        width: stripWidth.value * props.dataset.length,
+        height: absoluteHeight.value - padding.value.top - padding.value.bottom,
+        stripWidth: stripWidth.value,
+        absoluteHeight: absoluteHeight.value,
         absoluteWidth,
     }
 });
@@ -383,9 +435,9 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="stripPlotChart" :class="`vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${stripConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${stripConfig.style.fontFamily};width:100%; text-align:center;${!stripConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${stripConfig.style.chart.backgroundColor}`" :id="`strip-plot_${uid}`">
+    <div ref="stripPlotChart" :class="`vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${stripConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${stripConfig.style.fontFamily};width:100%; text-align:center;${!stripConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${stripConfig.style.chart.backgroundColor};${stripConfig.responsive ? 'height:100%' : ''}`" :id="`strip-plot_${uid}`">
 
-        <div v-if="stripConfig.style.chart.title.text" :style="`width:100%;background:${stripConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        <div ref="chartTitle" v-if="stripConfig.style.chart.title.text" :style="`width:100%;background:${stripConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
@@ -451,7 +503,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.absoluteWidth} ${drawingArea.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${stripConfig.style.chart.backgroundColor};color:${stripConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%; overflow: visible; background:${stripConfig.style.chart.backgroundColor};color:${stripConfig.style.chart.color};`">
             
             <!-- GRID -->
             <g v-if="stripConfig.style.chart.grid.show">
@@ -598,7 +650,7 @@ defineExpose({
                 <Shape 
                     v-for="(plot, i) in ds.plots"
                     :plot="{ x:plot.x, y: animationStarted ? plot.y : drawingArea.top }"
-                    :radius="selectedDatapoint && selectedDatapoint.id === plot.id ? stripConfig.style.chart.plots.radius * 1.5 : stripConfig.style.chart.plots.radius"
+                    :radius="selectedDatapoint && selectedDatapoint.id === plot.id ? plotRadius * 1.5 : plotRadius"
                     :shape="stripConfig.style.chart.plots.shape"
                     :stroke="stripConfig.style.chart.plots.stroke"
                     :strokeWidth="stripConfig.style.chart.plots.strokeWidth"
@@ -617,7 +669,7 @@ defineExpose({
                         <text 
                             v-if="i === ds.plots.length - 1"
                             :x="plot.x"
-                            :y="plot.y + stripConfig.style.chart.labels.bestPlotLabel.offsetY - stripConfig.style.chart.plots.radius * 1.5"
+                            :y="plot.y + stripConfig.style.chart.labels.bestPlotLabel.offsetY - plotRadius * 1.5"
                             :font-size="stripConfig.style.chart.labels.bestPlotLabel.fontSize"
                             :fill="stripConfig.style.chart.labels.bestPlotLabel.color"
                             text-anchor="middle"
