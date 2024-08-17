@@ -656,6 +656,7 @@
         }
     },
     "vue_ui_waffle": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "useBlurOnHover": true,
@@ -881,6 +882,7 @@
         }
     },
     "vue_ui_quadrant": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "useCssAnimation": true,
@@ -2023,6 +2025,7 @@
         }
     },
     "vue_ui_scatter": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "useCssAnimation": true,
@@ -2680,6 +2683,7 @@
         }
     },
     "vue_ui_relation_circle": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "style": {
@@ -4145,6 +4149,7 @@
         }
     },
     "vue_ui_strip_plot": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "useCssAnimation": true,
