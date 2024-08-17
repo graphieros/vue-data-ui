@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const dataset = ref([
         {
             name: "S0",
-            series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64],
+            series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12, 12, 12, 12],
             type: "line",
             smooth: false,
             useArea: true,
@@ -110,6 +110,10 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.showOnlyFirstAndLast', def: false, type: 'checkbox', label: 'showOnlyFirstAndLast', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 8, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
+
+    { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: true, type: 'checkbox'},
+    { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number'},
+
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 20, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
