@@ -800,9 +800,15 @@
                 <!-- TIME LABELS -->
                 <g v-if="chartConfig.chart.grid.labels.xAxisLabels.show">
                     <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
+                        
                         <text
                             :data-cy="`xy-time-label-${i}`"
-                            v-if="(label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1)) || (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i)"
+                            v-if="
+                                (label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
+                                (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
+                                (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
+                                (label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && chartConfig.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % chartConfig.chart.grid.labels.xAxisLabels.modulo === 0))
+                            "
                             :text-anchor="chartConfig.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : chartConfig.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                             :font-size="fontSizes.xAxis"
                             :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
