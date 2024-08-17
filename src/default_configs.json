@@ -256,6 +256,8 @@
                         "values": [],
                         "fontSize": 6,
                         "showOnlyFirstAndLast": false,
+                        "showOnlyAtModulo": false,
+                        "modulo": 12,
                         "yOffset": 0,
                         "rotation": 0
                     }
