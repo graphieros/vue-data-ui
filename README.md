@@ -603,32 +603,32 @@ The following table lays out the current state of this rollout:
 | VueUiFlow                   | ❌                             | ✅                                |
 | VueUiGalaxy                 | ❌                             | ✅                                |
 | VueUiGauge                  | ❌                             | ✅                                |
-| VueUiHeatmap                | ❌                             | ❌                                |
-| VueUiMolecule               | ❌                             | ❌                                |
+| VueUiHeatmap                | -                              | ❌                                |
+| VueUiMolecule               | -                              | ❌                                |
 | VueUiMoodRadar              | ❌                             | ✅                                |
 | VueUiNestedDonuts           | ✅                             | Done in v2.2.52                   |
 | VueUiOnion                  | ✅                             | Done in v2.2.52                   |
 | VueUiParallelCoordinatePlot | ✅                             | Done in v2.2.53                   |
-| VueUiQuadrant               | ❌                             | ✅                                |
+| VueUiQuadrant               | ✅                             | Done in v2.2.55                   |
 | VueUiQuickChart             | ✅                             | Done in v2.2.52                   |
 | VueUiRadar                  | ✅                             | Done in v2.2.53                   |
-| VueUiRelationCircle         | ❌                             | ✅                                |
+| VueUiRelationCircle         | ✅                             | Done in v2.2.55                   |
 | VueUiRings                  | ✅                             | Done in v2.2.53                   |
-| VueUiScatter                | ❌                             | ✅                                |
-| VueUiSparkHistogram         | ❌                             | ❌                                |
-| VueUiSparkStackbar          | ❌                             | ❌                                |
-| VueUiSparkTrend             | ❌                             | ❌                                |
-| VueUiSparkbar               | ❌                             | ❌                                |
-| VueUiSparkgauge             | ❌                             | ❌                                |
-| VueUiSparkline              | ❌                             | ❌                                |
-| VueUiStripPlot              | ❌                             | ✅                                |
-| VueUiTableHeatmap           | ❌                             | ❌                                |
-| VueUiTableSparkline         | ❌                             | ❌                                |
-| VueUiThermometer            | ❌                             | ✅                                |
-| VueUiTiremarks              | ❌                             | ✅                                |
+| VueUiScatter                | ✅                             | Done in v2.2.55                   |
+| VueUiSparkHistogram         | -                              | ❌                                |
+| VueUiSparkStackbar          | -                              | ❌                                |
+| VueUiSparkTrend             | -                              | ❌                                |
+| VueUiSparkbar               | -                              | ❌                                |
+| VueUiSparkgauge             | -                              | ❌                                |
+| VueUiSparkline              | -                              | ❌                                |
+| VueUiStripPlot              | ✅                             | Done in v2.2.55                   |
+| VueUiTableHeatmap           | -                              | ❌                                |
+| VueUiTableSparkline         | -                              | ❌                                |
+| VueUiThermometer            | -                              | ❌                                |
+| VueUiTiremarks              | -                              | ❌                                |
 | VueUiTreemap                | ✅                             | Done in v2.2.53                   |
 | VueUiVerticalBar            | ❌                             | ✅                                |
-| VueUiWaffle                 | ❌                             | ✅                                |
+| VueUiWaffle                 | ✅                             | Done in v2.2.55                   |
 | VueUiWheel                  | ❌                             | ✅                                |
 | VueUiWordCloud              | ❌                             | ✅                                |
 | VueUiXy                     | ✅                             | Done in v2.2.52                   |
