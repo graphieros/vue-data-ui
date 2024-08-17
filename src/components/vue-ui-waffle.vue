@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { 
     abbreviate,
     adaptColorToBackground,
@@ -20,6 +20,7 @@ import {
     themePalettes,
     XMLNS
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -31,6 +32,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -49,7 +51,39 @@ const props = defineProps({
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length
-})
+});
+
+const uid = ref(createUid());
+const defaultConfig = ref(mainConfig.vue_ui_waffle);
+const details = ref(null);
+const isTooltip = ref(false);
+const tooltipContent = ref("");
+const selectedSerie = ref(null);
+const step = ref(0);
+const waffleChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
+
+const waffleConfig = computed(() => {
+    const mergedConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
+    });
+
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_waffle[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
+});
+
+const resizeObserver = ref(null);
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -72,36 +106,29 @@ onMounted(() => {
             });
         });
     }
-});
 
+    if (waffleConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: waffleChart.value,
+                title: waffleConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: waffleConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+            drawingArea.value.width = width;
+            drawingArea.value.height = height;
+        });
 
-const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_waffle);
-const waffleChart = ref(null);
-const details = ref(null);
-const isTooltip = ref(false);
-const tooltipContent = ref("");
-const selectedSerie = ref(null);
-const step = ref(0);
-
-const waffleConfig = computed(() => {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: defaultConfig.value
-    });
-
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_waffle[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
-        }
-    } else {
-        return mergedConfig;
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(waffleChart.value.parentNode);
     }
 });
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
+
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-waffle_${uid.value}`,
@@ -117,29 +144,32 @@ const mutableConfig = ref({
     showTable: waffleConfig.value.table.show
 })
 
-const svg = computed(() => {
-    const height = 512;
-    return {
-        height,
-        width: 512,
-    }
+const svg = ref({
+    height: 512,
+    width: 512
 });
 
-const drawingArea = computed(() => {
-    return {
-        top: 0,
-        left: 0,
-        height: 512,
-        width: 512,
-    }
+const drawingArea = ref({
+    top: 0,
+    left: 0,
+    height: 512,
+    width: 512
 });
 
 const rectDimension = computed(() => {
     return ((drawingArea.value.width - (waffleConfig.value.style.chart.layout.grid.size * waffleConfig.value.style.chart.layout.grid.spaceBetween )) / waffleConfig.value.style.chart.layout.grid.size);
 });
 
+const rectDimensionY = computed(() => {
+    return ((drawingArea.value.height - (waffleConfig.value.style.chart.layout.grid.size * waffleConfig.value.style.chart.layout.grid.spaceBetween )) / waffleConfig.value.style.chart.layout.grid.size);
+})
+
 const absoluteRectDimension = computed(() => {
-    return ((drawingArea.value.width ) / waffleConfig.value.style.chart.layout.grid.size);
+    return ((drawingArea.value.width) / waffleConfig.value.style.chart.layout.grid.size);
+});
+
+const absoluteRectDimensionY = computed(() => {
+    return ((drawingArea.value.height) / waffleConfig.value.style.chart.layout.grid.size);
 })
 
 function calculateProportions(numbers) {
@@ -280,7 +310,7 @@ const positions = computed(() => {
                 isStartOfLine: j === 0,
                 position: waffleConfig.value.style.chart.layout.grid.vertical ? i : j,
                 x: (waffleConfig.value.style.chart.layout.grid.vertical ? i : j) * (rectDimension.value + waffleConfig.value.style.chart.layout.grid.spaceBetween),
-                y: (waffleConfig.value.style.chart.layout.grid.vertical ? j : i) * (rectDimension.value + waffleConfig.value.style.chart.layout.grid.spaceBetween) + drawingArea.value.top,
+                y: (waffleConfig.value.style.chart.layout.grid.vertical ? j : i) * (rectDimensionY.value + waffleConfig.value.style.chart.layout.grid.spaceBetween) + drawingArea.value.top,
             })
         }
     }
@@ -576,10 +606,10 @@ defineExpose({
         :class="`vue-ui-waffle ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
         ref="waffleChart" 
         :id="`vue-ui-waffle_${uid}`"
-        :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center;${!waffleConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${waffleConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center;${!waffleConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${waffleConfig.style.chart.backgroundColor};${waffleConfig.responsive ? 'height: 100%' : ''}`"
     >
         <!-- TITLE AS DIV -->
-        <div v-if="waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div ref="chartTitle" v-if="waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
@@ -641,7 +671,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="waffle-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="waffle-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >
 
             <!-- DEFS -->
             <defs>
@@ -665,8 +695,8 @@ defineExpose({
                     v-for="(position, i) in positions"
                     :x="position.x"
                     :y="position.y"
-                    :height="rectDimension"
-                    :width="rectDimension"
+                    :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
+                    :width="rectDimension <= 0 ? 0.0001 : rectDimension"
                     class="vue-ui-waffle-custom-cell-foreignObject"
                 >
                     <slot name="cell" v-bind="{ cell: {...position, color: rects[i].color, ...rects[i]}, isSelected: [null, undefined].includes(selectedSerie) ? true : rects[i].serieIndex === selectedSerie }"/>
@@ -680,8 +710,8 @@ defineExpose({
                     :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
                     :x="position.x"
                     :y="position.y"
-                    :height="rectDimension"
-                    :width="rectDimension"
+                    :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
+                    :width="rectDimension <= 0 ? 0.0001 : rectDimension"
                     fill="white"
                     :stroke="waffleConfig.style.chart.layout.rect.stroke"
                     :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
@@ -692,8 +722,8 @@ defineExpose({
                     :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
                     :x="position.x"
                     :y="position.y"
-                    :height="rectDimension"
-                    :width="rectDimension"
+                    :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
+                    :width="rectDimension <= 0 ? 0.0001 : rectDimension"
                     :fill="waffleConfig.style.chart.layout.rect.useGradient && waffleConfig.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
                     :stroke="waffleConfig.style.chart.layout.rect.stroke"
                     :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
@@ -707,8 +737,8 @@ defineExpose({
                     v-if="!isAnimating && !waffleConfig.style.chart.layout.grid.vertical && waffleConfig.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < waffleConfig.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % waffleConfig.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
                     :x="position.x + waffleConfig.style.chart.layout.labels.captions.offsetX"
                     :y="position.y + waffleConfig.style.chart.layout.labels.captions.offsetY"
-                    :height="absoluteRectDimension"
-                    :width="absoluteRectDimension * waffleConfig.style.chart.layout.grid.size"
+                    :height="absoluteRectDimensionY <= 0 ? 0.0001 : absoluteRectDimensionY"
+                    :width="absoluteRectDimension * waffleConfig.style.chart.layout.grid.size <= 0 ? 0.0001 : absoluteRectDimension * waffleConfig.style.chart.layout.grid.size"
                     :filter="getBlurFilter(rects[i].serieIndex)"
                 >
                     <div class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${waffleConfig.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
@@ -735,8 +765,8 @@ defineExpose({
                 @mouseleave="isTooltip = false; selectedSerie = null"
                 :x="position.x"
                 :y="position.y"
-                :height="absoluteRectDimension"
-                :width="absoluteRectDimension"
+                :height="absoluteRectDimensionY <= 0 ? 0.0001 : absoluteRectDimensionY"
+                :width="absoluteRectDimension <= 0 ? 0.0001 : absoluteRectDimension"
                 fill="transparent"
                 stroke="none"
             />
@@ -757,26 +787,28 @@ defineExpose({
         />
 
         <!-- LEGEND AS DIV -->
-        <Legend
-            v-if="waffleConfig.style.chart.legend.show"
-            :legendSet="legendSet"
-            :config="legendConfig"
-            @clickMarker="({legend}) => segregate(legend.uid)"
-        >
-            <template #item="{ legend }">
-                <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue, isAnimating})}}
-                    <span v-if="!segregated.includes(legend.uid)">
-                        ({{ isNaN(legend.value / total) ? '-' : dataLabel({v: legend.value /total * 100, s: '%', r: waffleConfig.style.chart.legend.roundingPercentage, isAnimating }) }})
-                    </span>
-                    <span v-else>
-                        ( - % )
-                    </span>
-                </div>
-            </template>
-        </Legend>
-
-        <slot name="legend" v-bind:legend="legendSet"></slot>
+        <div ref="chartLegend">        
+            <Legend
+                v-if="waffleConfig.style.chart.legend.show"
+                :legendSet="legendSet"
+                :config="legendConfig"
+                @clickMarker="({legend}) => segregate(legend.uid)"
+            >
+                <template #item="{ legend }">
+                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                        {{ legend.name }} : {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue, isAnimating})}}
+                        <span v-if="!segregated.includes(legend.uid)">
+                            ({{ isNaN(legend.value / total) ? '-' : dataLabel({v: legend.value /total * 100, s: '%', r: waffleConfig.style.chart.legend.roundingPercentage, isAnimating }) }})
+                        </span>
+                        <span v-else>
+                            ( - % )
+                        </span>
+                    </div>
+                </template>
+            </Legend>
+    
+            <slot v-else name="legend" v-bind:legend="legendSet"></slot>
+        </div>
 
         <!-- TOOLTIP -->
         <Tooltip
