@@ -124,6 +124,7 @@ const model = ref([
     { key: 'style.chart.grid.y.timeLabels.rotation', def: 0, type: 'number', min: -360, max: 360 },
     { key: 'style.chart.grid.y.timeLabels.offsetY', def: 30, type: 'number', min: -100, max: 100 },
     { key: 'style.chart.grid.y.timeLabels.color', def: '#1A1A1A', type: 'color' },
+    { key: 'style.chart.grid.y.timeLabels.modulo', def: 6, type: 'number', min: 1, max: 100},
     { key: 'style.chart.grid.x.showAxis', def: true, type: 'checkbox' },
     { key: 'style.chart.grid.x.axisName', def: 'X AXIS', type: 'text' },
     { key: 'style.chart.grid.x.axisColor', def: '#1A1A1A', type: 'color' },
