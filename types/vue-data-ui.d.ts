@@ -2080,6 +2080,8 @@ declare module 'vue-data-ui' {
                         showOnlyFirstAndLast?: boolean;
                         yOffset?: number;
                         rotation?: number;
+                        showOnlyAtModulo?: boolean;
+                        modulo?: number;
                     };
                 };
             };
@@ -4717,6 +4719,8 @@ declare module 'vue-data-ui' {
                             rotation?: number;
                             offsetY?: number;
                             color?: string;
+                            showOnlyAtModulo?: boolean;
+                            modulo?: number;
                         };
                     };
                     x?: {
