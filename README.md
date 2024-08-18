@@ -627,9 +627,9 @@ The following table lays out the current state of this rollout:
 | VueUiThermometer            | -                              | ❌                                |
 | VueUiTiremarks              | -                              | ❌                                |
 | VueUiTreemap                | ✅                             | Done in v2.2.53                   |
-| VueUiVerticalBar            | ❌                             | ✅                                |
+| VueUiVerticalBar            | ✅                             | Done in v2.2.60                   |
 | VueUiWaffle                 | ✅                             | Done in v2.2.55                   |
 | VueUiWheel                  | ❌                             | ✅                                |
-| VueUiWordCloud              | ❌                             | ✅                                |
+| VueUiWordCloud              | ✅                             | Done in v2.2.60                   |
 | VueUiXy                     | ✅                             | Done in v2.2.52                   |
-| VueUiXyCanvas               | ❌                             | ✅                                |
+| VueUiXyCanvas               | ✅                             | Done in v2.2.60                   |
