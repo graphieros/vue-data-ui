@@ -251,7 +251,7 @@ const config = computed(() => {
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
         <LocalVueUiXyCanvas :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
-            responsive: true
+            responsive: true,
         }"/>
     </div>
 
