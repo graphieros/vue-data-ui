@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import {
     convertColorToHex,
     createCsvContent,
@@ -15,8 +15,10 @@ import {
     shiftHue,
     themePalettes,
     XMLNS,
-    convertCustomPalette
+    convertCustomPalette,
+translateSize
 } from "../lib.js";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -28,6 +30,7 @@ import BaseIcon from "../atoms/BaseIcon.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -51,13 +54,15 @@ const isDataset = computed(() => {
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_vertical_bar);
 
-const verticalBarChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const barCount = ref(0);
 const hoveredBar = ref(null);
 const step = ref(0);
+const verticalBarChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
 
 const emit = defineEmits(['selectLegend']);
 
@@ -92,7 +97,9 @@ const tableContainer = ref(null)
 const isResponsive = ref(false)
 const breakpoint = computed(() => {
     return verticalBarConfig.value.table.responsiveBreakpoint
-})
+});
+
+const resizeObserver = ref(null);
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -109,9 +116,28 @@ onMounted(() => {
             return 1;
         }
     }).reduce((a, b) => a + b, 0);
-    observeTable()
+    observeTable();
+
+    if (verticalBarConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: verticalBarChart.value,
+                title: verticalBarConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: verticalBarConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+
+            baseWidth.value = width;
+            barHeight.value = height / barCount.value - (barGap.value * 2)
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(verticalBarChart.value.parentNode);
+    }
 });
 
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
 
 function observeTable() {
     const observer = new ResizeObserver((entries) => {
@@ -214,12 +240,20 @@ const legendConfig = computed(() => {
         paddingBottom: 12,
         fontWeight: verticalBarConfig.value.style.chart.legend.bold ? 'bold' : ''
     }
-})
+});
+
+const barHeight = ref(verticalBarConfig.value.style.chart.layout.bars.height);
+const barGap = ref(verticalBarConfig.value.style.chart.layout.bars.gap);
+
+const baseHeight = computed(() => {
+    return (barHeight.value + barGap.value) * barCount.value
+});
+const baseWidth = ref(512);
 
 const svg = computed(() => {
     return {
-        width: 512,
-        height: (verticalBarConfig.value.style.chart.layout.bars.height + verticalBarConfig.value.style.chart.layout.bars.gap) * barCount.value,
+        width: baseWidth.value,
+        height: baseHeight.value,
         padding: {
             top: 12,
             left: 128 + verticalBarConfig.value.style.chart.layout.bars.offsetX,
@@ -308,8 +342,8 @@ function calcDataLabelX(val) {
 
 function getParentData(serie, index) {
     const parent = mutableDataset.value.find(el => el.id === serie.parentId);
-    const start = drawableArea.value.top + ((verticalBarConfig.value.style.chart.layout.bars.gap + verticalBarConfig.value.style.chart.layout.bars.height) * (index));
-    const height = parent.children.length * (verticalBarConfig.value.style.chart.layout.bars.gap + verticalBarConfig.value.style.chart.layout.bars.height);
+    const start = drawableArea.value.top + ((barGap.value + barHeight.value) * (index));
+    const height = parent.children.length * (barGap.value + barHeight.value);
     return {
         y: start + (height / 2) - (verticalBarConfig.value.style.chart.layout.bars.parentLabels.fontSize),
         name: parent.name,
@@ -492,9 +526,9 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${verticalBarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center;${!verticalBarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${verticalBarConfig.style.chart.backgroundColor}`">
+    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${verticalBarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center;${!verticalBarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${verticalBarConfig.style.chart.backgroundColor};${verticalBarConfig.responsive ? 'height: 100%' : ''}`">
     
-        <div v-if="verticalBarConfig.style.chart.title.text" :style="`width:100%;background:${verticalBarConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div ref="chartTitle" v-if="verticalBarConfig.style.chart.title.text" :style="`width:100%;background:${verticalBarConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
@@ -564,21 +598,22 @@ defineExpose({
         </UserOptions>
 
          <!-- LEGEND AS DIV : TOP -->
-        <Legend
-            v-if="verticalBarConfig.style.chart.legend.show && verticalBarConfig.style.chart.legend.position === 'top'"
-            :legendSet="immutableDataset"
-            :config="legendConfig"
-            @clickMarker="({ legend }) => segregate(legend.id)"
-        >
-            <template #item="{ legend }">
-                <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
-                </div>
-            </template>
-        </Legend>
+        <div ref="chartLegend"  v-if="verticalBarConfig.style.chart.legend.show && verticalBarConfig.style.chart.legend.position === 'top'">
+            <Legend
+                :legendSet="immutableDataset"
+                :config="legendConfig"
+                @clickMarker="({ legend }) => segregate(legend.id)"
+            >
+                <template #item="{ legend }">
+                    <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                        {{ legend.name }} : {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
+                    </div>
+                </template>
+            </Legend>
+        </div>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" >
 
             <!-- defs -->
             <linearGradient
@@ -595,9 +630,9 @@ defineExpose({
                 <rect
                     :data-cy="`vertical-bar-rect-underlayer-${i}`"
                     :x="drawableArea.left"
-                    :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i)"
-                    :width="calcBarWidth(serie.value)"
-                    :height="verticalBarConfig.style.chart.layout.bars.height"
+                    :y="drawableArea.top + ((barGap + barHeight) * i)"
+                    :width="calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)"
+                    :height="barHeight <= 0 ? 0.0001 : barHeight"
                     :fill="verticalBarConfig.style.chart.layout.bars.underlayerColor"
                     :rx="verticalBarConfig.style.chart.layout.bars.borderRadius"
                     :class="{ 'animated': verticalBarConfig.useCssAnimation }"
@@ -607,9 +642,9 @@ defineExpose({
                 <!-- BARS -->
                 <rect 
                     :x="drawableArea.left"
-                    :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i)"
-                    :width="calcBarWidth(serie.value)"
-                    :height="verticalBarConfig.style.chart.layout.bars.height"
+                    :y="drawableArea.top + ((barGap + barHeight) * i)"
+                    :width="calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)"
+                    :height="barHeight <= 0 ? 0.0001 : barHeight"
                     :fill="verticalBarConfig.style.chart.layout.bars.useGradient ? `url(#vertical_bar_gradient_${uid}_${i})` : `${serie.color}${opacity[verticalBarConfig.style.chart.layout.bars.fillOpacity]}`"
                     :rx="verticalBarConfig.style.chart.layout.bars.borderRadius"
                     :stroke="verticalBarConfig.style.chart.layout.bars.useStroke ? serie.color : 'none'"
@@ -622,8 +657,8 @@ defineExpose({
                     v-if="(!serie.isChild || serie.isLastChild) && verticalBarConfig.style.chart.layout.separators.show && i !== bars.length -1"
                     :x1="0"
                     :x2="drawableArea.left"
-                    :y1="verticalBarConfig.style.chart.layout.bars.height + (verticalBarConfig.style.chart.layout.bars.gap / 2) + drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i)"
-                    :y2="verticalBarConfig.style.chart.layout.bars.height + (verticalBarConfig.style.chart.layout.bars.gap / 2) + drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i)"
+                    :y1="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
+                    :y2="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
                     :stroke="verticalBarConfig.style.chart.layout.separators.color"
                     :stroke-width="verticalBarConfig.style.chart.layout.separators.strokeWidth"
                     stroke-linecap="round"
@@ -633,7 +668,7 @@ defineExpose({
                 <text
                     :data-cy="`vertical-bar-datalabel-${i}`"
                     :x="calcDataLabelX(serie.value) + 3 + verticalBarConfig.style.chart.layout.bars.dataLabels.offsetX"
-                    :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i) + (verticalBarConfig.style.chart.layout.bars.height / 2) + verticalBarConfig.style.chart.layout.bars.dataLabels.fontSize / 2"
+                    :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + verticalBarConfig.style.chart.layout.bars.dataLabels.fontSize / 2"
                     text-anchor="start"
                     :font-size="verticalBarConfig.style.chart.layout.bars.dataLabels.fontSize"
                     :fill="verticalBarConfig.style.chart.layout.bars.dataLabels.color"
@@ -647,7 +682,7 @@ defineExpose({
                     v-if="(serie.isChild || !serie.hasChildren) && verticalBarConfig.style.chart.layout.bars.nameLabels.show"
                     text-anchor="end"
                     :x="drawableArea.left - 3 + verticalBarConfig.style.chart.layout.bars.nameLabels.offsetX"
-                    :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i) + (verticalBarConfig.style.chart.layout.bars.height / 2) + verticalBarConfig.style.chart.layout.bars.nameLabels.fontSize / 2"
+                    :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + verticalBarConfig.style.chart.layout.bars.nameLabels.fontSize / 2"
                     :font-size="verticalBarConfig.style.chart.layout.bars.nameLabels.fontSize"
                     :fill="verticalBarConfig.style.chart.layout.bars.nameLabels.color"
                     :font-weight="verticalBarConfig.style.chart.layout.bars.nameLabels.bold ? 'bold' : 'normal'"
@@ -684,9 +719,9 @@ defineExpose({
                     :data-cy="`vertical-bar-trap-${i}`"
                     data-cy-trap
                     :x="0"
-                    :y="drawableArea.top + ((verticalBarConfig.style.chart.layout.bars.gap + verticalBarConfig.style.chart.layout.bars.height) * i) - (verticalBarConfig.style.chart.layout.bars.gap/2)"
-                    :width="svg.width"
-                    :height="verticalBarConfig.style.chart.layout.bars.height + verticalBarConfig.style.chart.layout.bars.gap"
+                    :y="drawableArea.top + ((barGap + barHeight) * i) - (barGap/2)"
+                    :width="svg.width <= 0 ? 0.0001 : svg.width"
+                    :height="barHeight + barGap <= 0 ? 0.0001 : barHeight + barGap"
                     :fill="selectedBarId === serie.id ? `${verticalBarConfig.style.chart.layout.highlighter.color}${opacity[verticalBarConfig.style.chart.layout.highlighter.opacity]}` : 'transparent'"
                     @mouseenter="useTooltip(serie, i)"
                     @mouseleave="hoveredBar = null; isTooltip = false; selectedBarId = null"
@@ -712,18 +747,19 @@ defineExpose({
         />
 
          <!-- LEGEND AS DIV : BOTTOM -->
-         <Legend
-            v-if="verticalBarConfig.style.chart.legend.show && verticalBarConfig.style.chart.legend.position === 'bottom'"
-            :legendSet="immutableDataset"
-            :config="legendConfig"
-            @clickMarker="({ legend }) => segregate(legend.id)"
-        >
-            <template #item="{ legend }">
-                <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
-                </div>
-            </template>
-        </Legend>
+        <div ref="chartLegend" v-if="verticalBarConfig.style.chart.legend.show && verticalBarConfig.style.chart.legend.position === 'bottom'">
+            <Legend
+                :legendSet="immutableDataset"
+                :config="legendConfig"
+                @clickMarker="({ legend }) => segregate(legend.id)"
+            >
+                <template #item="{ legend }">
+                    <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                        {{ legend.name }} : {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
+                    </div>
+                </template>
+            </Legend>
+        </div>
 
         <slot name="legend" v-bind:legend="immutableDataset"></slot>
 
