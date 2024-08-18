@@ -1,10 +1,10 @@
 <script setup>
-import { ref, watch, computed, nextTick, onMounted } from 'vue';
+import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue';
 import UserOptions from '../atoms/UserOptions.vue';
-import { createUid, createWordCloudDatasetFromPlainText } from '../lib';
+import { createUid, createWordCloudDatasetFromPlainText, translateSize } from '../lib';
 import {
     downloadCsv,
     error,
@@ -16,10 +16,12 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
+import { throttle } from '../canvas-lib';
 import Accordion from "./vue-ui-accordion.vue";
 import DataTable from '../atoms/DataTable.vue';
 import { useNestedProp } from '../useNestedProp';
 import { usePrinter } from '../usePrinter';
+import { useResponsive } from '../useResponsive';
 
 const props = defineProps({
     config: {
@@ -47,6 +49,40 @@ const isDataset = computed({
 
 const drawableDataset = ref(typeof props.dataset === 'string' ? createWordCloudDatasetFromPlainText(props.dataset) : props.dataset);
 
+const uid = ref(createUid());
+const step = ref(0);
+const wordCloudChart = ref(null);
+const chartTitle = ref(null);
+
+const defaultConfig = ref(mainConfig.vue_ui_word_cloud);
+
+const wordCloudConfig = computed(() => {
+    const mergedConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
+    });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_word_cloud[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
+});
+
+const svg = ref({
+    width: wordCloudConfig.value.style.chart.width,
+    height: wordCloudConfig.value.style.chart.height,
+    maxFontSize: wordCloudConfig.value.style.chart.words.maxFontSize,
+    minFontSize: wordCloudConfig.value.style.chart.words.minFontSize
+})
+
+const resizeObserver = ref(null);
+
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
         error({
@@ -67,33 +103,26 @@ onMounted(() => {
                     index: i
                 })
             })
-        })
-        
+        })   
+    }
+    if (wordCloudConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: wordCloudChart.value,
+                title: wordCloudConfig.value.style.chart.title.text ? chartTitle.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+            nextTick(generateWordCloud)
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(wordCloudChart.value.parentNode);
     }
 });
 
-const uid = ref(createUid());
-const wordCloudChart = ref(null);
-const step = ref(0);
-
-const defaultConfig = ref(mainConfig.vue_ui_word_cloud);
-
-const wordCloudConfig = computed(() => {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: defaultConfig.value
-    });
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_word_cloud[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
-        }
-    } else {
-        return mergedConfig;
-    }
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -166,17 +195,12 @@ const positionedWords = ref([]);
 watch(() => props.dataset, generateWordCloud, { immediate: true });
 
 function generateWordCloud() {
-    const svgWidth = wordCloudConfig.value.style.chart.width;
-    const svgHeight = wordCloudConfig.value.style.chart.height;
-    const maxFontSize = wordCloudConfig.value.style.chart.words.maxFontSize;
-    const minFontSize = wordCloudConfig.value.style.chart.words.minFontSize
-
     const values = drawableDataset.value.map(d => d.value);
     const maxValue = Math.max(...values);
     const minValue = Math.min(...values);
 
     const scaledWords = drawableDataset.value.map((word, i) => {
-        const fontSize = ((word.value - minValue) / (maxValue - minValue)) * (maxFontSize - minFontSize) + minFontSize;
+        const fontSize = ((word.value - minValue) / (maxValue - minValue)) * (svg.value.maxFontSize - svg.value.minFontSize) + svg.value.minFontSize;
         const size = measureTextSize(word.name, fontSize);
         return {
             ...word,
@@ -188,7 +212,7 @@ function generateWordCloud() {
         };
     });
 
-    positionedWords.value = positionWords(scaledWords, svgWidth, svgHeight).sort((a, b) => b.fontSize - a.fontSize);
+    positionedWords.value = positionWords(scaledWords, svg.value.width, svg.value.height).sort((a, b) => b.fontSize - a.fontSize);
 }
 
 const table = computed(() => {
@@ -286,9 +310,8 @@ defineExpose({
 
 <template>
     <div class="vue-ui-word-cloud" ref="wordCloudChart" :id="`wordCloud_${uid}`"
-        :style="`width: 100%; font-family:${wordCloudConfig.style.fontFamily};background:${wordCloudConfig.style.chart.backgroundColor}`">
-        <div v-if="wordCloudConfig.style.chart.title.text"
-                    :style="`width:100%;background:${wordCloudConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        :style="`width: 100%; font-family:${wordCloudConfig.style.fontFamily};background:${wordCloudConfig.style.chart.backgroundColor};${wordCloudConfig.responsive ? 'height:100%' : ''}`">
+        <div ref="chartTitle" v-if="wordCloudConfig.style.chart.title.text" :style="`width:100%;background:${wordCloudConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <Title :config="{
                 title: {
                     text: wordCloudConfig.style.chart.title.text,
@@ -345,10 +368,10 @@ defineExpose({
         </UserOptions>
 
         <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" v-if="isDataset"
-            :xmlns="XMLNS" :viewBox="`0 0 ${wordCloudConfig.style.chart.width} ${wordCloudConfig.style.chart.height}`"
-            :style="`overflow:visible;background:${wordCloudConfig.style.chart.backgroundColor}; padding: 24px;`">
+            :xmlns="XMLNS" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+            :style="`overflow:visible;background:${wordCloudConfig.style.chart.backgroundColor};`">
             <g
-                :transform="`translate(${wordCloudConfig.style.chart.width / 2}, ${wordCloudConfig.style.chart.height / 2})`">
+                :transform="`translate(${(svg.width <= 0 ? 10 : svg.width) / 2}, ${(svg.height <= 0 ? 10 : svg.height) / 2})`">
                 <g v-for="(word, index) in positionedWords">
                     <text 
                         :fill="word.color" 
@@ -364,7 +387,7 @@ defineExpose({
                     </text>
                 </g>
             </g>
-            <slot name="svg" :svg="{ height: wordCloudConfig.style.chart.height, width: wordCloudConfig.style.chart.width }"/>
+            <slot name="svg" :svg="{ height: svg.height, width: svg.width }"/>
         </svg>
 
         <Accordion hideDetails v-if="isDataset" :config="{
