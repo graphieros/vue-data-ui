@@ -3,7 +3,8 @@ import {
     ref,
     computed,
     onMounted,
-    watch
+    watch,
+    onBeforeUnmount
 } from "vue";
 import {
     assignStackRatios,
@@ -23,6 +24,7 @@ import {
     downloadCsv,
     createCsvContent
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import {
     circle,
     cloneCanvas,
@@ -44,6 +46,7 @@ import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue"
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     dataset: {
@@ -79,12 +82,15 @@ const clonedCanvas = ref(null);
 const slicerStep = ref(0);
 const step = ref(0);
 const isFullscreen = ref(false);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
+const chartSlicer = ref(null);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 });
 
-const emit = defineEmits(['selectLegend'])
+const emit = defineEmits(['selectLegend']);
 
 const xyConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -103,6 +109,8 @@ const xyConfig = computed(() => {
         return mergedConfig;
     }
 });
+
+const aspectRatio = ref(xyConfig.value.style.chart.aspectRatio);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `xy_canvas_${uid.value}`,
@@ -1027,6 +1035,9 @@ function handleMouseLeave() {
     tooltipContent.value = '';
 }
 
+const responsiveObserver = ref(null);
+const resizeObserver = ref(null);
+
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
         error({
@@ -1040,7 +1051,22 @@ onMounted(() => {
         }
     }
 
-    const resizeObserver = new ResizeObserver((entries) => {
+    if (xyConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: xy.value,
+                title: xyConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: xyConfig.value.style.chart.legend.show ? chartLegend.value : null,
+                slicer: xyConfig.value.style.chart.zoom.show && maxSeries.value > 1 ? chartSlicer.value : null
+            });
+            aspectRatio.value = `${width} / ${height}`;
+        });
+
+        responsiveObserver.value = new ResizeObserver(handleResize);
+        responsiveObserver.value.observe(xy.value.parentNode);
+    }
+
+    resizeObserver.value = new ResizeObserver((entries) => {
         for (const entry of entries) {
             if (entry.contentBoxSize && container.value) {
                 datasetHasChanged.value = true;
@@ -1049,8 +1075,12 @@ onMounted(() => {
         }
     });
 
-    resizeObserver.observe(container.value);
+    resizeObserver.value.observe(container.value);
+});
 
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (responsiveObserver.value) responsiveObserver.value.disconnect();
 });
 
 function segregate(index) {
@@ -1190,8 +1220,8 @@ defineExpose({
 </script>
 
 <template>
-    <div style="width:100%; position: relative" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`">    
-        <div v-if="xyConfig.style.chart.title.text"
+    <div :style="`width:100%; position: relative;${xyConfig.responsive ? 'height: 100%' : ''}`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`">    
+        <div ref="chartTitle" v-if="xyConfig.style.chart.title.text"
             :style="`width:100%;background:${xyConfig.style.chart.backgroundColor};`">
             <Title :config="{
             title: {
@@ -1261,7 +1291,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <div class="vue-ui-xy-canvas" :style="`position: relative; aspect-ratio: ${xyConfig.style.chart.aspectRatio}`"
+        <div class="vue-ui-xy-canvas" :style="`position: relative; aspect-ratio: ${aspectRatio}`"
         ref="container">
     
             <canvas 
@@ -1310,7 +1340,7 @@ defineExpose({
             </Tooltip>
         </div>
     
-        <div :style="`width:100%;background:${xyConfig.style.chart.backgroundColor}`" data-html2canvas-ignore>    
+        <div ref="chartSlicer" :style="`width:100%;background:${xyConfig.style.chart.backgroundColor}`" data-html2canvas-ignore>    
             <Slicer 
                 v-if="xyConfig.style.chart.zoom.show && maxSeries > 1"
                 :key="`slicer_${slicerStep}`"
@@ -1337,17 +1367,18 @@ defineExpose({
             </Slicer>
         </div>
     
+        <div ref="chartLegend">
+            <Legend v-if="xyConfig.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig"
+                @clickMarker="({ i }) => segregate(i)">
+                <template #item="{ legend, index }">
+                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                        {{ legend.name }}
+                    </div>
+                </template>
+            </Legend>
     
-        <Legend v-if="xyConfig.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig"
-            @clickMarker="({ i }) => segregate(i)">
-            <template #item="{ legend, index }">
-                <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                    {{ legend.name }}
-                </div>
-            </template>
-        </Legend>
-
-        <slot name="legend" v-bind:legend="legendSet" />
+            <slot v-else name="legend" v-bind:legend="legendSet" />
+        </div>
 
         <Accordion v-if="slicer.end - slicer.start < 200" hideDetails :config="{
             open: mutableConfig.showTable,
