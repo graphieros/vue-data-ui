@@ -3329,6 +3329,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiVerticalBarConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -4578,6 +4579,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiWordCloudConfig = {
+        responsive?: boolean;
         theme?: string;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
@@ -4637,6 +4639,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiXyCanvasConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
