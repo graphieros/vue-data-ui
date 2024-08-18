@@ -1411,6 +1411,7 @@
         }
     },
     "vue_ui_vertical_bar": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "useCssAnimation": true,
@@ -4428,6 +4429,7 @@
         }
     },
     "vue_ui_word_cloud": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "useCssAnimation": true,
@@ -4495,6 +4497,7 @@
         }
     },
     "vue_ui_xy_canvas": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "userOptions": {
