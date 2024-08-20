@@ -15,6 +15,7 @@ onMounted(() => {
 })
 
 const model = ref([
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
@@ -76,6 +77,14 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiWheel :key="`responsive_${step}`" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
+    </div>
+
     <Box>
         <template #title>VueUiWheel</template>
         

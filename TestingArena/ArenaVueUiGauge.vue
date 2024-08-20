@@ -35,7 +35,7 @@ const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.animation.use', def: false, type: 'checkbox'},
+    { key: 'style.chart.animation.use', def: true, type: 'checkbox'},
     { key: 'style.chart.animation.speed', def: 1, type: 'range', min: 0, max: 100},
     { key: 'style.chart.animation.acceleration', def: 1, type: 'range', min: 0, max: 10},
     { key: 'style.chart.layout.track.size', def: 1, type: 'range', min: 0.5, max: 2, step: 0.01},
@@ -124,10 +124,10 @@ const step = ref(0);
                 <template #optionPdf>
                     PRINT PDF
                 </template>
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
                 <template #legend="{ legend }">
                     #LEGEND
                     {{ legend }}
