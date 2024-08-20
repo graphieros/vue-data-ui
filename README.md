@@ -573,11 +573,48 @@ Accepted color formats: HEX, RGB, HSL, named colors.
 By default, all charts will scale to the width of their container.
 However the folowing charts can be made fully responsive, making them better to use in resizable containers:
 
-- VueUiQuickChart
-- VueUiXy
-- VueUiDonut
-- VueUiNestedDonuts
-- VueUiOnion
+| Component                   | Responsive feature implemented |
+| --------------------------- | ------------------------------ |
+| VueUi3dBar                  | -                              |
+| VueUiAgePyramid             | ✅                             |
+| VueUiCandlestick            | ✅                             |
+| VueUiChestnut               | -                              |
+| VueUiDonut                  | ✅                             |
+| VueUiDonutEvolution         | -                              |
+| VueUiDumbbell               | ✅                             |
+| VueUiFlow                   | -                              |
+| VueUiGalaxy                 | -                              |
+| VueUiGauge                  | ✅                             |
+| VueUiHeatmap                | -                              |
+| VueUiMolecule               | -                              |
+| VueUiMoodRadar              | -                              |
+| VueUiNestedDonuts           | ✅                             |
+| VueUiOnion                  | ✅                             |
+| VueUiParallelCoordinatePlot | ✅                             |
+| VueUiQuadrant               | ✅                             |
+| VueUiQuickChart             | ✅                             |
+| VueUiRadar                  | ✅                             |
+| VueUiRelationCircle         | ✅                             |
+| VueUiRings                  | ✅                             |
+| VueUiScatter                | ✅                             |
+| VueUiSparkHistogram         | -                              |
+| VueUiSparkStackbar          | -                              |
+| VueUiSparkTrend             | -                              |
+| VueUiSparkbar               | -                              |
+| VueUiSparkgauge             | -                              |
+| VueUiSparkline              | -                              |
+| VueUiStripPlot              | ✅                             |
+| VueUiTableHeatmap           | -                              |
+| VueUiTableSparkline         | -                              |
+| VueUiThermometer            | -                              |
+| VueUiTiremarks              | -                              |
+| VueUiTreemap                | ✅                             |
+| VueUiVerticalBar            | ✅                             |
+| VueUiWaffle                 | ✅                             |
+| VueUiWheel                  | ✅                             |
+| VueUiWordCloud              | ✅                             |
+| VueUiXy                     | ✅                             |
+| VueUiXyCanvas               | ✅                             |
 
 To activate responsiveness, set the config.responsive attribute to true:
 
@@ -588,48 +625,4 @@ const config = ref({
 });
 ```
 
-The responsive attribute will be added to all charts that would require it when placed in a resizable context.
-The following table lays out the current state of this rollout:
-
-| Component                   | Responsive feature implemented | Will most probably be implemented |
-| --------------------------- | ------------------------------ | --------------------------------- |
-| VueUi3dBar                  | ❌                             | ✅                                |
-| VueUiAgePyramid             | ✅                             | Done in v2.2.54                   |
-| VueUiCandlestick            | ✅                             | Done in v2.2.54                   |
-| VueUiChestnut               | ❌                             | ✅                                |
-| VueUiDonut                  | ✅                             | Done in v2.2.52                   |
-| VueUiDonutEvolution         | ❌                             | ✅                                |
-| VueUiDumbbell               | ❌                             | ✅                                |
-| VueUiFlow                   | ❌                             | ✅                                |
-| VueUiGalaxy                 | ❌                             | ✅                                |
-| VueUiGauge                  | ❌                             | ✅                                |
-| VueUiHeatmap                | -                              | ❌                                |
-| VueUiMolecule               | -                              | ❌                                |
-| VueUiMoodRadar              | ❌                             | ✅                                |
-| VueUiNestedDonuts           | ✅                             | Done in v2.2.52                   |
-| VueUiOnion                  | ✅                             | Done in v2.2.52                   |
-| VueUiParallelCoordinatePlot | ✅                             | Done in v2.2.53                   |
-| VueUiQuadrant               | ✅                             | Done in v2.2.55                   |
-| VueUiQuickChart             | ✅                             | Done in v2.2.52                   |
-| VueUiRadar                  | ✅                             | Done in v2.2.53                   |
-| VueUiRelationCircle         | ✅                             | Done in v2.2.55                   |
-| VueUiRings                  | ✅                             | Done in v2.2.53                   |
-| VueUiScatter                | ✅                             | Done in v2.2.55                   |
-| VueUiSparkHistogram         | -                              | ❌                                |
-| VueUiSparkStackbar          | -                              | ❌                                |
-| VueUiSparkTrend             | -                              | ❌                                |
-| VueUiSparkbar               | -                              | ❌                                |
-| VueUiSparkgauge             | -                              | ❌                                |
-| VueUiSparkline              | -                              | ❌                                |
-| VueUiStripPlot              | ✅                             | Done in v2.2.55                   |
-| VueUiTableHeatmap           | -                              | ❌                                |
-| VueUiTableSparkline         | -                              | ❌                                |
-| VueUiThermometer            | -                              | ❌                                |
-| VueUiTiremarks              | -                              | ❌                                |
-| VueUiTreemap                | ✅                             | Done in v2.2.53                   |
-| VueUiVerticalBar            | ✅                             | Done in v2.2.60                   |
-| VueUiWaffle                 | ✅                             | Done in v2.2.55                   |
-| VueUiWheel                  | ❌                             | ✅                                |
-| VueUiWordCloud              | ✅                             | Done in v2.2.60                   |
-| VueUiXy                     | ✅                             | Done in v2.2.52                   |
-| VueUiXyCanvas               | ✅                             | Done in v2.2.60                   |
+**Important:** when using the responsive feature, charts must be placed inside a container with fixed dimensions. Avoid setting a 100% height to this container, as it will result in the chart growing infinitely.
