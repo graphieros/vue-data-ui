@@ -1,27 +1,26 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
 import { 
-    addVector, 
     convertColorToHex, 
     convertCustomPalette, 
     createUid,
     error,
     getMissingDatasetAttributes,
-    matrixTimes,
     objectIsEmpty,
     opacity, 
     palette, 
-    rotateMatrix,
     themePalettes,
     makeDonut,
     XMLNS
 } from "../lib.js";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config:{
@@ -44,9 +43,11 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_gauge);
-const gaugeChart = ref(null);
 const details = ref(null);
 const step = ref(0);
+const gaugeChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
 
 const gaugeConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -107,15 +108,20 @@ const mutableDataset = computed(() => {
     }
 });
 
-const svg = computed(() => {
-    return {
-        height: 358.4,
-        width: 512,
-        top: 0,
-        bottom: 358.4,
-        centerX: 179.2,
-        centerY: 256
-    }
+const baseSize = ref(512);
+
+const svg = ref({
+    height: 358.4,
+    width: baseSize.value,
+    top: 0,
+    bottom: 358.4,
+    centerX: 179.2,
+    centerY: baseSize.value / 2,
+    labelFontSize: 18,
+    legendFontSize: gaugeConfig.value.style.chart.legend.fontSize,
+    pointerRadius: gaugeConfig.value.style.chart.layout.pointer.circle.radius,
+    trackSize: gaugeConfig.value.style.chart.layout.track.size,
+    pointerSize: gaugeConfig.value.style.chart.layout.pointer.size
 });
 
 const max = ref(0);
@@ -130,23 +136,23 @@ watch(() => props.dataset.value, () => {
 
 const pointer = computed(() => {
     const x = svg.value.width / 2;
-    const y = svg.value.height * 0.69;
+    const y = svg.value.height / 2;
     const angle = Math.PI * ((activeRating.value + 0 - min.value) / (max.value - min.value)) + Math.PI;
     return {
         x1: x,
         y1: y,
-        x2: x + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size * 0.9) * Math.cos(angle),
-        y2: y + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size * 0.9) * Math.sin(angle)
+        x2: x + (arcSizeSource.value.pointerSize * svg.value.pointerSize * 0.9) * Math.cos(angle),
+        y2: y + (arcSizeSource.value.pointerSize * svg.value.pointerSize * 0.9) * Math.sin(angle)
     }
 });
 
 const pointyPointerPath = computed(() => {
     const centerX = svg.value.width / 2;
-    const centerY = svg.value.height * 0.69;
+    const centerY = arcSizeSource.value.base;
     const angle = Math.PI * ((activeRating.value + 0 - min.value) / (max.value - min.value)) + Math.PI;
-    const tipX = centerX + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size * 0.9) * Math.cos(angle);
-    const tipY = centerY + (svg.value.width / 3.2 * gaugeConfig.value.style.chart.layout.pointer.size * 0.9) * Math.sin(angle);
-    const baseLength = gaugeConfig.value.style.chart.layout.pointer.circle.radius;
+    const tipX = centerX + ((arcSizeSource.value.pointerSize) * svg.value.pointerSize * 0.9) * Math.cos(angle);
+    const tipY = centerY + ((arcSizeSource.value.pointerSize) * svg.value.pointerSize * 0.9) * Math.sin(angle);
+    const baseLength = svg.value.pointerRadius;
     const baseX1 = centerX + baseLength * Math.cos(angle + (Math.PI / 2));
     const baseY1 = centerY + baseLength * Math.sin(angle + (Math.PI / 2));
     const baseX2 = centerX + baseLength * Math.cos(angle - (Math.PI / 2));
@@ -166,6 +172,8 @@ const ratingColor = computed(() => {
     }
     return "#2D353C";
 });
+
+const resizeObserver = ref(null);
 
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
@@ -209,7 +217,33 @@ onMounted(() => {
 
         }
     }
-    useAnimation()
+    useAnimation();
+
+    if (gaugeConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: gaugeChart.value,
+                title: gaugeConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: chartLegend.value
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+            svg.value.centerX = width / 2;
+            svg.value.centerY = ((baseSize.value / 2) / 358.4) * height;
+            svg.value.bottom = height;
+            svg.value.labelFontSize = (18 / baseSize.value) * Math.min(height, width) < 10 ? 10 : (18 / baseSize.value) * Math.min(height, width);
+            svg.value.legendFontSize = (gaugeConfig.value.style.chart.legend.fontSize / baseSize.value) * Math.min(height, width) < 14 ? 14 : (gaugeConfig.value.style.chart.legend.fontSize / baseSize.value) * Math.min(height, width);
+            svg.value.pointerRadius = (gaugeConfig.value.style.chart.layout.pointer.circle.radius / baseSize.value) * (Math.min(height, width));
+            svg.value.trackSize = (gaugeConfig.value.style.chart.layout.track.size / baseSize.value) * (Math.min(height, width));
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(gaugeChart.value.parentNode);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
 function useAnimation() {
@@ -239,19 +273,30 @@ function useAnimation() {
     }
 }
 
+const arcSizeSource = computed(() => {
+    const src = gaugeConfig.value.responsive ? Math.min(svg.value.width, svg.value.height) : svg.value.width;
+    return {
+        arcs: src / 2.5,
+        gradients: src / 2.75,
+        base: gaugeConfig.value.responsive ? svg.value.height / 2 : svg.value.height * 0.7,
+        ratingBase: gaugeConfig.value.responsive ? svg.value.height / 2 + (svg.value.height / 4) : svg.value.height * 0.9,
+        pointerSize: gaugeConfig.value.responsive ? Math.min(svg.value.width, svg.value.height) / 3 : svg.value.width / 3.2
+    }
+})
+
 const arcs = computed(() => {
     const donut = makeDonut(
         {series: mutableDataset.value.series},
         svg.value.width / 2,
-        svg.value.height * 0.7,
-        svg.value.width / 2.5,
-        svg.value.width / 2.5,
+        arcSizeSource.value.base,
+        arcSizeSource.value.arcs,
+        arcSizeSource.value.arcs,
         1,
         1,
         1,
         180,
         109.9495,
-        40 * gaugeConfig.value.style.chart.layout.track.size
+        40 * svg.value.trackSize
     );
     return donut
 })
@@ -260,34 +305,18 @@ const gradientArcs = computed(() => {
     const donut = makeDonut(
         {series: mutableDataset.value.series},
         svg.value.width / 2,
-        svg.value.height * 0.7,
-        svg.value.width / 2.75,
-        svg.value.width / 2.75,
+        arcSizeSource.value.base,
+        arcSizeSource.value.gradients,
+        arcSizeSource.value.gradients,
         1,
         1,
         1,
         180,
         109.9495,
-        2 * gaugeConfig.value.style.chart.layout.track.size
+        2 * svg.value.trackSize
     );
     return donut
-})
-
-function calcMarkerPositionY(index, y, value) {
-    const isBig = String(value).length > 2;
-    const offset = isBig ? -3 : 0;
-    if(index === 0)  {
-        return y +14 + offset;
-    }
-    return y + 9 + offset;
-}
-
-function calcMarkerFontSize(value) {
-    if(String(value).length > 2) {
-        return 15;
-    }
-    return 20;
-}
+});
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -307,10 +336,10 @@ defineExpose({
         :class="`vue-ui-gauge ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         ref="gaugeChart"
         :id="`vue-ui-gauge_${uid}`"
-        :style="`font-family:${gaugeConfig.style.fontFamily};width:100%; text-align:center;background:${gaugeConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${gaugeConfig.style.fontFamily};width:100%; text-align:center;background:${gaugeConfig.style.chart.backgroundColor};${gaugeConfig.responsive ? 'height: 100%' : ''}`"
     >
         <!-- TITLE AS DIV -->
-        <div v-if="gaugeConfig.style.chart.title.text" :style="`width:100%;background:${gaugeConfig.style.chart.backgroundColor};padding-bottom:12px;${gaugeConfig.userOptions.show ? 'padding-top:36px' : ''}`">
+        <div ref="chartTitle" v-if="gaugeConfig.style.chart.title.text" :style="`width:100%;background:${gaugeConfig.style.chart.backgroundColor};padding-bottom:12px;${gaugeConfig.userOptions.show ? 'padding-top:36px' : ''}`">
             <div data-cy="gauge-div-title" :style="`width:100%;text-align:center;color:${gaugeConfig.style.chart.title.color};font-size:${gaugeConfig.style.chart.title.fontSize}px;font-weight:${gaugeConfig.style.chart.title.bold ? 'bold': ''}`">
                 {{ gaugeConfig.style.chart.title.text }}
             </div>
@@ -354,7 +383,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset"  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%;overflow:hidden !important;background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset"  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:hidden !important;background:${gaugeConfig.style.chart.backgroundColor};color:${gaugeConfig.style.chart.color}`">
 
             <defs>
                 <radialGradient :id="`gradient_${uid}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -396,9 +425,9 @@ defineExpose({
                 <!-- HIDER -->
                 <rect
                     :x="0"
-                    :y="svg.height * 0.7"
-                    :width="svg.width"
-                    :height="svg.height * 0.3"
+                    :y="arcSizeSource.base"
+                    :width="svg.width <= 0 ? 0.0001 : svg.width"
+                    :height="svg.height * 0.3 <= 0 ? 0.0001 : svg.height * 0.3"
                     :fill="gaugeConfig.style.chart.backgroundColor"
                 />
             </template>
@@ -411,7 +440,7 @@ defineExpose({
                 :x="arc.center.startX"
                 :y="arc.center.startY + gaugeConfig.style.chart.layout.markers.offsetY"
                 :text-anchor="arc.center.startX < (svg.width / 2 - 5) ? 'end' : arc.center.startX > (svg.width / 2 + 5) ? 'start' : 'middle'"
-                :font-size="18 * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
+                :font-size="svg.labelFontSize * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
                 :font-weight="`${gaugeConfig.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
                 :fill="gaugeConfig.style.chart.layout.markers.color"
             >
@@ -422,7 +451,7 @@ defineExpose({
                 :x="arcs.at(-1).endX"
                 :y="arcs.at(-1).endY + gaugeConfig.style.chart.layout.markers.offsetY"
                 text-anchor="start"
-                :font-size="18 * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
+                :font-size="svg.labelFontSize * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
                 :font-weight="`${gaugeConfig.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
                 :fill="gaugeConfig.style.chart.layout.markers.color"
             >
@@ -479,9 +508,9 @@ defineExpose({
             <circle
                 data-cy="gauge-pointer-circle"
                 :cx="svg.width / 2"
-                :cy="(svg.height) * 0.69"
+                :cy="arcSizeSource.base"
                 :fill="gaugeConfig.style.chart.layout.pointer.circle.color"
-                :r="gaugeConfig.style.chart.layout.pointer.circle.radius"
+                :r="svg.pointerRadius <= 0 ? 0.0001 : svg.pointerRadius"
                 :stroke-width="gaugeConfig.style.chart.layout.pointer.circle.strokeWidth"
                 :stroke="gaugeConfig.style.chart.layout.pointer.circle.stroke"
             />
@@ -490,9 +519,9 @@ defineExpose({
             <text
                 data-cy="gauge-score"
                 :x="svg.width / 2"
-                :y="(svg.height) * 0.9"
+                :y="arcSizeSource.ratingBase"
                 text-anchor="middle"
-                :font-size="gaugeConfig.style.chart.legend.fontSize"
+                :font-size="svg.legendFontSize"
                 font-weight="bold"
                 :fill="gaugeConfig.style.chart.legend.useRatingColor ? ratingColor : gaugeConfig.style.chart.legend.color"
             >
@@ -513,7 +542,10 @@ defineExpose({
                 }
             }"
         />
-        <slot name="legend" v-bind:legend="mutableDataset"></slot>
+
+        <div ref="chartLegend">
+            <slot name="legend" v-bind:legend="mutableDataset"></slot>
+        </div>
     </div>
 </template>
 
