@@ -1045,6 +1045,7 @@
         }
     },
     "vue_ui_gauge": {
+        "responsive": false,
         "theme": "",
         "customPalette": [],
         "style": {
@@ -3036,6 +3037,7 @@
         }
     },
     "vue_ui_wheel": {
+        "responsive": false,
         "theme": "",
         "style": {
             "fontFamily": "inherit",
@@ -4288,6 +4290,7 @@
         }
     },
     "vue_ui_dumbbell": {
+        "responsive": false,
         "theme": "",
         "useAnimation": true,
         "animationSpeed": 2,
