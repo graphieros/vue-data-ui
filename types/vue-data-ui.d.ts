@@ -872,6 +872,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiWheelConfig = {
+        responsive?: boolean;
         theme?: Theme;
         style?: {
             fontFamily?: string;
@@ -2943,6 +2944,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiGaugeConfig = {
+        responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -4472,6 +4474,7 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiDumbbellConfig = {
+        reponsive?: boolean;
         theme?: Theme;
         useAnimation?: boolean;
         animationSpeed?: number;
