@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { 
     XMLNS,
     calculateNiceScale,
@@ -13,6 +13,7 @@ import {
     objectIsEmpty,
     lightenHexColor,
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -23,6 +24,7 @@ import Legend from "../atoms/Legend.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -50,6 +52,32 @@ const isDataset = computed({
     }
 });
 
+const uid = ref(createUid());
+const defaultConfig = ref(mainConfig.vue_ui_dumbbell);
+const step = ref(0);
+const dumbbellChart = ref(null);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
+
+const dumbConfig = computed(() => {
+    const mergedConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: defaultConfig.value
+    });
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_dumbbell[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+        }
+    } else {
+        return mergedConfig;
+    }
+});
+
+const resizeObserver = ref(null);
+
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
         error({
@@ -72,30 +100,26 @@ onMounted(() => {
             })
         });
     }
+
+    if (dumbConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: dumbbellChart.value,
+                title: dumbConfig.value.style.chart.title.text ? chartTitle.value : null,
+                legend: dumbConfig.value.style.chart.legend.show ? chartLegend.value : null,
+            });
+            baseWidth.value = width;
+            baseRowHeight.value = height / props.dataset.length;
+            mutableDataset.value = getMutableDataset();
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(dumbbellChart.value.parentNode);
+    }
 });
 
-const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_dumbbell);
-const dumbbellChart = ref(null);
-const step = ref(0);
-const isTooltip = ref(false);
-const tooltipContent = ref("");
-
-const dumbConfig = computed(() => {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: defaultConfig.value
-    });
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_dumbbell[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-        }
-    } else {
-        return mergedConfig;
-    }
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -123,23 +147,25 @@ const extremes = computed(() => {
     }
 });
 
-
 const scale = computed(() => {
     return calculateNiceScale(extremes.value.min < 0 ? extremes.value.min : 0, extremes.value.max, dumbConfig.value.style.chart.grid.scaleSteps)
 });
 
+const baseRowHeight = ref(dumbConfig.value.style.chart.rowHeight);
+const baseWidth = ref(dumbConfig.value.style.chart.width)
+
 const drawingArea = computed(() => {
-    const rowHeight = dumbConfig.value.style.chart.rowHeight;
-    const absoluteWidth = dumbConfig.value.style.chart.padding.left + dumbConfig.value.style.chart.padding.right + dumbConfig.value.style.chart.width;
+    const rowHeight = baseRowHeight.value;
+    const absoluteWidth = dumbConfig.value.style.chart.padding.left + dumbConfig.value.style.chart.padding.right + baseWidth.value;
     const absoluteHeight = dumbConfig.value.style.chart.padding.top + dumbConfig.value.style.chart.padding.bottom + rowHeight * props.dataset.length;
-    const widthPlotReference = (scale.value.ticks.length) * (dumbConfig.value.style.chart.width / scale.value.ticks.length)
+    const widthPlotReference = (scale.value.ticks.length) * (baseWidth.value / scale.value.ticks.length)
 
     return {
         left: dumbConfig.value.style.chart.padding.left,
         right: absoluteWidth - dumbConfig.value.style.chart.padding.right,
         top: dumbConfig.value.style.chart.padding.top,
         bottom: absoluteHeight - dumbConfig.value.style.chart.padding.bottom,
-        width: dumbConfig.value.style.chart.width,
+        width: baseWidth.value,
         height: rowHeight * props.dataset.length,
         rowHeight,
         absoluteHeight,
@@ -147,8 +173,6 @@ const drawingArea = computed(() => {
         widthPlotReference
     }
 });
-
-
 
 function getMutableDataset() {
     return immutableDataset.value.map((ds, i) => {
@@ -160,7 +184,7 @@ function getMutableDataset() {
             startX,
             endX,
             centerX,
-            y: drawingArea.value.top + (i * dumbConfig.value.style.chart.rowHeight) + (dumbConfig.value.style.chart.rowHeight / 2),
+            y: drawingArea.value.top + (i * baseRowHeight.value) + (baseRowHeight.value / 2),
             endVal: ds.start
         }
     })
@@ -197,7 +221,7 @@ onMounted(() => {
                     startX,
                     endX,
                     centerX,
-                    y: drawingArea.value.top + (i * dumbConfig.value.style.chart.rowHeight) + (dumbConfig.value.style.chart.rowHeight / 2),
+                    y: drawingArea.value.top + (i * baseRowHeight.value) + (baseRowHeight.value / 2),
                     endVal: ds.endVal
                 }
             })
@@ -347,9 +371,9 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="dumbbellChart" :class="`vue-ui-dumbbell ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${dumbConfig.style.fontFamily};width:100%; text-align:center;${!dumbConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${dumbConfig.style.chart.backgroundColor}`" :id="`dumbbell_${uid}`">
+    <div ref="dumbbellChart" :class="`vue-ui-dumbbell ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${dumbConfig.style.fontFamily};width:100%; text-align:center;${!dumbConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${dumbConfig.style.chart.backgroundColor};${dumbConfig.responsive ? 'height:100%': ''}`" :id="`dumbbell_${uid}`">
 
-        <div v-if="dumbConfig.style.chart.title.text" :style="`width:100%;background:${dumbConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        <div ref="chartTitle" v-if="dumbConfig.style.chart.title.text" :style="`width:100%;background:${dumbConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <Title
                 :config="{
                     title: {
@@ -409,7 +433,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.absoluteWidth} ${drawingArea.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${dumbConfig.style.chart.backgroundColor};color:${dumbConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.absoluteWidth <= 0 ? 10 : drawingArea.absoluteWidth} ${drawingArea.absoluteHeight <= 0 ? 10 : drawingArea.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${dumbConfig.style.chart.backgroundColor};color:${dumbConfig.style.chart.color}`">
             <!-- VERTICAL GRID -->
             <g v-if="dumbConfig.style.chart.grid.verticalGrid.show">
 
@@ -430,8 +454,8 @@ defineExpose({
                     v-for="(_, i) in immutableDataset"
                     :x1="drawingArea.left"
                     :x2="drawingArea.right"
-                    :y1="drawingArea.top + (i * dumbConfig.style.chart.rowHeight)"
-                    :y2="drawingArea.top + (i * dumbConfig.style.chart.rowHeight)"
+                    :y1="drawingArea.top + (i * baseRowHeight)"
+                    :y2="drawingArea.top + (i * baseRowHeight)"
                     :stroke="dumbConfig.style.chart.grid.horizontalGrid.stroke"
                     :stroke-width="dumbConfig.style.chart.grid.horizontalGrid.strokeWidth"
                     :stroke-dasharray="dumbConfig.style.chart.grid.horizontalGrid.strokeDasharray"
@@ -451,7 +475,7 @@ defineExpose({
                 <text
                     v-for="(datapoint, i) in immutableDataset"
                     :x="drawingArea.left - 6 + dumbConfig.style.chart.labels.yAxisLabels.offsetX"
-                    :y="drawingArea.top + (i * dumbConfig.style.chart.rowHeight) + (dumbConfig.style.chart.labels.yAxisLabels.showProgression ? dumbConfig.style.chart.rowHeight / 3 : dumbConfig.style.chart.rowHeight / 2) + (dumbConfig.style.chart.labels.yAxisLabels.fontSize / 3)"
+                    :y="drawingArea.top + (i * baseRowHeight) + (dumbConfig.style.chart.labels.yAxisLabels.showProgression ? baseRowHeight / 3 : baseRowHeight / 2) + (dumbConfig.style.chart.labels.yAxisLabels.fontSize / 3)"
                     :font-size="dumbConfig.style.chart.labels.yAxisLabels.fontSize"
                     :fill="dumbConfig.style.chart.labels.yAxisLabels.color"
                     :font-weight="dumbConfig.style.chart.labels.yAxisLabels.bold ? 'bold': 'normal'"
@@ -463,7 +487,7 @@ defineExpose({
                     <text
                         v-for="(datapoint, i) in immutableDataset"
                         :x="drawingArea.left - 6 + dumbConfig.style.chart.labels.yAxisLabels.offsetX"
-                        :y="drawingArea.top + (i * dumbConfig.style.chart.rowHeight) + (dumbConfig.style.chart.rowHeight / 1.3) + (dumbConfig.style.chart.labels.yAxisLabels.fontSize / 3)"
+                        :y="drawingArea.top + (i * baseRowHeight) + (baseRowHeight / 1.3) + (dumbConfig.style.chart.labels.yAxisLabels.fontSize / 3)"
                         :font-size="dumbConfig.style.chart.labels.yAxisLabels.fontSize"
                         :fill="dumbConfig.style.chart.labels.yAxisLabels.color"
                         text-anchor="end"
@@ -571,7 +595,7 @@ defineExpose({
                     <text
                         v-for="(plot, i) in mutableDataset"
                         :x="plot.startX"
-                        :y="drawingArea.top + ((i + 1) * dumbConfig.style.chart.rowHeight) - (dumbConfig.style.chart.labels.startLabels.fontSize / 3) + dumbConfig.style.chart.labels.startLabels.offsetY"
+                        :y="drawingArea.top + ((i + 1) * baseRowHeight) - (dumbConfig.style.chart.labels.startLabels.fontSize / 3) + dumbConfig.style.chart.labels.startLabels.offsetY"
                         :fill="dumbConfig.style.chart.labels.startLabels.useStartColor ? dumbConfig.style.chart.plots.startColor : dumbConfig.style.chart.labels.startLabels.color"
                         :font-size="dumbConfig.style.chart.labels.startLabels.fontSize"
                         text-anchor="middle"
@@ -590,7 +614,7 @@ defineExpose({
                     <text
                         v-for="(plot, i) in mutableDataset"
                         :x="plot.endX"
-                        :y="drawingArea.top + (i * dumbConfig.style.chart.rowHeight) + dumbConfig.style.chart.labels.endLabels.fontSize + dumbConfig.style.chart.labels.endLabels.offsetY"
+                        :y="drawingArea.top + (i * baseRowHeight) + dumbConfig.style.chart.labels.endLabels.fontSize + dumbConfig.style.chart.labels.endLabels.offsetY"
                         :fill="dumbConfig.style.chart.labels.endLabels.useEndColor ? dumbConfig.style.chart.plots.endColor : dumbConfig.style.chart.labels.endLabels.color"
                         :font-size="dumbConfig.style.chart.labels.endLabels.fontSize"
                         text-anchor="middle"
@@ -621,22 +645,23 @@ defineExpose({
             }"
         />
         
-        <Legend
-            v-if="dumbConfig.style.chart.legend.show && isDataset"
-            :legendSet="legendSet"
-            :config="legendConfig"
-        >
-            <template #item="{ legend }">
-                <div :style="`display:flex;align-items:center;gap:4px;font-size:${dumbConfig.style.chart.legend.fontSize}px`">
-                    <svg :xmlns="XMLNS" viewBox="0 0 20 20" :height="dumbConfig.style.chart.legend.fontSize" :width="dumbConfig.style.chart.legend.fontSize">
-                        <circle :cx="10" :cy="10" :r="9" :fill="legend.color"/>
-                    </svg>
-                    {{ legend.name }}
-                </div>
-            </template>
-        </Legend>
-
-        <slot name="legend" v-bind:legend="legendSet" />
+        <div ref="chartLegend">
+            <Legend
+                v-if="dumbConfig.style.chart.legend.show && isDataset"
+                :legendSet="legendSet"
+                :config="legendConfig"
+            >
+                <template #item="{ legend }">
+                    <div :style="`display:flex;align-items:center;gap:4px;font-size:${dumbConfig.style.chart.legend.fontSize}px`">
+                        <svg :xmlns="XMLNS" viewBox="0 0 20 20" :height="dumbConfig.style.chart.legend.fontSize" :width="dumbConfig.style.chart.legend.fontSize">
+                            <circle :cx="10" :cy="10" :r="9" :fill="legend.color"/>
+                        </svg>
+                        {{ legend.name }}
+                    </div>
+                </template>
+            </Legend>
+            <slot v-else name="legend" v-bind:legend="legendSet" />
+        </div>
 
         <Accordion hideDetails v-if="isDataset" :config="{
             open: mutableConfig.showTable,
