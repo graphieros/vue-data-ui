@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
 import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
@@ -9,11 +9,14 @@ import {
     error,
     objectIsEmpty,
     shiftHue,
+    translateSize,
     XMLNS
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
 
 const props = defineProps({
     config: {
@@ -36,9 +39,10 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_wheel);
-const wheelChart = ref(null);
 const details = ref(null);
 const step = ref(0);
+const wheelChart = ref(null);
+const chartTitle = ref(null);
 
 const wheelConfig = computed(() => {
     const mergedConfig = useNestedProp({
@@ -66,13 +70,15 @@ const svg = ref({
     size: 360,
     height: 360,
     width: 360
-})
+});
+
+const baseLabelFontSize = ref(wheelConfig.value.style.chart.layout.percentage.fontSize)
 
 const wheel = computed(() => {
     return {
-        radius: (svg.value.size * 0.9) / 2,
-        centerX: svg.value.size / 2,
-        centerY: svg.value.size / 2,
+        radius: (Math.min(svg.value.width, svg.value.height) * 0.9) / 2,
+        centerX: svg.value.width / 2,
+        centerY: svg.value.height / 2,
     }
 })
 
@@ -89,7 +95,9 @@ const activeValue = ref(wheelConfig.value.style.chart.animation.use ? 0 : (props
 watch(() => props.dataset.percentage, () => {
     activeValue.value = ref(wheelConfig.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
     useAnimation()
-})
+});
+
+const resizeObserver = ref(null);
 
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
@@ -98,8 +106,27 @@ onMounted(() => {
             type: 'dataset'
         })
     }
-    useAnimation()
-})
+    useAnimation();
+
+    if (wheelConfig.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: wheelChart.value,
+                title: wheelConfig.value.style.chart.title.text ? chartTitle.value : null,
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+            baseLabelFontSize.value = (wheelConfig.value.style.chart.layout.percentage.fontSize / 360) * Math.min(width, height);
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(wheelChart.value.parentNode);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
 
 function useAnimation() {
     let acceleration = 0;
@@ -157,10 +184,9 @@ defineExpose({
         class="vue-ui-wheel" 
         ref="wheelChart"
         :id="uid"
-        :style="`font-family:${wheelConfig.style.fontFamily};width:100%; text-align:center;background:${wheelConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${wheelConfig.style.fontFamily};width:100%; text-align:center;background:${wheelConfig.style.chart.backgroundColor};${wheelConfig.responsive ? 'height:100%' : ''}`"
     >
-
-        <div v-if="wheelConfig.style.chart.title.text" :style="`width:100%;background:${wheelConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div ref="chartTitle" v-if="wheelConfig.style.chart.title.text" :style="`width:100%;background:${wheelConfig.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
@@ -211,7 +237,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="wheel-svg" :viewBox="`0 0 ${svg.size} ${svg.size}`" :style="`max-width:100%;overflow:visible;background:${wheelConfig.style.chart.backgroundColor};color:${wheelConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="wheel-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${wheelConfig.style.chart.backgroundColor};color:${wheelConfig.style.chart.color}`">
             <line 
                 v-for="(tick, i) in ticks"
                 :x1="tick.x1"
@@ -219,7 +245,7 @@ defineExpose({
                 :y1="tick.y1"
                 :y2="tick.y2"
                 :stroke="tick.color"
-                :stroke-width="5"
+                :stroke-width="(5 / 360) * Math.min(svg.width, svg.height)"
                 :stroke-linecap="wheelConfig.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
                 :class="{ 'vue-ui-tick-animated': wheelConfig.style.chart.animation.use && i <= activeValue }"
             />
@@ -227,7 +253,7 @@ defineExpose({
                 v-if="wheelConfig.style.chart.layout.innerCircle.show"
                 :cx="wheel.centerX"
                 :cy="wheel.centerY"
-                :r="wheel.radius * 0.8"
+                :r="wheel.radius * 0.8 <= 0 ? 0.0001 : wheel.radius * 0.8"
                 :stroke="wheelConfig.style.chart.layout.innerCircle.stroke"
                 :stroke-width="wheelConfig.style.chart.layout.innerCircle.strokeWidth"
                 fill="none"
@@ -235,8 +261,8 @@ defineExpose({
             <text
                 v-if="wheelConfig.style.chart.layout.percentage.show"
                 :x="wheel.centerX"
-                :y="wheel.centerY + wheelConfig.style.chart.layout.percentage.fontSize / 3"
-                :font-size="wheelConfig.style.chart.layout.percentage.fontSize"
+                :y="wheel.centerY + baseLabelFontSize / 3"
+                :font-size="baseLabelFontSize"
                 :fill="wheelConfig.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(wheelConfig.style.chart.layout.wheel.ticks.activeColor, activeValue / 100 * (wheelConfig.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : wheelConfig.style.chart.layout.wheel.ticks.activeColor"
                 text-anchor="middle"
                 :font-weight="wheelConfig.style.chart.layout.percentage.bold ? 'bold' : 'normal'"
