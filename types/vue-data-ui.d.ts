@@ -2025,7 +2025,7 @@ declare module 'vue-data-ui' {
                 fontSize?: number;
                 circleMarker?: {
                     radius?: number;
-                    color?: number;
+                    color?: string;
                 };
             };
             highlightArea?: {
@@ -2037,9 +2037,9 @@ declare module 'vue-data-ui' {
                 caption?: {
                     text?: string;
                     fontSize?: number;
-                    color?: number;
+                    color?: string;
                     bold?: boolean;
-                    offsetY?: boolean;
+                    offsetY?: number;
                     width?: "auto" | number;
                     textAlign?: TextAlign;
                 };
@@ -2135,7 +2135,7 @@ declare module 'vue-data-ui' {
                 color?: string;
             };
             serieName?: {
-                abbreviationSize?: boolean;
+                abbreviationSize?: number;
                 bold?: boolean;
                 color?: string;
                 offsetY?: boolean;
