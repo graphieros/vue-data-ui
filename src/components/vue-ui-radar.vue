@@ -126,7 +126,8 @@ const mutableConfig = ref({
     dataLabels: {
         show: radarConfig.value.style.chart.layout.labels.dataLabels.show,
     },
-    showTable: radarConfig.value.table.show
+    showTable: radarConfig.value.table.show,
+    showTooltip: radarConfig.value.style.chart.tooltip.show
 });
 
 const sparkBarConfig = computed(() => {
@@ -494,12 +495,17 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
-    toggleTable
+    toggleTable,
+    toggleTooltip
 });
 
 </script>
@@ -543,19 +549,25 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
+            :hasTooltip="radarConfig.userOptions.buttons.tooltip && radarConfig.style.chart.tooltip.show"
             :hasPdf="radarConfig.userOptions.buttons.pdf"
             :hasImg="radarConfig.userOptions.buttons.img"
             :hasXls="radarConfig.userOptions.buttons.csv"
             :hasTable="radarConfig.userOptions.buttons.table"
             :hasFullscreen="radarConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="radarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -714,7 +726,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="radarConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="radarConfig.style.chart.tooltip.backgroundColor"
             :color="radarConfig.style.chart.tooltip.color"
             :borderRadius="radarConfig.style.chart.tooltip.borderRadius"
