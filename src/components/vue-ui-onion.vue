@@ -87,7 +87,8 @@ const customPalette = computed(() => {
 });
 
 const mutableConfig = ref({
-    showTable: onionConfig.value.table.show
+    showTable: onionConfig.value.table.show,
+    showTooltip: onionConfig.value.style.chart.tooltip.show
 });
 
 const svg = ref({
@@ -410,12 +411,17 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
-    toggleTable
+    toggleTable,
+    toggleTooltip
 });
 
 </script>
@@ -458,19 +464,25 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
+            :hasTooltip="onionConfig.userOptions.buttons.tooltip && onionConfig.style.chart.tooltip.show"
             :hasPdf="onionConfig.userOptions.buttons.pdf"
             :hasImg="onionConfig.userOptions.buttons.img"
             :hasXls="onionConfig.userOptions.buttons.csv"
             :hasTable="onionConfig.userOptions.buttons.table"
             :hasFullscreen="onionConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="onionChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -623,7 +635,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="onionConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="onionConfig.style.chart.tooltip.backgroundColor"
             :color="onionConfig.style.chart.tooltip.color"
             :borderRadius="onionConfig.style.chart.tooltip.borderRadius"
