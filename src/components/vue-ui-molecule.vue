@@ -99,7 +99,8 @@ const customPalette = computed(() => {
 
 const mutableConfig = ref({
     showTable: moleculeConfig.value.table.show,
-    showDataLabels: true
+    showDataLabels: true,
+    showTooltip: moleculeConfig.value.style.chart.tooltip.show
 });
 
 function calculateDepth(data, depth = 0) {
@@ -471,13 +472,18 @@ function toggleLabels() {
     mutableConfig.value.showDataLabels = !mutableConfig.value.showDataLabels;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
-    toggleLabels
+    toggleLabels,
+    toggleTooltip
 });
 
 </script>
@@ -520,12 +526,14 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="moleculeConfig.userOptions.buttons.tooltip && moleculeConfig.style.chart.tooltip.show"
             :hasPdf="moleculeConfig.userOptions.buttons.pdf"
             :hasXls="moleculeConfig.userOptions.buttons.csv"
             :hasImg="moleculeConfig.userOptions.buttons.img"
             :hasTable="moleculeConfig.userOptions.buttons.table"
             :hasLabel="moleculeConfig.userOptions.buttons.labels"
             :hasFullscreen="moleculeConfig.userOptions.buttons.fullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="moleculeChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -533,7 +541,11 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -615,7 +627,7 @@ defineExpose({
         />
 
         <Tooltip
-            :show="moleculeConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="moleculeConfig.style.chart.tooltip.backgroundColor"
             :color="moleculeConfig.style.chart.tooltip.color"
             :borderRadius="moleculeConfig.style.chart.tooltip.borderRadius"
