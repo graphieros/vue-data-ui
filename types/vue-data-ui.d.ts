@@ -40,6 +40,7 @@ declare module 'vue-data-ui' {
     export type ChartUserOptions = {
         show?: boolean;
         buttons?: {
+            tooltip?: boolean;
             pdf?: boolean;
             csv?: boolean;
             img?: boolean;
