@@ -150,7 +150,8 @@ function observeTable() {
 
 const mutableConfig = ref({
     showTable: verticalBarConfig.value.table.show,
-    sortDesc: verticalBarConfig.value.style.chart.layout.bars.sort === "desc"
+    sortDesc: verticalBarConfig.value.style.chart.layout.bars.sort === "desc",
+    showTooltip: verticalBarConfig.value.style.chart.tooltip.show
 });
 
 
@@ -513,6 +514,10 @@ function toggleSort() {
     recalculateHeight()
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     recalculateHeight,
@@ -520,7 +525,8 @@ defineExpose({
     generateCsv,
     generateImage,
     toggleTable,
-    toggleSort
+    toggleSort,
+    toggleTooltip
 });
 
 </script>
@@ -559,6 +565,7 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
+            :hasTooltip="verticalBarConfig.userOptions.buttons.tooltip && verticalBarConfig.style.chart.tooltip.show"
             :hasPdf="verticalBarConfig.userOptions.buttons.pdf"
             :hasImg="verticalBarConfig.userOptions.buttons.img"
             :hasXls="verticalBarConfig.userOptions.buttons.csv"
@@ -566,6 +573,7 @@ defineExpose({
             :hasSort="verticalBarConfig.userOptions.buttons.sort"
             :hasFullscreen="verticalBarConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="verticalBarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -573,8 +581,12 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleSort="toggleSort"
+            @toggleTooltip="toggleTooltip"
         >
-        <template #optionPdf v-if="$slots.optionPdf">
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
+            <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
             <template #optionCsv v-if="$slots.optionCsv">
@@ -765,7 +777,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="verticalBarConfig.style.chart.tooltip.show && isTooltip && segregated.length < props.dataset.length"
+            :show="mutableConfig.showTooltip && isTooltip && segregated.length < props.dataset.length"
             :backgroundColor="verticalBarConfig.style.chart.tooltip.backgroundColor"
             :color="verticalBarConfig.style.chart.tooltip.color"
             :borderRadius="verticalBarConfig.style.chart.tooltip.borderRadius"
