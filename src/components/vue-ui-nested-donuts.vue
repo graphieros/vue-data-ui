@@ -130,6 +130,7 @@ const mutableConfig = ref({
         show: donutConfig.value.style.chart.layout.labels.dataLabels.show,
     },
     showTable: donutConfig.value.table.show,
+    showTooltip: donutConfig.value.style.chart.tooltip.show
 });
 
 
@@ -633,13 +634,18 @@ function toggleLabels() {
     mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
-    toggleLabels
+    toggleLabels,
+    toggleTooltip
 })
 
 </script>
@@ -678,6 +684,7 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="donutConfig.userOptions.buttons.tooltip && donutConfig.style.chart.tooltip.show"
             :hasPdf="donutConfig.userOptions.buttons.pdf"
             :hasXls="donutConfig.userOptions.buttons.csv"
             :hasImg="donutConfig.userOptions.buttons.img"
@@ -685,6 +692,7 @@ defineExpose({
             :hasLabel="donutConfig.userOptions.buttons.labels"
             :hasFullscreen="donutConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="nestedDonutsChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -692,7 +700,11 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -868,7 +880,7 @@ defineExpose({
 
          <!-- TOOLTIP -->
          <Tooltip
-            :show="donutConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="donutConfig.style.chart.tooltip.backgroundColor"
             :color="donutConfig.style.chart.tooltip.color"
             :borderRadius="donutConfig.style.chart.tooltip.borderRadius"
