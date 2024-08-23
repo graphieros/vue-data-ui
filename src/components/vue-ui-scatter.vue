@@ -121,6 +121,7 @@ const customPalette = computed(() => {
 
 const mutableConfig = ref({
     showTable: scatterConfig.value.table.show,
+    showTooltip: scatterConfig.value.style.tooltip.show
 });
 
 const svg = ref({
@@ -544,12 +545,17 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
-    toggleTable
+    toggleTable,
+    toggleTooltip
 });
 
 </script>
@@ -589,11 +595,13 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
+            :hasTooltip="scatterConfig.userOptions.buttons.tooltip && scatterConfig.style.tooltip.show"
             :hasPdf="scatterConfig.userOptions.buttons.pdf"
             :hasImg="scatterConfig.userOptions.buttons.img"
             :hasXls="scatterConfig.userOptions.buttons.csv"
             :hasTable="scatterConfig.userOptions.buttons.table"
             :hasFullscreen="scatterConfig.userOptions.buttons.fullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
             :chartElement="scatterChart"
             @toggleFullscreen="toggleFullscreen"
@@ -601,8 +609,12 @@ defineExpose({
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
-        <template #optionPdf v-if="$slots.optionPdf">
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
+            <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
             <template #optionCsv v-if="$slots.optionCsv">
@@ -1010,7 +1022,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="scatterConfig.style.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="scatterConfig.style.tooltip.backgroundColor"
             :color="scatterConfig.style.tooltip.color"
             :borderRadius="scatterConfig.style.tooltip.borderRadius"
