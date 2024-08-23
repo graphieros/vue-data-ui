@@ -103,6 +103,7 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 
 const mutableConfig = ref({
     showTable: agePyramidConfig.value.table.show,
+    showTooltip: agePyramidConfig.value.style.tooltip.show
 });
 
 const svg = ref({
@@ -352,11 +353,16 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
+    toggleTooltip
 });
 
 </script>
@@ -395,19 +401,25 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
+            :hasTooltip="agePyramidConfig.userOptions.buttons.tooltip && agePyramidConfig.style.tooltip.show"
             :hasPdf="agePyramidConfig.userOptions.buttons.pdf"
             :hasXls="agePyramidConfig.userOptions.buttons.csv"
             :hasImg="agePyramidConfig.userOptions.buttons.img"
             :hasTable="agePyramidConfig.userOptions.buttons.table"
             :hasFullscreen="agePyramidConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="agePyramid"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -641,7 +653,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="agePyramidConfig.style.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="agePyramidConfig.style.tooltip.backgroundColor"
             :color="agePyramidConfig.style.tooltip.color"
             :borderRadius="agePyramidConfig.style.tooltip.borderRadius"
