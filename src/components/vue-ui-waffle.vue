@@ -141,8 +141,9 @@ const customPalette = computed(() => {
 
 
 const mutableConfig = ref({
-    showTable: waffleConfig.value.table.show
-})
+    showTable: waffleConfig.value.table.show,
+    showTooltip: waffleConfig.value.style.chart.tooltip.show
+});
 
 const svg = ref({
     height: 512,
@@ -591,12 +592,17 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
-    toggleTable
+    toggleTable,
+    toggleTooltip
 });
 
 </script>
@@ -640,19 +646,25 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="waffleConfig.userOptions.buttons.tooltip && waffleConfig.style.chart.tooltip.show"
             :hasPdf="waffleConfig.userOptions.buttons.pdf"
             :hasImg="waffleConfig.userOptions.buttons.img"
             :hasXls="waffleConfig.userOptions.buttons.csv"
             :hasTable="waffleConfig.userOptions.buttons.table"
             :hasFullscreen="waffleConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="waffleChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -812,7 +824,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="waffleConfig.style.chart.tooltip.show && isTooltip && segregated.length < props.dataset.length"
+            :show="mutableConfig.showTooltip && isTooltip && segregated.length < props.dataset.length"
             :backgroundColor="waffleConfig.style.chart.tooltip.backgroundColor"
             :color="waffleConfig.style.chart.tooltip.color"
             :borderRadius="waffleConfig.style.chart.tooltip.borderRadius"
