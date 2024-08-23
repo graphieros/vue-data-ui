@@ -113,6 +113,7 @@ const mutableConfig = ref({
         show: galaxyConfig.value.style.chart.layout.labels.dataLabels.show,
     },
     showTable: galaxyConfig.value.table.show,
+    showTooltip: galaxyConfig.value.style.chart.tooltip.show
 });
 
 const svg = ref({
@@ -358,13 +359,18 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
-    toggleTable
-})
+    toggleTable,
+    toggleTooltip
+});
 
 </script>
 
@@ -402,11 +408,13 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="galaxyConfig.userOptions.buttons.tooltip && galaxyConfig.style.chart.tooltip.show"
             :hasPdf="galaxyConfig.userOptions.buttons.pdf"
             :hasXls="galaxyConfig.userOptions.buttons.csv"
             :hasImg="galaxyConfig.userOptions.buttons.img"
             :hasTable="galaxyConfig.userOptions.buttons.table"
             :hasFullscreen="galaxyConfig.userOptions.buttons.fullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
             :chartElement="galaxyChart"
             @toggleFullscreen="toggleFullscreen"
@@ -414,7 +422,11 @@ defineExpose({
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -532,7 +544,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="galaxyConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTable && isTooltip"
             :backgroundColor="galaxyConfig.style.chart.tooltip.backgroundColor"
             :color="galaxyConfig.style.chart.tooltip.color"
             :borderRadius="galaxyConfig.style.chart.tooltip.borderRadius"
