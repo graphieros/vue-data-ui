@@ -36,6 +36,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    hasTooltip: {
+        type: Boolean,
+        default: false,
+    },
     color: {
         type: String,
     },
@@ -71,10 +75,14 @@ const props = defineProps({
     isStacked:  {
         type: Boolean,
         default: false
+    },
+    isTooltip: {
+        type: Boolean,
+        default: false,
     }
 });
 
-const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack']);
+const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack', 'toggleTooltip']);
 
 function generatePdf() {
     emit('generatePdf');
@@ -133,6 +141,13 @@ function toggleStack() {
     emit('toggleStack')
 }
 
+const isItTooltip = ref(props.isTooltip);
+
+function toggleTooltip() {
+    isItTooltip.value = !isItTooltip.value;
+    emit('toggleTooltip');
+}
+
 const isFullscreen = ref(false);
 
 function toggleFullscreen(state) {
@@ -174,12 +189,22 @@ onBeforeUnmount(() => {
         </div>
         <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}`">
 
+            <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip">
+                <template v-if="$slots.optionTooltip">
+                    <slot name="optionTooltip"/>
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color"/>
+                    <BaseIcon v-else name="tooltipDisabled" :stroke="color"/>
+                </template>
+            </button>
+
             <button tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf">
                 <template v-if="$slots.optionPdf">
                     <slot name="optionPdf"/>
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isPrinting" name="spin" isSpin />
+                    <BaseIcon v-if="isPrinting" name="spin" isSpin :stroke="color" />
                     <BaseIcon v-else name="pdf" :stroke="color" />
                 </template>
             </button>
@@ -198,7 +223,7 @@ onBeforeUnmount(() => {
                     <slot name="optionImg"/>
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isImaging" name="spin" isSpin />
+                    <BaseIcon v-if="isImaging" name="spin" isSpin :stroke="color" />
                     <BaseIcon v-else name="image" :stroke="color" />
                 </template>
             </button>
@@ -230,7 +255,7 @@ onBeforeUnmount(() => {
                 </template>
             </button>
 
-            <button tabindex="0" v-if="hasStack" class="vue-ui-user-options-button" @click="toggleStack">
+            <button tabindex="0" v-if="hasStack" data-cy="user-options-stack" class="vue-ui-user-options-button" @click="toggleStack">
                 <template v-if="$slots.optionStack">
                     <slot name="optionStack"/>
                 </template>
