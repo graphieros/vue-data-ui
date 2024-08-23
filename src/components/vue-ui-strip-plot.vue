@@ -60,7 +60,6 @@ const isDataset = computed({
     }
 });
 
-
 const uid = ref(createUid());
 const defaultConfig = ref(mainConfig.vue_ui_strip_plot);
 const step = ref(0);
@@ -180,7 +179,8 @@ const mutableConfig = ref({
     showTable: stripConfig.value.table.show,
     dataLabels: {
         show: stripConfig.value.style.chart.labels.bestPlotLabel.show
-    }
+    },
+    showTooltip: stripConfig.value.style.chart.tooltip.show
 });
 
 const padding = ref({
@@ -423,13 +423,18 @@ function toggleLabels() {
     mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
-    toggleLabels
+    toggleLabels,
+    toggleTooltip
 });
 
 </script>
@@ -468,12 +473,14 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="stripConfig.userOptions.buttons.tooltip && stripConfig.style.chart.tooltip.show"
             :hasPdf="stripConfig.userOptions.buttons.pdf"
             :hasXls="stripConfig.userOptions.buttons.csv"
             :hasImg="stripConfig.userOptions.buttons.img"
             :hasTable="stripConfig.userOptions.buttons.table"
             :hasLabel="stripConfig.userOptions.buttons.labels"
             :hasFullscreen="stripConfig.userOptions.buttons.fullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
             :chartElement="stripPlotChart"
             @toggleFullscreen="toggleFullscreen"
@@ -482,7 +489,11 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -667,9 +678,9 @@ defineExpose({
                 <g v-if="mutableConfig.dataLabels.show">
                     <template v-for="(plot, i) in ds.plots">
                         <text 
-                            v-if="i === ds.plots.length - 1"
+                            v-if="i === ds.plots.length - 1 || (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip)"
                             :x="plot.x"
-                            :y="plot.y + stripConfig.style.chart.labels.bestPlotLabel.offsetY - plotRadius * 1.5"
+                            :y="plot.y + stripConfig.style.chart.labels.bestPlotLabel.offsetY - plotRadius * (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip ? 2 : 1.5)"
                             :font-size="stripConfig.style.chart.labels.bestPlotLabel.fontSize"
                             :fill="stripConfig.style.chart.labels.bestPlotLabel.color"
                             text-anchor="middle"
@@ -702,7 +713,7 @@ defineExpose({
         />
 
         <Tooltip
-            :show="stripConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="stripConfig.style.chart.tooltip.backgroundColor"
             :color="stripConfig.style.chart.tooltip.color"
             :borderRadius="stripConfig.style.chart.tooltip.borderRadius"
