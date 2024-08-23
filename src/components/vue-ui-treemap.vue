@@ -99,6 +99,7 @@ const customPalette = computed(() => {
 
 const mutableConfig = ref({
     showTable: treemapConfig.value.table.show,
+    showTooltip: treemapConfig.value.style.chart.tooltip.show
 });
 
 const chartDimensions = ref({
@@ -453,12 +454,17 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generateImage,
     generatePdf,
-    toggleTable
+    toggleTable,
+    toggleTooltip
 })
 
 </script>
@@ -501,19 +507,25 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="treemapConfig.userOptions.buttons.tooltip && treemapConfig.style.chart.tooltip.show"
             :hasPdf="treemapConfig.userOptions.buttons.pdf"
             :hasXls="treemapConfig.userOptions.buttons.csv"
             :hasImg="treemapConfig.userOptions.buttons.img"
             :hasTable="treemapConfig.userOptions.buttons.table"
             :hasFullscreen="treemapConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="treemapChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -646,7 +658,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="treemapConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="treemapConfig.style.chart.tooltip.backgroundColor"
             :color="treemapConfig.style.chart.tooltip.color"
             :fontSize="treemapConfig.style.chart.tooltip.fontSize"
