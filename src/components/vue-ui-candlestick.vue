@@ -136,7 +136,8 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 });
 
 const mutableConfig = ref({
-    showTable: candlestickConfig.value.table.show
+    showTable: candlestickConfig.value.table.show,
+    showTooltip: candlestickConfig.value.style.tooltip.show
 });
 
 const drawingArea = computed(() => {
@@ -416,11 +417,16 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
+    toggleTooltip
 });
 
 </script>
@@ -459,19 +465,25 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
+            :hasTooltip="candlestickConfig.userOptions.buttons.tooltip && candlestickConfig.style.tooltip.show"
             :hasPdf="candlestickConfig.userOptions.buttons.pdf"
             :hasImg="candlestickConfig.userOptions.buttons.img"
             :hasXls="candlestickConfig.userOptions.buttons.csv"
             :hasTable="candlestickConfig.userOptions.buttons.table"
             :hasFullscreen="candlestickConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="candlestickChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -723,7 +735,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="candlestickConfig.style.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="candlestickConfig.style.tooltip.backgroundColor"
             :color="candlestickConfig.style.tooltip.color"
             :borderRadius="candlestickConfig.style.tooltip.borderRadius"
