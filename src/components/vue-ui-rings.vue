@@ -140,6 +140,7 @@ const customPalette = computed(() => {
 
 const mutableConfig = ref({
     showTable: ringsConfig.value.table.show,
+    showTooltip: ringsConfig.value.style.chart.tooltip.show
 });
 
 const svg = ref({
@@ -410,12 +411,17 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+  mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
-    toggleTable
+    toggleTable,
+    toggleTooltip
 });
 
 </script>
@@ -467,34 +473,40 @@ defineExpose({
         :isPrinting="isPrinting"
         :isImaging="isImaging"
         :uid="uid"
+        :hasTooltip="ringsConfig.userOptions.buttons.tooltip && ringsConfig.style.chart.tooltip.show"
         :hasPdf="ringsConfig.userOptions.buttons.pdf"
         :hasXls="ringsConfig.userOptions.buttons.csv"
         :hasImg="ringsConfig.userOptions.buttons.img"
         :hasTable="ringsConfig.userOptions.buttons.table"
         :hasFullscreen="ringsConfig.userOptions.buttons.fullscreen"
         :isFullscreen="isFullscreen"
+        :isTooltip="mutableConfig.showTooltip"
         :chartElement="ringsChart"
         @toggleFullscreen="toggleFullscreen"
         @generatePdf="generatePdf"
         @generateCsv="generateCsv"
         @generateImage="generateImage"
         @toggleTable="toggleTable"
+        @toggleTooltip="toggleTooltip"
       >
+        <template #optionTooltip v-if="$slots.optionTooltip">
+            <slot name="optionTooltip"/>
+        </template>
         <template #optionPdf v-if="$slots.optionPdf">
-                <slot name="optionPdf" />
-            </template>
-            <template #optionCsv v-if="$slots.optionCsv">
-                <slot name="optionCsv" />
-            </template>
-            <template #optionImg v-if="$slots.optionImg">
-                <slot name="optionImg" />
-            </template>
-            <template #optionTable v-if="$slots.optionTable">
-                <slot name="optionTable" />
-            </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
-            </template>
+              <slot name="optionPdf" />
+          </template>
+          <template #optionCsv v-if="$slots.optionCsv">
+              <slot name="optionCsv" />
+          </template>
+          <template #optionImg v-if="$slots.optionImg">
+              <slot name="optionImg" />
+          </template>
+          <template #optionTable v-if="$slots.optionTable">
+              <slot name="optionTable" />
+          </template>
+          <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+              <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+          </template>
       </UserOptions>
 
     <!-- CHART -->
@@ -618,7 +630,7 @@ defineExpose({
     <!-- TOOLTIP -->
     <Tooltip
       :show="
-        ringsConfig.style.chart.tooltip.show &&
+        mutableConfig.showTooltip &&
         isTooltip &&
         segregated.length < props.dataset.length
       "
