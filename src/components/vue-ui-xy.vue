@@ -32,6 +32,7 @@
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uniqueId"
+            :hasTooltip="chartConfig.chart.userOptions.buttons.tooltip && chartConfig.chart.tooltip.show"
             :hasPdf="chartConfig.chart.userOptions.buttons.pdf"
             :hasXls="chartConfig.chart.userOptions.buttons.csv"
             :hasImg="chartConfig.chart.userOptions.buttons.img"
@@ -42,6 +43,7 @@
             :isStacked="mutableConfig.isStacked"
             :isFullscreen="isFullscreen"
             :chartElement="$refs.chart"
+            :isTooltip="mutableConfig.showTooltip"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -49,7 +51,11 @@
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
             @toggleStack="toggleStack"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -820,7 +826,7 @@
                 </g>
 
                 <!-- TOOLTIP TRAPS -->
-                <g v-if="chartConfig.chart.tooltip.show">
+                <g>
                     <g v-for="(_, i) in maxSeries" :key="`tooltip_trap_${i}`">
                         <rect
                             :data-cy="`xy-tooltip-trap-${i}`"
@@ -830,8 +836,8 @@
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
                             :fill="selectedSerieIndex === i || selectedRowIndex === i ? `${chartConfig.chart.highlighter.color}${opacity[chartConfig.chart.highlighter.opacity]}` : 'transparent'"
-                            @mouseenter="toggleTooltip(true, i)"
-                            @mouseleave="toggleTooltip(false)"
+                            @mouseenter="toggleTooltipVisibility(true, i)"
+                            @mouseleave="toggleTooltipVisibility(false)"
                             @click="selectX(i)"
                         />
                     </g>
@@ -955,7 +961,7 @@
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="chartConfig.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="chartConfig.chart.tooltip.backgroundColor"
             :color="chartConfig.chart.tooltip.color"
             :fontSize="chartConfig.chart.tooltip.fontSize"
@@ -1149,6 +1155,7 @@ export default {
                 dataLabels: {
                     show: true,
                 },
+                showTooltip: true,
                 showTable: false,
                 isStacked: false,
                 useIndividualScale: false
@@ -1953,6 +1960,7 @@ export default {
             dataLabels: {
                 show: true,
             },
+            showTooltip: this.chartConfig.chart.tooltip.show === true,
             showTable: this.chartConfig.showTable === true,
             isStacked: this.chartConfig.chart.grid.labels.yAxis.stacked,
             useIndividualScale: this.chartConfig.chart.grid.labels.yAxis.useIndividualScale
@@ -2111,6 +2119,9 @@ export default {
         toggleLabels() {
             this.mutableConfig.dataLabels.show = !this.mutableConfig.dataLabels.show;
         },
+        toggleTooltip() {
+            this.mutableConfig.showTooltip = !this.mutableConfig.showTooltip;
+        },
         checkAutoScaleError(datapoint) {
             if (datapoint.autoScaling) {
                 if (!this.chartConfig.chart.grid.labels.yAxis.useIndividualScale) {
@@ -2253,7 +2264,7 @@ export default {
             }));
             this.segregateStep += 1;
         },
-        toggleTooltip(show, selectedIndex = null) {
+        toggleTooltipVisibility(show, selectedIndex = null) {
             this.isTooltip = show;
             if(show) {
                 this.selectedSerieIndex = selectedIndex;
