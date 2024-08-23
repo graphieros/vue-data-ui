@@ -85,6 +85,7 @@ const dataset = ref([
 ]);
 
 const model = ref([
+    { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
