@@ -3,13 +3,14 @@ import UserOptions from './UserOptions.vue'
 describe('<UserOptions />', () => {
 
   beforeEach(function () {
-    cy.viewport(40, 250);
     cy.mount(UserOptions, {
       props: {
+        hasTooltip: true,
         hasImg: true,
         hasTable: true,
         hasSort: true,
-        hasLabel: true
+        hasLabel: true,
+        hasStack: true
       }
     });
     cy.get(`[data-cy="user-options-summary"]`).click()
@@ -30,12 +31,14 @@ describe('<UserOptions />', () => {
 
   it('contains all necessary icons', () => {
     [
+      'user-options-tooltip',
       'user-options-pdf',
       'user-options-xls',
       'user-options-img',
       'user-options-table',
       'user-options-label',
-      'user-options-sort'
+      'user-options-sort',
+      'user-options-stack'
     ].forEach(btn => {
       cy.get(`[data-cy="${btn}"]`).should('exist').and('be.visible')
     })
