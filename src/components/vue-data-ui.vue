@@ -137,7 +137,8 @@ const emit = defineEmits([
     'postImage',
     'hoverIndex',
     'selectX',
-    'toggleLock'
+    'toggleLock',
+    'toggleTooltip'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -167,6 +168,7 @@ const toggleTable = ref(() => null);
 const toggleLabels = ref(() => null);
 const toggleSort = ref(() => null);
 const toggleStack = ref(() => null);
+const toggleTooltip = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -219,6 +221,9 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.toggleStack) {
             toggleStack.value = newRef.toggleStack;
         }
+        if (newRef.toggleTooltip) {
+            toggleTooltip.value = newRef.toggleTooltip;
+        }
     }
 })
 
@@ -239,6 +244,7 @@ const getEventHandlers = () => {
         'hoverIndex',
         'selectX',
         'toggleLock',
+        'toggleTooltip'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -274,7 +280,8 @@ defineExpose({
     toggleTable,
     toggleLabels,
     toggleSort,
-    toggleStack
+    toggleStack,
+    toggleTooltip
 });
 </script>
 
