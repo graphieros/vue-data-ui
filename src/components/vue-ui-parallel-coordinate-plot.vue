@@ -205,6 +205,7 @@ const mutableConfig = ref({
         show: pcpConfig.value.style.chart.yAxis.labels.datapoints.show
     },
     showTable: pcpConfig.value.table.show,
+    showTooltip: pcpConfig.value.style.chart.tooltip.show
 });
 
 const segregated = ref([]);
@@ -476,13 +477,18 @@ function toggleLabels() {
     mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generatePdf,
     generateImage,
     toggleTable,
-    toggleLabels
+    toggleLabels,
+    toggleTooltip
 });
 
 </script>
@@ -525,6 +531,7 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="pcpConfig.userOptions.buttons.tooltip && pcpConfig.style.chart.tooltip.show"
             :hasPdf="pcpConfig.userOptions.buttons.pdf"
             :hasXls="pcpConfig.userOptions.buttons.csv"
             :hasImg="pcpConfig.userOptions.buttons.img"
@@ -532,6 +539,7 @@ defineExpose({
             :hasLabel="pcpConfig.userOptions.buttons.labels"
             :hasFullscreen="pcpConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="pcpChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -539,6 +547,7 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
+            @toggleTooltip="toggleTooltip"
         >
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -600,6 +609,7 @@ defineExpose({
                         :y2="tick.y"
                         :stroke="pcpConfig.style.chart.yAxis.stroke"
                         :stroke-width="pcpConfig.style.chart.yAxis.strokeWidth"
+                        :style="`opacity:${selectedItem && !mutableConfig.showTooltip ? 0.2 : 1}`"
                     />
                     
                     <!-- TICK LABELS -->
@@ -611,6 +621,7 @@ defineExpose({
                         text-anchor="end"
                         :font-size="chartDimensions.ticksFontSize"
                         :font-weight="pcpConfig.style.chart.yAxis.labels.ticks.bold ? 'bold' : 'normal'"
+                        :style="`opacity:${selectedItem && !mutableConfig.showTooltip ? 0.2 : 1}`"
                     >
                         {{ makeDataLabel({ value: tick.value, index: i }) }}
                     </text>
@@ -640,6 +651,20 @@ defineExpose({
                             :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? pcpConfig.style.chart.plots.opacity : 0.2 : pcpConfig.style.chart.plots.opacity}`"
                             @click="() => selectDatapoint(dp)"
                         />
+                        <!-- SERIE LABEL WHEN TOOLTIP IS DISABLED -->
+                        <template v-if="!mutableConfig.showTooltip" style="pointer-events: none;">
+                            <text 
+                                v-if="selectedItem && selectedItem === serieSet.id && serieSet.datapoints.length"
+                                :x="serieSet.datapoints[0].x - chartDimensions.ticksFontSize"
+                                :y="serieSet.datapoints[0].y + (chartDimensions.ticksFontSize / 3)"
+                                text-anchor="end"
+                                :font-size="chartDimensions.ticksFontSize"
+                                :fill="serie.color"
+                                font-weight="bold"
+                            >
+                                {{ serieSet.name }}
+                            </text>
+                        </template>
                     </g>
 
                     <!-- LABELS -->
@@ -718,7 +743,7 @@ defineExpose({
         </div>
 
         <Tooltip
-            :show="pcpConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="pcpConfig.style.chart.tooltip.backgroundColor"
             :color="pcpConfig.style.chart.tooltip.color"
             :fontSize="pcpConfig.style.chart.tooltip.fontSize"
