@@ -85,12 +85,13 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 });
 
 const mutableConfig = ref({
-    showTable: heatmapConfig.value.table.show
-})
+    showTable: heatmapConfig.value.table.show,
+    showTooltip: heatmapConfig.value.style.tooltip.show
+});
 
 const breakpoint = computed(() => {
     return heatmapConfig.value.table.responsiveBreakpoint
-})
+});
 
 function observeTable() {
     const observer = new ResizeObserver((entries) => {
@@ -308,17 +309,22 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     generatePdf,
     generateCsv,
     generateImage,
-    toggleTable
+    toggleTable,
+    toggleTooltip
 });
 
 </script>
 
 <template>
-     <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center;${!heatmapConfig.style.title.text ? 'padding-top:36px' : ''};background:${heatmapConfig.style.backgroundColor}`" :id="`heatmap__${uid}`">
+    <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${heatmapConfig.style.fontFamily};width:100%; text-align:center;${!heatmapConfig.style.title.text ? 'padding-top:36px' : ''};background:${heatmapConfig.style.backgroundColor}`" :id="`heatmap__${uid}`">
         <div v-if="heatmapConfig.style.title.text" :style="`width:100%;background:${heatmapConfig.style.backgroundColor}`">
             <Title
                 :config="{
@@ -350,19 +356,25 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
+            :hasTooltip="heatmapConfig.userOptions.buttons.tooltip && heatmapConfig.style.tooltip.show"
             :hasPdf="heatmapConfig.userOptions.buttons.pdf"
             :hasImg="heatmapConfig.userOptions.buttons.img"
             :hasXls="heatmapConfig.userOptions.buttons.csv"
             :hasTable="heatmapConfig.userOptions.buttons.table"
             :hasFullscreen="heatmapConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="heatmapChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -549,7 +561,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="heatmapConfig.style.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="heatmapConfig.style.tooltip.backgroundColor"
             :color="heatmapConfig.style.tooltip.color"
             :borderRadius="heatmapConfig.style.tooltip.borderRadius"
