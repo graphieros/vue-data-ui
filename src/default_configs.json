@@ -304,6 +304,7 @@
             "userOptions": {
                 "show": true,
                 "buttons": {
+                    "tooltip": true,
                     "pdf": true,
                     "csv": true,
                     "img": true,
@@ -506,6 +507,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -549,6 +551,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -743,6 +746,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -870,6 +874,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -1030,6 +1035,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -1382,6 +1388,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -1521,6 +1528,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -2002,6 +2010,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -2181,6 +2190,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -2329,6 +2339,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -2459,6 +2470,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -3007,6 +3019,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -3552,6 +3565,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -3799,6 +3813,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -3837,6 +3852,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -4030,6 +4046,7 @@
         "showTooltip": true,
         "showUserOptions": true,
         "userOptionsButtons": {
+            "tooltip": true,
             "pdf": true,
             "img": true,
             "fullscreen": true
@@ -4161,6 +4178,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -4506,6 +4524,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
@@ -4749,6 +4768,7 @@
         "userOptions": {
             "show": true,
             "buttons": {
+                "tooltip": true,
                 "pdf": true,
                 "csv": true,
                 "img": true,
