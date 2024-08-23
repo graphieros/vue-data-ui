@@ -111,7 +111,11 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 const defaultSizes = ref({
     width: quickConfig.value.width,
     height: quickConfig.value.height
-})
+});
+
+const mutableConfig = ref({
+    showTooltip: quickConfig.value.showTooltip
+});
 
 const resizeObserver = ref(null);
 
@@ -739,9 +743,14 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     generatePdf,
-    generateImage
+    generateImage,
+    toggleTooltip
 })
 
 </script>
@@ -764,16 +773,22 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="quickConfig.userOptionsButtons.tooltip && quickConfig.showTooltip"
             :hasPdf="quickConfig.userOptionsButtons.pdf"
             :hasImg="quickConfig.userOptionsButtons.img"
             :hasFullscreen="quickConfig.userOptionsButtons.fullscreen"
             :hasXls="false"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="quickChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -1445,7 +1460,7 @@ defineExpose({
         </div>
 
         <Tooltip
-            :show="quickConfig.showTooltip && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="quickConfig.backgroundColor"
             :color="quickConfig.color"
             :borderRadius="quickConfig.tooltipBorderRadius"
