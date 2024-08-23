@@ -148,6 +148,7 @@ const mutableConfig = ref({
         show: donutConfig.value.style.chart.layout.labels.dataLabels.show,
     },
     showTable: donutConfig.value.table.show,
+    showTooltip: donutConfig.value.style.chart.tooltip.show
 });
 
 const svg = ref({
@@ -503,6 +504,10 @@ function toggleLabels() {
     mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -510,6 +515,7 @@ defineExpose({
     generateImage,
     toggleTable,
     toggleLabels,
+    toggleTooltip
 });
 
 </script>
@@ -551,6 +557,7 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="donutConfig.style.chart.tooltip.show && donutConfig.userOptions.buttons.tooltip"
             :hasPdf="donutConfig.userOptions.buttons.pdf"
             :hasImg="donutConfig.userOptions.buttons.img"
             :hasXls="donutConfig.userOptions.buttons.csv"
@@ -559,13 +566,18 @@ defineExpose({
             :hasFullscreen="donutConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="donutChart"
+            :isTooltip="mutableConfig.showTooltip"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -585,8 +597,6 @@ defineExpose({
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
             </template>
         </UserOptions>
-
-
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
             
@@ -847,7 +857,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="donutConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="donutConfig.style.chart.tooltip.backgroundColor"
             :color="donutConfig.style.chart.tooltip.color"
             :fontSize="donutConfig.style.chart.tooltip.fontSize"
