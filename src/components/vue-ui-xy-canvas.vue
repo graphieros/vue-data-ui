@@ -120,7 +120,8 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 const mutableConfig = ref({
     showTable: xyConfig.value.table.show,
     showDataLabels: xyConfig.value.style.chart.dataLabels.show,
-    stacked: xyConfig.value.style.chart.stacked
+    stacked: xyConfig.value.style.chart.stacked,
+    showTooltip: xyConfig.value.style.chart.tooltip.show
 });
 
 function toggleFullscreen(state) {
@@ -1207,6 +1208,10 @@ function toggleStack() {
     mutableConfig.value.stacked = !mutableConfig.value.stacked;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generateCsv,
@@ -1214,7 +1219,8 @@ defineExpose({
     generateImage,
     toggleTable,
     toggleLabels,
-    toggleStack
+    toggleStack,
+    toggleTooltip
 });
 
 </script>
@@ -1250,6 +1256,7 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
+            :hasTooltip="xyConfig.userOptions.buttons.tooltip && xyConfig.style.chart.tooltip.show"
             :hasPdf="xyConfig.userOptions.buttons.pdf"
             :hasImg="xyConfig.userOptions.buttons.img"
             :hasXls="xyConfig.userOptions.buttons.csv"
@@ -1258,6 +1265,7 @@ defineExpose({
             :hasFullscreen="xyConfig.userOptions.buttons.fullscreen"
             :hasTable="(slicer.end - slicer.start < 200) && xyConfig.userOptions.buttons.table"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="xy"
             :isStacked="mutableConfig.stacked"
             @toggleFullscreen="toggleFullscreen"
@@ -1267,7 +1275,11 @@ defineExpose({
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
             @toggleStack="toggleStack"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -1323,7 +1335,7 @@ defineExpose({
         />
     
             <!-- TOOLTIP -->
-            <Tooltip :show="xyConfig.style.chart.tooltip.show && isTooltip"
+            <Tooltip :show="mutableConfig.showTooltip && isTooltip"
                 :backgroundColor="xyConfig.style.chart.tooltip.backgroundColor" 
                 :color="xyConfig.style.chart.tooltip.color"
                 :fontSize="xyConfig.style.chart.tooltip.fontSize" 
