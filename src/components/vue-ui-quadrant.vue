@@ -1,23 +1,22 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch, onBeforeUnmount } from "vue";
 import { 
+    XMLNS,
     adaptColorToBackground,
     convertColorToHex, 
+    convertCustomPalette,
     createCsvContent, 
     createUid, 
     downloadCsv,
     error,
     functionReturnsString,
-    isFunction,
     giftWrap,
+    isFunction,
     objectIsEmpty,
     opacity, 
     palette, 
     shiftHue,
     themePalettes,
-    XMLNS,
-convertCustomPalette,
-translateSize
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
@@ -169,7 +168,8 @@ const mutableConfig = ref({
     plotLabels: {
         show: quadrantConfig.value.style.chart.layout.labels.plotLabels.show,
     },
-    showTable: quadrantConfig.value.table.show
+    showTable: quadrantConfig.value.table.show,
+    showTooltip: quadrantConfig.value.style.chart.tooltip.show
 });
 
 const basePadding = ref(48);
@@ -860,13 +860,18 @@ function toggleLabels() {
     mutableConfig.value.plotLabels.show = !mutableConfig.value.plotLabels.show;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
-    toggleLabels
+    toggleLabels,
+    toggleTooltip
 });
 
 </script>
@@ -906,6 +911,7 @@ defineExpose({
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
+            :hasTooltip="quadrantConfig.userOptions.buttons.tooltip && quadrantConfig.style.chart.tooltip.show"
             :hasPdf="quadrantConfig.userOptions.buttons.pdf"
             :hasImg="quadrantConfig.userOptions.buttons.img"
             :hasXls="quadrantConfig.userOptions.buttons.csv"
@@ -913,6 +919,7 @@ defineExpose({
             :hasLabel="quadrantConfig.userOptions.buttons.labels"
             :hasFullscreen="quadrantConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip"
             :chartElement="quadrantChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -920,7 +927,11 @@ defineExpose({
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
+            @toggleTooltip="toggleTooltip"
         >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -1361,7 +1372,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="quadrantConfig.style.chart.tooltip.show && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="quadrantConfig.style.chart.tooltip.backgroundColor"
             :color="quadrantConfig.style.chart.tooltip.color"
             :borderRadius="quadrantConfig.style.chart.tooltip.borderRadius"
