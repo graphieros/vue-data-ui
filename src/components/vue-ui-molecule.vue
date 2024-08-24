@@ -138,6 +138,7 @@ function processNodes(
     paletteIndex = 0,
     rootColor = "#BBBBBB"
 ) {
+
     if (data && data.length > 0) {
         const polygonPath = createPolygonPath({
             plot: center,
@@ -150,13 +151,15 @@ function processNodes(
             const childCenter = polygonPath.coordinates[index];
             let color;
 
-            if (!node.parentNode) {
+            console.log(node)
+
+            if (!node.ancestor) {
                 color = rootColor;
-            } else if (!node.parentNode.parentNode) {
+            } else if (!node.ancestor.ancestor) {
                 color = customPalette.value[paletteIndex] || palette[paletteIndex] || rootColor;
                 paletteIndex += 1;
             } else {
-                color = node.parentNode.color || rootColor;
+                color = node.ancestor.color || rootColor;
             }
 
             node.polygonPath = {
@@ -168,7 +171,7 @@ function processNodes(
             node.uid = createUid();
 
             if (node.nodes && node.nodes.length > 0) {
-                const nestedPaletteIndex = !node.parentNode || !node.parentNode.parentNode ? paletteIndex : 0;
+                const nestedPaletteIndex = !node.ancestor || !node.ancestor.ancestor ? paletteIndex : 0;
                 node.nodes = processNodes(
                     node.nodes,
                     childCenter,
@@ -375,7 +378,7 @@ function convertDatasetToCSVFormat(dataset) {
         const data = {
             'name': node.name,
             'details': node.details || '-',
-            'parentNode': node.parentNode ? node.parentNode.name || '-' : '-',
+            'ancestor': node.ancestor ? node.ancestor.name || '-' : '-',
             'color': node.color || ''
         };
 
@@ -399,7 +402,7 @@ const dataTable = computed(() => {
     const head = [
         moleculeConfig.value.table.translations.nodeName,
         moleculeConfig.value.table.translations.details,
-        moleculeConfig.value.table.translations.parentNode,
+        moleculeConfig.value.table.translations.ancestor,
     ];
 
     const body = convertedTableData.value.map((h,i) => {
@@ -409,7 +412,7 @@ const dataTable = computed(() => {
                 name: h.name
             },
             h.details,
-            h.parentNode || ""
+            h.ancestor || ""
         ]
     });
 
@@ -430,7 +433,7 @@ const dataTable = computed(() => {
     const colNames = [
         moleculeConfig.value.table.translations.nodeName,
         moleculeConfig.value.table.translations.details,
-        moleculeConfig.value.table.translations.parentNode
+        moleculeConfig.value.table.translations.ancestor
     ]
 
     return {
