@@ -3559,7 +3559,7 @@
             "translations": {
                 "nodeName": "Node name",
                 "details": "Details",
-                "parentNode": "Parent node"
+                "ancestor": "Parent node"
             }
         },
         "userOptions": {
