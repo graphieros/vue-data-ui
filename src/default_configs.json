@@ -263,6 +263,13 @@
                     }
                 }
             },
+            "comments": {
+                "show": true,
+                "showInTooltip": true,
+                "width": 200,
+                "offsetY": 0,
+                "offsetX": 0
+            },
             "labels": {
                 "fontSize": 10,
                 "prefix": "",
