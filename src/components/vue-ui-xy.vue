@@ -220,6 +220,12 @@
                                 :stroke="chartConfig.bar.border.useSerieColor ? serie.color : chartConfig.bar.border.stroke"
                                 :stroke-width="chartConfig.bar.border.strokeWidth"
                             />
+
+                            <template v-if="plot.comment && chartConfig.chart.comments.show">
+                                <foreignObject style="overflow: visible" height="12" :width="(calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) / 2) + chartConfig.chart.comments.width" :x="calcRectX(plot) - (chartConfig.chart.comments.width / 2) + chartConfig.chart.comments.offsetX" :y="plot.y + chartConfig.chart.comments.offsetY + 6">
+                                    <slot name="plotComment" :plot="{...plot, color: serie.color}"/>
+                                </foreignObject>
+                            </template>
                         </g>
                         <g :data-cy="`xy-bar-progression-${i}`" v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                             <defs>
@@ -291,6 +297,14 @@
                             :stroke="chartConfig.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
+
+                        <template v-if="plot.comment && chartConfig.chart.comments.show">
+                            <foreignObject style="overflow: visible" height="12" :width="chartConfig.chart.comments.width" :x="plot.x - (chartConfig.chart.comments.width / 2) + chartConfig.chart.comments.offsetX" :y="plot.y + chartConfig.chart.comments.offsetY + 6">
+                                <div style="width: 100%;">
+                                    <slot name="plotComment" :plot="{...plot, color: serie.color}"/>
+                                </div>
+                            </foreignObject>
+                        </template>
                     </g>
                     <g :data-cy="`xy-plot-progression-${i}`" v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                         <defs>
@@ -410,6 +424,15 @@
                             :stroke="chartConfig.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
+
+                        <template v-if="plot.comment && chartConfig.chart.comments.show">
+                            <foreignObject style="overflow: visible" height="12" :width="chartConfig.chart.comments.width" :x="plot.x - (chartConfig.chart.comments.width / 2) + chartConfig.chart.comments.offsetX" :y="plot.y + chartConfig.chart.comments.offsetY + 6">
+                                <div style="width: 100%;">
+                                    <slot name="plotComment" :plot="{...plot, color: serie.color}"/>
+                                </div>
+                            </foreignObject>
+                        </template>
+
                     </g > 
                     <g :data-cy="`xy-line-progression-${i}`" v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                         <defs>
@@ -1435,6 +1458,7 @@ export default {
                         value: datapoint.absoluteValues[j],
                         zeroPosition,
                         individualMax,
+                        comment: datapoint.comments ? datapoint.comments[j] || '' : ''
                     }
                 });
 
@@ -1446,7 +1470,7 @@ export default {
                     }
                 })
 
-                const autoScalePlots = datapoint.series.map((plot, j) => {
+                const autoScalePlots = datapoint.series.map((_, j) => {
                     const x = this.mutableConfig.useIndividualScale && this.mutableConfig.isStacked 
                         ? this.drawingArea.left + (this.drawingArea.width / this.maxSeries * j) 
                         : (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length);
@@ -1458,6 +1482,7 @@ export default {
                         value: datapoint.absoluteValues[j],
                         zeroPosition,
                         individualMax,
+                        comment: datapoint.comments ? datapoint.comments[j] || '' : ''
                     }
                 });
 
@@ -1544,6 +1569,7 @@ export default {
                         x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
                         y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
                         value: datapoint.absoluteValues[j],
+                        comment: datapoint.comments ? datapoint.comments[j] || '' : ''
                     }
                 });
 
@@ -1560,7 +1586,8 @@ export default {
                         return {
                             x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
                             y: this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0),
-                            value: datapoint.absoluteValues[j]
+                            value: datapoint.absoluteValues[j],
+                            comment: datapoint.comments ? datapoint.comments[j] || '' : ''
                         }
                     }
                 })
@@ -1640,6 +1667,7 @@ export default {
                         x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
                         y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
                         value: datapoint.absoluteValues[j],
+                        comment: datapoint.comments ? datapoint.comments[j] || '' : ''
                     }
                 })
 
@@ -1656,6 +1684,7 @@ export default {
                         x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
                         y: this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0),
                         value: datapoint.absoluteValues[j],
+                        comment: datapoint.comments ? datapoint.comments[j] || '' : ''
                     }
                 })
 
@@ -1802,7 +1831,8 @@ export default {
                     name: datapoint.name,
                     color: datapoint.color,
                     type: datapoint.type,
-                    value: datapoint.absoluteValues.find((_s,i) => i === this.selectedSerieIndex)
+                    value: datapoint.absoluteValues.find((_s,i) => i === this.selectedSerieIndex),
+                    comments: datapoint.comments || []
                 }
             });
         },  
@@ -1896,7 +1926,12 @@ export default {
                             default:
                                 break;
                         }
-                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;">${shape} ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? this.dataLabel({p:this.chartConfig.chart.labels.prefix, v: s.value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.chart.tooltip.roundingValue}) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? this.dataLabel({p:this.chartConfig.chart.labels.prefix, v: s.value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.chart.tooltip.roundingValue}) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+
+                        if (this.chartConfig.chart.comments.showInTooltip && s.comments.length && s.comments[this.selectedSerieIndex]) {
+                            html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${s.comments[this.selectedSerieIndex]}</div>`
+                        }
+
                     }
                 });
                 return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
