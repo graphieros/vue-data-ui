@@ -180,7 +180,7 @@ const model = ref([
     { key: 'table.td.outline', def: 'none', type: 'text'},
     { key: 'table.translations.nodeName', def: 'Node name', type: 'text'},
     { key: 'table.translations.details', def: 'Details', type: 'text'},
-    { key: 'table.translations.parentNode', def: 'Parent node', type: 'text'},
+    { key: 'table.translations.ancestor', def: 'Parent node', type: 'text'},
 ])
 
 const testCustomTooltip = ref(false);
