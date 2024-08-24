@@ -502,7 +502,7 @@ declare module 'vue-data-ui' {
             translations?: {
                 nodeName?: string;
                 details?: string;
-                parentNode?: string;
+                ancestor?: string;
             };
         };
         userOptions?: ChartUserOptions;
@@ -514,7 +514,7 @@ declare module 'vue-data-ui' {
         name: string;
         details?: string;
         nodes?: VueUiMoleculeDatapoint;
-        parentNode?: VueUiMoleculeDatapoint;
+        ancestor?: VueUiMoleculeDatapoint;
         polygonPath: {
             coordinates: Array<{
                 x: number;
