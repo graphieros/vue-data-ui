@@ -2087,6 +2087,13 @@ declare module 'vue-data-ui' {
                     };
                 };
             };
+            comments?: {
+                show?: boolean;
+                showInTooltip?: boolean;
+                width?: number;
+                offsetY?: number;
+                offsetX?: number;
+            },
             labels?: {
                 fontSize?: number;
                 prefix?: string;
@@ -2201,6 +2208,7 @@ declare module 'vue-data-ui' {
         scaleMin?: number;
         autoScaling?: boolean;
         stackRatio?: number;
+        comments?: string[];
     };
 
     export type VueUiXyDatasetBarItem = {
