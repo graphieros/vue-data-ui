@@ -10,8 +10,9 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 
 const dataset = ref([
         {
-            name: "S0",
+            name: "Long name serie",
             series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12, 12, 12, 12],
+            comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
             type: "line",
             smooth: false,
             useArea: true,
@@ -20,7 +21,8 @@ const dataset = ref([
         },
         {
             name: "S1",
-            series: [8, 4, 8, 16, 12, 13, -16, 25, 12, 3, 7, 12, 6],
+            series: [-20, 20, 8, 16, 12, 13, -16, 55, 12, 3, 7, 12, 6],
+            comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
             type: "bar",
             smooth: false,
             useArea: true,
@@ -29,7 +31,8 @@ const dataset = ref([
         {
             name: "S2",
             series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
-            type: "line",
+            comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
+            type: "plot",
             smooth: false,
             useArea: true,
             scaleSteps: 2
@@ -199,6 +202,11 @@ const model = ref([
     { key: 'table.td.backgroundColor', def: '#FAFAFA', type: 'color', label: 'backgroundColorRow', category: 'table' },
     { key: 'table.td.color', def: '#1A1A1A', type: 'color', label: 'textColorRow', category: 'table' },
     { key: 'table.td.outline', def: '', type: 'text', label: 'outlineRow', category: 'table' },
+
+    { key: 'chart.comments.show', def: true, type: 'checkbox'},
+    { key: 'chart.comments.showInTooltip', def: true, type: 'checkbox'},
+    { key: 'chart.comments.width', def: 200, type: 'number', min: 50, max: 400},
+    { key: 'chart.comments.offsetY', def: 0, type: 'number', min: -100, max: 100},
 ]);
 
 const testCustomTooltip = ref(false);
@@ -328,14 +336,21 @@ function selectX(selectedX) {
             chart: {
                 ...config.chart,
             }
-        }"/>
+        }">  
+    </LocalVueUiXy>
     </div>
 
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
         <LocalVueUiXy component="VueUiXy" :dataset="dataset" :config="{
             ...config,
             responsive: true,
-        }"/>
+        }">
+        <template #plotComment="{ plot }">
+            <div :style="`font-size: 12px; color:${plot.color}; text-align:center`">
+                {{ plot.comment }}
+            </div>
+        </template>      
+    </LocalVueUiXy>
     </div>
     <Box>
         <template #title>VueUiXy</template>
