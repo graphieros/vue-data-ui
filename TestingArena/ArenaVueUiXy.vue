@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const dataset = ref([
         {
             name: "Long name serie",
-            series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12, 12, 12, 12],
+            series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12],
             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
             type: "line",
             smooth: false,
@@ -67,7 +67,7 @@ const model = ref([
     { key: 'chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
     { key: 'chart.height', def: 600, type: 'range', min: 300, max: 1000, label: 'height', category: 'general' },
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
-    { key: 'chart.zoom.show', def: false, type: 'checkbox', label: 'zoom', category: 'general' },
+    { key: 'chart.zoom.show', def: true, type: 'checkbox', label: 'zoom', category: 'general' },
     { key: 'chart.zoom.color', def: '#CCCCCC', type: 'color' },
     { key: 'chart.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
     { key: 'chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
