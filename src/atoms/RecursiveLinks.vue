@@ -2,20 +2,20 @@
   <template v-for="node in dataset">
     <template v-if="node.polygonPath && node.polygonPath.coordinates">
       <template v-for="(coordinate, index) in node.polygonPath.coordinates">
-        <template v-if="node.parentNode && node.parentNode.polygonPath">
+        <template v-if="node.ancestor && node.ancestor.polygonPath">
           <line
             :x1="coordinate.x"
             :y1="coordinate.y"
-            :x2="node.parentNode.polygonPath.coordinates[0].x"
-            :y2="node.parentNode.polygonPath.coordinates[0].y"
+            :x2="node.ancestor.polygonPath.coordinates[0].x"
+            :y2="node.ancestor.polygonPath.coordinates[0].y"
             :stroke="backgroundColor"
             :stroke-width="node.circleRadius / 1.5"
           />
           <line
             :x1="coordinate.x"
             :y1="coordinate.y"
-            :x2="node.parentNode.polygonPath.coordinates[0].x"
-            :y2="node.parentNode.polygonPath.coordinates[0].y"
+            :x2="node.ancestor.polygonPath.coordinates[0].x"
+            :y2="node.ancestor.polygonPath.coordinates[0].y"
             :stroke="color"
             :stroke-width="node.circleRadius / 2"
           />
@@ -55,7 +55,7 @@ const nodes = toRef(props, 'dataset');
 nodes.value.forEach((node) => {
   if (node.nodes && node.nodes.length > 0) {
     node.nodes.forEach((childNode) => {
-      childNode.parentNode = node;
+      childNode.ancestor = node;
     });
   }
 });

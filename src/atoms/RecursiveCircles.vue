@@ -75,7 +75,7 @@ const nodes = toRef(props, 'dataset');
 nodes.value.forEach((node) => {
     if (node.nodes && node.nodes.length > 0) {
         node.nodes.forEach((childNode) => {
-            childNode.parentNode = node;
+            childNode.ancestor = node;
         });
     }
 });

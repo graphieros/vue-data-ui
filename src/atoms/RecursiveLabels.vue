@@ -1,7 +1,7 @@
 <template>
     <template v-for="node in dataset">
         <template v-if="node.polygonPath && node.polygonPath.coordinates">
-            <template v-for="(coordinate, index) in node.polygonPath.coordinates">
+            <template v-for="(coordinate) in node.polygonPath.coordinates">
                 <text
                     :x="coordinate.x" 
                     :y="coordinate.y + node.circleRadius *2" 
@@ -49,7 +49,7 @@ const nodes = toRef(props, 'dataset');
 nodes.value.forEach((node) => {
     if (node.nodes && node.nodes.length > 0) {
         node.nodes.forEach((childNode) => {
-            childNode.parentNode = node;
+            childNode.ancestor = node;
         });
     }
 });
