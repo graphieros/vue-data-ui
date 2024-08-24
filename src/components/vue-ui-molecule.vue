@@ -151,8 +151,6 @@ function processNodes(
             const childCenter = polygonPath.coordinates[index];
             let color;
 
-            console.log(node)
-
             if (!node.ancestor) {
                 color = rootColor;
             } else if (!node.ancestor.ancestor) {
