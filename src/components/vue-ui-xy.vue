@@ -223,7 +223,7 @@
 
                             <template v-if="plot.comment && chartConfig.chart.comments.show">
                                 <foreignObject style="overflow: visible" height="12" :width="(calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) / 2) + chartConfig.chart.comments.width" :x="calcRectX(plot) - (chartConfig.chart.comments.width / 2) + chartConfig.chart.comments.offsetX" :y="plot.y + chartConfig.chart.comments.offsetY + 6">
-                                    <slot name="plotComment" :plot="{...plot, color: serie.color}"/>
+                                    <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
                                 </foreignObject>
                             </template>
                         </g>
@@ -301,7 +301,7 @@
                         <template v-if="plot.comment && chartConfig.chart.comments.show">
                             <foreignObject style="overflow: visible" height="12" :width="chartConfig.chart.comments.width" :x="plot.x - (chartConfig.chart.comments.width / 2) + chartConfig.chart.comments.offsetX" :y="plot.y + chartConfig.chart.comments.offsetY + 6">
                                 <div style="width: 100%;">
-                                    <slot name="plotComment" :plot="{...plot, color: serie.color}"/>
+                                    <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
                                 </div>
                             </foreignObject>
                         </template>
@@ -428,7 +428,7 @@
                         <template v-if="plot.comment && chartConfig.chart.comments.show">
                             <foreignObject style="overflow: visible" height="12" :width="chartConfig.chart.comments.width" :x="plot.x - (chartConfig.chart.comments.width / 2) + chartConfig.chart.comments.offsetX" :y="plot.y + chartConfig.chart.comments.offsetY + 6">
                                 <div style="width: 100%;">
-                                    <slot name="plotComment" :plot="{...plot, color: serie.color}"/>
+                                    <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
                                 </div>
                             </foreignObject>
                         </template>
