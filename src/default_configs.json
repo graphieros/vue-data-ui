@@ -474,6 +474,13 @@
                         "shadowColor": "#2D353C"
                     }
                 },
+                "comments": {
+                    "show": true,
+                    "showInTooltip": true,
+                    "width": 100,
+                    "offsetY": 0,
+                    "offsetX": 0
+                },
                 "legend": {
                     "backgroundColor": "#FFFFFF",
                     "color": "#2D353C",
@@ -4796,6 +4803,13 @@
                     "left": 36,
                     "right": 24,
                     "bottom": 36
+                },
+                "comments": {
+                    "show": true,
+                    "showInTooltip": true,
+                    "width": 200,
+                    "offsetY": 0,
+                    "offsetX": 0
                 },
                 "lines": {
                     "smooth": true,
