@@ -345,7 +345,7 @@ function selectX(selectedX) {
             ...config,
             responsive: true,
         }">
-        <template #plotComment="{ plot }">
+        <template #plot-comment="{ plot }">
             <div :style="`font-size: 12px; color:${plot.color}; text-align:center`">
                 {{ plot.comment }}
             </div>
