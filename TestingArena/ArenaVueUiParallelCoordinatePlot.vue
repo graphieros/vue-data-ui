@@ -15,7 +15,8 @@ const dataset = ref([
         series: [
             {
                 name: 'Item 1.1',
-                values: [1200, 300, 12, 1.2]
+                values: [1200, 300, 12, 1.2],
+                comments: ['', '', 'This is some sort of comment', '']
             },
             {
                 name: 'Item 1.2',
@@ -47,6 +48,11 @@ const dataset = ref([
 ])
 
 const model = ref([
+    { key: 'style.chart.comments.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.comments.showInTooltip', def: true, type: 'checkbox'},
+    { key: 'style.chart.comments.width', def: 200, type: 'number', min: 50, max: 400},
+    { key: 'style.chart.comments.offsetX', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.comments.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -178,7 +184,13 @@ function selectDatapoint(dp) {
         <LocalVueUiParallelCoordinatePlot :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
             responsive: true
-        }"/>
+        }">
+        <template #plot-comment="{ plot }">
+            <div :style="`width: 100%; text-align:center; color:${plot.color}`">
+                {{  plot.comment }}
+            </div>
+        </template>    
+    </LocalVueUiParallelCoordinatePlot>
     </div>
 
     <Box>
