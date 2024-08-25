@@ -173,6 +173,7 @@ const immutableSet = computed(() => {
                 color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 value: serie.values.reduce((a,b) => a + b, 0),
                 absoluteValues: serie.values,
+                comment: serie.comment || ''
             }
         })
 });
@@ -393,6 +394,10 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
             } else {
                 html += `<span>(${(datapoint.proportion * 100).toFixed(donutConfig.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
             }
+        }
+
+        if (donutConfig.value.style.chart.comments.showInTooltip && datapoint.comment) {
+            html += `<div class="vue-data-ui-tooltip-comment" style="background:${datapoint.color}20; padding: 6px; margin-bottom: 6px; margin-top:6px; border-left: 1px solid ${datapoint.color}">${datapoint.comment}</div>`
         }
 
         tooltipContent.value = `<div>${html}</div>`;
@@ -759,7 +764,7 @@ defineExpose({
                         height="60"
                         style="overflow: visible;"
                     >
-                        <div :class="{'vue-ui-donut-datalabel-slot': true, 'vue-ui-donut-datalabel-slot-not-safari' : !isSafari}">
+                        <div>
                             <slot name="dataLabel" v-bind="{
                                 datapoint: arc, 
                                 isBlur: !defaultConfig.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i,
@@ -810,6 +815,22 @@ defineExpose({
                         {{ arc.name }}
                     </text>
                 </g>
+
+                <g v-if="mutableConfig.dataLabels.show && donutConfig.style.chart.comments.show && arc.comment">
+                    <foreignObject
+                        v-if="isArcBigEnough(arc)"
+                        :x="donutConfig.style.chart.comments.offsetX + (calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - donutConfig.style.chart.comments.width: calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - (donutConfig.style.chart.comments.width / 2) : calcMarkerOffsetX(arc).x)"
+                        :y="calcMarkerOffsetY(arc) + 24 + donutConfig.style.chart.comments.offsetY"
+                        :width="donutConfig.style.chart.comments.width"
+                        height="1"
+                        style="overflow: visible;"
+                    >
+                        <div>
+                            <slot name="plot-comment" :plot="{ ...arc, textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor, flexAlign: calcMarkerOffsetX(arc, true, 16).anchor }"/>
+                        </div>
+                    </foreignObject>
+                </g>
+
             </g>
             <slot name="svg" :svg="svg"/>
         </svg>
