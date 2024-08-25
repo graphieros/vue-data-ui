@@ -15,7 +15,7 @@ import {
     functionReturnsString, 
     getMissingDatasetAttributes, 
     isFunction, 
-    objectIsEmpty, 
+    objectIsEmpty,
     palette, 
     themePalettes,
     getPathLengthFromCoordinates,
@@ -220,16 +220,18 @@ function segregate(id) {
 
 const immutableDataset = computed(() => {
     return props.dataset.map((ds, i) => {
+        const color = convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
         return {
             ...ds,
             series: ds.series.map(s => {
                 return {
                     ...s,
-                    id: createUid()
+                    id: createUid(),
+                    color,
                 }
             }),
             seriesIndex: i,
-            color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
+            color,
             id: createUid(),
             shape: ds.shape || 'circle'
         }
@@ -287,7 +289,7 @@ const scales = computed(() => {
             return {
                 y: drawingArea.value.bottom - (drawingArea.value.height * (senseValue / senseMax)),
                 x: drawingArea.value.left + (slot.value * i) + (slot.value / 2),
-                value: t
+                value: t,
             }
         });
         s.push({
@@ -318,7 +320,8 @@ const mutableDataset = computed(() => {
                                 seriesIndex: i,
                                 value: v,
                                 x: drawingArea.value.left + (slot.value * k) + (slot.value / 2),
-                                y: drawingArea.value.bottom - (drawingArea.value.height * (senseValue / senseMax))
+                                y: drawingArea.value.bottom - (drawingArea.value.height * (senseValue / senseMax)),
+                                comment: s.comments ? s.comments[k] || '' : ''
                             }
                         })
                     }
@@ -362,7 +365,7 @@ function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex }) {
     dataTooltipSlot.value = { serie, relativeIndex, seriesIndex, series: immutableDataset.value, scales: scales.value };
     isTooltip.value = true;
     selectedItem.value = serie.id;
-    let html = ""
+    let html = "";
 
     const customFormat = pcpConfig.value.style.chart.tooltip.customFormat;
 
@@ -395,7 +398,10 @@ function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex }) {
                         })}    
                     </span>
                 </div>
-            `
+            `;
+            if (pcpConfig.value.style.chart.comments.showInTooltip && serie.datapoints[i].comment) {
+                html += `<div class="vue-data-ui-tooltip-comment" style="background:${serie.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${serie.color}">${serie.datapoints[i].comment}</div>`
+            }
         })
         tooltipContent.value = `<div>${html}</div>`;
     }
@@ -664,6 +670,16 @@ defineExpose({
                             >
                                 {{ serieSet.name }}
                             </text>
+                        </template>
+
+                        <template v-if="pcpConfig.style.chart.comments.show">
+                            <g v-for="dp in serieSet.datapoints">                                
+                                <foreignObject v-if="dp.comment" style="overflow: visible" height="12" :width="pcpConfig.style.chart.comments.width" :x="dp.x - (pcpConfig.style.chart.comments.width / 2) + pcpConfig.style.chart.comments.offsetX" :y="dp.y + pcpConfig.style.chart.comments.offsetY + 6">
+                                    <div style="width: 100%;">
+                                        <slot name="plot-comment" :plot="{...dp, color: serie.color}"/>
+                                    </div>
+                                </foreignObject>
+                            </g>
                         </template>
                     </g>
 
