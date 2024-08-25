@@ -23,6 +23,14 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type ChartComments = {
+        show?: boolean;
+        showInTooltip?: boolean;
+        width?: number;
+        offsetY?: number;
+        offsetX?: number;
+    }
+
     export type ChartPadding = {
         top?: number;
         right?: number;
@@ -2087,13 +2095,7 @@ declare module 'vue-data-ui' {
                     };
                 };
             };
-            comments?: {
-                show?: boolean;
-                showInTooltip?: boolean;
-                width?: number;
-                offsetY?: number;
-                offsetX?: number;
-            },
+            comments?: ChartComments;
             labels?: {
                 fontSize?: number;
                 prefix?: string;
@@ -2348,6 +2350,7 @@ declare module 'vue-data-ui' {
                         shadowColor?: string;
                     };
                 };
+                comments?: ChartComments;
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
                     roundingValue?: number;
@@ -4906,6 +4909,7 @@ declare module 'vue-data-ui' {
                     right?: number;
                     bottom?: number;
                 };
+                comments?: ChartComments;
                 lines?: {
                     smooth?: boolean;
                     strokeWidth?: number;
