@@ -8,7 +8,8 @@ import convertArrayToObject from "./convertModel";
 const dataset = ref([
     {
         name: 'Serie 1',
-        values: [100]
+        values: [100],
+        comment: 'This is a comment'
     },
     {
         name: 'Serie 2',
@@ -16,19 +17,21 @@ const dataset = ref([
     },
     {
         name: 'Serie 3',
+        values: [25],
+        comment: "This is another comment that is quite long to see how it fits on the chart and to see if it's nit overflowing."
+    },
+    {
+        name: 'Serie 4',
         values: [25]
     },
     {
-        name: 'Serie 3',
+        name: 'Serie 5',
         values: [25]
     },
     {
-        name: 'Serie 3',
-        values: [25]
-    },
-    {
-        name: 'Serie 3',
-        values: [25]
+        name: 'Serie 6',
+        values: [25],
+        comment: 'Some other comment'
     },
 ]);
 
@@ -128,6 +131,11 @@ const model = ref([
     { key: 'style.chart.tooltip.roundingValue', def: 0, type: 'number', min: 0, max: 6, label: ['rounding', 'is', 'value'], category: 'tooltip' },
     { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox', label: 'showPercentage', category: 'tooltip' },
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'tooltip' },
+    { key: 'style.chart.comments.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.comments.showInTooltip', def: true, type: 'checkbox'},
+    { key: 'style.chart.comments.width', def: 100, type: 'number', min: 50, max: 400},
+    { key: 'style.chart.comments.offsetX', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.comments.offsetY', def: 0, type: 'number', min: -100, max: 100},
 ])
 
 const testCustomTooltip = ref(false);
@@ -220,7 +228,13 @@ function toggleLabels() {
         <LocalVueUiDonut :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
             responsive: true
-        }"/>
+        }">
+        <template #plot-comment="{ plot }">
+            <div :style="`text-align:${plot.textAlign};font-size: 10px; padding: 6px;`">
+                {{ plot.comment }}
+            </div>
+        </template>    
+    </LocalVueUiDonut>
     </div>
 
     <Box>
