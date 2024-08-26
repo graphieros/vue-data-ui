@@ -693,6 +693,7 @@ defineExpose({
             :hasFullscreen="donutConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...donutConfig.userOptions.buttonTitles }"
             :chartElement="nestedDonutsChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
