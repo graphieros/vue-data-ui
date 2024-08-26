@@ -409,6 +409,7 @@ defineExpose({
             :hasFullscreen="agePyramidConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...agePyramidConfig.userOptions.buttonTitles }"
             :chartElement="agePyramid"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
