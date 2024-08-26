@@ -524,6 +524,7 @@ defineExpose({
             :hasXls="!!hasStack && barConfig.userOptions.buttons.csv"
             :hasImg="barConfig.userOptions.buttons.img"
             :hasFullscreen="barConfig.userOptions.buttons.fullscreen"
+            :titles="{ ...barConfig.userOptions.buttonTitles }"
             :chartElement="bar3dChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
