@@ -136,6 +136,15 @@ const model = ref([
     { key: 'style.chart.comments.width', def: 100, type: 'number', min: 50, max: 400},
     { key: 'style.chart.comments.offsetX', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.comments.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'userOptions.buttonTitles.tooltip', def: 'TOGGLE TOOLTIP', type: 'text'},
+    { key: 'userOptions.buttonTitles.pdf', def: 'DOWNLOAD PDF', type: 'text'},
+    { key: 'userOptions.buttonTitles.csv', def: 'DOWNLOAD CSV', type: 'text'},
+    { key: 'userOptions.buttonTitles.img', def: 'DOWNLOAD PNG', type: 'text'},
+    { key: 'userOptions.buttonTitles.table', def: 'TOGGLE TABLE', type: 'text'},
+    { key: 'userOptions.buttonTitles.labels', def: 'TOGGLE LABELS', type: 'text'},
+    { key: 'userOptions.buttonTitles.fullscreen', def: 'TOGGLE FULLSCREEN', type: 'text'},
+    { key: 'userOptions.buttonTitles.open', def: 'OPEN OPTIONS', type: 'text'},
+    { key: 'userOptions.buttonTitles.close', def: 'CLOSE OPTIONS', type: 'text'},
 ])
 
 const testCustomTooltip = ref(false);
