@@ -472,6 +472,7 @@ defineExpose({
             :hasFullscreen="onionConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...onionConfig.userOptions.buttonTitles }"
             :chartElement="onionChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
