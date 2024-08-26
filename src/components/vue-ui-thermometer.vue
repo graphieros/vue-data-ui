@@ -272,6 +272,7 @@ defineExpose({
             :hasFullscreen="thermoConfig.userOptions.buttons.fullscreen"
             :hasXls="false"
             :isFullscreen="isFullscreen"
+            :titles="{ ...thermoConfig.userOptions.buttonTitles }"
             :chartElement="thermoChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
