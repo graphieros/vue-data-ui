@@ -416,6 +416,7 @@ defineExpose({
             :hasFullscreen="galaxyConfig.userOptions.buttons.fullscreen"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
+            :titles="{ ...galaxyConfig.userOptions.buttonTitles }"
             :chartElement="galaxyChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
