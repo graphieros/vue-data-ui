@@ -481,6 +481,7 @@ defineExpose({
             :hasTable="flowConfig.userOptions.buttons.table"
             :hasFullscreen="flowConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :titles="{ ...flowConfig.userOptions.buttonTitles }"
             :chartElement="flowChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
