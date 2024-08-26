@@ -574,6 +574,7 @@ defineExpose({
             :hasFullscreen="verticalBarConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...verticalBarConfig.userOptions.buttonTitles }"
             :chartElement="verticalBarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
