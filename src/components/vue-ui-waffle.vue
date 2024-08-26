@@ -654,6 +654,7 @@ defineExpose({
             :hasFullscreen="waffleConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...waffleConfig.userOptions.buttonTitles }"
             :chartElement="waffleChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
