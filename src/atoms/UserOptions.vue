@@ -79,6 +79,12 @@ const props = defineProps({
     isTooltip: {
         type: Boolean,
         default: false,
+    },
+    titles: {
+        type: Object,
+        default() {
+            return {}
+        }
     }
 });
 
@@ -184,12 +190,12 @@ onBeforeUnmount(() => {
 
 <template>
     <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; right:${isFullscreen ? '12px': '0'}; padding: 4px; background:transparent; z-index: 1`">
-        <div tabindex="0" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:${backgroundColor};`" @click.stop="toggle" @keypress.enter="toggle">
+        <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:${backgroundColor};`" @click.stop="toggle" @keypress.enter="toggle">
             <BaseIcon  :name="isOpen ? 'close' : 'menu'" stroke="#CCCCCC" :stroke-width="2" />
         </div>
         <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}`">
 
-            <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip">
+            <button :title="titles.tooltip || ''" tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip">
                 <template v-if="$slots.optionTooltip">
                     <slot name="optionTooltip"/>
                 </template>
@@ -199,7 +205,7 @@ onBeforeUnmount(() => {
                 </template>
             </button>
 
-            <button tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf">
+            <button :title="titles.pdf || ''" tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf">
                 <template v-if="$slots.optionPdf">
                     <slot name="optionPdf"/>
                 </template>
@@ -209,7 +215,7 @@ onBeforeUnmount(() => {
                 </template>
             </button>
             
-            <button tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateCsv">
+            <button :title="titles.csv || ''" tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateCsv">
                 <template v-if="$slots.optionCsv">
                     <slot name="optionCsv"/>
                 </template>
@@ -218,7 +224,7 @@ onBeforeUnmount(() => {
                 </template>
             </button>
 
-            <button tabindex="0" v-if="hasImg" data-cy="user-options-img" class="vue-ui-user-options-button" @click="generateImage">
+            <button :title="titles.img || ''" tabindex="0" v-if="hasImg" data-cy="user-options-img" class="vue-ui-user-options-button" @click="generateImage">
                 <template v-if="$slots.optionImg">
                     <slot name="optionImg"/>
                 </template>
@@ -228,7 +234,7 @@ onBeforeUnmount(() => {
                 </template>
             </button>
 
-            <button tabindex="0" v-if="hasTable" data-cy="user-options-table" class="vue-ui-user-options-button" @click="toggleTable">
+            <button :title="titles.table || ''" tabindex="0" v-if="hasTable" data-cy="user-options-table" class="vue-ui-user-options-button" @click="toggleTable">
                 <template v-if="$slots.optionTable">
                     <slot name="optionTable"/>
                 </template>
@@ -237,7 +243,7 @@ onBeforeUnmount(() => {
                 </template>
             </button>
 
-            <button tabindex="0" v-if="hasLabel" data-cy="user-options-label" class="vue-ui-user-options-button" @click="toggleLabels">
+            <button :title="titles.labels || ''" tabindex="0" v-if="hasLabel" data-cy="user-options-label" class="vue-ui-user-options-button" @click="toggleLabels">
                 <template v-if="$slots.optionLabels">
                     <slot name="optionLabels"/>
                 </template>
@@ -246,7 +252,7 @@ onBeforeUnmount(() => {
                 </template>
             </button>
 
-            <button tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
+            <button :title="titles.sort || ''" tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
                 <template v-if="$slots.optionSort">
                     <slot name="optionSort"/>
                 </template>
@@ -255,7 +261,7 @@ onBeforeUnmount(() => {
                 </template>
             </button>
 
-            <button tabindex="0" v-if="hasStack" data-cy="user-options-stack" class="vue-ui-user-options-button" @click="toggleStack">
+            <button :title="titles.stack || ''" tabindex="0" v-if="hasStack" data-cy="user-options-stack" class="vue-ui-user-options-button" @click="toggleStack">
                 <template v-if="$slots.optionStack">
                     <slot name="optionStack"/>
                 </template>
@@ -265,7 +271,7 @@ onBeforeUnmount(() => {
                 </template>
             </button>
 
-            <button tabindex="0" v-if="hasFullscreen" data-cy="user-options-sort" class="vue-ui-user-options-button">
+            <button :title="titles.fullscreen || ''" tabindex="0" v-if="hasFullscreen" data-cy="user-options-sort" class="vue-ui-user-options-button">
                 <template v-if="$slots.optionFullscreen">
                     <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
                 </template>
