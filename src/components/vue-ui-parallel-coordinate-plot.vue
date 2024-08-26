@@ -546,6 +546,7 @@ defineExpose({
             :hasFullscreen="pcpConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...pcpConfig.userOptions.buttonTitles }"
             :chartElement="pcpChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
