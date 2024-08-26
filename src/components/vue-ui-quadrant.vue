@@ -920,6 +920,7 @@ defineExpose({
             :hasFullscreen="quadrantConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...quadrantConfig.userOptions.buttonTitles }"
             :chartElement="quadrantChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
