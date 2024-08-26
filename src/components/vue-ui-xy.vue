@@ -44,6 +44,7 @@
             :isFullscreen="isFullscreen"
             :chartElement="$refs.chart"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...chartConfig.chart.userOptions.buttonTitles }"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
