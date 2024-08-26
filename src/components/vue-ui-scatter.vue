@@ -603,6 +603,7 @@ defineExpose({
             :hasFullscreen="scatterConfig.userOptions.buttons.fullscreen"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
+            :titles="{ ...scatterConfig.userOptions.buttonTitles }"
             :chartElement="scatterChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
