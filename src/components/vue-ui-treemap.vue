@@ -515,6 +515,7 @@ defineExpose({
             :hasFullscreen="treemapConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...treemapConfig.userOptions.buttonTitles }"
             :chartElement="treemapChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
