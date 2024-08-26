@@ -535,6 +535,7 @@ defineExpose({
             :hasLabel="moleculeConfig.userOptions.buttons.labels"
             :hasFullscreen="moleculeConfig.userOptions.buttons.fullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...moleculeConfig.userOptions.buttonTitles }"
             :chartElement="moleculeChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
