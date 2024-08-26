@@ -409,6 +409,7 @@ defineExpose({
             :hasTable="dumbConfig.userOptions.buttons.table"
             :hasFullscreen="dumbConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :titles="{ ...dumbConfig.userOptions.buttonTitles }"
             :chartElement="dumbbellChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
