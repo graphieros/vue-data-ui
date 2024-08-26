@@ -366,6 +366,7 @@ defineExpose({
             :hasImg="gaugeConfig.userOptions.buttons.img"
             :hasFullscreen="gaugeConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :titles="{ ...gaugeConfig.userOptions.buttonTitles }"
             :chartElement="gaugeChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
