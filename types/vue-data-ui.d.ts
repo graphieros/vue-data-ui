@@ -57,6 +57,19 @@ declare module 'vue-data-ui' {
             fullscreen?: boolean;
             stack?: boolean;
             sort?: boolean;
+        },
+        buttonTitles?: {
+            open?: string;
+            close?: string;
+            tooltip?: string;
+            pdf?: string;
+            csv?: string;
+            img?: string;
+            table?: string;
+            labels?: string;
+            fullscreen?: string;
+            stack?: string;
+            sort?: string;
         }
     }
 
@@ -4248,6 +4261,20 @@ declare module 'vue-data-ui' {
         zoomHighlightColor?: string;
         zoomFontSize?: number;
         zoomUseResetSlot?: boolean;
+        userOptionsButtons?: {
+            tooltip?: boolean;
+            pdf?: boolean;
+            img?: boolean;
+            fullscreen?: boolean;
+        };
+        userOptionsButtonTitles?: {
+            open?: string;
+            close?: string;
+            tooltip?: string;
+            pdf?: string;
+            img?: string;
+            fullscreen?: string;
+        }
     };
 
     export type VueUiQuickChartDatasetObjectItem = {
