@@ -503,6 +503,7 @@ defineExpose({
             :hasTable="chestnutConfig.userOptions.buttons.table"
             :hasFullscreen="chestnutConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
+            :titles="{ ...chestnutConfig.userOptions.buttonTitles }"
             :chartElement="chestnutChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
