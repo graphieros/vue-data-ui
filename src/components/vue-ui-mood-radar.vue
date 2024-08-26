@@ -315,6 +315,7 @@ defineExpose({
             :hasImg="radarConfig.userOptions.buttons.img"
             :hasTable="radarConfig.userOptions.buttons.table"
             :hasFullscreen="radarConfig.userOptions.buttons.fullscreen"
+            :titles="{ ...radarConfig.userOptions.buttonTitles }"
             :chartElement="moodRadarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
