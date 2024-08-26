@@ -473,6 +473,7 @@ defineExpose({
             :hasFullscreen="candlestickConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...candlestickConfig.userOptions.buttonTitles }"
             :chartElement="candlestickChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
