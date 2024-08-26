@@ -338,6 +338,7 @@ defineExpose({
                                 :hasImg="tableConfig.userOptions.buttons.img"
                                 :hasFullscreen="tableConfig.userOptions.buttons.fullscreen"
                                 :isFullscreen="isFullscreen"
+                                :titles="{ ...tableConfig.userOptions.buttonTitles }"
                                 :chartElement="tableContainer"
                                 @toggleFullscreen="toggleFullscreen"
                                 @generatePdf="generatePdf"
