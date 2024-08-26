@@ -1157,7 +1157,7 @@ export default {
             defaultConfig: mainConfig.vue_ui_xy,
             height: 600,
             width: 1000,
-            viewBox: '0 0 1000 600',
+            viewBox: `0 0 1000 600`,
             clientPosition: {
                 x:0,
                 y:0,
@@ -2059,7 +2059,9 @@ export default {
             resizeObserver.observe(parent);
 
         } else {
-            this.viewBox = `0 0 ${this.chartConfig.chart.width} ${this.chartConfig.chart.height}`
+            this.height = this.chartConfig.chart.height;
+            this.width = this.chartConfig.chart.width;
+            this.viewBox = `0 0 ${this.width} ${this.height}`;
             this.fontSizes.dataLabels = this.chartConfig.chart.grid.labels.fontSize;
             this.fontSizes.yAxis = this.chartConfig.chart.grid.labels.axis.fontSize;
             this.fontSizes.xAxis =  this.chartConfig.chart.grid.labels.xAxisLabels.fontSize;
