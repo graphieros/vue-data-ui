@@ -221,6 +221,7 @@ defineExpose({
             :hasFullscreen="wheelConfig.userOptions.buttons.fullscreen"
             :hasXls="false"
             :isFullscreen="isFullscreen"
+            :titles="{ ...wheelConfig.userOptions.buttonTitles }"
             :chartElement="wheelChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
