@@ -292,8 +292,9 @@ defineExpose({
             :hasFullscreen="tiremarksConfig.userOptions.buttons.fullscreen"
             :hasXls="false"
             :isFullscreen="isFullscreen"
-            @toggleFullscreen="toggleFullscreen"
+            :titles="{ ...tiremarksConfig.userOptions.buttonTitles }"
             :chartElement="tiremarksChart"
+            @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
         >
