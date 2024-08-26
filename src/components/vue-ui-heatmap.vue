@@ -364,6 +364,7 @@ defineExpose({
             :hasFullscreen="heatmapConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...heatmapConfig.userOptions.buttonTitles }"
             :chartElement="heatmapChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
