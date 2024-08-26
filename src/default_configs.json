@@ -319,6 +319,18 @@
                     "labels": true,
                     "fullscreen": true,
                     "stack": true
+                },
+                "buttonTitles": {
+                    "open": "Open options",
+                    "close": "Close options",
+                    "tooltip": "Toggle tooltip",
+                    "pdf": "Download PDF",
+                    "csv": "Download CSV",
+                    "img": "Download PNG",
+                    "table": "Toggle table",
+                    "labels": "Toggle labels",
+                    "fullscreen": "Toggle fullscreen",
+                    "stack": "Toggle stack mode"
                 }
             }
         },
@@ -528,6 +540,17 @@
                 "table": true,
                 "labels": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "labels": "Toggle labels",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "translations": {
@@ -572,6 +595,17 @@
                 "table": true,
                 "labels": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "labels": "Toggle labels",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "style": {
@@ -766,6 +800,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "table": {
@@ -894,6 +938,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "translations": {
@@ -1056,6 +1110,17 @@
                 "table": true,
                 "labels": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "labels": "Toggle labels",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "translations": {
@@ -1135,6 +1200,13 @@
                 "pdf": true,
                 "img": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "img": "Download PNG",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "translations": {
@@ -1313,6 +1385,15 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "translations": {
@@ -1408,6 +1489,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "table": {
@@ -1549,6 +1640,17 @@
                 "table": true,
                 "sort": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "sort": "Toggle sort",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "table": {
@@ -2030,6 +2132,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "table": {
@@ -2210,6 +2322,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "table": {
@@ -2359,6 +2481,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "table": {
@@ -2490,6 +2622,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "table": {
@@ -2763,6 +2905,13 @@
                 "pdf": true,
                 "img": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "img": "Download PNG",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -2828,6 +2977,13 @@
                 "pdf": true,
                 "img": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "img": "Download PNG",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -3039,6 +3195,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "table": {
@@ -3120,6 +3286,13 @@
                 "pdf": true,
                 "img": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "img": "Download PNG",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -3180,6 +3353,13 @@
                 "pdf": true,
                 "img": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "img": "Download PNG",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -3306,6 +3486,15 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -3405,6 +3594,15 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -3482,6 +3680,15 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "table": {
@@ -3586,6 +3793,17 @@
                 "table": true,
                 "labels": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "labels": "Toggle labels",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -3658,6 +3876,14 @@
                 "csv": true,
                 "img": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -3833,6 +4059,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -3872,6 +4108,16 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "style": {
@@ -4002,6 +4248,14 @@
                 "csv": true,
                 "img": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "fullscreen": "Toggle fullscreen"
             }
         }
     },
@@ -4064,6 +4318,14 @@
             "pdf": true,
             "img": true,
             "fullscreen": true
+        },
+        "userOptionsButtonTitles": {
+            "open": "Open options",
+            "close": "Close options",
+            "tooltip": "Toggle tooltip",
+            "pdf": "Download PDF",
+            "img": "Download PNG",
+            "fullscreen": "Toggle fullscreen"
         },
         "title": "",
         "titleBold": true,
@@ -4199,6 +4461,17 @@
                 "table": true,
                 "labels": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "labels": "Toggle labels",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "style": {
@@ -4334,6 +4607,15 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "style": {
@@ -4477,6 +4759,15 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "style": {
@@ -4546,6 +4837,18 @@
                 "labels": true,
                 "fullscreen": true,
                 "stack": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "labels": "Toggle labels",
+                "fullscreen": "Toggle fullscreen",
+                "stack": "Toggle stack mode"
             }
         },
         "style": {
@@ -4703,6 +5006,15 @@
                 "img": true,
                 "table": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "style": {
@@ -4789,6 +5101,17 @@
                 "table": true,
                 "labels": true,
                 "fullscreen": true
+            },
+            "buttonTitles": {
+                "open": "Open options",
+                "close": "Close options",
+                "tooltip": "Toggle tooltip",
+                "pdf": "Download PDF",
+                "csv": "Download CSV",
+                "img": "Download PNG",
+                "table": "Toggle table",
+                "labels": "Toggle labels",
+                "fullscreen": "Toggle fullscreen"
             }
         },
         "style": {
