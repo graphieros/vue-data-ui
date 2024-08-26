@@ -482,6 +482,7 @@ defineExpose({
             :hasFullscreen="stripConfig.userOptions.buttons.fullscreen"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
+            :titles="{ ...stripConfig.userOptions.buttonTitles }"
             :chartElement="stripPlotChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
