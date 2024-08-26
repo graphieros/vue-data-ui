@@ -557,6 +557,7 @@ defineExpose({
             :hasFullscreen="radarConfig.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
+            :titles="{ ...radarConfig.userOptions.buttonTitles }"
             :chartElement="radarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
