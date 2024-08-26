@@ -357,6 +357,7 @@ defineExpose({
             :hasFullscreen="relationConfig.userOptions.buttons.img"
             :hasXls="false"
             :isFullscreen="isFullscreen"
+            :titles="{ ...relationConfig.userOptions.buttonTitles }"
             :chartElement="relationCircleChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
