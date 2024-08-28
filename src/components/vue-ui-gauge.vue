@@ -11,6 +11,7 @@ import {
     palette, 
     themePalettes,
     makeDonut,
+    translateSize,
     XMLNS
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
@@ -121,7 +122,8 @@ const svg = ref({
     legendFontSize: gaugeConfig.value.style.chart.legend.fontSize,
     pointerRadius: gaugeConfig.value.style.chart.layout.pointer.circle.radius,
     trackSize: gaugeConfig.value.style.chart.layout.track.size,
-    pointerSize: gaugeConfig.value.style.chart.layout.pointer.size
+    pointerSize: gaugeConfig.value.style.chart.layout.pointer.size,
+    pointerStrokeWidth: gaugeConfig.value.style.chart.layout.pointer.strokeWidth
 });
 
 const max = ref(0);
@@ -136,7 +138,7 @@ watch(() => props.dataset.value, () => {
 
 const pointer = computed(() => {
     const x = svg.value.width / 2;
-    const y = svg.value.height / 2;
+    const y = arcSizeSource.value.base;
     const angle = Math.PI * ((activeRating.value + 0 - min.value) / (max.value - min.value)) + Math.PI;
     return {
         x1: x,
@@ -235,6 +237,13 @@ onMounted(() => {
             svg.value.legendFontSize = (gaugeConfig.value.style.chart.legend.fontSize / baseSize.value) * Math.min(height, width) < 14 ? 14 : (gaugeConfig.value.style.chart.legend.fontSize / baseSize.value) * Math.min(height, width);
             svg.value.pointerRadius = (gaugeConfig.value.style.chart.layout.pointer.circle.radius / baseSize.value) * (Math.min(height, width));
             svg.value.trackSize = (gaugeConfig.value.style.chart.layout.track.size / baseSize.value) * (Math.min(height, width));
+            svg.value.pointerStrokeWidth = translateSize({
+                relator: Math.min(width, height),
+                adjuster: baseSize.value,
+                source: gaugeConfig.value.style.chart.layout.pointer.strokeWidth,
+                threshold: 2,
+                gallback: 2
+            })
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
@@ -469,7 +478,7 @@ defineExpose({
                     :x2="pointer.x2"
                     :y2="pointer.y2"
                     :stroke="gaugeConfig.style.chart.layout.pointer.stroke"
-                    :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth"
+                    :stroke-width="svg.pointerStrokeWidth"
                     stroke-linecap="round"
                 />
                 <line
@@ -481,7 +490,7 @@ defineExpose({
                     :y2="pointer.y2"
                     :stroke="gaugeConfig.style.chart.layout.pointer.useRatingColor ? ratingColor : gaugeConfig.style.chart.layout.pointer.color"
                     stroke-linecap="round"
-                    :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth * 0.7"
+                    :stroke-width="svg.pointerStrokeWidth * 0.7"
                 />
                 <line
                     data-cy="gauge-pointer"
@@ -492,7 +501,7 @@ defineExpose({
                     :y2="pointer.y2"
                     :stroke="'white'"
                     stroke-linecap="round"
-                    :stroke-width="gaugeConfig.style.chart.layout.pointer.strokeWidth * 0.3"
+                    :stroke-width="svg.pointerStrokeWidth * 0.3"
                     :filter="`url(#blur_${uid})`"
                 />
             </g>
