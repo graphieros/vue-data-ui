@@ -8,17 +8,19 @@ import convertArrayToObject from "./convertModel";
 const dataset = ref([
     {
         name: "quality",
-        value: 61.953,
+        value: 200,
         rounding: 2,
         suffix: "%",
-        prefix: 'P'
+        prefix: 'P',
+        target: 1000,
     },
     {
         name: "popularity",
         value: 2.0412,
         rounding: 2,
         suffix: "%",
-        prefix: 'P'
+        prefix: 'P',
+        target: 2.3
     },
     {
         name: "maintenance",
