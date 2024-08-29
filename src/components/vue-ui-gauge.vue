@@ -12,6 +12,7 @@ import {
     themePalettes,
     makeDonut,
     translateSize,
+    offsetFromCenterPoint,
     XMLNS
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
@@ -123,7 +124,8 @@ const svg = ref({
     pointerRadius: gaugeConfig.value.style.chart.layout.pointer.circle.radius,
     trackSize: gaugeConfig.value.style.chart.layout.track.size,
     pointerSize: gaugeConfig.value.style.chart.layout.pointer.size,
-    pointerStrokeWidth: gaugeConfig.value.style.chart.layout.pointer.strokeWidth
+    pointerStrokeWidth: gaugeConfig.value.style.chart.layout.pointer.strokeWidth,
+    markerOffset: gaugeConfig.value.style.chart.layout.markers.offsetY + 3,
 });
 
 const max = ref(0);
@@ -242,7 +244,14 @@ onMounted(() => {
                 adjuster: baseSize.value,
                 source: gaugeConfig.value.style.chart.layout.pointer.strokeWidth,
                 threshold: 2,
-                gallback: 2
+                fallback: 2
+            });
+            svg.value.markerOffset = translateSize({
+                relator: Math.max(width, height),
+                adjuster: baseSize.value,
+                source: gaugeConfig.value.style.chart.layout.markers.offsetY + 3,
+                threshold: 2,
+                fallback: 2
             })
         });
 
@@ -447,8 +456,20 @@ defineExpose({
             <text
                 v-for="(arc, i) in arcs"
                 :data-cy="`gauge-step-marker-label-${i}`"
-                :x="arc.center.startX"
-                :y="arc.center.startY + gaugeConfig.style.chart.layout.markers.offsetY"
+                :x="offsetFromCenterPoint({
+                    centerX: svg.width / 2,
+                    centerY: arcSizeSource.base,
+                    initX: arc.center.startX,
+                    initY: arc.center.startY,
+                    offset: svg.markerOffset
+                }).x"
+                :y="offsetFromCenterPoint({
+                    centerX: svg.width / 2,
+                    centerY: arcSizeSource.base,
+                    initX: arc.center.startX,
+                    initY: arc.center.startY,
+                    offset: svg.markerOffset
+                }).y"
                 :text-anchor="arc.center.startX < (svg.width / 2 - 5) ? 'end' : arc.center.startX > (svg.width / 2 + 5) ? 'start' : 'middle'"
                 :font-size="svg.labelFontSize * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
                 :font-weight="`${gaugeConfig.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
@@ -456,10 +477,23 @@ defineExpose({
             >
                 {{ arc.from.toFixed(gaugeConfig.style.chart.layout.markers.roundingValue) }}
             </text>
+
             <text
                 data-cy="gauge-step-marker-label-last"
-                :x="arcs.at(-1).endX"
-                :y="arcs.at(-1).endY + gaugeConfig.style.chart.layout.markers.offsetY"
+                :x="offsetFromCenterPoint({
+                    centerX: svg.width / 2,
+                    centerY: arcSizeSource.base,
+                    initX: arcs.at(-1).endX,
+                    initY: arcs.at(-1).endY,
+                    offset: svg.markerOffset
+                }).x"
+                :y="offsetFromCenterPoint({
+                    centerX: svg.width / 2,
+                    centerY: arcSizeSource.base,
+                    initX: arcs.at(-1).endX,
+                    initY: arcs.at(-1).endY,
+                    offset: svg.markerOffset
+                }).y"
                 text-anchor="start"
                 :font-size="svg.labelFontSize * gaugeConfig.style.chart.layout.markers.fontSizeRatio"
                 :font-weight="`${gaugeConfig.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
