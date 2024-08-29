@@ -144,17 +144,21 @@ function ratioToMax(val) {
     return val / max.value;
 }
 
-function ratioTo(val) {
+function ratioTo(bar) {
+
     if (sparkbarConfig.value.style.layout.independant) {
+        if (bar.target) {
+            return bar.value / bar.target;
+        }
         if (sparkbarConfig.value.style.layout.percentage) {
-            return val / 100;
+            return bar.value / 100;
         } else if(sparkbarConfig.value.style.layout.target === 0) {
             return 1;
         } else {
-            return val / sparkbarConfig.value.style.layout.target
+            return bar.value / sparkbarConfig.value.style.layout.target
         }
     } else {
-        return ratioToMax(val)
+        return ratioToMax(bar.value)
     }
 }
 
@@ -173,7 +177,7 @@ function selectDatapoint(datapoint, index) {
                 <div :style="`width:${sparkbarConfig.style.labels.name.width};${['right','top'].includes(sparkbarConfig.style.labels.name.position) ? 'text-align:left' : 'text-align:right'};color:${sparkbarConfig.style.labels.name.color};font-size:${sparkbarConfig.style.labels.fontSize}px;font-weight:${sparkbarConfig.style.labels.name.bold ? 'bold' : 'normal'}`">
                     <span :data-cy="`sparkbar-name-${i}`">{{ bar.name }}</span>
                     <span :data-cy="`sparkbar-value-${i}`" v-if="sparkbarConfig.style.labels.value.show" :style="`font-weight:${sparkbarConfig.style.labels.value.bold ? 'bold' : 'normal'}`">
-                       : {{ bar.prefix ? bar.prefix : '' }}{{ Number(bar.value.toFixed(bar.rounding ? bar.rounding : 0)).toLocaleString() }}{{ bar.suffix ? bar.suffix : '' }}
+                    : {{ bar.prefix ? bar.prefix : '' }}{{ Number(bar.value.toFixed(bar.rounding ? bar.rounding : 0)).toLocaleString() }}{{ bar.suffix ? bar.suffix : '' }}
                     </span>
                 </div>
                 <svg :xmlns="XMLNS" :data-cy="`sparkbar-svg-${i}`" :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
@@ -190,8 +194,8 @@ function selectDatapoint(datapoint, index) {
                         </linearGradient>
                     </defs>
                     <rect :height="svg.height" :width="svg.width" :x="0" :y="0" :fill="`${sparkbarConfig.style.gutter.backgroundColor}${opacity[sparkbarConfig.style.gutter.opacity]}`" :rx="svg.height / 2" />
-                    <rect :height="svg.height" :width="svg.width * ratioTo(bar.value)" :x="0" :y="0" :fill="sparkbarConfig.style.bar.gradient.underlayerColor" :rx="svg.height / 2" />
-                    <rect :height="svg.height" :width="svg.width * ratioTo(bar.value)" :x="0" :y="0" :fill="sparkbarConfig.style.bar.gradient.show ? `url(#sparkbar_gradient_${i}_${uid})` : bar.color" :rx="svg.height / 2" />
+                    <rect :height="svg.height" :width="svg.width * ratioTo(bar)" :x="0" :y="0" :fill="sparkbarConfig.style.bar.gradient.underlayerColor" :rx="svg.height / 2" />
+                    <rect :height="svg.height" :width="svg.width * ratioTo(bar)" :x="0" :y="0" :fill="sparkbarConfig.style.bar.gradient.show ? `url(#sparkbar_gradient_${i}_${uid})` : bar.color" :rx="svg.height / 2" />
                 </svg>
             </div>
         </template>
