@@ -1429,6 +1429,7 @@ declare module 'vue-data-ui' {
         prefix?: string;
         rounding?: string;
         color?: string;
+        target?: number;
     }
 
     export type VueUiSparkbarConfig = {
