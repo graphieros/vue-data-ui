@@ -1,3 +1,4 @@
+import { dataLabel } from '../lib';
 import VueUiSparkbar from './vue-ui-sparkbar.vue'
 
 describe('<VueUiSparkbar />', () => {
@@ -23,7 +24,12 @@ describe('<VueUiSparkbar />', () => {
 
         cy.get(`[data-cy="sparkbar-value-${i}"]`)
           .should('exist')
-          .contains(`${fixture.dataset[i].prefix}${Number(fixture.dataset[i].value.toFixed(fixture.dataset[i].rounding)).toLocaleString()}${fixture.dataset[i].suffix}`)
+          .contains(dataLabel({
+            p: fixture.dataset[i].prefix,
+            v: fixture.dataset[i].value,
+            s: fixture.dataset[i].suffix,
+            r: fixture.dataset[i].rounding
+          }))
       }
     });
   });
