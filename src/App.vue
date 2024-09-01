@@ -43,56 +43,53 @@ import ArenaVueUiXyCanvas from "../TestingArena/ArenaVueUiXyCanvas.vue";
 import ArenaVueUiFlow from "../TestingArena/ArenaVueUiFlow.vue";
 import ArenaVueUiParallelCoordinatePlot from "../TestingArena/ArenaVueUiParallelCoordinatePlot.vue";
 
-import WordCloud from './components/vue-ui-word-cloud.vue';
-import VueDataUi from "./components/vue-data-ui.vue";
-
 const showOldArena = ref(false);
 
 const components = ref([
-  /*____________________*/"VueUiXy", //  0
-  /*_________________*/"VueUiDonut", //  1
-  /*_______________*/"VueUiTreemap", //  2
-  /*________________*/"VueUiWaffle", //  3
-  /*_________________*/"VueUiRadar", //  4
-  /*______________*/"VueUiQuadrant", //  5
+  /*____________________*/"VueUiXy", //  0 
+  /*_________________*/"VueUiDonut", //  1 
+  /*_______________*/"VueUiTreemap", //  2 
+  /*________________*/"VueUiWaffle", //  3 
+  /*_________________*/"VueUiRadar", //  4 
+  /*______________*/"VueUiQuadrant", //  5 
   /*_________________*/"VueUiGauge", //  6
   /*_________________*/"VueUiWheel", //  7
   /*_____________*/"VueUiTiremarks", //  8
-  /*______________*/"VueUiChestnut", //  9
-  /*_________________*/"VueUiOnion", // 10
-  /*___________*/"VueUiVerticalBar", // 11
+  /*______________*/"VueUiChestnut", //  9 
+  /*_________________*/"VueUiOnion", // 10 
+  /*___________*/"VueUiVerticalBar", // 11 
   /*_______________*/"VueUiHeatmap", // 12
-  /*_______________*/"VueUiScatter", // 13
-  /*___________*/"VueUiCandlestick", // 14
+  /*_______________*/"VueUiScatter", // 13 
+  /*___________*/"VueUiCandlestick", // 14 
   /*_____________*/"VueUiSparkline", // 15
   /*______________*/"VueUiSparkbar", // 16
   /*_________*/"VueUiSparkStackbar", // 17
   /*________*/"VueUiSparkHistogram", // 18
   /*____________*/"VueUiSparkgauge", // 19
   /*____________*/"VueUiSparkTrend", // 20
-  /*____________*/"VueUiQuickChart", // 21
-  /*____________*/"VueUiAgePyramid", // 22
+  /*____________*/"VueUiQuickChart", // 21 
+  /*____________*/"VueUiAgePyramid", // 22 
   /*________*/"VueUiRelationCircle", // 23
   /*___________*/"VueUiThermometer", // 24
-  /*_________________*/"VueUiRings", // 25
-  /*________*/"VueUiDonutEvolution", // 26
+  /*_________________*/"VueUiRings", // 25 
+  /*________*/"VueUiDonutEvolution", // 26 
   /*__________________*/"VueUiIcon", // 27
   /*_____________*/"VueUiMoodRadar", // 28
   /*______________*/"VueUiMolecule", // 29
-  /*__________*/"VueUiNestedDonuts", // 30
-  /*________________*/"VueUiGalaxy", // 31
+  /*__________*/"VueUiNestedDonuts", // 30 
+  /*________________*/"VueUiGalaxy", // 31 
   /*_____________*/"VueUiStripPlot", // 32
   /*______________*/"VueUiDumbbell", // 33
-  /*_________________*/"VueUi3dBar", // 34
+  /*_________________*/"VueUi3dBar", // 34 
   /*________*/"VueUiTableSparkline", // 35
   /*__________*/"VueUiTableHeatmap", // 36
   /*____________ */"VueUiWordCloud", // 37
-  /*______________*/"VueUiXyCanvas", // 38
+  /*______________*/"VueUiXyCanvas", // 38 
   /*__________________*/"VueUiFlow", // 39
-  /**/"VueUiParallelCoordinatePlot", // 40
+  /**/"VueUiParallelCoordinatePlot", // 40 
 ]);
 
-const selectedComponent = ref(components.value[34]);
+const selectedComponent = ref(components.value[1]);
 
 </script>
 

@@ -8,6 +8,14 @@ function refresh() {
 <template>
     <button class="reset" @click="refresh">RESET</button>
     <h1><slot name="title"/></h1>
+
+    <div class="knobs">
+        <details>
+            <summary>Config knobs</summary>
+            <slot name="knobs"/>
+        </details>
+    </div>
+    
     <div class="box">
         <div style="width:100%; max-height: 600px;">
             <p>Local</p>
@@ -26,10 +34,6 @@ function refresh() {
             <slot name="VDUI-build"/>
         </div>
     </div>
-    <div class="knobs">
-        <button class="reset" @click="refresh">RESET</button>
-        <slot name="knobs"/>
-    </div>
 
     <div class="config">
         <code>
@@ -39,6 +43,15 @@ function refresh() {
 </template>
 
 <style scoped>
+summary {
+    color: white;
+    margin:12px 0;
+    user-select: none;
+    cursor: pointer;
+    background: #FFFFFF10;
+    padding: 12px;
+    width: calc(100% - 48px);
+}
 h1, p {
     color: #CCCCCC;
 }
