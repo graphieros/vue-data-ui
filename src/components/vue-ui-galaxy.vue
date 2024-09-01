@@ -214,7 +214,6 @@ function toggleFullscreen(state) {
 const dataTooltipSlot = ref(null);
 
 function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
-
     dataTooltipSlot.value = {
         datapoint,
         seriesIndex,
@@ -376,7 +375,6 @@ defineExpose({
 
 <template>
     <div ref="galaxyChart" :class="`vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${galaxyConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${galaxyConfig.style.fontFamily};width:100%; text-align:center;${!galaxyConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${galaxyConfig.style.chart.backgroundColor}`" :id="`galaxy_${uid}`">
-
         <div v-if="galaxyConfig.style.chart.title.text" :style="`width:100%;background:${galaxyConfig.style.chart.backgroundColor};padding-bottom:24px`">            
             <Title
                 :config="{
@@ -530,7 +528,7 @@ defineExpose({
         >
             <template #item="{ legend, index }">
                 <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{ dataLabel({p: galaxyConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: galaxyConfig.style.chart.layout.labels.dataLabels.suffix, r: galaxyConfig.style.chart.legend.roundingValue}) }}
+                    {{ legend.name }}: {{ dataLabel({p: galaxyConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: galaxyConfig.style.chart.layout.labels.dataLabels.suffix, r: galaxyConfig.style.chart.legend.roundingValue}) }}
                     <span v-if="!segregated.includes(legend.id)">
                         ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(galaxyConfig.style.chart.legend.roundingPercentage)}}%)
                     </span>
@@ -545,7 +543,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :show="mutableConfig.showTable && isTooltip"
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="galaxyConfig.style.chart.tooltip.backgroundColor"
             :color="galaxyConfig.style.chart.tooltip.color"
             :borderRadius="galaxyConfig.style.chart.tooltip.borderRadius"

@@ -756,7 +756,7 @@ defineExpose({
                 >
                     <div class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${waffleConfig.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
                         <span v-if="waffleConfig.style.chart.layout.labels.captions.showSerieName">
-                            {{ waffleConfig.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects[i].name, length: waffleConfig.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects[i].name }} :
+                            {{ waffleConfig.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects[i].name, length: waffleConfig.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects[i].name }}:
                         </span>
                         <span v-if="waffleConfig.style.chart.layout.labels.captions.showPercentage">
                             {{ dataLabel({ v: rects[i].proportion, s: '%', r: waffleConfig.style.chart.layout.labels.captions.roundingPercentage }) }}
@@ -809,7 +809,7 @@ defineExpose({
             >
                 <template #item="{ legend }">
                     <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                        {{ legend.name }} : {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue, isAnimating})}}
+                        {{ legend.name }}: {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue, isAnimating})}}
                         <span v-if="!segregated.includes(legend.uid)">
                             ({{ isNaN(legend.value / total) ? '-' : dataLabel({v: legend.value /total * 100, s: '%', r: waffleConfig.style.chart.legend.roundingPercentage, isAnimating }) }})
                         </span>

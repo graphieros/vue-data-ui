@@ -717,7 +717,7 @@ defineExpose({
             >
                 <template #item="{ legend, index }">
                     <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                        {{ legend.name }} : {{ (legend.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%
+                        {{ legend.name }}: {{ (legend.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%
                     </div>
                 </template>
             </Legend>

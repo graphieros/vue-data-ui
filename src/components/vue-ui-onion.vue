@@ -596,7 +596,7 @@ defineExpose({
                         :fill="onionConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie === i ? onion.color:  onionConfig.style.chart.layout.labels.color"
                         :font-weight="onionConfig.style.chart.layout.labels.bold ? 'bold' : 'normal'"
                     >
-                        {{ onion.name ? onion.name + ' : ' : '' }} {{ onionConfig.style.chart.layout.labels.percentage.show ? `${(onion.percentage || 0).toFixed(onionConfig.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !onionConfig.style.chart.layout.labels.percentage.show && onionConfig.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""}` : '' }` : `${onionConfig.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""})` : '' : ''}` }}
+                        {{ onion.name ? onion.name + ': ' : '' }} {{ onionConfig.style.chart.layout.labels.percentage.show ? `${(onion.percentage || 0).toFixed(onionConfig.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !onionConfig.style.chart.layout.labels.percentage.show && onionConfig.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""}` : '' }` : `${onionConfig.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""})` : '' : ''}` }}
                     </text>
                 </g>
             </g>
@@ -626,7 +626,7 @@ defineExpose({
             >
                 <template #item="{ legend }">
                     <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name ? legend.name + ' : ' : '' }} {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
+                        {{ legend.name ? legend.name + ': ' : '' }} {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
                     </div>
                 </template>
             </Legend>

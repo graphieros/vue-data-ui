@@ -218,7 +218,7 @@ const tootlipDataset = computed(() => {
                 <svg viewBox="0 0 10 10" height="12" width="12">
                     <circle cx="5" cy="5" r="5" fill="${ds.color}"/>
                 </svg>
-                <span>${ds.name ? ds.name + ' : ' : ''}</span>
+                <span>${ds.name ? ds.name + ': ' : ''}</span>
                 <span>${dataLabel({
             p: ds.prefix || '',
             v: ds.series[tooltipIndex.value],

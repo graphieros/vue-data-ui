@@ -4,6 +4,7 @@ import {
     convertColorToHex,
     convertCustomPalette,
     createUid,
+    dataLabel,
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
@@ -176,13 +177,17 @@ function selectDatapoint(datapoint, index) {
             <div v-if="isDataset" :style="`display:flex !important;${['left', 'right'].includes(sparkbarConfig.style.labels.name.position) ? 'flex-direction:row !important' : 'flex-direction:column !important'};gap:${sparkbarConfig.style.gap}px !important;${sparkbarConfig.style.labels.name.position === 'right' ? 'row-reverse !important' : ''};align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`" @click="() => selectDatapoint(bar, i)">
                 <div :style="`width:${sparkbarConfig.style.labels.name.width};${['right','top'].includes(sparkbarConfig.style.labels.name.position) ? 'text-align:left' : 'text-align:right'};color:${sparkbarConfig.style.labels.name.color};font-size:${sparkbarConfig.style.labels.fontSize}px;font-weight:${sparkbarConfig.style.labels.name.bold ? 'bold' : 'normal'}`">
                     <span :data-cy="`sparkbar-name-${i}`">{{ bar.name }}</span>
-                  <span :data-cy="`sparkbar-value-${i}`"
+                    <span 
+                        :data-cy="`sparkbar-value-${i}`"
                         v-if="sparkbarConfig.style.labels.value.show"
-                        :style="`font-weight:${sparkbarConfig.style.labels.value.bold ? 'bold' : 'normal'}`">: {{
-                      bar.prefix ? bar.prefix : ''
-                    }}{{
-                      Number(bar.value.toFixed(bar.rounding ? bar.rounding : 0)).toLocaleString()
-                    }}{{ bar.suffix ? bar.suffix : '' }}</span>
+                        :style="`font-weight:${sparkbarConfig.style.labels.value.bold ? 'bold' : 'normal'}`"
+                    >: {{ dataLabel({
+                            p: bar.prefix || '',
+                            v: bar.value,
+                            s: bar.suffix || '',
+                            r: bar.rounding || 0
+                        })}}
+                    </span>
                 </div>
                 <svg :xmlns="XMLNS" :data-cy="`sparkbar-svg-${i}`" :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
                     <defs>

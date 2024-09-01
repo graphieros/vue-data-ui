@@ -430,21 +430,21 @@ function useTooltip(plot, seriesIndex) {
     
         html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid ${scatterConfig.value.style.tooltip.borderColor}">`;
 
-        html += `<div>${scatterConfig.value.style.layout.dataLabels.xAxis.name} : <b>${isNaN(plot.v.x) ? '-' : dataLabel({
+        html += `<div>${scatterConfig.value.style.layout.dataLabels.xAxis.name}: <b>${isNaN(plot.v.x) ? '-' : dataLabel({
             p: scatterConfig.value.style.tooltip.prefix,
             v: plot.v.x,
             s: scatterConfig.value.style.tooltip.suffix,
             r: scatterConfig.value.style.tooltip.roundingValue
         })}</b></div>`;
 
-        html += `<div>${scatterConfig.value.style.layout.dataLabels.yAxis.name} : <b>${isNaN(plot.v.y) ? '-' :  dataLabel({
+        html += `<div>${scatterConfig.value.style.layout.dataLabels.yAxis.name}: <b>${isNaN(plot.v.y) ? '-' :  dataLabel({
             p: scatterConfig.value.style.tooltip.prefix,
             v: plot.v.y,
             s: scatterConfig.value.style.tooltip.suffix,
             r: scatterConfig.value.style.tooltip.roundingValue
         })}</b></div>`;
         
-        html += `${scatterConfig.value.style.layout.plots.deviation.translation} : <b>${dataLabel({
+        html += `${scatterConfig.value.style.layout.plots.deviation.translation}: <b>${dataLabel({
             v: plot.deviation,
             r: scatterConfig.value.style.layout.plots.deviation.roundingValue
         })}</b>`;

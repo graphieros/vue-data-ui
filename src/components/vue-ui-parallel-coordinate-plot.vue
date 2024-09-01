@@ -388,7 +388,7 @@ function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex }) {
         scales.value.map(s => s.name).forEach((s, i) => {
             html += `
                 <div class="vue-ui-tooltip-item" style="text-align:left">
-                    <span>${s} : </span>
+                    <span>${s}: </span>
                     <span>
                         ${dataLabel({
                             p: pcpConfig.value.style.chart.yAxis.labels.prefixes[i] || '',

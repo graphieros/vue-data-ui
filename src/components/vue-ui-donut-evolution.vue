@@ -650,7 +650,7 @@ defineExpose({
                                 :font-size="8"
                                 :font-weight="'bold'"
                             >
-                            {{ arc.name}} : {{ displayArcPercentage(arc, datapoint.donut)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value) }})
+                            {{ arc.name}}: {{ displayArcPercentage(arc, datapoint.donut)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value) }})
                             </text>
                         </g>
                         <g>
@@ -815,7 +815,7 @@ defineExpose({
                         :font-size="10"
                         :font-weight="'bold'"
                     >
-                    {{ arc.name}} : {{ displayArcPercentage(arc, fixedDatapoint.donutFocus)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value) }})
+                    {{ arc.name}}: {{ displayArcPercentage(arc, fixedDatapoint.donutFocus)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value) }})
                     </text>
                 </g>
                 <circle
@@ -905,7 +905,7 @@ defineExpose({
         >
             <template #item="{legend, index}">
                 <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                    {{ legend.name }} : {{ Number(legend.value.toFixed(donutEvolutionConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                    {{ legend.name }}: {{ Number(legend.value.toFixed(donutEvolutionConfig.style.chart.legend.roundingValue)).toLocaleString() }}
                     <span v-if="!segregated.includes(legend.uid)">
                         ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(donutEvolutionConfig.style.chart.legend.roundingPercentage)}}%)
                     </span>

@@ -15,8 +15,7 @@ import {
     shiftHue,
     themePalettes,
     XMLNS,
-    convertCustomPalette,
-translateSize
+    convertCustomPalette
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
 import mainConfig from "../default_configs.json";
@@ -396,13 +395,13 @@ function useTooltip(bar, seriesIndex) {
             </div>`;
         
         if (verticalBarConfig.value.style.chart.tooltip.showValue) {
-            html += `<div>${verticalBarConfig.value.translations.value} : <b>${verticalBarConfig.value.style.chart.tooltip.prefix}${[undefined, NaN, null].includes(bar.value) ? '-' : bar.value.toFixed(verticalBarConfig.value.style.chart.tooltip.roundingValue)}${verticalBarConfig.value.style.chart.tooltip.suffix}</b></div>`;
+            html += `<div>${verticalBarConfig.value.translations.value}: <b>${verticalBarConfig.value.style.chart.tooltip.prefix}${[undefined, NaN, null].includes(bar.value) ? '-' : bar.value.toFixed(verticalBarConfig.value.style.chart.tooltip.roundingValue)}${verticalBarConfig.value.style.chart.tooltip.suffix}</b></div>`;
         }    
     
         if(verticalBarConfig.value.style.chart.tooltip.showPercentage) {
             html += `<div>${verticalBarConfig.value.translations.percentageToTotal} : <b>${isNaN(bar.value / total.value) ? '-' : `${(bar.value / total.value * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
             if(bar.isChild) {
-                html += `<div>${verticalBarConfig.value.translations.percentageToSerie} : <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+                html += `<div>${verticalBarConfig.value.translations.percentageToSerie}: <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
             }
         }
     
@@ -619,7 +618,7 @@ defineExpose({
             >
                 <template #item="{ legend }">
                     <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }} : {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
+                        {{ legend.name }}: {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
                     </div>
                 </template>
             </Legend>

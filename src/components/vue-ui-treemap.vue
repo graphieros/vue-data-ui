@@ -642,7 +642,7 @@ defineExpose({
             >
                 <template #item="{ legend, index }">
                     <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }} : {{ dataLabel({p: treemapConfig.style.chart.layout.labels.prefix, v: legend.value, s: treemapConfig.style.chart.layout.labels.suffix, r: treemapConfig.style.chart.legend.roundingValue}) }}
+                        {{ legend.name }}: {{ dataLabel({p: treemapConfig.style.chart.layout.labels.prefix, v: legend.value, s: treemapConfig.style.chart.layout.labels.suffix, r: treemapConfig.style.chart.legend.roundingValue}) }}
                         <span v-if="!segregated.includes(legend.id)">
                             ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(treemapConfig.style.chart.legend.roundingPercentage)}}%)
                         </span>

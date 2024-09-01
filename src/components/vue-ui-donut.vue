@@ -823,8 +823,8 @@ defineExpose({
                         :x="donutConfig.style.chart.comments.offsetX + (calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - donutConfig.style.chart.comments.width: calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - (donutConfig.style.chart.comments.width / 2) : calcMarkerOffsetX(arc).x)"
                         :y="calcMarkerOffsetY(arc) + 24 + donutConfig.style.chart.comments.offsetY"
                         :width="donutConfig.style.chart.comments.width"
-                        height="1"
-                        style="overflow: visible;"
+                        height="200"
+                        style="overflow: visible; pointer-events: none"
                     >
                         <div>
                             <slot name="plot-comment" :plot="{ ...arc, textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor, flexAlign: calcMarkerOffsetX(arc, true, 16).anchor }"/>
@@ -859,7 +859,7 @@ defineExpose({
             >
                 <template #item="{ legend, index }">
                     <div :data-cy="`legend-item-${index}`" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                        {{ legend.name }} : {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
+                        {{ legend.name }}: {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
                         <span v-if="!segregated.includes(index)" style="font-variant-numeric: tabular-nums;">
                             ({{ isNaN(legend.value / total) ? '-' : dataLabel({
                                 v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,

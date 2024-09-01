@@ -836,7 +836,7 @@ defineExpose({
                             <svg viewBox="0 0 20 20" height="16" width="16">
                                 <circle cx="10" cy="10" r="10" :fill="root.color" stroke="none"/>
                             </svg>
-                            <span>{{ root.name }}</span> : <b>{{ chestnutConfig.style.chart.layout.legend.prefix }} {{ root.total.toFixed(chestnutConfig.style.chart.layout.legend.roundingValue) }} {{ chestnutConfig.style.chart.layout.legend.suffix }}</b>({{ (root.total / treeTotal * 100).toFixed(chestnutConfig.style.chart.layout.legend.roundingPercentage) }}%)
+                            <span>{{ root.name }}:</span> <b>{{ chestnutConfig.style.chart.layout.legend.prefix }} {{ root.total.toFixed(chestnutConfig.style.chart.layout.legend.roundingValue) }} {{ chestnutConfig.style.chart.layout.legend.suffix }}</b>({{ (root.total / treeTotal * 100).toFixed(chestnutConfig.style.chart.layout.legend.roundingPercentage) }}%)
                         </div>
                     </div>
                 </div>
@@ -861,7 +861,7 @@ defineExpose({
                                 <svg viewBox="0 0 20 20" height="16" width="16">
                                     <circle cx="10" cy="10" r="10" :fill="nut.color" stroke="none"/>
                                 </svg>
-                                <span>{{ nut.name }} : <b>{{ chestnutConfig.style.chart.layout.legend.prefix }} {{ nut.value.toFixed(chestnutConfig.style.chart.layout.nuts.selected.labels.roundingValue) }} {{ chestnutConfig.style.chart.layout.legend.suffix }}</b> ({{ (nut.proportionToBranch * 100).toFixed(chestnutConfig.style.chart.layout.nuts.selected.labels.roundingPercentage) }}%)</span>
+                                <span>{{ nut.name }}: <b>{{ chestnutConfig.style.chart.layout.legend.prefix }} {{ nut.value.toFixed(chestnutConfig.style.chart.layout.nuts.selected.labels.roundingValue) }} {{ chestnutConfig.style.chart.layout.legend.suffix }}</b> ({{ (nut.proportionToBranch * 100).toFixed(chestnutConfig.style.chart.layout.nuts.selected.labels.roundingPercentage) }}%)</span>
                             </div>
                         </div>
                     </div>
@@ -1026,7 +1026,7 @@ defineExpose({
                     :fill="chestnutConfig.style.chart.layout.branches.labels.color"
                     @click="resetTree"
                 >
-                    {{ branch.name }} : {{ chestnutConfig.style.chart.layout.branches.labels.dataLabels.prefix }} {{ branch.value.toFixed(chestnutConfig.style.chart.layout.branches.labels.dataLabels.roundingValue) }} {{ chestnutConfig.style.chart.layout.branches.labels.dataLabels.suffix }}
+                    {{ branch.name }}: {{ chestnutConfig.style.chart.layout.branches.labels.dataLabels.prefix }} {{ branch.value.toFixed(chestnutConfig.style.chart.layout.branches.labels.dataLabels.roundingValue) }} {{ chestnutConfig.style.chart.layout.branches.labels.dataLabels.suffix }}
                 </text>
                 <text 
                     v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"

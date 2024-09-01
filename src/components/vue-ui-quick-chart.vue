@@ -525,7 +525,7 @@ const line = computed(() => {
                 html += `
                     <div style="display:flex; flex-wrap: wrap; align-items:center; gap:3px;">
                         <svg viewBox="0 0 12 12" height="14" width="12"><circle cx="6" cy="6" r="6" stroke="none" fill="${s.color}"/></svg>
-                        <span>${s.name}</span>:
+                        <span>${s.name}:</span>
                         <b>${dataLabel({
                             p: quickConfig.value.valuePrefix,
                             v: s.value,
@@ -703,7 +703,7 @@ const bar = computed(() => {
                 html += `
                     <div style="display:flex; flex-wrap: wrap; align-items:center; gap:3px;">
                         <svg viewBox="0 0 12 12" height="14" width="12"><rect x=0 y="0" width="12" height="12" rx="1" stroke="none" fill="${s.color}"/></svg>
-                        <span>${s.name}</span>:
+                        <span>${s.name}:</span>
                         <b>${dataLabel({
                             p: quickConfig.value.valuePrefix,
                             v: s.value,

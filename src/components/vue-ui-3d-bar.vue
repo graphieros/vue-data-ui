@@ -646,7 +646,7 @@ defineExpose({
                         <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
                         <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
                             <div v-if="barConfig.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${barConfig.style.chart.legend.fontSize}px; text-align:left; line-height: ${barConfig.style.chart.legend.fontSize}px; color:${barConfig.style.chart.legend.color}`">
-                                {{ bar.name }} : {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
+                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
                             </div>
                             <slot name="legend" v-bind="{ datapoint: bar, config: barConfig, dataset: stack}"/>
                         </foreignObject>
@@ -666,7 +666,7 @@ defineExpose({
                                     fill="none"
                                 />
                             </g>
-   
+
                             <path 
                                 v-for="(arc, j) in bar.fill.donut"
                                 class="vue-ui-donut-arc-path"
@@ -767,7 +767,7 @@ defineExpose({
                         <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
                         <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
                             <div v-if="barConfig.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${barConfig.style.chart.legend.fontSize}px; text-align:left; line-height: ${barConfig.style.chart.legend.fontSize}px; color:${barConfig.style.chart.legend.color}`">
-                                {{ bar.name }} : {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
+                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
                             </div>
                             <slot name="legend" v-bind="{ datapoint: bar, config: barConfig, dataset: stack}"/>
                         </foreignObject>

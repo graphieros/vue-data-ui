@@ -1927,7 +1927,7 @@ export default {
                             default:
                                 break;
                         }
-                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name} : <b>${this.chartConfig.chart.tooltip.showValue ? this.dataLabel({p:this.chartConfig.chart.labels.prefix, v: s.value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.chart.tooltip.roundingValue}) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${this.chartConfig.chart.tooltip.showValue ? this.dataLabel({p:this.chartConfig.chart.labels.prefix, v: s.value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.chart.tooltip.roundingValue}) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
 
                         if (this.chartConfig.chart.comments.showInTooltip && s.comments.length && s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]) {
                             html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]}</div>`
