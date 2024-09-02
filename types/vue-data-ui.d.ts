@@ -1447,6 +1447,7 @@ declare module 'vue-data-ui' {
                 percentage?: boolean;
                 target?: number;
                 showTargetValue?: boolean;
+                showTargetValueText?: string;
             };
             gutter?: {
                 backgroundColor?: string;
