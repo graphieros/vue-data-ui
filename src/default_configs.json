@@ -2664,7 +2664,7 @@
                 "percentage": true,
                 "target": 0,
                 "showTargetValue": false,
-                "showTargetValueText": ""
+                "targetValueText": ""
             },
             "gutter": {
                 "backgroundColor": "#e1e5e8",

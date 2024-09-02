@@ -80,7 +80,7 @@
                 "independant": true,
                 "percentage": true,
                 "showTargetValue": true,
-                "showTargetValueText": "to"
+                "targetValueText": "to"
             },
             "gutter": {
                 "backgroundColor": "#e1e5e8"

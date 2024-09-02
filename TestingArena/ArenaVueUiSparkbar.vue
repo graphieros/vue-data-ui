@@ -39,8 +39,8 @@ const model = ref([
     { key: 'style.layout.independant', def: true, type: 'checkbox'},
     { key: 'style.layout.percentage', def: true, type: 'checkbox'},
     { key: 'style.layout.target', def: 200, type: 'number', min: 50, max: 200},
-    { key: 'style.layout.showTargetValue', def: false, type: 'checkbox'},
-    { key: 'style.layout.showTargetValueText', def: '', type: 'text'},
+    { key: 'style.layout.showTargetValue', def: true, type: 'checkbox'},
+    { key: 'style.layout.targetValueText', def: 'Target', type: 'text'},
     { key: 'style.gutter.backgroundColor', def: '#e1e5e8', type: 'color'},
     { key: 'style.gutter.opacity', def: 100, type: 'range', min: 0, max: 100},
     { key: 'style.bar.gradient.show', def: true, type: 'checkbox'},
@@ -90,21 +90,41 @@ const step = ref(0)
         
         <template #local>
             <LocalVueUiSparkbar :dataset="dataset" :config="config" :key="`local_${step}`">
+                <template #data-label="{ bar }">
+                    <div style="width:100%">
+                        {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
+                    </div>
+                </template>
             </LocalVueUiSparkbar>
         </template>
         
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiSparkbar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+                <template #data-label="{ bar }">
+                    <div style="width:100%">
+                        {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
+                    </div>
+                </template>
             </LocalVueDataUi>
         </template>
         
         <template #build>
             <VueUiSparkbar :dataset="dataset" :config="config" :key="`build_${step}`">
+                <template #data-label="{ bar }">
+                    <div style="width:100%">
+                        {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
+                    </div>
+                </template>
             </VueUiSparkbar>
         </template>
         
         <template #VDUI-build>
             <VueDataUi component="VueUiSparkbar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+                <template #data-label="{ bar }">
+                    <div style="width:100%">
+                        {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
+                    </div>
+                </template>
             </VueDataUi>
         </template>
 

@@ -32,7 +32,7 @@ describe('<VueUiSparkbar />', () => {
           }));
 
         if (fixture.config.style.layout.showTargetValue) {
-          const targetValueText = fixture.config.style.layout.showTargetValueText;
+          const targetValueText = fixture.config.style.layout.targetValueText;
           const target = fixture.config.style.layout.target ?? fixture.dataset[i].target ?? 0;
 
           const formattedValue = dataLabel({
