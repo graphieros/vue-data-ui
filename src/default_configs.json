@@ -2662,7 +2662,9 @@
             "layout": {
                 "independant": true,
                 "percentage": true,
-                "target": 0
+                "target": 0,
+                "showTargetValue": false,
+                "showTargetValueText": ""
             },
             "gutter": {
                 "backgroundColor": "#e1e5e8",

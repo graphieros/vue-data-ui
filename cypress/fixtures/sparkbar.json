@@ -62,6 +62,14 @@
           "suffix": "%",
           "prefix": "v.",
           "rounding": 0
+        },
+        {
+          "name": "KPI 10",
+          "value": 10,
+          "target": 1000,
+          "suffix": "%",
+          "prefix": "v.",
+          "rounding": 0
         }
       ],
     "config": {
@@ -71,7 +79,8 @@
             "layout": {
                 "independant": true,
                 "percentage": true,
-                "target": 0
+                "showTargetValue": true,
+                "showTargetValueText": "to"
             },
             "gutter": {
                 "backgroundColor": "#e1e5e8"
