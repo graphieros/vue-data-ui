@@ -354,7 +354,7 @@ From the dataset you pass into the props, this component will produce the most a
 | Name                  | dataset type                       | config type                 | emits / exposed methods | slots             | custom tooltip | themes |
 | --------------------- | ---------------------------------- | --------------------------- | ----------------------- | ----------------- | -------------- | ------ |
 | `VueUiSparkline`      | `VueUiSparklineDatasetItem[]`      | `VueUiSparklineConfig`      | `@selectDatapoint`      | `#svg`, `#before` | ❌             | ✅     |
-| `VueUiSparkbar`       | `VueUiSparkbarDatasetItem[]`       | `VueUiSparkbarConfig`       | `@selectDatapoint`      | ❌                | ❌             | ✅     |
+| `VueUiSparkbar`       | `VueUiSparkbarDatasetItem[]`       | `VueUiSparkbarConfig`       | `@selectDatapoint`      | `#data-label`     | ❌             | ✅     |
 | `VueUiSparkStackbar`  | `VueUiSparkStackbarDatasetItem[]`  | `VueUiSparkStackbarConfig`  | `@selectDatapoint`      | ❌                | ❌             | ✅     |
 | `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`      | ❌                | ❌             | ✅     |
 | `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                      | ❌                | ❌             | ✅     |
