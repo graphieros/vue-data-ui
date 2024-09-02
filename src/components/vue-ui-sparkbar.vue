@@ -163,6 +163,13 @@ function ratioTo(bar) {
     }
 }
 
+function getTarget(bar) {
+  if (sparkbarConfig.value.style.layout.independant) {
+    return bar.target || sparkbarConfig.value.style.layout.target;
+  }
+  return sparkbarConfig.value.style.layout.target;
+}
+
 const emits = defineEmits(['selectDatapoint'])
 
 function selectDatapoint(datapoint, index) {
@@ -188,6 +195,19 @@ function selectDatapoint(datapoint, index) {
                             r: bar.rounding || 0
                         })}}
                     </span>
+                    <span
+                        :data-cy="`sparkbar-target-value-${i}`"
+                        v-if="sparkbarConfig.style.layout.showTargetValue"
+                        >
+                        {{ ' ' + sparkbarConfig.style.layout.showTargetValueText }}  
+                        {{ dataLabel({
+                            p: bar.prefix || '',
+                            v: getTarget(bar),
+                            s: bar.suffix || '',
+                            r: bar.rounding || 0
+                        })}}
+                        </span>
+
                 </div>
                 <svg :xmlns="XMLNS" :data-cy="`sparkbar-svg-${i}`" :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
                     <defs>

@@ -12,7 +12,7 @@ const dataset = ref([
         rounding: 2,
         suffix: "%",
         prefix: 'P',
-        target: 1000,
+        target: 1000
     },
     {
         name: "popularity",
@@ -39,6 +39,8 @@ const model = ref([
     { key: 'style.layout.independant', def: true, type: 'checkbox'},
     { key: 'style.layout.percentage', def: true, type: 'checkbox'},
     { key: 'style.layout.target', def: 200, type: 'number', min: 50, max: 200},
+    { key: 'style.layout.showTargetValue', def: false, type: 'checkbox'},
+    { key: 'style.layout.showTargetValueText', def: '', type: 'text'},
     { key: 'style.gutter.backgroundColor', def: '#e1e5e8', type: 'color'},
     { key: 'style.gutter.opacity', def: 100, type: 'range', min: 0, max: 100},
     { key: 'style.bar.gradient.show', def: true, type: 'checkbox'},
