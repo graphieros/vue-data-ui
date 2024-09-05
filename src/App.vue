@@ -42,6 +42,7 @@ import ArenaVueUiWordCloud from "../TestingArena/ArenaVueUiWordCloud.vue";
 import ArenaVueUiXyCanvas from "../TestingArena/ArenaVueUiXyCanvas.vue";
 import ArenaVueUiFlow from "../TestingArena/ArenaVueUiFlow.vue";
 import ArenaVueUiParallelCoordinatePlot from "../TestingArena/ArenaVueUiParallelCoordinatePlot.vue";
+import ArenaVueUiTimer from "../TestingArena/ArenaVueUiTimer.vue";
 
 const showOldArena = ref(false);
 
@@ -86,10 +87,11 @@ const components = ref([
   /*____________ */"VueUiWordCloud", // 37
   /*______________*/"VueUiXyCanvas", // 38 
   /*__________________*/"VueUiFlow", // 39
-  /**/"VueUiParallelCoordinatePlot", // 40 
+  /**/"VueUiParallelCoordinatePlot", // 40
+  /*_________________*/"VueUiTimer", // 41 
 ]);
 
-const selectedComponent = ref(components.value[1]);
+const selectedComponent = ref(components.value[41]);
 
 </script>
 
@@ -226,4 +228,7 @@ const selectedComponent = ref(components.value[1]);
 
   <!-- 40 -->
   <ArenaVueUiParallelCoordinatePlot v-if="selectedComponent === 'VueUiParallelCoordinatePlot'" />
+
+  <!-- 41 -->
+  <ArenaVueUiTimer v-if="selectedComponent === 'VueUiTimer'" />
 </template>
