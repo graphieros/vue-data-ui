@@ -5293,7 +5293,8 @@
                     "pause": true,
                     "reset": true,
                     "restart": true,
-                    "lap": true
+                    "lap": true,
+                    "iconColor": "#2D353C"
                 },
                 "buttonTitles": {
                     "start": "Start",
