@@ -142,6 +142,7 @@ function pause() {
 
 function restart() {
     if(!isRunning.value) return;
+    isPaused.value = false;
     emit('restart')
     laps.value = [];
     TIMER.restart();
