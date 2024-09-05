@@ -326,7 +326,7 @@ defineExpose({
                         cursor: isRunning ? 'default' : 'pointer' 
                     }"
                 >
-                    <BaseIcon name="play" stroke="black"/>
+                    <BaseIcon name="play" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
                 </button>
 
                 <button
@@ -339,7 +339,7 @@ defineExpose({
                         cursor: isRunning ? 'pointer' : 'default'
                     }"
                     >
-                    <BaseIcon name="pause" stroke="black"/>
+                    <BaseIcon name="pause" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
                 </button>
                 
                 <button
@@ -352,7 +352,7 @@ defineExpose({
                         cursor: isRunning ? 'pointer' : 'default' 
                     }"
                 >
-                    <BaseIcon name="stop" stroke="black"/>
+                    <BaseIcon name="stop" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
                 </button>
 
                 <button
@@ -364,7 +364,7 @@ defineExpose({
                         opacity: isRunning ? 1 : 0.2, 
                         cursor: isRunning ? 'pointer' : 'default' 
                     }">
-                    <BaseIcon name="restart" stroke="black"/>
+                    <BaseIcon name="restart" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
                 </button>
 
                 <button
@@ -376,7 +376,7 @@ defineExpose({
                         opacity: isRunning && !isPaused ? 1 : 0.2, 
                         cursor: isRunning && !isPaused ? 'pointer' : 'default' 
                     }">
-                    <BaseIcon name="lap" stroke="black"/>
+                    <BaseIcon name="lap" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
                 </button>
             </div>
             <slot name="controls" v-bind="{ 
