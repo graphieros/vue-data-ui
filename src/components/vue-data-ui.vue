@@ -64,7 +64,8 @@ const components = {
     VueUiWordCloud: defineAsyncComponent(() => import('./vue-ui-word-cloud.vue')),
     VueUiXyCanvas: defineAsyncComponent(() => import('./vue-ui-xy-canvas.vue')),
     VueUiFlow: defineAsyncComponent(() => import('./vue-ui-flow.vue')),
-    VueUiParallelCoordinatePlot: defineAsyncComponent(() => import('./vue-ui-parallel-coordinate-plot.vue'))
+    VueUiParallelCoordinatePlot: defineAsyncComponent(() => import('./vue-ui-parallel-coordinate-plot.vue')),
+    VueUiTimer: defineAsyncComponent(() => import('./vue-ui-timer.vue'))
 };
 
 const componentProps = {
@@ -119,7 +120,8 @@ const componentProps = {
     VueUiWordCloud: ['config', 'dataset'],
     VueUiXyCanvas: ['config', 'dataset'],
     VueUiFlow: ['config', 'dataset'],
-    VueUiParallelCoordinatePlot: ['config', 'dataset']
+    VueUiParallelCoordinatePlot: ['config', 'dataset'],
+    VueUiTimer: ['config']
 };
 
 const emit = defineEmits([
@@ -138,7 +140,13 @@ const emit = defineEmits([
     'hoverIndex',
     'selectX',
     'toggleLock',
-    'toggleTooltip'
+    'toggleTooltip',
+    'start',
+    'play',
+    'pause',
+    'reset',
+    'restart',
+    'lap'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -169,6 +177,11 @@ const toggleLabels = ref(() => null);
 const toggleSort = ref(() => null);
 const toggleStack = ref(() => null);
 const toggleTooltip = ref(() => null);
+const start = ref(() => null);
+const pause = ref(() => null);
+const reset = ref(() => null);
+const restart = ref(() => null);
+const lap = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -224,6 +237,21 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.toggleTooltip) {
             toggleTooltip.value = newRef.toggleTooltip;
         }
+        if (newRef.start) {
+            start.value = newRef.start;
+        }
+        if (newRef.pause) {
+            pause.value = newRef.pause;
+        }
+        if (newRef.reset) {
+            reset.value = newRef.reset;
+        }
+        if (newRef.restart) {
+            restart.value = newRef.restart;
+        }
+        if (newRef.lap) {
+            lap.value = newRef.lap;
+        }
     }
 })
 
@@ -244,7 +272,12 @@ const getEventHandlers = () => {
         'hoverIndex',
         'selectX',
         'toggleLock',
-        'toggleTooltip'
+        'toggleTooltip',
+        'start',
+        'pause',
+        'reset',
+        'restart',
+        'lap'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -281,7 +314,12 @@ defineExpose({
     toggleLabels,
     toggleSort,
     toggleStack,
-    toggleTooltip
+    toggleTooltip,
+    start,
+    pause,
+    reset,
+    restart,
+    lap
 });
 </script>
 
