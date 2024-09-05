@@ -1463,7 +1463,7 @@ declare module 'vue-data-ui' {
             labels?: {
                 fontSize?: number;
                 name?: {
-                    position?: "top" | "left" | "right";
+                    position?: TextAlign;
                     width?: string;
                     color?: string;
                     bold?: boolean;
@@ -1472,6 +1472,20 @@ declare module 'vue-data-ui' {
                     show?: boolean;
                     bold?: boolean;
                 }
+            },
+            title?: {
+                backgroundColor?: string;
+                text?: string;
+                fontSize?: number;
+                color?: string;
+                bold?: boolean;
+                textAlign?: TextAlign;
+                subtitle?: {
+                    text?: string;
+                    color?: string;
+                    fontSize?: number;
+                    bold?: boolean;
+                };
             },
             gap?: number;
         }

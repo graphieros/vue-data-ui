@@ -180,6 +180,19 @@ function selectDatapoint(datapoint, index) {
 
 <template>
     <div :style="`width:100%; font-family:${sparkbarConfig.style.fontFamily};background:${sparkbarConfig.style.backgroundColor}`">
+       <!-- CUSTOM TITLE -->
+       <slot v-if="$slots['title']" name="title" v-bind="{ title: { ...title, title: sparkbarConfig.style.title.text, subtitle: sparkbarConfig.style.title.subtitle.text } }" />
+           
+        <!-- DEFAULT TITLE -->
+        <div data-cy="sparkbar-title-wrapper" v-if="!$slots['title'] && sparkbarConfig.style.title.text"  :style="`width:calc(100% - 12px);background:${sparkbarConfig.style.backgroundColor};margin:0 auto;margin:${sparkbarConfig.style.title.margin};padding: 0 6px;text-align:${sparkbarConfig.style.title.textAlign}`">
+            <div data-cy="sparkbar-title" :style="`font-size:${sparkbarConfig.style.title.fontSize}px;color:${sparkbarConfig.style.title.color};font-weight:${sparkbarConfig.style.title.bold ? 'bold' : 'normal'}`">
+                {{ sparkbarConfig.style.title.text }}
+            </div>
+            <div data-cy="sparkbar-subtitle" v-if="sparkbarConfig.style.title.subtitle.text" :style="`font-size:${sparkbarConfig.style.title.subtitle.fontSize}px;color:${sparkbarConfig.style.title.subtitle.color};font-weight:${sparkbarConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
+                {{ sparkbarConfig.style.title.subtitle.text }}
+            </div>
+            
+        </div>
         <template v-for="(bar, i) in drawableDataset">
             <div v-if="isDataset" :style="`display:flex !important;${['left', 'right'].includes(sparkbarConfig.style.labels.name.position) ? 'flex-direction:row !important' : 'flex-direction:column !important'};gap:${sparkbarConfig.style.gap}px !important;${sparkbarConfig.style.labels.name.position === 'right' ? 'row-reverse !important' : ''};align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`" @click="() => selectDatapoint(bar, i)">
                 <!-- CUSTOM DATALABEL -->
