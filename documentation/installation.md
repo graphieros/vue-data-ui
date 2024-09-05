@@ -195,17 +195,18 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Utilities
 
-| Name              | dataset type              | config type             | emits / exposed methods                | slots                                                   |
-| ----------------- | ------------------------- | ----------------------- | -------------------------------------- | ------------------------------------------------------- |
-| `VueUiAccordion`  | ❌                        | `VueUiAccordionConfig`  | ❌                                     | `#arrow`, `#title`, `#content`                          |
-| `VueUiAnnotator`  | `VueUiAnnotatorDataset`   | `VueUiAnnotatorConfig`  | `@toggleOpenState`, `@saveAnnotations` | ❌                                                      |
-| `VueUiCursor`     | ❌                        | `VueUiCursorConfig`     | ❌                                     | ❌                                                      |
-| `VueUiDashboard`  | `VueUiDashboardElement[]` | `VueUiDashboardConfig`  | `@change`                              | `#content`                                              |
-| `VueUiDigits`     | `number`                  | `VueUiDigitsConfig`     | ❌                                     | ❌                                                      |
-| `VueUiKpi`        | `number`                  | `VueUiKpiConfig`        | ❌                                     | `#title`, `#value`, `#comment-before`, `#comment-after` |
-| `VueUiMiniLoader` | ❌                        | `VueUiMiniLoaderConfig` | ❌                                     | ❌                                                      |
-| `VueUiScreenshot` | ❌                        | `VueUiScreenshotConfig` | `@postImage`, `shoot`, `close`         | ❌                                                      |
-| `VueUiSkeleton`   | ❌                        | `VueUiSkeletonConfig`   | ❌                                     | ❌                                                      |
+| Name              | dataset type              | config type             | emits / exposed methods                          | slots                                                   |
+| ----------------- | ------------------------- | ----------------------- | ------------------------------------------------ | ------------------------------------------------------- |
+| `VueUiAccordion`  | ❌                        | `VueUiAccordionConfig`  | ❌                                               | `#arrow`, `#title`, `#content`                          |
+| `VueUiAnnotator`  | `VueUiAnnotatorDataset`   | `VueUiAnnotatorConfig`  | `@toggleOpenState`, `@saveAnnotations`           | ❌                                                      |
+| `VueUiCursor`     | ❌                        | `VueUiCursorConfig`     | ❌                                               | ❌                                                      |
+| `VueUiDashboard`  | `VueUiDashboardElement[]` | `VueUiDashboardConfig`  | `@change`                                        | `#content`                                              |
+| `VueUiDigits`     | `number`                  | `VueUiDigitsConfig`     | ❌                                               | ❌                                                      |
+| `VueUiKpi`        | `number`                  | `VueUiKpiConfig`        | ❌                                               | `#title`, `#value`, `#comment-before`, `#comment-after` |
+| `VueUiMiniLoader` | ❌                        | `VueUiMiniLoaderConfig` | ❌                                               | ❌                                                      |
+| `VueUiScreenshot` | ❌                        | `VueUiScreenshotConfig` | `@postImage`, `shoot`, `close`                   | ❌                                                      |
+| `VueUiSkeleton`   | ❌                        | `VueUiSkeletonConfig`   | ❌                                               | ❌                                                      |
+| `VueUiTimer`      | ❌                        | `VueUiTimerConfig`      | `@start`, `@pause`, `@reset`, `@restart`, `@lap` | `#time`, `#controls`, `#laps`                           |
 | `VueUiIcon`       | see below                 |
 
 ### Icons

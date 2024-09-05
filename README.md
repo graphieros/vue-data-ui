@@ -9,7 +9,7 @@
 # vue-data-ui
 
 ![npm](https://img.shields.io/npm/v/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-53-blue)
+![Static Badge](https://img.shields.io/badge/components-54-blue)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
@@ -91,6 +91,7 @@ Available components
 - [VueUiMiniLoader](https://vue-data-ui.graphieros.com/docs#vue-ui-mini-loader)
 - [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)
 - [VueUiSkeleton](https://vue-data-ui.graphieros.com/docs#vue-ui-skeleton)
+- [VueUiTimer](https://vue-data-ui.graphieros.com/docs#vue-ui-timer
 
 # Installation
 
@@ -201,6 +202,7 @@ All charts expose a #legend slot except for:
 - VueUiTiremarks
 - VueUiWheel
 - VueUiDumbbell
+- VueUiTimer
 
 The legend slot also works when using the VueDataUi universal component, if the component it wraps supports it.
 It is recommended to set the show legend config attribute to false, to hide the default legend.
@@ -417,17 +419,18 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Utilities
 
-| Name              | dataset type              | config type             | emits / exposed methods                | slots                                                   |
-| ----------------- | ------------------------- | ----------------------- | -------------------------------------- | ------------------------------------------------------- |
-| `VueUiAccordion`  | ❌                        | `VueUiAccordionConfig`  | ❌                                     | `#arrow`, `#title`, `#content`                          |
-| `VueUiAnnotator`  | `VueUiAnnotatorDataset`   | `VueUiAnnotatorConfig`  | `@toggleOpenState`, `@saveAnnotations` | ❌                                                      |
-| `VueUiCursor`     | ❌                        | `VueUiCursorConfig`     | ❌                                     | ❌                                                      |
-| `VueUiDashboard`  | `VueUiDashboardElement[]` | `VueUiDashboardConfig`  | `@change`                              | `#content`                                              |
-| `VueUiDigits`     | `number`                  | `VueUiDigitsConfig`     | ❌                                     | ❌                                                      |
-| `VueUiKpi`        | `number`                  | `VueUiKpiConfig`        | ❌                                     | `#title`, `#value`, `#comment-before`, `#comment-after` |
-| `VueUiMiniLoader` | ❌                        | `VueUiMiniLoaderConfig` | ❌                                     | ❌                                                      |
-| `VueUiScreenshot` | ❌                        | `VueUiScreenshotConfig` | `@postImage`, `shoot`, `close`         | ❌                                                      |
-| `VueUiSkeleton`   | ❌                        | `VueUiSkeletonConfig`   | ❌                                     | ❌                                                      |
+| Name              | dataset type              | config type             | emits / exposed methods                          | slots                                                   |
+| ----------------- | ------------------------- | ----------------------- | ------------------------------------------------ | ------------------------------------------------------- |
+| `VueUiAccordion`  | ❌                        | `VueUiAccordionConfig`  | ❌                                               | `#arrow`, `#title`, `#content`                          |
+| `VueUiAnnotator`  | `VueUiAnnotatorDataset`   | `VueUiAnnotatorConfig`  | `@toggleOpenState`, `@saveAnnotations`           | ❌                                                      |
+| `VueUiCursor`     | ❌                        | `VueUiCursorConfig`     | ❌                                               | ❌                                                      |
+| `VueUiDashboard`  | `VueUiDashboardElement[]` | `VueUiDashboardConfig`  | `@change`                                        | `#content`                                              |
+| `VueUiDigits`     | `number`                  | `VueUiDigitsConfig`     | ❌                                               | ❌                                                      |
+| `VueUiKpi`        | `number`                  | `VueUiKpiConfig`        | ❌                                               | `#title`, `#value`, `#comment-before`, `#comment-after` |
+| `VueUiMiniLoader` | ❌                        | `VueUiMiniLoaderConfig` | ❌                                               | ❌                                                      |
+| `VueUiScreenshot` | ❌                        | `VueUiScreenshotConfig` | `@postImage`, `shoot`, `close`                   | ❌                                                      |
+| `VueUiSkeleton`   | ❌                        | `VueUiSkeletonConfig`   | ❌                                               | ❌                                                      |
+| `VueUiTimer`      | ❌                        | `VueUiTimerConfig`      | `@start`, `@pause`, `@reset`, `@restart`, `@lap` | `#time`, `#controls`, `#laps`                           |
 | `VueUiIcon`       | see below                 |
 
 ### Icons
@@ -607,6 +610,7 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiTableHeatmap           | -                              |
 | VueUiTableSparkline         | -                              |
 | VueUiThermometer            | -                              |
+| VueUiTimer                  | ✅                             |
 | VueUiTiremarks              | -                              |
 | VueUiTreemap                | ✅                             |
 | VueUiVerticalBar            | ✅                             |
