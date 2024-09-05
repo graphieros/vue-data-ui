@@ -5089,7 +5089,8 @@ declare module 'vue-data-ui' {
                     pause?: boolean;
                     reset?: boolean;
                     restart?: boolean;
-                    lap?: true
+                    lap?: true,
+                    iconColor?: string;
                 };
                 buttonTitles?: {
                     start?: string;
