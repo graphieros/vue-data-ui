@@ -54,7 +54,8 @@ import {
     VueUiWordCloud,
     VueUiXyCanvas,
     VueUiFlow,
-    VueUiParallelCoordinatePlot
+    VueUiParallelCoordinatePlot,
+    VueUiTimer
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -112,4 +113,5 @@ app.component("VueUiWordCloud", VueUiWordCloud);
 app.component("VueUiXyCanvas", VueUiXyCanvas);
 app.component("VueUiFlow", VueUiFlow);
 app.component("VueUiParallelCoordinatePlot", VueUiParallelCoordinatePlot);
+app.component("VueUiTimer", VueUiTimer);
 app.mount('#app');
