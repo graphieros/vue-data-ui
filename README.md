@@ -91,7 +91,7 @@ Available components
 - [VueUiMiniLoader](https://vue-data-ui.graphieros.com/docs#vue-ui-mini-loader)
 - [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)
 - [VueUiSkeleton](https://vue-data-ui.graphieros.com/docs#vue-ui-skeleton)
-- [VueUiTimer](https://vue-data-ui.graphieros.com/docs#vue-ui-timer
+- [VueUiTimer](https://vue-data-ui.graphieros.com/docs#vue-ui-timer)
 
 # Installation
 
