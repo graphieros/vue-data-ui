@@ -115,6 +115,13 @@ const step = ref(0)
         
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiSparkbar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+                <template #title="{ title }">
+                    <div style="width:100%;">
+                        {{ title.title }}
+                        {{ title.subtitle }}
+                    </div>
+                </template>
+
                 <template #data-label="{ bar }">
                     <div style="width:100%">
                         {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
@@ -125,6 +132,13 @@ const step = ref(0)
         
         <template #build>
             <VueUiSparkbar :dataset="dataset" :config="config" :key="`build_${step}`">
+                <template #title="{ title }">
+                    <div style="width:100%;">
+                        {{ title.title }}
+                        {{ title.subtitle }}
+                    </div>
+                </template>
+
                 <template #data-label="{ bar }">
                     <div style="width:100%">
                         {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
@@ -135,6 +149,13 @@ const step = ref(0)
         
         <template #VDUI-build>
             <VueDataUi component="VueUiSparkbar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+                <template #title="{ title }">
+                    <div style="width:100%;">
+                        {{ title.title }}
+                        {{ title.subtitle }}
+                    </div>
+                </template>
+
                 <template #data-label="{ bar }">
                     <div style="width:100%">
                         {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
