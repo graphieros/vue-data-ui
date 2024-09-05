@@ -49,6 +49,7 @@ const model = ref([
     { key: 'stopwatch.legend.buttons.reset', def: true, type: 'checkbox'},
     { key: 'stopwatch.legend.buttons.restart', def: true, type: 'checkbox'},
     { key: 'stopwatch.legend.buttons.lap', def: true, type: 'checkbox'},
+    { key: 'stopwatch.legend.buttons.iconColor', def: '#1A1A1A', type: 'color'},
     { key: 'stopwatch.legend.buttonTitles.start', def: 'START', type: 'text'},
     { key: 'stopwatch.legend.buttonTitles.pause', def: 'PAUSE', type: 'text'},
     { key: 'stopwatch.legend.buttonTitles.resume', def: 'RESUME', type: 'text'},
