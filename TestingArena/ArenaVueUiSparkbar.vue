@@ -53,12 +53,15 @@ const model = ref([
     { key: 'style.labels.name.bold', def: false, type: 'checkbox'},
     { key: 'style.labels.value.show', def: true, type: 'checkbox'},
     { key: 'style.labels.value.bold', def: true, type: 'checkbox'},
+    { key: 'style.title.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.title.margin', def: '0 auto', type: 'text'},
+    { key: 'style.title.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
     { key: 'style.title.text', def: 'Lorem ipsum dolor sic amet', type: 'text'},
     { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.title.fontSize', def: 20, type: 'number', min: 8, max: 48},
     { key: 'style.title.bold', def: true, type: 'checkbox'},
     { key: 'style.title.subtitle.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
-    { key: 'style.title.subtitle.color', def: '#CCCCCC', type: 'color'},
+    { key: 'style.title.subtitle.color', def: '#A1A1A1', type: 'color'},
     { key: 'style.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
     { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'},
     { key: 'style.gap', def: 4, type: 'number', min: 0, max: 24}
@@ -84,6 +87,8 @@ const config = computed(() => {
 
 const step = ref(0)
 
+const showTitleSlot = ref(false);
+
 </script>
 
 <template>
@@ -93,12 +98,16 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+    <div style="color:white">
+        <input type="checkbox" v-model="showTitleSlot" id="toggle-title-slot"/>
+        <label for="toggle-title-slot">Toggle title slot</label>
+    </div>
     <Box>
         <template #title>VueUiSparkbar</template>
         
         <template #local>
             <LocalVueUiSparkbar :dataset="dataset" :config="config" :key="`local_${step}`">
-                <template #title="{ title }">
+                <template #title="{ title }" v-if="showTitleSlot">
                     <div style="width:100%;">
                         {{ title.title }}
                         {{ title.subtitle }}
@@ -115,7 +124,7 @@ const step = ref(0)
         
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiSparkbar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
-                <template #title="{ title }">
+                <template #title="{ title }" v-if="showTitleSlot">
                     <div style="width:100%;">
                         {{ title.title }}
                         {{ title.subtitle }}
@@ -132,7 +141,7 @@ const step = ref(0)
         
         <template #build>
             <VueUiSparkbar :dataset="dataset" :config="config" :key="`build_${step}`">
-                <template #title="{ title }">
+                <template #title="{ title }" v-if="showTitleSlot">
                     <div style="width:100%;">
                         {{ title.title }}
                         {{ title.subtitle }}
@@ -149,7 +158,7 @@ const step = ref(0)
         
         <template #VDUI-build>
             <VueDataUi component="VueUiSparkbar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
-                <template #title="{ title }">
+                <template #title="{ title }" v-if="showTitleSlot">
                     <div style="width:100%;">
                         {{ title.title }}
                         {{ title.subtitle }}
