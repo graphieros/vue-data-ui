@@ -52,6 +52,7 @@
                 }
             },
             "title": {
+                "backgroundColor": "#FFFFFF",
                 "textAlign": "left",
                 "text": "Title",
                 "color": "#2D353C",
