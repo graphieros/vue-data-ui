@@ -1475,16 +1475,17 @@ declare module 'vue-data-ui' {
             },
             title?: {
                 backgroundColor?: string;
-                text?: string;
-                fontSize?: number;
-                color?: string;
                 bold?: boolean;
+                color?: string;
+                fontSize?: number;
+                margin?: string;
+                text?: string;
                 textAlign?: TextAlign;
                 subtitle?: {
-                    text?: string;
+                    bold?: boolean;
                     color?: string;
                     fontSize?: number;
-                    bold?: boolean;
+                    text?: string;
                 };
             },
             gap?: number;
