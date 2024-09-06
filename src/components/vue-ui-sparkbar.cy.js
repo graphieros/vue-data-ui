@@ -1,5 +1,5 @@
 import { dataLabel } from '../lib';
-import VueUiSparkbar from './vue-ui-sparkbar.vue'
+import VueUiSparkbar from './vue-ui-sparkbar.vue';
 
 describe('<VueUiSparkbar />', () => {
   beforeEach(function () {
@@ -51,6 +51,49 @@ describe('<VueUiSparkbar />', () => {
               expect(text.trim()).to.eq(expectedText);
             });
         }
+      }
+    });
+  });
+
+  it('renders with custom title and subtitle using slots', function () {
+    cy.get('@fixture').then((fixture) => {
+      const customTitle = 'Custom Title';
+      const customSubtitle = 'Custom Subtitle';
+
+      cy.mount(VueUiSparkbar, {
+        props: {
+          dataset: fixture.dataset,
+          config: fixture.config
+        },
+        slots: {
+          title: `<div>
+                    <div data-cy="custom-title">${customTitle}</div>
+                    <div data-cy="custom-subtitle">${customSubtitle}</div>
+                  </div>`
+        }
+      });
+
+      cy.get('[data-cy="custom-title"]').should('exist').contains(customTitle);
+      cy.get('[data-cy="custom-subtitle"]').should('exist').contains(customSubtitle);
+      
+      cy.get('[data-cy="sparkbar-title-wrapper"]').should('not.exist');
+    });
+  });
+
+  it('renders with default title when no slot is provided', function () {
+    cy.get('@fixture').then((fixture) => {
+      cy.mount(VueUiSparkbar, {
+        props: {
+          dataset: fixture.dataset,
+          config: fixture.config
+        }
+      });
+
+      cy.get('[data-cy="sparkbar-title-wrapper"]').should('exist');
+      cy.get('[data-cy="sparkbar-title"]').should('exist').contains(fixture.config.style.title.text);
+      
+      if (fixture.config.style.title.subtitle?.text) {
+        cy.get('[data-cy="sparkbar-subtitle"]').should('exist').contains(fixture.config.style.title.subtitle.text);
       }
     });
   });
