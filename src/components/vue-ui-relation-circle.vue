@@ -327,17 +327,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'relation-div-title',
-                        text: relationConfig.style.title.text,
-                        color: relationConfig.style.title.color ,
-                        fontSize: relationConfig.style.title.fontSize,
-                        bold: relationConfig.style.title.bold
+                        ...relationConfig.style.title
                     },
                     subtitle: {
                         cy: 'relation-div-subtitle',
-                        text: relationConfig.style.title.subtitle.text,
-                        color: relationConfig.style.title.subtitle.color ,
-                        fontSize: relationConfig.style.title.subtitle.fontSize,
-                        bold: relationConfig.style.title.subtitle.bold
+                        ...relationConfig.style.title.subtitle
                     },
                 }"
             />

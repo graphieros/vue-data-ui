@@ -620,17 +620,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'waffle-title',
-                        text: waffleConfig.style.chart.title.text,
-                        color: waffleConfig.style.chart.title.color,
-                        fontSize: waffleConfig.style.chart.title.fontSize,
-                        bold: waffleConfig.style.chart.title.bold
+                        ...waffleConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'waffle-subtitle',
-                        text: waffleConfig.style.chart.title.subtitle.text,
-                        color: waffleConfig.style.chart.title.subtitle.color,
-                        fontSize: waffleConfig.style.chart.title.subtitle.fontSize,
-                        bold: waffleConfig.style.chart.title.subtitle.bold
+                        ...waffleConfig.style.chart.title.subtitle
                     },
                 }"
             />

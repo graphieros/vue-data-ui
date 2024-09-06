@@ -569,17 +569,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'scatter-div-title',
-                        text: scatterConfig.style.title.text,
-                        color: scatterConfig.style.title.color,
-                        fontSize: scatterConfig.style.title.fontSize,
-                        bold: scatterConfig.style.title.bold
+                        ...scatterConfig.style.title
                     },
                     subtitle: {
                         cy: 'scatter-div-subtitle',
-                        text: scatterConfig.style.title.subtitle.text,
-                        color: scatterConfig.style.title.subtitle.color,
-                        fontSize: scatterConfig.style.title.subtitle.fontSize,
-                        bold: scatterConfig.style.title.subtitle.bold
+                        ...scatterConfig.style.title.subtitle
                     },
                 }"
             />

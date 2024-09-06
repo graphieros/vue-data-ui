@@ -1232,17 +1232,11 @@ defineExpose({
             <Title :config="{
             title: {
                 cy: 'xy-canvas-title',
-                text: xyConfig.style.chart.title.text,
-                color: xyConfig.style.chart.title.color,
-                fontSize: xyConfig.style.chart.title.fontSize,
-                bold: xyConfig.style.chart.title.bold
+                ...xyConfig.style.chart.title
             },
             subtitle: {
                 cy: 'xy-canvas-subtitle',
-                text: xyConfig.style.chart.title.subtitle.text,
-                color: xyConfig.style.chart.title.subtitle.color,
-                fontSize: xyConfig.style.chart.title.subtitle.fontSize,
-                bold: xyConfig.style.chart.title.subtitle.bold
+                ...xyConfig.style.chart.title.subtitle
             }
         }" />
         </div>

@@ -262,17 +262,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'wheel-title',
-                        text: tiremarksConfig.style.chart.title.text,
-                        color: tiremarksConfig.style.chart.title.color,
-                        fontSize: tiremarksConfig.style.chart.title.fontSize,
-                        bold: tiremarksConfig.style.chart.title.bold
+                        ...tiremarksConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'wheel-subtitle',
-                        text: tiremarksConfig.style.chart.title.subtitle.text,
-                        color: tiremarksConfig.style.chart.title.subtitle.color,
-                        fontSize: tiremarksConfig.style.chart.title.subtitle.fontSize,
-                        bold: tiremarksConfig.style.chart.title.subtitle.bold
+                        ...tiremarksConfig.style.chart.title.subtitle
                     },
                 }"
             />

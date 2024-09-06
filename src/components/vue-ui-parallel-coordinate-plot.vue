@@ -512,17 +512,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'pcp-div-title',
-                        text: pcpConfig.style.chart.title.text,
-                        color: pcpConfig.style.chart.title.color,
-                        fontSize: pcpConfig.style.chart.title.fontSize,
-                        bold: pcpConfig.style.chart.title.bold
+                        ...pcpConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'pcp-div-subtitle',
-                        text: pcpConfig.style.chart.title.subtitle.text,
-                        color: pcpConfig.style.chart.title.subtitle.color,
-                        fontSize: pcpConfig.style.chart.title.subtitle.fontSize,
-                        bold: pcpConfig.style.chart.title.subtitle.bold
+                        ...pcpConfig.style.chart.title.subtitle
                     }
                 }"
             />

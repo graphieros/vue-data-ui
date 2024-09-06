@@ -536,17 +536,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'donut-div-title',
-                        text: donutConfig.style.chart.title.text,
-                        color: donutConfig.style.chart.title.color,
-                        fontSize: donutConfig.style.chart.title.fontSize,
-                        bold: donutConfig.style.chart.title.bold
+                        ...donutConfig.style.chart.title,
                     },
                     subtitle: {
                         cy: 'donut-div-subtitle',
-                        text: donutConfig.style.chart.title.subtitle.text,
-                        color: donutConfig.style.chart.title.subtitle.color,
-                        fontSize: donutConfig.style.chart.title.subtitle.fontSize,
-                        bold: donutConfig.style.chart.title.subtitle.bold
+                        ...donutConfig.style.chart.title.subtitle
                     }
                 }"
             />

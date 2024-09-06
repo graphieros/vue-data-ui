@@ -447,17 +447,11 @@ defineExpose({
         :config="{
           title: {
             cy: 'rings-div-title',
-            text: ringsConfig.style.chart.title.text,
-            color: ringsConfig.style.chart.title.color,
-            fontSize: ringsConfig.style.chart.title.fontSize,
-            bold: ringsConfig.style.chart.title.bold,
+            ...ringsConfig.style.chart.title
           },
           subtitle: {
             cy: 'rings-div-subtitle',
-            text: ringsConfig.style.chart.title.subtitle.text,
-            color: ringsConfig.style.chart.title.subtitle.color,
-            fontSize: ringsConfig.style.chart.title.subtitle.fontSize,
-            bold: ringsConfig.style.chart.title.subtitle.bold,
+            ...ringsConfig.style.chart.title.subtitle
           },
         }"
       />

@@ -481,17 +481,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'treemap-div-title',
-                        text: treemapConfig.style.chart.title.text,
-                        color: treemapConfig.style.chart.title.color,
-                        fontSize: treemapConfig.style.chart.title.fontSize,
-                        bold: treemapConfig.style.chart.title.bold
+                        ...treemapConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'treemap-div-subtitle',
-                        text: treemapConfig.style.chart.title.subtitle.text,
-                        color: treemapConfig.style.chart.title.subtitle.color,
-                        fontSize: treemapConfig.style.chart.title.subtitle.fontSize,
-                        bold: treemapConfig.style.chart.title.subtitle.bold
+                        ...treemapConfig.style.chart.title.subtitle
                     }
                 }"
             />

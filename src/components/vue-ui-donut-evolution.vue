@@ -475,17 +475,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'donut-evolution-div-title',
-                        text: donutEvolutionConfig.style.chart.title.text,
-                        color: donutEvolutionConfig.style.chart.title.color,
-                        fontSize: donutEvolutionConfig.style.chart.title.fontSize,
-                        bold: donutEvolutionConfig.style.chart.title.bold
+                        ...donutEvolutionConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'donut-evolution-div-subtitle',
-                        text: donutEvolutionConfig.style.chart.title.subtitle.text,
-                        color: donutEvolutionConfig.style.chart.title.subtitle.color,
-                        fontSize: donutEvolutionConfig.style.chart.title.subtitle.fontSize,
-                        bold: donutEvolutionConfig.style.chart.title.subtitle.bold
+                        ...donutEvolutionConfig.style.chart.title.subtitle
                     }
                 }"
             />

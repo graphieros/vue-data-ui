@@ -314,16 +314,10 @@ defineExpose({
         <div ref="chartTitle" v-if="wordCloudConfig.style.chart.title.text" :style="`width:100%;background:${wordCloudConfig.style.chart.backgroundColor};padding-bottom:24px`">
             <Title :config="{
                 title: {
-                    text: wordCloudConfig.style.chart.title.text,
-                    color: wordCloudConfig.style.chart.title.color,
-                    fontSize: wordCloudConfig.style.chart.title.fontSize,
-                    bold: wordCloudConfig.style.chart.title.bold
+                    ...wordCloudConfig.style.chart.title
                 },
                 subtitle: {
-                    text: wordCloudConfig.style.chart.title.subtitle.text,
-                    color: wordCloudConfig.style.chart.title.subtitle.color,
-                    fontSize: wordCloudConfig.style.chart.title.subtitle.fontSize,
-                    bold: wordCloudConfig.style.chart.title.subtitle.bold
+                    ...wordCloudConfig.style.chart.title.subtitle
                 }
             }" />
         </div>

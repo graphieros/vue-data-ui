@@ -330,17 +330,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'heatmap-div-title',
-                        text: heatmapConfig.style.title.text,
-                        color: heatmapConfig.style.title.color,
-                        fontSize: heatmapConfig.style.title.fontSize,
-                        bold: heatmapConfig.style.title.bold
+                        ...heatmapConfig.style.title
                     },
                     subtitle: {
                         cy: 'heatmap-div-subtitle',
-                        text: heatmapConfig.style.title.subtitle.text,
-                        color: heatmapConfig.style.title.subtitle.color,
-                        fontSize: heatmapConfig.style.title.subtitle.fontSize,
-                        bold: heatmapConfig.style.title.subtitle.bold
+                        ...heatmapConfig.style.title.subtitle
                     },
                 }"
             />

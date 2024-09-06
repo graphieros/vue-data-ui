@@ -438,17 +438,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'onion-div-title',
-                        text: onionConfig.style.chart.title.text,
-                        color: onionConfig.style.chart.title.color,
-                        fontSize: onionConfig.style.chart.title.fontSize,
-                        bold: onionConfig.style.chart.title.bold
+                        ...onionConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'onion-div-subtitle',
-                        text: onionConfig.style.chart.title.subtitle.text,
-                        color: onionConfig.style.chart.title.subtitle.color,
-                        fontSize: onionConfig.style.chart.title.subtitle.fontSize,
-                        bold: onionConfig.style.chart.title.subtitle.bold
+                        ...onionConfig.style.chart.title.subtitle
                     },
                 }"
             />

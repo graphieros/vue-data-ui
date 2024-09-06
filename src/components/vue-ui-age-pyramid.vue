@@ -375,17 +375,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'pyramid-div-title',
-                        text: agePyramidConfig.style.title.text,
-                        color: agePyramidConfig.style.title.color,
-                        fontSize: agePyramidConfig.style.title.fontSize,
-                        bold: agePyramidConfig.style.title.bold
+                        ...agePyramidConfig.style.title
                     },
                     subtitle: {
                         cy: 'pyramid-div-subtitle',
-                        text: agePyramidConfig.style.title.subtitle.text,
-                        color: agePyramidConfig.style.title.subtitle.color,
-                        fontSize: agePyramidConfig.style.title.subtitle.fontSize,
-                        bold: agePyramidConfig.style.title.subtitle.bold
+                        ...agePyramidConfig.style.title.subtitle
                     },
                 }"
             />

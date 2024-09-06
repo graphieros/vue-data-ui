@@ -439,17 +439,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'candlestick-div-title',
-                        text: candlestickConfig.style.title.text,
-                        color: candlestickConfig.style.title.color,
-                        fontSize: candlestickConfig.style.title.fontSize,
-                        bold: candlestickConfig.style.title.bold
+                        ...candlestickConfig.style.title
                     },
                     subtitle: {
                         cy: 'candlestick-div-subtitle',
-                        text: candlestickConfig.style.title.subtitle.text,
-                        color: candlestickConfig.style.title.subtitle.color,
-                        fontSize: candlestickConfig.style.title.subtitle.fontSize,
-                        bold: candlestickConfig.style.title.subtitle.bold
+                        ...candlestickConfig.style.title.subtitle
                     }
                 }"
             />

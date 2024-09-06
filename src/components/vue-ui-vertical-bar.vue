@@ -538,17 +538,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'vertical-bar-div-title',
-                        text: verticalBarConfig.style.chart.title.text,
-                        color: verticalBarConfig.style.chart.title.color,
-                        fontSize: verticalBarConfig.style.chart.title.fontSize,
-                        bold: verticalBarConfig.style.chart.title.bold
+                        ...verticalBarConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'vertical-bar-div-subtitle',
-                        text: verticalBarConfig.style.chart.title.subtitle.text ,
-                        color: verticalBarConfig.style.chart.title.subtitle.color,
-                        fontSize: verticalBarConfig.style.chart.title.subtitle.fontSize,
-                        bold: verticalBarConfig.style.chart.title.subtitle.bold
+                        ...verticalBarConfig.style.chart.title.subtitle
                     }
                 }"
             />

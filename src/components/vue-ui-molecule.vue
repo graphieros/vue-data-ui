@@ -502,17 +502,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'molecule-div-title',
-                        text: moleculeConfig.style.chart.title.text,
-                        color: moleculeConfig.style.chart.title.color,
-                        fontSize: moleculeConfig.style.chart.title.fontSize,
-                        bold: moleculeConfig.style.chart.title.bold
+                        ...moleculeConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'molecule-div-subtitle',
-                        text: moleculeConfig.style.chart.title.subtitle.text,
-                        color: moleculeConfig.style.chart.title.subtitle.color,
-                        fontSize: moleculeConfig.style.chart.title.subtitle.fontSize,
-                        bold: moleculeConfig.style.chart.title.subtitle.bold
+                        ...moleculeConfig.style.chart.title.subtitle
                     }
                 }"
             />

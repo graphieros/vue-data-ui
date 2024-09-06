@@ -494,17 +494,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: '3dBar-div-title',
-                        text: barConfig.style.chart.title.text,
-                        color: barConfig.style.chart.title.color,
-                        fontSize: barConfig.style.chart.title.fontSize,
-                        bold: barConfig.style.chart.title.bold
+                        ...barConfig.style.chart.title
                     },
                     subtitle: {
                         cy: '3dBar-div-subtitle',
-                        text: barConfig.style.chart.title.subtitle.text,
-                        color: barConfig.style.chart.title.subtitle.color,
-                        fontSize: barConfig.style.chart.title.subtitle.fontSize,
-                        bold: barConfig.style.chart.title.subtitle.bold
+                        ...barConfig.style.chart.title.subtitle
                     }
                 }"
             />

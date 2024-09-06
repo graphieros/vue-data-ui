@@ -380,17 +380,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'galaxy-div-title',
-                        text: galaxyConfig.style.chart.title.text,
-                        color: galaxyConfig.style.chart.title.color,
-                        fontSize: galaxyConfig.style.chart.title.fontSize,
-                        bold: galaxyConfig.style.chart.title.bold
+                        ...galaxyConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'galaxy-div-subtitle',
-                        text: galaxyConfig.style.chart.title.subtitle.text,
-                        color: galaxyConfig.style.chart.title.subtitle.color,
-                        fontSize: galaxyConfig.style.chart.title.subtitle.fontSize,
-                        bold: galaxyConfig.style.chart.title.subtitle.bold
+                        ...galaxyConfig.style.chart.title.subtitle
                     }
                 }"
             />

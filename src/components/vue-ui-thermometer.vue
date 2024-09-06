@@ -241,17 +241,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'thermometer-div-title',
-                        text: thermoConfig.style.title.text,
-                        color: thermoConfig.style.title.color,
-                        fontSize: thermoConfig.style.title.fontSize,
-                        bold: thermoConfig.style.title.bold
+                        ...thermoConfig.style.title
                     },
                     subtitle: {
                         cy: 'thermometer-div-subtitle',
-                        text: thermoConfig.style.title.subtitle.text,
-                        color: thermoConfig.style.title.subtitle.color,
-                        fontSize: thermoConfig.style.title.subtitle.fontSize,
-                        bold: thermoConfig.style.title.subtitle.bold
+                        ...thermoConfig.style.title.subtitle
                     }
                 }"
             />

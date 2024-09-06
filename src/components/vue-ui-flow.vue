@@ -450,17 +450,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'flow-title',
-                        text: flowConfig.style.chart.title.text,
-                        color: flowConfig.style.chart.title.color,
-                        fontSize: flowConfig.style.chart.title.fontSize,
-                        bold: flowConfig.style.chart.title.bold
+                        ...flowConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'flow-subtitle',
-                        text: flowConfig.style.chart.title.subtitle.text,
-                        color: flowConfig.style.chart.title.subtitle.color,
-                        fontSize: flowConfig.style.chart.title.subtitle.fontSize,
-                        bold: flowConfig.style.chart.title.subtitle.bold
+                        ...flowConfig.style.chart.title.subtitle
                     }
                 }"
             />

@@ -225,17 +225,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'title',
-                        text: timerConfig.style.title.text,
-                        color: timerConfig.style.title.color,
-                        fontSize: timerConfig.style.title.fontSize,
-                        bold: timerConfig.style.title.bold
+                        ...timerConfig.style.title
                     },
                     subtitle: {
                         cy: 'subtitle',
-                        text: timerConfig.style.title.subtitle.text,
-                        color: timerConfig.style.title.subtitle.color,
-                        fontSize: timerConfig.style.title.subtitle.fontSize,
-                        bold: timerConfig.style.title.subtitle.bold
+                        ...timerConfig.style.title.subtitle
                     }
                 }"
             />

@@ -7,17 +7,11 @@
                 :config="{
                     title: {
                         cy: 'xy-div-title',
-                        text: chartConfig.chart.title.text,
-                        color: chartConfig.chart.title.color,
-                        fontSize: chartConfig.chart.title.fontSize,
-                        bold: chartConfig.chart.title.bold
+                        ...chartConfig.chart.title
                     },
                     subtitle: {
                         cy: 'xy-div-subtitle',
-                        text: chartConfig.chart.title.subtitle.text,
-                        color: chartConfig.chart.title.subtitle.color,
-                        fontSize: chartConfig.chart.title.subtitle.fontSize,
-                        bold: chartConfig.chart.title.subtitle.bold
+                        ...chartConfig.chart.title.subtitle
                     },
                 }"
             />

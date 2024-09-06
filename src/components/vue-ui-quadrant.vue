@@ -885,17 +885,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'quadrant-title',
-                        text: quadrantConfig.style.chart.title.text,
-                        color: quadrantConfig.style.chart.title.color,
-                        fontSize: quadrantConfig.style.chart.title.fontSize,
-                        bold: quadrantConfig.style.chart.title.bold
+                        ...quadrantConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'quadrant-subtitle',
-                        text: quadrantConfig.style.chart.title.subtitle.text,
-                        color: quadrantConfig.style.chart.title.subtitle.color,
-                        fontSize: quadrantConfig.style.chart.title.subtitle.fontSize,
-                        bold: quadrantConfig.style.chart.title.subtitle.bold
+                        ...quadrantConfig.style.chart.title.subtitle
                     },
                 }"
             />

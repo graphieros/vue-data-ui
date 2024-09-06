@@ -448,17 +448,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'donut-div-title',
-                        text: stripConfig.style.chart.title.text,
-                        color: stripConfig.style.chart.title.color,
-                        fontSize: stripConfig.style.chart.title.fontSize,
-                        bold: stripConfig.style.chart.title.bold
+                        ...stripConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'donut-div-subtitle',
-                        text: stripConfig.style.chart.title.subtitle.text,
-                        color: stripConfig.style.chart.title.subtitle.color,
-                        fontSize: stripConfig.style.chart.title.subtitle.fontSize,
-                        bold: stripConfig.style.chart.title.subtitle.bold
+                        ...stripConfig.style.chart.title.subtitle
                     }
                 }"
             />

@@ -286,17 +286,11 @@ defineExpose({
             <Title :config="{
                 title: {
                     cy: 'mood-radar-title',
-                    text: radarConfig.style.chart.title.text,
-                    color: radarConfig.style.chart.title.color,
-                    fontSize: radarConfig.style.chart.title.fontSize,
-                    bold: radarConfig.style.chart.title.bold,
+                    ...radarConfig.style.chart.title
                 },
                 subtitle: {
                     cy: 'mood-radar-subtitle',
-                    text: radarConfig.style.chart.title.subtitle.text,
-                    color: radarConfig.style.chart.title.subtitle.color,
-                    fontSize: radarConfig.style.chart.title.subtitle.fontSize,
-                    bold: radarConfig.style.chart.title.subtitle.bold,
+                    ...radarConfig.style.chart.title.subtitle
                 },
             }" />
         </div>

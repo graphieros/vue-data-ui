@@ -191,17 +191,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'wheel-title',
-                        text: wheelConfig.style.chart.title.text,
-                        color: wheelConfig.style.chart.title.color,
-                        fontSize: wheelConfig.style.chart.title.fontSize,
-                        bold: wheelConfig.style.chart.title.bold
+                        ...wheelConfig.style.chart.title
                     },
                     subtitle: {
                         cy: 'wheel-subtitle',
-                        text: wheelConfig.style.chart.title.subtitle.text,
-                        color: wheelConfig.style.chart.title.subtitle.color,
-                        fontSize: wheelConfig.style.chart.title.subtitle.fontSize,
-                        bold: wheelConfig.style.chart.title.subtitle.bold
+                        ...wheelConfig.style.chart.title.subtitle
                     },
                 }"
             />
