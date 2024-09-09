@@ -11,12 +11,14 @@ import {
     interpolateColorHex,
     objectIsEmpty,
 } from "../lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import UserOptions from "../atoms/UserOptions.vue";
 import Shape from "../atoms/Shape.vue";
 import { usePrinter } from "../usePrinter";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_table_heatmap: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -34,16 +36,15 @@ const props = defineProps({
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_table_heatmap);
 const isResponsive = ref(false);
 const tableContainer = ref(null);
 const isFullscreen = ref(false);
 const step = ref(0);
 
-const tableConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -63,7 +64,7 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 });
 
 const breakpoint = computed(() => {
-    return tableConfig.value.table.responsiveBreakpoint;
+    return FINAL_CONFIG.value.table.responsiveBreakpoint;
 })
 
 const isDataset = computed(() => {
@@ -122,8 +123,8 @@ const extremes = computed(() => {
 });
 
 function interpolateColor(value, serieExtremes) {
-    const isIndividual = tableConfig.value.style.heatmapColors.useIndividualScale;
-    return interpolateColorHex(tableConfig.value.style.heatmapColors.min, tableConfig.value.style.heatmapColors.max, isIndividual ? serieExtremes.min : extremes.value.min, isIndividual ? serieExtremes.max : extremes.value.max, value)
+    const isIndividual = FINAL_CONFIG.value.style.heatmapColors.useIndividualScale;
+    return interpolateColorHex(FINAL_CONFIG.value.style.heatmapColors.min, FINAL_CONFIG.value.style.heatmapColors.max, isIndividual ? serieExtremes.min : extremes.value.min, isIndividual ? serieExtremes.max : extremes.value.max, value)
 }
 
 const formattedDataset = computed(() => {
@@ -131,17 +132,17 @@ const formattedDataset = computed(() => {
         return {
             ...ds,
             colors: ds.displayValues.map(v => {
-                return isNaN(v) ? tableConfig.value.style.backgroundColor : interpolateColor(v, ds.serieExtremes)
+                return isNaN(v) ? FINAL_CONFIG.value.style.backgroundColor : interpolateColor(v, ds.serieExtremes)
             })
         }
     })
 });
 
 const backgroundColor = computed(() => {
-    return tableConfig.value.style.backgroundColor
+    return FINAL_CONFIG.value.style.backgroundColor
 });
 const borderWidth = computed(() => {
-    return `${tableConfig.value.table.borderWidth}px`;
+    return `${FINAL_CONFIG.value.table.borderWidth}px`;
 });
 
 function generateCsv() {
@@ -156,7 +157,7 @@ function generateCsv() {
             ]
         })
 
-        const tableXls = [[[""], tableConfig.value.table.head.values, ['sum'],['average'],['median']],].concat(labels);
+        const tableXls = [[[""], FINAL_CONFIG.value.table.head.values, ['sum'],['average'],['median']],].concat(labels);
         const csvContent = createCsvContent(tableXls);
         downloadCsv({ csvContent, title: "vue-ui-table-heatmap" })
     });
@@ -176,22 +177,22 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tableContainer" :style="`width:100%; overflow-x:auto; container-type: inline-size;padding-top:${tableConfig.userOptions.show ? '36px' : ''}`" :class="{ 'vue-ui-responsive' : isResponsive }" :id="`table_heatmap_${uid}`">
+    <div ref="tableContainer" :style="`width:100%; overflow-x:auto; container-type: inline-size;padding-top:${FINAL_CONFIG.userOptions.show ? '36px' : ''}`" :class="{ 'vue-ui-responsive' : isResponsive }" :id="`table_heatmap_${uid}`">
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="tableConfig.userOptions.show && isDataset"
-            :backgroundColor="tableConfig.style.backgroundColor"
-            :color="tableConfig.style.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
+            :color="FINAL_CONFIG.style.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="tableConfig.userOptions.buttons.pdf"
-            :hasXls="tableConfig.userOptions.buttons.csv"
-            :hasImg="tableConfig.userOptions.buttons.img"
-            :hasFullscreen="tableConfig.userOptions.buttons.fullscreen"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
-            :titles="{ ...tableConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="tableContainer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -212,14 +213,14 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <table :class="{'vue-ui-table-heatmap': true}" :style="`width:100%;font-family:${tableConfig.style.fontFamily};background:${tableConfig.style.backgroundColor};`">
+        <table :class="{'vue-ui-table-heatmap': true}" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor};`">
             <caption>
                 <slot name="caption"></slot>
             </caption>
     
             <thead>
-                <tr role="row" :style="`background:${tableConfig.table.head.backgroundColor};color:${tableConfig.table.head.color}`">
-                    <th role="cell" v-for="(cell, i) in tableConfig.table.head.values">
+                <tr role="row" :style="`background:${FINAL_CONFIG.table.head.backgroundColor};color:${FINAL_CONFIG.table.head.color}`">
+                    <th role="cell" v-for="(cell, i) in FINAL_CONFIG.table.head.values">
                         <slot name="head" v-bind="{ value: cell, rowIndex: i, type: typeof cell, isResponsive }"></slot>
                     </th>
                 </tr>
@@ -230,11 +231,11 @@ defineExpose({
                     <td 
                         role="cell" 
                         v-for="(cell, j) in row.displayValues"
-                        :data-cell="tableConfig.table.head.values[j]"
+                        :data-cell="FINAL_CONFIG.table.head.values[j]"
                     >
                         <template v-if="row.color && j === 0">
                             <div style="display:flex; flex-direction: row; gap:2px; align-items:center;">
-                                <svg :height="tableConfig.style.shapeSize" :width="tableConfig.style.shapeSize" v-if="row.color" viewBox="0 0 20 20" style="background: none;overflow: visible">
+                                <svg :height="FINAL_CONFIG.style.shapeSize" :width="FINAL_CONFIG.style.shapeSize" v-if="row.color" viewBox="0 0 20 20" style="background: none;overflow: visible">
                                     <Shape
                                         :plot="{ x: 10, y: 10 }"
                                         :color="row.color"
@@ -250,13 +251,13 @@ defineExpose({
                             <slot v-if="j > 0" name="cell" v-bind="{ value: cell, rowIndex: i, colIndex: j, type: typeof cell, isResponsive, color: row.colors[j], textColor: adaptColorToBackground(row.colors[j]) }"></slot>
                         </template>
                     </td>
-                    <td role="cell" data-cell="sum" v-if="tableConfig.table.showSum">
+                    <td role="cell" data-cell="sum" v-if="FINAL_CONFIG.table.showSum">
                         <slot name="sum" v-bind="{ value: row.sum, rowIndex: i, isResponsive }"></slot>
                     </td>
-                    <td role="cell" data-cell="average" v-if="tableConfig.table.showAverage">
+                    <td role="cell" data-cell="average" v-if="FINAL_CONFIG.table.showAverage">
                         <slot name="average" v-bind="{ value: row.average, rowIndex: i, isResponsive }"></slot>
                     </td>
-                    <td role="cell" data-cell="median" v-if="tableConfig.table.showMedian">
+                    <td role="cell" data-cell="median" v-if="FINAL_CONFIG.table.showMedian">
                         <slot name="median" v-bind="{ value: row.median, rowIndex: i, isResponsive }"></slot>
                     </td>
                 </tr>

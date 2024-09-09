@@ -1,32 +1,32 @@
 <template>
-    <div class="vue-ui-table-main" :style="`font-family: ${tableConfig.fontFamily}`">
+    <div class="vue-ui-table-main" :style="`font-family: ${FINAL_CONFIG.fontFamily}`">
         <div class="vue-ui-table-export-hub">
-            <button @click="isExportRequest = !isExportRequest" v-html="icons.export" :style="`background:${tableConfig.style.exportMenu.backgroundColor};color:${tableConfig.style.exportMenu.color}`"/>
-            <div class="vue-ui-table-export-hub-dropdown" :data-is-open="isExportRequest || 'false'" :style="`background:${tableConfig.style.exportMenu.backgroundColor};color:${tableConfig.style.exportMenu.color}`">
+            <button @click="isExportRequest = !isExportRequest" v-html="icons.export" :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color}`"/>
+            <div class="vue-ui-table-export-hub-dropdown" :data-is-open="isExportRequest || 'false'" :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color}`">
                 <b class="vue-ui-table-export-hub-title">
                     Export
                 </b>
-                <button class="close-dropdown" @click="isExportRequest = false" :style="`background:${tableConfig.style.closeButtons.backgroundColor};color:${tableConfig.style.closeButtons.color};border-radius:${tableConfig.style.closeButtons.borderRadius}`">
+                <button class="close-dropdown" @click="isExportRequest = false" :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
                     ✖
                 </button>
                 <div class="vue-ui-table-export-hub-options">
                     <div class="vue-ui-table-export-hub-option-wrapper">
                         <div class="label">
-                            {{ tableConfig.translations.exportAllLabel }} 
+                            {{ FINAL_CONFIG.translations.exportAllLabel }} 
                             ({{ bodyCopy.length }})
                         </div>
-                        <button id="exportAll" @click="createXls('all')" :style="`background:${tableConfig.style.exportMenu.buttons.backgroundColor};color:${tableConfig.style.exportMenu.buttons.color}`">
+                        <button id="exportAll" @click="createXls('all')" :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color}`">
                             <div v-html="icons.fileDownload"/>
-                            <span>{{ tableConfig.translations.exportAllButton }}</span>
+                            <span>{{ FINAL_CONFIG.translations.exportAllButton }}</span>
                         </button>
                     </div>
                     <div class="vue-ui-table-export-hub-option-wrapper">
                         <div class="label">
-                            {{ tableConfig.translations.exportPageLabel }}
+                            {{ FINAL_CONFIG.translations.exportPageLabel }}
                         </div>
-                        <button id="exportPage" @click="createXls('page')" :style="`background:${tableConfig.style.exportMenu.buttons.backgroundColor};color:${tableConfig.style.exportMenu.buttons.color}`">
+                        <button id="exportPage" @click="createXls('page')" :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color}`">
                             <div v-html="icons.fileDownload"/>
-                            <span>{{ tableConfig.translations.exportPageButton }}</span>
+                            <span>{{ FINAL_CONFIG.translations.exportPageButton }}</span>
                         </button>
                     </div>
                 </div>
@@ -34,7 +34,7 @@
         </div>
         <div 
             class="vue-ui-table__wrapper" 
-            :style="`max-height:${tableConfig.maxHeight}px`" 
+            :style="`max-height:${FINAL_CONFIG.maxHeight}px`" 
             ref="tableWrapper"
         >  
             <table class="vue-ui-table">
@@ -46,7 +46,7 @@
                         <th 
                             v-for="(th,i) in tableHead" 
                             :key="`thead_${i}`" 
-                            :style="`overflow: visible;background:${tableConfig.style.th.backgroundColor};color:${tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
+                            :style="`overflow: visible;background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
                             :class="{'th-has-nan': hasNaN[i]}"
                         >
                             <span v-if="hasNumericTypes && ([constants.TEXT, constants.DATE].includes(th.type) || th.isPercentage)">{{ th.name }} 
@@ -65,7 +65,7 @@
                                 v-for="(th,i) in tableHead" 
                                 :key="`thead_${i}`"
                                 :class="{'th-numeric': true, 'th-has-nan': hasNaN[i]}"
-                                :style="`background:${tableConfig.style.th.backgroundColor};color:${tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
+                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
                             >
                                 <span 
                                     v-if="th.sum && !hasNaN[i]" 
@@ -95,7 +95,7 @@
                                 v-for="(th,i) in tableHead" 
                                 :key="`thead_${i}`"
                                 :class="{'th-numeric': true, 'th-has-nan': hasNaN[i]}"
-                                :style="`background:${tableConfig.style.th.backgroundColor};color:${tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
+                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
                             >
                                 <span v-if="th.average && !hasNaN[i]">
                                     ~ {{ th.prefix }} 
@@ -112,7 +112,7 @@
                                 v-for="(th,i) in tableHead" 
                                 :key="`thead_${i}`"
                                 :class="{'th-has-nan': hasNaN[i]}"
-                                :style="`background:${tableConfig.style.th.backgroundColor};color:${tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
+                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
                             >
                                 <div class="th-filter">
                                     <!-- DATE -->
@@ -121,19 +121,19 @@
                                             <div class="date-wrapper--inputs">
                                                 <div class="date-fieldset">
                                                     <label :for="`from_${i}`">
-                                                        {{ tableConfig.translations.from }}
+                                                        {{ FINAL_CONFIG.translations.from }}
                                                     </label>
                                                     <input 
                                                         :id="`from_${i}`" 
                                                         type="date" 
                                                         v-model="dates[i].from" 
                                                         @input="filterBody(); setFilterDatesIndexes(i)"
-                                                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
+                                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
                                                     >
                                                 </div>
                                                 <div class="date-fieldset">
                                                     <label :for="`to_${i}`">
-                                                        {{ tableConfig.translations.to }}
+                                                        {{ FINAL_CONFIG.translations.to }}
                                                     </label>
                                                     <input 
                                                         :id="`to_${i}`" 
@@ -141,7 +141,7 @@
                                                         v-model="dates[i].to" 
                                                         @input="filterBody(); 
                                                         setFilterDatesIndexes(i)"
-                                                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
+                                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
                                                     >
                                                 </div>
                                             </div>
@@ -150,7 +150,7 @@
                                                     v-if="th.isSort" 
                                                     @click="sortTh(i, $event)" 
                                                     :class="{'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i])}"
-                                                    :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : tableConfig.style.pagination.buttons.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : tableConfig.style.pagination.buttons.color}`"
+                                                    :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.pagination.buttons.color}`"
                                                 >
                                                     <span 
                                                         v-if="sorts[i] === constants.ASC" 
@@ -176,18 +176,18 @@
                                     <!-- SEARCH -->
                                     <input
                                         v-if="th.isSearch"
-                                        :placeholder="tableConfig.translations.inputPlaceholder"
+                                        :placeholder="FINAL_CONFIG.translations.inputPlaceholder"
                                         v-model="searches[i]"
                                         @input="debounce(filterBody, 400)"
                                         :name="`search_${i}`"
-                                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
+                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
                                     >
                                     <!-- SORT -->
                                     <button 
                                         v-if="!hasNaN[i] && th.isSort && th.type !== constants.DATE"
                                         @click="sortTh(i, $event)"
                                         :class="{'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i])}"
-                                        :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : tableConfig.style.pagination.buttons.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : tableConfig.style.pagination.buttons.color}`"
+                                        :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.pagination.buttons.color}`"
                                     >
                                         <span 
                                             v-if="sorts[i] === constants.ASC" 
@@ -206,7 +206,7 @@
                                         @click="toggleMultiselect(i, th, $event)" 
                                         v-html="icons.filter"
                                         :class="{'th-button-active': multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length }"
-                                        :style="`background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : tableConfig.style.pagination.buttons.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : tableConfig.style.pagination.buttons.color}`"
+                                        :style="`background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.pagination.buttons.color}`"
                                     />
 
                                     <!-- SHOW CHART -->
@@ -215,7 +215,7 @@
                                         @click="showChart = !showChart"
                                         v-html="icons.chart"
                                         :class="{'th-button-active': showChart }"
-                                        :style="`background:${showChart ? '' : tableConfig.style.pagination.buttons.backgroundColor};color:${showChart ? '' : tableConfig.style.pagination.buttons.color}`"
+                                        :style="`background:${showChart ? '' : FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${showChart ? '' : FINAL_CONFIG.style.pagination.buttons.color}`"
                                     />
 
                                     <div v-if="th.rangeFilter && rangeFilters[i] && !hasNaN[i]" class="th-range-filter">
@@ -227,7 +227,7 @@
                                             :min="immutableRangeFilters[i].min" 
                                             v-model.number="rangeFilters[i].min"
                                             @input="debounce(filterBody, 400)"
-                                            :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
+                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
                                         >
                                         <input 
                                             type="number" 
@@ -236,7 +236,7 @@
                                             :min="immutableRangeFilters[i].min" 
                                             v-model.number="rangeFilters[i].max"
                                             @input="debounce(filterBody, 400)" 
-                                            :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
+                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
                                         >
                                         <label :for="`rangeMax${i}`"><span style="color:grey">ᒪ</span> max <span style="color:grey">ᒧ</span></label>
                                     </div>
@@ -257,9 +257,9 @@
                                         v-if="th.isMultiselect"
                                         data-is-open="false"
                                         :id="`th_dropdown_${i}`"
-                                        :style="`background:${tableConfig.style.dropdowns.backgroundColor};color:${tableConfig.style.dropdowns.color}`"
+                                        :style="`background:${FINAL_CONFIG.style.dropdowns.backgroundColor};color:${FINAL_CONFIG.style.dropdowns.color}`"
                                     >
-                                        <button class="close-dropdown" @click="toggleMultiselect(i, th, $event)" :style="`background:${tableConfig.style.closeButtons.backgroundColor};color:${tableConfig.style.closeButtons.color}`">
+                                        <button class="close-dropdown" @click="toggleMultiselect(i, th, $event)" :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color}`">
                                             ✖
                                         </button>
                                         <span 
@@ -272,11 +272,11 @@
                                             :style="`opacity:${isDropdownOptionSelected(option, i) ? 1 : 0.5}`"
                                             tabindex="0"
                                         >
-                                            <span v-if="isDropdownOptionSelected(option, i)" :style="`color:${tableConfig.style.dropdowns.icons.selected.color};margin-right:5px`" class="th-icon-green">
-                                                {{ tableConfig.style.dropdowns.icons.selected.unicode }}
+                                            <span v-if="isDropdownOptionSelected(option, i)" :style="`color:${FINAL_CONFIG.style.dropdowns.icons.selected.color};margin-right:5px`" class="th-icon-green">
+                                                {{ FINAL_CONFIG.style.dropdowns.icons.selected.unicode }}
                                             </span>
-                                            <span v-else :style="`color:${tableConfig.style.dropdowns.icons.unselected.color};margin-right:5px`" class="th-icon-red">
-                                                {{ tableConfig.style.dropdowns.icons.unselected.unicode }}
+                                            <span v-else :style="`color:${FINAL_CONFIG.style.dropdowns.icons.unselected.color};margin-right:5px`" class="th-icon-red">
+                                                {{ FINAL_CONFIG.style.dropdowns.icons.unselected.unicode }}
                                             </span>
                                             <span>
                                                 {{ option }}
@@ -295,7 +295,7 @@
                             v-for="(colSelector, i) in tableHead" 
                             :key="`col_selector_${i}`"
                             :class="{'vue-ui-table-col-selector': !hasNaN[i], 'th-has-nan': hasNaN[i] }"
-                            :style="`background:${i === selectedColumn && !hasNaN[i] ? tableConfig.style.th.selected.backgroundColor : tableConfig.style.th.backgroundColor};color:${i === selectedColumn && !hasNaN[i] ? tableConfig.style.th.selected.color : tableConfig.style.th.color};outline:${tableConfig.style.th.outline}`"
+                            :style="`background:${i === selectedColumn && !hasNaN[i] ? FINAL_CONFIG.style.th.selected.backgroundColor : FINAL_CONFIG.style.th.backgroundColor};color:${i === selectedColumn && !hasNaN[i] ? FINAL_CONFIG.style.th.selected.color : FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
                         >
                             <div
                                 v-if="!hasNaN[i]"
@@ -311,7 +311,7 @@
 
                 <!-- TABLE BODY -->
                 <tbody @click="closeAllDropdowns" @keydown="navigateCell($event)">
-                    <tr v-for="(tr, i) in visibleRows" :key="`tbody_${i}`" :data-row="i % 2 === 0 ? 'odd' : 'even'" :class="`tr_${uid}`" :style="`${i % 2 === 0 ? `background:${tableConfig.style.rows.odd.backgroundColor};color:${tableConfig.style.rows.odd.color}` : `background:${tableConfig.style.rows.even.backgroundColor};color:${tableConfig.style.rows.even.color}`}`">
+                    <tr v-for="(tr, i) in visibleRows" :key="`tbody_${i}`" :data-row="i % 2 === 0 ? 'odd' : 'even'" :class="`tr_${uid}`" :style="`${i % 2 === 0 ? `background:${FINAL_CONFIG.style.rows.odd.backgroundColor};color:${FINAL_CONFIG.style.rows.odd.color}` : `background:${FINAL_CONFIG.style.rows.even.backgroundColor};color:${FINAL_CONFIG.style.rows.even.color}`}`">
                         <td class="vue-ui-table-td-iteration" :data-row="i % 2 === 0 ? 'odd' : 'even'">{{ tr.absoluteIndex + 1 }}</td>
                         <td 
                             :data-row="i % 2 === 0 ? 'odd' : 'even'"
@@ -394,7 +394,7 @@
 
         <!-- INFO BAR (active if numeric cells are selected) -->
          <div 
-            :class="{'td-selector-info': true, 'td-selector-info--active': currentSelectionSpan.col !== undefined && currentSelectionSpan.rows.length}" :style="`background:${tableConfig.style.infoBar.backgroundColor};color:${tableConfig.style.infoBar.color}`"
+            :class="{'td-selector-info': true, 'td-selector-info--active': currentSelectionSpan.col !== undefined && currentSelectionSpan.rows.length}" :style="`background:${FINAL_CONFIG.style.infoBar.backgroundColor};color:${FINAL_CONFIG.style.infoBar.color}`"
         >
             <template v-if="currentSelectionSpan.col !== undefined && currentSelectionSpan.rows.length">
                 <div v-html="icons.table" class="td-selector-icon"/>
@@ -409,12 +409,12 @@
 
                     <!-- NB OF SELECTED CELLS -->
                     <span style="margin-left:12px">
-                        {{ tableConfig.translations.nb }} : <b class="format-num">{{ currentSelectionSpan.rows.length }}</b>
+                        {{ FINAL_CONFIG.translations.nb }} : <b class="format-num">{{ currentSelectionSpan.rows.length }}</b>
                     </span>
 
                     <!-- SUM OF SELECTED CELLS -->
                     <span style="margin-left: 12px">
-                        {{ tableConfig.translations.sum }} : 
+                        {{ FINAL_CONFIG.translations.sum }} : 
                         <b class="format-num" v-if="dataset.header[currentSelectionSpan.col].isPercentage">
                             {{selectedCellsCalculations.sumPercentage }}
                         </b>
@@ -428,7 +428,7 @@
 
                     <!-- AVERAGE OF SELECTED CELLS -->
                     <span style="margin-left: 12px">
-                        {{ tableConfig.translations.average }} : 
+                        {{ FINAL_CONFIG.translations.average }} : 
                         <b v-if="dataset.header[currentSelectionSpan.col].isPercentage" class="format-num">
                             {{ selectedCellsCalculations.averagePercentage }}
                         </b>
@@ -443,7 +443,7 @@
                 <button 
                     @click="resetSelection"
                     class="td-selector-info-reset"
-                    :style="`background:${tableConfig.style.closeButtons.backgroundColor};color:${tableConfig.style.closeButtons.color};border-radius:${tableConfig.style.closeButtons.borderRadius}`"
+                    :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`"
                 >
                     ✖
                 </button>
@@ -452,14 +452,14 @@
 
         <!-- PAGINATOR -->
         <div class="vue-ui-table-paginator format-num" v-if="bodyCopy.length > 10">
-            {{ tableConfig.translations.totalRows }} : {{ dataset.body.length }} |  
-            {{ tableConfig.translations.paginatorLabel }} :
+            {{ FINAL_CONFIG.translations.totalRows }} : {{ dataset.body.length }} |  
+            {{ FINAL_CONFIG.translations.paginatorLabel }} :
             <select 
                 id="paginatorSelector" 
                 v-model.number="itemsPerPage" 
                 v-if="bodyCopy.length > 10" 
                 @change="resetSelection"
-                :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border}`"
+                :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
             >
                 <template v-for="(option, i) in paginatorOptions">
                     <option 
@@ -472,14 +472,14 @@
             </select>
         </div>
         <div class="vue-ui-table-size-warning" v-if="itemsPerPage >= 250">
-            <span v-html="icons.warning"/>{{ tableConfig.translations.sizeWarning }}
+            <span v-html="icons.warning"/>{{ FINAL_CONFIG.translations.sizeWarning }}
         </div>
 
         <!-- PAGINATION -->
         <div 
             class="vue-ui-table-navigation-indicator" 
             v-if="pages.length > 1 && pages.length <= 10" 
-            :style="`background:${tableConfig.style.pagination.navigationIndicator.backgroundColor};width:calc(${(currentPage / (pages.length - 1)) * 100}%)`"
+            :style="`background:${FINAL_CONFIG.style.pagination.navigationIndicator.backgroundColor};width:calc(${(currentPage / (pages.length - 1)) * 100}%)`"
         />
         <div class="vue-ui-table-pagination format-num" v-if="pages.length > 1">
             <!-- PREVIOUS PAGE -->
@@ -488,7 +488,7 @@
                 @click.stop="navigate('previous')" 
                 v-html="icons.chevronLeft"
                 :disabled="currentPage === 0"
-                :style="`background:${tableConfig.style.pagination.buttons.backgroundColor};color:${tableConfig.style.pagination.buttons.color};opacity:${currentPage === 0 ? tableConfig.style.pagination.buttons.opacityDisabled : 1}`"
+                :style="`background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
             />
             <template v-if="pages.length > 3">
                 <!-- FIRST PAGE -->
@@ -496,14 +496,14 @@
                     class="vue-ui-table-navigation" 
                     @click.stop="navigate(1)" 
                     :disabled="currentPage === 0"
-                    :style="`background:${tableConfig.style.pagination.buttons.backgroundColor};color:${tableConfig.style.pagination.buttons.color};opacity:${currentPage === 0 ? tableConfig.style.pagination.buttons.opacityDisabled : 1}`"
+                    :style="`background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
                 >
                     1
                 </button>
                 <!-- PAGE SCROLLER -->
                 <div v-if="pages.length > 10" class="vue-ui-table-page-scroller-wrapper">
                     <label for="pageScroller" style="font-size: 14px">
-                        {{ tableConfig.translations.page }} 
+                        {{ FINAL_CONFIG.translations.page }} 
                         {{ currentPage + 1 }} / {{ pages.length }}
                     </label>
                     <input
@@ -515,11 +515,11 @@
                         :max="pages.length-1" 
                         @input="updateCurrentPage($event)" 
                         :value="currentPage"
-                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border};accent-color:${tableConfig.style.inputs.accentColor}`"
+                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`"
                     >
                 </div>
                 <span v-else>
-                    {{ tableConfig.translations.page }} 
+                    {{ FINAL_CONFIG.translations.page }} 
                     {{ currentPage + 1 }} / {{ pages.length }}
                 </span>
                 <!-- LAST PAGE -->
@@ -527,13 +527,13 @@
                     class="vue-ui-table-navigation" 
                     @click.stop="navigate(pages.length)" 
                     :disabled="currentPage === pages.length - 1"
-                    :style="`background:${tableConfig.style.pagination.buttons.backgroundColor};color:${tableConfig.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? tableConfig.style.pagination.buttons.opacityDisabled : 1}`"
+                    :style="`background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
                 >
                     {{ pages.length }}
                 </button>
             </template>
             <template v-else>
-                {{ tableConfig.translations.page }} 
+                {{ FINAL_CONFIG.translations.page }} 
                 {{ currentPage + 1 }} / {{ pages.length }}
             </template>
             <!-- NEXT PAGE -->
@@ -542,16 +542,16 @@
                 @click.stop="navigate('next')" 
                 v-html="icons.chevronRight"
                 :disabled="currentPage === pages.length -1"
-                :style="`background:${tableConfig.style.pagination.buttons.backgroundColor};color:${tableConfig.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? tableConfig.style.pagination.buttons.opacityDisabled : 1}`"
+                :style="`background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
             />
         </div>
 
         <!-- CHART MODAL -->
         <div class="vue-ui-table-chart-modal" 
             v-if="showChart && canChart" 
-            :style="`top:${clientY}px; left:${clientX}px;background:${tableConfig.style.chart.modal.backgroundColor};color:${tableConfig.style.chart.modal.color}`"
+            :style="`top:${clientY}px; left:${clientX}px;background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`"
         >
-            <button class="close-chart-modal" @click="showChart = false" :style="`background:${tableConfig.style.closeButtons.backgroundColor};color:${tableConfig.style.closeButtons.color};border-radius:${tableConfig.style.closeButtons.borderRadius}`">
+            <button class="close-chart-modal" @click="showChart = false" :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
                 ✖
             </button>
             <div class="chart-modal-options">
@@ -560,19 +560,19 @@
                     @click="showDonutOptions = true" 
                     v-html="icons.donut" 
                     :class="{'is-active-chart' : chart.type === constants.DONUT || showDonutOptions}"
-                    :style="`background:${chart.type === constants.DONUT || showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.backgroundColor : tableConfig.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.color : tableConfig.style.chart.modal.buttons.unselected.color}`"
+                    :style="`background:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`"
                 />
                 <button 
                     @click="chart.type = constants.LINE; showDonutOptions = false" 
                     v-html="icons.chart" 
                     :class="{'is-active-chart' : chart.type === constants.LINE && !showDonutOptions}"
-                    :style="`background:${chart.type === constants.LINE && !showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.backgroundColor : tableConfig.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.color : tableConfig.style.chart.modal.buttons.unselected.color}`"
+                    :style="`background:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`"
                 />
                 <button 
                     @click="chart.type = constants.BAR; showDonutOptions = false" 
                     v-html="icons.bar" 
                     :class="{'is-active-chart' : chart.type === constants.BAR && !showDonutOptions}"
-                    :style="`background:${chart.type === constants.BAR && !showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.backgroundColor : tableConfig.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? tableConfig.style.chart.modal.buttons.selected.color : tableConfig.style.chart.modal.buttons.unselected.color}`"
+                    :style="`background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`"
                 />
             </div>
 
@@ -583,7 +583,7 @@
                         / {{ dataset.header[percentages[currentSelectionSpan.col].referenceIndex].name }}
                     </span>
                     <span v-if="chart.type === constants.DONUT && selectedDonutCategory && selectedDonutCategory.name">
-                        {{ tableConfig.translations.by }}
+                        {{ FINAL_CONFIG.translations.by }}
                         {{ selectedDonutCategory.name }}
                     </span>
                 </b>
@@ -594,10 +594,10 @@
                 ref="chartModal"
             >
                 <!-- DONUT OPTIONS -->
-                <div v-if="showDonutOptions && availableDonutCategories.length" :style="`background:${tableConfig.style.chart.modal.backgroundColor};color:${tableConfig.style.chart.modal.color}`">
+                <div v-if="showDonutOptions && availableDonutCategories.length" :style="`background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
                     <fieldset class="vue-ui-table-fieldset">
                         <legend>
-                            {{ tableConfig.translations.chooseCategoryColumn }}
+                            {{ FINAL_CONFIG.translations.chooseCategoryColumn }}
                         </legend>
                         <div class="vue-ui-table-fieldset-wrapper">
                             <template v-for="(option, i) in availableDonutCategories" :key="`donut_radio_${i}`">
@@ -608,7 +608,7 @@
                                         :id="option.name"
                                         :checked="selectedDonutCategory && option.name === selectedDonutCategory.name"
                                         @input="selectedDonutCategory = availableDonutCategories[i]"
-                                        :style="`background:${tableConfig.style.inputs.backgroundColor};color:${tableConfig.style.inputs.color};border:${tableConfig.style.inputs.border};accent-color:${tableConfig.style.inputs.accentColor}`"
+                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`"
                                     />
                                     <label 
                                         :for="option.name"
@@ -618,22 +618,22 @@
                                 </div>
                             </template>
                         </div>
-                        <button class="vue-ui-table-generate-donut" :disabled="!selectedDonutCategory" @click="applyDonutOption" :style="`background:${tableConfig.style.chart.modal.buttons.selected.backgroundColor};color:${tableConfig.style.chart.modal.buttons.selected.color}`">
+                        <button class="vue-ui-table-generate-donut" :disabled="!selectedDonutCategory" @click="applyDonutOption" :style="`background:${FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.buttons.selected.color}`">
                             <div style="margin-bottom: -3px" v-html="icons.donut"/>
-                            {{ tableConfig.translations.makeDonut }}
+                            {{ FINAL_CONFIG.translations.makeDonut }}
                         </button>
                     </fieldset>
                 </div>
 
                 <!-- BAR | LINE CHARTS -->
                 <template v-if="[constants.BAR, constants.LINE].includes(chart.type) && !showDonutOptions">
-                    <svg :viewBox="`0 0 ${chart.width} ${chart.height}`" class="vue-ui-table-chart-svg" :style="`background:${tableConfig.style.chart.layout.backgroundColor}`">
+                    <svg :viewBox="`0 0 ${chart.width} ${chart.height}`" class="vue-ui-table-chart-svg" :style="`background:${FINAL_CONFIG.style.chart.layout.backgroundColor}`">
                         <defs>
-                            <marker id="arrowhead" :markerWidth="tableConfig.style.chart.layout.progression.arrowSize" :markerHeight="tableConfig.style.chart.layout.progression.arrowSize" 
-                            refX="0" :refY="tableConfig.style.chart.layout.progression.arrowSize/2" orient="auto">
+                            <marker id="arrowhead" :markerWidth="FINAL_CONFIG.style.chart.layout.progression.arrowSize" :markerHeight="FINAL_CONFIG.style.chart.layout.progression.arrowSize" 
+                            refX="0" :refY="FINAL_CONFIG.style.chart.layout.progression.arrowSize/2" orient="auto">
                                 <polygon 
-                                    :points="`0 0, ${tableConfig.style.chart.layout.progression.arrowSize} ${tableConfig.style.chart.layout.progression.arrowSize/2}, 0 ${tableConfig.style.chart.layout.progression.arrowSize}`" 
-                                    :fill="tableConfig.style.chart.layout.progression.stroke"
+                                    :points="`0 0, ${FINAL_CONFIG.style.chart.layout.progression.arrowSize} ${FINAL_CONFIG.style.chart.layout.progression.arrowSize/2}, 0 ${FINAL_CONFIG.style.chart.layout.progression.arrowSize}`" 
+                                    :fill="FINAL_CONFIG.style.chart.layout.progression.stroke"
                                 />
                             </marker>
                         </defs>
@@ -645,8 +645,8 @@
                                 :x2="chart.width" 
                                 :y1="chartData.zero" 
                                 :y2="chartData.zero" 
-                                :stroke="tableConfig.style.chart.layout.axis.stroke" 
-                                :stroke-width="tableConfig.style.chart.layout.axis.strokeWidth" 
+                                :stroke="FINAL_CONFIG.style.chart.layout.axis.stroke" 
+                                :stroke-width="FINAL_CONFIG.style.chart.layout.axis.strokeWidth" 
                                 stroke-linecap="round"
                             />
                             <line 
@@ -654,8 +654,8 @@
                                 :x2="0" 
                                 :y1="0" 
                                 :y2="chart.height" 
-                                :stroke="tableConfig.style.chart.layout.axis.stroke" 
-                                :stroke-width="tableConfig.style.chart.layout.axis.strokeWidth" 
+                                :stroke="FINAL_CONFIG.style.chart.layout.axis.stroke" 
+                                :stroke-width="FINAL_CONFIG.style.chart.layout.axis.strokeWidth" 
                                 stroke-linecap="round"
                             />
                         </g>
@@ -697,8 +697,8 @@
                                     :y="chartData.isAllNegative ? 0 : calcRectY(plot.value, plot.y)" 
                                     :height="plot.value >= 0 ? chartData.zero - plot.y : chartData.isAllNegative ? plot.y : plot.y - chartData.zero" 
                                     :width="chartData.slot" 
-                                    :fill="tableConfig.style.chart.layout.bar.fill ? tableConfig.style.chart.layout.bar.fill : selectedPlot === i ? plot.value >= 0 ? 'url(#barGradientSelected)' : 'url(#barGradientSelectedNeg)' : plot.value >=0 ? 'url(#barGradient)' : 'url(#barGradient)'"  
-                                    :stroke="tableConfig.style.chart.layout.bar.stroke" 
+                                    :fill="FINAL_CONFIG.style.chart.layout.bar.fill ? FINAL_CONFIG.style.chart.layout.bar.fill : selectedPlot === i ? plot.value >= 0 ? 'url(#barGradientSelected)' : 'url(#barGradientSelectedNeg)' : plot.value >=0 ? 'url(#barGradient)' : 'url(#barGradient)'"  
+                                    :stroke="FINAL_CONFIG.style.chart.layout.bar.stroke" 
                                     stroke-width="1"
                                 />
                                 <foreignObject 
@@ -709,7 +709,7 @@
                                     :width="chartData.slot < 100 ? 100 : chartData.slot" 
                                     style="overflow:visible"
                                 >
-                                    <div :style="`width:100%;text-align:center;font-size:20px;color:${tableConfig.style.chart.layout.labels.color}`">
+                                    <div :style="`width:100%;text-align:center;font-size:20px;color:${FINAL_CONFIG.style.chart.layout.labels.color}`">
                                         {{ plot.prefix }} 
                                         {{ Number(plot.value.toFixed(dataset.header[currentSelectionSpan.col].decimals)).toLocaleString() }}
                                         {{ plot.suffix }}
@@ -725,8 +725,8 @@
                                     :y1="plot.y" 
                                     :x2="chartData.plots[i+1].x" 
                                     :y2="chartData.plots[i+1].y" 
-                                    :stroke-width="tableConfig.style.chart.layout.line.strokeWidth" 
-                                    :stroke="tableConfig.style.chart.layout.line.stroke"
+                                    :stroke-width="FINAL_CONFIG.style.chart.layout.line.strokeWidth" 
+                                    :stroke="FINAL_CONFIG.style.chart.layout.line.stroke"
                                 />
                                 <line 
                                     v-if="selectedPlot === i" 
@@ -734,17 +734,17 @@
                                     :y1="plot.y" 
                                     :x2="plot.x" 
                                     :y2="chart.height" 
-                                    :stroke="tableConfig.style.chart.layout.line.selector.stroke" 
-                                    :stroke-width="tableConfig.style.chart.layout.line.selector.strokeWidth" 
-                                    :stroke-dasharray="tableConfig.style.chart.layout.line.selector.strokeDasharray"
+                                    :stroke="FINAL_CONFIG.style.chart.layout.line.selector.stroke" 
+                                    :stroke-width="FINAL_CONFIG.style.chart.layout.line.selector.strokeWidth" 
+                                    :stroke-dasharray="FINAL_CONFIG.style.chart.layout.line.selector.strokeDasharray"
                                 />
                                 <circle 
                                     :cx="plot.x" 
                                     :cy="plot.y" 
-                                    :r="selectedPlot === i ? tableConfig.style.chart.layout.line.plot.radius.selected : tableConfig.style.chart.layout.line.plot.radius.unselected" 
-                                    :fill="tableConfig.style.chart.layout.line.plot.fill" 
-                                    :stroke="tableConfig.style.chart.layout.line.plot.stroke" 
-                                    :stroke-width="tableConfig.style.chart.layout.line.plot.strokeWidth"
+                                    :r="selectedPlot === i ? FINAL_CONFIG.style.chart.layout.line.plot.radius.selected : FINAL_CONFIG.style.chart.layout.line.plot.radius.unselected" 
+                                    :fill="FINAL_CONFIG.style.chart.layout.line.plot.fill" 
+                                    :stroke="FINAL_CONFIG.style.chart.layout.line.plot.stroke" 
+                                    :stroke-width="FINAL_CONFIG.style.chart.layout.line.plot.strokeWidth"
                                 />
                                 <foreignObject 
                                     v-if="selectedPlot === i" 
@@ -758,7 +758,7 @@
                                     :width="chartData.slot < 100 ? 100 : chartData.slot" 
                                     style="overflow:visible"
                                 >
-                                    <div :style="`width:100%;text-align:center;font-size:20px;color:${tableConfig.style.chart.layout.labels.color}`">
+                                    <div :style="`width:100%;text-align:center;font-size:20px;color:${FINAL_CONFIG.style.chart.layout.labels.color}`">
                                         {{ plot.prefix }} 
                                         {{ Number(plot.value.toFixed(dataset.header[currentSelectionSpan.col].decimals)).toLocaleString() }} 
                                         {{ plot.suffix }}
@@ -786,20 +786,20 @@
                             :y1="chartData.progression.y1" 
                             :x2="chartData.progression.x2" 
                             :y2="chartData.progression.y2" 
-                            :stroke="tableConfig.style.chart.layout.progression.stroke"
-                            :stroke-width="tableConfig.style.chart.layout.progression.strokeWidth" 
-                            :stroke-dasharray="tableConfig.style.chart.layout.progression.strokeDasharray"
+                            :stroke="FINAL_CONFIG.style.chart.layout.progression.stroke"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.progression.strokeWidth" 
+                            :stroke-dasharray="FINAL_CONFIG.style.chart.layout.progression.strokeDasharray"
                             marker-end="url(#arrowhead)"
                         />
                     </svg>
-                    <div v-if="chartData.plots.length >=2" class="chart-trend" :style="`color:${tableConfig.style.chart.modal.color}`">
+                    <div v-if="chartData.plots.length >=2" class="chart-trend" :style="`color:${FINAL_CONFIG.style.chart.modal.color}`">
                         <span>---</span> Trend: {{ ((chartData.progression.trend) * 100).toFixed(1) }} %
                     </div>
                 </template>
 
                 <!-- DONUT CHART -->
                 <template v-if="[constants.DONUT].includes(chart.type) && !showDonutOptions">
-                    <svg viewBox="0 0 100 100" :style="`max-width:100%; overflow: visible; padding: 0 24px;background:${tableConfig.style.chart.layout.backgroundColor}`" class="vue-ui-table-donut-chart">
+                    <svg viewBox="0 0 100 100" :style="`max-width:100%; overflow: visible; padding: 0 24px;background:${FINAL_CONFIG.style.chart.layout.backgroundColor}`" class="vue-ui-table-donut-chart">
                         <path 
                             v-for="(arc, i) in currentDonut" 
                             :key="`arc_${i}`" 
@@ -818,25 +818,25 @@
                             width="30"
                             style="overflow:visible; display:flex;align-items:center;justify-content:center"
                         >
-                            <div v-if="isArcBigEnough(arc)" class="vue-ui-table-donut-label" :style="`color:${tableConfig.style.chart.layout.labels.color}`">
+                            <div v-if="isArcBigEnough(arc)" class="vue-ui-table-donut-label" :style="`color:${FINAL_CONFIG.style.chart.layout.labels.color}`">
                                 <b>{{ displayArcPercentage(arc, currentDonut) }}</b>
                                 <span class="vue-ui-table-donut-label-name">{{ arc.name }}</span>
                             </div>
                         </foreignObject>
 
-                        <text :x="50" :y="42" text-anchor="middle" font-size="6" :fill="tableConfig.style.chart.layout.labels.color">
-                            {{ tableConfig.translations.total }}
+                        <text :x="50" :y="42" text-anchor="middle" font-size="6" :fill="FINAL_CONFIG.style.chart.layout.labels.color">
+                            {{ FINAL_CONFIG.translations.total }}
                         </text>
-                        <text :x="50" :y="48" text-anchor="middle" font-size="4" :fill="tableConfig.style.chart.layout.labels.color">
+                        <text :x="50" :y="48" text-anchor="middle" font-size="4" :fill="FINAL_CONFIG.style.chart.layout.labels.color">
                             {{ dataset.header[currentSelectionSpan.col].prefix }}
                             {{ donutHollowLabels.total }}
                             {{ dataset.header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
                             {{ dataset.header[currentSelectionSpan.col].suffix }}
                         </text>
-                        <text :x="50" :y="56" text-anchor="middle" font-size="6" :fill="tableConfig.style.chart.layout.labels.color">
-                            {{ tableConfig.translations.average }}
+                        <text :x="50" :y="56" text-anchor="middle" font-size="6" :fill="FINAL_CONFIG.style.chart.layout.labels.color">
+                            {{ FINAL_CONFIG.translations.average }}
                         </text>
-                        <text :x="50" :y="62" text-anchor="middle" font-size="4" :fill="tableConfig.style.chart.layout.labels.color">
+                        <text :x="50" :y="62" text-anchor="middle" font-size="4" :fill="FINAL_CONFIG.style.chart.layout.labels.color">
                             {{ dataset.header[currentSelectionSpan.col].prefix }}
                             {{ donutHollowLabels.average }}
                             {{ dataset.header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
@@ -850,7 +850,7 @@
                             v-for="(legendItem, i) in currentDonut.filter(c => c.value > 0)" 
                             class="vue-ui-table-donut-legend-item" 
                             :key="`donut_legend_${i}`"
-                            :style="`color:${tableConfig.style.chart.layout.labels.color}`"
+                            :style="`color:${FINAL_CONFIG.style.chart.layout.labels.color}`"
                         >
                             <span :style="`color:${legendItem.color}`">●</span>
                             <span>{{ legendItem.name }} : </span>
@@ -872,7 +872,7 @@
 
 <script>
 import { makeDonut, treeShake, palette, convertColorToHex, convertConfigColors, calcLinearProgression, createCsvContent, downloadCsv } from "../lib";
-import mainConfig from "../default_configs.json";
+import { useConfig } from "../useConfig";
 
 export default {
     name: "vue-ui-table",
@@ -894,7 +894,6 @@ export default {
         const uid = `vue-ui-table-${Math.random()}`;
         return {
             uid,
-            defaultConfig: mainConfig.vue_ui_table,
             bodyCopy: JSON.parse(JSON.stringify(this.dataset.body)).map((el, i) => {
                 return {
                     ...el,
@@ -1026,7 +1025,7 @@ export default {
             })
         },
         canChart() {
-            return this.tableConfig.useChart && this.currentSelectionSpan.rows.length > 1;
+            return this.FINAL_CONFIG.useChart && this.currentSelectionSpan.rows.length > 1;
         },
         chartData() {
             if(!this.canChart) return [];
@@ -1110,13 +1109,15 @@ export default {
                 averageRegular: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a,b) => a + b, 0) / this.currentSelectionSpan.rows.length).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString()
             }
         },
-        tableConfig() {
+        FINAL_CONFIG() {
+            const { vue_ui_table: DEFAULT_CONFIG } = useConfig();
+
             if(!Object.keys(this.config || {}).length) {
-                return this.defaultConfig
+                return DEFAULT_CONFIG
             }
 
             const reconcilied =  this.treeShake({
-                defaultConfig: this.defaultConfig,
+                defaultConfig: DEFAULT_CONFIG,
                 userConfig: this.config
             });
 
@@ -1550,11 +1551,11 @@ export default {
             Array.from(rows).forEach(tr => {
                 Array.from(tr.getElementsByTagName("td")).forEach(td => {
                     if(td.dataset.row === 'even') {
-                        td.style.background = this.tableConfig.style.rows.even.backgroundColor;
-                        td.style.color = this.tableConfig.style.rows.even.color;
+                        td.style.background = this.FINAL_CONFIG.style.rows.even.backgroundColor;
+                        td.style.color = this.FINAL_CONFIG.style.rows.even.color;
                     } else {
-                        td.style.background = this.tableConfig.style.rows.odd.backgroundColor;
-                        td.style.color = this.tableConfig.style.rows.odd.color;
+                        td.style.background = this.FINAL_CONFIG.style.rows.odd.backgroundColor;
+                        td.style.color = this.FINAL_CONFIG.style.rows.odd.color;
                     }
                 });
             });
@@ -1618,20 +1619,20 @@ export default {
                 event.currentTarget.classList.remove(this.cssClass.CELL);
                 Array.from(tr.children).forEach((td, i) => {
                     if(td.dataset.row === 'even') {
-                        td.style.background = this.tableConfig.style.rows.even.backgroundColor;
-                        td.style.color = this.tableConfig.style.rows.even.olor;
+                        td.style.background = this.FINAL_CONFIG.style.rows.even.backgroundColor;
+                        td.style.color = this.FINAL_CONFIG.style.rows.even.olor;
                     } else {
-                        td.style.background = this.tableConfig.style.rows.odd.backgroundColor;
-                        td.style.color = this.tableConfig.style.rows.odd.color;
+                        td.style.background = this.FINAL_CONFIG.style.rows.odd.backgroundColor;
+                        td.style.color = this.FINAL_CONFIG.style.rows.odd.color;
                     }
                 });
                 
                 if(event.currentTarget.dataset.row === 'even') {
-                    event.currentTarget.style.background = this.tableConfig.style.rows.even.backgroundColor;
-                    event.currentTarget.style.color = this.tableConfig.style.rows.even.color;
+                    event.currentTarget.style.background = this.FINAL_CONFIG.style.rows.even.backgroundColor;
+                    event.currentTarget.style.color = this.FINAL_CONFIG.style.rows.even.color;
                 } else {
-                    event.currentTarget.style.background = this.tableConfig.style.rows.odd.backgroundColor;
-                    event.currentTarget.style.color = this.tableConfig.style.rows.odd.color;
+                    event.currentTarget.style.background = this.FINAL_CONFIG.style.rows.odd.backgroundColor;
+                    event.currentTarget.style.color = this.FINAL_CONFIG.style.rows.odd.color;
                 }
 
             } else {
@@ -1642,20 +1643,20 @@ export default {
                 });
                 Array.from(tr.children).forEach((td, i) => {
                     if(td.dataset.row === 'even') {
-                        td.style.background = this.tableConfig.style.rows.even.selectedNeighbors.backgroundColor;
-                        td.style.color = this.tableConfig.style.rows.even.selectedNeighbors.color;
+                        td.style.background = this.FINAL_CONFIG.style.rows.even.selectedNeighbors.backgroundColor;
+                        td.style.color = this.FINAL_CONFIG.style.rows.even.selectedNeighbors.color;
                     } else {
-                        td.style.background = this.tableConfig.style.rows.odd.selectedNeighbors.backgroundColor;
-                        td.style.color = this.tableConfig.style.rows.odd.selectedNeighbors.color;
+                        td.style.background = this.FINAL_CONFIG.style.rows.odd.selectedNeighbors.backgroundColor;
+                        td.style.color = this.FINAL_CONFIG.style.rows.odd.selectedNeighbors.color;
                     }
                 });
 
                 if(event.currentTarget.dataset.row === 'odd') {
-                    event.currentTarget.style.background = this.tableConfig.style.rows.odd.selectedCell.backgroundColor;
-                    event.currentTarget.style.color = this.tableConfig.style.rows.odd.selectedCell.color;
+                    event.currentTarget.style.background = this.FINAL_CONFIG.style.rows.odd.selectedCell.backgroundColor;
+                    event.currentTarget.style.color = this.FINAL_CONFIG.style.rows.odd.selectedCell.color;
                 } else {
-                    event.currentTarget.style.background = this.tableConfig.style.rows.even.selectedCell.backgroundColor;
-                    event.currentTarget.style.color = this.tableConfig.style.rows.even.selectedCell.color;
+                    event.currentTarget.style.background = this.FINAL_CONFIG.style.rows.even.selectedCell.backgroundColor;
+                    event.currentTarget.style.color = this.FINAL_CONFIG.style.rows.even.selectedCell.color;
                 }
             }
             this.currentSelectionSpan.rows = this.currentSelectionSpan.rows.sort((a,b) => a.index - b.index); // Guarantees the chart will display plots in the same order than the visible rows

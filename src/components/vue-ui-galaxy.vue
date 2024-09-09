@@ -17,7 +17,6 @@ import {
     themePalettes,
     XMLNS
 } from "../lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue";
 import Title from "../atoms/Title.vue";
@@ -28,6 +27,9 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_galaxy: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -72,8 +74,6 @@ onMounted(() => {
 });
 
 const uid = ref(createUid());
-
-const defaultConfig = ref(mainConfig.vue_ui_galaxy);
 const galaxyChart = ref(null);
 const details = ref(null);
 const isTooltip = ref(false);
@@ -81,10 +81,10 @@ const tooltipContent = ref("");
 const selectedSerie = ref(null);
 const step = ref(0);
 
-const galaxyConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -101,19 +101,19 @@ const galaxyConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `galaxy_${uid.value}`,
-    fileName: galaxyConfig.value.style.chart.title.text || 'vue-ui-galaxy'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-galaxy'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(galaxyConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 const mutableConfig = ref({
     dataLabels: {
-        show: galaxyConfig.value.style.chart.layout.labels.dataLabels.show,
+        show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show,
     },
-    showTable: galaxyConfig.value.table.show,
-    showTooltip: galaxyConfig.value.style.chart.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 const svg = ref({
@@ -194,8 +194,8 @@ const galaxySet = computed(() => {
             proportion: serie.value / total.value,
             path: createSpiralPath({
                 points: points,
-                startX: 115 + galaxyConfig.value.style.chart.layout.arcs.offsetX,
-                startY: 90 + galaxyConfig.value.style.chart.layout.arcs.offsetY
+                startX: 115 + FINAL_CONFIG.value.style.chart.layout.arcs.offsetX,
+                startY: 90 + FINAL_CONFIG.value.style.chart.layout.arcs.offsetY
             })
         })
     }
@@ -218,39 +218,39 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
         datapoint,
         seriesIndex,
         series: immutableSet.value,
-        config: galaxyConfig.value
+        config: FINAL_CONFIG.value
     }
 
     isTooltip.value = show;
     selectedSerie.value = datapoint.id;
     let html = "";
-    const customFormat = galaxyConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if(isFunction(customFormat) && functionReturnsString(() => customFormat({
         seriesIndex,
         datapoint,
         series: immutableSet.value,
-        config: galaxyConfig.value
+        config: FINAL_CONFIG.value
     }))) {
         tooltipContent.value = customFormat({
             seriesIndex,
             datapoint,
             series: immutableSet.value,
-            config: galaxyConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
-        html += `<div data-cy="galaxy-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${galaxyConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div data-cy="galaxy-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="galaxy-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-        if(galaxyConfig.value.style.chart.tooltip.showValue) {
-            html += `<b data-cy="galaxy-tooltip-value">${ dataLabel({p: galaxyConfig.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: galaxyConfig.value.style.chart.layout.labels.dataLabels.suffix, r: galaxyConfig.value.style.chart.tooltip.roundingValue})}</b>`;
+        if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+            html += `<b data-cy="galaxy-tooltip-value">${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
         }
 
-        if(galaxyConfig.value.style.chart.tooltip.showPercentage) {
-            if(!galaxyConfig.value.style.chart.tooltip.showValue) {
-                html += `<b>${(datapoint.proportion * 100).toFixed(galaxyConfig.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+        if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+            if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+                html += `<b>${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
             } else {
-                html += `<span>(${(datapoint.proportion * 100).toFixed(galaxyConfig.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+                html += `<span>(${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
             }
         }
 
@@ -275,11 +275,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'galaxy-div-legend',
-        backgroundColor: galaxyConfig.value.style.chart.legend.backgroundColor,
-        color: galaxyConfig.value.style.chart.legend.color,
-        fontSize: galaxyConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: galaxyConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 });
 
@@ -301,49 +301,49 @@ function generateCsv() {
                 h.name
             ],[table.value.body[i]], [isNaN(table.value.body[i] / total.value) ? '-' : table.value.body[i] / total.value * 100]]
         });
-        const tableXls = [[galaxyConfig.value.style.chart.title.text],[galaxyConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: galaxyConfig.value.style.chart.title.text || "vue-ui-galaxy" })
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-galaxy" })
     });
 }
 
 const dataTable = computed(() => {
     const head = [
-        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`, dataLabel({p: galaxyConfig.value.style.chart.layout.labels.dataLabels.prefix, v: total.value, s: galaxyConfig.value.style.chart.layout.labels.dataLabels.suffix, r: galaxyConfig.value.table.td.roundingValue}),
+        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`, dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: total.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.table.td.roundingValue}),
         '100%'
     ];
 
     const body = table.value.head.map((h,i) => {
-        const label = dataLabel({p: galaxyConfig.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: galaxyConfig.value.style.chart.layout.labels.dataLabels.suffix, r: galaxyConfig.value.table.td.roundingValue});
+        const label = dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.table.td.roundingValue});
         return [
             {
                 color: h.color,
                 name: h.name
             },
             label,
-            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(galaxyConfig.value.table.td.roundingPercentage) + '%'
+            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
         ]
     });
 
     const config = {
         th: {
-            backgroundColor: galaxyConfig.value.table.th.backgroundColor,
-            color: galaxyConfig.value.table.th.color,
-            outline: galaxyConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: galaxyConfig.value.table.td.backgroundColor,
-            color: galaxyConfig.value.table.td.color,
-            outline: galaxyConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: galaxyConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-        galaxyConfig.value.table.columnNames.series,
-        galaxyConfig.value.table.columnNames.value,
-        galaxyConfig.value.table.columnNames.percentage
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.percentage
     ]
 
     return {
@@ -374,17 +374,17 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="galaxyChart" :class="`vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${galaxyConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${galaxyConfig.style.fontFamily};width:100%; text-align:center;${!galaxyConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${galaxyConfig.style.chart.backgroundColor}`" :id="`galaxy_${uid}`">
-        <div v-if="galaxyConfig.style.chart.title.text" :style="`width:100%;background:${galaxyConfig.style.chart.backgroundColor};padding-bottom:24px`">            
+    <div ref="galaxyChart" :class="`vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`galaxy_${uid}`">
+        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">            
             <Title
                 :config="{
                     title: {
                         cy: 'galaxy-div-title',
-                        ...galaxyConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'galaxy-div-subtitle',
-                        ...galaxyConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     }
                 }"
             />
@@ -394,21 +394,21 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="galaxyConfig.userOptions.show && isDataset"
-            :backgroundColor="galaxyConfig.style.chart.backgroundColor"
-            :color="galaxyConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="galaxyConfig.userOptions.buttons.tooltip && galaxyConfig.style.chart.tooltip.show"
-            :hasPdf="galaxyConfig.userOptions.buttons.pdf"
-            :hasXls="galaxyConfig.userOptions.buttons.csv"
-            :hasImg="galaxyConfig.userOptions.buttons.img"
-            :hasTable="galaxyConfig.userOptions.buttons.table"
-            :hasFullscreen="galaxyConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
-            :titles="{ ...galaxyConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="galaxyChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -437,12 +437,12 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="galaxy-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${galaxyConfig.style.chart.backgroundColor};color:${galaxyConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="galaxy-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
             
             <!-- GRADIENT -->
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / galaxyConfig.style.chart.layout.arcs.gradient.intensity" />
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / FINAL_CONFIG.style.chart.layout.arcs.gradient.intensity" />
                 </filter>
             </defs>
 
@@ -452,8 +452,8 @@ defineExpose({
                     v-if="datapoint.value"
                     :d="datapoint.path"
                     fill="none"
-                    :stroke="galaxyConfig.style.chart.backgroundColor"
-                    :stroke-width="(galaxyConfig.style.chart.layout.arcs.strokeWidth + galaxyConfig.style.chart.layout.arcs.borderWidth) * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
+                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    :stroke-width="(FINAL_CONFIG.style.chart.layout.arcs.strokeWidth + FINAL_CONFIG.style.chart.layout.arcs.borderWidth) * (selectedSerie === datapoint.id && FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.show ? FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
                     stroke-linecap="round"                    
                 />
                 <path
@@ -461,18 +461,18 @@ defineExpose({
                     :d="datapoint.path"
                     fill="none"
                     :stroke="datapoint.color"
-                    :stroke-width="galaxyConfig.style.chart.layout.arcs.strokeWidth * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.arcs.strokeWidth * (selectedSerie === datapoint.id && FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.show ? FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
                     stroke-linecap="round"
-                    :class="`${selectedSerie && selectedSerie !== datapoint.id && galaxyConfig.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                    :class="`${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
                 />
-                <g :filter="`url(#blur_${uid})`" v-if="datapoint.value && galaxyConfig.style.chart.layout.arcs.gradient.show">
+                <g :filter="`url(#blur_${uid})`" v-if="datapoint.value && FINAL_CONFIG.style.chart.layout.arcs.gradient.show">
                     <path
                         :d="datapoint.path"
                         fill="none"
-                        :stroke="galaxyConfig.style.chart.layout.arcs.gradient.color"
-                        :stroke-width="(galaxyConfig.style.chart.layout.arcs.strokeWidth / 2) * (selectedSerie === datapoint.id && galaxyConfig.style.chart.layout.arcs.hoverEffect.show ? galaxyConfig.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
+                        :stroke="FINAL_CONFIG.style.chart.layout.arcs.gradient.color"
+                        :stroke-width="(FINAL_CONFIG.style.chart.layout.arcs.strokeWidth / 2) * (selectedSerie === datapoint.id && FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.show ? FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
                         stroke-linecap="round"
-                        :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && galaxyConfig.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                        :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
                     />
                 </g>
             </g>
@@ -484,7 +484,7 @@ defineExpose({
                     :d="datapoint.path"
                     fill="none"
                     stroke="transparent"
-                    :stroke-width="galaxyConfig.style.chart.layout.arcs.strokeWidth + galaxyConfig.style.chart.layout.arcs.borderWidth"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.arcs.strokeWidth + FINAL_CONFIG.style.chart.layout.arcs.borderWidth"
                     stroke-linecap="round"
                     @mouseenter="useTooltip({
                         datapoint,
@@ -504,7 +504,7 @@ defineExpose({
             :config="{
                 type: 'galaxy',
                 style: {
-                    backgroundColor: galaxyConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     galaxy: {
                         color: '#CCCCCC'
                     }
@@ -515,16 +515,16 @@ defineExpose({
         <!-- LEGEND AS DIV -->
 
         <Legend
-            v-if="galaxyConfig.style.chart.legend.show"
+            v-if="FINAL_CONFIG.style.chart.legend.show"
             :legendSet="legendSet"
             :config="legendConfig"
             @clickMarker="({legend}) => segregate(legend)"
         >
             <template #item="{ legend, index }">
                 <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }}: {{ dataLabel({p: galaxyConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: galaxyConfig.style.chart.layout.labels.dataLabels.suffix, r: galaxyConfig.style.chart.legend.roundingValue}) }}
+                    {{ legend.name }}: {{ dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue}) }}
                     <span v-if="!segregated.includes(legend.id)">
-                        ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(galaxyConfig.style.chart.legend.roundingPercentage)}}%)
+                        ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}}%)
                     </span>
                     <span v-else>
                         ( - % )
@@ -538,15 +538,15 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="galaxyConfig.style.chart.tooltip.backgroundColor"
-            :color="galaxyConfig.style.chart.tooltip.color"
-            :borderRadius="galaxyConfig.style.chart.tooltip.borderRadius"
-            :borderColor="galaxyConfig.style.chart.tooltip.borderColor"
-            :borderWidth="galaxyConfig.style.chart.tooltip.borderWidth"
-            :fontSize="galaxyConfig.style.chart.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :parent="galaxyChart"
             :content="tooltipContent"
-            :isCustom="isFunction(galaxyConfig.style.chart.tooltip.customFormat)"
+            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -561,12 +561,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: galaxyConfig.style.chart.backgroundColor,
-                color: galaxyConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
-                backgroundColor: galaxyConfig.style.chart.backgroundColor,
-                color: galaxyConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
@@ -575,7 +575,7 @@ defineExpose({
                     :head="dataTable.head" 
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${galaxyConfig.style.chart.title.text}${galaxyConfig.style.chart.title.subtitle.text ? ` : ${galaxyConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

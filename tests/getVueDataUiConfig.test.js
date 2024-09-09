@@ -1,6 +1,6 @@
 import { expect, test, describe } from "vitest";
-import sut from '../src/default_configs.json'
 import getVueDataUiConfig from "../src/getVueDataUiConfig";
+import { useConfig } from "../src/useConfig";
 
 describe('getVueDataUiConfig', () => {
 
@@ -56,8 +56,9 @@ describe('getVueDataUiConfig', () => {
 
     components.forEach(component => {
         test(`returns vue_ui_${component} config`, () => {
+            const expectedConfig = useConfig()[`vue_ui_${component}`]
             expect(getVueDataUiConfig(`vue_ui_${component}`)).not.toBeUndefined();
-            expect(getVueDataUiConfig(`vue_ui_${component}`)).toStrictEqual(sut[`vue_ui_${component}`]);
+            expect(getVueDataUiConfig(`vue_ui_${component}`)).toStrictEqual(expectedConfig);
         })
     })
 })

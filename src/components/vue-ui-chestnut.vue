@@ -20,7 +20,6 @@ import {
     themePalettes,
     XMLNS
 } from "../lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
@@ -28,6 +27,9 @@ import BaseIcon from "../atoms/BaseIcon.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_chestnut: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -46,18 +48,17 @@ const props = defineProps({
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
-})
+});
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_chestnut);
 const chestnutChart = ref(null);
 const details = ref(null);
 const step = ref(0);
 
-const chestnutConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -74,21 +75,21 @@ const chestnutConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-chestnut_${uid.value}`,
-    fileName: chestnutConfig.value.style.chart.layout.title.text || 'vue-ui-chestnut'
+    fileName: FINAL_CONFIG.value.style.chart.layout.title.text || 'vue-ui-chestnut'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(chestnutConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 const mutableConfig = ref({
-    showTable: chestnutConfig.value.table.show,
+    showTable: FINAL_CONFIG.value.table.show,
 });
 
 const tableContainer = ref(null)
 const isResponsive = ref(false)
 const breakpoint = computed(() => {
-    return chestnutConfig.value.table.responsiveBreakpoint
+    return FINAL_CONFIG.value.table.responsiveBreakpoint
 })
 
 const svg = ref({
@@ -263,13 +264,13 @@ const roots = computed(() => {
 });
 
 const canopea = computed(() => {
-    if(chestnutConfig.value.style.chart.layout.branches.widthRatio <= 0) {
+    if(FINAL_CONFIG.value.style.chart.layout.branches.widthRatio <= 0) {
         return 0.1;
     }
-    if(chestnutConfig.value.style.chart.layout.branches.widthRatio > 1.8) {
+    if(FINAL_CONFIG.value.style.chart.layout.branches.widthRatio > 1.8) {
         return 1.8;
     }
-    return chestnutConfig.value.style.chart.layout.branches.widthRatio
+    return FINAL_CONFIG.value.style.chart.layout.branches.widthRatio
 })
 
 
@@ -334,7 +335,7 @@ function pickNut(branch) {
         selectedBranch.value = branch;
         openNut.value = makeDonut(
             { series: branch.breakdown, base: 1},
-            branch.x2 + 24 + chestnutConfig.value.style.chart.layout.nuts.offsetX,
+            branch.x2 + 24 + FINAL_CONFIG.value.style.chart.layout.nuts.offsetX,
             branch.y1 + svg.value.branchSize / 2,
             80,
             80
@@ -382,7 +383,7 @@ function placeLegendTopOrBottom() {
 }
 
 function isArcBigEnough(arc) {
-    return arc.proportion * 100 > chestnutConfig.value.style.chart.layout.nuts.selected.labels.dataLabels.hideUnderValue;
+    return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.dataLabels.hideUnderValue;
 }
 
 function observeTable() {
@@ -409,18 +410,18 @@ onMounted(() => {
 
 const table = computed(() => {
     const head = [
-        chestnutConfig.value.table.th.translations.rootName,
-        chestnutConfig.value.table.th.translations.rootValue,
-        chestnutConfig.value.table.th.translations.rootToTotal,
-        chestnutConfig.value.table.th.translations.branchName,
-        chestnutConfig.value.table.th.translations.branchValue,
-        chestnutConfig.value.table.th.translations.branchToRoot,
-        chestnutConfig.value.table.th.translations.branchToTotal,
-        chestnutConfig.value.table.th.translations.nutName,
-        chestnutConfig.value.table.th.translations.nutValue,
-        chestnutConfig.value.table.th.translations.nutToBranch,
-        chestnutConfig.value.table.th.translations.nutToRoot,
-        chestnutConfig.value.table.th.translations.nutToTotal,
+        FINAL_CONFIG.value.table.th.translations.rootName,
+        FINAL_CONFIG.value.table.th.translations.rootValue,
+        FINAL_CONFIG.value.table.th.translations.rootToTotal,
+        FINAL_CONFIG.value.table.th.translations.branchName,
+        FINAL_CONFIG.value.table.th.translations.branchValue,
+        FINAL_CONFIG.value.table.th.translations.branchToRoot,
+        FINAL_CONFIG.value.table.th.translations.branchToTotal,
+        FINAL_CONFIG.value.table.th.translations.nutName,
+        FINAL_CONFIG.value.table.th.translations.nutValue,
+        FINAL_CONFIG.value.table.th.translations.nutToBranch,
+        FINAL_CONFIG.value.table.th.translations.nutToRoot,
+        FINAL_CONFIG.value.table.th.translations.nutToTotal,
     ];
 
     const body = mutableDataset.value.flatMap((root, i) => {
@@ -436,7 +437,7 @@ const table = computed(() => {
 
 function generateCsv() {
     nextTick(() => {
-        const title = [[chestnutConfig.value.style.chart.layout.title.text], [chestnutConfig.value.style.chart.layout.title.subtitle.text], [""],["Grand total", treeTotal.value],[""]];
+        const title = [[FINAL_CONFIG.value.style.chart.layout.title.text], [FINAL_CONFIG.value.style.chart.layout.title.subtitle.text], [""],["Grand total", treeTotal.value],[""]];
         const head = table.value.head;
         const body = table.value.body.map((tr, i) => {
             return [
@@ -456,7 +457,7 @@ function generateCsv() {
         });
         const tableXls = title.concat([head]).concat(body);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: chestnutConfig.value.style.chart.layout.title.text || 'vue-ui-chestnut'})
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.layout.title.text || 'vue-ui-chestnut'})
     });
 }
 
@@ -485,25 +486,25 @@ defineExpose({
         :class="`vue-ui-chestnut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         ref="chestnutChart"
         :id="`vue-ui-chestnut_${uid}`"
-        :style="`font-family:${chestnutConfig.style.fontFamily};width:100%; text-align:center;padding-top:36px;background:${chestnutConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;padding-top:36px;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
     >
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="chestnutConfig.userOptions.show && isDataset"
-            :backgroundColor="chestnutConfig.style.chart.backgroundColor"
-            :color="chestnutConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasPdf="chestnutConfig.userOptions.buttons.pdf"
-            :hasImg="chestnutConfig.userOptions.buttons.img"
-            :hasXls="chestnutConfig.userOptions.buttons.csv"
-            :hasTable="chestnutConfig.userOptions.buttons.table"
-            :hasFullscreen="chestnutConfig.userOptions.buttons.fullscreen"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
-            :titles="{ ...chestnutConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="chestnutChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -528,35 +529,35 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${chestnutConfig.style.chart.backgroundColor};color:${chestnutConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`" >
 
             <!-- TITLE AS G -->
             <g v-if="!selectedNut">
                 <text
                     data-cy="chestnut-title"
-                    v-if="chestnutConfig.style.chart.layout.title.text"
+                    v-if="FINAL_CONFIG.style.chart.layout.title.text"
                     text-anchor="middle"
-                    :fill="chestnutConfig.style.chart.layout.title.color"
-                    :font-weight="chestnutConfig.style.chart.layout.title.bold ? 'bold' : 'normal'"
-                    :font-size="chestnutConfig.style.chart.layout.title.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.title.color"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.title.bold ? 'bold' : 'normal'"
+                    :font-size="FINAL_CONFIG.style.chart.layout.title.fontSize"
                     :x="svg.width / 2"
-                    :y="12 + chestnutConfig.style.chart.layout.title.fontSize + chestnutConfig.style.chart.layout.title.offsetY"
+                    :y="12 + FINAL_CONFIG.style.chart.layout.title.fontSize + FINAL_CONFIG.style.chart.layout.title.offsetY"
                     @click="resetTree"
                 >
-                    {{ chestnutConfig.style.chart.layout.title.text }}
+                    {{ FINAL_CONFIG.style.chart.layout.title.text }}
                 </text>
                 <text
                     data-cy="chestnut-subtitle"
-                    v-if="chestnutConfig.style.chart.layout.title.subtitle.text"
+                    v-if="FINAL_CONFIG.style.chart.layout.title.subtitle.text"
                     text-anchor="middle"
-                    :fill="chestnutConfig.style.chart.layout.title.subtitle.color"
-                    :font-weight="chestnutConfig.style.chart.layout.title.subtitle.bold ? 'bold' : 'normal'"
-                    :font-size="chestnutConfig.style.chart.layout.title.subtitle.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.title.subtitle.color"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.title.subtitle.bold ? 'bold' : 'normal'"
+                    :font-size="FINAL_CONFIG.style.chart.layout.title.subtitle.fontSize"
                     :x="svg.width / 2"
-                    :y="48 + chestnutConfig.style.chart.layout.title.subtitle.fontSize + chestnutConfig.style.chart.layout.title.subtitle.offsetY"
+                    :y="48 + FINAL_CONFIG.style.chart.layout.title.subtitle.fontSize + FINAL_CONFIG.style.chart.layout.title.subtitle.offsetY"
                     @click="resetTree"
                 >
-                    {{ chestnutConfig.style.chart.layout.title.subtitle.text }}
+                    {{ FINAL_CONFIG.style.chart.layout.title.subtitle.text }}
                 </text>
             </g>
 
@@ -567,7 +568,7 @@ defineExpose({
                     v-for="(d, i) in mutableDataset"
                     :id="`root_gradient_${uid}_${d.rootIndex}`"
                 >
-                    <stop offset="0%" :stop-color="`${shiftHue(d.color, 0.05)}${opacity[100 - chestnutConfig.style.chart.layout.roots.gradientIntensity]}`"/>
+                    <stop offset="0%" :stop-color="`${shiftHue(d.color, 0.05)}${opacity[100 - FINAL_CONFIG.style.chart.layout.roots.gradientIntensity]}`"/>
                     <stop offset="100%" :stop-color="d.color" />
                 </radialGradient>
                 <linearGradient
@@ -576,7 +577,7 @@ defineExpose({
                     :id="`branch_gradient_${uid}_${d.rootIndex}`"
                 >
                     <stop offset="0%" :stop-color="d.color" />
-                    <stop offset="100%" :stop-color="`${shiftHue(d.color, 0.02)}${opacity[100 - chestnutConfig.style.chart.layout.branches.gradientIntensity]}`"/>
+                    <stop offset="100%" :stop-color="`${shiftHue(d.color, 0.02)}${opacity[100 - FINAL_CONFIG.style.chart.layout.branches.gradientIntensity]}`"/>
                 </linearGradient>
                 <!-- picked nut core gradient -->
                 <radialGradient
@@ -584,7 +585,7 @@ defineExpose({
                     :id="`nutpick_${uid}`"
                 >
                     <stop offset="0%" :stop-color="`#FFFFFF${opacity[0]}`"/>
-                    <stop offset="80%" :stop-color="`#FFFFFF${opacity[chestnutConfig.style.chart.layout.nuts.selected.gradientIntensity]}`"/>
+                    <stop offset="80%" :stop-color="`#FFFFFF${opacity[FINAL_CONFIG.style.chart.layout.nuts.selected.gradientIntensity]}`"/>
                     <stop offset="100%" :stop-color="`#FFFFFF${opacity[0]}`"/>
                 </radialGradient>
                 <radialGradient
@@ -592,7 +593,7 @@ defineExpose({
                     :id="`nut_${uid}`"
                 >
                     <stop offset="0%" :stop-color="`#FFFFFF${opacity[0]}`"/>
-                    <stop offset="80%" :stop-color="`#FFFFFF${opacity[chestnutConfig.style.chart.layout.nuts.gradientIntensity]}`"/>
+                    <stop offset="80%" :stop-color="`#FFFFFF${opacity[FINAL_CONFIG.style.chart.layout.nuts.gradientIntensity]}`"/>
                     <stop offset="100%" :stop-color="`#FFFFFF${opacity[0]}`"/>
                 </radialGradient>
                 <!-- picked nut underlayer -->
@@ -600,35 +601,35 @@ defineExpose({
                     cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
                     :id="`nut_underlayer_${uid}`"
                 >
-                    <stop offset="0%" :stop-color="`${chestnutConfig.style.chart.backgroundColor}${opacity[100]}`"/>
-                    <stop offset="80%" :stop-color="`${chestnutConfig.style.chart.backgroundColor}${opacity[60]}`"/>
-                    <stop offset="100%" :stop-color="`${chestnutConfig.style.chart.backgroundColor}${opacity[0]}`"/>
+                    <stop offset="0%" :stop-color="`${FINAL_CONFIG.style.chart.backgroundColor}${opacity[100]}`"/>
+                    <stop offset="80%" :stop-color="`${FINAL_CONFIG.style.chart.backgroundColor}${opacity[60]}`"/>
+                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.backgroundColor}${opacity[0]}`"/>
                 </radialGradient>
             </defs>
 
             <!-- GRAND TOTAL -->
-            <g v-if="chestnutConfig.style.chart.layout.grandTotal.show">
+            <g v-if="FINAL_CONFIG.style.chart.layout.grandTotal.show">
                 <text
                     :x="drawableArea.seedX"
-                    :y="32 + chestnutConfig.style.chart.layout.grandTotal.offsetY"
-                    :font-size="chestnutConfig.style.chart.layout.grandTotal.fontSize"
-                    :font-weight="chestnutConfig.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
-                    :fill="chestnutConfig.style.chart.layout.grandTotal.color"
+                    :y="32 + FINAL_CONFIG.style.chart.layout.grandTotal.offsetY"
+                    :font-size="FINAL_CONFIG.style.chart.layout.grandTotal.fontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
                     text-anchor="middle"
                     @click="resetTree"
                 >
-                    {{ chestnutConfig.style.chart.layout.grandTotal.text }}
+                    {{ FINAL_CONFIG.style.chart.layout.grandTotal.text }}
                 </text>
                 <text
                     :x="drawableArea.seedX"
-                    :y="38 + chestnutConfig.style.chart.layout.grandTotal.fontSize + chestnutConfig.style.chart.layout.grandTotal.offsetY"
-                    :font-size="chestnutConfig.style.chart.layout.grandTotal.fontSize"
-                    :font-weight="chestnutConfig.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
-                    :fill="chestnutConfig.style.chart.layout.grandTotal.color"
+                    :y="38 + FINAL_CONFIG.style.chart.layout.grandTotal.fontSize + FINAL_CONFIG.style.chart.layout.grandTotal.offsetY"
+                    :font-size="FINAL_CONFIG.style.chart.layout.grandTotal.fontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
                     text-anchor="middle"
                     @click="resetTree"
                 >
-                    {{chestnutConfig.style.chart.layout.grandTotal.prefix}} {{ treeTotal.toFixed(chestnutConfig.style.chart.layout.grandTotal.roundingValue) }} {{ chestnutConfig.style.chart.layout.grandTotal.suffix }}
+                    {{FINAL_CONFIG.style.chart.layout.grandTotal.prefix}} {{ treeTotal.toFixed(FINAL_CONFIG.style.chart.layout.grandTotal.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.grandTotal.suffix }}
                 </text>
                 
             </g>
@@ -643,7 +644,7 @@ defineExpose({
                     ${branch.x1 - 80},${branch.y1 + i} 
                     ${getRoot(branch).x + getRoot(branch).r / 2}, ${getRoot(branch).y}
                 `"
-                    :stroke="`${branch.color}${opacity[chestnutConfig.style.chart.layout.links.opacity]}`"
+                    :stroke="`${branch.color}${opacity[FINAL_CONFIG.style.chart.layout.links.opacity]}`"
                     fill="none"
                     stroke-width="2"
                     shape-rendering="cirspEdges"
@@ -658,7 +659,7 @@ defineExpose({
                 :cx="root.x" 
                 :cy="root.y" 
                 :r="root.r" 
-                :fill="chestnutConfig.style.chart.layout.roots.underlayerColor"
+                :fill="FINAL_CONFIG.style.chart.layout.roots.underlayerColor"
                 stroke="none"
                 :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
             />
@@ -668,26 +669,26 @@ defineExpose({
                 :cx="root.x" 
                 :cy="root.y" 
                 :r="root.r" 
-                :fill="chestnutConfig.style.chart.layout.roots.useGradient ? `url(#root_gradient_${uid}_${root.rootIndex})` : root.color"
-                :stroke="chestnutConfig.style.chart.layout.roots.stroke" 
-                :stroke-width="chestnutConfig.style.chart.layout.roots.strokeWidth"
+                :fill="FINAL_CONFIG.style.chart.layout.roots.useGradient ? `url(#root_gradient_${uid}_${root.rootIndex})` : root.color"
+                :stroke="FINAL_CONFIG.style.chart.layout.roots.stroke" 
+                :stroke-width="FINAL_CONFIG.style.chart.layout.roots.strokeWidth"
                 :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
                 @click="pickRoot(root)"
             />
-            <g v-if="chestnutConfig.style.chart.layout.roots.labels.show">
+            <g v-if="FINAL_CONFIG.style.chart.layout.roots.labels.show">
                 <!-- ROOT TOTAL -->
                 <text v-for="(root, i) in roots"
                     :data-cy="`chestnut-root-label-${i}`"
                     :x="root.x"
-                    :y="root.y + chestnutConfig.style.chart.layout.roots.labels.fontSize / 2.6"
+                    :y="root.y + FINAL_CONFIG.style.chart.layout.roots.labels.fontSize / 2.6"
                     text-anchor="middle"
-                    :font-size="chestnutConfig.style.chart.layout.roots.labels.fontSize"
-                    :fill="chestnutConfig.style.chart.layout.roots.labels.adaptColorToBackground ? adaptColorToBackground(root.color) : chestnutConfig.style.chart.layout.roots.labels.color"
+                    :font-size="FINAL_CONFIG.style.chart.layout.roots.labels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.roots.labels.adaptColorToBackground ? adaptColorToBackground(root.color) : FINAL_CONFIG.style.chart.layout.roots.labels.color"
                     font-weight="bold"
                     :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
                     @click="pickRoot(root)"
                 >
-                    {{ chestnutConfig.style.chart.layout.roots.labels.prefix }} {{ root.total.toFixed(chestnutConfig.style.chart.layout.roots.labels.roundingValue) }} {{ chestnutConfig.style.chart.layout.roots.labels.suffix }}
+                    {{ FINAL_CONFIG.style.chart.layout.roots.labels.prefix }} {{ root.total.toFixed(FINAL_CONFIG.style.chart.layout.roots.labels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.roots.labels.suffix }}
                 </text>
                 <!-- ROOT NAME LABEL -->
                 <g v-for="root in roots"> 
@@ -696,9 +697,9 @@ defineExpose({
                             :x="root.x"
                             :y="root.y + root.r + 24"
                             text-anchor="middle"
-                            :fill="chestnutConfig.style.chart.layout.roots.labels.name.color"
-                            :font-size="chestnutConfig.style.chart.layout.roots.labels.name.fontSize"
-                            :font-weight="chestnutConfig.style.chart.layout.roots.labels.name.bold ? 'bold' : 'normal'"
+                            :fill="FINAL_CONFIG.style.chart.layout.roots.labels.name.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.roots.labels.name.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.roots.labels.name.bold ? 'bold' : 'normal'"
                             @click="resetTree"
                         >
                             {{ root.name }}
@@ -714,8 +715,8 @@ defineExpose({
                 :y="branch.y1"
                 :height="svg.branchSize"
                 :width="branch.x2 - branch.x1"
-                :fill="chestnutConfig.style.chart.layout.branches.underlayerColor"
-                :rx="chestnutConfig.style.chart.layout.branches.borderRadius"
+                :fill="FINAL_CONFIG.style.chart.layout.branches.underlayerColor"
+                :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
                 stroke="none"
                 :style="`opacity:${isFocused(branch) ? 1 : 0.05}`"
                 @click="pickBranch(branch)"
@@ -727,28 +728,28 @@ defineExpose({
                 :y="branch.y1"
                 :height="svg.branchSize"
                 :width="branch.x2 - branch.x1"
-                :fill="chestnutConfig.style.chart.layout.branches.useGradient ? `url(#branch_gradient_${uid}_${branch.rootIndex})` : branch.color"
-                :rx="chestnutConfig.style.chart.layout.branches.borderRadius"
-                :stroke="chestnutConfig.style.chart.layout.branches.stroke"
-                :stroke-width="chestnutConfig.style.chart.layout.branches.strokeWidth"
+                :fill="FINAL_CONFIG.style.chart.layout.branches.useGradient ? `url(#branch_gradient_${uid}_${branch.rootIndex})` : branch.color"
+                :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
+                :stroke="FINAL_CONFIG.style.chart.layout.branches.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.layout.branches.strokeWidth"
                 :style="`cursor:pointer; opacity:${isFocused(branch) ? 1 : 0.05}`"
                 @click="pickBranch(branch)"
             />
-            <g v-if="chestnutConfig.style.chart.layout.branches.labels.dataLabels.show">
+            <g v-if="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.show">
                 <g v-for="branch in branches">
                     <!-- BRANCH TOTAL -->
                     <text
-                        v-if="branch.proportionToRoot * 100 > chestnutConfig.style.chart.layout.branches.labels.dataLabels.hideUnderValue"    
+                        v-if="branch.proportionToRoot * 100 > FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.hideUnderValue"    
                         :x="branch.x1 + 6"
                         :y="branch.y1 + svg.branchSize / 1.5"
                         text-anchor="start"
                         :fill="adaptColorToBackground(branch.color)"
-                        :font-size="chestnutConfig.style.chart.layout.branches.labels.dataLabels.fontSize"
+                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
                         font-weight="bold"
                         :style="`cursor:pointer; opacity:${isFocused(branch) ? 1 : 0.05}`"
                         @click="pickBranch(branch)"
                     >
-                        {{ chestnutConfig.style.chart.layout.branches.labels.dataLabels.prefix }} {{ branch.value.toFixed(chestnutConfig.style.chart.layout.branches.labels.dataLabels.roundingValue) }} {{ chestnutConfig.style.chart.layout.branches.labels.dataLabels.suffix }}
+                        {{ FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix }} {{ branch.value.toFixed(FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix }}
                     </text>
                 </g>
 
@@ -760,7 +761,7 @@ defineExpose({
                 <path 
                     v-for="(arc, i) in makeDonut(
                         { series: branch.breakdown, base:1 },
-                        branch.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX, 
+                        branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX, 
                         branch.y1 + svg.branchSize / 2,
                         svg.branchSize / 3,
                         svg.branchSize / 3
@@ -775,18 +776,18 @@ defineExpose({
                 <!-- core -->
                 <circle
                     v-for="branch in branches"
-                    :cx="branch.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
+                    :cx="branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="branch.y1 + svg.branchSize / 2"
                     :r="6"
-                    :fill="chestnutConfig.style.chart.backgroundColor"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
                     @click="pickNut(branch)"
                     style="cursor: pointer"
                 />
                 <!-- tooltip trap -->
                 <circle
                     :data-cy="`chestnut-trap-${b}`"
-                    :fill="chestnutConfig.style.chart.layout.nuts.useGradient ? `url(#nut_${uid})` : 'transparent'"
-                    :cx="branch.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
+                    :fill="FINAL_CONFIG.style.chart.layout.nuts.useGradient ? `url(#nut_${uid})` : 'transparent'"
+                    :cx="branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="branch.y1 + svg.branchSize / 2"
                     :r="svg.branchSize / 2 + 2"
                     @click="pickNut(branch)"
@@ -794,14 +795,14 @@ defineExpose({
                 />
             </g>
 
-            <g v-if="chestnutConfig.style.chart.layout.branches.labels.show && !selectedBranch">
+            <g v-if="FINAL_CONFIG.style.chart.layout.branches.labels.show && !selectedBranch">
                 <text
                     v-for="branch in branches"
-                    :x="branch.x2 + svg.branchSize + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
+                    :x="branch.x2 + svg.branchSize + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :y="branch.y1 + svg.branchSize / 2 + 5"
-                    :font-size="chestnutConfig.style.chart.layout.branches.labels.fontSize"
-                    :font-weight="chestnutConfig.style.chart.layout.branches.labels.bold ? 'bold' : 'normal'"
-                    :fill="chestnutConfig.style.chart.layout.branches.labels.color"
+                    :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.fontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.branches.labels.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
                     text-anchor="start"
                     :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
                 >
@@ -816,8 +817,8 @@ defineExpose({
                 :x2="256 + svg.padding.left"
                 :y1="drawableArea.top"
                 :y2="drawableArea.bottom"
-                :stroke="chestnutConfig.style.chart.layout.verticalSeparator.stroke"
-                :stroke-width="chestnutConfig.style.chart.layout.verticalSeparator.strokeWidth"
+                :stroke="FINAL_CONFIG.style.chart.layout.verticalSeparator.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.layout.verticalSeparator.strokeWidth"
             />
 
             <!-- ROOT LEGEND -->
@@ -832,11 +833,11 @@ defineExpose({
             >
                 <div style="width: 100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column">
                     <div style="display: flex; align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;flex-direction:row">
-                        <div v-for="root in roots" :style="`display:flex;align-items:center;gap:3px;flex-direction:row;font-size:${chestnutConfig.style.chart.layout.legend.fontSize}px;`">
+                        <div v-for="root in roots" :style="`display:flex;align-items:center;gap:3px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`">
                             <svg viewBox="0 0 20 20" height="16" width="16">
                                 <circle cx="10" cy="10" r="10" :fill="root.color" stroke="none"/>
                             </svg>
-                            <span>{{ root.name }}:</span> <b>{{ chestnutConfig.style.chart.layout.legend.prefix }} {{ root.total.toFixed(chestnutConfig.style.chart.layout.legend.roundingValue) }} {{ chestnutConfig.style.chart.layout.legend.suffix }}</b>({{ (root.total / treeTotal * 100).toFixed(chestnutConfig.style.chart.layout.legend.roundingPercentage) }}%)
+                            <span>{{ root.name }}:</span> <b>{{ FINAL_CONFIG.style.chart.layout.legend.prefix }} {{ root.total.toFixed(FINAL_CONFIG.style.chart.layout.legend.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.legend.suffix }}</b>({{ (root.total / treeTotal * 100).toFixed(FINAL_CONFIG.style.chart.layout.legend.roundingPercentage) }}%)
                         </div>
                     </div>
                 </div>
@@ -857,11 +858,11 @@ defineExpose({
                     <div style="width: 100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column">
                         <b>{{ selectedNut.name }}</b>
                         <div style="display: flex; align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;flex-direction:row">
-                            <div v-for="(nut, i) in selectedNut.breakdown" :style="`display:flex;align-items:center;gap:6px;flex-direction:row;font-size:${chestnutConfig.style.chart.layout.legend.fontSize}px;`">
+                            <div v-for="(nut, i) in selectedNut.breakdown" :style="`display:flex;align-items:center;gap:6px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`">
                                 <svg viewBox="0 0 20 20" height="16" width="16">
                                     <circle cx="10" cy="10" r="10" :fill="nut.color" stroke="none"/>
                                 </svg>
-                                <span>{{ nut.name }}: <b>{{ chestnutConfig.style.chart.layout.legend.prefix }} {{ nut.value.toFixed(chestnutConfig.style.chart.layout.nuts.selected.labels.roundingValue) }} {{ chestnutConfig.style.chart.layout.legend.suffix }}</b> ({{ (nut.proportionToBranch * 100).toFixed(chestnutConfig.style.chart.layout.nuts.selected.labels.roundingPercentage) }}%)</span>
+                                <span>{{ nut.name }}: <b>{{ FINAL_CONFIG.style.chart.layout.legend.prefix }} {{ nut.value.toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.legend.suffix }}</b> ({{ (nut.proportionToBranch * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}%)</span>
                             </div>
                         </div>
                     </div>
@@ -876,24 +877,24 @@ defineExpose({
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         fill="none"
-                        :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     />
                 </g>
                 <circle
-                    :cx="selectedNut.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
+                    :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="selectedNut.y1 + svg.branchSize / 2"
                     :r="256"
                     :fill="`url(#nut_underlayer_${uid})`"
                     @click="leaveNut"
-                    :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 />
                 <circle
-                    :cx="selectedNut.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
+                    :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="selectedNut.y1 + svg.branchSize / 2"
                     :r="118"
-                    :fill="chestnutConfig.style.chart.backgroundColor"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
                     @click="leaveNut"
-                    :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 />
                 <path 
                     v-for="arc in openNut" 
@@ -902,49 +903,49 @@ defineExpose({
                     :stroke-width="64" 
                     fill="none" 
                     @click="leaveNut" 
-                    :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 />
                 <!-- NUT PICK CORE -->
                 <circle
-                    :cx="selectedNut.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
+                    :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="selectedNut.y1 + svg.branchSize / 2"
                     :r="100"
                     :fill="`url(#nutpick_${uid})`"
                     @click="leaveNut"
-                    :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 />
                 <circle
-                    :cx="selectedNut.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
+                    :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="selectedNut.y1 + svg.branchSize / 2"
                     :r="48"
-                    :fill="chestnutConfig.style.chart.backgroundColor"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
                     @click="leaveNut"
-                    :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 />
 
                 <text
-                    :x="selectedNut.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
+                    :x="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :y="selectedNut.y1 + 8"
-                    :fill="chestnutConfig.style.chart.layout.nuts.selected.labels.core.total.color"
-                    :font-size="chestnutConfig.style.chart.layout.nuts.selected.labels.core.total.fontSize"
-                    :font-weight="chestnutConfig.style.chart.layout.nuts.selected.labels.core.total.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.color"
+                    :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.fontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.bold ? 'bold' : 'normal'"
                     text-anchor="middle"
                     @click="leaveNut"
-                    :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 >
-                    {{ chestnutConfig.translations.total }}
+                    {{ FINAL_CONFIG.translations.total }}
                 </text>
                 <text
-                    :x="selectedNut.x2 + 24 + chestnutConfig.style.chart.layout.nuts.offsetX"
+                    :x="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :y="selectedNut.y1 + 36"
-                    :fill="chestnutConfig.style.chart.layout.nuts.selected.labels.core.value.color"
-                    :font-size="chestnutConfig.style.chart.layout.nuts.selected.labels.core.value.fontSize"
-                    :font-weight="chestnutConfig.style.chart.layout.nuts.selected.labels.core.value.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.color"
+                    :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.fontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.bold ? 'bold' : 'normal'"
                     text-anchor="middle"
                     @click="leaveNut"
-                    :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 >
-                    {{ chestnutConfig.style.chart.layout.nuts.selected.labels.core.value.prefix }} {{ selectedNut.value.toFixed(chestnutConfig.style.chart.layout.nuts.selected.roundingValue) }} {{ chestnutConfig.style.chart.layout.nuts.selected.labels.core.value.suffix }}
+                    {{ FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.prefix }} {{ selectedNut.value.toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.suffix }}
                 </text>
 
                 <!-- NUT PICK DATALABELS -->
@@ -955,9 +956,9 @@ defineExpose({
                         :text-anchor="calcMarkerOffsetX(arc).anchor"
                         :y="calcMarkerOffsetY(arc)"
                         :fill="arc.color"
-                        :font-size="chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :style="`font-weight:${chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     >
                         ⬤
                     </text>
@@ -966,10 +967,10 @@ defineExpose({
                         :x="calcMarkerOffsetX(arc, true).x"
                         :text-anchor="calcMarkerOffsetX(arc, true).anchor"
                         :y="calcMarkerOffsetY(arc)"
-                        :fill="chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                        :font-size="chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :style="`font-weight:${chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     >
                         {{ selectedNut.breakdown[i].name }}
                     </text>
@@ -979,37 +980,37 @@ defineExpose({
                         v-if="isArcBigEnough(arc)"
                         :x="calcMarkerOffsetX(arc, true).x"
                         :text-anchor="calcMarkerOffsetX(arc).anchor"
-                        :y="calcMarkerOffsetY(arc) + chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :fill="chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                        :font-size="chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :style="`font-weight:${chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     >
-                        {{ (selectedNut.breakdown[i].value / selectedNut.value * 100).toFixed(chestnutConfig.style.chart.layout.nuts.selected.labels.roundingPercentage) }}% {{ chestnutConfig.translations.of }} {{ selectedNut.breakdown[i].branchName }} ({{chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.prefix}} {{ selectedNut.breakdown[i].value }} {{chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.suffix}})
+                        {{ (selectedNut.breakdown[i].value / selectedNut.value * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].branchName }} ({{FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.prefix}} {{ selectedNut.breakdown[i].value }} {{FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.suffix}})
                     </text>
                     <text
                         v-if="isArcBigEnough(arc)"
                         :x="calcMarkerOffsetX(arc, true).x"
                         :text-anchor="calcMarkerOffsetX(arc).anchor"
-                        :y="calcMarkerOffsetY(arc) + chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 2"
-                        :fill="chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                        :font-size="chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :style="`font-weight:${chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 2"
+                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     >
-                        {{ (selectedNut.breakdown[i].proportionToRoot * 100).toFixed(chestnutConfig.style.chart.layout.nuts.selected.labels.roundingPercentage) }}% {{ chestnutConfig.translations.of }} {{ selectedNut.breakdown[i].rootName }}
+                        {{ (selectedNut.breakdown[i].proportionToRoot * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].rootName }}
                     </text>
                     <text
                         v-if="isArcBigEnough(arc)"
                         :x="calcMarkerOffsetX(arc, true).x"
                         :text-anchor="calcMarkerOffsetX(arc).anchor"
-                        :y="calcMarkerOffsetY(arc) + chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 3"
-                        :fill="chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                        :font-size="chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :style="`font-weight:${chestnutConfig.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="chestnutConfig.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 3"
+                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     >
-                        {{ (selectedNut.breakdown[i].proportionToTree * 100).toFixed(chestnutConfig.style.chart.layout.nuts.selected.labels.roundingPercentage) }}% {{ chestnutConfig.translations.proportionToTree }}
+                        {{ (selectedNut.breakdown[i].proportionToTree * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.proportionToTree }}
                     </text>
                 </g>
             </g>
@@ -1022,33 +1023,33 @@ defineExpose({
                     :y="branch.y1 + svg.branchSize + 24"
                     font-weight="bold"
                     text-anchor="start"
-                    :font-size="chestnutConfig.style.chart.layout.branches.labels.dataLabels.fontSize"
-                    :fill="chestnutConfig.style.chart.layout.branches.labels.color"
+                    :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
                     @click="resetTree"
                 >
-                    {{ branch.name }}: {{ chestnutConfig.style.chart.layout.branches.labels.dataLabels.prefix }} {{ branch.value.toFixed(chestnutConfig.style.chart.layout.branches.labels.dataLabels.roundingValue) }} {{ chestnutConfig.style.chart.layout.branches.labels.dataLabels.suffix }}
+                    {{ branch.name }}: {{ FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix }} {{ branch.value.toFixed(FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix }}
                 </text>
                 <text 
                     v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
                     :x="branch.x1 + 6"
                     :y="branch.y1 + svg.branchSize + 48"
                     text-anchor="start"
-                    :font-size="chestnutConfig.style.chart.layout.branches.labels.dataLabels.fontSize"
-                    :fill="chestnutConfig.style.chart.layout.branches.labels.color"
+                    :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
                     @click="resetTree"
                 >
-                    {{ (branch.proportionToRoot * 100).toFixed(chestnutConfig.style.chart.layout.branches.labels.dataLabels.roundingPercentage) }}% {{ chestnutConfig.translations.of }} {{ branch.rootName }}
+                    {{ (branch.proportionToRoot * 100).toFixed(FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.of }} {{ branch.rootName }}
                 </text>
                 <text 
                     v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
                     :x="branch.x1 + 6"
                     :y="branch.y1 + svg.branchSize + 72"
                     text-anchor="start"
-                    :font-size="chestnutConfig.style.chart.layout.branches.labels.dataLabels.fontSize"
-                    :fill="chestnutConfig.style.chart.layout.branches.labels.color"
+                    :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
                     @click="resetTree"
                 >
-                    {{ (branch.value / treeTotal * 100).toFixed(chestnutConfig.style.chart.layout.branches.labels.dataLabels.roundingPercentage) }}% {{ chestnutConfig.translations.proportionToTree }}
+                    {{ (branch.value / treeTotal * 100).toFixed(FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.proportionToTree }}
                 </text>
         </g>
         <slot name="svg" :svg="svg"/>
@@ -1059,7 +1060,7 @@ defineExpose({
             :config="{
                 type: 'chestnut',
                 style: {
-                    backgroundColor: chestnutConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     chestnut: {
                         color: '#CCCCCC'
                     }
@@ -1072,35 +1073,35 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: chestnutConfig.style.chart.backgroundColor,
-                color: chestnutConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
-                backgroundColor: chestnutConfig.style.chart.backgroundColor,
-                color: chestnutConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
                 <div ref="tableContainer" class="vue-ui-chestnut-table">
                     <div style="padding-top:36px; position: relative">
-                        <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${chestnutConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
-                            <BaseIcon name="close" :stroke="chestnutConfig.table.th.color" :stroke-width="2" />
+                        <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                            <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div>        
                         <div style="width: 100%" :class="{'vue-ui-responsive': isResponsive}">
                             <table data-cy="chestnut-table" class="vue-ui-data-table">
-                                <caption :style="{backgroundColor: chestnutConfig.table.th.backgroundColor, color: chestnutConfig.table.th.color, outline: chestnutConfig.table.th.outline }" class="vue-ui-data-table__caption">
-                                    {{ chestnutConfig.style.chart.layout.title.text }} <span v-if="chestnutConfig.style.chart.layout.title.subtitle.text">{{  chestnutConfig.style.chart.layout.title.subtitle.text }}</span>
+                                <caption :style="{backgroundColor: FINAL_CONFIG.table.th.backgroundColor, color: FINAL_CONFIG.table.th.color, outline: FINAL_CONFIG.table.th.outline }" class="vue-ui-data-table__caption">
+                                    {{ FINAL_CONFIG.style.chart.layout.title.text }} <span v-if="FINAL_CONFIG.style.chart.layout.title.subtitle.text">{{  FINAL_CONFIG.style.chart.layout.title.subtitle.text }}</span>
                                 </caption>
                                 <thead>
-                                    <tr role="row" :style="`background:${chestnutConfig.table.th.backgroundColor};color:${chestnutConfig.table.th.color}`">
-                                        <th :style="`outline:${chestnutConfig.table.th.outline}`" v-for="th in table.head">
+                                    <tr role="row" :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color}`">
+                                        <th :style="`outline:${FINAL_CONFIG.table.th.outline}`" v-for="th in table.head">
                                             {{ th }}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(tr, i) in table.body" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${chestnutConfig.table.td.backgroundColor};color:${chestnutConfig.table.td.color}`">
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[0]">
+                                    <tr v-for="(tr, i) in table.body" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${FINAL_CONFIG.table.td.backgroundColor};color:${FINAL_CONFIG.table.td.color}`">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[0]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
                                                 </span>
@@ -1109,25 +1110,25 @@ defineExpose({
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[1]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[1]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
                                                 </span>
                                                 <span v-else>
-                                                    {{ tr.rootValue.toFixed(chestnutConfig.table.td.roundingValue) }}
+                                                    {{ tr.rootValue.toFixed(FINAL_CONFIG.table.td.roundingValue) }}
                                                 </span>                           
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[2]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[2]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
                                                 </span>
                                                 <span v-else>
-                                                    {{ (tr.rootToTotal * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                                    {{ (tr.rootToTotal * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
                                                 </span> 
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[3]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[3]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
                                                 </span>
@@ -1136,56 +1137,56 @@ defineExpose({
                                                 </span> 
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[4]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[4]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
                                                 </span>
                                                 <span v-else>
-                                                    {{ tr.branchValue.toFixed(chestnutConfig.table.td.roundingValue) }}
+                                                    {{ tr.branchValue.toFixed(FINAL_CONFIG.table.td.roundingValue) }}
                                                 </span> 
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[5]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[5]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
                                                 </span>
                                                 <span v-else>
-                                                    {{ (tr.branchToRoot * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                                    {{ (tr.branchToRoot * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[6]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[6]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
                                                 </span>
                                                 <span v-else>
-                                                    {{ (tr.branchToTotal * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                                    {{ (tr.branchToTotal * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[7]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[7]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 {{ tr.nutName }}
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[8]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[8]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ tr.nutValue.toFixed(chestnutConfig.table.td.roundingValue) }}
+                                                {{ tr.nutValue.toFixed(FINAL_CONFIG.table.td.roundingValue) }}
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[9]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[9]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ (tr.nutToBranch * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                                {{ (tr.nutToBranch * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[10]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[10]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ (tr.nutToRoot * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                                {{ (tr.nutToRoot * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${chestnutConfig.table.td.outline}`" :data-cell="table.head[11]">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[11]">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ (tr.nutToTotal * 100).toFixed(chestnutConfig.table.td.roundingPercentage) }}%
+                                                {{ (tr.nutToTotal * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
                                             </div>
                                         </td>
                                     </tr>

@@ -21,7 +21,6 @@ import {
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -33,6 +32,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_waffle: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -54,7 +56,6 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_waffle);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -64,10 +65,10 @@ const waffleChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 
-const waffleConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
 
     if (mergedConfig.theme) {
@@ -107,12 +108,12 @@ onMounted(() => {
         });
     }
 
-    if (waffleConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: waffleChart.value,
-                title: waffleConfig.value.style.chart.title.text ? chartTitle.value : null,
-                legend: waffleConfig.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -132,17 +133,17 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-waffle_${uid.value}`,
-    fileName: waffleConfig.value.style.chart.title.text || 'vue-ui-waffle'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-waffle'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(waffleConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 
 const mutableConfig = ref({
-    showTable: waffleConfig.value.table.show,
-    showTooltip: waffleConfig.value.style.chart.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 const svg = ref({
@@ -158,19 +159,19 @@ const drawingArea = ref({
 });
 
 const rectDimension = computed(() => {
-    return ((drawingArea.value.width - (waffleConfig.value.style.chart.layout.grid.size * waffleConfig.value.style.chart.layout.grid.spaceBetween )) / waffleConfig.value.style.chart.layout.grid.size);
+    return ((drawingArea.value.width - (FINAL_CONFIG.value.style.chart.layout.grid.size * FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween )) / FINAL_CONFIG.value.style.chart.layout.grid.size);
 });
 
 const rectDimensionY = computed(() => {
-    return ((drawingArea.value.height - (waffleConfig.value.style.chart.layout.grid.size * waffleConfig.value.style.chart.layout.grid.spaceBetween )) / waffleConfig.value.style.chart.layout.grid.size);
+    return ((drawingArea.value.height - (FINAL_CONFIG.value.style.chart.layout.grid.size * FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween )) / FINAL_CONFIG.value.style.chart.layout.grid.size);
 })
 
 const absoluteRectDimension = computed(() => {
-    return ((drawingArea.value.width) / waffleConfig.value.style.chart.layout.grid.size);
+    return ((drawingArea.value.width) / FINAL_CONFIG.value.style.chart.layout.grid.size);
 });
 
 const absoluteRectDimensionY = computed(() => {
-    return ((drawingArea.value.height) / waffleConfig.value.style.chart.layout.grid.size);
+    return ((drawingArea.value.height) / FINAL_CONFIG.value.style.chart.layout.grid.size);
 })
 
 function calculateProportions(numbers) {
@@ -233,7 +234,7 @@ const waffleSet = computed(() => {
                 color: serie.color,
                 value: (serie.values || []).reduce((a,b) => a + b, 0),
                 absoluteValues: serie.values || [],
-                proportion: proportions.value[i] * Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)
+                proportion: proportions.value[i] * Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2)
             }
         })
 });
@@ -248,7 +249,7 @@ const immutableSet = computed(() => {
                 color: serie.color,
                 value: (serie.values || []).reduce((a,b) => a + b, 0),
                 absoluteValues: serie.values || [],
-                proportion: immutableProportions.value[i] * Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)
+                proportion: immutableProportions.value[i] * Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2)
             }
         })
 });
@@ -259,7 +260,7 @@ function getData() {
             name: ds.name,
             color: ds.color,
             value: ds.value,
-            proportion: ds.proportion  / (Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2))
+            proportion: ds.proportion  / (Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2))
         }
     });
 }
@@ -298,20 +299,20 @@ const rects = computed(() => {
     }).map((s, i) => {
         return {
             ...s,
-            isAbsoluteFirst: i % waffleConfig.value.style.chart.layout.grid.size === 0,
+            isAbsoluteFirst: i % FINAL_CONFIG.value.style.chart.layout.grid.size === 0,
         }
     })
 });
 
 const positions = computed(() => {
     const grid = [];
-    for(let i = 0; i < waffleConfig.value.style.chart.layout.grid.size; i += 1) {
-        for(let j = 0; j < waffleConfig.value.style.chart.layout.grid.size; j += 1) {
+    for(let i = 0; i < FINAL_CONFIG.value.style.chart.layout.grid.size; i += 1) {
+        for(let j = 0; j < FINAL_CONFIG.value.style.chart.layout.grid.size; j += 1) {
             grid.push({
                 isStartOfLine: j === 0,
-                position: waffleConfig.value.style.chart.layout.grid.vertical ? i : j,
-                x: (waffleConfig.value.style.chart.layout.grid.vertical ? i : j) * (rectDimension.value + waffleConfig.value.style.chart.layout.grid.spaceBetween),
-                y: (waffleConfig.value.style.chart.layout.grid.vertical ? j : i) * (rectDimensionY.value + waffleConfig.value.style.chart.layout.grid.spaceBetween) + drawingArea.value.top,
+                position: FINAL_CONFIG.value.style.chart.layout.grid.vertical ? i : j,
+                x: (FINAL_CONFIG.value.style.chart.layout.grid.vertical ? i : j) * (rectDimension.value + FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween),
+                y: (FINAL_CONFIG.value.style.chart.layout.grid.vertical ? j : i) * (rectDimensionY.value + FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween) + drawingArea.value.top,
             })
         }
     }
@@ -324,7 +325,7 @@ const rafUp = ref(null);
 const rafDown = ref(null);
 
 function segregate(uid) {
-    if (!waffleConfig.value.useAnimation) {
+    if (!FINAL_CONFIG.value.useAnimation) {
         if(segregated.value.includes(uid)) {
             segregated.value = segregated.value.filter(s => s !== uid);
         } else if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
@@ -410,7 +411,7 @@ function segregate(uid) {
             name: w.name,
             color: w.color,
             value: w.value,
-            proportion: (w.proportion / (Math.pow(waffleConfig.value.style.chart.layout.grid.size, 2)))
+            proportion: (w.proportion / (Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2)))
         }
     }));
 }
@@ -440,11 +441,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'waffle-div-legend',
-        backgroundColor: waffleConfig.value.style.chart.legend.backgroundColor,
-        color: waffleConfig.value.style.chart.legend.color,
-        fontSize: waffleConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: waffleConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 });
 
@@ -463,37 +464,37 @@ function useTooltip(index) {
         datapoint: selected,
         seriesIndex: selected.absoluteIndex,
         series: datasetCopy.value,
-        config: waffleConfig.value
+        config: FINAL_CONFIG.value
     }
     
     isTooltip.value = true;
     selectedSerie.value = rects.value[index].serieIndex;
 
-    const customFormat = waffleConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if(isFunction(customFormat) && functionReturnsString(() => customFormat({ 
         seriesIndex: rects.value[index].absoluteIndex, 
         datapoint: selected, 
         series: datasetCopy.value, 
-        config: waffleConfig.value}))) {
+        config: FINAL_CONFIG.value}))) {
         tooltipContent.value = customFormat({ 
             seriesIndex: rects.value[index].absoluteIndex, 
             datapoint: selected, 
             series: datasetCopy.value, 
-            config: waffleConfig.value})
+            config: FINAL_CONFIG.value})
     } else {
         let html = "";
     
-        html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${waffleConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
+        html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" rx="1" fill="${selected.color}" /></svg>`;
-        if(waffleConfig.value.style.chart.tooltip.showValue) {
-            html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:waffleConfig.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s: waffleConfig.value.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.value.style.chart.tooltip.roundingValue})}</b>`;
+        if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+            html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
         }
-        if(waffleConfig.value.style.chart.tooltip.showPercentage) {
-            if(!waffleConfig.value.style.chart.tooltip.showValue) {
-                html += `<b>${(selected.value / total.value * 100).toFixed(waffleConfig.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+        if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+            if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+                html += `<b>${(selected.value / total.value * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
             } else {
-                html += `<span data-cy="waffle-tooltip-percentage">(${(selected.value / total.value * 100).toFixed(waffleConfig.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+                html += `<span data-cy="waffle-tooltip-percentage">(${(selected.value / total.value * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
             }
         }
         tooltipContent.value = html;
@@ -514,7 +515,7 @@ const table = computed(() => {
 });
 
 function getBlurFilter(index) {
-    if (waffleConfig.value.useBlurOnHover && ![null, undefined].includes(selectedSerie.value) && selectedSerie.value !== index) {
+    if (FINAL_CONFIG.value.useBlurOnHover && ![null, undefined].includes(selectedSerie.value) && selectedSerie.value !== index) {
         return `url(#blur_${uid.value})`;
     } else {
         return '';
@@ -528,17 +529,17 @@ function generateCsv() {
                 h.name
             ],[table.value.body[i]], [isNaN(table.value.body[i] / total.value) ? '-' : table.value.body[i] / total.value * 100]]
         });
-        const tableXls = [[waffleConfig.value.style.chart.title.text],[waffleConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: waffleConfig.value.style.chart.title.text || "vue-ui-waffle"})
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-waffle"})
     });
 }
 
 const dataTable = computed(() => {
     const head = [
         ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
-        dataLabel({p:waffleConfig.value.style.chart.layout.labels.dataLabels.prefix, v:total.value, s: waffleConfig.value.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.value.table.td.roundingValue}),
+        dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v:total.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.table.td.roundingValue}),
         '100%'
     ];
 
@@ -548,30 +549,30 @@ const dataTable = computed(() => {
                 color: h.color,
                 name: h.name
             },
-            dataLabel({p:waffleConfig.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s:waffleConfig.value.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.value.table.td.roundingValue }),
-            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(waffleConfig.value.table.td.roundingPercentage) + '%'
+            dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r:FINAL_CONFIG.value.table.td.roundingValue }),
+            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
         ]
     });
 
     const config = {
         th: {
-            backgroundColor: waffleConfig.value.table.th.backgroundColor,
-            color: waffleConfig.value.table.th.color,
-            outline: waffleConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: waffleConfig.value.table.td.backgroundColor,
-            color: waffleConfig.value.table.td.color,
-            outline: waffleConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
         shape: 'square',
-        breakpoint: waffleConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-        waffleConfig.value.table.columnNames.series,
-        waffleConfig.value.table.columnNames.value,
-        waffleConfig.value.table.columnNames.percentage
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.percentage
     ]
 
     return {
@@ -612,19 +613,19 @@ defineExpose({
         :class="`vue-ui-waffle ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
         ref="waffleChart" 
         :id="`vue-ui-waffle_${uid}`"
-        :style="`font-family:${waffleConfig.style.fontFamily};width:100%; text-align:center;${!waffleConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${waffleConfig.style.chart.backgroundColor};${waffleConfig.responsive ? 'height: 100%' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
     >
         <!-- TITLE AS DIV -->
-        <div ref="chartTitle" v-if="waffleConfig.style.chart.title.text" :style="`width:100%;background:${waffleConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
                         cy: 'waffle-title',
-                        ...waffleConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'waffle-subtitle',
-                        ...waffleConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     },
                 }"
             />
@@ -634,21 +635,21 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="waffleConfig.userOptions.show && isDataset"
-            :backgroundColor="waffleConfig.style.chart.backgroundColor"
-            :color="waffleConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="waffleConfig.userOptions.buttons.tooltip && waffleConfig.style.chart.tooltip.show"
-            :hasPdf="waffleConfig.userOptions.buttons.pdf"
-            :hasImg="waffleConfig.userOptions.buttons.img"
-            :hasXls="waffleConfig.userOptions.buttons.csv"
-            :hasTable="waffleConfig.userOptions.buttons.table"
-            :hasFullscreen="waffleConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...waffleConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="waffleChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -678,12 +679,12 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="waffle-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${waffleConfig.style.chart.backgroundColor};color:${waffleConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="waffle-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`" >
 
             <!-- DEFS -->
             <defs>
                 <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" v-for="(rect,i) in rects" :id="`gradient_${uid}_${i}`">
-                    <stop offset="0%" :stop-color="`${shiftHue(rect.color, 0.05)}${opacity[100 - waffleConfig.style.chart.layout.rect.gradientIntensity]}`"/>
+                    <stop offset="0%" :stop-color="`${shiftHue(rect.color, 0.05)}${opacity[100 - FINAL_CONFIG.style.chart.layout.rect.gradientIntensity]}`"/>
                     <stop offset="100%" :stop-color="rect.color" />
                 </radialGradient>
             </defs>
@@ -697,7 +698,7 @@ defineExpose({
             </defs>
 
             <!-- CUSTOM CELLS SLOTS -->
-            <template v-if="waffleConfig.useCustomCells">
+            <template v-if="FINAL_CONFIG.useCustomCells">
                 <foreignObject 
                     v-for="(position, i) in positions"
                     :x="position.x"
@@ -714,26 +715,26 @@ defineExpose({
                 <rect
                     v-for="(position, i) in positions"
                     :data-cy="`waffle-rect-underlayer-${i}`"
-                    :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
+                    :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
                     :x="position.x"
                     :y="position.y"
                     :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
                     :width="rectDimension <= 0 ? 0.0001 : rectDimension"
                     fill="white"
-                    :stroke="waffleConfig.style.chart.layout.rect.stroke"
-                    :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.rect.strokeWidth"
                     :filter="getBlurFilter(rects[i].serieIndex)"
                 />
                 <rect
                     v-for="(position, i) in positions"
-                    :rx="waffleConfig.style.chart.layout.rect.rounded ? waffleConfig.style.chart.layout.rect.rounding : 0"
+                    :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
                     :x="position.x"
                     :y="position.y"
                     :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
                     :width="rectDimension <= 0 ? 0.0001 : rectDimension"
-                    :fill="waffleConfig.style.chart.layout.rect.useGradient && waffleConfig.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
-                    :stroke="waffleConfig.style.chart.layout.rect.stroke"
-                    :stroke-width="waffleConfig.style.chart.layout.rect.strokeWidth"
+                    :fill="FINAL_CONFIG.style.chart.layout.rect.useGradient && FINAL_CONFIG.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
+                    :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.rect.strokeWidth"
                     :filter="getBlurFilter(rects[i].serieIndex)"
                 />
             </template>
@@ -741,25 +742,25 @@ defineExpose({
             <!-- DATA LABELS -->
             <template v-for="(position, i) in positions">
                 <foreignObject
-                    v-if="!isAnimating && !waffleConfig.style.chart.layout.grid.vertical && waffleConfig.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < waffleConfig.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % waffleConfig.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
-                    :x="position.x + waffleConfig.style.chart.layout.labels.captions.offsetX"
-                    :y="position.y + waffleConfig.style.chart.layout.labels.captions.offsetY"
+                    v-if="!isAnimating && !FINAL_CONFIG.style.chart.layout.grid.vertical && FINAL_CONFIG.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < FINAL_CONFIG.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % FINAL_CONFIG.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
+                    :x="position.x + FINAL_CONFIG.style.chart.layout.labels.captions.offsetX"
+                    :y="position.y + FINAL_CONFIG.style.chart.layout.labels.captions.offsetY"
                     :height="absoluteRectDimensionY <= 0 ? 0.0001 : absoluteRectDimensionY"
-                    :width="absoluteRectDimension * waffleConfig.style.chart.layout.grid.size <= 0 ? 0.0001 : absoluteRectDimension * waffleConfig.style.chart.layout.grid.size"
+                    :width="absoluteRectDimension * FINAL_CONFIG.style.chart.layout.grid.size <= 0 ? 0.0001 : absoluteRectDimension * FINAL_CONFIG.style.chart.layout.grid.size"
                     :filter="getBlurFilter(rects[i].serieIndex)"
                 >
-                    <div class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${waffleConfig.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
-                        <span v-if="waffleConfig.style.chart.layout.labels.captions.showSerieName">
-                            {{ waffleConfig.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects[i].name, length: waffleConfig.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects[i].name }}:
+                    <div class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${FINAL_CONFIG.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
+                        <span v-if="FINAL_CONFIG.style.chart.layout.labels.captions.showSerieName">
+                            {{ FINAL_CONFIG.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects[i].name, length: FINAL_CONFIG.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects[i].name }}:
                         </span>
-                        <span v-if="waffleConfig.style.chart.layout.labels.captions.showPercentage">
-                            {{ dataLabel({ v: rects[i].proportion, s: '%', r: waffleConfig.style.chart.layout.labels.captions.roundingPercentage }) }}
+                        <span v-if="FINAL_CONFIG.style.chart.layout.labels.captions.showPercentage">
+                            {{ dataLabel({ v: rects[i].proportion, s: '%', r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingPercentage }) }}
                         </span>
-                        <span v-if="waffleConfig.style.chart.layout.labels.captions.showPercentage && waffleConfig.style.chart.layout.labels.captions.showValue">
-                            ({{ dataLabel({ p: waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: rects[i].value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.style.chart.layout.labels.captions.roundingValue }) }})
+                        <span v-if="FINAL_CONFIG.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.style.chart.layout.labels.captions.showValue">
+                            ({{ dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: rects[i].value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue }) }})
                         </span>
-                        <span v-if="!waffleConfig.style.chart.layout.labels.captions.showPercentage && waffleConfig.style.chart.layout.labels.captions.showValue">
-                            {{ dataLabel({ p: waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: rects[i].value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r: waffleConfig.style.chart.layout.labels.captions.roundingValue }) }}
+                        <span v-if="!FINAL_CONFIG.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.style.chart.layout.labels.captions.showValue">
+                            {{ dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: rects[i].value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue }) }}
                         </span>
                     </div>
                 </foreignObject>
@@ -785,7 +786,7 @@ defineExpose({
             :config="{
                 type: 'waffle',
                 style: {
-                    backgroundColor: waffleConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     waffle: {
                         color: '#CCCCCC'
                     }
@@ -796,16 +797,16 @@ defineExpose({
         <!-- LEGEND AS DIV -->
         <div ref="chartLegend">        
             <Legend
-                v-if="waffleConfig.style.chart.legend.show"
+                v-if="FINAL_CONFIG.style.chart.legend.show"
                 :legendSet="legendSet"
                 :config="legendConfig"
                 @clickMarker="({legend}) => segregate(legend.uid)"
             >
                 <template #item="{ legend }">
                     <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{ dataLabel({p:waffleConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: waffleConfig.style.chart.layout.labels.dataLabels.suffix, r:waffleConfig.style.chart.legend.roundingValue, isAnimating})}}
+                        {{ legend.name }}: {{ dataLabel({p:FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r:FINAL_CONFIG.style.chart.legend.roundingValue, isAnimating})}}
                         <span v-if="!segregated.includes(legend.uid)">
-                            ({{ isNaN(legend.value / total) ? '-' : dataLabel({v: legend.value /total * 100, s: '%', r: waffleConfig.style.chart.legend.roundingPercentage, isAnimating }) }})
+                            ({{ isNaN(legend.value / total) ? '-' : dataLabel({v: legend.value /total * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage, isAnimating }) }})
                         </span>
                         <span v-else>
                             ( - % )
@@ -820,15 +821,15 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip && segregated.length < props.dataset.length"
-            :backgroundColor="waffleConfig.style.chart.tooltip.backgroundColor"
-            :color="waffleConfig.style.chart.tooltip.color"
-            :borderRadius="waffleConfig.style.chart.tooltip.borderRadius"
-            :borderColor="waffleConfig.style.chart.tooltip.borderColor"
-            :borderWidth="waffleConfig.style.chart.tooltip.borderWidth"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :parent="waffleChart"
             :content="tooltipContent"
-            :isCustom="waffleConfig.style.chart.tooltip.customFormat && typeof waffleConfig.style.chart.tooltip.customFormat === 'function'"
-            :fontSize="waffleConfig.style.chart.tooltip.fontSize"
+            :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -843,12 +844,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: waffleConfig.style.chart.backgroundColor,
-                color: waffleConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             },
             head: {
-                backgroundColor: waffleConfig.style.chart.backgroundColor,
-                color: waffleConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             }
         }">
             <template #content>            
@@ -857,7 +858,7 @@ defineExpose({
                     :head="dataTable.head" 
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${waffleConfig.style.chart.title.text}${waffleConfig.style.chart.title.subtitle.text ? ` : ${waffleConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{th}">

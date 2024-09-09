@@ -16,7 +16,6 @@ import {
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import themes from "../themes.json";
@@ -28,6 +27,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_candlestick: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -49,7 +51,6 @@ const isDataset = computed(() => {
 })
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_candlestick);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -61,10 +62,10 @@ const chartTitle = ref(null);
 const chartLegend = ref(null);
 const chartSlicer = ref(null);
 
-const candlestickConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -79,10 +80,10 @@ const candlestickConfig = computed(() => {
 });
 
 const svg = ref({
-    height: candlestickConfig.value.style.height,
-    width: candlestickConfig.value.style.width,
-    xAxisFontSize: candlestickConfig.value.style.layout.grid.xAxis.dataLabels.fontSize,
-    yAxisFontSize: candlestickConfig.value.style.layout.grid.yAxis.dataLabels.fontSize
+    height: FINAL_CONFIG.value.style.height,
+    width: FINAL_CONFIG.value.style.width,
+    xAxisFontSize: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.fontSize,
+    yAxisFontSize: FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.fontSize
 })
 
 const resizeObserver = ref(null);
@@ -95,11 +96,11 @@ onMounted(() => {
         })
     }
 
-    if (candlestickConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: candlestickChart.value,
-                title: candlestickConfig.value.style.title.text ? chartTitle.value : null,
+                title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
                 slicer: chartSlicer.value,
                 legend: chartLegend.value
             });
@@ -107,15 +108,15 @@ onMounted(() => {
             svg.value.height = height;
             svg.value.xAxisFontSize = translateSize({
                 relator: Math.min(width, height),
-                adjuster: candlestickConfig.value.style.width,
-                source: candlestickConfig.value.style.layout.grid.xAxis.dataLabels.fontSize,
+                adjuster: FINAL_CONFIG.value.style.width,
+                source: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.fontSize,
                 threshold: 6,
                 fallback: 6
             })
             svg.value.yAxisFontSize = translateSize({
                 relator: Math.min(width, height),
-                adjuster: candlestickConfig.value.style.width,
-                source: candlestickConfig.value.style.layout.grid.yAxis.dataLabels.fontSize,
+                adjuster: FINAL_CONFIG.value.style.width,
+                source: FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.fontSize,
                 threshold: 6,
                 fallback: 6
             })
@@ -132,16 +133,16 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-candlestick_${uid.value}`,
-    fileName: candlestickConfig.value.style.title.text || 'vue-ui-candlestick'
+    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-candlestick'
 });
 
 const mutableConfig = ref({
-    showTable: candlestickConfig.value.table.show,
-    showTooltip: candlestickConfig.value.style.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.tooltip.show
 });
 
 const drawingArea = computed(() => {
-    const {top: pt, right: pr, bottom: pb, left:pl} = candlestickConfig.value.style.layout.padding;
+    const {top: pt, right: pr, bottom: pb, left:pl} = FINAL_CONFIG.value.style.layout.padding;
     return {
         top: pt,
         right: svg.value.width - pr,
@@ -240,7 +241,7 @@ const extremes = computed(() => {
 });
 
 const niceScale = computed(() => {
-    return calculateNiceScale(extremes.value.min, extremes.value.max, candlestickConfig.value.style.layout.grid.yAxis.dataLabels.steps)
+    return calculateNiceScale(extremes.value.min, extremes.value.max, FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.steps)
 })
 
 function convertToPlot(item, index) {
@@ -297,43 +298,43 @@ function useTooltip(index, datapoint) {
         datapoint,
         seriesIndex: index,
         series: drawableDataset.value,
-        config: candlestickConfig.value
+        config: FINAL_CONFIG.value
     }
 
-    const customFormat = candlestickConfig.value.style.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             seriesIndex: index,
             datapoint,
             series: drawableDataset.value,
-            config: candlestickConfig.value
+            config: FINAL_CONFIG.value
         }))) {
         tooltipContent.value = customFormat({
             seriesIndex: index,
             datapoint,
             series: drawableDataset.value,
-            config: candlestickConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
-        if (candlestickConfig.value.style.tooltip.show) {
+        if (FINAL_CONFIG.value.style.tooltip.show) {
             let html = "";
             const { period, open, high, low, last, volume, isBullish } = drawableDataset.value[index];
-            const { period:tr_period, open:tr_open, high:tr_high, low:tr_low, last:tr_last, volume:tr_volume } = candlestickConfig.value.translations;
+            const { period:tr_period, open:tr_open, high:tr_high, low:tr_low, last:tr_last, volume:tr_volume } = FINAL_CONFIG.value.translations;
     
-            html += `<div data-cy="candlestick-tooltip-period"><svg style="margin-right:6px" viewBox="0 0 12 12" height="12" width="12"><rect x="0" y="0" height="12" width="12" rx="${candlestickConfig.value.style.layout.candle.borderRadius*3}" stroke="${candlestickConfig.value.style.layout.candle.stroke}" stroke-width="${candlestickConfig.value.style.layout.candle.strokeWidth}" 
-                fill="${candlestickConfig.value.style.layout.candle.gradient.show 
+            html += `<div data-cy="candlestick-tooltip-period"><svg style="margin-right:6px" viewBox="0 0 12 12" height="12" width="12"><rect x="0" y="0" height="12" width="12" rx="${FINAL_CONFIG.value.style.layout.candle.borderRadius*3}" stroke="${FINAL_CONFIG.value.style.layout.candle.stroke}" stroke-width="${FINAL_CONFIG.value.style.layout.candle.strokeWidth}" 
+                fill="${FINAL_CONFIG.value.style.layout.candle.gradient.show 
                     ? isBullish 
                         ? `url(#bullish_gradient_${uid.value})` 
                         : `url(#bearish_gradient_${uid.value})` 
                     : isBullish 
-                        ? candlestickConfig.value.style.layout.candle.colors.bullish 
-                        : candlestickConfig.value.style.layout.candle.colors.bearish}"/></svg>${period}</div>`;
-            html += `${tr_volume} : <b data-cy="candlestick-tooltip-volume">${ isNaN(volume) ? '-' : Number(volume.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()}</b>`;
-            html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${candlestickConfig.value.style.tooltip.borderColor}">`;
-            html += `<div>${tr_open}: <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(open.value) ? '-' : Number(open.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
-            html += `<div>${tr_high}: <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(high.value) ? '-' : Number(high.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
-            html += `<div>${tr_low}: <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(low.value) ? '-' : Number(low.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
-            html += `<div>${tr_last}: <b>${candlestickConfig.value.style.tooltip.prefix} ${isNaN(last.value) ? '-' : Number(last.value.toFixed(candlestickConfig.value.style.tooltip.roundingValue)).toLocaleString()} ${candlestickConfig.value.style.tooltip.suffix}</b></div>`;
+                        ? FINAL_CONFIG.value.style.layout.candle.colors.bullish 
+                        : FINAL_CONFIG.value.style.layout.candle.colors.bearish}"/></svg>${period}</div>`;
+            html += `${tr_volume} : <b data-cy="candlestick-tooltip-volume">${ isNaN(volume) ? '-' : Number(volume.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()}</b>`;
+            html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}">`;
+            html += `<div>${tr_open}: <b>${FINAL_CONFIG.value.style.tooltip.prefix} ${isNaN(open.value) ? '-' : Number(open.value.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.style.tooltip.suffix}</b></div>`;
+            html += `<div>${tr_high}: <b>${FINAL_CONFIG.value.style.tooltip.prefix} ${isNaN(high.value) ? '-' : Number(high.value.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.style.tooltip.suffix}</b></div>`;
+            html += `<div>${tr_low}: <b>${FINAL_CONFIG.value.style.tooltip.prefix} ${isNaN(low.value) ? '-' : Number(low.value.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.style.tooltip.suffix}</b></div>`;
+            html += `<div>${tr_last}: <b>${FINAL_CONFIG.value.style.tooltip.prefix} ${isNaN(last.value) ? '-' : Number(last.value.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.style.tooltip.suffix}</b></div>`;
             html += `</div>`;
     
             tooltipContent.value = `<div style="text-align:right">${html}</div>`
@@ -352,7 +353,7 @@ function refreshSlicer() {
 
 function generateCsv() {
     nextTick(() => {
-        const labels = [candlestickConfig.value.translations.period, candlestickConfig.value.translations.open, candlestickConfig.value.translations.high, candlestickConfig.value.translations.low, candlestickConfig.value.translations.last, candlestickConfig.value.translations.volume];
+        const labels = [FINAL_CONFIG.value.translations.period, FINAL_CONFIG.value.translations.open, FINAL_CONFIG.value.translations.high, FINAL_CONFIG.value.translations.low, FINAL_CONFIG.value.translations.last, FINAL_CONFIG.value.translations.volume];
 
         const values = drawableDataset.value.map(ds => {
             return [
@@ -365,43 +366,43 @@ function generateCsv() {
             ]
         });
 
-        const tableXls = [[candlestickConfig.value.style.title.text],[candlestickConfig.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
+        const tableXls = [[FINAL_CONFIG.value.style.title.text],[FINAL_CONFIG.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: candlestickConfig.value.style.title.text || "vue-ui-candlestick"});
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-candlestick"});
     });
 }
 
 const dataTable = computed(() => {
     const body = drawableDataset.value.map(ds => [
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px"><rect x="0" y="0" height="12" width="12" :rx="${candlestickConfig.value.style.layout.candle.borderRadius * 3}" fill="${candlestickConfig.value.style.layout.candle.gradient.show ? ds.isBullish ? `url(#bullish_gradient_${uid.value}` : `url(#bearish_gradient_${uid.value})` : ds.isBullish ? candlestickConfig.value.style.layout.candle.colors.bullish : candlestickConfig.value.style.layout.candle.colors.bearish}"/></svg> ${ds.period}`,
-        `${candlestickConfig.value.table.td.prefix} ${isNaN(ds.open.value) ? '-' : Number(ds.open.value.toFixed(candlestickConfig.value.table.td.roundingValue)).toLocaleString()} ${candlestickConfig.value.table.td.suffix}`,
-        `${candlestickConfig.value.table.td.prefix} ${isNaN(ds.high.value) ? '-' : Number(ds.high.value.toFixed(candlestickConfig.value.table.td.roundingValue)).toLocaleString()} ${candlestickConfig.value.table.td.suffix}`,
-        `${candlestickConfig.value.table.td.prefix} ${isNaN(ds.low.value) ? '-' : Number(ds.low.value.toFixed(candlestickConfig.value.table.td.roundingValue)).toLocaleString()} ${candlestickConfig.value.table.td.suffix}`,
-        `${candlestickConfig.value.table.td.prefix} ${isNaN(ds.last.value) ? '-' : Number(ds.last.value.toFixed(candlestickConfig.value.table.td.roundingValue)).toLocaleString()} ${candlestickConfig.value.table.td.suffix}`,
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px"><rect x="0" y="0" height="12" width="12" :rx="${FINAL_CONFIG.value.style.layout.candle.borderRadius * 3}" fill="${FINAL_CONFIG.value.style.layout.candle.gradient.show ? ds.isBullish ? `url(#bullish_gradient_${uid.value}` : `url(#bearish_gradient_${uid.value})` : ds.isBullish ? FINAL_CONFIG.value.style.layout.candle.colors.bullish : FINAL_CONFIG.value.style.layout.candle.colors.bearish}"/></svg> ${ds.period}`,
+        `${FINAL_CONFIG.value.table.td.prefix} ${isNaN(ds.open.value) ? '-' : Number(ds.open.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.table.td.suffix}`,
+        `${FINAL_CONFIG.value.table.td.prefix} ${isNaN(ds.high.value) ? '-' : Number(ds.high.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.table.td.suffix}`,
+        `${FINAL_CONFIG.value.table.td.prefix} ${isNaN(ds.low.value) ? '-' : Number(ds.low.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.table.td.suffix}`,
+        `${FINAL_CONFIG.value.table.td.prefix} ${isNaN(ds.last.value) ? '-' : Number(ds.last.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.table.td.suffix}`,
         `${isNaN(ds.volume) ? '-' : ds.volume.toLocaleString()}`,
     ]);
 
     const config = {
         th: {
-            backgroundColor: candlestickConfig.value.table.th.backgroundColor,
-            color: candlestickConfig.value.table.th.color,
-            outline: candlestickConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: candlestickConfig.value.table.td.backgroundColor,
-            color: candlestickConfig.value.table.td.color,
-            outline: candlestickConfig.value.table.td.outline,
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline,
         },
-        breakpoint: candlestickConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     };
 
     const colNames = [
-        candlestickConfig.value.translations.period,
-        candlestickConfig.value.translations.open,
-        candlestickConfig.value.translations.high,
-        candlestickConfig.value.translations.low,
-        candlestickConfig.value.translations.last,
-        candlestickConfig.value.translations.volume
+        FINAL_CONFIG.value.translations.period,
+        FINAL_CONFIG.value.translations.open,
+        FINAL_CONFIG.value.translations.high,
+        FINAL_CONFIG.value.translations.low,
+        FINAL_CONFIG.value.translations.last,
+        FINAL_CONFIG.value.translations.volume
     ]
 
     return { head: colNames, body, config, colNames }
@@ -432,18 +433,18 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="candlestickChart" :class="`vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${candlestickConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`position:relative;font-family:${candlestickConfig.style.fontFamily}; text-align:center;${!candlestickConfig.style.title.text ? 'padding-top:36px' : ''};background:${candlestickConfig.style.backgroundColor}; ${candlestickConfig.responsive ? 'height: 100%' : ''}`" :id="`vue-ui-candlestick_${uid}`">
-        <div ref="chartTitle" v-if="candlestickConfig.style.title.text" :style="`width:100%;background:${candlestickConfig.style.backgroundColor}`">
+    <div ref="candlestickChart" :class="`vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`position:relative;font-family:${FINAL_CONFIG.style.fontFamily}; text-align:center;${!FINAL_CONFIG.style.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.backgroundColor}; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" :id="`vue-ui-candlestick_${uid}`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
                     title: {
                         cy: 'candlestick-div-title',
-                        ...candlestickConfig.style.title
+                        ...FINAL_CONFIG.style.title
                     },
                     subtitle: {
                         cy: 'candlestick-div-subtitle',
-                        ...candlestickConfig.style.title.subtitle
+                        ...FINAL_CONFIG.style.title.subtitle
                     }
                 }"
             />
@@ -453,21 +454,21 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="candlestickConfig.userOptions.show && isDataset"
-            :backgroundColor="candlestickConfig.style.backgroundColor"
-            :color="candlestickConfig.style.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
+            :color="FINAL_CONFIG.style.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasTooltip="candlestickConfig.userOptions.buttons.tooltip && candlestickConfig.style.tooltip.show"
-            :hasPdf="candlestickConfig.userOptions.buttons.pdf"
-            :hasImg="candlestickConfig.userOptions.buttons.img"
-            :hasXls="candlestickConfig.userOptions.buttons.csv"
-            :hasTable="candlestickConfig.userOptions.buttons.table"
-            :hasFullscreen="candlestickConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...candlestickConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="candlestickChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -497,34 +498,34 @@ defineExpose({
         </UserOptions>
         
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${candlestickConfig.style.backgroundColor};color:${candlestickConfig.style.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.backgroundColor};color:${FINAL_CONFIG.style.color}`">
             <g v-if="drawableDataset.length > 0">
                 <!-- DEFS -->
             <defs>
                 <!-- BEARISH GRADIENT -->
                 <linearGradient :id="`bearish_gradient_${uid}`" x2="0%" y2="100%">
-                    <stop offset="0%" :stop-color="candlestickConfig.style.layout.candle.colors.bearish"/>
-                    <stop offset="50%" :stop-color="`${shiftHue(candlestickConfig.style.layout.candle.colors.bearish, 0.02)}DE`"/>
-                    <stop offset="100%" :stop-color="`${shiftHue(candlestickConfig.style.layout.candle.colors.bearish, 0.05)}66`"/>
+                    <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.candle.colors.bearish"/>
+                    <stop offset="50%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bearish, 0.02)}DE`"/>
+                    <stop offset="100%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bearish, 0.05)}66`"/>
                 </linearGradient>
                 <!-- BULLISH GRADIENT -->
                 <linearGradient :id="`bullish_gradient_${uid}`" x2="0%" y2="100%">
-                    <stop offset="0%" :stop-color="candlestickConfig.style.layout.candle.colors.bullish"/>
-                    <stop offset="50%" :stop-color="`${shiftHue(candlestickConfig.style.layout.candle.colors.bullish, 0.02)}DE`"/>
-                    <stop offset="100%" :stop-color="`${shiftHue(candlestickConfig.style.layout.candle.colors.bullish, 0.05)}66`"/>
+                    <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.candle.colors.bullish"/>
+                    <stop offset="50%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bullish, 0.02)}DE`"/>
+                    <stop offset="100%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bullish, 0.05)}66`"/>
                 </linearGradient>
             </defs>
 
             <!-- AXIS -->
-            <g v-if="candlestickConfig.style.layout.grid.show">
+            <g v-if="FINAL_CONFIG.style.layout.grid.show">
                 <line
                     data-cy="candlestick-grid-y-axis"
                     :x1="drawingArea.left"
                     :x2="drawingArea.left"
                     :y1="drawingArea.top"
                     :y2="drawingArea.bottom"
-                    :stroke="candlestickConfig.style.layout.grid.stroke"
-                    :stroke-width="candlestickConfig.style.layout.grid.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                    :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                     stroke-linecap="round"
                 />
                 <line
@@ -533,15 +534,15 @@ defineExpose({
                     :x2="drawingArea.right"
                     :y1="drawingArea.bottom"
                     :y2="drawingArea.bottom"
-                    :stroke="candlestickConfig.style.layout.grid.stroke"
-                    :stroke-width="candlestickConfig.style.layout.grid.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                    :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                     stroke-linecap="round"
                 />
             </g>
 
             <!-- LABELS -->
             <!-- Y LABELS -->
-            <g v-if="candlestickConfig.style.layout.grid.yAxis.dataLabels.show">
+            <g v-if="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.show">
                 <g v-for="(yLabel, i) in yLabels">
                     <line 
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
@@ -549,33 +550,33 @@ defineExpose({
                         :x2="drawingArea.left - 5" 
                         :y1="yLabel.y" 
                         :y2="yLabel.y" 
-                        :stroke="candlestickConfig.style.layout.grid.stroke" 
-                        :stroke-width="candlestickConfig.style.layout.grid.strokeWidth"
+                        :stroke="FINAL_CONFIG.style.layout.grid.stroke" 
+                        :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                         stroke-linecap="round"
                     />
                     <text 
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
-                        :x="drawingArea.left - 8 + candlestickConfig.style.layout.grid.yAxis.dataLabels.offsetX" 
+                        :x="drawingArea.left - 8 + FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.offsetX" 
                         :y="yLabel.y + svg.yAxisFontSize / 3" 
                         :font-size="svg.yAxisFontSize" 
                         text-anchor="end"
-                        :fill="candlestickConfig.style.layout.grid.yAxis.dataLabels.color"
-                        :font-weight="candlestickConfig.style.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.color"
+                        :font-weight="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
                     >
-                        {{ candlestickConfig.style.layout.grid.yAxis.dataLabels.prefix }} {{ canShowValue(yLabel.value) ? yLabel.value.toFixed(candlestickConfig.style.layout.grid.yAxis.dataLabels.roundingValue) : '' }} {{ candlestickConfig.style.layout.grid.yAxis.dataLabels.suffix }}
+                        {{ FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.prefix }} {{ canShowValue(yLabel.value) ? yLabel.value.toFixed(FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.roundingValue) : '' }} {{ FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.suffix }}
                     </text>
                 </g>
             </g>
             <!-- X LABELS -->
-            <g v-if="candlestickConfig.style.layout.grid.xAxis.dataLabels.show">
+            <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show">
                 <g v-for="(xLabel, i) in xLabels">
                     <text
                         :data-cy="`candlestick-time-label-${i}`"
-                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + svg.xAxisFontSize * 2 + candlestickConfig.style.layout.grid.xAxis.dataLabels.offsetY}), rotate(${candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation})`"
-                        :text-anchor="candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : candlestickConfig.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
+                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + svg.xAxisFontSize * 2 + FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.offsetY}), rotate(${FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation})`"
+                        :text-anchor="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
                         :font-size="svg.xAxisFontSize"
-                        :fill="candlestickConfig.style.layout.grid.xAxis.dataLabels.color"
-                        :font-weight="candlestickConfig.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
+                        :fill="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.color"
+                        :font-weight="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
                     >
                         {{ xLabel }}
                     </text>
@@ -591,43 +592,43 @@ defineExpose({
                         :x2="wick.open.x"
                         :y1="wick.high.y"
                         :y2="wick.low.y"
-                        :stroke="candlestickConfig.style.layout.wick.stroke"
-                        :stroke-width="candlestickConfig.style.layout.wick.strokeWidth"
+                        :stroke="FINAL_CONFIG.style.layout.wick.stroke"
+                        :stroke-width="FINAL_CONFIG.style.layout.wick.strokeWidth"
                         stroke-linecap="round"
                     />
-                    <g v-if="candlestickConfig.style.layout.wick.extremity.shape === 'circle'">
+                    <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'circle'">
                         <circle 
                             :cx="wick.high.x" 
                             :cy="wick.high.y" 
-                            :r="candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot / 20 : candlestickConfig.style.layout.wick.extremity.size" 
-                            :fill="candlestickConfig.style.layout.wick.extremity.color"
+                            :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
+                            :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
                         />
                         <circle 
                             :cx="wick.low.x" 
                             :cy="wick.low.y" 
-                            :r="candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot / 20 : candlestickConfig.style.layout.wick.extremity.size" 
-                            :fill="candlestickConfig.style.layout.wick.extremity.color"
+                            :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
+                            :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
                         />
                     </g>
-                    <g v-if="candlestickConfig.style.layout.wick.extremity.shape === 'line'">
+                    <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'line'">
                         <line
                             :data-cy="`candlestick-wick-high-${i}`" 
-                            :x1="wick.high.x - (candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot * candlestickConfig.style.layout.candle.widthRatio : candlestickConfig.style.layout.wick.extremity.size) / 2"
-                            :x2="wick.high.x + (candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot * candlestickConfig.style.layout.candle.widthRatio : candlestickConfig.style.layout.wick.extremity.size) / 2"
+                            :x1="wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
+                            :x2="wick.high.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
                             :y1="wick.high.y"
                             :y2="wick.high.y"
-                            :stroke="candlestickConfig.style.layout.wick.extremity.color"
-                            :stroke-width="candlestickConfig.style.layout.wick.strokeWidth"
+                            :stroke="FINAL_CONFIG.style.layout.wick.extremity.color"
+                            :stroke-width="FINAL_CONFIG.style.layout.wick.strokeWidth"
                             stroke-linecap="round"
                         />
                         <line
                             :data-cy="`candlestick-wick-low-${i}`"
-                            :x1="wick.low.x - (candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot * candlestickConfig.style.layout.candle.widthRatio : candlestickConfig.style.layout.wick.extremity.size) / 2"
-                            :x2="wick.low.x + (candlestickConfig.style.layout.wick.extremity.size === 'auto' ? slot * candlestickConfig.style.layout.candle.widthRatio : candlestickConfig.style.layout.wick.extremity.size) / 2"
+                            :x1="wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
+                            :x2="wick.low.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
                             :y1="wick.low.y"
                             :y2="wick.low.y"
-                            :stroke="candlestickConfig.style.layout.wick.extremity.color"
-                            :stroke-width="candlestickConfig.style.layout.wick.strokeWidth"
+                            :stroke="FINAL_CONFIG.style.layout.wick.extremity.color"
+                            :stroke-width="FINAL_CONFIG.style.layout.wick.strokeWidth"
                             stroke-linecap="round"
                         />
                     </g>
@@ -638,25 +639,25 @@ defineExpose({
                 <rect
                     v-for="(candle, i) in drawableDataset"
                     :data-cy="`candlestick-rect-underlayer-${i}`"
-                    :x="candle.open.x - slot / 2 + (slot * (1 - candlestickConfig.style.layout.candle.widthRatio) / 2)"
+                    :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
                     :y="candle.isBullish ? candle.last.y : candle.open.y"
                     :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
-                    :width="slot * candlestickConfig.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * candlestickConfig.style.layout.candle.widthRatio"
-                    :fill="candlestickConfig.style.layout.candle.gradient.underlayer"
-                    :rx="candlestickConfig.style.layout.candle.borderRadius"
+                    :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
+                    :fill="FINAL_CONFIG.style.layout.candle.gradient.underlayer"
+                    :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
                     stroke="none"
                 />
                 <rect
                     v-for="(candle, i) in drawableDataset"
                     :data-cy="`candlestick-rect-${i}`"
-                    :x="candle.open.x - slot / 2 + (slot * (1 - candlestickConfig.style.layout.candle.widthRatio) / 2)"
+                    :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
                     :y="candle.isBullish ? candle.last.y : candle.open.y"
                     :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
-                    :width="slot * candlestickConfig.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * candlestickConfig.style.layout.candle.widthRatio"
-                    :fill="candle.isBullish ? candlestickConfig.style.layout.candle.gradient.show ? `url(#bullish_gradient_${uid})` : candlestickConfig.style.layout.candle.colors.bullish : candlestickConfig.style.layout.candle.gradient.show ? `url(#bearish_gradient_${uid})` : candlestickConfig.style.layout.candle.colors.bearish"
-                    :rx="candlestickConfig.style.layout.candle.borderRadius"
-                    :stroke="candlestickConfig.style.layout.candle.stroke"
-                    :stroke-width="candlestickConfig.style.layout.candle.strokeWidth"
+                    :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
+                    :fill="candle.isBullish ? FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bullish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bearish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bearish"
+                    :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
+                    :stroke="FINAL_CONFIG.style.layout.candle.stroke"
+                    :stroke-width="FINAL_CONFIG.style.layout.candle.strokeWidth"
                     stroke-linecap="round"
                     stroke-linejoin="round"
                 />
@@ -671,7 +672,7 @@ defineExpose({
                     :y="drawingArea.top"
                     :height="drawingArea.height <= 0 ? 0.0001 : drawingArea.height"
                     :width="slot <= 0 ? 0.0001 : slot"
-                    :fill="hoveredIndex === i ? `${candlestickConfig.style.layout.selector.color}${opacity[candlestickConfig.style.layout.selector.opacity]}` : 'transparent'"
+                    :fill="hoveredIndex === i ? `${FINAL_CONFIG.style.layout.selector.color}${opacity[FINAL_CONFIG.style.layout.selector.opacity]}` : 'transparent'"
                     @mouseover="useTooltip(i,rect)"
                     @mouseleave="hoveredIndex = undefined; isTooltip = false"
                 />
@@ -685,7 +686,7 @@ defineExpose({
             :config="{
                 type: 'candlesticks',
                 style: {
-                    backgroundColor: candlestickConfig.style.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
                     candlesticks: {
                         axis: {
                             color: '#CCCCCC'
@@ -698,18 +699,18 @@ defineExpose({
             }"
         />
 
-        <div ref="chartSlicer" v-if="candlestickConfig.style.zoom.show && isDataset">
+        <div ref="chartSlicer" v-if="FINAL_CONFIG.style.zoom.show && isDataset">
             <Slicer 
                 :key="`slicer_${slicerStep}`"
-                :background="candlestickConfig.style.zoom.color"
-                :borderColor="candlestickConfig.style.backgroundColor"
-                :fontSize="candlestickConfig.style.zoom.fontSize"
-                :useResetSlot="candlestickConfig.style.zoom.useResetSlot"
+                :background="FINAL_CONFIG.style.zoom.color"
+                :borderColor="FINAL_CONFIG.style.backgroundColor"
+                :fontSize="FINAL_CONFIG.style.zoom.fontSize"
+                :useResetSlot="FINAL_CONFIG.style.zoom.useResetSlot"
                 :labelLeft="dataset[slicer.start] ? dataset[slicer.start][0] : dataset[0][0]"
                 :labelRight="dataset[slicer.end-1] ? dataset[slicer.end-1][0] : dataset.at(-1)[0]"
-                :textColor="candlestickConfig.style.color"
-                :inputColor="candlestickConfig.style.zoom.color"
-                :selectColor="candlestickConfig.style.zoom.highlightColor"
+                :textColor="FINAL_CONFIG.style.color"
+                :inputColor="FINAL_CONFIG.style.zoom.color"
+                :selectColor="FINAL_CONFIG.style.zoom.highlightColor"
                 :max="len"
                 :min="0"
                 :valueStart="slicer.start"
@@ -731,15 +732,15 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="candlestickConfig.style.tooltip.backgroundColor"
-            :color="candlestickConfig.style.tooltip.color"
-            :borderRadius="candlestickConfig.style.tooltip.borderRadius"
-            :borderColor="candlestickConfig.style.tooltip.borderColor"
-            :borderWidth="candlestickConfig.style.tooltip.borderWidth"
-            :fontSize="candlestickConfig.style.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
             :parent="candlestickChart"
             :content="tooltipContent"
-            :isCustom="candlestickConfig.style.tooltip.customFormat && typeof candlestickConfig.style.tooltip.customFormat === 'function'"
+            :isCustom="FINAL_CONFIG.style.tooltip.customFormat && typeof FINAL_CONFIG.style.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -754,12 +755,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: candlestickConfig.style.backgroundColor,
-                color: candlestickConfig.style.color,
+                backgroundColor: FINAL_CONFIG.style.backgroundColor,
+                color: FINAL_CONFIG.style.color,
             },
             head: {
-                backgroundColor: candlestickConfig.style.backgroundColor,
-                color: candlestickConfig.style.color,
+                backgroundColor: FINAL_CONFIG.style.backgroundColor,
+                color: FINAL_CONFIG.style.color,
             }
         }">
             <template #content>
@@ -768,7 +769,7 @@ defineExpose({
                     :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${candlestickConfig.style.title.text}${candlestickConfig.style.title.subtitle.text ? ` : ${candlestickConfig.style.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.title.text}${FINAL_CONFIG.style.title.subtitle.text ? ` : ${FINAL_CONFIG.style.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

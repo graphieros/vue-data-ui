@@ -99,7 +99,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[3])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

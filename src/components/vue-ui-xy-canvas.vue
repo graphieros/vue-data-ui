@@ -34,7 +34,6 @@ import {
     rect,
     text,
 } from "../canvas-lib";
-import mainConfig from "../default_configs.json"
 import themes from "../themes.json";
 import Tooltip from "../atoms/Tooltip.vue";
 import Legend from "../atoms/Legend.vue";
@@ -47,6 +46,9 @@ import Skeleton from "./vue-ui-skeleton.vue"
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_xy_canvas: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     dataset: {
@@ -92,10 +94,10 @@ const isDataset = computed(() => {
 
 const emit = defineEmits(['selectLegend']);
 
-const xyConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: mainConfig.vue_ui_xy_canvas
+        defaultConfig: DEFAULT_CONFIG
     })
     if (mergedConfig.theme) {
         return {
@@ -110,18 +112,18 @@ const xyConfig = computed(() => {
     }
 });
 
-const aspectRatio = ref(xyConfig.value.style.chart.aspectRatio);
+const aspectRatio = ref(FINAL_CONFIG.value.style.chart.aspectRatio);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `xy_canvas_${uid.value}`,
-    fileName: xyConfig.value.style.chart.title.text || 'vue-ui-xy-canvas'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-xy-canvas'
 });
 
 const mutableConfig = ref({
-    showTable: xyConfig.value.table.show,
-    showDataLabels: xyConfig.value.style.chart.dataLabels.show,
-    stacked: xyConfig.value.style.chart.stacked,
-    showTooltip: xyConfig.value.style.chart.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showDataLabels: FINAL_CONFIG.value.style.chart.dataLabels.show,
+    stacked: FINAL_CONFIG.value.style.chart.stacked,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 function toggleFullscreen(state) {
@@ -130,7 +132,7 @@ function toggleFullscreen(state) {
 }
 
 const customPalette = computed(() => {
-    return convertCustomPalette(xyConfig.value.customPalette)
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette)
 });
 
 const maxSeries = computed(() => {
@@ -138,16 +140,16 @@ const maxSeries = computed(() => {
 });
 
 const drawingArea = computed(() => {
-    const width = w.value - (w.value * (xyConfig.value.style.chart.paddingProportions.left + xyConfig.value.style.chart.paddingProportions.right))
+    const width = w.value - (w.value * (FINAL_CONFIG.value.style.chart.paddingProportions.left + FINAL_CONFIG.value.style.chart.paddingProportions.right))
     return {
         canvasWidth: w.value,
         canvasHeight: h.value,
-        left: w.value * xyConfig.value.style.chart.paddingProportions.left,
-        top: h.value * xyConfig.value.style.chart.paddingProportions.top,
-        right: w.value - (w.value * xyConfig.value.style.chart.paddingProportions.right),
-        bottom: h.value - (h.value * xyConfig.value.style.chart.paddingProportions.bottom),
+        left: w.value * FINAL_CONFIG.value.style.chart.paddingProportions.left,
+        top: h.value * FINAL_CONFIG.value.style.chart.paddingProportions.top,
+        right: w.value - (w.value * FINAL_CONFIG.value.style.chart.paddingProportions.right),
+        bottom: h.value - (h.value * FINAL_CONFIG.value.style.chart.paddingProportions.bottom),
         width,
-        height: h.value - (h.value * (xyConfig.value.style.chart.paddingProportions.top + xyConfig.value.style.chart.paddingProportions.bottom)),
+        height: h.value - (h.value * (FINAL_CONFIG.value.style.chart.paddingProportions.top + FINAL_CONFIG.value.style.chart.paddingProportions.bottom)),
         slot: width / (slicer.value.end - slicer.value.start)
     }
 });
@@ -188,7 +190,7 @@ function createDatapointCoordinates({ hasAutoScale, series, min, max, scale, yOf
 const absoluteExtremes = computed(() => {
     const min = Math.min(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
     const max = Math.max(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
-    const scale = calculateNiceScale(min < 0 ? min : 0, max === min ? min + 1 < 0 ? 0 : min + 1 : max < 0 ? 0 : max, xyConfig.value.style.chart.scale.ticks);
+    const scale = calculateNiceScale(min < 0 ? min : 0, max === min ? min + 1 < 0 ? 0 : min + 1 : max < 0 ? 0 : max, FINAL_CONFIG.value.style.chart.scale.ticks);
 
     const absoluteMin = scale.min < 0 ? Math.abs(scale.min) : 0;
     const zero = drawingArea.value.bottom - (drawingArea.value.height * (absoluteMin / ((scale.max) + absoluteMin)));
@@ -264,7 +266,7 @@ const formattedDataset = computed(() => {
                 valueMax: max
             }
 
-            const scaleSteps = ds.scaleSteps || xyConfig.value.style.chart.scale.ticks;
+            const scaleSteps = ds.scaleSteps || FINAL_CONFIG.value.style.chart.scale.ticks;
 
             let localScale;
 
@@ -276,7 +278,7 @@ const formattedDataset = computed(() => {
 
             const yOffset = mutableConfig.value.stacked ? drawingArea.value.height * (1 - ds.cumulatedStackRatio) : 0;
 
-            const gap = mutableConfig.value.stacked ? drawingArea.value.height / xyConfig.value.style.chart.stackGap : 0;
+            const gap = mutableConfig.value.stacked ? drawingArea.value.height / FINAL_CONFIG.value.style.chart.stackGap : 0;
 
             const individualHeight = mutableConfig.value.stacked ? (drawingArea.value.height * ds.stackRatio) - gap : drawingArea.value.height;
 
@@ -370,12 +372,12 @@ function resizeCanvas() {
 }
 
 function setupChart() {
-    ctx.value.fillStyle = xyConfig.value.style.chart.backgroundColor;
+    ctx.value.fillStyle = FINAL_CONFIG.value.style.chart.backgroundColor;
     ctx.value.fillRect(0, 0, drawingArea.value.canvasWidth, drawingArea.value.canvasHeight);
 
     if (!mutableConfig.value.stacked) {
         // VERTICAL LINES
-        if (xyConfig.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) < xyConfig.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
+        if (FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
             for (let i = 0; i < (slicer.value.end - slicer.value.start) + 1; i += 1) {
                 line(
                     ctx.value,
@@ -384,7 +386,7 @@ function setupChart() {
                         { x: drawingArea.value.left + drawingArea.value.slot * i, y: drawingArea.value.bottom }
                     ],
                     {
-                        color: xyConfig.value.style.chart.grid.y.verticalLines.color
+                        color: FINAL_CONFIG.value.style.chart.grid.y.verticalLines.color
                     }
                 );
             }
@@ -392,8 +394,8 @@ function setupChart() {
         // UNSTACKED
 
         // HORIZONTAL LINES
-        if (xyConfig.value.style.chart.grid.x.horizontalLines.show) {
-            if (xyConfig.value.style.chart.grid.x.horizontalLines.alternate) {
+        if (FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.show) {
+            if (FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.alternate) {
                 absoluteExtremes.value.yLabels.forEach((entry, i) => {
                     if (i < absoluteExtremes.value.yLabels.length - 1) {
                         rect(
@@ -405,7 +407,7 @@ function setupChart() {
                                 { x: drawingArea.value.left, y: absoluteExtremes.value.yLabels[i + 1].y },
                             ],
                             {
-                                fillColor: i % 2 === 0 ? 'transparent' : xyConfig.value.style.chart.grid.x.horizontalLines.color + opacity[xyConfig.value.style.chart.grid.x.horizontalLines.opacity],
+                                fillColor: i % 2 === 0 ? 'transparent' : FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.color + opacity[FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.opacity],
                                 strokeColor: 'transparent'
                             }
                         );
@@ -420,7 +422,7 @@ function setupChart() {
                             { x: drawingArea.value.right, y: entry.y },
                         ],
                         {
-                            color: xyConfig.value.style.chart.grid.x.horizontalLines.color
+                            color: FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.color
                         }
                     );
                 });
@@ -428,7 +430,7 @@ function setupChart() {
         }
 
         // AXES LINES
-        if (xyConfig.value.style.chart.grid.y.showAxis) {
+        if (FINAL_CONFIG.value.style.chart.grid.y.showAxis) {
             line(
                 ctx.value,
                 [
@@ -436,12 +438,12 @@ function setupChart() {
                     { x: drawingArea.value.left, y: drawingArea.value.bottom },
                 ],
                 {
-                    color: xyConfig.value.style.chart.grid.y.axisColor,
-                    lineWidth: xyConfig.value.style.chart.grid.y.axisThickness,
+                    color: FINAL_CONFIG.value.style.chart.grid.y.axisColor,
+                    lineWidth: FINAL_CONFIG.value.style.chart.grid.y.axisThickness,
                 }
             );
         }
-        if (xyConfig.value.style.chart.grid.x.showAxis) {
+        if (FINAL_CONFIG.value.style.chart.grid.x.showAxis) {
             line(
                 ctx.value,
                 [
@@ -449,14 +451,14 @@ function setupChart() {
                     { x: drawingArea.value.right, y: drawingArea.value.bottom },
                 ],
                 {
-                    color: xyConfig.value.style.chart.grid.x.axisColor,
-                    lineWidth: xyConfig.value.style.chart.grid.x.axisThickness,
+                    color: FINAL_CONFIG.value.style.chart.grid.x.axisColor,
+                    lineWidth: FINAL_CONFIG.value.style.chart.grid.x.axisThickness,
                 }
             );
         }
 
         // ZERO LINE
-        if (xyConfig.value.style.chart.grid.zeroLine.show) {
+        if (FINAL_CONFIG.value.style.chart.grid.zeroLine.show) {
             line(
                 ctx.value,
                 [
@@ -464,29 +466,29 @@ function setupChart() {
                     { x: drawingArea.value.right, y: absoluteExtremes.value.zero },
                 ],
                 {
-                    color: xyConfig.value.style.chart.grid.zeroLine.color,
-                    lineDash: xyConfig.value.style.chart.grid.zeroLine.dashed ? [10, 10] : [0, 0]
+                    color: FINAL_CONFIG.value.style.chart.grid.zeroLine.color,
+                    lineDash: FINAL_CONFIG.value.style.chart.grid.zeroLine.dashed ? [10, 10] : [0, 0]
                 }
             );
         }
 
         // AXES LABELS
-        if (xyConfig.value.style.chart.grid.y.axisLabels.show) {
+        if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
             absoluteExtremes.value.yLabels.forEach(label => {
                 text(
                     ctx.value,
                     dataLabel({
-                        p: xyConfig.value.style.chart.grid.y.axisLabels.prefix || '',
+                        p: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
                         v: label.value,
-                        s: xyConfig.value.style.chart.grid.y.axisLabels.suffix || '',
-                        r: xyConfig.value.style.chart.grid.y.axisLabels.rounding || 0
+                        s: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
+                        r: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
                     }),
-                    label.x + xyConfig.value.style.chart.grid.y.axisLabels.offsetX,
+                    label.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
                     label.y,
                     {
                         align: 'right',
-                        font: `${w.value / 40 * xyConfig.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`,
-                        color: xyConfig.value.style.chart.grid.y.axisLabels.color
+                        font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                        color: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.color
                     }
                 );
             });
@@ -495,7 +497,7 @@ function setupChart() {
         // STACKED
         // VERTICAL LINES
 
-        if (xyConfig.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) < xyConfig.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
+        if (FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
             formattedDataset.value.forEach((ds, i) => {
                 for (let k = 0; k < (slicer.value.end - slicer.value.start) + 1; k += 1) {
                     line(
@@ -511,7 +513,7 @@ function setupChart() {
                             }
                         ],
                         {
-                            color: xyConfig.value.style.chart.grid.y.verticalLines.color
+                            color: FINAL_CONFIG.value.style.chart.grid.y.verticalLines.color
                         }
                     );
                 }
@@ -519,8 +521,8 @@ function setupChart() {
         }
 
         // HORIZONTAL LINES
-        if (xyConfig.value.style.chart.grid.x.horizontalLines.show) {
-            if (xyConfig.value.style.chart.grid.x.horizontalLines.alternate) {
+        if (FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.show) {
+            if (FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.alternate) {
                 formattedDataset.value.forEach((ds) => {
                     ds.localYLabels.forEach((entry, k) => {
                         if (k < ds.localYLabels.length - 1) {
@@ -533,7 +535,7 @@ function setupChart() {
                                     { x: drawingArea.value.left, y: ds.localYLabels[k + 1].y }
                                 ],
                                 {
-                                    fillColor: k % 2 === 0 ? 'transparent' : xyConfig.value.style.chart.grid.x.horizontalLines.color + opacity[xyConfig.value.style.chart.grid.x.horizontalLines.opacity],
+                                    fillColor: k % 2 === 0 ? 'transparent' : FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.color + opacity[FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.opacity],
                                     strokeColor: 'transparent'
                                 }
                             );
@@ -550,7 +552,7 @@ function setupChart() {
                                 { x: drawingArea.value.right, y: entry.y }
                             ],
                             {
-                                color: xyConfig.value.style.chart.grid.x.horizontalLines.color
+                                color: FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.color
                             }
                         );
                     });
@@ -559,7 +561,7 @@ function setupChart() {
         }
 
         // ZERO LINE
-        if (xyConfig.value.style.chart.grid.zeroLine.show) {
+        if (FINAL_CONFIG.value.style.chart.grid.zeroLine.show) {
             formattedDataset.value.forEach(ds => {
                 line(
                     ctx.value,
@@ -568,15 +570,15 @@ function setupChart() {
                         { x: drawingArea.value.right, y: ds.localZero }
                     ],
                     {
-                        color: xyConfig.value.style.chart.grid.zeroLine.color,
-                        lineDash: xyConfig.value.style.chart.grid.zeroLine.dashed ? [10, 10] : [0, 0]
+                        color: FINAL_CONFIG.value.style.chart.grid.zeroLine.color,
+                        lineDash: FINAL_CONFIG.value.style.chart.grid.zeroLine.dashed ? [10, 10] : [0, 0]
                     }
                 );
             });
         }
 
         // AXES LABELS
-        if (xyConfig.value.style.chart.grid.y.axisLabels.show) {
+        if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
             formattedDataset.value.forEach((ds, i) => {
                 // INDIVIDUAL Y AXES
                 line(
@@ -604,16 +606,16 @@ function setupChart() {
                     text(
                         ctx.value,
                         dataLabel({
-                            p: ds.prefix || xyConfig.value.style.chart.grid.y.axisLabels.prefix || '',
+                            p: ds.prefix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
                             v: entry.value,
-                            s: ds.suffix || xyConfig.value.style.chart.grid.y.axisLabels.suffix || '',
-                            r: ds.rounding || xyConfig.value.style.chart.grid.y.axisLabels.rounding || 0
+                            s: ds.suffix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
+                            r: ds.rounding || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
                         }),
-                        entry.x + xyConfig.value.style.chart.grid.y.axisLabels.offsetX,
+                        entry.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
                         entry.y,
                         {
                             align: 'right',
-                            font: `${w.value / 40 * xyConfig.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`,
+                            font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
                             color: ds.color
                         }
                     );
@@ -632,37 +634,37 @@ function setupChart() {
                     align: 'center',
                     rotation: -90,
                     color: ds.color,
-                    font: `${w.value / 40 * xyConfig.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`
+                    font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`
                 }
             );
         });
     }
 
     // AXES NAMES
-    if (xyConfig.value.style.chart.grid.y.axisName) {
+    if (FINAL_CONFIG.value.style.chart.grid.y.axisName) {
         text(
             ctx.value,
-            xyConfig.value.style.chart.grid.y.axisName,
-            w.value - w.value / 40 * xyConfig.value.style.chart.grid.y.axisLabels.fontSizeRatio * 1.2,
+            FINAL_CONFIG.value.style.chart.grid.y.axisName,
+            w.value - w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio * 1.2,
             drawingArea.value.bottom - drawingArea.value.height / 2,
             {
-                font: `${w.value / 40 * xyConfig.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`,
-                color: xyConfig.value.style.chart.color,
+                font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                color: FINAL_CONFIG.value.style.chart.color,
                 align: 'center',
                 rotation: 90
             }
         );
     }
 
-    if (xyConfig.value.style.chart.grid.x.axisName) {
+    if (FINAL_CONFIG.value.style.chart.grid.x.axisName) {
         text(
             ctx.value,
-            xyConfig.value.style.chart.grid.x.axisName,
+            FINAL_CONFIG.value.style.chart.grid.x.axisName,
             w.value / 2,
             h.value,
             {
-                font: `${w.value / 40 * xyConfig.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`,
-                color: xyConfig.value.style.chart.color,
+                font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                color: FINAL_CONFIG.value.style.chart.color,
                 align: 'center'
             }
         );
@@ -671,13 +673,13 @@ function setupChart() {
 
 function drawPlots(ds) {
     for (let i = 0; i < ds.coordinatesLine.length; i += 1) {
-        const radius = (tooltipIndex.value === i ? w.value / 150 : xyConfig.value.style.chart.line.plots.show ? w.value / 200 : 0) * xyConfig.value.style.chart.line.plots.radiusRatio;
+        const radius = (tooltipIndex.value === i ? w.value / 150 : FINAL_CONFIG.value.style.chart.line.plots.show ? w.value / 200 : 0) * FINAL_CONFIG.value.style.chart.line.plots.radiusRatio;
         circle(
             ctx.value,
             { x: ds.coordinatesLine[i].x, y: ds.coordinatesLine[i].y },
             radius,
             {
-                color: xyConfig.value.style.chart.backgroundColor,
+                color: FINAL_CONFIG.value.style.chart.backgroundColor,
                 fillStyle: ds.color,
                 strokeColor: 'transparent'
             }
@@ -696,12 +698,12 @@ function drawDataLabels(ds) {
                 r: ds.rounding || 0
             }),
             ds.coordinatesLine[i].x,
-            ds.coordinatesLine[i].y + xyConfig.value.style.chart.dataLabels.offsetY,
+            ds.coordinatesLine[i].y + FINAL_CONFIG.value.style.chart.dataLabels.offsetY,
             {
                 align: 'center',
-                font: `${w.value / 40 * xyConfig.value.style.chart.dataLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`,
-                color: xyConfig.value.style.chart.dataLabels.useSerieColor ? ds.color : xyConfig.value.style.chart.dataLabels.color,
-                strokeColor: xyConfig.value.style.chart.backgroundColor,
+                font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                color: FINAL_CONFIG.value.style.chart.dataLabels.useSerieColor ? ds.color : FINAL_CONFIG.value.style.chart.dataLabels.color,
+                strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
                 lineWidth: 0.8
             }
         );
@@ -710,17 +712,17 @@ function drawDataLabels(ds) {
 
 function drawTimeLabels() {
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
-        if ((slicer.value.end - slicer.value.start) < xyConfig.value.style.chart.grid.y.timeLabels.modulo || ((slicer.value.end - slicer.value.start) >= xyConfig.value.style.chart.grid.y.timeLabels.modulo && (i % Math.floor((slicer.value.end - slicer.value.start) / xyConfig.value.style.chart.grid.y.timeLabels.modulo) === 0 || i === (tooltipIndex.value + slicer.value.start)))) {
+        if ((slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo || ((slicer.value.end - slicer.value.start) >= FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo && (i % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo) === 0 || i === (tooltipIndex.value + slicer.value.start)))) {
             text(
                 ctx.value,
-                xyConfig.value.style.chart.grid.y.timeLabels.values[i] || i + 1,
+                FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values[i] || i + 1,
                 drawingArea.value.left + (drawingArea.value.slot * (i - slicer.value.start)) + (drawingArea.value.slot / 2),
-                drawingArea.value.bottom + (w.value / xyConfig.value.style.chart.grid.y.timeLabels.offsetY),
+                drawingArea.value.bottom + (w.value / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.offsetY),
                 {
-                    align: xyConfig.value.style.chart.grid.y.timeLabels.rotation === 0 ? 'center' : xyConfig.value.style.chart.grid.y.timeLabels.rotation > 0 ? 'left' : 'right',
-                    font: `${w.value / 40 * xyConfig.value.style.chart.grid.y.timeLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`,
-                    color: xyConfig.value.style.chart.grid.y.timeLabels.color + opacity[tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100],
-                    rotation: xyConfig.value.style.chart.grid.y.timeLabels.rotation,
+                    align: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation === 0 ? 'center' : FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation > 0 ? 'left' : 'right',
+                    font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.timeLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                    color: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color + opacity[tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100],
+                    rotation: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation,
                 }
             );
         }
@@ -735,8 +737,8 @@ function drawSelector() {
             { x: drawingArea.value.left + (drawingArea.value.slot * tooltipIndex.value) + (drawingArea.value.slot / 2), y: drawingArea.value.bottom },
         ],
         {
-            color: xyConfig.value.style.chart.selector.color,
-            lineDash: xyConfig.value.style.chart.selector.dashed ? [8, 8] : [0, 0],
+            color: FINAL_CONFIG.value.style.chart.selector.color,
+            lineDash: FINAL_CONFIG.value.style.chart.selector.dashed ? [8, 8] : [0, 0],
             lineWidth: 2,
             linceCap: 'round'
         }
@@ -785,7 +787,7 @@ function drawBars() {
                     }
                 ],
                 {
-                    strokeColor: xyConfig.value.style.chart.backgroundColor,
+                    strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
                     gradient: {
                         type: 'linear',
                         start: {
@@ -820,12 +822,12 @@ function drawBars() {
                                 (mutableConfig.value.stacked ? 0 : ((drawingArea.value.slot) / barTypes.value.length * i) -
                                 (i === 0 ? 0 : (drawingArea.value.slot / (5 * barTypes.value.length) * i))) +
                                 (drawingArea.value.slot * 0.4 / (mutableConfig.value.stacked ? 1 : barTypes.value.length)),
-                        (ds.coordinatesLine[k].value < 0 ? (mutableConfig.value.stacked ? ds.localZero : absoluteExtremes.value.zero) : ds.coordinatesLine[k].y) + xyConfig.value.style.chart.dataLabels.offsetY ,
+                        (ds.coordinatesLine[k].value < 0 ? (mutableConfig.value.stacked ? ds.localZero : absoluteExtremes.value.zero) : ds.coordinatesLine[k].y) + FINAL_CONFIG.value.style.chart.dataLabels.offsetY ,
                         {
                             align: 'center',
-                            font: `${w.value / 40 * xyConfig.value.style.chart.dataLabels.fontSizeRatio}px ${xyConfig.value.style.fontFamily}`,
-                            color: xyConfig.value.style.chart.dataLabels.useSerieColor ? ds.color : xyConfig.value.style.chart.dataLabels.color,
-                            strokeColor: xyConfig.value.style.chart.backgroundColor,
+                            font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                            color: FINAL_CONFIG.value.style.chart.dataLabels.useSerieColor ? ds.color : FINAL_CONFIG.value.style.chart.dataLabels.color,
+                            strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
                             lineWidth: 0.8
                         }
                     );
@@ -843,7 +845,7 @@ function drawLineOrArea(ds) {
                 ctx.value,
                 [{ x: ds.coordinatesLine[0].x, y: ds.localZero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: ds.localZero }],
                 {
-                    fillColor: ds.color + opacity[xyConfig.value.style.chart.area.opacity],
+                    fillColor: ds.color + opacity[FINAL_CONFIG.value.style.chart.area.opacity],
                     strokeColor: 'transparent',
                 }
             );
@@ -852,7 +854,7 @@ function drawLineOrArea(ds) {
                 ctx.value,
                 [{ x: ds.coordinatesLine[0].x, y: absoluteExtremes.value.zero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: absoluteExtremes.value.zero }],
                 {
-                    fillColor: ds.color + opacity[xyConfig.value.style.chart.area.opacity],
+                    fillColor: ds.color + opacity[FINAL_CONFIG.value.style.chart.area.opacity],
                     strokeColor: 'transparent',
                 }
             );
@@ -874,7 +876,7 @@ function drawXBaseLineStacked() {
                 { x: drawingArea.value.right, y: drawingArea.value.bottom - ds.yOffset },
             ],
             {
-                color: xyConfig.value.style.chart.grid.x.horizontalLines.color,
+                color: FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.color,
                 lineWidth: 1,
             }
         );
@@ -886,12 +888,12 @@ function draw() {
     if (datasetHasChanged.value) {
 
         if (tooltipHasChanged.value) {
-            (tooltipIndex.value !== null && xyConfig.value.style.chart.selector.show) && drawSelector();
+            (tooltipIndex.value !== null && FINAL_CONFIG.value.style.chart.selector.show) && drawSelector();
         }
 
         drawBars();
 
-        mutableConfig.value.stacked && xyConfig.value.style.chart.grid.x.showAxis && drawXBaseLineStacked();
+        mutableConfig.value.stacked && FINAL_CONFIG.value.style.chart.grid.x.showAxis && drawXBaseLineStacked();
 
         lineAndPlotTypes.value.forEach(ds => {
             (ds.type === 'line' || !ds.type) && drawLineOrArea(ds);
@@ -913,13 +915,14 @@ function draw() {
         }
 
         if (tooltipHasChanged.value) {
-            (tooltipIndex.value !== null && xyConfig.value.style.chart.selector.show) && drawSelector();
+            (tooltipIndex.value !== null && FINAL_CONFIG.value.style.chart.selector.show) && drawSelector();
         }
 
         // PLOT HIGHLIGHTS
         if (tooltipHasChanged.value && tooltipIndex.value !== null) {
             formattedDataset.value.forEach(ds => {
                 if (((ds.type === 'line' || !ds.type)) || ds.type === 'plot') {
+                    if(!ds.coordinatesLine[tooltipIndex.value]) return
                     if (ds.coordinatesLine[tooltipIndex.value].x !== undefined && ds.coordinatesLine[tooltipIndex.value].y !== undefined) {
                         circle(
                             ctx.value,
@@ -927,9 +930,9 @@ function draw() {
                                 x: ds.coordinatesLine[tooltipIndex.value].x,
                                 y: ds.coordinatesLine[tooltipIndex.value].y
                             },
-                            w.value / 150 * xyConfig.value.style.chart.line.plots.radiusRatio,
+                            w.value / 150 * FINAL_CONFIG.value.style.chart.line.plots.radiusRatio,
                             {
-                                color: xyConfig.value.style.chart.backgroundColor,
+                                color: FINAL_CONFIG.value.style.chart.backgroundColor,
                                 fillStyle: ds.color,
                                 strokeColor: 'transparent'
                             }
@@ -941,7 +944,7 @@ function draw() {
     }
 
     // TIME LABELS
-    xyConfig.value.style.chart.grid.y.timeLabels.show && drawTimeLabels();
+    FINAL_CONFIG.value.style.chart.grid.y.timeLabels.show && drawTimeLabels();
     datasetHasChanged.value = false;
 }
 
@@ -968,7 +971,7 @@ function handleMousemove(e) {
 
     let html = "";
 
-    const customFormat = xyConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
         seriesIndex: tooltipIndex.value,
@@ -982,7 +985,7 @@ function handleMousemove(e) {
             }
         }),
         series: formattedDataset.value,
-        config: xyConfig.value
+        config: FINAL_CONFIG.value
     }))) {
         tooltipContent.value = customFormat({
             seriesIndex: tooltipIndex.value,
@@ -996,11 +999,11 @@ function handleMousemove(e) {
                 }
             }),
             series: formattedDataset.value,
-            config: xyConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
-        if (xyConfig.value.style.chart.grid.y.timeLabels.values[tooltipIndex.value]) {
-            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${xyConfig.value.style.chart.tooltip.borderColor}; width:100%">${xyConfig.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]}</div>`;
+        if (FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]) {
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]}</div>`;
         }
         html += tootlipDataset.value.join('')
         tooltipContent.value = html;
@@ -1052,13 +1055,13 @@ onMounted(() => {
         }
     }
 
-    if (xyConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: xy.value,
-                title: xyConfig.value.style.chart.title.text ? chartTitle.value : null,
-                legend: xyConfig.value.style.chart.legend.show ? chartLegend.value : null,
-                slicer: xyConfig.value.style.chart.zoom.show && maxSeries.value > 1 ? chartSlicer.value : null
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxSeries.value > 1 ? chartSlicer.value : null
             });
             aspectRatio.value = `${width} / ${height}`;
         });
@@ -1119,11 +1122,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'donut-div-legend',
-        backgroundColor: xyConfig.value.style.chart.legend.backgroundColor,
-        color: xyConfig.value.style.chart.legend.color,
-        fontSize: xyConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: xyConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 });
 
@@ -1137,24 +1140,24 @@ const dataTable = computed(() => {
             return ds.series[i] ?? 0
         }).reduce((a,b ) => a + b, 0);
 
-        body.push([xyConfig.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(xyConfig.value.table.rounding))).concat((sum ?? 0).toFixed(xyConfig.value.table.rounding)));
+        body.push([FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.rounding))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)));
     }
 
     const config = {
         th: {
-            backgroundColor: xyConfig.value.table.th.backgroundColor,
-            color: xyConfig.value.table.th.color,
-            outline: xyConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: xyConfig.value.table.td.backgroundColor,
-            color: xyConfig.value.table.td.color,
-            outline: xyConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: xyConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
-    const colNames = [xyConfig.value.table.columnNames.period].concat(formattedDataset.value.map(ds => ds.name)).concat(xyConfig.value.table.columnNames.total);
+    const colNames = [FINAL_CONFIG.value.table.columnNames.period].concat(formattedDataset.value.map(ds => ds.name)).concat(FINAL_CONFIG.value.table.columnNames.total);
 
     return { head, body: body.slice(0, slicer.value.end - slicer.value.start), config, colNames }
 });
@@ -1173,9 +1176,9 @@ const tableCsv = computed(() => {
     const body = [];
 
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
-        const row = [xyConfig.value.style.chart.grid.y.timeLabels.values[i] || i + 1];
+        const row = [FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values[i] || i + 1];
         formattedDataset.value.forEach(s => {
-            row.push(Number((s.series[i] || 0).toFixed(xyConfig.value.table.rounding)));
+            row.push(Number((s.series[i] || 0).toFixed(FINAL_CONFIG.value.table.rounding)));
         });
         body.push(row);
     }
@@ -1184,12 +1187,12 @@ const tableCsv = computed(() => {
 });
 
 function generateCsv() {
-    const title = [[xyConfig.value.style.chart.title.text], [xyConfig.value.style.chart.title.subtitle.text], [""]];
+    const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
     const head = ["",...tableCsv.value.head.map(h => h.label)];
     const body = tableCsv.value.body;
     const table = title.concat([head]).concat(body);
     const csvContent = createCsvContent(table);
-    downloadCsv({ csvContent, title: xyConfig.value.style.chart.title.text || 'vue-ui-xy-canvas'});
+    downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-xy-canvas'});
 }
 
 function getData() {
@@ -1226,17 +1229,17 @@ defineExpose({
 </script>
 
 <template>
-    <div :style="`width:100%; position: relative;${xyConfig.responsive ? 'height: 100%' : ''}`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`">    
-        <div ref="chartTitle" v-if="xyConfig.style.chart.title.text"
-            :style="`width:100%;background:${xyConfig.style.chart.backgroundColor};`">
+    <div :style="`width:100%; position: relative;${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`">    
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <Title :config="{
             title: {
                 cy: 'xy-canvas-title',
-                ...xyConfig.style.chart.title
+                ...FINAL_CONFIG.style.chart.title
             },
             subtitle: {
                 cy: 'xy-canvas-subtitle',
-                ...xyConfig.style.chart.title.subtitle
+                ...FINAL_CONFIG.style.chart.title.subtitle
             }
         }" />
         </div>
@@ -1244,24 +1247,24 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="xyConfig.userOptions.show && isDataset"
-            :backgroundColor="xyConfig.style.chart.backgroundColor"
-            :color="xyConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="xyConfig.userOptions.buttons.tooltip && xyConfig.style.chart.tooltip.show"
-            :hasPdf="xyConfig.userOptions.buttons.pdf"
-            :hasImg="xyConfig.userOptions.buttons.img"
-            :hasXls="xyConfig.userOptions.buttons.csv"
-            :hasLabel="xyConfig.userOptions.buttons.labels"
-            :hasStack="dataset.length > 1 && xyConfig.userOptions.buttons.stack"
-            :hasFullscreen="xyConfig.userOptions.buttons.fullscreen"
-            :hasTable="(slicer.end - slicer.start < 200) && xyConfig.userOptions.buttons.table"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
+            :hasStack="dataset.length > 1 && FINAL_CONFIG.userOptions.buttons.stack"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasTable="(slicer.end - slicer.start < 200) && FINAL_CONFIG.userOptions.buttons.table"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
             :isStacked="mutableConfig.stacked"
-            :titles="{ ...xyConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="xy"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -1315,7 +1318,7 @@ defineExpose({
                 :config="{
                     type: 'line',
                     style: {
-                        backgroundColor: xyConfig.style.chart.backgroundColor,
+                        backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                         line: {
                             axis: {
                                 color: '#CCCCCC',
@@ -1331,13 +1334,13 @@ defineExpose({
     
             <!-- TOOLTIP -->
             <Tooltip :show="mutableConfig.showTooltip && isTooltip"
-                :backgroundColor="xyConfig.style.chart.tooltip.backgroundColor" 
-                :color="xyConfig.style.chart.tooltip.color"
-                :fontSize="xyConfig.style.chart.tooltip.fontSize" 
-                :borderRadius="xyConfig.style.chart.tooltip.borderRadius"
-                :borderColor="xyConfig.style.chart.tooltip.borderColor"
-                :borderWidth="xyConfig.style.chart.tooltip.borderWidth" :parent="canvas" :content="tooltipContent"
-                :isCustom="isFunction(xyConfig.style.chart.tooltip.customFormat)">
+                :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor" 
+                :color="FINAL_CONFIG.style.chart.tooltip.color"
+                :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize" 
+                :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+                :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+                :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth" :parent="canvas" :content="tooltipContent"
+                :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)">
                 <template #tooltip-before>
                     <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
                 </template>
@@ -1347,19 +1350,19 @@ defineExpose({
             </Tooltip>
         </div>
     
-        <div ref="chartSlicer" :style="`width:100%;background:${xyConfig.style.chart.backgroundColor}`" data-html2canvas-ignore>    
+        <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-html2canvas-ignore>    
             <Slicer 
-                v-if="xyConfig.style.chart.zoom.show && maxSeries > 1"
+                v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 1"
                 :key="`slicer_${slicerStep}`"
-                :background="xyConfig.style.chart.zoom.color"
-                :borderColor="xyConfig.style.chart.backgroundColor"
-                :fontSize="xyConfig.style.chart.zoom.fontSize"
-                :useResetSlot="xyConfig.style.chart.zoom.useResetSlot"
-                :labelLeft="xyConfig.style.chart.grid.y.timeLabels.values[slicer.start] ? xyConfig.style.chart.grid.y.timeLabels.values[slicer.start] : ''"
-                :labelRight="xyConfig.style.chart.grid.y.timeLabels.values[slicer.end-1] ? xyConfig.style.chart.grid.y.timeLabels.values[slicer.end-1] : ''"
-                :textColor="xyConfig.style.chart.color"
-                :inputColor="xyConfig.style.chart.zoom.color"
-                :selectColor="xyConfig.style.chart.zoom.highlightColor"
+                :background="FINAL_CONFIG.style.chart.zoom.color"
+                :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
+                :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
+                :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
+                :labelLeft="FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.start] ? FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.start] : ''"
+                :labelRight="FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.end-1] ? FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.end-1] : ''"
+                :textColor="FINAL_CONFIG.style.chart.color"
+                :inputColor="FINAL_CONFIG.style.chart.zoom.color"
+                :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
                 :max="maxSeries"
                 :min="0"
                 :valueStart="slicer.start"
@@ -1375,7 +1378,7 @@ defineExpose({
         </div>
     
         <div ref="chartLegend">
-            <Legend v-if="xyConfig.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig"
+            <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig"
                 @clickMarker="({ i }) => segregate(i)">
                 <template #item="{ legend, index }">
                     <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
@@ -1391,12 +1394,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: xyConfig.style.chart.backgroundColor,
-                color: xyConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             },
             head: {
-                backgroundColor: xyConfig.style.chart.backgroundColor,
-                color: xyConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             }
         }">
             <template #content>
@@ -1405,7 +1408,7 @@ defineExpose({
                     :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${xyConfig.style.chart.title.text}${xyConfig.style.chart.title.subtitle.text ? ` : ${xyConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

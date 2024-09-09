@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import { 
     XMLNS, 
@@ -23,6 +22,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_flow: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -53,8 +55,6 @@ onMounted(() => {
 });
 
 const uid = ref(createUid());
-
-const defaultConfig = ref(mainConfig.vue_ui_flow);
 const flowChart = ref(null);
 const step = ref(0);
 
@@ -64,10 +64,10 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-const flowConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -84,27 +84,27 @@ const flowConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `flow_${uid.value}`,
-    fileName: flowConfig.value.style.chart.title.text || 'vue-ui-flow'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-flow'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(flowConfig.value.customPalette)
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette)
 });
 
 const gap = computed(() => {
-    return flowConfig.value.style.chart.nodes.gap;
+    return FINAL_CONFIG.value.style.chart.nodes.gap;
 });
 
 const nodeWidth = computed(() => {
-    return flowConfig.value.style.chart.nodes.width;
+    return FINAL_CONFIG.value.style.chart.nodes.width;
 });
 
 const mutableConfig = ref({
-    showTable: flowConfig.value.table.show
+    showTable: FINAL_CONFIG.value.table.show
 });
 
 const unitWidth = computed(() => {
-    return flowConfig.value.style.chart.links.width;
+    return FINAL_CONFIG.value.style.chart.links.width;
 });
 
 const max = computed(() => {
@@ -134,11 +134,11 @@ const max = computed(() => {
 });
 
 function setHeight(val) {
-    return val / max.value * 100 + flowConfig.value.style.chart.nodes.minHeight;
+    return val / max.value * 100 + FINAL_CONFIG.value.style.chart.nodes.minHeight;
 }
 
 function getValueFromHeight(height) {
-    const minHeight = flowConfig.value.style.chart.nodes.minHeight;
+    const minHeight = FINAL_CONFIG.value.style.chart.nodes.minHeight;
     return ((height - minHeight) / 100) * max.value;
 }
 
@@ -191,7 +191,7 @@ function computeSankeyCoordinates(ds) {
         levels[level].forEach((node, i) => {
             const nodeHeight = nodes[node].height;
             nodeCoordinates[node] = {
-                x: parseInt(level, 10) * unitWidth.value + flowConfig.value.style.chart.padding.left,
+                x: parseInt(level, 10) * unitWidth.value + FINAL_CONFIG.value.style.chart.padding.left,
                 y: yOffset,
                 absoluteY: yOffset,
                 height: nodeHeight,
@@ -272,7 +272,7 @@ function computeTotalHeight(nodeCoordinates) {
 }
 
 const drawingArea = computed(() => {
-    const { top: p_top, right: p_right, left: p_left, bottom: p_bottom } = flowConfig.value.style.chart.padding;
+    const { top: p_top, right: p_right, left: p_left, bottom: p_bottom } = FINAL_CONFIG.value.style.chart.padding;
     const width = props.dataset.length * unitWidth.value;
     return {
         height: totalHeight.value + p_top + p_bottom,
@@ -348,28 +348,28 @@ function generateCsv() {
         });
 
         const tableXls = [
-            [ flowConfig.value.style.chart.title.text ],
-            [ flowConfig.value.style.chart.title.subtitle.text ],
+            [ FINAL_CONFIG.value.style.chart.title.text ],
+            [ FINAL_CONFIG.value.style.chart.title.subtitle.text ],
             [
-                [ flowConfig.value.table.columnNames.source ],
-                [ flowConfig.value.table.columnNames.target ],
-                [ flowConfig.value.table.columnNames.value ],
+                [ FINAL_CONFIG.value.table.columnNames.source ],
+                [ FINAL_CONFIG.value.table.columnNames.target ],
+                [ FINAL_CONFIG.value.table.columnNames.value ],
             ]
         ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
         downloadCsv({
             csvContent,
-            title: flowConfig.value.style.chart.title.text || 'vue-ui-flow'
+            title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-flow'
         })
     })
 }
 
 const dataTable = computed(() => {
     const head = [
-        flowConfig.value.table.columnNames.source,
-        flowConfig.value.table.columnNames.target,
-        flowConfig.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.source,
+        FINAL_CONFIG.value.table.columnNames.target,
+        FINAL_CONFIG.value.table.columnNames.value,
     ];
 
     const body = table.value.map((el, i) => {
@@ -383,32 +383,32 @@ const dataTable = computed(() => {
                 name: el.target
             },
             dataLabel({
-                p: flowConfig.value.style.chart.nodes.labels.prefix,
+                p: FINAL_CONFIG.value.style.chart.nodes.labels.prefix,
                 v: el.value,
-                s: flowConfig.value.style.chart.nodes.labels.suffix,
-                r: flowConfig.value.style.chart.nodes.labels.rounding
+                s: FINAL_CONFIG.value.style.chart.nodes.labels.suffix,
+                r: FINAL_CONFIG.value.style.chart.nodes.labels.rounding
             })
         ]
     });
 
     const config = {
         th: {
-            backgroundColor: flowConfig.value.table.th.backgroundColor,
-            color: flowConfig.value.table.th.color,
-            outline: flowConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: flowConfig.value.table.td.backgroundColor,
-            color: flowConfig.value.table.td.color,
-            outline: flowConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: flowConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-        flowConfig.value.table.columnNames.source,
-        flowConfig.value.table.columnNames.target,
-        flowConfig.value.table.columnNames.value
+        FINAL_CONFIG.value.table.columnNames.source,
+        FINAL_CONFIG.value.table.columnNames.target,
+        FINAL_CONFIG.value.table.columnNames.value
     ];
 
     return {
@@ -441,20 +441,20 @@ defineExpose({
     <div
         ref="flowChart"
         :class="`vue-ui-flow ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
-        :style="`font-family:${flowConfig.style.fontFamily};width:100%; text-align:center;${!flowConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${flowConfig.style.chart.backgroundColor}`" 
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" 
         :id="`flow_${uid}`"
     >
 
-        <div v-if="flowConfig.style.chart.title.text" :style="`width:100%;background:${flowConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
             <Title
                 :config="{
                     title: {
                         cy: 'flow-title',
-                        ...flowConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'flow-subtitle',
-                        ...flowConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     }
                 }"
             />
@@ -463,19 +463,19 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="flowConfig.userOptions.show && isDataset"
-            :backgroundColor="flowConfig.style.chart.backgroundColor"
-            :color="flowConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="flowConfig.userOptions.buttons.pdf"
-            :hasXls="flowConfig.userOptions.buttons.csv"
-            :hasImg="flowConfig.userOptions.buttons.img"
-            :hasTable="flowConfig.userOptions.buttons.table"
-            :hasFullscreen="flowConfig.userOptions.buttons.fullscreen"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
-            :titles="{ ...flowConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="flowChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -503,7 +503,7 @@ defineExpose({
         <svg
             :xmlns="XMLNS"
             :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :style="`max-width:100%; overflow: visible; background:${flowConfig.style.chart.backgroundColor};color:${flowConfig.style.chart.color}`"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :style="`max-width:100%; overflow: visible; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`"
         >
             <defs>
                 <linearGradient 
@@ -524,9 +524,9 @@ defineExpose({
                 class="vue-ui-flow-link"
                 :d="path.path" 
                 :fill="`url(#${path.id})`" 
-                :stroke="flowConfig.style.chart.links.stroke"
-                :stroke-width="flowConfig.style.chart.links.strokeWidth"
-                :style="`opacity:${selectedSource ? [path.target, path.source].includes(selectedSource) ? 1 : 0.3 : flowConfig.style.chart.links.opacity}`"
+                :stroke="FINAL_CONFIG.style.chart.links.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.links.strokeWidth"
+                :style="`opacity:${selectedSource ? [path.target, path.source].includes(selectedSource) ? 1 : 0.3 : FINAL_CONFIG.style.chart.links.opacity}`"
             />
 
             <rect 
@@ -537,8 +537,8 @@ defineExpose({
                 :height="node.height"
                 :width="nodeWidth"
                 :fill="node.color"
-                :stroke="flowConfig.style.chart.nodes.stroke"
-                :stroke-width="flowConfig.style.chart.nodes.strokeWidth"
+                :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.nodes.strokeWidth"
                 @mouseenter="selectNode(node)"
                 @mouseleave="unselectNode()"
                 :style="`opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0.2 : 1}`"
@@ -547,28 +547,28 @@ defineExpose({
             <text 
                 v-for="(node, i) in mutableDataset.nodes"
                 :x="node.x + nodeWidth / 2"
-                :y="node.absoluteY + node.height / 2 - (flowConfig.style.chart.nodes.labels.fontSize / 4)"
-                :font-size="flowConfig.style.chart.nodes.labels.fontSize"
+                :y="node.absoluteY + node.height / 2 - (FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4)"
+                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
                 :fill="adaptColorToBackground(node.color)"
                 text-anchor="middle"
                 :style="`pointer-events: none; opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0 : 1}`"
             >
-                {{ flowConfig.style.chart.nodes.labels.abbreviation.use ? abbreviate({ source: node.name, length: flowConfig.style.chart.nodes.labels.abbreviation.length}) : node.name }}
+                {{ FINAL_CONFIG.style.chart.nodes.labels.abbreviation.use ? abbreviate({ source: node.name, length: FINAL_CONFIG.style.chart.nodes.labels.abbreviation.length}) : node.name }}
             </text>
             <text 
                 v-for="(node, i) in mutableDataset.nodes"
                 :x="node.x + nodeWidth / 2"
-                :y="node.absoluteY + node.height / 2 + (flowConfig.style.chart.nodes.labels.fontSize)"
-                :font-size="flowConfig.style.chart.nodes.labels.fontSize"
+                :y="node.absoluteY + node.height / 2 + (FINAL_CONFIG.style.chart.nodes.labels.fontSize)"
+                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
                 :fill="adaptColorToBackground(node.color)"
                 text-anchor="middle"
                 :style="`pointer-events: none; opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0 : 1}`"
             >
                 {{ dataLabel({
-                    p: flowConfig.style.chart.nodes.labels.prefix,
+                    p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
                     v: node.value,
-                    s: flowConfig.style.chart.nodes.labels.suffix,
-                    r: flowConfig.style.chart.nodes.labels.rounding
+                    s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
+                    r: FINAL_CONFIG.style.chart.nodes.labels.rounding
                 }) }}
             </text>
 
@@ -580,7 +580,7 @@ defineExpose({
             :config="{
                 type: 'flow',
                 style: {
-                    backgroundColor: flowConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                 }
             }"
         />
@@ -589,12 +589,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: flowConfig.style.chart.backgroundColor,
-                color: flowConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             },
             head: {
-                backgroundColor: flowConfig.style.chart.backgroundColor,
-                color: flowConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             }
         }">
             <template #content>            
@@ -603,7 +603,7 @@ defineExpose({
                     :head="dataTable.head" 
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${flowConfig.style.chart.title.text}${flowConfig.style.chart.title.subtitle.text ? ` : ${flowConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

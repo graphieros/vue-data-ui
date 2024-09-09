@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue';
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -33,6 +32,9 @@ import {
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
+import { useConfig } from '../useConfig';
+
+const { vue_ui_treemap: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -60,7 +62,6 @@ const isSafari = computed(() => {
 })
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_treemap);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const isFullscreen = ref(false);
@@ -70,10 +71,10 @@ const treemapChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 
-const treemapConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -90,33 +91,33 @@ const treemapConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `treemap_${uid.value}`,
-    fileName: treemapConfig.value.style.chart.title.text || 'vue-ui-treemap'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-treemap'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(treemapConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 const mutableConfig = ref({
-    showTable: treemapConfig.value.table.show,
-    showTooltip: treemapConfig.value.style.chart.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 const chartDimensions = ref({
-    height: treemapConfig.value.style.chart.height,
-    width: treemapConfig.value.style.chart.width
+    height: FINAL_CONFIG.value.style.chart.height,
+    width: FINAL_CONFIG.value.style.chart.width
 })
 
 const svg = computed(() => {
     return {
-        bottom: chartDimensions.value.height - treemapConfig.value.style.chart.padding.bottom,
-        height: chartDimensions.value.height - treemapConfig.value.style.chart.padding.top - treemapConfig.value.style.chart.padding.bottom,
-        left: treemapConfig.value.style.chart.padding.left,
-        right: chartDimensions.value.width - treemapConfig.value.style.chart.padding.right,
-        top: treemapConfig.value.style.chart.padding.top,
+        bottom: chartDimensions.value.height - FINAL_CONFIG.value.style.chart.padding.bottom,
+        height: chartDimensions.value.height - FINAL_CONFIG.value.style.chart.padding.top - FINAL_CONFIG.value.style.chart.padding.bottom,
+        left: FINAL_CONFIG.value.style.chart.padding.left,
+        right: chartDimensions.value.width - FINAL_CONFIG.value.style.chart.padding.right,
+        top: FINAL_CONFIG.value.style.chart.padding.top,
         vbHeight: chartDimensions.value.height,
         vbWidth: chartDimensions.value.width,
-        width: chartDimensions.value.width - treemapConfig.value.style.chart.padding.left - treemapConfig.value.style.chart.padding.right,
+        width: chartDimensions.value.width - FINAL_CONFIG.value.style.chart.padding.left - FINAL_CONFIG.value.style.chart.padding.right,
     }
 });
 
@@ -148,12 +149,12 @@ onMounted(() => {
 
     addIdsToTree(immutableDataset.value);
 
-    if (treemapConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: treemapChart.value,
-                title: treemapConfig.value.style.chart.title.text ? chartTitle.value : null,
-                legend: treemapConfig.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
             });
             chartDimensions.value.width = width;
             chartDimensions.value.height = height;
@@ -184,7 +185,7 @@ const total = computed(() => immutableDataset.value.filter((ds) => !segregated.v
 const orderedDataset = computed({
     get() {
         let ds = [...datasetCopy.value];
-        if (treemapConfig.value.style.chart.layout.sorted) {
+        if (FINAL_CONFIG.value.style.chart.layout.sorted) {
             ds = [...datasetCopy.value].sort((a, b) => b.value - a.value);
         }
         return ds.map(d => {
@@ -203,7 +204,7 @@ function calcRectProportion(rect, totalValue) {
 }
 
 function calcRectOpacity(color, rect, totalValue) {
-    const ratio = treemapConfig.value.style.chart.layout.rects.colorRatio - calcRectProportion(rect, totalValue);
+    const ratio = FINAL_CONFIG.value.style.chart.layout.rects.colorRatio - calcRectProportion(rect, totalValue);
     return lightenHexColor(color, ratio < 0 ? 0 : ratio);
 }
 
@@ -248,8 +249,8 @@ function getWidth({ x0, x1 }) {
 }
 
 function calcFontSize(rect) {
-    const provisional = treemapConfig.value.style.chart.layout.labels.fontSize * (rect.proportion * 2 > 1 ? 1 : rect.proportion * 2);
-    const adapted = provisional < treemapConfig.value.style.chart.layout.labels.minFontSize ? treemapConfig.value.style.chart.layout.labels.minFontSize : provisional;
+    const provisional = FINAL_CONFIG.value.style.chart.layout.labels.fontSize * (rect.proportion * 2 > 1 ? 1 : rect.proportion * 2);
+    const adapted = provisional < FINAL_CONFIG.value.style.chart.layout.labels.minFontSize ? FINAL_CONFIG.value.style.chart.layout.labels.minFontSize : provisional;
     return adapted;
 }
 
@@ -318,11 +319,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'treemap-div-legend',
-        backgroundColor: treemapConfig.value.style.chart.legend.backgroundColor,
-        color: treemapConfig.value.style.chart.legend.color,
-        fontSize: treemapConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: treemapConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 });
 
@@ -343,30 +344,30 @@ const dataTooltipSlot = ref(null);
 
 function useTooltip({ datapoint, seriesIndex }) {
     selectedRect.value = datapoint;
-    dataTooltipSlot.value = { datapoint, seriesIndex, config: treemapConfig.value, series: datasetCopy.value };
+    dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: datasetCopy.value };
 
-    const customFormat = treemapConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
         seriesIndex,
         datapoint,
         series: datasetCopy.value,
-        config: treemapConfig.value
+        config: FINAL_CONFIG.value
     }))) {
         tooltipContent.value = customFormat({
             seriesIndex,
             datapoint,
             series: datasetCopy.value,
-            config: treemapConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
         let html = '';
 
-        html += `<div data-cy="treemap-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${treemapConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div data-cy="treemap-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="treemap-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-        html += `<b data-cy="treemap-tooltip-value">${ dataLabel({p: treemapConfig.value.style.chart.layout.labels.prefix, v: datapoint.value, s: treemapConfig.value.style.chart.layout.labels.suffix, r: treemapConfig.value.style.chart.tooltip.roundingValue})}</b>`;
+        html += `<b data-cy="treemap-tooltip-value">${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
 
         tooltipContent.value = `<div>${html}</div>`;
     }
@@ -392,22 +393,22 @@ function generateCsv() {
                 h.name
             ],[table.value.body[i]], [isNaN(table.value.body[i] / total.value) ? '-' : table.value.body[i] / total.value * 100]]
         });
-        const tableXls = [[treemapConfig.value.style.chart.title.text],[treemapConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: treemapConfig.value.style.chart.title.text || "vue-ui-treemap" })
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-treemap" })
     });
 }
 
 const dataTable = computed(() => {
     const head = [
-        treemapConfig.value.table.columnNames.series,
-        treemapConfig.value.table.columnNames.value,
-        treemapConfig.value.table.columnNames.percentage,
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.percentage,
     ];
 
     const body = table.value.head.map((h,i) => {
-        const label = dataLabel({p:treemapConfig.value.style.chart.layout.labels.prefix, v: table.value.body[i], s:treemapConfig.value.style.chart.layout.labels.suffix, r:treemapConfig.value.table.td.roundingValue});
+        const label = dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.prefix, v: table.value.body[i], s:FINAL_CONFIG.value.style.chart.layout.labels.suffix, r:FINAL_CONFIG.value.table.td.roundingValue});
         return [
             {
                 color: h.color,
@@ -415,27 +416,27 @@ const dataTable = computed(() => {
                 shape: 'square'
             },
             label,
-            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(treemapConfig.value.table.td.roundingPercentage) + '%'
+            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
         ]
     });
 
     const config = {
         th: {
-            backgroundColor:treemapConfig.value.table.th.backgroundColor,
-            color:treemapConfig.value.table.th.color,
-            outline:treemapConfig.value.table.th.outline
+            backgroundColor:FINAL_CONFIG.value.table.th.backgroundColor,
+            color:FINAL_CONFIG.value.table.th.color,
+            outline:FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor:treemapConfig.value.table.td.backgroundColor,
-            color:treemapConfig.value.table.td.color,
-            outline:treemapConfig.value.table.td.outline
+            backgroundColor:FINAL_CONFIG.value.table.td.backgroundColor,
+            color:FINAL_CONFIG.value.table.td.color,
+            outline:FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint:treemapConfig.value.table.responsiveBreakpoint,
+        breakpoint:FINAL_CONFIG.value.table.responsiveBreakpoint,
     }
 
     const colNames = [
-       treemapConfig.value.table.columnNames.series,
-       treemapConfig.value.table.columnNames.value,
+       FINAL_CONFIG.value.table.columnNames.series,
+       FINAL_CONFIG.value.table.columnNames.value,
     ]
 
     return {
@@ -471,21 +472,21 @@ defineExpose({
 
 <template>
     <div ref="treemapChart"
-        :class="`vue-ui-treemap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${treemapConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
-        :style="`font-family:${treemapConfig.style.fontFamily};width:100%; ${treemapConfig.responsive ? 'height: 100%;' : ''} text-align:center;${!treemapConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${treemapConfig.style.chart.backgroundColor}`"
+        :class="`vue-ui-treemap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`treemap_${uid}`">
         
         <!-- TITLE -->
-        <div ref="chartTitle" v-if="treemapConfig.style.chart.title.text" :style="`width:100%;background:${treemapConfig.style.chart.backgroundColor};padding-bottom:6px`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:6px`">
             <Title
                 :config="{
                     title: {
                         cy: 'treemap-div-title',
-                        ...treemapConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'treemap-div-subtitle',
-                        ...treemapConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     }
                 }"
             />
@@ -495,21 +496,21 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="treemapConfig.userOptions.show && isDataset"
-            :backgroundColor="treemapConfig.style.chart.backgroundColor"
-            :color="treemapConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="treemapConfig.userOptions.buttons.tooltip && treemapConfig.style.chart.tooltip.show"
-            :hasPdf="treemapConfig.userOptions.buttons.pdf"
-            :hasXls="treemapConfig.userOptions.buttons.csv"
-            :hasImg="treemapConfig.userOptions.buttons.img"
-            :hasTable="treemapConfig.userOptions.buttons.table"
-            :hasFullscreen="treemapConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...treemapConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="treemapChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -542,13 +543,13 @@ defineExpose({
         <svg :xmlns="XMLNS" v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
             data-cy="treemap-svg" :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
-            :style="`max-width:100%; overflow: hidden; background:${treemapConfig.style.chart.backgroundColor};color:${treemapConfig.style.chart.color}`">
+            :style="`max-width:100%; overflow: hidden; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
 
             <g v-for="(rect, i) in squarified">            
-                <defs v-if="treemapConfig.style.chart.layout.rects.gradient.show">
+                <defs v-if="FINAL_CONFIG.style.chart.layout.rects.gradient.show">
                     <radialGradient :id="`tgrad_${rect.id}`" gradientTransform="translate(-1, -1.000001) scale(2, 2)">
                         <stop offset="18%" :stop-color="rect.color"/>
-                        <stop offset="100%" :stop-color="lightenHexColor(rect.color, treemapConfig.style.chart.layout.rects.gradient.intensity / 100)"/>
+                        <stop offset="100%" :stop-color="lightenHexColor(rect.color, FINAL_CONFIG.style.chart.layout.rects.gradient.intensity / 100)"/>
                     </radialGradient>
                 </defs>
             </g>
@@ -559,17 +560,17 @@ defineExpose({
                     :y="rect.y0" 
                     :height="getHeight(rect)" 
                     :width="getWidth(rect)" 
-                    :fill="isSafari ? rect.color : treemapConfig.style.chart.layout.rects.gradient.show ? `url(#tgrad_${rect.id})` : rect.color"
-                    :rx="treemapConfig.style.chart.layout.rects.borderRadius"
-                    :stroke="selectedRect && selectedRect.id === rect.id ? treemapConfig.style.chart.layout.rects.selected.stroke : treemapConfig.style.chart.layout.rects.stroke"
-                    :stroke-width="selectedRect && selectedRect.id === rect.id ? treemapConfig.style.chart.layout.rects.selected.strokeWidth : treemapConfig.style.chart.layout.rects.strokeWidth"
+                    :fill="isSafari ? rect.color : FINAL_CONFIG.style.chart.layout.rects.gradient.show ? `url(#tgrad_${rect.id})` : rect.color"
+                    :rx="FINAL_CONFIG.style.chart.layout.rects.borderRadius"
+                    :stroke="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.stroke : FINAL_CONFIG.style.chart.layout.rects.stroke"
+                    :stroke-width="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.strokeWidth : FINAL_CONFIG.style.chart.layout.rects.strokeWidth"
                     @click="zoom(rect)"
                     @mouseenter="() => useTooltip({
                         datapoint: rect,
                         seriesIndex: i,
                     })"
                     @mouseleave="selectedRect = null; isTooltip = false"
-                    :style="`opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : treemapConfig.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
+                    :style="`opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
                     class="vue-ui-treemap-rect"
                 />
 
@@ -583,17 +584,17 @@ defineExpose({
                     <div style="width: 100%; height: 100%" class="vue-ui-treemap-cell">
                         <div
                             class="vue-ui-treemap-cell-default"
-                            v-if="treemapConfig.style.chart.layout.labels.showDefaultLabels && (rect.proportion > treemapConfig.style.chart.layout.labels.hideUnderProportion || isZoom)" :style="`width:calc(100% - ${calcFontSize(rect) / 1.5}px);text-align:left;line-height:${calcFontSize(rect) < 14 ? 14 : calcFontSize(rect)}px;padding:${calcFontSize(rect) / 3}px; color:${adaptColorToBackground(rect.color)}`"
+                            v-if="FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && (rect.proportion > FINAL_CONFIG.style.chart.layout.labels.hideUnderProportion || isZoom)" :style="`width:calc(100% - ${calcFontSize(rect) / 1.5}px);text-align:left;line-height:${calcFontSize(rect) < 14 ? 14 : calcFontSize(rect)}px;padding:${calcFontSize(rect) / 3}px; color:${adaptColorToBackground(rect.color)}`"
                         >
                             <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
                                 {{ rect.name }}
                             </span><br>
                             <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
                                 {{  dataLabel({
-                                    p: treemapConfig.style.chart.layout.labels.prefix,
+                                    p: FINAL_CONFIG.style.chart.layout.labels.prefix,
                                     v: rect.value,
-                                    s: treemapConfig.style.chart.layout.labels.suffix,
-                                    r: treemapConfig.style.chart.layout.labels.rounding
+                                    s: FINAL_CONFIG.style.chart.layout.labels.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.labels.rounding
                                 }) }}
                             </span>
                         </div>
@@ -601,7 +602,7 @@ defineExpose({
                             name="rect" 
                             v-bind="{ 
                                 rect, 
-                                shouldShow: rect.proportion > treemapConfig.style.chart.layout.labels.hideUnderProportion || isZoom, 
+                                shouldShow: rect.proportion > FINAL_CONFIG.style.chart.layout.labels.hideUnderProportion || isZoom, 
                                 fontSize: calcFontSize(rect), 
                                 isZoom, 
                                 textColor: adaptColorToBackground(rect.color) 
@@ -609,7 +610,7 @@ defineExpose({
                     </div>
                 </foreignObject>
             </g>
-            <slot name="svg" v-bind="{ svg, isZoom, rect: selectedRect, config: treemapConfig }"/>
+            <slot name="svg" v-bind="{ svg, isZoom, rect: selectedRect, config: FINAL_CONFIG }"/>
         </svg>
 
         <Skeleton 
@@ -617,7 +618,7 @@ defineExpose({
             :config="{
                 type: 'treemap',
                 style: {
-                    backgroundColor: treemapConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     treemap: {
                         color: '#CCCCCC',
                     }
@@ -628,7 +629,7 @@ defineExpose({
         <!-- LEGEND & LEGEND SLOT -->
         <div ref="chartLegend">
             <Legend
-                v-if="treemapConfig.style.chart.legend.show"
+                v-if="FINAL_CONFIG.style.chart.legend.show"
                 :legendSet="legendSet"
                 :config="legendConfig"
                 :id="`treemap_legend_${uid}`"
@@ -636,9 +637,9 @@ defineExpose({
             >
                 <template #item="{ legend, index }">
                     <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{ dataLabel({p: treemapConfig.style.chart.layout.labels.prefix, v: legend.value, s: treemapConfig.style.chart.layout.labels.suffix, r: treemapConfig.style.chart.legend.roundingValue}) }}
+                        {{ legend.name }}: {{ dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue}) }}
                         <span v-if="!segregated.includes(legend.id)">
-                            ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(treemapConfig.style.chart.legend.roundingPercentage)}}%)
+                            ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}}%)
                         </span>
                         <span v-else>
                             ( - % )
@@ -654,15 +655,15 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="treemapConfig.style.chart.tooltip.backgroundColor"
-            :color="treemapConfig.style.chart.tooltip.color"
-            :fontSize="treemapConfig.style.chart.tooltip.fontSize"
-            :borderRadius="treemapConfig.style.chart.tooltip.borderRadius"
-            :borderColor="treemapConfig.style.chart.tooltip.borderColor"
-            :borderWidth="treemapConfig.style.chart.tooltip.borderWidth"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :parent="treemapChart"
             :content="tooltipContent"
-            :isCustom="isFunction(treemapConfig.style.chart.tooltip.customFormat)"
+            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -677,12 +678,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: treemapConfig.style.chart.backgroundColor,
-                color: treemapConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             },
             head: {
-                backgroundColor: treemapConfig.style.chart.backgroundColor,
-                color: treemapConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             }
         }">
             <template #content>
@@ -691,7 +692,7 @@ defineExpose({
                     :head="dataTable.head" 
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${treemapConfig.style.chart.title.text}${treemapConfig.style.chart.title.subtitle.text ? ` : ${treemapConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

@@ -2,8 +2,10 @@
 import { ref, computed, watch, onMounted } from "vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import { useNestedProp } from "../useNestedProp";
-import mainConfig from "../default_configs.json";
 import { createUid } from "../lib";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_accordion: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -18,38 +20,36 @@ const props = defineProps({
     }
 });
 
-const defaultConfig = ref(mainConfig.vue_ui_accordion);
-
-const accordionConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
 });
 
-const isOpen = ref(accordionConfig.value.open);
+const isOpen = ref(FINAL_CONFIG.value.open);
 
 const uid = ref(createUid())
 const details = ref(null);
 const init = ref(0)
 
 onMounted(() => {
-    details.value.open = accordionConfig.value.open;
+    details.value.open = FINAL_CONFIG.value.open;
 })
 
-watch(() => accordionConfig.value.open, (val) => {
+watch(() => FINAL_CONFIG.value.open, (val) => {
     details.value.open = val;
 })
 
 function toggleDetails() {
-    if(init.value > 0 || !accordionConfig.value.open) {
+    if(init.value > 0 || !FINAL_CONFIG.value.open) {
         isOpen.value = !isOpen.value;
     }
     init.value += 1;
 }
 
 const maxHeight = computed(() => {
-    return `${accordionConfig.value.maxHeight}px`
+    return `${FINAL_CONFIG.value.maxHeight}px`
 })
 
 </script>
@@ -58,17 +58,17 @@ const maxHeight = computed(() => {
     <div>
         <details :id="`details_${uid}`" ref="details" @toggle="toggleDetails">
             <summary :class="{ 'vue-ui-accordion-headless': hideDetails }">
-                <div class="vue-ui-accordion-head" :style="`background:${accordionConfig.head.backgroundColor};padding:${accordionConfig.head.padding}; ${hideDetails ? 'height: 0px !important; padding: 0 !important;' : ''}`">
+                <div class="vue-ui-accordion-head" :style="`background:${FINAL_CONFIG.head.backgroundColor};padding:${FINAL_CONFIG.head.padding}; ${hideDetails ? 'height: 0px !important; padding: 0 !important;' : ''}`">
                     <div class="vue-ui-accordion-arrow" v-if="!hideDetails">
-                        <slot name="arrow" v-if="accordionConfig.head.useArrowSlot" v-bind="{ backgroundColor: accordionConfig.head.backgroundColor, color: accordionConfig.head.color, iconColor: accordionConfig.head.iconColor, isOpen }" />
-                        <BaseIcon name="arrowRight" v-else :stroke="accordionConfig.head.iconColor" />
+                        <slot name="arrow" v-if="FINAL_CONFIG.head.useArrowSlot" v-bind="{ backgroundColor: FINAL_CONFIG.head.backgroundColor, color: FINAL_CONFIG.head.color, iconColor: FINAL_CONFIG.head.iconColor, isOpen }" />
+                        <BaseIcon name="arrowRight" v-else :stroke="FINAL_CONFIG.head.iconColor" />
                     </div>
-                    <slot name="title" v-bind="{ color: accordionConfig.head.color, isOpen }"/>
+                    <slot name="title" v-bind="{ color: FINAL_CONFIG.head.color, isOpen }"/>
                 </div>
             </summary>
         </details>
-        <div class="vue-ui-accordion-content" :style="`background:${accordionConfig.body.backgroundColor};color:${accordionConfig.body.color}`">
-            <slot name="content" v-bind="{ backgroundColor: accordionConfig.body.backgroundColor, color: accordionConfig.body.color, isOpen }"/>
+        <div class="vue-ui-accordion-content" :style="`background:${FINAL_CONFIG.body.backgroundColor};color:${FINAL_CONFIG.body.color}`">
+            <slot name="content" v-bind="{ backgroundColor: FINAL_CONFIG.body.backgroundColor, color: FINAL_CONFIG.body.color, isOpen }"/>
         </div>
     </div>
 </template>

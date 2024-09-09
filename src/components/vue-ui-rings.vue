@@ -19,7 +19,6 @@ import {
   XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -31,6 +30,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_rings: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
   config: {
@@ -54,7 +56,6 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_rings);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -64,10 +65,10 @@ const ringsChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 
-const ringsConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
   const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -106,12 +107,12 @@ onMounted(() => {
     })
   }
 
-  if (ringsConfig.value.responsive) {
+  if (FINAL_CONFIG.value.responsive) {
     const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: ringsChart.value,
-                title: ringsConfig.value.style.chart.title.text ? chartTitle.value : null,
-                legend: ringsConfig.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -131,16 +132,16 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `rings_${uid.value}`,
-    fileName: ringsConfig.value.style.chart.title.text || 'vue-ui-rings'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-rings'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(ringsConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
 const mutableConfig = ref({
-    showTable: ringsConfig.value.table.show,
-    showTooltip: ringsConfig.value.style.chart.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 const svg = ref({
@@ -215,11 +216,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'rings-div-legend',
-        backgroundColor: ringsConfig.value.style.chart.legend.backgroundColor,
-        color: ringsConfig.value.style.chart.legend.color,
-        fontSize: ringsConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: ringsConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 })
 
@@ -245,7 +246,7 @@ const convertedDataset = computed(() => {
         proportion: proportionToMax(value),
         percentage: (value / grandTotal.value) * 100,
         strokeWidth:
-          ringsConfig.value.style.chart.layout.rings.strokeWidth *
+          FINAL_CONFIG.value.style.chart.layout.rings.strokeWidth *
           proportionToMax(value),
       };
     })
@@ -269,7 +270,7 @@ function getData() {
 }
 
 const maxHeight = computed(() => {
-  return chartRadius.value - ringsConfig.value.style.chart.layout.rings.strokeWidth * 2;
+  return chartRadius.value - FINAL_CONFIG.value.style.chart.layout.rings.strokeWidth * 2;
 });
 
 const dataTooltipSlot = ref(null);
@@ -281,45 +282,45 @@ function useTooltip(index, datapoint) {
     datapoint,
     seriesIndex: index,
     series: convertedDataset.value,
-    config: ringsConfig.value
+    config: FINAL_CONFIG.value
   }
 
   selectedSerie.value = index;
   const selected = convertedDataset.value[index];
-  const customFormat = ringsConfig.value.style.chart.tooltip.customFormat;
+  const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
   if (isFunction(customFormat) && functionReturnsString(() => customFormat({
       seriesIndex: index,
       datapoint,
       series: convertedDataset.value,
-      config: ringsConfig.value
+      config: FINAL_CONFIG.value
     }))) {
     tooltipContent.value = customFormat({
       seriesIndex: index,
       datapoint,
       series: convertedDataset.value,
-      config: ringsConfig.value
+      config: FINAL_CONFIG.value
     })
   } else {
     let html = "";
   
-    html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${ringsConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
+    html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
   
     html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="waffle-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${selected.color}" /></svg>`;
-    if (ringsConfig.value.style.chart.tooltip.showValue) {
-      html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:ringsConfig.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s:ringsConfig.value.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.value.style.chart.tooltip.roundingValue})}</b>`;
+    if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+      html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r:FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
     }
-    if (ringsConfig.value.style.chart.tooltip.showPercentage) {
-      if (!ringsConfig.value.style.chart.tooltip.showValue) {
+    if (FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+      if (!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
         html += `<b>${((selected.value / grandTotal.value) * 100).toFixed(
-          ringsConfig.value.style.chart.tooltip.roundingPercentage
+          FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
         )}%</b></div>`;
       } else {
         html += `<span data-cy="waffle-tooltip-percentage">(${(
           (selected.value / grandTotal.value) *
           100
         ).toFixed(
-          ringsConfig.value.style.chart.tooltip.roundingPercentage
+          FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
         )}%)</span></div>`;
       }
     }
@@ -344,7 +345,7 @@ const table = computed(() => {
 const dataTable = computed(() => {
     const head = [
         ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
-        dataLabel({p: ringsConfig.value.style.chart.layout.labels.dataLabels.prefix, v: grandTotal.value, s: ringsConfig.value.style.chart.layout.labels.dataLabels.suffix, r: ringsConfig.value.table.td.roundingValue}),
+        dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: grandTotal.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.table.td.roundingValue}),
         '100%'
     ];
 
@@ -354,29 +355,29 @@ const dataTable = computed(() => {
                 color: h.color,
                 name: h.name
             },
-            dataLabel({p: ringsConfig.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: ringsConfig.value.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.value.table.td.roundingValue}),
-            isNaN(table.value.body[i] / grandTotal.value) ? "-" : (table.value.body[i] / grandTotal.value * 100).toFixed(ringsConfig.value.table.td.roundingPercentage) + '%'
+            dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r:FINAL_CONFIG.value.table.td.roundingValue}),
+            isNaN(table.value.body[i] / grandTotal.value) ? "-" : (table.value.body[i] / grandTotal.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
         ]
     });
 
     const config = {
         th: {
-            backgroundColor: ringsConfig.value.table.th.backgroundColor,
-            color: ringsConfig.value.table.th.color,
-            outline: ringsConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: ringsConfig.value.table.td.backgroundColor,
-            color: ringsConfig.value.table.td.color,
-            outline: ringsConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: ringsConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-      ringsConfig.value.table.columnNames.series,
-      ringsConfig.value.table.columnNames.value,
-      ringsConfig.value.table.columnNames.percentage
+      FINAL_CONFIG.value.table.columnNames.series,
+      FINAL_CONFIG.value.table.columnNames.value,
+      FINAL_CONFIG.value.table.columnNames.percentage
     ]
 
     return {
@@ -395,9 +396,9 @@ function generateCsv() {
                 h.name
             ],[table.value.body[i]], [isNaN(table.value.body[i] / grandTotal.value) ? '-' : table.value.body[i] / grandTotal.value * 100]]
         });
-        const tableXls = [[ringsConfig.value.style.chart.title.text],[ringsConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: ringsConfig.value.style.chart.title.text || "vue-ui-rings"});
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-rings"});
     });
 }
 
@@ -429,8 +430,8 @@ defineExpose({
 <template>
   <div
     ref="ringsChart"
-    :class="`vue-ui-rings ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${ringsConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
-    :style="`font-family:${ringsConfig.style.fontFamily};text-align:center;width:100%;background:${ringsConfig.style.chart.backgroundColor};${ringsConfig.responsive ? 'height: 100%' : ''}`"
+    :class="`vue-ui-rings ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
+    :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
     :id="`rings_${uid}`"
     @mouseleave="
       selectedSerie = null;
@@ -439,19 +440,19 @@ defineExpose({
   >
     <div
       ref="chartTitle"
-      v-if="ringsConfig.style.chart.title.text"
-      :style="`width:100%;background:${ringsConfig.style.chart.backgroundColor}`"
+      v-if="FINAL_CONFIG.style.chart.title.text"
+      :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
     >
       <!-- TITLE AS DIV -->
       <Title
         :config="{
           title: {
             cy: 'rings-div-title',
-            ...ringsConfig.style.chart.title
+            ...FINAL_CONFIG.style.chart.title
           },
           subtitle: {
             cy: 'rings-div-subtitle',
-            ...ringsConfig.style.chart.title.subtitle
+            ...FINAL_CONFIG.style.chart.title.subtitle
           },
         }"
       />
@@ -461,21 +462,21 @@ defineExpose({
     <UserOptions
         ref="details"
         :key="`user_options_${step}`"
-        v-if="ringsConfig.userOptions.show && isDataset"
-        :backgroundColor="ringsConfig.style.chart.backgroundColor"
-        :color="ringsConfig.style.chart.color"
+        v-if="FINAL_CONFIG.userOptions.show && isDataset"
+        :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+        :color="FINAL_CONFIG.style.chart.color"
         :isPrinting="isPrinting"
         :isImaging="isImaging"
         :uid="uid"
-        :hasTooltip="ringsConfig.userOptions.buttons.tooltip && ringsConfig.style.chart.tooltip.show"
-        :hasPdf="ringsConfig.userOptions.buttons.pdf"
-        :hasXls="ringsConfig.userOptions.buttons.csv"
-        :hasImg="ringsConfig.userOptions.buttons.img"
-        :hasTable="ringsConfig.userOptions.buttons.table"
-        :hasFullscreen="ringsConfig.userOptions.buttons.fullscreen"
+        :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+        :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+        :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+        :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+        :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+        :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
         :isTooltip="mutableConfig.showTooltip"
         :isFullscreen="isFullscreen"
-        :titles="{ ...ringsConfig.userOptions.buttonTitles }"
+        :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
         :chartElement="ringsChart"
         @toggleFullscreen="toggleFullscreen"
         @generatePdf="generatePdf"
@@ -511,7 +512,7 @@ defineExpose({
       :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
       data-cy="rings-svg"
       :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-      :style="`max-width:100%;overflow:visible;background:${ringsConfig.style.chart.backgroundColor};color:${ringsConfig.style.chart.color}`"
+      :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`"
     >
       <!-- DEFS ? -->
       <radialGradient
@@ -526,7 +527,7 @@ defineExpose({
         <stop
           offset="0%"
           :stop-color="`${shiftHue(d.color, 0.05)}${
-            opacity[100 - ringsConfig.style.chart.layout.rings.gradient.intensity]
+            opacity[100 - FINAL_CONFIG.style.chart.layout.rings.gradient.intensity]
           }`"
         />
         <stop offset="100%" :stop-color="d.color" />
@@ -536,23 +537,23 @@ defineExpose({
       <g v-for="(ring, i) in convertedDataset">
         <circle
           :class="{
-            'vue-ui-rings-item': isLoaded && ringsConfig.useCssAnimation,
-            'vue-rings-item-onload': !isLoaded && ringsConfig.useCssAnimation,
+            'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
+            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation,
             'vue-ui-rings-opacity': selectedSerie !== null && selectedSerie !== i,
           }"
           :style="`animation-delay:${i * 100}ms`"
-          :stroke="ringsConfig.style.chart.layout.rings.stroke"
+          :stroke="FINAL_CONFIG.style.chart.layout.rings.stroke"
           :cx="svg.width / 2"
           :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
           :r="((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9"
-          :fill="ringsConfig.style.chart.layout.rings.gradient.underlayerColor"
+          :fill="FINAL_CONFIG.style.chart.layout.rings.gradient.underlayerColor"
         />
         <circle
         :data-cy="`ring-${i}`"
           :class="{
-            'vue-ui-rings-item': isLoaded && ringsConfig.useCssAnimation,
-            'vue-rings-item-onload': !isLoaded && ringsConfig.useCssAnimation,
-            'vue-ui-rings-shadow': ringsConfig.style.chart.layout.rings.useShadow,
+            'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
+            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation,
+            'vue-ui-rings-shadow': FINAL_CONFIG.style.chart.layout.rings.useShadow,
             'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
           }"
           :style="`animation-delay:${i * 100}ms`"
@@ -562,7 +563,7 @@ defineExpose({
           :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
           :r="((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9"
           :fill="
-            ringsConfig.style.chart.layout.rings.gradient.show
+            FINAL_CONFIG.style.chart.layout.rings.gradient.show
               ? `url(#gradient_${uid}_${i})`
               : ring.color
           "
@@ -590,7 +591,7 @@ defineExpose({
       :config="{
         type: 'rings',
         style: {
-          backgroundColor: ringsConfig.style.chart.backgroundColor,
+          backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
           rings: {
             color: '#CCCCCC'
           }
@@ -601,16 +602,16 @@ defineExpose({
     <!-- LEGEND AS DIV -->
     <div ref="chartLegend">
       <Legend
-        v-if="ringsConfig.style.chart.legend.show"
+        v-if="FINAL_CONFIG.style.chart.legend.show"
         :legendSet="legendSet"
         :config="legendConfig"
         @clickMarker="({legend}) => segregate(legend.uid)"
       >
         <template #item="{legend}">
             <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                {{ legend.name }}: {{ dataLabel({p:ringsConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: ringsConfig.style.chart.layout.labels.dataLabels.suffix, r:ringsConfig.style.chart.legend.roundingValue}) }}
+                {{ legend.name }}: {{ dataLabel({p:FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r:FINAL_CONFIG.style.chart.legend.roundingValue}) }}
                 <span v-if="!segregated.includes(legend.uid)">
-                    ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(ringsConfig.style.chart.legend.roundingPercentage)}}%)
+                    ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}}%)
                 </span>
                 <span v-else>
                     ( - % )
@@ -629,15 +630,15 @@ defineExpose({
         isTooltip &&
         segregated.length < props.dataset.length
       "
-      :backgroundColor="ringsConfig.style.chart.tooltip.backgroundColor"
-      :color="ringsConfig.style.chart.tooltip.color"
-      :borderRadius="ringsConfig.style.chart.tooltip.borderRadius"
-      :borderColor="ringsConfig.style.chart.tooltip.borderColor"
-      :borderWidth="ringsConfig.style.chart.tooltip.borderWidth"
-      :fontSize="ringsConfig.style.chart.tooltip.fontSize"
+      :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+      :color="FINAL_CONFIG.style.chart.tooltip.color"
+      :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+      :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+      :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+      :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
       :parent="ringsChart"
       :content="tooltipContent"
-      :isCustom="ringsConfig.style.chart.tooltip.customFormat && typeof ringsConfig.style.chart.tooltip.customFormat === 'function'"
+      :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
     >
         <template #tooltip-before>
             <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -652,12 +653,12 @@ defineExpose({
       open: mutableConfig.showTable,
       maxHeight: 10000,
       body: {
-        backgroundColor: ringsConfig.style.chart.backgroundColor,
-        color: ringsConfig.style.chart.color,
+        backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+        color: FINAL_CONFIG.style.chart.color,
       },
       head: {
-        backgroundColor: ringsConfig.style.chart.backgroundColor,
-        color: ringsConfig.style.chart.color,
+        backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+        color: FINAL_CONFIG.style.chart.color,
       }
     }">
         <template #content>
@@ -666,7 +667,7 @@ defineExpose({
             :head="dataTable.head" 
             :body="dataTable.body"
             :config="dataTable.config"
-            :title="`${ringsConfig.style.chart.title.text}${ringsConfig.style.chart.title.subtitle.text ? ` : ${ringsConfig.style.chart.title.subtitle.text}` : ''}`"
+            :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
             @close="mutableConfig.showTable = false"
           >
             <template #th="{th}">

@@ -88,10 +88,13 @@ const components = ref([
   /*______________*/"VueUiXyCanvas", // 38 
   /*__________________*/"VueUiFlow", // 39
   /**/"VueUiParallelCoordinatePlot", // 40
-  /*_________________*/"VueUiTimer", // 41 
+  /*_________________*/"VueUiTimer", // 41
+  // screenshot
+  // dashboard
+  // cursor
 ]);
 
-const selectedComponent = ref(components.value[41]);
+const selectedComponent = ref(components.value[0]);
 
 </script>
 

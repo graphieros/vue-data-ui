@@ -1,10 +1,9 @@
 <script setup>
 import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue';
 import UserOptions from '../atoms/UserOptions.vue';
-import { createUid, createWordCloudDatasetFromPlainText, translateSize } from '../lib';
+import { createUid, createWordCloudDatasetFromPlainText } from '../lib';
 import {
     downloadCsv,
     error,
@@ -22,6 +21,9 @@ import DataTable from '../atoms/DataTable.vue';
 import { useNestedProp } from '../useNestedProp';
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
+import { useConfig } from '../useConfig';
+
+const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -54,12 +56,10 @@ const step = ref(0);
 const wordCloudChart = ref(null);
 const chartTitle = ref(null);
 
-const defaultConfig = ref(mainConfig.vue_ui_word_cloud);
-
-const wordCloudConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -75,10 +75,10 @@ const wordCloudConfig = computed(() => {
 });
 
 const svg = ref({
-    width: wordCloudConfig.value.style.chart.width,
-    height: wordCloudConfig.value.style.chart.height,
-    maxFontSize: wordCloudConfig.value.style.chart.words.maxFontSize,
-    minFontSize: wordCloudConfig.value.style.chart.words.minFontSize
+    width: FINAL_CONFIG.value.style.chart.width,
+    height: FINAL_CONFIG.value.style.chart.height,
+    maxFontSize: FINAL_CONFIG.value.style.chart.words.maxFontSize,
+    minFontSize: FINAL_CONFIG.value.style.chart.words.minFontSize
 })
 
 const resizeObserver = ref(null);
@@ -105,11 +105,11 @@ onMounted(() => {
             })
         })   
     }
-    if (wordCloudConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: wordCloudChart.value,
-                title: wordCloudConfig.value.style.chart.title.text ? chartTitle.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -127,21 +127,21 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `wordCloud_${uid.value}`,
-    fileName: wordCloudConfig.value.style.chart.title.text || 'vue-ui-word-cloud'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-word-cloud'
 });
 
 const mutableConfig = ref({
-    showTable: wordCloudConfig.value.table.show,
+    showTable: FINAL_CONFIG.value.table.show,
 });
 
 function measureTextSize(text, fontSize, fontFamily = "Arial") {
     // This invisible canvas is necessary to calculate the exact dimensions of words before painting them on the svg. Cool trick
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    context.font = `${fontSize}px ${wordCloudConfig.value.style.chart.words.bold ? 'bold' : 'normal'} ${fontFamily}`;
+    context.font = `${fontSize}px ${FINAL_CONFIG.value.style.chart.words.bold ? 'bold' : 'normal'} ${fontFamily}`;
     const metrics = context.measureText(text);
     return {
-        width: metrics.width + wordCloudConfig.value.style.chart.words.proximity,
+        width: metrics.width + FINAL_CONFIG.value.style.chart.words.proximity,
         height: fontSize,
     };
 }
@@ -163,8 +163,8 @@ function positionWords(words, width, height) {
 
     words.forEach(word => {
         let isPlaced = false;
-        for (let i = 0; i < Math.max(width, height) / 2 && !isPlaced; i += wordCloudConfig.value.style.chart.words.packingWeight) {
-            for (let theta = 0; theta < 360 && !isPlaced; theta += wordCloudConfig.value.style.chart.words.packingWeight) {
+        for (let i = 0; i < Math.max(width, height) / 2 && !isPlaced; i += FINAL_CONFIG.value.style.chart.words.packingWeight) {
+            for (let theta = 0; theta < 360 && !isPlaced; theta += FINAL_CONFIG.value.style.chart.words.packingWeight) {
                 const rad = (theta * Math.PI) / 180;
                 const x = centerX + i * Math.cos(rad) - word.width / 2;
                 const y = centerY + i * Math.sin(rad) - word.height / 2;
@@ -208,7 +208,7 @@ function generateWordCloud() {
             fontSize,
             width: size.width,
             height: size.height,
-            color: wordCloudConfig.value.style.chart.words.usePalette ? (wordCloudConfig.value.customPalette[i] || wordCloudConfig.value.customPalette[i % wordCloudConfig.value.customPalette.length] || palette[i] || palette[i % palette.length]) : wordCloudConfig.value.style.chart.words.color
+            color: FINAL_CONFIG.value.style.chart.words.usePalette ? (FINAL_CONFIG.value.customPalette[i] || FINAL_CONFIG.value.customPalette[i % FINAL_CONFIG.value.customPalette.length] || palette[i] || palette[i % palette.length]) : FINAL_CONFIG.value.style.chart.words.color
         };
     });
 
@@ -233,21 +233,21 @@ function generateCsv() {
                 h.name
             ], [table.value.body[i]]]
         });
-        const tableXls = [[wordCloudConfig.value.style.chart.title.text], [wordCloudConfig.value.style.chart.title.subtitle.text], [[""], [wordCloudConfig.value.table.columnNames.value],]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [[""], [FINAL_CONFIG.value.table.columnNames.value],]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: wordCloudConfig.value.style.chart.title.text || "vue-ui-word-cloud" })
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-word-cloud" })
     });
 }
 
 const dataTable = computed(() => {
     const head = [
-        wordCloudConfig.value.table.columnNames.series,
-        wordCloudConfig.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
     ];
 
     const body = table.value.head.map((h, i) => {
-        const label = dataLabel({ p: wordCloudConfig.value.table.td.prefix, v: table.value.body[i], s: wordCloudConfig.value.table.td.suffix, r: wordCloudConfig.value.table.td.roundingValue });
+        const label = dataLabel({ p: FINAL_CONFIG.value.table.td.prefix, v: table.value.body[i], s: FINAL_CONFIG.value.table.td.suffix, r: FINAL_CONFIG.value.table.td.roundingValue });
         return [
             {
                 color: h.color,
@@ -259,21 +259,21 @@ const dataTable = computed(() => {
 
     const config = {
         th: {
-            backgroundColor: wordCloudConfig.value.table.th.backgroundColor,
-            color: wordCloudConfig.value.table.th.color,
-            outline: wordCloudConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: wordCloudConfig.value.table.td.backgroundColor,
-            color: wordCloudConfig.value.table.td.color,
-            outline: wordCloudConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: wordCloudConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-        wordCloudConfig.value.table.columnNames.series,
-        wordCloudConfig.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
     ]
 
     return {
@@ -310,14 +310,14 @@ defineExpose({
 
 <template>
     <div class="vue-ui-word-cloud" ref="wordCloudChart" :id="`wordCloud_${uid}`"
-        :style="`width: 100%; font-family:${wordCloudConfig.style.fontFamily};background:${wordCloudConfig.style.chart.backgroundColor};${wordCloudConfig.responsive ? 'height:100%' : ''}`">
-        <div ref="chartTitle" v-if="wordCloudConfig.style.chart.title.text" :style="`width:100%;background:${wordCloudConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
             <Title :config="{
                 title: {
-                    ...wordCloudConfig.style.chart.title
+                    ...FINAL_CONFIG.style.chart.title
                 },
                 subtitle: {
-                    ...wordCloudConfig.style.chart.title.subtitle
+                    ...FINAL_CONFIG.style.chart.title.subtitle
                 }
             }" />
         </div>
@@ -325,19 +325,19 @@ defineExpose({
         <UserOptions 
             ref="details" 
             :key="`user_option_${step}`" 
-            v-if="wordCloudConfig.userOptions.show && isDataset"
-            :backgroundColor="wordCloudConfig.style.chart.backgroundColor" 
-            :color="wordCloudConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting" 
             :isImaging="isImaging" 
             :uid="uid"
-            :hasPdf="wordCloudConfig.userOptions.buttons.pdf"
-            :hasXls="wordCloudConfig.userOptions.buttons.csv"
-            :hasImg="wordCloudConfig.userOptions.buttons.img" 
-            :hasTable="wordCloudConfig.userOptions.buttons.table" 
-            :hasFullscreen="wordCloudConfig.userOptions.buttons.fullscreen"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img" 
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table" 
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
-            :titles="{ ...wordCloudConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="wordCloudChart" 
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf" 
@@ -364,17 +364,17 @@ defineExpose({
 
         <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" v-if="isDataset"
             :xmlns="XMLNS" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-            :style="`overflow:visible;background:${wordCloudConfig.style.chart.backgroundColor};`">
+            :style="`overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <g
                 :transform="`translate(${(svg.width <= 0 ? 10 : svg.width) / 2}, ${(svg.height <= 0 ? 10 : svg.height) / 2})`">
                 <g v-for="(word, index) in positionedWords">
                     <text 
                         :fill="word.color" 
-                        :font-weight="wordCloudConfig.style.chart.words.bold ? 'bold' : 'normal'" :key="index"
+                        :font-weight="FINAL_CONFIG.style.chart.words.bold ? 'bold' : 'normal'" :key="index"
                         :x="word.x" :y="word.y" :font-size="word.fontSize"
                         :transform="`translate(${word.width / 2}, ${word.height / 2})`"
-                        :style="`animation-delay:${index * wordCloudConfig.animationDelayMs}ms !important`"
-                        :class="{'animated': wordCloudConfig.useCssAnimation}"
+                        :style="`animation-delay:${index * FINAL_CONFIG.animationDelayMs}ms !important`"
+                        :class="{'animated': FINAL_CONFIG.useCssAnimation}"
                         text-anchor="middle"
                         dominant-baseline="middle"
                     >
@@ -389,18 +389,18 @@ defineExpose({
         open: mutableConfig.showTable,
         maxHeight: 10000,
         body: {
-            backgroundColor: wordCloudConfig.style.chart.backgroundColor,
-            color: wordCloudConfig.style.chart.color
+            backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+            color: FINAL_CONFIG.style.chart.color
         },
         head: {
-            backgroundColor: wordCloudConfig.style.chart.backgroundColor,
-            color: wordCloudConfig.style.chart.color
+            backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+            color: FINAL_CONFIG.style.chart.color
         }
     }">
             <template #content>
                 <DataTable :colNames="dataTable.colNames" :head="dataTable.head" :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${wordCloudConfig.style.chart.title.text}${wordCloudConfig.style.chart.title.subtitle.text ? ` : ${wordCloudConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false">
                     <template #th="{ th }">
                         <div v-html="th" style="display:flex;align-items:center"></div>

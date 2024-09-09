@@ -21,7 +21,6 @@ import {
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -34,6 +33,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_radar: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -55,8 +57,6 @@ const isDataset = computed(() => {
 })
 
 const uid = ref(createUid());
-
-const defaultConfig = ref(mainConfig.vue_ui_radar);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -65,10 +65,10 @@ const radarChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 
-const radarConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -93,12 +93,12 @@ onMounted(() => {
         })
     }
 
-    if (radarConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: radarChart.value,
-                title: radarConfig.value.style.chart.title.text ? chartTitle.value : null,
-                legend: radarConfig.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -115,33 +115,33 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-radar_${uid.value}`,
-    fileName: radarConfig.value.style.chart.title.text || 'vue-ui-radar'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-radar'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(radarConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
 const mutableConfig = ref({
     dataLabels: {
-        show: radarConfig.value.style.chart.layout.labels.dataLabels.show,
+        show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show,
     },
-    showTable: radarConfig.value.table.show,
-    showTooltip: radarConfig.value.style.chart.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 const sparkBarConfig = computed(() => {
     return {
         style: {
-            backgroundColor: radarConfig.value.style.chart.tooltip.backgroundColor,
+            backgroundColor: FINAL_CONFIG.value.style.chart.tooltip.backgroundColor,
             animation: {
-                show: radarConfig.value.style.chart.tooltip.animation.show,
-                animationFrames: radarConfig.value.style.chart.tooltip.animation.animationFrames
+                show: FINAL_CONFIG.value.style.chart.tooltip.animation.show,
+                animationFrames: FINAL_CONFIG.value.style.chart.tooltip.animation.animationFrames
             },
             labels: {
-                fontSize: radarConfig.value.style.chart.tooltip.fontSize,
+                fontSize: FINAL_CONFIG.value.style.chart.tooltip.fontSize,
                 name: {
-                    color: radarConfig.value.style.chart.tooltip.color
+                    color: FINAL_CONFIG.value.style.chart.tooltip.color
                 },
             },
             gutter: {
@@ -298,7 +298,7 @@ const outerPolygon = computed(() => {
 
 const innerPolygons = computed(() => {
     const polygons = [];
-    for (let i = 0; i < polygonRadius.value; i += (polygonRadius.value / radarConfig.value.style.chart.layout.grid.graduations)) {
+    for (let i = 0; i < polygonRadius.value; i += (polygonRadius.value / FINAL_CONFIG.value.style.chart.layout.grid.graduations)) {
          polygons.push(i)
     }
     return polygons;
@@ -373,18 +373,18 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'radar-div-legend',
-        backgroundColor: radarConfig.value.style.chart.legend.backgroundColor,
-        color: radarConfig.value.style.chart.legend.color,
-        fontSize: radarConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: radarConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 })
 
 const dataTable = computed(() => {
     const head = [
-        { name: radarConfig.value.translations.datapoint, color: "" },
-        { name: radarConfig.value.translations.target, color: "" },
+        { name: FINAL_CONFIG.value.translations.datapoint, color: "" },
+        { name: FINAL_CONFIG.value.translations.target, color: "" },
         ...legendSet.value
     ];
     const body = props.dataset.series.map(ds => {
@@ -392,22 +392,22 @@ const dataTable = computed(() => {
             ds.name,
             ds.target,
             ...ds.values.map((v, i) => {
-                return `${dataLabel({p: datasetCopy.value[i].prefix, v, s: datasetCopy.value[i].suffix, r:radarConfig.value.table.td.roundingValue})} (${isNaN(v / ds.target) ? '' : (v / ds.target * 100).toFixed(radarConfig.value.table.td.roundingPercentage)}%)`
+                return `${dataLabel({p: datasetCopy.value[i].prefix, v, s: datasetCopy.value[i].suffix, r:FINAL_CONFIG.value.table.td.roundingValue})} (${isNaN(v / ds.target) ? '' : (v / ds.target * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage)}%)`
             })
         ]
     });
     const config = {
         th: {
-            backgroundColor: radarConfig.value.table.th.backgroundColor,
-            color: radarConfig.value.table.th.color,
-            outline: radarConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: radarConfig.value.table.td.backgroundColor,
-            color: radarConfig.value.table.td.color,
-            outline: radarConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: radarConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     };
 
     return { head, body, config, colNames: head }
@@ -432,25 +432,25 @@ function useTooltip(apex, i) {
             datapoints: seriesCopy.value,
             radar: radar.value
         },
-        config: radarConfig.value
+        config: FINAL_CONFIG.value
     }
 
-    const customFormat = radarConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             seriesIndex: i,
             datapoint: apex,
             series: { categories: datasetCopy.value, datapoints: seriesCopy.value, radar: radar.value  },
-            config: radarConfig.value
+            config: FINAL_CONFIG.value
         }))) {
         tooltipContent.value = customFormat({
             seriesIndex: i,
             datapoint: apex,
             series: { categories: datasetCopy.value, datapoints: seriesCopy.value, radar: radar.value  },
-            config: radarConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
-        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${radarConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
+        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
         for(let k = 0; k < apex.values.length; k += 1) {
             if(!segregated.value.includes(k)) {
                 sparkBarData.value.push({
@@ -458,8 +458,8 @@ function useTooltip(apex, i) {
                     value: apex.values[k] / apex.target * 100,
                     color: datasetCopy.value[k].color,
                     suffix: '%)',
-                    prefix: `${dataLabel({p: datasetCopy.value[k].prefix ?? '',v:apex.values[k],s:datasetCopy.value[k].suffix ?? '', r:radarConfig.value.style.chart.tooltip.roundingValue})} (`,
-                    rounding: radarConfig.value.style.chart.tooltip.roundingPercentage
+                    prefix: `${dataLabel({p: datasetCopy.value[k].prefix ?? '',v:apex.values[k],s:datasetCopy.value[k].suffix ?? '', r:FINAL_CONFIG.value.style.chart.tooltip.roundingValue})} (`,
+                    rounding: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
                 })
             }
         }
@@ -469,8 +469,8 @@ function useTooltip(apex, i) {
 
 function generateCsv() {
     nextTick(() => {
-        const title = [[radarConfig.value.style.chart.title.text], [radarConfig.value.style.chart.title.subtitle.text], [""]];
-        const head = [[""],[radarConfig.value.translations.target], ...legendSet.value.flatMap(l => [[l.name], ["%"]])];
+        const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
+        const head = [[""],[FINAL_CONFIG.value.translations.target], ...legendSet.value.flatMap(l => [[l.name], ["%"]])];
         const body = props.dataset.series.map((s, i) => {
             return [ s.name, s.target, ...s.values.flatMap(v => {
                 return [
@@ -481,7 +481,7 @@ function generateCsv() {
 
         const tableXls = title.concat([head]).concat(body);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: radarConfig.value.style.chart.title.text || "vue-ui-radar"})
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-radar"})
     });
 }
 
@@ -512,22 +512,22 @@ defineExpose({
 
 <template>
     <div 
-        :class="`vue-ui-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${radarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`"
+        :class="`vue-ui-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
         ref="radarChart"
         :id="`vue-ui-radar_${uid}`"
-        :style="`font-family:${radarConfig.style.fontFamily};width:100%; ${radarConfig.responsive ? 'height: 100%;' : ''} text-align:center;${!radarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${radarConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`"
     >
         <!-- TITLE AS DIV -->
-        <div ref="chartTitle" v-if="radarConfig.style.chart.title.text" :style="`width:100%;background:${radarConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
                         cy: 'radar-div-title',
-                        ...radarConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'radar-div-subtitle',
-                        ...radarConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     },
                 }"
             />
@@ -537,21 +537,21 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="radarConfig.userOptions.show && isDataset"
-            :backgroundColor="radarConfig.style.chart.backgroundColor"
-            :color="radarConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasTooltip="radarConfig.userOptions.buttons.tooltip && radarConfig.style.chart.tooltip.show"
-            :hasPdf="radarConfig.userOptions.buttons.pdf"
-            :hasImg="radarConfig.userOptions.buttons.img"
-            :hasXls="radarConfig.userOptions.buttons.csv"
-            :hasTable="radarConfig.userOptions.buttons.table"
-            :hasFullscreen="radarConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...radarConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="radarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -581,7 +581,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`" >
 
             <!-- DEFS -->
             <defs>
@@ -590,24 +590,24 @@ defineExpose({
                     v-for="(d, i) in datasetCopy"
                     :id="`radar_gradient_${uid}_${i}`"
                 >
-                    <stop offset="0%" :stop-color="`${shiftHue(d.color, 0.05)}${opacity[radarConfig.style.chart.layout.dataPolygon.opacity]}`"/>
-                    <stop offset="100%" :stop-color="d.color + opacity[radarConfig.style.chart.layout.dataPolygon.opacity]" />
+                    <stop offset="0%" :stop-color="`${shiftHue(d.color, 0.05)}${opacity[FINAL_CONFIG.style.chart.layout.dataPolygon.opacity]}`"/>
+                    <stop offset="100%" :stop-color="d.color + opacity[FINAL_CONFIG.style.chart.layout.dataPolygon.opacity]" />
                 </radialGradient>
             </defs>
 
             <!-- GRID -->
-            <g v-if="radarConfig.style.chart.layout.grid.show">
+            <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
                 <!-- RADIAL LINES -->
                 <line v-for="line in radar"
                     :x1="svg.width / 2"
                     :y1="svg.height / 2"
                     :x2="line.x"
                     :y2="line.y"
-                    :stroke="radarConfig.style.chart.layout.grid.stroke"
-                    :stroke-width="radarConfig.style.chart.layout.grid.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
                 />
                 <!-- INNER POLYGONS -->
-                <g v-if="radarConfig.style.chart.layout.grid.graduations > 0">
+                <g v-if="FINAL_CONFIG.style.chart.layout.grid.graduations > 0">
                     <path 
                         v-for="radius in innerPolygons"
                         :d="createPolygonPath({
@@ -617,24 +617,24 @@ defineExpose({
                             rotation: 0
                         }).path"
                         fill="none"
-                        :stroke="radarConfig.style.chart.layout.grid.stroke"
-                        :stroke-width="radarConfig.style.chart.layout.grid.strokeWidth"
+                        :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
                     />
                 </g>
             </g>
 
             <!-- OUTER POLYGON -->
-            <path :d="outerPolygon.path" fill="none" :stroke="radarConfig.style.chart.layout.outerPolygon.stroke" :stroke-width="radarConfig.style.chart.layout.outerPolygon.strokeWidth" stroke-linejoin="round" stroke-linecap="round"/>
+            <path :d="outerPolygon.path" fill="none" :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke" :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" stroke-linejoin="round" stroke-linecap="round"/>
 
             <!-- APEX LABELS -->
-            <g v-if="radarConfig.style.chart.layout.labels.dataLabels.show">
+            <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
             <text v-for="(label, i) in radar"
                 :data-cy="`radar-apex-label-${i}`"
                 :x="offset(label).x"
                 :y="offset(label).y"
                 :text-anchor="offset(label).anchor"
-                :font-size="radarConfig.style.chart.layout.labels.dataLabels.fontSize"
-                :fill="radarConfig.style.chart.layout.labels.dataLabels.color"
+                :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
+                :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
                 @mouseenter="useTooltip(label, i)"
                 @mouseleave="isTooltip = false; selectedIndex = null"
             >
@@ -648,35 +648,35 @@ defineExpose({
                     <polygon
                         data-cy-radar-path
                         :points="makePath(radar.map(r => r.plots[i]), false, true)"
-                        :stroke="radarConfig.style.chart.backgroundColor"
-                        :stroke-width="radarConfig.style.chart.layout.dataPolygon.strokeWidth + 1"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth + 1"
                         fill="none"
-                        v-if="radarConfig.useCssAnimation || (!radarConfig.useCssAnimation && !segregated.includes(i))"
-                        :class="{ 'animated-out': segregated.includes(i) && radarConfig.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && radarConfig.useCssAnimation }"
+                        v-if="FINAL_CONFIG.useCssAnimation || (!FINAL_CONFIG.useCssAnimation && !segregated.includes(i))"
+                        :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
                     />
                     <polygon
                         data-cy-radar-path
                         :points="makePath(radar.map(r => r.plots[i]), false, true)"
                         :stroke="d.color"
-                        :stroke-width="radarConfig.style.chart.layout.dataPolygon.strokeWidth"
-                        v-if="radarConfig.useCssAnimation || (!radarConfig.useCssAnimation && !segregated.includes(i))"
-                        :fill="radarConfig.style.chart.layout.dataPolygon.transparent ? 'transparent' : radarConfig.style.chart.layout.dataPolygon.useGradient ? `url(#radar_gradient_${uid}_${i})` : d.color + opacity[radarConfig.style.chart.layout.dataPolygon.opacity]"
-                        :class="{ 'animated-out': segregated.includes(i) && radarConfig.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && radarConfig.useCssAnimation }"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth"
+                        v-if="FINAL_CONFIG.useCssAnimation || (!FINAL_CONFIG.useCssAnimation && !segregated.includes(i))"
+                        :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.transparent ? 'transparent' : FINAL_CONFIG.style.chart.layout.dataPolygon.useGradient ? `url(#radar_gradient_${uid}_${i})` : d.color + opacity[FINAL_CONFIG.style.chart.layout.dataPolygon.opacity]"
+                        :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
                     />
                 </g>
             </g>
             
-            <g v-if="radarConfig.style.chart.layout.plots.show">
+            <g v-if="FINAL_CONFIG.style.chart.layout.plots.show">
                 <g v-for="(category, i) in radar">
                     <circle 
                         v-for="(p, j) in category.plots"
                         :cx="p.x"
                         :cy="p.y"
                         :fill="segregated.includes(j) ? 'transparent' : datasetCopy[j].color"
-                        :r="selectedIndex !== null && selectedIndex === i ? radarConfig.style.chart.layout.plots.radius * 1.6 : radarConfig.style.chart.layout.plots.radius"
-                        :stroke="segregated.includes(j) ? 'transparent' : radarConfig.style.chart.backgroundColor"
+                        :r="selectedIndex !== null && selectedIndex === i ? FINAL_CONFIG.style.chart.layout.plots.radius * 1.6 : FINAL_CONFIG.style.chart.layout.plots.radius"
+                        :stroke="segregated.includes(j) ? 'transparent' : FINAL_CONFIG.style.chart.backgroundColor"
                         :stroke-width="0.5"
-                        :class="{ 'animated-out': segregated.includes(j) && radarConfig.useCssAnimation, 'animated-in': isAnimating && inSegregation === j && radarConfig.useCssAnimation }"
+                        :class="{ 'animated-out': segregated.includes(j) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === j && FINAL_CONFIG.useCssAnimation }"
                     />
                 </g>
             </g>
@@ -688,13 +688,13 @@ defineExpose({
             :config="{
                 type: 'radar',
                 style: {
-                    backgroundColor: radarConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     radar: {
                         grid: {
-                            color: radarConfig.style.chart.layout.outerPolygon.stroke
+                            color: FINAL_CONFIG.style.chart.layout.outerPolygon.stroke
                         },
                         shapes: {
-                            color: radarConfig.style.chart.layout.outerPolygon.stroke
+                            color: FINAL_CONFIG.style.chart.layout.outerPolygon.stroke
                         }
                     }
                 }
@@ -704,14 +704,14 @@ defineExpose({
         <!-- LEGEND AS DIV -->
         <div ref="chartLegend">
             <Legend
-                v-if="radarConfig.style.chart.legend.show"
+                v-if="FINAL_CONFIG.style.chart.legend.show"
                 :legendSet="legendSet"
                 :config="legendConfig"
                 @clickMarker="({i}) => segregate(i)"
             >
                 <template #item="{ legend, index }">
                     <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{ (legend.totalProportion * 100).toFixed(radarConfig.style.chart.legend.roundingPercentage) }}%
+                        {{ legend.name }}: {{ (legend.totalProportion * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage) }}%
                     </div>
                 </template>
             </Legend>
@@ -722,21 +722,21 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="radarConfig.style.chart.tooltip.backgroundColor"
-            :color="radarConfig.style.chart.tooltip.color"
-            :borderRadius="radarConfig.style.chart.tooltip.borderRadius"
-            :borderColor="radarConfig.style.chart.tooltip.borderColor"
-            :borderWidth="radarConfig.style.chart.tooltip.borderWidth"
-            :fontSize="radarConfig.style.chart.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :parent="radarChart"
             :content="tooltipContent"
-            :isCustom="radarConfig.style.chart.tooltip.customFormat && typeof radarConfig.style.chart.tooltip.customFormat === 'function'"
+            :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
             <template #tooltip-after>
-                <div style="max-width: 200px;margin:0 auto" v-if="!['function'].includes(typeof radarConfig.style.chart.tooltip.customFormat)">
+                <div style="max-width: 200px;margin:0 auto" v-if="!['function'].includes(typeof FINAL_CONFIG.style.chart.tooltip.customFormat)">
                     <SparkBar :dataset="sparkBarData" :config="sparkBarConfig"/>
                 </div>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
@@ -748,12 +748,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: radarConfig.style.chart.backgroundColor,
-                color: radarConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             },
             head: {
-                backgroundColor: radarConfig.style.chart.backgroundColor,
-                color: radarConfig.style.chart.color
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
             }
         }">
             <template #content>
@@ -762,7 +762,7 @@ defineExpose({
                     :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${radarConfig.style.chart.title.text}${radarConfig.style.chart.title.subtitle.text ? ` : ${radarConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

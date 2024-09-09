@@ -17,19 +17,19 @@ function refresh() {
     </div>
     
     <div class="box">
-        <div style="width:100%; max-height: 600px;">
+        <div style="width:100%; max-width: 600px">
             <p>Local</p>
             <slot name="local"/>
         </div>
-        <div style="width:100%; max-height: 600px">
+        <div style="width:100%; max-width: 600px">
             <p>VueDataUi Local</p>
             <slot name="VDUI-local"/>
         </div>
-        <div style="width: 100%; max-height: 600px">
+        <div style="width: 100%; max-width: 600px">
             <p>Build</p>
             <slot name="build"/>
         </div>
-        <div style="width: 100%; max-height: 600px">
+        <div style="width: 100%; max-width: 600px">
             <p>VueDataUi build</p>
             <slot name="VDUI-build"/>
         </div>

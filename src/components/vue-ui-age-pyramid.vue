@@ -13,7 +13,6 @@ import {
     XMLNS
 } from '../lib';
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -24,6 +23,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_age_pyramid: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -45,7 +47,6 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_age_pyramid);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -54,10 +55,10 @@ const step = ref(0);
 const agePyramid = ref(null);
 const chartTitle = ref(null);
 
-const agePyramidConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -81,11 +82,11 @@ onMounted(() => {
         })
     }
 
-    if (agePyramidConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: agePyramid.value,
-                title: agePyramidConfig.value.style.title.text ? chartTitle.value : null,
+                title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -98,45 +99,45 @@ onMounted(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-age-pyramid_${uid.value}`,
-    fileName: agePyramidConfig.value.style.title.text || 'vue-ui-age-pyramid'
+    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-age-pyramid'
 });
 
 const mutableConfig = ref({
-    showTable: agePyramidConfig.value.table.show,
-    showTooltip: agePyramidConfig.value.style.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.tooltip.show
 });
 
 const svg = ref({
-    height: agePyramidConfig.value.style.height,
-    width: agePyramidConfig.value.style.width
+    height: FINAL_CONFIG.value.style.height,
+    width: FINAL_CONFIG.value.style.width
 })
 
 const drawingArea = computed(() => {
-    const width = svg.value.width - agePyramidConfig.value.style.layout.padding.right - agePyramidConfig.value.style.layout.padding.left;
-    const left = agePyramidConfig.value.style.layout.padding.left;
-    const right = svg.value.width - agePyramidConfig.value.style.layout.padding.right;
+    const width = svg.value.width - FINAL_CONFIG.value.style.layout.padding.right - FINAL_CONFIG.value.style.layout.padding.left;
+    const left = FINAL_CONFIG.value.style.layout.padding.left;
+    const right = svg.value.width - FINAL_CONFIG.value.style.layout.padding.right;
     return {
-        top: agePyramidConfig.value.style.layout.padding.top,
+        top: FINAL_CONFIG.value.style.layout.padding.top,
         left,
         right,
-        bottom: svg.value.height - agePyramidConfig.value.style.layout.padding.bottom,
+        bottom: svg.value.height - FINAL_CONFIG.value.style.layout.padding.bottom,
         width,
-        height: svg.value.height - agePyramidConfig.value.style.layout.padding.top - agePyramidConfig.value.style.layout.padding.bottom,
-        centerX: agePyramidConfig.value.style.layout.padding.left + width / 2,
+        height: svg.value.height - FINAL_CONFIG.value.style.layout.padding.top - FINAL_CONFIG.value.style.layout.padding.bottom,
+        centerX: FINAL_CONFIG.value.style.layout.padding.left + width / 2,
         leftChart: {
-            width: (width / 2) - agePyramidConfig.value.style.layout.centerSlit.width,
-            right: left + (width / 2) - agePyramidConfig.value.style.layout.centerSlit.width
+            width: (width / 2) - FINAL_CONFIG.value.style.layout.centerSlit.width,
+            right: left + (width / 2) - FINAL_CONFIG.value.style.layout.centerSlit.width
         },
         rightChart: {
-            width: (width / 2) - agePyramidConfig.value.style.layout.centerSlit.width,
-            left: left + (width / 2) + agePyramidConfig.value.style.layout.centerSlit.width
+            width: (width / 2) - FINAL_CONFIG.value.style.layout.centerSlit.width,
+            left: left + (width / 2) + FINAL_CONFIG.value.style.layout.centerSlit.width
         }
     }
 });
 
 const yLabels =  computed(() => {
     return props.dataset.map(ds => {
-        if (agePyramidConfig.value.style.layout.dataLabels.yAxis.display === 'age') {
+        if (FINAL_CONFIG.value.style.layout.dataLabels.yAxis.display === 'age') {
             return ds[1];
         } else {
             return ds[0];
@@ -153,11 +154,11 @@ const xLabels = computed(() => {
         const valueLeft = step * (i - 5);
         stepsRight.push({
             value: valueRight,
-            x: drawingArea.value.left + drawingArea.value.width / 2 + agePyramidConfig.value.style.layout.centerSlit.width + ((valueRight / max.value * drawingArea.value.leftChart.width))
+            x: drawingArea.value.left + drawingArea.value.width / 2 + FINAL_CONFIG.value.style.layout.centerSlit.width + ((valueRight / max.value * drawingArea.value.leftChart.width))
         });
         stepsLeft.push({
             value: Math.abs(valueLeft),
-            x: drawingArea.value.left + drawingArea.value.width / 2 + ((valueLeft / max.value * drawingArea.value.leftChart.width)) - agePyramidConfig.value.style.layout.centerSlit.width
+            x: drawingArea.value.left + drawingArea.value.width / 2 + ((valueLeft / max.value * drawingArea.value.leftChart.width)) - FINAL_CONFIG.value.style.layout.centerSlit.width
         });
     }
     return {
@@ -209,14 +210,14 @@ const mutableDataset = computed(() => {
 const drawableDataset = computed(() => {
     return mutableDataset.value.map((ds, i) => {
         const y = drawingArea.value.top + (drawingArea.value.height / len.value) * i;
-        const height = (drawingArea.value.height / len.value) - agePyramidConfig.value.style.layout.bars.gap;
+        const height = (drawingArea.value.height / len.value) - FINAL_CONFIG.value.style.layout.bars.gap;
         return {
             segment: ds.segment,
             age: ds.age,
             left: {
                 ...ds.left,
                 y,
-                color: agePyramidConfig.value.style.layout.bars.left.color,
+                color: FINAL_CONFIG.value.style.layout.bars.left.color,
                 x: drawingArea.value.leftChart.right - (ds.left.proportionToMax * drawingArea.value.leftChart.width),
                 width: ds.left.proportionToMax * drawingArea.value.leftChart.width,
                 height
@@ -224,7 +225,7 @@ const drawableDataset = computed(() => {
             right: {
                 ...ds.right,
                 y,
-                color: agePyramidConfig.value.style.layout.bars.right.color,
+                color: FINAL_CONFIG.value.style.layout.bars.right.color,
                 x: drawingArea.value.rightChart.left,
                 width: ds.right.proportionToMax * drawingArea.value.rightChart.width,
                 height
@@ -242,10 +243,10 @@ function useTooltip(index, datapoint) {
         datapoint,
         seriesIndex: index,
         series: drawableDataset.value,
-        config: agePyramidConfig.value
+        config: FINAL_CONFIG.value
     }
 
-    const customFormat = agePyramidConfig.value.style.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             seriesIndex: index,
@@ -256,7 +257,7 @@ function useTooltip(index, datapoint) {
                 right: datapoint[3]
             },
             series: drawableDataset.value,
-            config: agePyramidConfig.value
+            config: FINAL_CONFIG.value
         }))) {
         tooltipContent.value = customFormat({
             seriesIndex: index,
@@ -267,20 +268,20 @@ function useTooltip(index, datapoint) {
                 right: datapoint[3]
             },
             series: drawableDataset.value,
-            config: agePyramidConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
         let html = "";
     
         const selectedSet = drawableDataset.value[index];
         html += `<div><b>${selectedSet.segment}</b></div>`;
-        html += `<div>${agePyramidConfig.value.translations.age}: ${selectedSet.age}</div>`
-        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${agePyramidConfig.value.style.tooltip.borderColor}">`;
+        html += `<div>${FINAL_CONFIG.value.translations.age}: ${selectedSet.age}</div>`
+        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}">`;
         html += `<div style="display:flex; flex-direction:row;gap:12px">`;
-        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : agePyramidConfig.value.style.layout.bars.left.color}"/></svg><div>${agePyramidConfig.value.translations.female}</div><div><b>${selectedSet.left.value.toLocaleString()}</b></div></div>`;
-        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${agePyramidConfig.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : agePyramidConfig.value.style.layout.bars.right.color}"/></svg><div>${agePyramidConfig.value.translations.male}</div><div><b>${selectedSet.right.value.toLocaleString()}</b></div></div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : FINAL_CONFIG.value.style.layout.bars.left.color}"/></svg><div>${FINAL_CONFIG.value.translations.female}</div><div><b>${selectedSet.left.value.toLocaleString()}</b></div></div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : FINAL_CONFIG.value.style.layout.bars.right.color}"/></svg><div>${FINAL_CONFIG.value.translations.male}</div><div><b>${selectedSet.right.value.toLocaleString()}</b></div></div>`;
         html += `</div>`;
-        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${agePyramidConfig.value.style.tooltip.borderColor}"><div>${agePyramidConfig.value.translations.total}</div><div><b>${(selectedSet.left.value + selectedSet.right.value).toLocaleString()}</b></div></div>`
+        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}"><div>${FINAL_CONFIG.value.translations.total}</div><div><b>${(selectedSet.left.value + selectedSet.right.value).toLocaleString()}</b></div></div>`
         html += `</div>`;
     
         tooltipContent.value = `<div>${html}</div>`;
@@ -291,7 +292,7 @@ function useTooltip(index, datapoint) {
 
 function generateCsv() {
     nextTick(() => {
-        const labels = [agePyramidConfig.value.translations.year, agePyramidConfig.value.translations.age, agePyramidConfig.value.translations.female, agePyramidConfig.value.translations.male, agePyramidConfig.value.translations.total];
+        const labels = [FINAL_CONFIG.value.translations.year, FINAL_CONFIG.value.translations.age, FINAL_CONFIG.value.translations.female, FINAL_CONFIG.value.translations.male, FINAL_CONFIG.value.translations.total];
 
         const values = props.dataset.map(ds => {
             return [
@@ -303,19 +304,19 @@ function generateCsv() {
             ]
         });
 
-        const tableXls = [[agePyramidConfig.value.style.title.text],[agePyramidConfig.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
+        const tableXls = [[FINAL_CONFIG.value.style.title.text],[FINAL_CONFIG.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: agePyramidConfig.value.style.title.text || "vue-ui-heatmap"});
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-heatmap"});
     });
 }
 
 const dataTable = computed(() => {
     const head = [
-        agePyramidConfig.value.translations.year,
-        agePyramidConfig.value.translations.age,
-        agePyramidConfig.value.translations.female,
-        agePyramidConfig.value.translations.male,
-        agePyramidConfig.value.translations.total
+        FINAL_CONFIG.value.translations.year,
+        FINAL_CONFIG.value.translations.age,
+        FINAL_CONFIG.value.translations.female,
+        FINAL_CONFIG.value.translations.male,
+        FINAL_CONFIG.value.translations.total
     ];
     const body = props.dataset.map(ds => {
         return [
@@ -328,16 +329,16 @@ const dataTable = computed(() => {
     });
     const config = {
         th: {
-            backgroundColor: agePyramidConfig.value.table.th.backgroundColor,
-            color: agePyramidConfig.value.table.th.color,
-            outline: agePyramidConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: agePyramidConfig.value.table.td.backgroundColor,
-            color: agePyramidConfig.value.table.td.color,
-            outline: agePyramidConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: agePyramidConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     };
     
     return { head, body, config, colNames: head}
@@ -368,18 +369,18 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-age-pyramid ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${agePyramidConfig.style.fontFamily};width:100%; text-align:center;${!agePyramidConfig.style.title.text ? 'padding-top:36px' : ''};background:${agePyramidConfig.style.backgroundColor};${agePyramidConfig.responsive ? 'height:100%' : ''}`">
+    <div :class="`vue-ui-age-pyramid ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`">
     
-        <div ref="chartTitle" v-if="agePyramidConfig.style.title.text" :style="`width:100%;background:${agePyramidConfig.style.backgroundColor}`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
             <Title
                 :config="{
                     title: {
                         cy: 'pyramid-div-title',
-                        ...agePyramidConfig.style.title
+                        ...FINAL_CONFIG.style.title
                     },
                     subtitle: {
                         cy: 'pyramid-div-subtitle',
-                        ...agePyramidConfig.style.title.subtitle
+                        ...FINAL_CONFIG.style.title.subtitle
                     },
                 }"
             />
@@ -389,21 +390,21 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="agePyramidConfig.userOptions.show && isDataset"
-            :backgroundColor="agePyramidConfig.style.backgroundColor"
-            :color="agePyramidConfig.style.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
+            :color="FINAL_CONFIG.style.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasTooltip="agePyramidConfig.userOptions.buttons.tooltip && agePyramidConfig.style.tooltip.show"
-            :hasPdf="agePyramidConfig.userOptions.buttons.pdf"
-            :hasXls="agePyramidConfig.userOptions.buttons.csv"
-            :hasImg="agePyramidConfig.userOptions.buttons.img"
-            :hasTable="agePyramidConfig.userOptions.buttons.table"
-            :hasFullscreen="agePyramidConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...agePyramidConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="agePyramid"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -433,7 +434,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${agePyramidConfig.style.backgroundColor};color:${agePyramidConfig.style.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.backgroundColor};color:${FINAL_CONFIG.style.color}`" >
             <defs>
                 <linearGradient 
                     :id="`age_pyramid_left_${uid}`"
@@ -441,11 +442,11 @@ defineExpose({
                 >
                     <stop 
                         offset="0%" 
-                        :stop-color="agePyramidConfig.style.layout.bars.left.color"
+                        :stop-color="FINAL_CONFIG.style.layout.bars.left.color"
                     />
                     <stop 
                         offset="100%" 
-                        :stop-color="`${shiftHue(agePyramidConfig.style.layout.bars.left.color, agePyramidConfig.style.layout.bars.gradient.shiftHue)}${opacity[100 - agePyramidConfig.style.layout.bars.gradient.intensity]}`"
+                        :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.bars.left.color, FINAL_CONFIG.style.layout.bars.gradient.shiftHue)}${opacity[100 - FINAL_CONFIG.style.layout.bars.gradient.intensity]}`"
                     />
                 </linearGradient>
                 <linearGradient 
@@ -454,11 +455,11 @@ defineExpose({
                 >
                     <stop 
                         offset="0%" 
-                        :stop-color="`${shiftHue(agePyramidConfig.style.layout.bars.right.color, agePyramidConfig.style.layout.bars.gradient.shiftHue)}${opacity[100 - agePyramidConfig.style.layout.bars.gradient.intensity]}`"
+                        :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.bars.right.color, FINAL_CONFIG.style.layout.bars.gradient.shiftHue)}${opacity[100 - FINAL_CONFIG.style.layout.bars.gradient.intensity]}`"
                     />
                     <stop 
                         offset="100%" 
-                        :stop-color="agePyramidConfig.style.layout.bars.right.color"
+                        :stop-color="FINAL_CONFIG.style.layout.bars.right.color"
                     />
                 </linearGradient>
             </defs>
@@ -469,148 +470,148 @@ defineExpose({
                     :y="segment.left.y"
                     :width="segment.left.width <= 0 ? 0.0001 : segment.left.width"
                     :height="segment.left.height <= 0 ? 0.0001 : segment.left.height"
-                    :fill="agePyramidConfig.style.layout.bars.gradient.underlayer"
-                    :rx="agePyramidConfig.style.layout.bars.borderRadius"
+                    :fill="FINAL_CONFIG.style.layout.bars.gradient.underlayer"
+                    :rx="FINAL_CONFIG.style.layout.bars.borderRadius"
                 />
                 <rect
                     :x="segment.left.x"
                     :y="segment.left.y"
                     :width="segment.left.width <= 0 ? 0.0001 : segment.left.width"
                     :height="segment.left.height <= 0 ? 0.0001 : segment.left.height"
-                    :fill="agePyramidConfig.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid})` : segment.left.color"
-                    :rx="agePyramidConfig.style.layout.bars.borderRadius"
+                    :fill="FINAL_CONFIG.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid})` : segment.left.color"
+                    :rx="FINAL_CONFIG.style.layout.bars.borderRadius"
                 />
                 <rect
                     :x="segment.right.x"
                     :y="segment.right.y"
                     :width="segment.right.width <= 0 ? 0.0001 : segment.right.width"
                     :height="segment.right.height <= 0 ? 0.0001 : segment.right.height"
-                    :fill="agePyramidConfig.style.layout.bars.gradient.underlayer"
-                    :rx="agePyramidConfig.style.layout.bars.borderRadius"
+                    :fill="FINAL_CONFIG.style.layout.bars.gradient.underlayer"
+                    :rx="FINAL_CONFIG.style.layout.bars.borderRadius"
                 />
                 <rect
                     :x="segment.right.x"
                     :y="segment.right.y"
                     :width="segment.right.width <= 0 ? 0.0001 : segment.right.width"
                     :height="segment.right.height <= 0 ? 0.0001 : segment.right.height"
-                    :fill="agePyramidConfig.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid})` : segment.right.color"
-                    :rx="agePyramidConfig.style.layout.bars.borderRadius"
+                    :fill="FINAL_CONFIG.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid})` : segment.right.color"
+                    :rx="FINAL_CONFIG.style.layout.bars.borderRadius"
                 />
             </g>
 
             <!-- LABELS -->
             <g>
-                <g v-if="agePyramidConfig.style.layout.dataLabels.sideTitles.show">
+                <g v-if="FINAL_CONFIG.style.layout.dataLabels.sideTitles.show">
                     <text
                         :x="drawingArea.left"
-                        :y="drawingArea.top + agePyramidConfig.style.layout.dataLabels.sideTitles.offsetY"
-                        :fill="agePyramidConfig.style.layout.dataLabels.sideTitles.useSideColor ? agePyramidConfig.style.layout.bars.left.color : agePyramidConfig.style.layout.dataLabels.sideTitles.color"
-                        :font-size="agePyramidConfig.style.layout.dataLabels.sideTitles.fontSize"
+                        :y="drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.sideTitles.offsetY"
+                        :fill="FINAL_CONFIG.style.layout.dataLabels.sideTitles.useSideColor ? FINAL_CONFIG.style.layout.bars.left.color : FINAL_CONFIG.style.layout.dataLabels.sideTitles.color"
+                        :font-size="FINAL_CONFIG.style.layout.dataLabels.sideTitles.fontSize"
                         text-anchor="start"
-                        :font-weight="agePyramidConfig.style.layout.dataLabels.sideTitles.bold ? 'bold' : 'normal'"
+                        :font-weight="FINAL_CONFIG.style.layout.dataLabels.sideTitles.bold ? 'bold' : 'normal'"
                     >
-                        {{ agePyramidConfig.translations.female }}
+                        {{ FINAL_CONFIG.translations.female }}
                     </text>
                     <text
                         :x="drawingArea.right"
-                        :y="drawingArea.top + agePyramidConfig.style.layout.dataLabels.sideTitles.offsetY"
-                        :fill="agePyramidConfig.style.layout.dataLabels.sideTitles.useSideColor ? agePyramidConfig.style.layout.bars.right.color : agePyramidConfig.style.layout.dataLabels.sideTitles.color"
-                        :font-size="agePyramidConfig.style.layout.dataLabels.sideTitles.fontSize"
+                        :y="drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.sideTitles.offsetY"
+                        :fill="FINAL_CONFIG.style.layout.dataLabels.sideTitles.useSideColor ? FINAL_CONFIG.style.layout.bars.right.color : FINAL_CONFIG.style.layout.dataLabels.sideTitles.color"
+                        :font-size="FINAL_CONFIG.style.layout.dataLabels.sideTitles.fontSize"
                         text-anchor="end"
-                        :font-weight="agePyramidConfig.style.layout.dataLabels.sideTitles.bold ? 'bold' : 'normal'"
+                        :font-weight="FINAL_CONFIG.style.layout.dataLabels.sideTitles.bold ? 'bold' : 'normal'"
                     >
-                        {{ agePyramidConfig.translations.male }}
+                        {{ FINAL_CONFIG.translations.male }}
                     </text>
                 </g>
 
-                <g v-if="agePyramidConfig.style.layout.dataLabels.yAxis.show">
+                <g v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show">
                     <template v-for="(label, i) in yLabels"> 
                         <text 
-                            v-if="i % agePyramidConfig.style.layout.dataLabels.yAxis.showEvery === 0"
+                            v-if="i % FINAL_CONFIG.style.layout.dataLabels.yAxis.showEvery === 0"
                             :x="drawingArea.centerX"
-                            :y="drawingArea.top + (drawingArea.height / len) * i + (agePyramidConfig.style.layout.dataLabels.yAxis.fontSize / 3)"
+                            :y="drawingArea.top + (drawingArea.height / len) * i + (FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize / 3)"
                             text-anchor="middle"
-                            :font-size="agePyramidConfig.style.layout.dataLabels.yAxis.fontSize"
-                            :fill="agePyramidConfig.style.layout.dataLabels.yAxis.color"
-                            :font-weight="agePyramidConfig.style.layout.dataLabels.yAxis.bold ? 'bold': 'normal'"
+                            :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
+                            :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
+                            :font-weight="FINAL_CONFIG.style.layout.dataLabels.yAxis.bold ? 'bold': 'normal'"
                         >
                             {{ label }}
                         </text>
                     </template>
                 </g>
 
-                <g v-if="agePyramidConfig.style.layout.dataLabels.xAxis.show">
-                    <g v-if="agePyramidConfig.style.layout.grid.show">
+                <g v-if="FINAL_CONFIG.style.layout.dataLabels.xAxis.show">
+                    <g v-if="FINAL_CONFIG.style.layout.grid.show">
                         <line
                             :x1="xLabels.right[0].x"
                             :x2="xLabels.right.at(-1).x"
-                            :y1="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize / 2"
-                            :y2="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize / 2"
-                            :stroke="agePyramidConfig.style.layout.grid.stroke"
-                            :stroke-width="agePyramidConfig.style.layout.grid.strokeWidth"
+                            :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
+                            :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
+                            :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                             stroke-linecap="round"
                         />
                         <line
                             :x1="xLabels.left[0].x"
                             :x2="xLabels.left.at(-1).x"
-                            :y1="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize / 2"
-                            :y2="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize / 2"
-                            :stroke="agePyramidConfig.style.layout.grid.stroke"
-                            :stroke-width="agePyramidConfig.style.layout.grid.strokeWidth"
+                            :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
+                            :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
+                            :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                             stroke-linecap="round"
                         />
                     </g>
                     <g v-for="rightLabel in xLabels.right">
-                        <line v-if="agePyramidConfig.style.layout.grid.show"
+                        <line v-if="FINAL_CONFIG.style.layout.grid.show"
                             :x1="rightLabel.x"
                             :x2="rightLabel.x"
-                            :y1="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize / 2"
-                            :y2="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize / 4"
-                            :stroke="agePyramidConfig.style.layout.grid.stroke"
-                            :stroke-width="agePyramidConfig.style.layout.grid.strokeWidth"
+                            :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
+                            :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 4"
+                            :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                             stroke-linecap="round"
                         />
                         <text
                             :x="rightLabel.x"
-                            :y="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize * 2"
-                            :font-size="agePyramidConfig.style.layout.dataLabels.xAxis.fontSize"
-                            :fill="agePyramidConfig.style.layout.dataLabels.xAxis.color"
+                            :y="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2"
+                            :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                            :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
                             text-anchor="middle"
-                            :font-weight="agePyramidConfig.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
+                            :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
                         >
-                            {{ Number((rightLabel.value / agePyramidConfig.style.layout.dataLabels.xAxis.scale).toFixed(0)).toLocaleString() }}
+                            {{ Number((rightLabel.value / FINAL_CONFIG.style.layout.dataLabels.xAxis.scale).toFixed(0)).toLocaleString() }}
                         </text>
                     </g>
                     <g v-for="leftLabel in xLabels.left">
-                        <line v-if="agePyramidConfig.style.layout.grid.show"
+                        <line v-if="FINAL_CONFIG.style.layout.grid.show"
                             :x1="leftLabel.x"
                             :x2="leftLabel.x"
-                            :y1="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize / 2"
-                            :y2="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize / 4"
-                            :stroke="agePyramidConfig.style.layout.grid.stroke"
-                            :stroke-width="agePyramidConfig.style.layout.grid.strokeWidth"
+                            :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
+                            :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 4"
+                            :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                             stroke-linecap="round"
                         />
                         <text
                             :x="leftLabel.x"
-                            :y="drawingArea.bottom + agePyramidConfig.style.layout.dataLabels.xAxis.fontSize * 2"
-                            :font-size="agePyramidConfig.style.layout.dataLabels.xAxis.fontSize"
-                            :fill="agePyramidConfig.style.layout.dataLabels.xAxis.color"
+                            :y="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2"
+                            :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                            :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
                             text-anchor="middle"
-                            :font-weight="agePyramidConfig.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
+                            :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
                         >
-                            {{ Number((leftLabel.value / agePyramidConfig.style.layout.dataLabels.xAxis.scale).toFixed(0)).toLocaleString() }}
+                            {{ Number((leftLabel.value / FINAL_CONFIG.style.layout.dataLabels.xAxis.scale).toFixed(0)).toLocaleString() }}
                         </text>
                     </g>
                     <text
                         :x="drawingArea.right"
                         :y="svg.height"
                         text-anchor="end"
-                        :font-size="agePyramidConfig.style.layout.dataLabels.xAxis.fontSize"
-                        :fill="agePyramidConfig.style.layout.dataLabels.xAxis.color"
-                        :font-weight="agePyramidConfig.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
+                        :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                        :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
+                        :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
                     >
-                        {{ agePyramidConfig.style.layout.dataLabels.xAxis.translation }}
+                        {{ FINAL_CONFIG.style.layout.dataLabels.xAxis.translation }}
                     </text>
                 </g>
             </g>
@@ -619,10 +620,10 @@ defineExpose({
             <g v-for="(datapoint, i) in dataset">
                 <rect
                     :x="drawingArea.left"
-                    :y="drawingArea.top + (drawingArea.height / len) * i - agePyramidConfig.style.layout.bars.gap / 2"
+                    :y="drawingArea.top + (drawingArea.height / len) * i - FINAL_CONFIG.style.layout.bars.gap / 2"
                     :width="drawingArea.width <= 0 ? 0.0001 : drawingArea.width"
                     :height="drawingArea.height / len <= 0 ? 0.0001 : drawingArea.height / len"
-                    :fill="selectedIndex !== null && selectedIndex === i ? `${agePyramidConfig.style.highlighter.color}${opacity[agePyramidConfig.style.highlighter.opacity]}` : 'transparent'"
+                    :fill="selectedIndex !== null && selectedIndex === i ? `${FINAL_CONFIG.style.highlighter.color}${opacity[FINAL_CONFIG.style.highlighter.opacity]}` : 'transparent'"
                     @mouseover="useTooltip(i, datapoint)"
                     @mouseleave="selectedIndex = null; isTooltip = false"
                 />
@@ -636,7 +637,7 @@ defineExpose({
             :config="{
                 type: 'pyramid',
                 style: {
-                    backgroundColor: agePyramidConfig.style.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
                     pyramid: {
                         color: '#CCCCCC'
                     }
@@ -649,15 +650,15 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="agePyramidConfig.style.tooltip.backgroundColor"
-            :color="agePyramidConfig.style.tooltip.color"
-            :borderRadius="agePyramidConfig.style.tooltip.borderRadius"
-            :borderColor="agePyramidConfig.style.tooltip.borderColor"
-            :borderWidth="agePyramidConfig.style.tooltip.borderWidth"
-            :fontSize="agePyramidConfig.style.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
             :parent="agePyramid"
             :content="tooltipContent"
-            :isCustom="agePyramidConfig.style.tooltip.customFormat && typeof agePyramidConfig.style.tooltip.customFormat === 'function'"
+            :isCustom="FINAL_CONFIG.style.tooltip.customFormat && typeof FINAL_CONFIG.style.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -672,12 +673,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: agePyramidConfig.style.backgroundColor,
-                color: agePyramidConfig.style.color,
+                backgroundColor: FINAL_CONFIG.style.backgroundColor,
+                color: FINAL_CONFIG.style.color,
             },
             head: {
-                backgroundColor: agePyramidConfig.style.backgroundColor,
-                color: agePyramidConfig.style.color,
+                backgroundColor: FINAL_CONFIG.style.backgroundColor,
+                color: FINAL_CONFIG.style.color,
             }
         }">
             <template #content>
@@ -686,7 +687,7 @@ defineExpose({
                     :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${agePyramidConfig.style.title.text}${agePyramidConfig.style.title.subtitle.text ? ` : ${agePyramidConfig.style.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.title.text}${FINAL_CONFIG.style.title.subtitle.text ? ` : ${FINAL_CONFIG.style.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

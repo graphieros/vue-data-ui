@@ -78,6 +78,7 @@ export class Timer {
         this.cycle = () => {
             drift = Date.now() - this.expected;
             if (drift > this.interval) {
+                // FIXME: auto correct expected interval
                 !!error && error();
             }
             this.expected += this.interval;

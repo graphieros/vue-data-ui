@@ -19,7 +19,6 @@ dataLabel,
 convertCustomPalette
 } from '../lib';
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -32,6 +31,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_scatter: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -53,7 +55,6 @@ const isDataset = computed(() => {
 })
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_scatter);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -62,10 +63,10 @@ const scatterChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 
-const scatterConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -90,12 +91,12 @@ onMounted(() => {
         })
     }
 
-    if (scatterConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: scatterChart.value,
-                title: scatterConfig.value.style.title.text ? chartTitle.value : null,
-                legend: scatterConfig.value.style.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.legend.show ? chartLegend.value : null,
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -112,38 +113,38 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-scatter_${uid.value}`,
-    fileName: scatterConfig.value.style.title.text || 'vue-ui-scatter',
+    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-scatter',
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(scatterConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 const mutableConfig = ref({
-    showTable: scatterConfig.value.table.show,
-    showTooltip: scatterConfig.value.style.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.tooltip.show
 });
 
 const svg = ref({
-    height: scatterConfig.value.style.layout.height,
-    width: scatterConfig.value.style.layout.width,
+    height: FINAL_CONFIG.value.style.layout.height,
+    width: FINAL_CONFIG.value.style.layout.width,
 })
 
 const marginalSize = computed(() => {
-    if(!scatterConfig.value.style.layout.marginalBars.show) {
+    if(!FINAL_CONFIG.value.style.layout.marginalBars.show) {
         return 0
     }
-    return scatterConfig.value.style.layout.marginalBars.size + scatterConfig.value.style.layout.marginalBars.offset
+    return FINAL_CONFIG.value.style.layout.marginalBars.size + FINAL_CONFIG.value.style.layout.marginalBars.offset
 })
 
 const drawingArea = computed(() => {
     return {
-        top: scatterConfig.value.style.layout.padding.top + marginalSize.value,
-        right: svg.value.width - scatterConfig.value.style.layout.padding.right - marginalSize.value,
-        bottom: svg.value.height - scatterConfig.value.style.layout.padding.bottom,
-        left: scatterConfig.value.style.layout.padding.left,
-        height: svg.value.height - scatterConfig.value.style.layout.padding.top - scatterConfig.value.style.layout.padding.bottom - marginalSize.value,
-        width: svg.value.width - scatterConfig.value.style.layout.padding.left - scatterConfig.value.style.layout.padding.right - marginalSize.value
+        top: FINAL_CONFIG.value.style.layout.padding.top + marginalSize.value,
+        right: svg.value.width - FINAL_CONFIG.value.style.layout.padding.right - marginalSize.value,
+        bottom: svg.value.height - FINAL_CONFIG.value.style.layout.padding.bottom,
+        left: FINAL_CONFIG.value.style.layout.padding.left,
+        height: svg.value.height - FINAL_CONFIG.value.style.layout.padding.top - FINAL_CONFIG.value.style.layout.padding.bottom - marginalSize.value,
+        width: svg.value.width - FINAL_CONFIG.value.style.layout.padding.left - FINAL_CONFIG.value.style.layout.padding.right - marginalSize.value
     }
 });
 
@@ -209,11 +210,11 @@ const datasetWithId = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'scatter-div-legend',
-        backgroundColor: scatterConfig.value.style.legend.backgroundColor,
-        color: scatterConfig.value.style.legend.color,
-        fontSize: scatterConfig.value.style.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.legend.color,
+        fontSize: FINAL_CONFIG.value.style.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: scatterConfig.value.style.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.legend.bold ? 'bold' : ''
     }
 })
 
@@ -232,7 +233,7 @@ const mutableDataset = computed(() => {
                     clusterName: ds.name,
                     color: ds.color ? ds.color : (customPalette.value[i] || palette[i] || palette[i % palette.length]),
                     id: `plot_${uid.value}_${Math.random()}`,
-                    weight: v.weight ?? scatterConfig.value.style.layout.plots.radius
+                    weight: v.weight ?? FINAL_CONFIG.value.style.layout.plots.radius
                 }
             }),
         }
@@ -268,11 +269,11 @@ const drawableDataset = computed(() => {
         const m = (correlation.y2 - correlation.y1) / (correlation.x2 - correlation.x1);
         const b = correlation.y1 - m * correlation.x1;
 
-        const labelX = Math.min(svg.value.width - scatterConfig.value.style.layout.padding.right, Math.max(scatterConfig.value.style.layout.padding.left, (drawingArea.value.top - b) / m));
+        const labelX = Math.min(svg.value.width - FINAL_CONFIG.value.style.layout.padding.right, Math.max(FINAL_CONFIG.value.style.layout.padding.left, (drawingArea.value.top - b) / m));
 
         const label = {
             x: labelX,
-            y: m * labelX + b <= scatterConfig.value.style.layout.padding.top ? drawingArea.value.top : m * labelX + b
+            y: m * labelX + b <= FINAL_CONFIG.value.style.layout.padding.top ? drawingArea.value.top : m * labelX + b
         }
 
         return {
@@ -357,15 +358,15 @@ function aggregateCoordinates(arr, scale) {
     return { x: xCounts, y: yCounts, avgX, avgY, maxX, maxY };
 }
 
-const scale = computed(() => scatterConfig.value.style.layout.marginalBars.tranches)
+const scale = computed(() => FINAL_CONFIG.value.style.layout.marginalBars.tranches)
 
 const marginalBars = computed(() => {
     return aggregateCoordinates(mutableDataset.value, scale.value)
 });
 
 const marginalLines = computed(() => {
-    const top = drawingArea.value.top - scatterConfig.value.style.layout.marginalBars.offset;
-    const right = drawingArea.value.right + scatterConfig.value.style.layout.marginalBars.offset;
+    const top = drawingArea.value.top - FINAL_CONFIG.value.style.layout.marginalBars.offset;
+    const right = drawingArea.value.right + FINAL_CONFIG.value.style.layout.marginalBars.offset;
     return mutableDataset.value.map(ds => {
         const coords = aggregateCoordinates(ds, scale.value);
 
@@ -374,13 +375,13 @@ const marginalLines = computed(() => {
             dX: createSmoothPath(coords.avgX.map((el,i) => {
                 return { 
                     x: el, 
-                    y: top - coords.x[i] / coords.maxX * scatterConfig.value.style.layout.marginalBars.size
+                    y: top - coords.x[i] / coords.maxX * FINAL_CONFIG.value.style.layout.marginalBars.size
                 }
             })),
             dY: createSmoothPath(coords.avgY.map((el, i) => {
                 return {
                     y: el,
-                    x: right + (scatterConfig.value.style.layout.marginalBars.size * coords.y[i] / coords.maxY)
+                    x: right + (FINAL_CONFIG.value.style.layout.marginalBars.size * coords.y[i] / coords.maxY)
                 }
             })),
             color: ds.color,
@@ -402,22 +403,22 @@ function useTooltip(plot, seriesIndex) {
         datapoint: plot,
         seriesIndex,
         series: drawableDataset.value,
-        config: scatterConfig.value
+        config: FINAL_CONFIG.value
     }
 
-    const customFormat = scatterConfig.value.style.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint: plot,
             seriesIndex,
             series: drawableDataset.value,
-            config: scatterConfig.value
+            config: FINAL_CONFIG.value
         }))) {
         tooltipContent.value = customFormat({
             datapoint: plot,
             seriesIndex,
             series: drawableDataset.value,
-            config: scatterConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
         if (plot.clusterName) {
@@ -428,25 +429,25 @@ function useTooltip(plot, seriesIndex) {
             html += `<div>${plot.v.name}</div>`
         }
     
-        html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid ${scatterConfig.value.style.tooltip.borderColor}">`;
+        html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}">`;
 
-        html += `<div>${scatterConfig.value.style.layout.dataLabels.xAxis.name}: <b>${isNaN(plot.v.x) ? '-' : dataLabel({
-            p: scatterConfig.value.style.tooltip.prefix,
+        html += `<div>${FINAL_CONFIG.value.style.layout.dataLabels.xAxis.name}: <b>${isNaN(plot.v.x) ? '-' : dataLabel({
+            p: FINAL_CONFIG.value.style.tooltip.prefix,
             v: plot.v.x,
-            s: scatterConfig.value.style.tooltip.suffix,
-            r: scatterConfig.value.style.tooltip.roundingValue
+            s: FINAL_CONFIG.value.style.tooltip.suffix,
+            r: FINAL_CONFIG.value.style.tooltip.roundingValue
         })}</b></div>`;
 
-        html += `<div>${scatterConfig.value.style.layout.dataLabels.yAxis.name}: <b>${isNaN(plot.v.y) ? '-' :  dataLabel({
-            p: scatterConfig.value.style.tooltip.prefix,
+        html += `<div>${FINAL_CONFIG.value.style.layout.dataLabels.yAxis.name}: <b>${isNaN(plot.v.y) ? '-' :  dataLabel({
+            p: FINAL_CONFIG.value.style.tooltip.prefix,
             v: plot.v.y,
-            s: scatterConfig.value.style.tooltip.suffix,
-            r: scatterConfig.value.style.tooltip.roundingValue
+            s: FINAL_CONFIG.value.style.tooltip.suffix,
+            r: FINAL_CONFIG.value.style.tooltip.roundingValue
         })}</b></div>`;
         
-        html += `${scatterConfig.value.style.layout.plots.deviation.translation}: <b>${dataLabel({
+        html += `${FINAL_CONFIG.value.style.layout.plots.deviation.translation}: <b>${dataLabel({
             v: plot.deviation,
-            r: scatterConfig.value.style.layout.plots.deviation.roundingValue
+            r: FINAL_CONFIG.value.style.layout.plots.deviation.roundingValue
         })}</b>`;
 
         html += `</div>`;
@@ -477,7 +478,7 @@ function segregate(id) {
 
 function generateCsv() {
     nextTick(() => {
-        const labels = ["", scatterConfig.value.table.translations.correlationCoefficient, scatterConfig.value.table.translations.nbrPlots, `${scatterConfig.value.style.layout.dataLabels.xAxis.name} ${scatterConfig.value.table.translations.average}`, `${scatterConfig.value.style.layout.dataLabels.yAxis.name} ${scatterConfig.value.table.translations.average}`];
+        const labels = ["", FINAL_CONFIG.value.table.translations.correlationCoefficient, FINAL_CONFIG.value.table.translations.nbrPlots, `${FINAL_CONFIG.value.style.layout.dataLabels.xAxis.name} ${FINAL_CONFIG.value.table.translations.average}`, `${FINAL_CONFIG.value.style.layout.dataLabels.yAxis.name} ${FINAL_CONFIG.value.table.translations.average}`];
 
         const values = drawableDataset.value.map(ds => {
             return [
@@ -489,19 +490,19 @@ function generateCsv() {
             ]
         });
 
-        const tableXls = [[scatterConfig.value.style.title.text],[scatterConfig.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
+        const tableXls = [[FINAL_CONFIG.value.style.title.text],[FINAL_CONFIG.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: scatterConfig.value.style.title.text || "vue-ui-heatmap"})
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-heatmap"})
     });
 }
 
 const dataTable = computed(() => {
     const head = [
-        scatterConfig.value.table.translations.series,
-        scatterConfig.value.table.translations.correlationCoefficient,
-        scatterConfig.value.table.translations.nbrPlots,
-        `${scatterConfig.value.style.layout.dataLabels.xAxis.name} ${scatterConfig.value.table.translations.average}`,
-        `${scatterConfig.value.style.layout.dataLabels.yAxis.name} ${scatterConfig.value.table.translations.average}`
+        FINAL_CONFIG.value.table.translations.series,
+        FINAL_CONFIG.value.table.translations.correlationCoefficient,
+        FINAL_CONFIG.value.table.translations.nbrPlots,
+        `${FINAL_CONFIG.value.style.layout.dataLabels.xAxis.name} ${FINAL_CONFIG.value.table.translations.average}`,
+        `${FINAL_CONFIG.value.style.layout.dataLabels.yAxis.name} ${FINAL_CONFIG.value.table.translations.average}`
     ];
 
     const body = drawableDataset.value.map(ds => {
@@ -511,25 +512,25 @@ const dataTable = computed(() => {
                 content: ds.name,
                 color: ds.color
             },
-            Number((ds.correlation.coefficient ?? 0).toFixed(scatterConfig.value.table.td.roundingValue)).toLocaleString(),
+            Number((ds.correlation.coefficient ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString(),
             ds.plots.length.toLocaleString(),
-            Number((ds.plots.map(p => p.v.x ?? 0).reduce((a,b) => a + b , 0) / ds.plots.length).toFixed(scatterConfig.value.table.td.roundingAverage)).toLocaleString(),
-            Number((ds.plots.map(p => p.v.y ?? 0).reduce((a,b) => a + b , 0) / ds.plots.length).toFixed(scatterConfig.value.table.td.roundingAverage)).toLocaleString(),
+            Number((ds.plots.map(p => p.v.x ?? 0).reduce((a,b) => a + b , 0) / ds.plots.length).toFixed(FINAL_CONFIG.value.table.td.roundingAverage)).toLocaleString(),
+            Number((ds.plots.map(p => p.v.y ?? 0).reduce((a,b) => a + b , 0) / ds.plots.length).toFixed(FINAL_CONFIG.value.table.td.roundingAverage)).toLocaleString(),
         ]
     });
 
     const config = {
         th: {
-            backgroundColor: scatterConfig.value.table.th.backgroundColor,
-            color: scatterConfig.value.table.th.color,
-            outline: scatterConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: scatterConfig.value.table.td.backgroundColor,
-            color: scatterConfig.value.table.td.color,
-            outline: scatterConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: scatterConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     };
 
     return { head, body, config, colNames: head };
@@ -561,19 +562,19 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-scatter ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${scatterConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${scatterConfig.style.fontFamily};width:100%; text-align:center;${!scatterConfig.style.title.text ? 'padding-top:36px' : ''};background:${scatterConfig.style.backgroundColor};${scatterConfig.responsive ? 'height: 100%' : ''}`">
+    <div :class="`vue-ui-scatter ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="scatterChart" :id="`vue-ui-scatter_${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`">
         
-        <div ref="chartTitle" v-if="scatterConfig.style.title.text" :style="`width:100%;background:${scatterConfig.style.backgroundColor}`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
                     title: {
                         cy: 'scatter-div-title',
-                        ...scatterConfig.style.title
+                        ...FINAL_CONFIG.style.title
                     },
                     subtitle: {
                         cy: 'scatter-div-subtitle',
-                        ...scatterConfig.style.title.subtitle
+                        ...FINAL_CONFIG.style.title.subtitle
                     },
                 }"
             />
@@ -583,21 +584,21 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="scatterConfig.userOptions.show && isDataset"
-            :backgroundColor="scatterConfig.style.backgroundColor"
-            :color="scatterConfig.style.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
+            :color="FINAL_CONFIG.style.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasTooltip="scatterConfig.userOptions.buttons.tooltip && scatterConfig.style.tooltip.show"
-            :hasPdf="scatterConfig.userOptions.buttons.pdf"
-            :hasImg="scatterConfig.userOptions.buttons.img"
-            :hasXls="scatterConfig.userOptions.buttons.csv"
-            :hasTable="scatterConfig.userOptions.buttons.table"
-            :hasFullscreen="scatterConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
-            :titles="{ ...scatterConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="scatterChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -627,18 +628,18 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${scatterConfig.style.backgroundColor};color:${scatterConfig.style.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.backgroundColor};color:${FINAL_CONFIG.style.color}`">
 
             <!-- AXIS -->
-            <g v-if="scatterConfig.style.layout.axis.show">
+            <g v-if="FINAL_CONFIG.style.layout.axis.show">
                 <line
                     data-cy="scatter-y-axis"
                     :x1="zero.x"
                     :x2="zero.x"
                     :y1="drawingArea.top"
                     :y2="drawingArea.bottom"
-                    :stroke="scatterConfig.style.layout.axis.stroke"
-                    :stroke-width="scatterConfig.style.layout.axis.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.layout.axis.stroke"
+                    :stroke-width="FINAL_CONFIG.style.layout.axis.strokeWidth"
                     stroke-linecap="round"
                 />
                 <line
@@ -647,21 +648,21 @@ defineExpose({
                     :x2="drawingArea.right"
                     :y1="zero.y"
                     :y2="zero.y"
-                    :stroke="scatterConfig.style.layout.axis.stroke"
-                    :stroke-width="scatterConfig.style.layout.axis.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.layout.axis.stroke"
+                    :stroke-width="FINAL_CONFIG.style.layout.axis.strokeWidth"
                     stroke-linecap="round"
                 />
             </g>
 
             <!-- GIFT WRAP -->
-            <g v-if="scatterConfig.style.layout.plots.giftWrap.show">
+            <g v-if="FINAL_CONFIG.style.layout.plots.giftWrap.show">
                 <g v-for="(ds, i) in drawableDataset">
                     <polygon 
                         v-if="ds.plots.length > 2"
                         :points="giftWrap({series: ds.plots})"
-                        :fill="`${ds.color}${opacity[scatterConfig.style.layout.plots.giftWrap.fillOpacity * 100]}`"
-                        :stroke-width="scatterConfig.style.layout.plots.giftWrap.strokeWidth"
-                        :stroke-dasharray="scatterConfig.style.layout.plots.giftWrap.strokeDasharray"
+                        :fill="`${ds.color}${opacity[FINAL_CONFIG.style.layout.plots.giftWrap.fillOpacity * 100]}`"
+                        :stroke-width="FINAL_CONFIG.style.layout.plots.giftWrap.strokeWidth"
+                        :stroke-dasharray="FINAL_CONFIG.style.layout.plots.giftWrap.strokeDasharray"
                         :stroke="ds.color"
                         stroke-linejoin="round"
                         stroke-linecap="round"
@@ -678,12 +679,12 @@ defineExpose({
                         :cx="plot.x"
                         :cy="plot.y"
                         :r="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
-                        :fill="`${ds.color}${opacity[scatterConfig.style.layout.plots.opacity * 100]}`"
-                        :stroke="scatterConfig.style.layout.plots.stroke"
-                        :stroke-width="scatterConfig.style.layout.plots.strokeWidth"
+                        :fill="`${ds.color}${opacity[FINAL_CONFIG.style.layout.plots.opacity * 100]}`"
+                        :stroke="FINAL_CONFIG.style.layout.plots.stroke"
+                        :stroke-width="FINAL_CONFIG.style.layout.plots.strokeWidth"
                         @mouseover="useTooltip(plot, i)"
                         @mouseleave="clearHover"
-                        :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : scatterConfig.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
+                        :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
                     />
                 </g>
                 <g v-else>
@@ -693,63 +694,63 @@ defineExpose({
                         :plot="{x: plot.x, y: plot.y }"
                         :radius="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
                         :shape="ds.shape"
-                        :color="`${ds.color}${opacity[scatterConfig.style.layout.plots.opacity * 100]}`"
-                        :stroke="scatterConfig.style.layout.plots.stroke"
-                        :strokeWidth="scatterConfig.style.layout.plots.strokeWidth"
+                        :color="`${ds.color}${opacity[FINAL_CONFIG.style.layout.plots.opacity * 100]}`"
+                        :stroke="FINAL_CONFIG.style.layout.plots.stroke"
+                        :strokeWidth="FINAL_CONFIG.style.layout.plots.strokeWidth"
                         @mouseover="useTooltip(plot, i)"
                         @mouseleave="clearHover"
-                        :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : scatterConfig.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : scatterConfig.style.layout.plots.significance.show && Math.abs(plot.deviation) > scatterConfig.style.layout.plots.significance.deviationThreshold ? scatterConfig.style.layout.plots.significance.opacity : 1}`"
+                        :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
                     />
                 </g>
             </g>
 
             <!-- MARGINAL BARS -->
-            <g v-if="scatterConfig.style.layout.marginalBars.show">
+            <g v-if="FINAL_CONFIG.style.layout.marginalBars.show">
                 <defs>
                     <linearGradient :id="`marginal_x_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" :stop-color="scatterConfig.style.layout.marginalBars.fill"/>
-                        <stop offset="100%" :stop-color="scatterConfig.style.backgroundColor"/>
+                        <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.marginalBars.fill"/>
+                        <stop offset="100%" :stop-color="FINAL_CONFIG.style.backgroundColor"/>
                     </linearGradient>
                     <linearGradient :id="`marginal_y_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
-                        <stop offset="0%" :stop-color="scatterConfig.style.backgroundColor"/>
-                        <stop offset="100%" :stop-color="scatterConfig.style.layout.marginalBars.fill"/>
+                        <stop offset="0%" :stop-color="FINAL_CONFIG.style.backgroundColor"/>
+                        <stop offset="100%" :stop-color="FINAL_CONFIG.style.layout.marginalBars.fill"/>
                     </linearGradient>
                 </defs>
                 <g v-for="(x, i) in marginalBars.x">
                     <rect
                         v-if="x && marginalBars.avgX[i]"
                         :x="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
-                        :y="drawingArea.top - scatterConfig.style.layout.marginalBars.offset - x / marginalBars.maxX * scatterConfig.style.layout.marginalBars.size"
+                        :y="drawingArea.top - FINAL_CONFIG.style.layout.marginalBars.offset - x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size"
                         :width="drawingArea.width / scale <= 0 ? 0.0001 : drawingArea.width / scale"
-                        :height="x / marginalBars.maxX * scatterConfig.style.layout.marginalBars.size <= 0 ? 0.0001 : x / marginalBars.maxX * scatterConfig.style.layout.marginalBars.size"
-                        :fill="scatterConfig.style.layout.marginalBars.useGradient ? `url(#marginal_x_${uid})` : scatterConfig.style.layout.marginalBars.fill"
-                        :style="`opacity:${scatterConfig.style.layout.marginalBars.opacity}`"
-                        :stroke="scatterConfig.style.backgroundColor"
-                        :stroke-width="scatterConfig.style.layout.marginalBars.strokeWidth"
-                        :rx="scatterConfig.style.layout.marginalBars.borderRadius"
+                        :height="x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size <= 0 ? 0.0001 : x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size"
+                        :fill="FINAL_CONFIG.style.layout.marginalBars.useGradient ? `url(#marginal_x_${uid})` : FINAL_CONFIG.style.layout.marginalBars.fill"
+                        :style="`opacity:${FINAL_CONFIG.style.layout.marginalBars.opacity}`"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.layout.marginalBars.strokeWidth"
+                        :rx="FINAL_CONFIG.style.layout.marginalBars.borderRadius"
                     />
                 </g>
                 <g v-for="(y, i) in marginalBars.y">
                     <rect
                         v-if="y && marginalBars.avgY[i]"
-                        :x="drawingArea.right + scatterConfig.style.layout.marginalBars.offset"
+                        :x="drawingArea.right + FINAL_CONFIG.style.layout.marginalBars.offset"
                         :y="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
                         :height="drawingArea.height / scale <= 0 ? 0.0001 : drawingArea.height / scale"
-                        :width="y / marginalBars.maxY * scatterConfig.style.layout.marginalBars.size <= 0 ? 0.0001 : y / marginalBars.maxY * scatterConfig.style.layout.marginalBars.size"
-                        :fill="scatterConfig.style.layout.marginalBars.useGradient ? `url(#marginal_y_${uid})` : scatterConfig.style.layout.marginalBars.fill"
-                        :style="`opacity:${scatterConfig.style.layout.marginalBars.opacity}`"
-                        :stroke="scatterConfig.style.backgroundColor"
-                        :stroke-width="scatterConfig.style.layout.marginalBars.strokeWidth"
-                        :rx="scatterConfig.style.layout.marginalBars.borderRadius"
+                        :width="y / marginalBars.maxY * FINAL_CONFIG.style.layout.marginalBars.size <= 0 ? 0.0001 : y / marginalBars.maxY * FINAL_CONFIG.style.layout.marginalBars.size"
+                        :fill="FINAL_CONFIG.style.layout.marginalBars.useGradient ? `url(#marginal_y_${uid})` : FINAL_CONFIG.style.layout.marginalBars.fill"
+                        :style="`opacity:${FINAL_CONFIG.style.layout.marginalBars.opacity}`"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.layout.marginalBars.strokeWidth"
+                        :rx="FINAL_CONFIG.style.layout.marginalBars.borderRadius"
                     />
                 </g>
-                <g v-if="scatterConfig.style.layout.marginalBars.showLines">
+                <g v-if="FINAL_CONFIG.style.layout.marginalBars.showLines">
                     <template v-for="line in marginalLines">                   
                         <path
                             v-if="!segregated.includes(line.id)"
                             :d="`M ${line.dX}`"
-                            :stroke="scatterConfig.style.backgroundColor"
-                            :stroke-width="scatterConfig.style.layout.marginalBars.linesStrokeWidth + 1"
+                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth + 1"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             fill="none"
@@ -758,7 +759,7 @@ defineExpose({
                             v-if="!segregated.includes(line.id)"
                             :d="`M ${line.dX}`"
                             :stroke="line.color"
-                            :stroke-width="scatterConfig.style.layout.marginalBars.linesStrokeWidth"
+                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             fill="none"
@@ -766,8 +767,8 @@ defineExpose({
                         <path
                             v-if="!segregated.includes(line.id)"
                             :d="`M ${line.dY}`"
-                            :stroke="scatterConfig.style.backgroundColor"
-                            :stroke-width="scatterConfig.style.layout.marginalBars.linesStrokeWidth + 1"
+                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth + 1"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             fill="none"
@@ -776,7 +777,7 @@ defineExpose({
                             v-if="!segregated.includes(line.id)"
                             :d="`M ${line.dY}`"
                             :stroke="line.color"
-                            :stroke-width="scatterConfig.style.layout.marginalBars.linesStrokeWidth"
+                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             fill="none"
@@ -786,15 +787,15 @@ defineExpose({
             </g>
 
             <!-- SELECTORS -->
-            <g v-if="selectedPlot && scatterConfig.style.layout.plots.selectors.show" style="pointer-events: none !important;">
+            <g v-if="selectedPlot && FINAL_CONFIG.style.layout.plots.selectors.show" style="pointer-events: none !important;">
                 <line
                     :x1="zero.x"
                     :x2="selectedPlot.x"
                     :y1="selectedPlot.y"
                     :y2="selectedPlot.y"
-                    :stroke="scatterConfig.style.layout.plots.selectors.stroke"
-                    :stroke-width="scatterConfig.style.layout.plots.selectors.strokeWidth"
-                    :stroke-dasharray="scatterConfig.style.layout.plots.selectors.strokeDasharray"
+                    :stroke="FINAL_CONFIG.style.layout.plots.selectors.stroke"
+                    :stroke-width="FINAL_CONFIG.style.layout.plots.selectors.strokeWidth"
+                    :stroke-dasharray="FINAL_CONFIG.style.layout.plots.selectors.strokeDasharray"
                     stroke-linecap="round"
                     class="line-pointer"
                 />
@@ -803,67 +804,67 @@ defineExpose({
                     :x2="selectedPlot.x"
                     :y1="zero.y"
                     :y2="selectedPlot.y"
-                    :stroke="scatterConfig.style.layout.plots.selectors.stroke"
-                    :stroke-width="scatterConfig.style.layout.plots.selectors.strokeWidth"
-                    :stroke-dasharray="scatterConfig.style.layout.plots.selectors.strokeDasharray"
+                    :stroke="FINAL_CONFIG.style.layout.plots.selectors.stroke"
+                    :stroke-width="FINAL_CONFIG.style.layout.plots.selectors.strokeWidth"
+                    :stroke-dasharray="FINAL_CONFIG.style.layout.plots.selectors.strokeDasharray"
                     stroke-linecap="round"
                     class="line-pointer"
                 />
                 <text
                     :x="zero.x + (selectedPlot.x > zero.x ? -6 : 6)"
-                    :y="selectedPlot.y + scatterConfig.style.layout.plots.selectors.labels.fontSize / 3"
-                    :font-size="scatterConfig.style.layout.plots.selectors.labels.fontSize"
-                    :fill="scatterConfig.style.layout.plots.selectors.labels.color"
-                    :font-weight="scatterConfig.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
+                    :y="selectedPlot.y + FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize / 3"
+                    :font-size="FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize"
+                    :fill="FINAL_CONFIG.style.layout.plots.selectors.labels.color"
+                    :font-weight="FINAL_CONFIG.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
                     :text-anchor="selectedPlot.x > zero.x ? 'end' : 'start'"
                 >
                     {{ dataLabel({
-                        p: scatterConfig.style.layout.plots.selectors.labels.prefix,
+                        p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
                         v: selectedPlot.v.y,
-                        s: scatterConfig.style.layout.plots.selectors.labels.suffix,
-                        r: scatterConfig.style.layout.plots.selectors.labels.rounding
+                        s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                        r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
                     }) }}
                 </text>
                 <text
                     :x="selectedPlot.x"
-                    :y="zero.y + (selectedPlot.y > zero.y ? - 6 : scatterConfig.style.layout.plots.selectors.labels.fontSize +6)"
-                    :font-size="scatterConfig.style.layout.plots.selectors.labels.fontSize"
-                    :fill="scatterConfig.style.layout.plots.selectors.labels.color"
-                    :font-weight="scatterConfig.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
+                    :y="zero.y + (selectedPlot.y > zero.y ? - 6 : FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize +6)"
+                    :font-size="FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize"
+                    :fill="FINAL_CONFIG.style.layout.plots.selectors.labels.color"
+                    :font-weight="FINAL_CONFIG.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
                     :text-anchor="'middle'"
                 >
                     {{ dataLabel({
-                        p: scatterConfig.style.layout.plots.selectors.labels.prefix,
+                        p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
                         v: selectedPlot.v.x,
-                        s: scatterConfig.style.layout.plots.selectors.labels.suffix,
-                        r: scatterConfig.style.layout.plots.selectors.labels.rounding
+                        s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                        r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
                     }) }}
                 </text>
                 <circle
                     :cx="zero.x"
                     :cy="selectedPlot.y"
-                    :r="scatterConfig.style.layout.plots.selectors.markers.radius"
-                    :fill="scatterConfig.style.layout.plots.selectors.markers.fill"
-                    :stroke="scatterConfig.style.layout.plots.selectors.markers.stroke"
-                    :stroke-width="scatterConfig.style.layout.plots.selectors.markers.strokeWidth"
+                    :r="FINAL_CONFIG.style.layout.plots.selectors.markers.radius"
+                    :fill="FINAL_CONFIG.style.layout.plots.selectors.markers.fill"
+                    :stroke="FINAL_CONFIG.style.layout.plots.selectors.markers.stroke"
+                    :stroke-width="FINAL_CONFIG.style.layout.plots.selectors.markers.strokeWidth"
                     class="line-pointer"
                 />
                 <circle
                     :cx="selectedPlot.x"
                     :cy="zero.y"
-                    :r="scatterConfig.style.layout.plots.selectors.markers.radius"
-                    :fill="scatterConfig.style.layout.plots.selectors.markers.fill"
-                    :stroke="scatterConfig.style.layout.plots.selectors.markers.stroke"
-                    :stroke-width="scatterConfig.style.layout.plots.selectors.markers.strokeWidth"
+                    :r="FINAL_CONFIG.style.layout.plots.selectors.markers.radius"
+                    :fill="FINAL_CONFIG.style.layout.plots.selectors.markers.fill"
+                    :stroke="FINAL_CONFIG.style.layout.plots.selectors.markers.stroke"
+                    :stroke-width="FINAL_CONFIG.style.layout.plots.selectors.markers.strokeWidth"
                     class="line-pointer"
                 />
                 <text
-                    v-if="scatterConfig.style.layout.plots.selectors.labels.showName"
+                    v-if="FINAL_CONFIG.style.layout.plots.selectors.labels.showName"
                     :x="selectedPlot.x"
-                    :y="selectedPlot.y + (selectedPlot.y < zero.y ? - scatterConfig.style.layout.plots.selectors.labels.fontSize /2 : scatterConfig.style.layout.plots.selectors.labels.fontSize)"
-                    :font-size="scatterConfig.style.layout.plots.selectors.labels.fontSize"
-                    :fill="scatterConfig.style.layout.plots.selectors.labels.color"
-                    :font-weight="scatterConfig.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
+                    :y="selectedPlot.y + (selectedPlot.y < zero.y ? - FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize /2 : FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize)"
+                    :font-size="FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize"
+                    :fill="FINAL_CONFIG.style.layout.plots.selectors.labels.color"
+                    :font-weight="FINAL_CONFIG.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
                     :text-anchor="selectedPlot.x < drawingArea.left + 100 ? 'start' : selectedPlot.x > drawingArea.right - 100 ? 'end' : selectedPlot.x > zero.x ? 'start' : 'end'"
                 >
                     {{ selectedPlot.v.name }}
@@ -871,71 +872,71 @@ defineExpose({
             </g>
 
             <!-- AXIS LABELS -->
-            <g v-if="scatterConfig.style.layout.dataLabels.xAxis.show">
+            <g v-if="FINAL_CONFIG.style.layout.dataLabels.xAxis.show">
                 <text
                     data-cy="scatter-x-min-axis-label"
                     :x="drawingArea.left - 5"
-                    :y="zero.y + scatterConfig.style.layout.dataLabels.xAxis.fontSize / 3"
+                    :y="zero.y + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 3"
                     text-anchor="end"
-                    :font-size="scatterConfig.style.layout.dataLabels.xAxis.fontSize"
-                    :fill="scatterConfig.style.layout.dataLabels.xAxis.color"
+                    :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                    :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
                 >
-                    {{ Number(extremes.xMin.toFixed(scatterConfig.style.layout.dataLabels.xAxis.rounding)).toLocaleString() }}
+                    {{ Number(extremes.xMin.toFixed(FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding)).toLocaleString() }}
                 </text>
                 <text
                     data-cy="scatter-x-max-axis-label"
                     :x="drawingArea.right + 3"
-                    :y="zero.y + scatterConfig.style.layout.dataLabels.xAxis.fontSize / 3"
+                    :y="zero.y + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 3"
                     text-anchor="start"
-                    :font-size="scatterConfig.style.layout.dataLabels.xAxis.fontSize"
-                    :fill="scatterConfig.style.layout.dataLabels.xAxis.color"
+                    :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                    :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
                 >
-                    {{ Number(extremes.xMax.toFixed(scatterConfig.style.layout.dataLabels.xAxis.rounding)).toLocaleString() }}
+                    {{ Number(extremes.xMax.toFixed(FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding)).toLocaleString() }}
                 </text>
                 <text
                     data-cy="scatter-x-label-name"
                     :id="`vue-ui-scatter-xAxis-label-${uid}`"
-                    :transform="`translate(${scatterConfig.style.layout.dataLabels.xAxis.fontSize * 2}, ${drawingArea.top + drawingArea.height / 2}), rotate(-90)`" 
+                    :transform="`translate(${FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2}, ${drawingArea.top + drawingArea.height / 2}), rotate(-90)`" 
                     text-anchor="middle"
-                    :font-size="scatterConfig.style.layout.dataLabels.xAxis.fontSize"
-                    :font-weight="scatterConfig.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
-                    :fill="scatterConfig.style.layout.dataLabels.xAxis.color"
+                    :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                    :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
                 >
-                    {{ scatterConfig.style.layout.dataLabels.xAxis.name }}
+                    {{ FINAL_CONFIG.style.layout.dataLabels.xAxis.name }}
                 </text>
 
             </g>
-            <g v-if="scatterConfig.style.layout.dataLabels.yAxis.show">
+            <g v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show">
                 <text
                     data-cy="scatter-y-min-axis-label"
                     :x="zero.x"
-                    :y="drawingArea.bottom + scatterConfig.style.layout.dataLabels.yAxis.fontSize + 3"
+                    :y="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize + 3"
                     text-anchor="middle"
-                    :font-size="scatterConfig.style.layout.dataLabels.yAxis.fontSize"
-                    :fill="scatterConfig.style.layout.dataLabels.yAxis.color"
+                    :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
+                    :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
                 >
-                    {{ Number(extremes.yMin.toFixed(scatterConfig.style.layout.dataLabels.yAxis.rounding)).toLocaleString() }}
+                    {{ Number(extremes.yMin.toFixed(FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding)).toLocaleString() }}
                 </text>
                 <text
                     data-cy="scatter-y-max-axis-label"
                     :x="zero.x"
-                    :y="drawingArea.top - scatterConfig.style.layout.dataLabels.yAxis.fontSize / 2"
+                    :y="drawingArea.top - FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize / 2"
                     text-anchor="middle"
-                    :font-size="scatterConfig.style.layout.dataLabels.yAxis.fontSize"
-                    :fill="scatterConfig.style.layout.dataLabels.yAxis.color"
+                    :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
+                    :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
                 >
-                    {{ Number(extremes.yMax.toFixed(scatterConfig.style.layout.dataLabels.yAxis.rounding)).toLocaleString() }}
+                    {{ Number(extremes.yMax.toFixed(FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding)).toLocaleString() }}
                 </text>
                 <text
                     data-cy="scatter-y-label-name"
                     text-anchor="middle"
-                    :font-size="scatterConfig.style.layout.dataLabels.yAxis.fontSize"
-                    :font-weight="scatterConfig.style.layout.dataLabels.yAxis.bold ? 'bold' : 'normal'"
-                    :fill="scatterConfig.style.layout.dataLabels.yAxis.color"
+                    :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
+                    :font-weight="FINAL_CONFIG.style.layout.dataLabels.yAxis.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
                     :x="drawingArea.left + drawingArea.width / 2"
-                    :y="drawingArea.bottom + 8 + scatterConfig.style.layout.dataLabels.yAxis.fontSize * 2"
+                    :y="drawingArea.bottom + 8 + FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize * 2"
                 >
-                    {{ scatterConfig.style.layout.dataLabels.yAxis.name }}
+                    {{ FINAL_CONFIG.style.layout.dataLabels.yAxis.name }}
                 </text>
             </g>
 
@@ -949,7 +950,7 @@ defineExpose({
             </clipPath>
 
             <!-- CORRELATION -->
-            <g v-if="scatterConfig.style.layout.correlation.show">
+            <g v-if="FINAL_CONFIG.style.layout.correlation.show">
                 <line 
                     v-for="(ds, i) in drawableDataset"
                     :data-cy="`scatter-correlation-line-${i}`"
@@ -957,22 +958,22 @@ defineExpose({
                     :x2="ds.correlation.x2"
                     :y1="ds.correlation.y1"
                     :y2="ds.correlation.y2"
-                    :stroke-dasharray="scatterConfig.style.layout.correlation.strokeDasharray"
+                    :stroke-dasharray="FINAL_CONFIG.style.layout.correlation.strokeDasharray"
                     :stroke="ds.color"
-                    :stroke-width="scatterConfig.style.layout.correlation.strokeWidth"
+                    :stroke-width="FINAL_CONFIG.style.layout.correlation.strokeWidth"
                     :clip-path="`url(#clip_path_${uid})`"
                 />
                 <g v-for="(ds, i) in drawableDataset">
                     <text
                         :data-cy="`scatter-correlation-label-${i}`"
-                        v-if="scatterConfig.style.layout.correlation.label.show"
+                        v-if="FINAL_CONFIG.style.layout.correlation.label.show"
                         :x="ds.label.x"
                         :y="ds.label.y"
-                        :fill="scatterConfig.style.layout.correlation.label.useSerieColor ? ds.color : scatterConfig.style.layout.correlation.label.color"
-                        :font-size="scatterConfig.style.layout.correlation.label.fontSize"
-                        :font-weight="scatterConfig.style.layout.correlation.label.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.layout.correlation.label.useSerieColor ? ds.color : FINAL_CONFIG.style.layout.correlation.label.color"
+                        :font-size="FINAL_CONFIG.style.layout.correlation.label.fontSize"
+                        :font-weight="FINAL_CONFIG.style.layout.correlation.label.bold ? 'bold' : 'normal'"
                     >
-                        {{ Number(ds.correlation.coefficient.toFixed(scatterConfig.style.layout.correlation.label.roundingValue)).toLocaleString() }}
+                        {{ Number(ds.correlation.coefficient.toFixed(FINAL_CONFIG.style.layout.correlation.label.roundingValue)).toLocaleString() }}
                     </text>
                 </g>
             </g>
@@ -984,13 +985,13 @@ defineExpose({
             :config="{
                 type: 'quadrant',
                 style: {
-                    backgroundColor: scatterConfig.style.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
                     quadrant: {
                         grid: {
-                            color: scatterConfig.style.layout.axis.stroke
+                            color: FINAL_CONFIG.style.layout.axis.stroke
                         },
                         plots: {
-                            color: scatterConfig.style.layout.axis.stroke,
+                            color: FINAL_CONFIG.style.layout.axis.stroke,
                             radius: 1
                         }
                     }
@@ -1001,7 +1002,7 @@ defineExpose({
         <!-- LEGEND AS DIV -->
         <div ref="chartLegend">
             <Legend
-                v-if="scatterConfig.style.legend.show"
+                v-if="FINAL_CONFIG.style.legend.show"
                 :legendSet="datasetWithId"
                 :config="legendConfig"
                 @clickMarker="({ legend }) => segregate(legend.id)"
@@ -1018,20 +1019,20 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="scatterConfig.style.tooltip.backgroundColor"
-            :color="scatterConfig.style.tooltip.color"
-            :borderRadius="scatterConfig.style.tooltip.borderRadius"
-            :borderColor="scatterConfig.style.tooltip.borderColor"
-            :borderWidth="scatterConfig.style.tooltip.borderWidth"
-            :fontSize="scatterConfig.style.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
             :parent="scatterChart"
             :content="tooltipContent"
-            :isCustom="scatterConfig.style.tooltip.customFormat && typeof scatterConfig.style.tooltip.customFormat === 'function'"
+            :isCustom="FINAL_CONFIG.style.tooltip.customFormat && typeof FINAL_CONFIG.style.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
-            <div style="width: 100%; display: flex; align-items:center;justify-content:center;" v-if="scatterConfig.style.tooltip.showShape">
+            <div style="width: 100%; display: flex; align-items:center;justify-content:center;" v-if="FINAL_CONFIG.style.tooltip.showShape">
                 <svg viewBox="0 0 20 20" height="20" width="20" style="overflow: hidden;background:transparent;">
                     <Shape 
                         :shape="selectedPlot.shape"
@@ -1051,12 +1052,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: scatterConfig.style.backgroundColor,
-                color: scatterConfig.style.color
+                backgroundColor: FINAL_CONFIG.style.backgroundColor,
+                color: FINAL_CONFIG.style.color
             },
             head: {
-                backgroundColor: scatterConfig.style.backgroundColor,
-                color: scatterConfig.style.color
+                backgroundColor: FINAL_CONFIG.style.backgroundColor,
+                color: FINAL_CONFIG.style.color
             }
         }">
             <template #content>
@@ -1065,7 +1066,7 @@ defineExpose({
                     :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${scatterConfig.style.title.text}${scatterConfig.style.title.subtitle.text ? ` : ${scatterConfig.style.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.title.text}${FINAL_CONFIG.style.title.subtitle.text ? ` : ${FINAL_CONFIG.style.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

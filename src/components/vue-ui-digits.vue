@@ -1,9 +1,11 @@
 <script setup>
 import { computed, ref } from "vue";
 import Digit from '../atoms/Digit.vue';
-import mainConfig from "../default_configs.json"
 import { useNestedProp } from "../useNestedProp";
 import { XMLNS } from "../lib";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_digits: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     dataset: {
@@ -18,13 +20,10 @@ const props = defineProps({
     }
 });
 
-const defaultConfig = ref(mainConfig.vue_ui_digits);
-
-
-const digitConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
 });
 
@@ -59,14 +58,14 @@ const maxY = computed(() => {
 </script>
 
 <template>
-    <svg :xmlns="XMLNS" :viewBox="`0 0 ${maxY} 80`" :style="`background:${digitConfig.backgroundColor};${digitConfig.height ? `height:${digitConfig.height};` : ''}${digitConfig.width ? `width:${digitConfig.width}` : ''}`">
+    <svg :xmlns="XMLNS" :viewBox="`0 0 ${maxY} 80`" :style="`background:${FINAL_CONFIG.backgroundColor};${FINAL_CONFIG.height ? `height:${FINAL_CONFIG.height};` : ''}${FINAL_CONFIG.width ? `width:${FINAL_CONFIG.width}` : ''}`">
         <Digit
             v-for="digit in digits"
             :x="digit.x"
             :y="digit.y"
             :quanta="digit.quanta"
-            :color="digitConfig.digits.color"
-            :backgroundColor="digitConfig.digits.skeletonColor"
+            :color="FINAL_CONFIG.digits.color"
+            :backgroundColor="FINAL_CONFIG.digits.skeletonColor"
         />
     </svg>
 </template>

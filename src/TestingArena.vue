@@ -10,7 +10,6 @@
  * 
  */
 import { ref, computed, onMounted, nextTick, watch } from "vue";
-import PROD_CONFIG from "./default_configs.json";
 import Box from "./Box.vue";
 import BaseIcon from "./atoms/BaseIcon.vue";
 import TableTest from "./components/vue-ui-table.vue";
@@ -2155,10 +2154,6 @@ const ringsDataset = ref([
 const wheelDataset = ref({
   percentage: 66.5
 })
-
-const wheelConfig = ref(PROD_CONFIG.vvue_ui_wheel)
-
-const showLocalTest = ref(false);
 
 function copyConfig(c) {
   let selBox = document.createElement('textarea');
