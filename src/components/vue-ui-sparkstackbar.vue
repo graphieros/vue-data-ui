@@ -14,10 +14,12 @@ import {
     themePalettes,
     XMLNS 
 } from "../lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import Skeleton from "./vue-ui-skeleton.vue";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_sparkstackbar: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -39,12 +41,11 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_sparkstackbar);
 
-const stackConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -60,13 +61,13 @@ const stackConfig = computed(() => {
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(stackConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 const safeDatasetCopy = ref(props.dataset.map((d, i ) => {
     return {
         ...d,
-        value: stackConfig.value.style.animation.show ? 0 : d.value || 0,
+        value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
         color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length]
     }
 }));
@@ -95,8 +96,8 @@ onMounted(() => {
         });
     }
 
-    if (stackConfig.value.style.animation.show) {
-        const chunks = stackConfig.value.style.animation.animationFrames;
+    if (FINAL_CONFIG.value.style.animation.show) {
+        const chunks = FINAL_CONFIG.value.style.animation.animationFrames;
         const chunkSet = props.dataset.map((d, i) => d.value / chunks);
         const total = props.dataset.map(d => d.value || 0).reduce((a, b) => a + b, 0);
         let start = 0;
@@ -150,7 +151,7 @@ const absoluteDataset = computed(() => {
             proportionLabel: dataLabel({
                 v: (d.value || 0) / total.value * 100,
                 s: '%',
-                r: stackConfig.value.style.legend.percentage.rounding
+                r: FINAL_CONFIG.value.style.legend.percentage.rounding
             }),
         }
     })
@@ -193,14 +194,14 @@ function selectDatapoint(datapoint, index) {
 </script>
 
 <template>
-    <div :style="`width:100%; background:${stackConfig.style.backgroundColor}`">
+    <div :style="`width:100%; background:${FINAL_CONFIG.style.backgroundColor}`">
         <!-- TITLE -->
-        <div data-cy="sparkstackbar-title-wrapper" v-if="stackConfig.style.title.text" :style="`width:calc(100% - 12px);background:${stackConfig.style.backgroundColor};margin:0 auto;margin:${stackConfig.style.title.margin};padding: 0 6px;text-align:${stackConfig.style.title.textAlign}`">
-            <div data-cy="sparkstackbar-title" :style="`font-size:${stackConfig.style.title.fontSize}px;color:${stackConfig.style.title.color};font-weight:${stackConfig.style.title.bold ? 'bold' : 'normal'}`">
-                {{ stackConfig.style.title.text }}
+        <div data-cy="sparkstackbar-title-wrapper" v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:${FINAL_CONFIG.style.backgroundColor};margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
+            <div data-cy="sparkstackbar-title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
+                {{ FINAL_CONFIG.style.title.text }}
             </div>
-            <div data-cy="sparkstackbar-subtitle" v-if="stackConfig.style.title.subtitle.text" :style="`font-size:${stackConfig.style.title.subtitle.fontSize}px;color:${stackConfig.style.title.subtitle.color};font-weight:${stackConfig.style.title.subtitle.bold ? 'bold' : 'normal'}`">
-                {{ stackConfig.style.title.subtitle.text }}
+            <div data-cy="sparkstackbar-subtitle" v-if="FINAL_CONFIG.style.title.subtitle.text" :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`">
+                {{ FINAL_CONFIG.style.title.subtitle.text }}
             </div>
             
         </div>
@@ -209,7 +210,7 @@ function selectDatapoint(datapoint, index) {
         <defs>
             <linearGradient v-for="(rect, i) in drawableDataset" :key="`stack_gradient_${i}`" gradientTransform="rotate(90)" :id="`stack_gradient_${i}_${uid}`">
                 <stop offset="0%" :stop-color="rect.color"/>
-                <stop offset="50%" :stop-color="`${shiftHue(rect.color, 0.05)}${opacity[100 - stackConfig.style.bar.gradient.intensity]}`"/>
+                <stop offset="50%" :stop-color="`${shiftHue(rect.color, 0.05)}${opacity[100 - FINAL_CONFIG.style.bar.gradient.intensity]}`"/>
                 <stop offset="100%" :stop-color="rect.color"/>
             </linearGradient>
             <clipPath id="stackPill" clipPathUnits="objectBoundingBox">
@@ -220,7 +221,7 @@ function selectDatapoint(datapoint, index) {
                     height="5"
                     rx="3"
                     ry="3"
-                    :fill="stackConfig.style.backgroundColor"
+                    :fill="FINAL_CONFIG.style.backgroundColor"
                 />
             </clipPath>
         </defs>
@@ -230,7 +231,7 @@ function selectDatapoint(datapoint, index) {
                     :y="0" 
                     :height="svg.height" 
                     :width="drawableDataset.map(ds => ds.width).reduce((a, b) => a + b, 0)" 
-                    :fill="stackConfig.style.bar.gradient.underlayerColor"
+                    :fill="FINAL_CONFIG.style.bar.gradient.underlayerColor"
                     :class="{'animated': !isLoading}"
                 />
                 <rect 
@@ -240,8 +241,8 @@ function selectDatapoint(datapoint, index) {
                     :y="0"
                     :width="rect.width"
                     :height="svg.height"
-                    :fill="stackConfig.style.bar.gradient.show ? `url(#stack_gradient_${i}_${uid})` : rect.color"
-                    :stroke="stackConfig.style.backgroundColor"
+                    :fill="FINAL_CONFIG.style.bar.gradient.show ? `url(#stack_gradient_${i}_${uid})` : rect.color"
+                    :stroke="FINAL_CONFIG.style.backgroundColor"
                     stroke-linecap="round"
                     :class="{'animated': !isLoading}"
                 />
@@ -253,7 +254,7 @@ function selectDatapoint(datapoint, index) {
             :config="{
                 type: 'sparkStackbar',
                 style: {
-                    backgroundColor: stackConfig.style.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
                     sparkStackbar: {
                         color: '#CCCCCC'
                     }
@@ -261,44 +262,44 @@ function selectDatapoint(datapoint, index) {
             }"
         />
         <div 
-            v-if="stackConfig.style.legend.show" 
+            v-if="FINAL_CONFIG.style.legend.show" 
             data-cy="sparkstackbar-legend" 
-            :style="`background:${stackConfig.style.backgroundColor};margin:0 auto;margin:${stackConfig.style.legend.margin};justify-content:${stackConfig.style.legend.textAlign === 'left' ? 'flex-start' : stackConfig.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" 
+            :style="`background:${FINAL_CONFIG.style.backgroundColor};margin:0 auto;margin:${FINAL_CONFIG.style.legend.margin};justify-content:${FINAL_CONFIG.style.legend.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" 
             class="vue-ui-sparkstackbar-legend"
         >
             <div 
                 v-for=" (rect, i) in absoluteDataset" 
-                :style="`font-size:${stackConfig.style.legend.fontSize}px;`" 
+                :style="`font-size:${FINAL_CONFIG.style.legend.fontSize}px;`" 
                 :class="{'vue-ui-sparkstackbar-legend-item': true, 'vue-ui-sparkstackbar-legend-item-unselected': segregated.includes(i)}" 
                 @click="segregate(i); selectDatapoint(rect, i)"
 
             >
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px;justify-content:center" >
                     <svg 
-                        :height="`${stackConfig.style.legend.fontSize}px`" 
-                        :width="`${stackConfig.style.legend.fontSize}px`" 
+                        :height="`${FINAL_CONFIG.style.legend.fontSize}px`" 
+                        :width="`${FINAL_CONFIG.style.legend.fontSize}px`" 
                         viewBox="0 0 10 10"
                     >
                         <circle :cx="5" :cy="5" :r="5" :fill="rect.color"/>
                     </svg>
-                    <span :style="`color:${stackConfig.style.legend.name.color}; font-weight:${stackConfig.style.legend.name.bold ? 'bold' : 'normal'}`">
+                    <span :style="`color:${FINAL_CONFIG.style.legend.name.color}; font-weight:${FINAL_CONFIG.style.legend.name.bold ? 'bold' : 'normal'}`">
                         {{ rect.name }}
                     </span>
                     <span 
-                        v-if="stackConfig.style.legend.percentage.show" 
-                        :style="`font-weight:${stackConfig.style.legend.percentage.bold ? 'bold': 'normal'};color:${stackConfig.style.legend.percentage.color}`"
+                        v-if="FINAL_CONFIG.style.legend.percentage.show" 
+                        :style="`font-weight:${FINAL_CONFIG.style.legend.percentage.bold ? 'bold': 'normal'};color:${FINAL_CONFIG.style.legend.percentage.color}`"
                     >
                         {{ segregated.includes(i) ? ' - ' : rect.proportionLabel }}
                     </span>
                     <span 
-                        v-if="stackConfig.style.legend.value.show" 
-                        :style="`font-weight:${stackConfig.style.legend.value.bold ? 'bold' : 'normal'};color:${stackConfig.style.legend.value.color}`"
+                        v-if="FINAL_CONFIG.style.legend.value.show" 
+                        :style="`font-weight:${FINAL_CONFIG.style.legend.value.bold ? 'bold' : 'normal'};color:${FINAL_CONFIG.style.legend.value.color}`"
                     >
                         ({{ dataLabel({
-                            p: stackConfig.style.legend.value.prefix,
+                            p: FINAL_CONFIG.style.legend.value.prefix,
                             v: rect.value,
-                            s: stackConfig.style.legend.value.suffix,
-                            r: stackConfig.style.legend.value.rounding
+                            s: FINAL_CONFIG.style.legend.value.suffix,
+                            r: FINAL_CONFIG.style.legend.value.rounding
                         }) }})
                     </span> 
                 </div>

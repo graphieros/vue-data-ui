@@ -21,7 +21,6 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -32,6 +31,9 @@ import Slicer from "../atoms/Slicer.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_donut_evolution: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -91,7 +93,6 @@ onMounted(() => {
 })
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_donut_evolution);
 const segregated = ref([]);
 const hoveredIndex = ref(null);
 const hoveredDatapoint = ref(null);
@@ -103,10 +104,10 @@ const slicerStep = ref(0);
 
 const emit = defineEmits(['selectLegend'])
 
-const donutEvolutionConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -123,29 +124,29 @@ const donutEvolutionConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
-    fileName: donutEvolutionConfig.value.style.chart.title.text || 'vue-ui-donut-evolution'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-donut-evolution'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(donutEvolutionConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
 const mutableConfig = ref({
-    showTable: donutEvolutionConfig.value.table.show
+    showTable: FINAL_CONFIG.value.table.show
 });
 
 const padding = computed(() => {
     return {
-        top: donutEvolutionConfig.value.style.chart.layout.padding.top,
-        right: donutEvolutionConfig.value.style.chart.layout.padding.right,
-        bottom: donutEvolutionConfig.value.style.chart.layout.padding.bottom,
-        left: donutEvolutionConfig.value.style.chart.layout.padding.left,
+        top: FINAL_CONFIG.value.style.chart.layout.padding.top,
+        right: FINAL_CONFIG.value.style.chart.layout.padding.right,
+        bottom: FINAL_CONFIG.value.style.chart.layout.padding.bottom,
+        left: FINAL_CONFIG.value.style.chart.layout.padding.left,
     }
 });
 
 const svg = computed(() => {
-    const absoluteHeight = donutEvolutionConfig.value.style.chart.layout.height;
-    const absoluteWidth = donutEvolutionConfig.value.style.chart.layout.width;
+    const absoluteHeight = FINAL_CONFIG.value.style.chart.layout.height;
+    const absoluteWidth = FINAL_CONFIG.value.style.chart.layout.width;
     const height = absoluteHeight - padding.value.top - padding.value.bottom;
     const width = absoluteWidth - padding.value.left - padding.value.right;
     return {
@@ -233,7 +234,7 @@ const drawableDataset = computed(() => {
         const radius = radiusReference > svg.value.width / 16 ? svg.value.width / 16 : radiusReference;
         const activeRadius = hoveredIndex.value === a.index ? svg.value.width / 16 : radius;
         const hoverRadius = arr.length > 4 ? radiusReference * 2 : radiusReference * 2 > (slit.value / 2 * 0.7) ? slit.value / 2 * 0.7 : radiusReference * 2
-        const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxScale, donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps).max);
+        const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxScale, FINAL_CONFIG.value.style.chart.layout.grid.yAxis.dataLabels.steps).max);
         return {
             ...a,
             y,
@@ -272,7 +273,7 @@ const drawableDataset = computed(() => {
 });
 
 function labellizeValue(val) {
-    return `${donutEvolutionConfig.value.style.chart.layout.dataLabels.prefix}${isNaN(val) ? '-' : Number(val.toFixed(donutEvolutionConfig.value.style.chart.layout.dataLabels.rounding)).toLocaleString()}${donutEvolutionConfig.value.style.chart.layout.dataLabels.suffix}`;
+    return `${FINAL_CONFIG.value.style.chart.layout.dataLabels.prefix}${isNaN(val) ? '-' : Number(val.toFixed(FINAL_CONFIG.value.style.chart.layout.dataLabels.rounding)).toLocaleString()}${FINAL_CONFIG.value.style.chart.layout.dataLabels.suffix}`;
 }
 
 const extremes = computed(() => {
@@ -284,7 +285,7 @@ const extremes = computed(() => {
 
 const niceScale = computed(() => {
     const maxScale = drawableDataset.value.length === 1 ? extremes.value.max * 2 : extremes.value.max
-    return calculateNiceScale(extremes.value.min, maxScale, donutEvolutionConfig.value.style.chart.layout.grid.yAxis.dataLabels.steps)
+    return calculateNiceScale(extremes.value.min, maxScale, FINAL_CONFIG.value.style.chart.layout.grid.yAxis.dataLabels.steps)
 })
 
 function ratioToMax(value) {
@@ -364,11 +365,11 @@ const grandTotal = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'donut-div-legend',
-        backgroundColor: donutEvolutionConfig.value.style.chart.legend.backgroundColor,
-        color: donutEvolutionConfig.value.style.chart.legend.color,
-        fontSize: donutEvolutionConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: donutEvolutionConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 });
 
@@ -400,32 +401,32 @@ const table = computed(() => {
             return ds.values[i] ?? 0
         }).reduce((a, b) => a + b, 0);
 
-        body.push([donutEvolutionConfig.value.style.chart.layout.grid.xAxis.dataLabels.values[i] ?? '-'].concat(convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => {
+        body.push([FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.values[i] ?? '-'].concat(convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => {
             return {
                 value: ds.values[i] ?? 0,
                 percentage: ds.values[i] ? ds.values[i] / sum * 100 : 0
             }
-        })).concat([`${donutEvolutionConfig.value.style.chart.layout.dataLabels.prefix}${Number(sum.toFixed(donutEvolutionConfig.value.table.td.roundingValue))}${donutEvolutionConfig.value.style.chart.layout.dataLabels.suffix}`]))
+        })).concat([`${FINAL_CONFIG.value.style.chart.layout.dataLabels.prefix}${Number(sum.toFixed(FINAL_CONFIG.value.table.td.roundingValue))}${FINAL_CONFIG.value.style.chart.layout.dataLabels.suffix}`]))
 
     }
 
     const config = {
         th: {
-            backgroundColor: donutEvolutionConfig.value.table.th.backgroundColor,
-            color: donutEvolutionConfig.value.table.th.color,
-            outline: donutEvolutionConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: donutEvolutionConfig.value.table.td.backgroundColor,
-            color: donutEvolutionConfig.value.table.td.color,
-            outline: donutEvolutionConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: donutEvolutionConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-        donutEvolutionConfig.value.table.columnNames.period
-    ].concat(convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => ds.name)).concat(donutEvolutionConfig.value.table.columnNames.total)
+        FINAL_CONFIG.value.table.columnNames.period
+    ].concat(convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => ds.name)).concat(FINAL_CONFIG.value.table.columnNames.total)
 
     return { head, body, config, colNames };
 });
@@ -436,14 +437,14 @@ function getData() {
 
 function generateCsv() {
     nextTick(() => {
-        const title = [[donutEvolutionConfig.value.style.chart.title.text],[donutEvolutionConfig.value.style.chart.title.subtitle.text],[""]];
+        const title = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[""]];
         const head = [...table.value.head.map(h => h.name ?? h)];
         const body = [...table.value.body.map(b => {
             return b.map(t => t.value ?? t)
         })];
         const tableXls = title.concat([head]).concat(body);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: donutEvolutionConfig.value.style.chart.title.text || "vue-ui-donut-evolution"});
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-donut-evolution"});
     });
 }
 
@@ -468,18 +469,18 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="donutEvolutionChart" :class="`vue-ui-donut-evolution ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${donutEvolutionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutEvolutionConfig.style.fontFamily};width:100%; text-align:center;${!donutEvolutionConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${donutEvolutionConfig.style.chart.backgroundColor}`" :id="uid">
-        <div v-if="donutEvolutionConfig.style.chart.title.text" :style="`width:100%;background:${donutEvolutionConfig.style.chart.backgroundColor};padding-bottom:24px`" @mouseleave="leave">
+    <div ref="donutEvolutionChart" :class="`vue-ui-donut-evolution ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="uid">
+        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`" @mouseleave="leave">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
                     title: {
                         cy: 'donut-evolution-div-title',
-                        ...donutEvolutionConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'donut-evolution-div-subtitle',
-                        ...donutEvolutionConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     }
                 }"
             />
@@ -488,19 +489,19 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="donutEvolutionConfig.userOptions.show && isDataset"
-            :backgroundColor="donutEvolutionConfig.style.chart.backgroundColor"
-            :color="donutEvolutionConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="donutEvolutionConfig.userOptions.buttons.pdf"
-            :hasImg="donutEvolutionConfig.userOptions.buttons.img"
-            :hasXls="donutEvolutionConfig.userOptions.buttons.csv"
-            :hasTable="donutEvolutionConfig.userOptions.buttons.table"
-            :hasFullscreen="donutEvolutionConfig.userOptions.buttons.fullscreen"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
-            :titles="{ ...donutEvolutionConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="donutEvolutionChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -525,34 +526,34 @@ defineExpose({
             </template>
         </UserOptions>
         
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-evolution-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${donutEvolutionConfig.style.chart.backgroundColor};color:${donutEvolutionConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-evolution-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
 
             <defs>
                 <linearGradient :id="`hover_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" :stop-color="`${donutEvolutionConfig.style.chart.backgroundColor}${opacity[donutEvolutionConfig.style.chart.layout.highlighter.opacity]}`"/>
-                    <stop offset="100%" :stop-color="`${donutEvolutionConfig.style.chart.layout.highlighter.color}${opacity[donutEvolutionConfig.style.chart.layout.highlighter.opacity]}`"/>
+                    <stop offset="0%" :stop-color="`${FINAL_CONFIG.style.chart.backgroundColor}${opacity[FINAL_CONFIG.style.chart.layout.highlighter.opacity]}`"/>
+                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.layout.highlighter.color}${opacity[FINAL_CONFIG.style.chart.layout.highlighter.opacity]}`"/>
                 </linearGradient>
 
                 <radialGradient :id="`focus_${uid}`">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(donutEvolutionConfig.style.chart.backgroundColor)}00`" />
+                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
                     <stop offset="77%" :stop-color="'#FFFFFF' + opacity[30]" />
-                    <stop offset="100%" :stop-color="`${convertColorToHex(donutEvolutionConfig.style.chart.backgroundColor)}00`" />
+                    <stop offset="100%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
                 </radialGradient>
             </defs>
             
 
             <!-- GRID -->
-            <g v-if="donutEvolutionConfig.style.chart.layout.grid.show">
-                <line :x1="padding.left" :x2="padding.left" :y1="padding.top" :y2="padding.top + svg.height" :stroke="donutEvolutionConfig.style.chart.layout.grid.stroke" :stroke-width="donutEvolutionConfig.style.chart.layout.grid.strokeWidth" stroke-linecap="round"/>
-                <line :x1="padding.left" :x2="svg.absoluteWidth - padding.right" :y1="svg.absoluteHeight - padding.bottom" :y2="svg.absoluteHeight - padding.bottom" :stroke="donutEvolutionConfig.style.chart.layout.grid.stroke" :stroke-width="donutEvolutionConfig.style.chart.layout.grid.strokeWidth" stroke-linecap="round" />
+            <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
+                <line :x1="padding.left" :x2="padding.left" :y1="padding.top" :y2="padding.top + svg.height" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" stroke-linecap="round"/>
+                <line :x1="padding.left" :x2="svg.absoluteWidth - padding.right" :y1="svg.absoluteHeight - padding.bottom" :y2="svg.absoluteHeight - padding.bottom" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" stroke-linecap="round" />
 
-                <g v-if="donutEvolutionConfig.style.chart.layout.grid.showVerticalLines">
-                    <line v-for="(l, i) in (slicer.end - slicer.start)" :x1="padding.left + ((i +1 ) * slit)" :x2="padding.left + ((i +1) * slit)" :y1="padding.top" :y2="svg.absoluteHeight - padding.bottom" :stroke="donutEvolutionConfig.style.chart.layout.grid.stroke" :stroke-width="donutEvolutionConfig.style.chart.layout.grid.strokeWidth" stroke-linecap="round"/>
+                <g v-if="FINAL_CONFIG.style.chart.layout.grid.showVerticalLines">
+                    <line v-for="(l, i) in (slicer.end - slicer.start)" :x1="padding.left + ((i +1 ) * slit)" :x2="padding.left + ((i +1) * slit)" :y1="padding.top" :y2="svg.absoluteHeight - padding.bottom" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" stroke-linecap="round"/>
                 </g>
             </g>
 
             <!-- Y LABELS -->
-            <g v-if="donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null || isFixed}">
+            <g v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null || isFixed}">
                 <g v-for="(yLabel, i) in yLabels">
                     <line 
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
@@ -560,35 +561,35 @@ defineExpose({
                         :x2="padding.left - 5" 
                         :y1="yLabel.y" 
                         :y2="yLabel.y" 
-                        :stroke="donutEvolutionConfig.style.chart.layout.grid.stroke" 
-                        :stroke-width="donutEvolutionConfig.style.chart.layout.grid.strokeWidth" 
+                        :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
                     />
                     <text 
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
-                        :x="padding.left - 8 + donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.offsetX" 
-                        :y="yLabel.y + donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.fontSize / 3" 
-                        :font-size="donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.fontSize" 
+                        :x="padding.left - 8 + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.offsetX" 
+                        :y="yLabel.y + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize / 3" 
+                        :font-size="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize" 
                         text-anchor="end"
-                        :fill="donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.color"
-                        :font-weight="donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
                     >
-                        {{ donutEvolutionConfig.style.chart.layout.dataLabels.prefix }} {{ canShowValue(yLabel.value) ? yLabel.value.toFixed(donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.roundingValue) : '' }} {{ donutEvolutionConfig.style.chart.layout.dataLabels.suffix }}
+                        {{ FINAL_CONFIG.style.chart.layout.dataLabels.prefix }} {{ canShowValue(yLabel.value) ? yLabel.value.toFixed(FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.roundingValue) : '' }} {{ FINAL_CONFIG.style.chart.layout.dataLabels.suffix }}
                     </text>
                 </g>
             </g>
 
             <!-- X LABELS -->
-            <g v-if="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': isFixed}">
+            <g v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': isFixed}">
                 <g v-for="(_, i) in (slicer.end - slicer.start)">
                     <text
-                        v-if="(donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast"
-                        :text-anchor="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
-                        :font-size="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize"
-                        :fill="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.color"
-                        :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
+                        v-if="(FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast"
+                        :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
+                        :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
+                        :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
 
                     >
-                        {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(i) + Number(slicer.start)] ?? '' }}
+                        {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(i) + Number(slicer.start)] ?? '' }}
                     </text>
                 </g>
             </g>
@@ -597,13 +598,13 @@ defineExpose({
             <g v-for="(datapoint, i ) in drawableDataset">
                 <line
                     :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null || isFixed}"
-                    v-if="donutEvolutionConfig.style.chart.layout.line.show && i < drawableDataset.length - 1 && ![datapoint.subtotal, drawableDataset[i + 1].subtotal].includes(null)"
+                    v-if="FINAL_CONFIG.style.chart.layout.line.show && i < drawableDataset.length - 1 && ![datapoint.subtotal, drawableDataset[i + 1].subtotal].includes(null)"
                     :x1="datapoint.x"
                     :y1="datapoint.y"
                     :x2="drawableDataset[i + 1].x"
                     :y2="drawableDataset[i + 1].y"
-                    :stroke="donutEvolutionConfig.style.chart.layout.line.stroke"
-                    :stroke-width="donutEvolutionConfig.style.chart.layout.line.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.chart.layout.line.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.line.strokeWidth"
                     stroke-linecap="round"
                     stroke-linejoin="round"
                 />
@@ -613,7 +614,7 @@ defineExpose({
                         :cx="datapoint.x"
                         :cy="datapoint.y"
                         :r="datapoint.activeRadius"
-                        :fill="donutEvolutionConfig.style.chart.backgroundColor"
+                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
                     />
                 </g>
             </g>
@@ -640,7 +641,7 @@ defineExpose({
                                 :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
                                 :x="calcMarkerOffsetX(arc, true, 3).x"
                                 :y="calcMarkerOffsetY(arc)"
-                                :fill="donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.color"
+                                :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
                                 :font-size="8"
                                 :font-weight="'bold'"
                             >
@@ -652,7 +653,7 @@ defineExpose({
                                 :cx="datapoint.x"
                                 :cy="datapoint.y"
                                 :r="datapoint.hoverRadius"
-                                :fill="donutEvolutionConfig.style.chart.backgroundColor"
+                                :fill="FINAL_CONFIG.style.chart.backgroundColor"
                             />
                         </g>
                     </g>
@@ -665,7 +666,7 @@ defineExpose({
                         :cx="datapoint.x"
                         :cy="datapoint.y"
                         :r="3"
-                        :fill="donutEvolutionConfig.style.chart.color"
+                        :fill="FINAL_CONFIG.style.chart.color"
                     />
                     <g v-else-if="hoveredIndex !== null && hoveredIndex === i">
                         <path 
@@ -673,7 +674,7 @@ defineExpose({
                             :d="arc.arcSlice"
                             :fill="`${arc.color}`"
                             :stroke-width="1"
-                            :stroke="donutEvolutionConfig.style.chart.backgroundColor"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         />
                     </g>
                     <g v-else>
@@ -683,7 +684,7 @@ defineExpose({
                             :d="arc.arcSlice"
                             :fill="`${arc.color}`"
                             :stroke-width="0.5"
-                            :stroke="donutEvolutionConfig.style.chart.backgroundColor"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         />
                     </g>
                 </g>
@@ -692,13 +693,13 @@ defineExpose({
             <!-- DATALABELS -->
             <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || isFixed}">
                 <text 
-                    v-if="datapoint.subtotal !== null && donutEvolutionConfig.style.chart.layout.dataLabels.show"
+                    v-if="datapoint.subtotal !== null && FINAL_CONFIG.style.chart.layout.dataLabels.show"
                     text-anchor="middle"
                     :x="datapoint.x"
-                    :y="hoveredIndex === datapoint.index && datapoint.subtotal ? datapoint.y + donutEvolutionConfig.style.chart.layout.dataLabels.fontSize / 3 : datapoint.y - datapoint.radius - donutEvolutionConfig.style.chart.layout.dataLabels.fontSize + donutEvolutionConfig.style.chart.layout.dataLabels.offsetY"
-                    :font-size="donutEvolutionConfig.style.chart.layout.dataLabels.fontSize"
+                    :y="hoveredIndex === datapoint.index && datapoint.subtotal ? datapoint.y + FINAL_CONFIG.style.chart.layout.dataLabels.fontSize / 3 : datapoint.y - datapoint.radius - FINAL_CONFIG.style.chart.layout.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.dataLabels.offsetY"
+                    :font-size="FINAL_CONFIG.style.chart.layout.dataLabels.fontSize"
                     :font-weight="'bold'"
-                    :fill="donutEvolutionConfig.style.chart.layout.dataLabels.color"
+                    :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
                 >
                     {{ labellizeValue(datapoint.subtotal) }}
                 </text>
@@ -738,7 +739,7 @@ defineExpose({
                     :y="padding.top"
                     :width="svg.width"
                     :height="svg.height"
-                    :fill="donutEvolutionConfig.style.chart.backgroundColor"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
                     style="filter:drop-shadow(0 12px 12px rgba(0,0,0,0.3))"
                 />
                 <line
@@ -748,7 +749,7 @@ defineExpose({
                     :x2="svg.absoluteWidth - padding.right - 4"
                     :y2="padding.top + 15.5"
                     stroke-linecap="round"
-                    :stroke="donutEvolutionConfig.style.chart.color"
+                    :stroke="FINAL_CONFIG.style.chart.color"
                     stroke-width="1.5"
                 />
                 <line
@@ -758,7 +759,7 @@ defineExpose({
                     :x2="svg.absoluteWidth - padding.right - 4"
                     :y1="padding.top + 15.5"
                     stroke-linecap="round"
-                    :stroke="donutEvolutionConfig.style.chart.color"
+                    :stroke="FINAL_CONFIG.style.chart.color"
                     stroke-width="1.5"
                 />
                 <circle
@@ -789,14 +790,14 @@ defineExpose({
                     :cx="padding.left + svg.width / 2"
                     :cy="padding.top + svg.height / 2"
                     :r="svg.height / 7"
-                    :fill="donutEvolutionConfig.style.chart.backgroundColor"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
                 />
                 <path 
                     v-for="(arc, k) in fixedDatapoint.donutFocus"
                     :d="arc.arcSlice"
                     :fill="`${arc.color}`"
                     :stroke-width="1"
-                    :stroke="donutEvolutionConfig.style.chart.backgroundColor"
+                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                     class="vue-ui-donut-evolution-focus"
                 />
                 <g v-for="(arc, i) in fixedDatapoint.donutFocus" class="vue-ui-donut-evolution-focus">
@@ -805,7 +806,7 @@ defineExpose({
                         :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
                         :x="calcMarkerOffsetX(arc, true, 10).x"
                         :y="calcMarkerOffsetY(arc)"
-                        :fill="donutEvolutionConfig.style.chart.layout.grid.yAxis.dataLabels.color"
+                        :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
                         :font-size="10"
                         :font-weight="'bold'"
                     >
@@ -822,7 +823,7 @@ defineExpose({
                 :cx="padding.left + (svg.width / 2)"
                     :cy="padding.top + (svg.height / 2)"
                     :r="svg.height / 7.7"
-                    :fill="donutEvolutionConfig.style.chart.backgroundColor"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
                 />
                 <text 
                     text-anchor="middle"
@@ -830,19 +831,19 @@ defineExpose({
                     :y="padding.top + (svg.height / 2) + 14 / 3"
                     :font-size="14"
                     :font-weight="'bold'"
-                    :fill="donutEvolutionConfig.style.chart.layout.dataLabels.color"
+                    :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
                     class="vue-ui-donut-evolution-focus"
                 >
                     {{ labellizeValue(fixedDatapoint.subtotal) }}
                 </text>
                 <text 
-                    v-if="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[fixedDatapoint.index]"
+                    v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[fixedDatapoint.index]"
                     :x="padding.left + 6"
-                    :y="padding.top + donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2"
-                    :font-size="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.fontSize * 1.6"
-                    :fill="donutEvolutionConfig.style.chart.layout.dataLabels.color"
+                    :y="padding.top + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2"
+                    :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 1.6"
+                    :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
                 >
-                    {{ donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(fixedDatapoint.index) + Number(slicer.start)] }}
+                    {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(fixedDatapoint.index) + Number(slicer.start)] }}
                 </text>
             </g>
             <slot name="svg" :svg="svg"/>
@@ -853,7 +854,7 @@ defineExpose({
             :config="{
                 type: 'donutEvolution',
                 style: {
-                    backgroundColor: donutEvolutionConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     donutEvolution: {
                         axis: {
                             color: '#CCCCCC'
@@ -867,17 +868,17 @@ defineExpose({
         />
 
         <Slicer
-            v-if="maxLength > 1 && donutEvolutionConfig.style.chart.zoom.show"
+            v-if="maxLength > 1 && FINAL_CONFIG.style.chart.zoom.show"
             :key="`slicer_${slicerStep}`"
-            :background="donutEvolutionConfig.style.chart.zoom.color"
-            :borderColor="donutEvolutionConfig.style.chart.backgroundColor"
-            :fontSize="donutEvolutionConfig.style.chart.zoom.fontSize"
-            :useResetSlot="donutEvolutionConfig.style.chart.zoom.useResetSlot"
-            :labelLeft="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.start)] || ''"
-            :labelRight="donutEvolutionConfig.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.end)-1] || ''"
-            :textColor="donutEvolutionConfig.style.chart.color"
-            :inputColor="donutEvolutionConfig.style.chart.zoom.color"
-            :selectColor="donutEvolutionConfig.style.chart.zoom.highlightColor"
+            :background="FINAL_CONFIG.style.chart.zoom.color"
+            :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
+            :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
+            :labelLeft="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.start)] || ''"
+            :labelRight="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.end)-1] || ''"
+            :textColor="FINAL_CONFIG.style.chart.color"
+            :inputColor="FINAL_CONFIG.style.chart.zoom.color"
+            :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
             :max="maxLength"
             :min="0"
             :valueStart="slicer.start"
@@ -892,16 +893,16 @@ defineExpose({
         </Slicer>
 
         <Legend
-            v-if="donutEvolutionConfig.style.chart.legend.show"
+            v-if="FINAL_CONFIG.style.chart.legend.show"
             :legendSet="legendSet"
             :config="legendConfig"
             @clickMarker="({legend}) => segregate(legend.uid)"
         >
             <template #item="{legend, index}">
                 <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                    {{ legend.name }}: {{ Number(legend.value.toFixed(donutEvolutionConfig.style.chart.legend.roundingValue)).toLocaleString() }}
+                    {{ legend.name }}: {{ Number(legend.value.toFixed(FINAL_CONFIG.style.chart.legend.roundingValue)).toLocaleString() }}
                     <span v-if="!segregated.includes(legend.uid)">
-                        ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(donutEvolutionConfig.style.chart.legend.roundingPercentage)}}%)
+                        ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}}%)
                     </span>
                     <span v-else>
                         ( - % )
@@ -916,12 +917,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: donutEvolutionConfig.style.chart.backgroundColor,
-                color: donutEvolutionConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
-                backgroundColor: donutEvolutionConfig.style.chart.backgroundColor,
-                color: donutEvolutionConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
@@ -930,7 +931,7 @@ defineExpose({
                     :head="table.head" 
                     :body="table.body" 
                     :config="table.config" 
-                    :title="`${donutEvolutionConfig.style.chart.title.text}${donutEvolutionConfig.style.chart.title.subtitle.text ? ` : ${donutEvolutionConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{th}">
@@ -939,10 +940,10 @@ defineExpose({
                     <template #td="{td}">
                         <span v-if="td.value === null">-</span>
                         <b v-else>
-                            {{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.prefix : '' }}{{ !isNaN(td.value) && td.value !== null ? Number(td.value.toFixed(donutEvolutionConfig.table.td.roundingValue)).toLocaleString() : td }}{{ !isNaN(td.value) ? donutEvolutionConfig.style.chart.layout.dataLabels.suffix : '' }} 
+                            {{ !isNaN(td.value) ? FINAL_CONFIG.style.chart.layout.dataLabels.prefix : '' }}{{ !isNaN(td.value) && td.value !== null ? Number(td.value.toFixed(FINAL_CONFIG.table.td.roundingValue)).toLocaleString() : td }}{{ !isNaN(td.value) ? FINAL_CONFIG.style.chart.layout.dataLabels.suffix : '' }} 
                         </b>
                         <span>
-                            {{ td.percentage && !isNaN(td.percentage) ? `(${Number(td.percentage.toFixed(donutEvolutionConfig.table.td.roundingPercentage)).toLocaleString()}%)` : '' }}
+                            {{ td.percentage && !isNaN(td.percentage) ? `(${Number(td.percentage.toFixed(FINAL_CONFIG.table.td.roundingPercentage)).toLocaleString()}%)` : '' }}
                         </span>
                     </template>
                 </DataTable>

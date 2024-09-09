@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -9,7 +8,6 @@ import {
     error,
     objectIsEmpty,
     shiftHue,
-    translateSize,
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
@@ -17,6 +15,9 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_wheel: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -38,16 +39,15 @@ const isDataset = computed(() => {
 })
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_wheel);
 const details = ref(null);
 const step = ref(0);
 const wheelChart = ref(null);
 const chartTitle = ref(null);
 
-const wheelConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -63,7 +63,7 @@ const wheelConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
-    fileName: wheelConfig.value.style.chart.title.text || 'vue-ui-wheel'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-wheel'
 });
 
 const svg = ref({
@@ -72,7 +72,7 @@ const svg = ref({
     width: 360
 });
 
-const baseLabelFontSize = ref(wheelConfig.value.style.chart.layout.percentage.fontSize)
+const baseLabelFontSize = ref(FINAL_CONFIG.value.style.chart.layout.percentage.fontSize)
 
 const wheel = computed(() => {
     return {
@@ -90,10 +90,10 @@ function calcTickStart(angle, distance = 1) {
     }
 }
 
-const activeValue = ref(wheelConfig.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
+const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
 
 watch(() => props.dataset.percentage, () => {
-    activeValue.value = ref(wheelConfig.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
+    activeValue.value = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
     useAnimation()
 });
 
@@ -108,15 +108,15 @@ onMounted(() => {
     }
     useAnimation();
 
-    if (wheelConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: wheelChart.value,
-                title: wheelConfig.value.style.chart.title.text ? chartTitle.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
             });
             svg.value.width = width;
             svg.value.height = height;
-            baseLabelFontSize.value = (wheelConfig.value.style.chart.layout.percentage.fontSize / 360) * Math.min(width, height);
+            baseLabelFontSize.value = (FINAL_CONFIG.value.style.chart.layout.percentage.fontSize / 360) * Math.min(width, height);
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
@@ -130,8 +130,8 @@ onBeforeUnmount(() => {
 
 function useAnimation() {
     let acceleration = 0;
-    let speed = wheelConfig.value.style.chart.animation.speed;
-    let incr = (0.005) * wheelConfig.value.style.chart.animation.acceleration;
+    let speed = FINAL_CONFIG.value.style.chart.animation.speed;
+    let incr = (0.005) * FINAL_CONFIG.value.style.chart.animation.acceleration;
     function animate() {
         activeValue.value += speed + acceleration;
         acceleration += incr;
@@ -142,7 +142,7 @@ function useAnimation() {
         }
     }
 
-    if(wheelConfig.value.style.chart.animation.use) {
+    if(FINAL_CONFIG.value.style.chart.animation.use) {
         activeValue.value = 0;
         animate()
     }
@@ -152,7 +152,7 @@ const ticks = computed(() => {
     const tickArray = [];
     const tickAmount = 100;
     for(let i = 0; i < tickAmount; i += 1) {
-        const color = activeValue.value > i ? wheelConfig.value.style.chart.layout.wheel.ticks.activeColor : wheelConfig.value.style.chart.layout.wheel.ticks.inactiveColor;
+        const color = activeValue.value > i ? FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor : FINAL_CONFIG.value.style.chart.layout.wheel.ticks.inactiveColor;
         const { x: x1, y: y1 } = calcTickStart((svg.value.size / tickAmount) * i);
         const { x: x2, y: y2 } = calcTickStart((svg.value.size / tickAmount) * i, 0.9);
         tickArray.push({
@@ -160,7 +160,7 @@ const ticks = computed(() => {
             y1,
             x2,
             y2,
-            color: wheelConfig.value.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(color, i / tickAmount * (wheelConfig.value.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : color
+            color: FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(color, i / tickAmount * (FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : color
         })
     }
     return tickArray
@@ -184,18 +184,18 @@ defineExpose({
         class="vue-ui-wheel" 
         ref="wheelChart"
         :id="uid"
-        :style="`font-family:${wheelConfig.style.fontFamily};width:100%; text-align:center;background:${wheelConfig.style.chart.backgroundColor};${wheelConfig.responsive ? 'height:100%' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
     >
-        <div ref="chartTitle" v-if="wheelConfig.style.chart.title.text" :style="`width:100%;background:${wheelConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
                         cy: 'wheel-title',
-                        ...wheelConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'wheel-subtitle',
-                        ...wheelConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     },
                 }"
             />
@@ -204,18 +204,18 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="wheelConfig.userOptions.show && isDataset"
-            :backgroundColor="wheelConfig.style.chart.backgroundColor"
-            :color="wheelConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="wheelConfig.userOptions.buttons.pdf"
-            :hasImg="wheelConfig.userOptions.buttons.img"
-            :hasFullscreen="wheelConfig.userOptions.buttons.fullscreen"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :hasXls="false"
             :isFullscreen="isFullscreen"
-            :titles="{ ...wheelConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="wheelChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -232,7 +232,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="wheel-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${wheelConfig.style.chart.backgroundColor};color:${wheelConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="wheel-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
             <line 
                 v-for="(tick, i) in ticks"
                 :x1="tick.x1"
@@ -241,29 +241,29 @@ defineExpose({
                 :y2="tick.y2"
                 :stroke="tick.color"
                 :stroke-width="(5 / 360) * Math.min(svg.width, svg.height)"
-                :stroke-linecap="wheelConfig.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
-                :class="{ 'vue-ui-tick-animated': wheelConfig.style.chart.animation.use && i <= activeValue }"
+                :stroke-linecap="FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
+                :class="{ 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && i <= activeValue }"
             />
             <circle 
-                v-if="wheelConfig.style.chart.layout.innerCircle.show"
+                v-if="FINAL_CONFIG.style.chart.layout.innerCircle.show"
                 :cx="wheel.centerX"
                 :cy="wheel.centerY"
                 :r="wheel.radius * 0.8 <= 0 ? 0.0001 : wheel.radius * 0.8"
-                :stroke="wheelConfig.style.chart.layout.innerCircle.stroke"
-                :stroke-width="wheelConfig.style.chart.layout.innerCircle.strokeWidth"
+                :stroke="FINAL_CONFIG.style.chart.layout.innerCircle.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.layout.innerCircle.strokeWidth"
                 fill="none"
             />
             <text
-                v-if="wheelConfig.style.chart.layout.percentage.show"
+                v-if="FINAL_CONFIG.style.chart.layout.percentage.show"
                 :x="wheel.centerX"
                 :y="wheel.centerY + baseLabelFontSize / 3"
                 :font-size="baseLabelFontSize"
-                :fill="wheelConfig.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(wheelConfig.style.chart.layout.wheel.ticks.activeColor, activeValue / 100 * (wheelConfig.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : wheelConfig.style.chart.layout.wheel.ticks.activeColor"
+                :fill="FINAL_CONFIG.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(FINAL_CONFIG.style.chart.layout.wheel.ticks.activeColor, activeValue / 100 * (FINAL_CONFIG.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : FINAL_CONFIG.style.chart.layout.wheel.ticks.activeColor"
                 text-anchor="middle"
-                :font-weight="wheelConfig.style.chart.layout.percentage.bold ? 'bold' : 'normal'"
+                :font-weight="FINAL_CONFIG.style.chart.layout.percentage.bold ? 'bold' : 'normal'"
                 style="font-variant-numeric:tabluar-nums"
             >
-                {{ Number(activeValue.toFixed(wheelConfig.style.chart.layout.percentage.rounding)).toLocaleString() }}%
+                {{ Number(activeValue.toFixed(FINAL_CONFIG.style.chart.layout.percentage.rounding)).toLocaleString() }}%
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>
@@ -273,7 +273,7 @@ defineExpose({
             :config="{
                 type: 'wheel',
                 style: {
-                    backgroundColor: wheelConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     wheel: {
                         color: '#CCCCCC'
                     }

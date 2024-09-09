@@ -1,17 +1,17 @@
 
 <template>
-    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${chartConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color};width:100%;${!chartConfig.chart.title.text ? 'padding-top:36px' : ''};font-family:${chartConfig.chart.fontFamily};${chartConfig.responsive ? 'height: 100%' : ''}`">
+    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;${!FINAL_CONFIG.chart.title.text ? 'padding-top:36px' : ''};font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`">
         <!-- TITLE AS OUTSIDE DIV -->
-        <div ref="chartTitle" class="vue-ui-xy-title" v-if="chartConfig.chart.title.show" :style="`font-family:${chartConfig.chart.fontFamily}`">
+        <div ref="chartTitle" class="vue-ui-xy-title" v-if="FINAL_CONFIG.chart.title.show" :style="`font-family:${FINAL_CONFIG.chart.fontFamily}`">
             <Title
                 :config="{
                     title: {
                         cy: 'xy-div-title',
-                        ...chartConfig.chart.title
+                        ...FINAL_CONFIG.chart.title
                     },
                     subtitle: {
                         cy: 'xy-div-subtitle',
-                        ...chartConfig.chart.title.subtitle
+                        ...FINAL_CONFIG.chart.title.subtitle
                     },
                 }"
             />
@@ -20,25 +20,25 @@
         <UserOptions
             ref="defails"
             :key="`user_options_${step}`"
-            v-if="chartConfig.chart.userOptions.show && isDataset"
-            :backgroundColor="chartConfig.chart.backgroundColor"
-            :color="chartConfig.chart.color"
+            v-if="FINAL_CONFIG.chart.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.chart.backgroundColor"
+            :color="FINAL_CONFIG.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uniqueId"
-            :hasTooltip="chartConfig.chart.userOptions.buttons.tooltip && chartConfig.chart.tooltip.show"
-            :hasPdf="chartConfig.chart.userOptions.buttons.pdf"
-            :hasXls="chartConfig.chart.userOptions.buttons.csv"
-            :hasImg="chartConfig.chart.userOptions.buttons.img"
-            :hasLabel="chartConfig.chart.userOptions.buttons.labels"
-            :hasTable="chartConfig.chart.userOptions.buttons.table"
-            :hasStack="dataset.length > 1 && chartConfig.chart.userOptions.buttons.stack"
-            :hasFullscreen="chartConfig.chart.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.chart.userOptions.buttons.tooltip && FINAL_CONFIG.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.chart.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.chart.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.chart.userOptions.buttons.img"
+            :hasLabel="FINAL_CONFIG.chart.userOptions.buttons.labels"
+            :hasTable="FINAL_CONFIG.chart.userOptions.buttons.table"
+            :hasStack="dataset.length > 1 && FINAL_CONFIG.chart.userOptions.buttons.stack"
+            :hasFullscreen="FINAL_CONFIG.chart.userOptions.buttons.fullscreen"
             :isStacked="mutableConfig.isStacked"
             :isFullscreen="isFullscreen"
             :chartElement="$refs.chart"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...chartConfig.chart.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.chart.userOptions.buttonTitles }"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -74,13 +74,13 @@
             </template>
         </UserOptions>
         
-        <svg xmlns="http://www.w3.org/2000/svg" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${chartConfig.chart.backgroundColor}; color:${chartConfig.chart.color}; font-family:${chartConfig.chart.fontFamily}`">
+        <svg xmlns="http://www.w3.org/2000/svg" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`">
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
                     <line 
-                        v-if="chartConfig.chart.grid.labels.xAxis.showBaseline"
-                        :stroke="chartConfig.chart.grid.stroke" 
+                        v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showBaseline"
+                        :stroke="FINAL_CONFIG.chart.grid.stroke" 
                         stroke-width="1" 
                         :x1="drawingArea.left"
                         :x2="drawingArea.right"
@@ -90,9 +90,9 @@
                     />
                     <template v-if="!mutableConfig.useIndividualScale">
                         <line
-                            v-if="chartConfig.chart.grid.labels.yAxis.showBaseline"
+                            v-if="FINAL_CONFIG.chart.grid.labels.yAxis.showBaseline"
                             data-cy="xy-grid-line-y"
-                            :stroke="chartConfig.chart.grid.stroke" 
+                            :stroke="FINAL_CONFIG.chart.grid.stroke" 
                             stroke-width="1" 
                             :x1="drawingArea.left" 
                             :x2="drawingArea.left" 
@@ -100,20 +100,20 @@
                             :y2="drawingArea.bottom" 
                             stroke-linecap="round"
                         />
-                        <g v-if="chartConfig.chart.grid.showHorizontalLines">
+                        <g v-if="FINAL_CONFIG.chart.grid.showHorizontalLines">
                             <line 
                                 v-for="l in yLabels"
                                 :x1="drawingArea.left"
                                 :x2="drawingArea.right"
                                 :y1="l.y"
                                 :y2="l.y"
-                                :stroke="chartConfig.chart.grid.stroke"
+                                :stroke="FINAL_CONFIG.chart.grid.stroke"
                                 :stroke-width="0.5"
                                 stroke-linecap="round"
                             />
                         </g>
                     </template>
-                    <template v-else-if="chartConfig.chart.grid.showHorizontalLines">
+                    <template v-else-if="FINAL_CONFIG.chart.grid.showHorizontalLines">
                         <g v-for="grid in allScales">
                             <template v-if="grid.id === selectedScale && grid.yLabels.length">
                                 <line 
@@ -134,14 +134,14 @@
                                     :x2="drawingArea.right"
                                     :y1="l.y"
                                     :y2="l.y"
-                                    :stroke="chartConfig.chart.grid.stroke"
+                                    :stroke="FINAL_CONFIG.chart.grid.stroke"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
                                 />
                             </template>
                         </g>
                     </template>
-                    <g v-if="chartConfig.chart.grid.showVerticalLines" data-cy="xy-grid-vertical-lines">
+                    <g v-if="FINAL_CONFIG.chart.grid.showVerticalLines" data-cy="xy-grid-vertical-lines">
                         <line
                             :data-cy="`xy-grid-vertical-line-${i}`"
                             v-for="(_, i) in maxSeries + 1" 
@@ -151,7 +151,7 @@
                             :y1="drawingArea.top"
                             :y2="drawingArea.bottom"
                             stroke-width="0.5"
-                            :stroke="chartConfig.chart.grid.stroke"
+                            :stroke="FINAL_CONFIG.chart.grid.stroke"
                         />
                     </g>
                 </g>
@@ -190,8 +190,8 @@
                             <stop offset="100%" :stop-color="serie.color" />
                         </radialGradient>
                         <linearGradient :id="`areaGradient_${i}_${uniqueId}`" x1="0%" x2="100%" y1="0%" y2="0%">
-                            <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.03)}${opacity[chartConfig.line.area.opacity]}`"/>
-                            <stop offset="100%" :stop-color="`${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
+                            <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.03)}${opacity[FINAL_CONFIG.line.area.opacity]}`"/>
+                            <stop offset="100%" :stop-color="`${serie.color}${opacity[FINAL_CONFIG.line.area.opacity]}`"/>
                         </linearGradient>
                     </defs>
                 </template>
@@ -210,14 +210,14 @@
                                 :y="mutableConfig.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
                                 :height="mutableConfig.useIndividualScale ? Math.abs(calcIndividualHeight(plot)) : Math.abs(calcRectHeight(plot))"
                                 :width="calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap)"
-                                :rx="chartConfig.bar.borderRadius"
-                                :fill="chartConfig.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
-                                :stroke="chartConfig.bar.border.useSerieColor ? serie.color : chartConfig.bar.border.stroke"
-                                :stroke-width="chartConfig.bar.border.strokeWidth"
+                                :rx="FINAL_CONFIG.bar.borderRadius"
+                                :fill="FINAL_CONFIG.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
+                                :stroke="FINAL_CONFIG.bar.border.useSerieColor ? serie.color : FINAL_CONFIG.bar.border.stroke"
+                                :stroke-width="FINAL_CONFIG.bar.border.strokeWidth"
                             />
 
-                            <template v-if="plot.comment && chartConfig.chart.comments.show">
-                                <foreignObject style="overflow: visible" height="12" :width="(calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) / 2) + chartConfig.chart.comments.width" :x="calcRectX(plot) - (chartConfig.chart.comments.width / 2) + chartConfig.chart.comments.offsetX" :y="plot.y + chartConfig.chart.comments.offsetY + 6">
+                            <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
+                                <foreignObject style="overflow: visible" height="12" :width="(calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) / 2) + FINAL_CONFIG.chart.comments.width" :x="calcRectX(plot) - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX" :y="plot.y + FINAL_CONFIG.chart.comments.offsetY + 6">
                                     <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
                                 </foreignObject>
                             </template>
@@ -263,10 +263,10 @@
                 </template>
 
                 <!-- ZERO LINE (AFTER BAR DATASETS, BEFORE LABELS) -->
-                <template v-if="!mutableConfig.useIndividualScale && chartConfig.chart.grid.labels.zeroLine.show">
+                <template v-if="!mutableConfig.useIndividualScale && FINAL_CONFIG.chart.grid.labels.zeroLine.show">
                     <line
                         data-cy="xy-grid-line-x"
-                        :stroke="chartConfig.chart.grid.stroke" 
+                        :stroke="FINAL_CONFIG.chart.grid.stroke" 
                         stroke-width="1" 
                         :x1="drawingArea.left" 
                         :x2="drawingArea.right" 
@@ -286,15 +286,15 @@
                             :data-cy="`xy-plot-${i}-${j}`"
                             v-if="canShowValue(plot.value)"
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
-                            :color="chartConfig.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : serie.color"
+                            :color="FINAL_CONFIG.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : serie.color"
                             :plot="{ x: plot.x, y: plot.y }"
                             :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (plotRadii.plot || 6) * 1.5 : plotRadii.plot || 6 : plotRadii.plot || 6"
-                            :stroke="chartConfig.chart.backgroundColor"
+                            :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
 
-                        <template v-if="plot.comment && chartConfig.chart.comments.show">
-                            <foreignObject style="overflow: visible" height="12" :width="chartConfig.chart.comments.width" :x="plot.x - (chartConfig.chart.comments.width / 2) + chartConfig.chart.comments.offsetX" :y="plot.y + chartConfig.chart.comments.offsetY + 6">
+                        <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
+                            <foreignObject style="overflow: visible" height="12" :width="FINAL_CONFIG.chart.comments.width" :x="plot.x - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX" :y="plot.y + FINAL_CONFIG.chart.comments.offsetY + 6">
                                 <div style="width: 100%;">
                                     <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
                                 </div>
@@ -346,9 +346,9 @@
                         :data-cy="`xy-line-area-path-${i}`" 
                         v-if="serie.smooth && serie.plots.length > 1" 
                         :d="`M${serie.curve}`" 
-                        :stroke="chartConfig.chart.backgroundColor" 
-                        :stroke-width="chartConfig.line.strokeWidth + 1" 
-                        :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" 
+                        :stroke="FINAL_CONFIG.chart.backgroundColor" 
+                        :stroke-width="FINAL_CONFIG.line.strokeWidth + 1" 
+                        :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" 
                         fill="none" 
                     />
                     <g v-else-if="serie.plots.length > 1">
@@ -360,9 +360,9 @@
                                 :x2="serie.plots[j+1].x"
                                 :y1="plot.y"
                                 :y2="serie.plots[j+1].y"
-                                :stroke="chartConfig.chart.backgroundColor"
-                                :stroke-width="chartConfig.line.strokeWidth + 1"
-                                :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0"
+                                :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                :stroke-width="FINAL_CONFIG.line.strokeWidth + 1"
+                                :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
                                 stroke-linejoin="round"
                                 stroke-linecap="round"
                             />
@@ -375,9 +375,9 @@
                     <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea && serie.plots.length > 1">
                         <path 
                             v-if="serie.smooth" 
-                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"
+                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[FINAL_CONFIG.line.area.opacity]}`"
                         />
-                        <path v-else :d="`M${serie.area}Z`" :fill="chartConfig.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[chartConfig.line.area.opacity]}`"/>
+                        <path v-else :d="`M${serie.area}Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[FINAL_CONFIG.line.area.opacity]}`"/>
                     </g>
 
                     <path 
@@ -385,8 +385,8 @@
                         v-if="serie.smooth && serie.plots.length > 1" 
                         :d="`M${serie.curve}`" 
                         :stroke="serie.color" 
-                        :stroke-width="chartConfig.line.strokeWidth" 
-                        :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0" 
+                        :stroke-width="FINAL_CONFIG.line.strokeWidth" 
+                        :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" 
                         fill="none" 
                     />
                     <g v-else-if="serie.plots.length > 1">
@@ -399,8 +399,8 @@
                                 :y1="plot.y"
                                 :y2="serie.plots[j+1].y"
                                 :stroke="serie.color"
-                                :stroke-width="chartConfig.line.strokeWidth"
-                                :stroke-dasharray="serie.dashed ? chartConfig.line.strokeWidth * 2 : 0"
+                                :stroke-width="FINAL_CONFIG.line.strokeWidth"
+                                :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
                                 stroke-linejoin="round"
                                 stroke-linecap="round"
                             />
@@ -413,15 +413,15 @@
                             :data-cy="`xy-plot-${i}-${j}`"
                             v-if="plot && canShowValue(plot.value)"
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
-                            :color="chartConfig.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
+                            :color="FINAL_CONFIG.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
                             :plot="{ x: plot.x, y: plot.y }"
                             :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (plotRadii.line || 6) * 1.5 : plotRadii.line : plotRadii.line"
-                            :stroke="chartConfig.chart.backgroundColor"
+                            :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
 
-                        <template v-if="plot.comment && chartConfig.chart.comments.show">
-                            <foreignObject style="overflow: visible" height="12" :width="chartConfig.chart.comments.width" :x="plot.x - (chartConfig.chart.comments.width / 2) + chartConfig.chart.comments.offsetX" :y="plot.y + chartConfig.chart.comments.offsetY + 6">
+                        <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
+                            <foreignObject style="overflow: visible" height="12" :width="FINAL_CONFIG.chart.comments.width" :x="plot.x - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX" :y="plot.y + FINAL_CONFIG.chart.comments.offsetY + 6">
                                 <div style="width: 100%;">
                                     <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
                                 </div>
@@ -469,49 +469,49 @@
                 </g>
 
                 <!-- X LABELS BAR -->
-                <g v-if="(chartConfig.bar.labels.show || chartConfig.bar.serieName.show) && mutableConfig.dataLabels.show">
+                <g v-if="(FINAL_CONFIG.bar.labels.show || FINAL_CONFIG.bar.serieName.show) && mutableConfig.dataLabels.show">
                     <g v-for="(serie, i) in barSet" :key="`xLabel_bar_${i}`" :class="`xLabel_bar_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_bar_${i}_${j}`">
                             <text
                                 :data-cy="`xy-bar-label-x-${i}-${j}`"
-                                v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && chartConfig.bar.labels.show"
+                                v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && FINAL_CONFIG.bar.labels.show"
                                 :x="mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : calcRectX(plot) + calcRectWidth() / 2 - barPeriodGap / 2"
-                                :y="plot.y + (plot.value > 0 ? chartConfig.bar.labels.offsetY : - chartConfig.bar.labels.offsetY * 3)"
+                                :y="plot.y + (plot.value > 0 ? FINAL_CONFIG.bar.labels.offsetY : - FINAL_CONFIG.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="fontSizes.plotLabels"
-                                :fill="chartConfig.bar.labels.color"
+                                :fill="FINAL_CONFIG.bar.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.bar.labels.rounding}) : '' }}
+                                {{ canShowValue(plot.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: plot.value, s: FINAL_CONFIG.chart.labels.suffix, r: FINAL_CONFIG.bar.labels.rounding}) : '' }}
                             </text>
                             <text 
-                                v-if="plot && chartConfig.bar.serieName.show"
+                                v-if="plot && FINAL_CONFIG.bar.serieName.show"
                                 :x="mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1"
-                                :y="plot.y + (plot.value > 0 ? chartConfig.bar.serieName.offsetY : - chartConfig.bar.serieName.offsetY * 3)"
+                                :y="plot.y + (plot.value > 0 ? FINAL_CONFIG.bar.serieName.offsetY : - FINAL_CONFIG.bar.serieName.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="fontSizes.plotLabels"
-                                :fill="chartConfig.bar.serieName.useSerieColor ? serie.color : chartConfig.bar.serieName.color"
-                                :font-weight="chartConfig.bar.serieName.bold ? 'bold' : 'normal'"
+                                :fill="FINAL_CONFIG.bar.serieName.useSerieColor ? serie.color : FINAL_CONFIG.bar.serieName.color"
+                                :font-weight="FINAL_CONFIG.bar.serieName.bold ? 'bold' : 'normal'"
                             >
-                                {{ chartConfig.bar.serieName.useAbbreviation ? abbreviate({ source: serie.name, length: chartConfig.bar.serieName.abbreviationSize}) : serie.name }}
+                                {{ FINAL_CONFIG.bar.serieName.useAbbreviation ? abbreviate({ source: serie.name, length: FINAL_CONFIG.bar.serieName.abbreviationSize}) : serie.name }}
                             </text>
                         </g>
                     </g>
                 </g>
 
                 <!-- X LABELS PLOT -->
-                <g v-if="chartConfig.plot.labels.show && mutableConfig.dataLabels.show">
+                <g v-if="FINAL_CONFIG.plot.labels.show && mutableConfig.dataLabels.show">
                     <g v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                             <text
                                 :data-cy="`xy-plot-label-x-${i}-${j}`"
                                 v-if="plot && !Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
                                 :x="plot.x"
-                                :y="plot.y + chartConfig.plot.labels.offsetY"
+                                :y="plot.y + FINAL_CONFIG.plot.labels.offsetY"
                                 text-anchor="middle"
                                 :font-size="fontSizes.plotLabels"
-                                :fill="chartConfig.plot.labels.color"
+                                :fill="FINAL_CONFIG.plot.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.plot.labels.rounding}) : '' }}
+                                {{ canShowValue(plot.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: plot.value, s: FINAL_CONFIG.chart.labels.suffix, r: FINAL_CONFIG.plot.labels.rounding}) : '' }}
                             </text>
                             <foreignObject
                                 :data-cy="`xy-plot-tag-start-${i}`"
@@ -544,19 +544,19 @@
                 </g>
 
                 <!-- X LABELS LINE -->
-                <g v-if="chartConfig.line.labels.show && mutableConfig.dataLabels.show">
+                <g v-if="FINAL_CONFIG.line.labels.show && mutableConfig.dataLabels.show">
                     <g v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <g v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                             <text
                                 :data-cy="`xy-line-label-x-${i}-${j}`"
                                 v-if="plot && !Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true"
                                 :x="plot.x"
-                                :y="plot.y + (plot.value > 0 ? chartConfig.line.labels.offsetY : - chartConfig.line.labels.offsetY * 3)"
+                                :y="plot.y + (plot.value > 0 ? FINAL_CONFIG.line.labels.offsetY : - FINAL_CONFIG.line.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="fontSizes.plotLabels"
-                                :fill="chartConfig.line.labels.color"
+                                :fill="FINAL_CONFIG.line.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: plot.value, s: chartConfig.chart.labels.suffix, r: chartConfig.line.labels.rounding}) : '' }}
+                                {{ canShowValue(plot.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: plot.value, s: FINAL_CONFIG.chart.labels.suffix, r: FINAL_CONFIG.line.labels.rounding}) : '' }}
                             </text>
                             <foreignObject
                                 :data-cy="`xy-line-tag-start-${i}`"
@@ -592,22 +592,22 @@
                 <g v-if="hasHighlightArea">
                     <rect
                         data-cy="xy-highlight-area"
-                        :x="drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))"
+                        :x="drawingArea.left + (drawingArea.width / maxSeries) * (FINAL_CONFIG.chart.highlightArea.from - (slicer.start))"
                         :y="drawingArea.top"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                         :width="(drawingArea.width / maxSeries) * highlightAreaSpan < 0 ? 0.00001 : (drawingArea.width / maxSeries) * highlightAreaSpan"
-                        :fill="`${chartConfig.chart.highlightArea.color}${opacity[chartConfig.chart.highlightArea.opacity]}`"
+                        :fill="`${FINAL_CONFIG.chart.highlightArea.color}${opacity[FINAL_CONFIG.chart.highlightArea.opacity]}`"
                     />
-                    <foreignObject v-if="chartConfig.chart.highlightArea.caption.text"
-                        :x="(drawingArea.left + (drawingArea.width / maxSeries) * (chartConfig.chart.highlightArea.from - (slicer.start))) - (chartConfig.chart.highlightArea.caption.width === 'auto' ? 0 : chartConfig.chart.highlightArea.caption.width / 2 - (drawingArea.width / maxSeries) * highlightAreaSpan / 2)"
-                        :y="drawingArea.top + chartConfig.chart.highlightArea.caption.offsetY"
+                    <foreignObject v-if="FINAL_CONFIG.chart.highlightArea.caption.text"
+                        :x="(drawingArea.left + (drawingArea.width / maxSeries) * (FINAL_CONFIG.chart.highlightArea.from - (slicer.start))) - (FINAL_CONFIG.chart.highlightArea.caption.width === 'auto' ? 0 : FINAL_CONFIG.chart.highlightArea.caption.width / 2 - (drawingArea.width / maxSeries) * highlightAreaSpan / 2)"
+                        :y="drawingArea.top + FINAL_CONFIG.chart.highlightArea.caption.offsetY"
                         style="overflow:visible"
                         height="1"
-                        :width="chartConfig.chart.highlightArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * highlightAreaSpan : chartConfig.chart.highlightArea.caption.width"
+                        :width="FINAL_CONFIG.chart.highlightArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * highlightAreaSpan : FINAL_CONFIG.chart.highlightArea.caption.width"
                         
                     >
-                        <div :style="`padding:${chartConfig.chart.highlightArea.caption.padding}px;text-align:${chartConfig.chart.highlightArea.caption.textAlign};font-size:${chartConfig.chart.highlightArea.caption.fontSize}px;color:${chartConfig.chart.highlightArea.caption.color};font-weight:${chartConfig.chart.highlightArea.caption.bold ? 'bold' : 'normal'}`">
-                            {{ chartConfig.chart.highlightArea.caption.text }}
+                        <div :style="`padding:${FINAL_CONFIG.chart.highlightArea.caption.padding}px;text-align:${FINAL_CONFIG.chart.highlightArea.caption.textAlign};font-size:${FINAL_CONFIG.chart.highlightArea.caption.fontSize}px;color:${FINAL_CONFIG.chart.highlightArea.caption.color};font-weight:${FINAL_CONFIG.chart.highlightArea.caption.bold ? 'bold' : 'normal'}`">
+                            {{ FINAL_CONFIG.chart.highlightArea.caption.text }}
                         </div>
                     </foreignObject>
                 </g>
@@ -617,16 +617,16 @@
                     <rect
                         :x="0"
                         :y="drawingArea.top"
-                        :width="chartConfig.chart.padding.left - 1"
+                        :width="FINAL_CONFIG.chart.padding.left - 1"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :fill="chartConfig.chart.backgroundColor"
+                        :fill="FINAL_CONFIG.chart.backgroundColor"
                     />
                     <rect
                         :x="drawingArea.right + 1"
                         :y="drawingArea.top"
-                        :width="chartConfig.chart.padding.right"
+                        :width="FINAL_CONFIG.chart.padding.right"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :fill="chartConfig.chart.backgroundColor"
+                        :fill="FINAL_CONFIG.chart.backgroundColor"
                     />
                 </g>
 
@@ -707,7 +707,7 @@
                 </g>
 
                 <!-- Y LABELS -->
-                <g v-if="chartConfig.chart.grid.labels.show">
+                <g v-if="FINAL_CONFIG.chart.grid.labels.show">
                     <template v-if="mutableConfig.useIndividualScale">
                         <g v-for="el in allScales">
                             <line 
@@ -716,7 +716,7 @@
                                 :y1="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset - el.individualHeight) : drawingArea.top"
                                 :y2="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset) : drawingArea.bottom"
                                 :stroke="el.color"
-                                :stroke-width="chartConfig.chart.grid.stroke"
+                                :stroke-width="FINAL_CONFIG.chart.grid.stroke"
                                 stroke-linecap="round"
                                 :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
                             />
@@ -726,7 +726,7 @@
                                 :fill="el.color"
                                 :font-size="fontSizes.dataLabels"
                                 text-anchor="middle"
-                                :transform="`translate(${el.x - chartConfig.chart.grid.labels.yAxis.labelWidth + 5}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                                :transform="`translate(${el.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + 5}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                             >
                                 {{ el.name }} {{ el.scaleLabel ? `- ${el.scaleLabel}` : '' }}
                             </text>
@@ -749,7 +749,7 @@
                                 :fill="el.color"
                             >
                                 {{
-                                    dataLabel({p:chartConfig.chart.labels.prefix, v: yLabel.value, s: chartConfig.chart.labels.suffix, r: 1})
+                                    dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: yLabel.value, s: FINAL_CONFIG.chart.labels.suffix, r: 1})
                                 }}
                             </text>
                         </g>
@@ -762,7 +762,7 @@
                                 :x2="drawingArea.left - 5" 
                                 :y1="yLabel.y" 
                                 :y2="yLabel.y" 
-                                :stroke="chartConfig.chart.grid.stroke" 
+                                :stroke="FINAL_CONFIG.chart.grid.stroke" 
                                 stroke-width="1" 
                                 stroke-linecap="round"
                             />
@@ -773,9 +773,9 @@
                                 :y="yLabel.y + fontSizes.dataLabels / 3" 
                                 :font-size="fontSizes.dataLabels" 
                                 text-anchor="end"
-                                :fill="chartConfig.chart.grid.labels.color"
+                                :fill="FINAL_CONFIG.chart.grid.labels.color"
                             >
-                                {{ canShowValue(yLabel.value) ? dataLabel({p:chartConfig.chart.labels.prefix, v: yLabel.value, s: chartConfig.chart.labels.suffix, r: 1}) : '' }}
+                                {{ canShowValue(yLabel.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: yLabel.value, s: FINAL_CONFIG.chart.labels.suffix, r: 1}) : '' }}
                             </text>
                         </g>
                     </template>
@@ -785,9 +785,9 @@
                 <template v-if="mutableConfig.useIndividualScale && !mutableConfig.isStacked">
                     <rect 
                         v-for="trap in allScales"
-                        :x="trap.x - chartConfig.chart.grid.labels.yAxis.labelWidth"
+                        :x="trap.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth"
                         :y="drawingArea.top"
-                        :width="chartConfig.chart.grid.labels.yAxis.labelWidth"
+                        :width="FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                         :fill="selectedScale === trap.id ? `${trap.color}20` : 'transparent'"
                         @mouseenter="selectedScale = trap.id"
@@ -799,44 +799,44 @@
                 <g>
                     <text 
                         data-cy="xy-axis-yLabel" 
-                        v-if="chartConfig.chart.grid.labels.axis.yLabel && ! mutableConfig.useIndividualScale" 
+                        v-if="FINAL_CONFIG.chart.grid.labels.axis.yLabel && ! mutableConfig.useIndividualScale" 
                         :font-size="fontSizes.yAxis" 
-                        :fill="chartConfig.chart.grid.labels.color"
-                        :transform="`translate(${fontSizes.yAxis + chartConfig.chart.grid.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                        :fill="FINAL_CONFIG.chart.grid.labels.color"
+                        :transform="`translate(${fontSizes.yAxis + FINAL_CONFIG.chart.grid.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                         text-anchor="middle" 
                         style="transition: none"
                     >
-                        {{ chartConfig.chart.grid.labels.axis.yLabel }}
+                        {{ FINAL_CONFIG.chart.grid.labels.axis.yLabel }}
                     </text>
                     <text 
                         data-cy="xy-axis-xLabel"
-                        v-if="chartConfig.chart.grid.labels.axis.xLabel" 
+                        v-if="FINAL_CONFIG.chart.grid.labels.axis.xLabel" 
                         text-anchor="middle"
                         :x="width / 2"
-                        :y="drawingArea.bottom + fontSizes.yAxis + (fontSizes.xAxis * 1.3) + chartConfig.chart.grid.labels.axis.xLabelOffsetY"
+                        :y="drawingArea.bottom + fontSizes.yAxis + (fontSizes.xAxis * 1.3) + FINAL_CONFIG.chart.grid.labels.axis.xLabelOffsetY"
                         :font-size="fontSizes.yAxis"
-                        :fill="chartConfig.chart.grid.labels.color"
+                        :fill="FINAL_CONFIG.chart.grid.labels.color"
                     >
-                        {{ chartConfig.chart.grid.labels.axis.xLabel }}
+                        {{ FINAL_CONFIG.chart.grid.labels.axis.xLabel }}
                     </text>
                 </g>
                 
                 <!-- TIME LABELS -->
-                <g v-if="chartConfig.chart.grid.labels.xAxisLabels.show">
+                <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show">
                     <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                         
                         <text
                             :data-cy="`xy-time-label-${i}`"
                             v-if="
-                                (label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
-                                (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
-                                (label && chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                (label && !chartConfig.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && chartConfig.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / chartConfig.chart.grid.labels.xAxisLabels.modulo) === 0))
+                                (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
+                                (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
+                                (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
+                                (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
                             "
-                            :text-anchor="chartConfig.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : chartConfig.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
+                            :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                             :font-size="fontSizes.xAxis"
-                            :fill="chartConfig.chart.grid.labels.xAxisLabels.color"
-                            :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + chartConfig.chart.grid.labels.xAxisLabels.yOffset}), rotate(${chartConfig.chart.grid.labels.xAxisLabels.rotation})`"
+                            :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
+                            :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                         >
                             {{ label || "" }}
                         </text>
@@ -853,7 +853,7 @@
                             :y="drawingArea.top"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
-                            :fill="selectedSerieIndex === i || selectedRowIndex === i ? `${chartConfig.chart.highlighter.color}${opacity[chartConfig.chart.highlighter.opacity]}` : 'transparent'"
+                            :fill="selectedSerieIndex === i || selectedRowIndex === i ? `${FINAL_CONFIG.chart.highlighter.color}${opacity[FINAL_CONFIG.chart.highlighter.opacity]}` : 'transparent'"
                             @mouseenter="toggleTooltipVisibility(true, i)"
                             @mouseleave="toggleTooltipVisibility(false)"
                             @click="selectX(i)"
@@ -861,22 +861,22 @@
                     </g>
                 </g>
 
-                <g v-if="chartConfig.chart.highlighter.useLine && ![null, undefined].includes(selectedSerieIndex)">
+                <g v-if="FINAL_CONFIG.chart.highlighter.useLine && ![null, undefined].includes(selectedSerieIndex)">
                     <line
                         :x1="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
                         :x2="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
                         :y1="drawingArea.top"
                         :y2="drawingArea.bottom"
-                        :stroke="chartConfig.chart.highlighter.color"
-                        :stroke-width="chartConfig.chart.highlighter.lineWidth"
-                        :stroke-dasharray="chartConfig.chart.highlighter.lineDasharray"
+                        :stroke="FINAL_CONFIG.chart.highlighter.color"
+                        :stroke-width="FINAL_CONFIG.chart.highlighter.lineWidth"
+                        :stroke-dasharray="FINAL_CONFIG.chart.highlighter.lineDasharray"
                         stroke-linecap="round"
                         style="transition:none !important; animation: none !important; pointer-events: none;"
                     />
                 </g>
 
                 <!-- TIME TAG -->
-                <g v-if="chartConfig.chart.timeTag.show && ![null, undefined].includes(selectedSerieIndex)">
+                <g v-if="FINAL_CONFIG.chart.timeTag.show && ![null, undefined].includes(selectedSerieIndex)">
                     <foreignObject
                         :x="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex - 100 + (drawingArea.width / maxSeries / 2)"
                         :y="drawingArea.bottom"
@@ -884,15 +884,15 @@
                         height="40"
                         style="overflow: visible !important;"
                     >
-                        <div class="vue-ui-xy-time-tag" :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${chartConfig.chart.timeTag.backgroundColor};color:${chartConfig.chart.timeTag.color};font-size:${chartConfig.chart.timeTag.fontSize}px`">
+                        <div class="vue-ui-xy-time-tag" :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${FINAL_CONFIG.chart.timeTag.backgroundColor};color:${FINAL_CONFIG.chart.timeTag.color};font-size:${FINAL_CONFIG.chart.timeTag.fontSize}px`">
                             {{ timeLabels[selectedSerieIndex] || selectedSerieIndex }}
                         </div>
                     </foreignObject>
                     <circle
                         :cx="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
                         :cy="drawingArea.bottom"
-                        :r="chartConfig.chart.timeTag.circleMarker.radius"
-                        :fill="chartConfig.chart.timeTag.circleMarker.color"
+                        :r="FINAL_CONFIG.chart.timeTag.circleMarker.radius"
+                        :fill="FINAL_CONFIG.chart.timeTag.circleMarker.color"
                     />
                 </g>
             </g>
@@ -905,13 +905,13 @@
             :config="{
                 type: 'line',
                 style: {
-                    backgroundColor: chartConfig.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.chart.backgroundColor,
                     line: {
                         axis: {
-                            color: chartConfig.chart.grid.stroke,
+                            color: FINAL_CONFIG.chart.grid.stroke,
                         },
                         path: {
-                            color: chartConfig.chart.grid.stroke,
+                            color: FINAL_CONFIG.chart.grid.stroke,
                             strokeWidth: 0.5
                         }
                     }
@@ -921,17 +921,17 @@
 
         <Slicer
             ref="chartSlicer"
-            v-if="chartConfig.chart.zoom.show && maxX > 6 && isDataset"
+            v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
             :key="`slicer_${slicerStep}`"
-            :background="chartConfig.chart.zoom.color"
-            :fontSize="chartConfig.chart.zoom.fontSize"
-            :useResetSlot="chartConfig.chart.zoom.useResetSlot"
-            :labelLeft="chartConfig.chart.grid.labels.xAxisLabels.values[slicer.start]"
-            :labelRight="chartConfig.chart.grid.labels.xAxisLabels.values[slicer.end-1]"
-            :textColor="chartConfig.chart.color"
-            :inputColor="chartConfig.chart.zoom.color"
-            :selectColor="chartConfig.chart.zoom.highlightColor"
-            :borderColor="chartConfig.chart.backgroundColor"
+            :background="FINAL_CONFIG.chart.zoom.color"
+            :fontSize="FINAL_CONFIG.chart.zoom.fontSize"
+            :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
+            :labelLeft="FINAL_CONFIG.chart.grid.labels.xAxisLabels.values[slicer.start]"
+            :labelRight="FINAL_CONFIG.chart.grid.labels.xAxisLabels.values[slicer.end-1]"
+            :textColor="FINAL_CONFIG.chart.color"
+            :inputColor="FINAL_CONFIG.chart.zoom.color"
+            :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
+            :borderColor="FINAL_CONFIG.chart.backgroundColor"
             :max="maxX"
             :min="0"
             :valueStart="slicer.start"
@@ -946,7 +946,7 @@
         </Slicer>
 
         <!-- LEGEND AS OUTSIDE DIV -->
-        <div ref="chartLegend" data-cy="xy-div-legend" v-if="chartConfig.chart.legend.show" class="vue-ui-xy-legend" :style="`font-size:${chartConfig.chart.legend.fontSize}px`">
+        <div ref="chartLegend" data-cy="xy-div-legend" v-if="FINAL_CONFIG.chart.legend.show" class="vue-ui-xy-legend" :style="`font-size:${FINAL_CONFIG.chart.legend.fontSize}px`">
             <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`" :key="`div_legend_item_${i}`" @click="segregate(legendItem)" :class="{'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated' : segregatedSeries.includes(legendItem.id)}">
                 <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
                         <rect x="0" y="7" rx="3" stroke="none" height="4" width="20" :fill="legendItem.color" />
@@ -955,7 +955,7 @@
                             :radius="4"
                             :color="legendItem.color"
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
-                            :stroke="chartConfig.chart.backgroundColor"
+                            :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :strokeWidth="1"
                         />
                 </svg>
@@ -968,7 +968,7 @@
                         :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
                     />
                 </svg>
-                <span :style="`color:${chartConfig.chart.legend.color}`">{{legendItem.name}}</span>
+                <span :style="`color:${FINAL_CONFIG.chart.legend.color}`">{{legendItem.name}}</span>
             </div>
         </div>
 
@@ -980,15 +980,15 @@
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="chartConfig.chart.tooltip.backgroundColor"
-            :color="chartConfig.chart.tooltip.color"
-            :fontSize="chartConfig.chart.tooltip.fontSize"
-            :borderRadius="chartConfig.chart.tooltip.borderRadius"
-            :borderColor="chartConfig.chart.tooltip.borderColor"
-            :borderWidth="chartConfig.chart.tooltip.borderWidth"
+            :backgroundColor="FINAL_CONFIG.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.chart.tooltip.color"
+            :fontSize="FINAL_CONFIG.chart.tooltip.fontSize"
+            :borderRadius="FINAL_CONFIG.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.chart.tooltip.borderWidth"
             :parent="$refs.chart"
             :content="tooltipContent"
-            :isCustom="chartConfig.chart.tooltip.customFormat && typeof chartConfig.chart.tooltip.customFormat === 'function'"
+            :isCustom="FINAL_CONFIG.chart.tooltip.customFormat && typeof FINAL_CONFIG.chart.tooltip.customFormat === 'function'"
             >
                 <template #tooltip-before>
                     <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1003,12 +1003,12 @@
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: chartConfig.chart.backgroundColor,
-                color: chartConfig.chart.color
+                backgroundColor: FINAL_CONFIG.chart.backgroundColor,
+                color: FINAL_CONFIG.chart.color
             },
             head: {
-                backgroundColor: chartConfig.chart.backgroundColor,
-                color: chartConfig.chart.color
+                backgroundColor: FINAL_CONFIG.chart.backgroundColor,
+                color: FINAL_CONFIG.chart.color
             }
         }">
             <template #content>
@@ -1016,7 +1016,7 @@
                     <div style="display: flex; flex-direction:row; gap: 6px; align-items:center; padding-left: 6px" data-html2canvas-ignore>
                         <input type="checkbox" v-model="showSparklineTable">
                         <div @click="showSparklineTable = !showSparklineTable" style="cursor: pointer">
-                            <BaseIcon name="chartLine" :size="20" :stroke="chartConfig.chart.color"/>
+                            <BaseIcon name="chartLine" :size="20" :stroke="FINAL_CONFIG.chart.color"/>
                         </div>
                     </div>
                     <TableSparkline v-if="showSparklineTable" :key="`sparkline_${segregateStep}`" :dataset="tableSparklineDataset" :config="tableSparklineConfig"/>
@@ -1026,7 +1026,7 @@
                         :head="dataTable.head"
                         :body="dataTable.body"
                         :config="dataTable.config"
-                        :title="`${chartConfig.chart.title.text}${chartConfig.chart.title.subtitle.text ? ` : ${chartConfig.chart.title.subtitle.text}` : ''}`"
+                        :title="`${FINAL_CONFIG.chart.title.text}${FINAL_CONFIG.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.chart.title.subtitle.text}` : ''}`"
                         @close="mutableConfig.showTable = false"
                     >
                         <template #th="{ th }">
@@ -1045,7 +1045,6 @@
 <script>
 import pdf from '../pdf';
 import img from "../img";
-import { useMouse } from '../useMouse';
 import { 
     abbreviate,
     adaptColorToBackground,
@@ -1077,8 +1076,6 @@ import {
     themePalettes,
     translateSize
 } from '../lib';
-import { useNestedProp } from '../useNestedProp';
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import DataTable from "../atoms/DataTable.vue";
 import Title from '../atoms/Title.vue';
@@ -1090,6 +1087,9 @@ import TableSparkline from "./vue-ui-table-sparkline.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Slicer from '../atoms/Slicer.vue';
 import Accordion from "./vue-ui-accordion.vue";
+import { useConfig } from '../useConfig';
+import { useMouse } from '../useMouse';
+import { useNestedProp } from '../useNestedProp';
 
 const sliderId = createUid();
 
@@ -1148,7 +1148,6 @@ export default {
             opacity,
             useSafeValues: true,
             palette,
-            defaultConfig: mainConfig.vue_ui_xy,
             height: 600,
             width: 1000,
             viewBox: `0 0 1000 600`,
@@ -1203,13 +1202,13 @@ export default {
     },
     computed: {
         customPalette() {
-            return this.convertCustomPalette(this.chartConfig.customPalette);
+            return this.convertCustomPalette(this.FINAL_CONFIG.customPalette);
         },
         backgroundColor() {
-            return this.chartConfig.chart.backgroundColor;
+            return this.FINAL_CONFIG.chart.backgroundColor;
         },  
         slicerColor() {
-            return this.chartConfig.chart.zoom.color;
+            return this.FINAL_CONFIG.chart.zoom.color;
         },
         allScales() {
             const lines = this.lineSet.map(l => {
@@ -1282,15 +1281,18 @@ export default {
             const wrapper = document.getElementById(`vue-ui-xy_${this.uniqueId}`);
             return window.getComputedStyle(wrapper, null).getPropertyValue("font-family");
         },
-        chartConfig: {
+        FINAL_CONFIG: {
             get: function() {
+
+                const DEFAULT_CONFIG = useConfig().vue_ui_xy;
+
                 if(!Object.keys(this.config || {}).length) {
-                    return this.defaultConfig
+                    return DEFAULT_CONFIG
                 }
 
                 const mergedConfig = this.useNestedProp({
                     userConfig: this.config,
-                    defaultConfig: this.defaultConfig
+                    defaultConfig: DEFAULT_CONFIG
                 });
 
                 if (mergedConfig.theme) {
@@ -1310,10 +1312,10 @@ export default {
             }
         },
         hasHighlightArea() {
-            return this.chartConfig.chart.highlightArea && this.chartConfig.chart.highlightArea.show;
+            return this.FINAL_CONFIG.chart.highlightArea && this.FINAL_CONFIG.chart.highlightArea.show;
         },
         highlightAreaSpan() {
-            const { from, to } = this.chartConfig.chart.highlightArea;
+            const { from, to } = this.FINAL_CONFIG.chart.highlightArea;
             if (from === to) return 1;
             if (to < from) return 0;
             return to - from + 1;
@@ -1360,22 +1362,22 @@ export default {
         },
         tableSparklineConfig() {
             return {
-                responsiveBreakpoint: this.chartConfig.table.responsiveBreakpoint,
-                roundingValues: this.chartConfig.table.rounding,
+                responsiveBreakpoint: this.FINAL_CONFIG.table.responsiveBreakpoint,
+                roundingValues: this.FINAL_CONFIG.table.rounding,
                 showAverage: false,
                 showMedian: false,
                 showTotal: false,
-                fontFamily: this.chartConfig.chart.fontFamily,
-                colNames: this.chartConfig.chart.grid.labels.xAxisLabels.values,
+                fontFamily: this.FINAL_CONFIG.chart.fontFamily,
+                colNames: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values,
                 thead: {
-                    backgroundColor: this.chartConfig.table.th.backgroundColor,
-                    color: this.chartConfig.table.th.color,
-                    outline: this.chartConfig.table.th.outline
+                    backgroundColor: this.FINAL_CONFIG.table.th.backgroundColor,
+                    color: this.FINAL_CONFIG.table.th.color,
+                    outline: this.FINAL_CONFIG.table.th.outline
                 },
                 tbody: {
-                    backgroundColor: this.chartConfig.table.td.backgroundColor,
-                    color: this.chartConfig.table.td.color,
-                    outline: this.chartConfig.table.td.outline
+                    backgroundColor: this.FINAL_CONFIG.table.td.backgroundColor,
+                    color: this.FINAL_CONFIG.table.td.color,
+                    outline: this.FINAL_CONFIG.table.td.outline
                 },
                 userOptions: {
                     show: false
@@ -1413,7 +1415,7 @@ export default {
                     max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
                     min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues.filter(v => ![undefined,null].includes(v))) > 0 ? 0 : Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)))
                 };
-                const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps;
+                const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps;
                 
                 const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps);
                 const autoScaleSteps = this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
@@ -1426,7 +1428,7 @@ export default {
 
                 const yOffset = this.mutableConfig.isStacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
 
-                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.FINAL_CONFIG.chart.grid.labels.yAxis.gap : this.drawingArea.height;
 
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
                 const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
@@ -1535,7 +1537,7 @@ export default {
                     min: datapoint.scaleMin || (Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues))
                 };
 
-                const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
+                const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps
 
                 const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps);
                 
@@ -1549,7 +1551,7 @@ export default {
 
                 const yOffset = this.mutableConfig.isStacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
 
-                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.FINAL_CONFIG.chart.grid.labels.yAxis.gap : this.drawingArea.height;
                 
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
 
@@ -1639,7 +1641,7 @@ export default {
                     min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
                 };
 
-                const scaleSteps = datapoint.scaleSteps || this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps
+                const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps
                 const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
                 const autoScaleSteps = this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
 
@@ -1651,7 +1653,7 @@ export default {
                 
                 const yOffset = this.mutableConfig.isStacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
 
-                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.chartConfig.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.FINAL_CONFIG.chart.grid.labels.yAxis.gap : this.drawingArea.height;
 
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
                 const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
@@ -1712,14 +1714,14 @@ export default {
             })
         },
         drawingArea() {
-            const individualScalesPadding = this.mutableConfig.useIndividualScale && this.chartConfig.chart.grid.labels.show ? this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)).length * (this.mutableConfig.isStacked ? 0 : this.chartConfig.chart.grid.labels.yAxis.labelWidth) : 0;
+            const individualScalesPadding = this.mutableConfig.useIndividualScale && this.FINAL_CONFIG.chart.grid.labels.show ? this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)).length * (this.mutableConfig.isStacked ? 0 : this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth) : 0;
             return {
-                top: this.chartConfig.chart.padding.top,
-                right: this.width - this.chartConfig.chart.padding.right,
-                bottom: this.height - this.chartConfig.chart.padding.bottom,
-                left: this.chartConfig.chart.padding.left + individualScalesPadding,
-                height: this.height - (this.chartConfig.chart.padding.top + this.chartConfig.chart.padding.bottom),
-                width: this.width - (this.chartConfig.chart.padding.right + this.chartConfig.chart.padding.left + individualScalesPadding)
+                top: this.FINAL_CONFIG.chart.padding.top,
+                right: this.width - this.FINAL_CONFIG.chart.padding.right,
+                bottom: this.height - this.FINAL_CONFIG.chart.padding.bottom,
+                left: this.FINAL_CONFIG.chart.padding.left + individualScalesPadding,
+                height: this.height - (this.FINAL_CONFIG.chart.padding.top + this.FINAL_CONFIG.chart.padding.bottom),
+                width: this.width - (this.FINAL_CONFIG.chart.padding.right + this.FINAL_CONFIG.chart.padding.left + individualScalesPadding)
             }
         },
         max(){
@@ -1731,13 +1733,13 @@ export default {
             return min;
         },
         niceScale() {
-            return this.calculateNiceScale(this.min, this.max < 0 ? 0 : this.max, this.chartConfig.chart.grid.labels.yAxis.commonScaleSteps)
+            return this.calculateNiceScale(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps)
         },
         maxSeries(){
             return this.slicer.end - this.slicer.start;
         },
         timeLabels() {
-            return this.chartConfig.chart.grid.labels.xAxisLabels.values.slice(this.slicer.start, this.slicer.end);
+            return this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values.slice(this.slicer.start, this.slicer.end);
         },
         slot() {
             return {
@@ -1751,7 +1753,7 @@ export default {
             return (this.drawingArea.width) / this.maxSeries / len - (this.barPeriodGap * len)
         },
         barPeriodGap() {
-            return this.slot.line * this.chartConfig.bar.periodGap;
+            return this.slot.line * this.FINAL_CONFIG.bar.periodGap;
         },
         maxSlot(){
             return Math.max(...Object.values(this.slot).filter(e => e !== Infinity))
@@ -1772,7 +1774,7 @@ export default {
             this.timeLabels.forEach((t, i) => {
                 const row = [t];
                 this.relativeDataset.forEach(s => {
-                    row.push(this.canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(this.chartConfig.table.rounding)) : '')
+                    row.push(this.canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(this.FINAL_CONFIG.table.rounding)) : '')
                 });
                 body.push(row);
             })
@@ -1788,23 +1790,23 @@ export default {
                     return ds.absoluteValues[i] ?? 0
                 }).reduce((a, b) => a + b, 0)
 
-                body.push([this.timeLabels[i] ?? '-'].concat(this.relativeDataset.map(ds => (ds.absoluteValues[i] ?? 0).toFixed(this.chartConfig.table.rounding))).concat((sum ?? 0).toFixed(this.chartConfig.table.rounding)))
+                body.push([this.timeLabels[i] ?? '-'].concat(this.relativeDataset.map(ds => (ds.absoluteValues[i] ?? 0).toFixed(this.FINAL_CONFIG.table.rounding))).concat((sum ?? 0).toFixed(this.FINAL_CONFIG.table.rounding)))
             }
 
             const config = {
                 th: {
-                    backgroundColor: this.chartConfig.table.th.backgroundColor,
-                    color: this.chartConfig.table.th.color,
-                    outline: this.chartConfig.table.th.outline
+                    backgroundColor: this.FINAL_CONFIG.table.th.backgroundColor,
+                    color: this.FINAL_CONFIG.table.th.color,
+                    outline: this.FINAL_CONFIG.table.th.outline
                 },
                 td: {
-                    backgroundColor: this.chartConfig.table.td.backgroundColor,
-                    color: this.chartConfig.table.td.color,
-                    outline: this.chartConfig.table.td.outline
+                    backgroundColor: this.FINAL_CONFIG.table.td.backgroundColor,
+                    color: this.FINAL_CONFIG.table.td.color,
+                    outline: this.FINAL_CONFIG.table.td.outline
                 },
-                breakpoint: this.chartConfig.table.responsiveBreakpoint
+                breakpoint: this.FINAL_CONFIG.table.responsiveBreakpoint
             }
-            const colNames = [this.chartConfig.table.columnNames.period].concat(this.relativeDataset.map(ds => ds.name)).concat(this.chartConfig.table.columnNames.total)
+            const colNames = [this.FINAL_CONFIG.table.columnNames.period].concat(this.relativeDataset.map(ds => ds.name)).concat(this.FINAL_CONFIG.table.columnNames.total)
 
             return { head, body, config, colNames}
         },
@@ -1816,7 +1818,7 @@ export default {
                 bars: this.barSet,
                 lines: this.lineSet,
                 plots: this.plotSet,
-                config: this.chartConfig 
+                config: this.FINAL_CONFIG 
             }
         },
         selectedSeries() {
@@ -1837,7 +1839,7 @@ export default {
             let sum = this.selectedSeries.map(s => s.value).filter(s => this.isSafeValue(s) && s !== null).reduce((a,b) => Math.abs(a) + Math.abs(b), 0);
             
             const time = this.timeLabels[this.selectedSerieIndex];
-            const customFormat = this.chartConfig.chart.tooltip.customFormat;
+            const customFormat = this.FINAL_CONFIG.chart.tooltip.customFormat;
 
             if(this.isFunction(customFormat) && this.functionReturnsString(() => customFormat({
                 seriesIndex: this.selectedSerieIndex,
@@ -1846,7 +1848,7 @@ export default {
                 bars: this.barSet,
                 lines: this.lineSet,
                 plots: this.plotSet,
-                config: this.chartConfig
+                config: this.FINAL_CONFIG
             }))) {
                 return customFormat({
                     seriesIndex: this.selectedSerieIndex,
@@ -1855,11 +1857,11 @@ export default {
                     bars: this.barSet,
                     lines: this.lineSet,
                     plots: this.plotSet,
-                    config: this.chartConfig
+                    config: this.FINAL_CONFIG
                 })
             } else {
                 if(time) {
-                    html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${this.chartConfig.chart.tooltip.borderColor}; width:100%">${time}</div>`;
+                    html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${this.FINAL_CONFIG.chart.tooltip.borderColor}; width:100%">${time}</div>`;
                 }
                 this.selectedSeries.forEach(s => {
                     if(this.isSafeValue(s.value)) {
@@ -1872,64 +1874,64 @@ export default {
                             
                             case 'line':
                                 if(!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
-                                    insideShape = `<circle cx="10" cy="8" r="4" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" />`
+                                    insideShape = `<circle cx="10" cy="8" r="4" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" />`
                                 } else if(s.shape === 'triangle') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" />`
                                 } else if(s.shape === 'square') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" />`
                                 } else if(s.shape === 'diamond') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" />`
                                 } else if(s.shape === 'pentagon') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" />`
                                 } else if(s.shape === 'hexagon') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" />`
+                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" />`
                                 } else if(s.shape === 'star') {
-                                    insideShape = `<polygon stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 10, y: 8 }, radius: 4})}" />`
+                                    insideShape = `<polygon stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 10, y: 8 }, radius: 4})}" />`
                                 }
                                 shape = `<svg viewBox="0 0 20 12" height="14" width="20"><rect rx="3" x="0" y="6" stroke="none" height="4" width="20" fill="${s.color}" />${insideShape}</svg>`;
                                 break;
     
                             case 'plot':
                                 if (!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" /></svg>`;
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" /></svg>`;
                                     break;
                                 }
                                 if(s.shape === 'star') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5})}" /></svg>`;
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5})}" /></svg>`;
                                     break;
                                 }
                                 if(s.shape === 'triangle') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
                                     break;
                                 }
                                 if(s.shape === 'square') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
                                     break;
                                 }
                                 if(s.shape === 'diamond') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
                                     break;
                                 }
                                 if(s.shape === 'pentagon') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
                                     break;
                                 }
                                 if(s.shape === 'hexagon') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.chartConfig.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
                                     break;
                                 }
                             default:
                                 break;
                         }
-                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${this.chartConfig.chart.tooltip.showValue ? this.dataLabel({p:this.chartConfig.chart.labels.prefix, v: s.value, s: this.chartConfig.chart.labels.suffix, r:this.chartConfig.chart.tooltip.roundingValue}) : ''}</b> ${this.chartConfig.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.chartConfig.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${this.FINAL_CONFIG.chart.tooltip.showValue ? this.dataLabel({p:this.FINAL_CONFIG.chart.labels.prefix, v: s.value, s: this.FINAL_CONFIG.chart.labels.suffix, r:this.FINAL_CONFIG.chart.tooltip.roundingValue}) : ''}</b> ${this.FINAL_CONFIG.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.FINAL_CONFIG.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
 
-                        if (this.chartConfig.chart.comments.showInTooltip && s.comments.length && s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]) {
+                        if (this.FINAL_CONFIG.chart.comments.showInTooltip && s.comments.length && s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]) {
                             html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]}</div>`
                         }
 
                     }
                 });
-                return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.chartConfig.chart.tooltip.backgroundColor};color:${this.chartConfig.chart.tooltip.color}">${html}</div>`;
+                return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.FINAL_CONFIG.chart.tooltip.backgroundColor};color:${this.FINAL_CONFIG.chart.tooltip.color}">${html}</div>`;
             }            
         },
         svg() {
@@ -1969,7 +1971,7 @@ export default {
             })
         }
 
-        if(this.chartConfig.showWarnings) {
+        if(this.FINAL_CONFIG.showWarnings) {
             this.dataset.forEach((datapoint) => {
                 datapoint.series.forEach((s, j) => {
                     if(!this.isSafeValue(s)) {
@@ -1990,14 +1992,14 @@ export default {
             dataLabels: {
                 show: true,
             },
-            showTooltip: this.chartConfig.chart.tooltip.show === true,
-            showTable: this.chartConfig.showTable === true,
-            isStacked: this.chartConfig.chart.grid.labels.yAxis.stacked,
-            useIndividualScale: this.chartConfig.chart.grid.labels.yAxis.useIndividualScale
+            showTooltip: this.FINAL_CONFIG.chart.tooltip.show === true,
+            showTable: this.FINAL_CONFIG.showTable === true,
+            isStacked: this.FINAL_CONFIG.chart.grid.labels.yAxis.stacked,
+            useIndividualScale: this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale
         }
 
 
-        if (this.chartConfig.responsive) {
+        if (this.FINAL_CONFIG.responsive) {
             const chart = this.$refs.chart;
             // Parent container (must have fixed height or max-height. Setting 100% will result in infinite height growth which looks aweful on top of being useless)
             const parent = chart.parentNode;
@@ -2006,7 +2008,7 @@ export default {
             // Title height to substract
             let title = null;
             let titleHeight = 0;
-            if (this.chartConfig.chart.title.show) {
+            if (this.FINAL_CONFIG.chart.title.show) {
                 title = this.$refs.chartTitle;
                 titleHeight = title.getBoundingClientRect().height;
             }
@@ -2014,7 +2016,7 @@ export default {
             // Slicer height to substract
             let slicer = null;
             let slicerHeight = 0;
-            if (this.chartConfig.chart.zoom.show && this.maxX > 6 && this.isDataset) {
+            if (this.FINAL_CONFIG.chart.zoom.show && this.maxX > 6 && this.isDataset) {
                 slicer = this.$refs.chartSlicer.$el;
                 slicerHeight = slicer.getBoundingClientRect().height;
             }
@@ -2022,7 +2024,7 @@ export default {
             // Legend height to substract
             let legend = null;
             let legendHeight = 0
-            if (this.chartConfig.chart.legend.show) {
+            if (this.FINAL_CONFIG.chart.legend.show) {
                 legend = this.$refs.chartLegend;
                 legendHeight = legend.getBoundingClientRect().height;
             }
@@ -2053,15 +2055,15 @@ export default {
             resizeObserver.observe(parent);
 
         } else {
-            this.height = this.chartConfig.chart.height;
-            this.width = this.chartConfig.chart.width;
+            this.height = this.FINAL_CONFIG.chart.height;
+            this.width = this.FINAL_CONFIG.chart.width;
             this.viewBox = `0 0 ${this.width} ${this.height}`;
-            this.fontSizes.dataLabels = this.chartConfig.chart.grid.labels.fontSize;
-            this.fontSizes.yAxis = this.chartConfig.chart.grid.labels.axis.fontSize;
-            this.fontSizes.xAxis =  this.chartConfig.chart.grid.labels.xAxisLabels.fontSize;
-            this.fontSizes.plotLabels = this.chartConfig.chart.labels.fontSize;
-            this.plotRadii.plot = this.chartConfig.plot.radius;
-            this.plotRadii.line = this.chartConfig.line.radius;
+            this.fontSizes.dataLabels = this.FINAL_CONFIG.chart.grid.labels.fontSize;
+            this.fontSizes.yAxis = this.FINAL_CONFIG.chart.grid.labels.axis.fontSize;
+            this.fontSizes.xAxis =  this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize;
+            this.fontSizes.plotLabels = this.FINAL_CONFIG.chart.labels.fontSize;
+            this.plotRadii.plot = this.FINAL_CONFIG.plot.radius;
+            this.plotRadii.line = this.FINAL_CONFIG.line.radius;
         }
     },
     methods: {
@@ -2097,42 +2099,42 @@ export default {
             this.fontSizes.dataLabels = this.translateSize({
                 relator: this.height,
                 adjuster: 400,
-                source: this.chartConfig.chart.grid.labels.fontSize,
+                source: this.FINAL_CONFIG.chart.grid.labels.fontSize,
                 threshold: 10,
                 fallback: 10
             });
             this.fontSizes.yAxis = this.translateSize({
                 relator: this.width,
                 adjuster: 1000,
-                source: this.chartConfig.chart.grid.labels.axis.fontSize,
+                source: this.FINAL_CONFIG.chart.grid.labels.axis.fontSize,
                 threshold: 10,
                 fallback: 10
             });
             this.fontSizes.xAxis = this.translateSize({
                 relator: this.width,
                 adjuster: 1000,
-                source: this.chartConfig.chart.grid.labels.xAxisLabels.fontSize,
+                source: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize,
                 threshold: 10,
                 fallback: 10
             });
             this.fontSizes.plotLabels = this.translateSize({
                 relator: this.width,
                 adjuster: 800,
-                source: this.chartConfig.chart.labels.fontSize,
+                source: this.FINAL_CONFIG.chart.labels.fontSize,
                 threshold: 10,
                 fallback: 10
             });
             this.plotRadii.plot = this.translateSize({
                 relator: this.width,
                 adjuster: 800,
-                source: this.chartConfig.plot.radius,
+                source: this.FINAL_CONFIG.plot.radius,
                 threshold: 1,
                 fallback: 1
             });
             this.plotRadii.line = this.translateSize({
                 relator: this.width,
                 adjuster: 800,
-                source: this.chartConfig.line.radius,
+                source: this.FINAL_CONFIG.line.radius,
                 threshold: 1,
                 fallback: 1
             })
@@ -2140,7 +2142,7 @@ export default {
         toggleStack() {
             this.mutableConfig.isStacked = !this.mutableConfig.isStacked
             if (!this.mutableConfig.isStacked) {
-                this.mutableConfig.useIndividualScale = this.chartConfig.chart.grid.labels.yAxis.useIndividualScale;
+                this.mutableConfig.useIndividualScale = this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale;
             } else {
                 this.mutableConfig.useIndividualScale = true
             }
@@ -2156,10 +2158,10 @@ export default {
         },
         checkAutoScaleError(datapoint) {
             if (datapoint.autoScaling) {
-                if (!this.chartConfig.chart.grid.labels.yAxis.useIndividualScale) {
+                if (!this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale) {
                     console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.useIndividualScale is set to true`)
                 }
-                if (!this.chartConfig.chart.grid.labels.yAxis.stacked) {
+                if (!this.FINAL_CONFIG.chart.grid.labels.yAxis.stacked) {
                     console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.stacked is set to true`)
                 }
             }
@@ -2265,7 +2267,7 @@ export default {
                         }
                     }),
                     index,
-                    indexLabel: this.chartConfig.chart.grid.labels.xAxisLabels.values[index]
+                    indexLabel: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values[index]
                 }
             );
         },
@@ -2317,19 +2319,19 @@ export default {
             this.__to__ = setTimeout(() => {
                 this.pdf({
                     domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
-                    fileName: this.chartConfig.chart.title.text || 'vue-ui-xy'
+                    fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy'
                 }).finally(() => {
                     this.isPrinting = false;
                 });
             }, 100)
         },
         generateCsv() {
-            const title = [[this.chartConfig.chart.title.text], [this.chartConfig.chart.title.subtitle.text], [""]];
+            const title = [[this.FINAL_CONFIG.chart.title.text], [this.FINAL_CONFIG.chart.title.subtitle.text], [""]];
             const head = ["",...this.table.head.map(h => h.label)]
             const body = this.table.body
             const table = title.concat([head]).concat(body);
             const csvContent = this.createCsvContent(table);
-            this.downloadCsv({ csvContent, title: this.chartConfig.chart.title.text || 'vue-ui-xy'})
+            this.downloadCsv({ csvContent, title: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy'})
         },
         showSpinnerImage() {
             this.isImaging = true;
@@ -2340,7 +2342,7 @@ export default {
             this.__to__ = setTimeout(() => {
                 this.img({
                     domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
-                    fileName: this.chartConfig.chart.title.text || 'vue-ui-xy',
+                    fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy',
                     format: 'png'
                 }).finally(() => {
                     this.isImaging = false;

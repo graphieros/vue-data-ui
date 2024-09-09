@@ -20,7 +20,6 @@ import {
     XMLNS, 
 } from '../lib';
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -32,6 +31,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_nested_donuts: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -53,7 +55,6 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_nested_donuts);
 const isTooltip = ref(false);
 const tooltipContent = ref('');
 const selectedSerie = ref(null);
@@ -68,10 +69,10 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-const donutConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -96,12 +97,12 @@ onMounted(() => {
         })
     }
 
-    if (donutConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: nestedDonutsChart.value,
-                title: donutConfig.value.style.chart.title.text ? chartTitle.value : null,
-                legend: donutConfig.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -118,19 +119,19 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `nested_donuts_${uid.value}`,
-    fileName: donutConfig.value.style.chart.title.text || 'vue-ui-nested-donuts'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-nested-donuts'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(donutConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
 const mutableConfig = ref({
     dataLabels: {
-        show: donutConfig.value.style.chart.layout.labels.dataLabels.show,
+        show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show,
     },
-    showTable: donutConfig.value.table.show,
-    showTooltip: donutConfig.value.style.chart.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 
@@ -219,10 +220,10 @@ const immutableDataset = computed(() => {
     });
 });
 
-const baseDonutSize = ref(donutConfig.value.style.chart.layout.donut.strokeWidth);
+const baseDonutSize = ref(FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth);
 
 const donutSize = computed(() => {
-    return Math.min(svg.value.height, svg.value.width) * (donutConfig.value.style.chart.layout.donut.strokeWidth / 512);
+    return Math.min(svg.value.height, svg.value.width) * (FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth / 512);
 });
 
 const md = computed(() => {
@@ -373,7 +374,7 @@ const donuts = computed(() => {
                 1,
                 360,
                 105.25,
-                donutSize.value / immutableDataset.value.length * donutConfig.value.style.chart.layout.donut.spacingRatio
+                donutSize.value / immutableDataset.value.length * FINAL_CONFIG.value.style.chart.layout.donut.spacingRatio
             )
         }
     })
@@ -396,7 +397,7 @@ const gradientSets = computed(() => {
                 1,
                 360,
                 105.25,
-                donutSize.value / immutableDataset.value.length * donutConfig.value.style.chart.layout.donut.spacingRatio
+                donutSize.value / immutableDataset.value.length * FINAL_CONFIG.value.style.chart.layout.donut.spacingRatio
             )[0]
         }
     });
@@ -416,27 +417,27 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
         datapoint,
         seriesIndex,
         series: mutableDataset.value,
-        config: donutConfig.value
+        config: FINAL_CONFIG.value
     }
 
-    const customFormat = donutConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if(isFunction(customFormat) && functionReturnsString(() => customFormat({
         seriesIndex,
         datapoint,
         series: mutableDataset.value,
-        config: donutConfig.value
+        config: FINAL_CONFIG.value
     }))) {
         tooltipContent.value = customFormat({
             seriesIndex,
             datapoint,
             series: mutableDataset.value,
-            config: donutConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
         let html = "";
 
-        if (donutConfig.value.style.chart.tooltip.showAllItemsAtIndex && segregated.value.length === 0 ) {
+        if (FINAL_CONFIG.value.style.chart.tooltip.showAllItemsAtIndex && segregated.value.length === 0 ) {
             const itemsAtIndex = mutableDataset.value.map(ds => {
                 return ds.series.find((s) => s.seriesIndex === seriesIndex)
             });
@@ -444,9 +445,9 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
             itemsAtIndex.forEach((item, i) => {
                 if(!item) return ''
                 html += `
-                    <div style="display:flex; flex-direction: column; justify-content:flex-start; align-items:flex-start;padding:6px 0; ${i < itemsAtIndex.length -1 ? `border-bottom:1px solid ${donutConfig.value.style.chart.tooltip.borderColor}` : ''}">
+                    <div style="display:flex; flex-direction: column; justify-content:flex-start; align-items:flex-start;padding:6px 0; ${i < itemsAtIndex.length -1 ? `border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}` : ''}">
                         <div style="display:flex; flex-direction: row; gap: 3px; justify-content:flex-start; align-items:center;">
-                            <svg viewBox="0 0 20 20" height="${donutConfig.value.style.chart.tooltip.fontSize}" width="${donutConfig.value.style.chart.tooltip.fontSize}">
+                            <svg viewBox="0 0 20 20" height="${FINAL_CONFIG.value.style.chart.tooltip.fontSize}" width="${FINAL_CONFIG.value.style.chart.tooltip.fontSize}">
                                 <circle cx="10" cy="10" r="10" fill="${item.color}"/>
                             </svg>
                             <span>
@@ -454,50 +455,50 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
                             </span>
                         </div>
                         <span>
-                            ${donutConfig.value.style.chart.tooltip.showValue ? `<b>${ dataLabel({p: donutConfig.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: donutConfig.value.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.value.style.chart.tooltip.roundingValue})}</b>` : ''}
-                            ${donutConfig.value.style.chart.tooltip.showPercentage ? `(${dataLabel({ v: item.proportion * 100, s: '%', r: donutConfig.value.style.chart.tooltip.roundingPercentage })})` : ''}
+                            ${FINAL_CONFIG.value.style.chart.tooltip.showValue ? `<b>${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>` : ''}
+                            ${FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `(${dataLabel({ v: item.proportion * 100, s: '%', r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage })})` : ''}
                         </span>
                     </div>
                 `;
             })
         } else {
-            html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${donutConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.arcOf ?? ''} - ${datapoint.name}</div>`;
+            html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.arcOf ?? ''} - ${datapoint.name}</div>`;
 
             html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-                if(donutConfig.value.style.chart.tooltip.showValue) {
-                    html += `<b data-cy="donut-tooltip-value">${ dataLabel({p: donutConfig.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: donutConfig.value.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.value.style.chart.tooltip.roundingValue})}</b>`;
+                if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+                    html += `<b data-cy="donut-tooltip-value">${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
                 }
 
-                if(donutConfig.value.style.chart.tooltip.showPercentage) {
-                    if(!donutConfig.value.style.chart.tooltip.showValue) {
-                        html += `<b>${(datapoint.proportion * 100).toFixed(donutConfig.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+                if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+                    if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+                        html += `<b>${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
                     } else {
-                        html += `<span>(${(datapoint.proportion * 100).toFixed(donutConfig.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+                        html += `<span>(${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
                     }
                 }
         }
-        tooltipContent.value = `<div style="font-size:${donutConfig.value.style.chart.tooltip.fontSize}px">${html}</div>`;
+        tooltipContent.value = `<div style="font-size:${FINAL_CONFIG.value.style.chart.tooltip.fontSize}px">${html}</div>`;
     }
     isTooltip.value = true;
 }
 
 function isArcBigEnough(arc) {
-    return arc.proportion * 100 > donutConfig.value.style.chart.layout.labels.dataLabels.hideUnderValue;
+    return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.hideUnderValue;
 }
 
 function getBlurFilter(arc, index) {
-    if (!donutConfig.value.useBlurOnHover) {
+    if (!FINAL_CONFIG.value.useBlurOnHover) {
         return '';
     }
-    if (donutConfig.value.style.chart.tooltip.showAllItemsAtIndex && segregated.value.length === 0) {
+    if (FINAL_CONFIG.value.style.chart.tooltip.showAllItemsAtIndex && segregated.value.length === 0) {
         if ([null, undefined].includes(selectedDatapointIndex.value) || selectedDatapointIndex.value === index) {
             return ''
         } else {
             return `url(#blur_${uid.value})`;
         }
     }
-    if (!donutConfig.value.style.chart.tooltip.showAllItemsAtIndex || segregated.value.length) {
+    if (!FINAL_CONFIG.value.style.chart.tooltip.showAllItemsAtIndex || segregated.value.length) {
         if([null, undefined].includes(selectedDatapoint.value)) {
             return ''
         }
@@ -537,11 +538,11 @@ const legendSets = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'nested-donuts-legend',
-        backgroundColor: donutConfig.value.style.chart.legend.backgroundColor,
-        color: donutConfig.value.style.chart.legend.color,
-        fontSize: donutConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: donutConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 });
 
@@ -568,50 +569,50 @@ function generateCsv() {
                 h.name
             ],[table.value.body[i]], [isNaN(table.value.body[i] / h.total) ? '-' : table.value.body[i] / h.total * 100]]
         });
-        const tableXls = [[donutConfig.value.style.chart.title.text],[donutConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: donutConfig.value.style.chart.title.text || "vue-ui-nested-donuts" })
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-nested-donuts" })
     });
 }
 
 const dataTable = computed(() => {
     const head = [
-        donutConfig.value.table.columnNames.series,
-        donutConfig.value.table.columnNames.value,
-        donutConfig.value.table.columnNames.percentage,
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.percentage,
     ];
 
     const body = table.value.head.map((h,i) => {
-        const label = dataLabel({p: donutConfig.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: donutConfig.value.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.value.table.td.roundingValue});
+        const label = dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.table.td.roundingValue});
         return [
             {
                 color: h.color,
                 name: h.name
             },
             label,
-            isNaN(table.value.body[i] / h.total) ? "-" : (table.value.body[i] / h.total * 100).toFixed(donutConfig.value.table.td.roundingPercentage) + '%'
+            isNaN(table.value.body[i] / h.total) ? "-" : (table.value.body[i] / h.total * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
         ]
     });
 
     const config = {
         th: {
-            backgroundColor: donutConfig.value.table.th.backgroundColor,
-            color: donutConfig.value.table.th.color,
-            outline: donutConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: donutConfig.value.table.td.backgroundColor,
-            color: donutConfig.value.table.td.color,
-            outline: donutConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: donutConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-        donutConfig.value.table.columnNames.series,
-        donutConfig.value.table.columnNames.value,
-        donutConfig.value.table.columnNames.percentage
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.percentage
     ]
 
     return {
@@ -651,18 +652,18 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="nestedDonutsChart" :class="`vue-ui-nested-donuts ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${donutConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${donutConfig.style.fontFamily};width:100%; text-align:center;${(!donutConfig.style.chart.title.text && donutConfig.userOptions.show) ? 'padding-top:36px' : ''};background:${donutConfig.style.chart.backgroundColor}`" :id="`nested_donuts_${uid}`">
+    <div ref="nestedDonutsChart" :class="`vue-ui-nested-donuts ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${(!FINAL_CONFIG.style.chart.title.text && FINAL_CONFIG.userOptions.show) ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`nested_donuts_${uid}`">
         
-        <div ref="chartTitle" v-if="donutConfig.style.chart.title.text">        
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text">        
             <Title
                 :config="{
                     title: {
                         cy: 'donut-div-title',
-                        ...donutConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'donut-div-subtitle',
-                        ...donutConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     }
                 }"
             />
@@ -672,22 +673,22 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="donutConfig.userOptions.show && isDataset"
-            :backgroundColor="donutConfig.style.chart.backgroundColor"
-            :color="donutConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="donutConfig.userOptions.buttons.tooltip && donutConfig.style.chart.tooltip.show"
-            :hasPdf="donutConfig.userOptions.buttons.pdf"
-            :hasXls="donutConfig.userOptions.buttons.csv"
-            :hasImg="donutConfig.userOptions.buttons.img"
-            :hasTable="donutConfig.userOptions.buttons.table"
-            :hasLabel="donutConfig.userOptions.buttons.labels"
-            :hasFullscreen="donutConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...donutConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="nestedDonutsChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -720,12 +721,12 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 0.001 : svg.width} ${svg.height < 0 ? 0.001 : svg.height}`" :style="`max-width:100%; overflow: visible; background:${donutConfig.style.chart.backgroundColor};color:${donutConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 0.001 : svg.width} ${svg.height < 0 ? 0.001 : svg.height}`" :style="`max-width:100%; overflow: visible; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
             <!-- GRADIENTS -->
             <defs>
                 <radialGradient v-for="(_, i) in gradientSets" :id="`radial_${uid}_${i}`" cx="50%" cy="50%" r="50%" :fr="30 - (1 * (i+1)) + '%'">
                     <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
-                    <stop :offset="70 - (20 * i) + '%'" stop-color="#FFFFFF" :stop-opacity="donutConfig.style.chart.gradientIntensity / 100"/>
+                    <stop :offset="70 - (20 * i) + '%'" stop-color="#FFFFFF" :stop-opacity="FINAL_CONFIG.style.chart.gradientIntensity / 100"/>
                     <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
                 </radialGradient>
             </defs>
@@ -738,7 +739,7 @@ defineExpose({
                 </filter>
 
                 <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
-                    <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5" :flood-color="donutConfig.style.chart.layout.donut.shadowColor" />
+                    <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5" :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
                 </filter>
             </defs>
             
@@ -748,8 +749,8 @@ defineExpose({
                 :cx="svg.width / 2"
                 :cy="svg.height / 2"
                 :r="c.radius < 0 ? 0.00001 : c.radius "
-                :fill="donutConfig.style.chart.backgroundColor"
-                :filter="donutConfig.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
+                :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                :filter="FINAL_CONFIG.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
             />
            
             <!-- NESTED DONUTS -->
@@ -759,14 +760,14 @@ defineExpose({
                         class="vue-ui-donut-arc-path"
                         :d="arc.arcSlice" 
                         :fill="`${arc.color}CC`"
-                        :stroke="donutConfig.style.chart.backgroundColor"
-                        :stroke-width="donutConfig.style.chart.layout.donut.borderWidth"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                         :filter="getBlurFilter(arc, j)"
                     />
                 </g>
             </g>
 
-            <g v-if="donutConfig.style.chart.useGradient">
+            <g v-if="FINAL_CONFIG.style.chart.useGradient">
                 <g v-for="(gradient, i) in gradientSets">
                     <path
                         :d="gradient.donut.arcSlice"
@@ -777,64 +778,64 @@ defineExpose({
                 </g>
             </g>
 
-            <g v-if="donutConfig.style.chart.layout.labels.dataLabels.showDonutName">
+            <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.showDonutName">
                 <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut">    
                         <text
-                            :class="{ 'animated': donutConfig.useCssAnimation }"
+                            :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
                             v-if="j === 0"
                             :x="svg.width / 2"
-                            :y="arc.startY - donutConfig.style.chart.layout.labels.dataLabels.fontSize + donutConfig.style.chart.layout.labels.dataLabels.donutNameOffsetY"
+                            :y="arc.startY - FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameOffsetY"
                             text-anchor="middle"
-                            :font-size="donutConfig.style.chart.layout.labels.dataLabels.fontSize"
-                            :font-weight="donutConfig.style.chart.layout.labels.dataLabels.boldDonutName ? 'bold': 'normal'"
-                            :fill="donutConfig.style.chart.layout.labels.dataLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName ? 'bold': 'normal'"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
                         >
-                            {{ donutConfig.style.chart.layout.labels.dataLabels.donutNameAbbreviation ? abbreviate({ source: item.name, length: donutConfig.style.chart.layout.labels.dataLabels.donutNameMaxAbbreviationSize }) : item.name }}
+                            {{ FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameAbbreviation ? abbreviate({ source: item.name, length: FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameMaxAbbreviationSize }) : item.name }}
                         </text>
                     </g>
                 </g>
             </g>
 
             <!-- DATALABELS -->
-            <g v-if="donutConfig.style.chart.layout.labels.dataLabels.show">
+            <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
                 <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut" :filter="getBlurFilter(arc, j)">
                         <text
-                            :class="{ 'animated': donutConfig.useCssAnimation }"
-                            v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && donutConfig.style.chart.layout.labels.dataLabels.showPercentage"
+                            :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
+                            v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                            :x="calcMarkerOffsetX(arc, false, donutConfig.style.chart.layout.labels.dataLabels.offsetX).x"
-                            :y="calcMarkerOffsetY(arc, donutConfig.style.chart.layout.labels.dataLabels.offsetY, donutConfig.style.chart.layout.labels.dataLabels.offsetY)"
-                            :fill="donutConfig.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : donutConfig.style.chart.layout.labels.dataLabels.color"
-                            :font-size="donutConfig.style.chart.layout.labels.dataLabels.fontSize"
-                            :font-weight="donutConfig.style.chart.layout.labels.dataLabels.boldPercentage ? 'bold': 'normal'"
+                            :x="calcMarkerOffsetX(arc, false, FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX).x"
+                            :y="calcMarkerOffsetY(arc, FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY, FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY)"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldPercentage ? 'bold': 'normal'"
                         >
-                            {{ dataLabel({ v: arc.proportion * 100, s: '%', r: donutConfig.style.chart.layout.labels.dataLabels.roundingPercentage }) }}
+                            {{ dataLabel({ v: arc.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingPercentage }) }}
                         </text>
                         <text
-                            :class="{ 'animated': donutConfig.useCssAnimation }"
-                            v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && donutConfig.style.chart.layout.labels.dataLabels.showPercentage && donutConfig.style.chart.layout.labels.dataLabels.showValue"
+                            :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
+                            v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                            :x="calcMarkerOffsetX(arc, false, donutConfig.style.chart.layout.labels.dataLabels.offsetX).x"
-                            :y="calcMarkerOffsetY(arc, donutConfig.style.chart.layout.labels.dataLabels.offsetY, donutConfig.style.chart.layout.labels.dataLabels.offsetY) + donutConfig.style.chart.layout.labels.dataLabels.fontSize"
-                            :fill="donutConfig.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : donutConfig.style.chart.layout.labels.dataLabels.color"
-                            :font-size="donutConfig.style.chart.layout.labels.dataLabels.fontSize"
-                            :font-weight="donutConfig.style.chart.layout.labels.dataLabels.boldValue ? 'bold': 'normal'"
+                            :x="calcMarkerOffsetX(arc, false, FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX).x"
+                            :y="calcMarkerOffsetY(arc, FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY, FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY) + FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue ? 'bold': 'normal'"
                         >
-                            ({{ dataLabel({ p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.layout.labels.dataLabels.roundingValue }) }})
+                            ({{ dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue }) }})
                         </text>
                         <text
-                            :class="{ 'animated': donutConfig.useCssAnimation }"
-                            v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && !donutConfig.style.chart.layout.labels.dataLabels.showPercentage && donutConfig.style.chart.layout.labels.dataLabels.showValue"
+                            :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
+                            v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && !FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                            :x="calcMarkerOffsetX(arc, false, donutConfig.style.chart.layout.labels.dataLabels.offsetX).x"
-                            :y="calcMarkerOffsetY(arc, donutConfig.style.chart.layout.labels.dataLabels.offsetY, donutConfig.style.chart.layout.labels.dataLabels.offsetY)"
-                            :fill="donutConfig.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : donutConfig.style.chart.layout.labels.dataLabels.color"
-                            :font-size="donutConfig.style.chart.layout.labels.dataLabels.fontSize"
-                            :font-weight="donutConfig.style.chart.layout.labels.dataLabels.boldValue ? 'bold': 'normal'"
+                            :x="calcMarkerOffsetX(arc, false, FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX).x"
+                            :y="calcMarkerOffsetY(arc, FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY, FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY)"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue ? 'bold': 'normal'"
                         >
-                            {{ dataLabel({ p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.layout.labels.dataLabels.roundingValue }) }}
+                            {{ dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue }) }}
                         </text>
                     </g>
                 </g>
@@ -865,7 +866,7 @@ defineExpose({
             :config="{
                 type: 'donut',
                 style: {
-                    backgroundColor: donutConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     donut: {
                         color: '#CCCCCC',
                     }
@@ -876,15 +877,15 @@ defineExpose({
          <!-- TOOLTIP -->
          <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="donutConfig.style.chart.tooltip.backgroundColor"
-            :color="donutConfig.style.chart.tooltip.color"
-            :borderRadius="donutConfig.style.chart.tooltip.borderRadius"
-            :borderColor="donutConfig.style.chart.tooltip.borderColor"
-            :borderWidth="donutConfig.style.chart.tooltip.borderWidth"
-            :fontSize="donutConfig.style.chart.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :parent="nestedDonutsChart"
             :content="tooltipContent"
-            :isCustom="isFunction(donutConfig.style.chart.tooltip.customFormat)"
+            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -895,7 +896,7 @@ defineExpose({
         </Tooltip>
 
         <!-- LEGENDS -->
-        <div ref="chartLegend" v-if="donutConfig.style.chart.legend.show" :class="{ 'vue-ui-nested-donuts-legend' : legendSets.length > 1 }">
+        <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show" :class="{ 'vue-ui-nested-donuts-legend' : legendSets.length > 1 }">
             <Legend 
                 v-for="legendSet in legendSets"
                 :legendSet="legendSet"
@@ -909,9 +910,9 @@ defineExpose({
                 </template>
                 <template #item="{ legend, index }">
                     <div :data-cy="`legend-item-${index}`" @click="segregateDonut(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }}: {{ dataLabel({p: donutConfig.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: donutConfig.style.chart.layout.labels.dataLabels.suffix, r: donutConfig.style.chart.legend.roundingValue}) }}
+                    {{ legend.name }}: {{ dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue}) }}
                     <template v-if="!segregated.includes(legend.id)">
-                        ({{ isNaN(legend.value / legend.total) ? '-' : dataLabel({ v: legend.value / legend.total * 100, s: '%', r: donutConfig.style.chart.legend.roundingPercentage }) }})
+                        ({{ isNaN(legend.value / legend.total) ? '-' : dataLabel({ v: legend.value / legend.total * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage }) }})
                     </template>
                     <template v-else>
                         ( - % )
@@ -921,7 +922,7 @@ defineExpose({
             </Legend>
         </div>
 
-        <div ref="chartLegend" v-if="!donutConfig.style.chart.legend.show">
+        <div ref="chartLegend" v-if="!FINAL_CONFIG.style.chart.legend.show">
             <slot name="legend" v-bind:legend="legendSets"></slot>
         </div>
 
@@ -930,12 +931,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: donutConfig.style.chart.backgroundColor,
-                color: donutConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
-                backgroundColor: donutConfig.style.chart.backgroundColor,
-                color: donutConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
@@ -944,7 +945,7 @@ defineExpose({
                     :head="dataTable.head" 
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${donutConfig.style.chart.title.text}${donutConfig.style.chart.title.subtitle.text ? ` : ${donutConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

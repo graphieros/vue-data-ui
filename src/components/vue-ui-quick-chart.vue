@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import * as detector from "../chartDetector";
 import {
@@ -30,6 +29,9 @@ import Slicer from "../atoms/Slicer.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -55,15 +57,14 @@ const isTooltip = ref(false);
 const dataTooltipSlot = ref(null);
 const tooltipContent = ref('');
 const selectedDatapoint = ref(null)
-const defaultConfig = ref(mainConfig.vue_ui_quick_chart);
 const segregated = ref([]);
 const step = ref(0);
 const slicerStep = ref(0);
 
-const quickConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -79,13 +80,13 @@ const quickConfig = computed(() => {
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(quickConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 const emit = defineEmits(['selectDatapoint', 'selectLegend'])
 
 const fd = computed(() => {
-    const f = detector.detectChart({ dataset: props.dataset, barLineSwitch: quickConfig.value.chartIsBarUnderDatasetLength });
+    const f = detector.detectChart({ dataset: props.dataset, barLineSwitch: FINAL_CONFIG.value.chartIsBarUnderDatasetLength });
     if(!f) {
         console.error('VueUiQuickChart : Dataset is not processable')
     }
@@ -105,28 +106,28 @@ const chartType = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `${chartType.value}_${uid.value}`,
-    fileName: quickConfig.value.title || chartType.value
+    fileName: FINAL_CONFIG.value.title || chartType.value
 });
 
 const defaultSizes = ref({
-    width: quickConfig.value.width,
-    height: quickConfig.value.height
+    width: FINAL_CONFIG.value.width,
+    height: FINAL_CONFIG.value.height
 });
 
 const mutableConfig = ref({
-    showTooltip: quickConfig.value.showTooltip
+    showTooltip: FINAL_CONFIG.value.showTooltip
 });
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
-    if (quickConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: quickChart.value,
-                title: quickConfig.value.title ? quickChartTitle.value : null,
-                legend: quickConfig.value.showLegend ? quickChartLegend.value : null,
-                slicer: [detector.chartType.BAR, detector.chartType.LINE].includes(chartType.value) && quickConfig.value.zoomXy && formattedDataset.value.maxSeriesLength > 1 ? quickChartSlicer.value : null
+                title: FINAL_CONFIG.value.title ? quickChartTitle.value : null,
+                legend: FINAL_CONFIG.value.showLegend ? quickChartLegend.value : null,
+                slicer: [detector.chartType.BAR, detector.chartType.LINE].includes(chartType.value) && FINAL_CONFIG.value.zoomXy && formattedDataset.value.maxSeriesLength > 1 ? quickChartSlicer.value : null
             });
             defaultSizes.value.width = width;
             defaultSizes.value.height = height;
@@ -162,7 +163,7 @@ function sumValues(source) {
 }
 
 function getBlurFilter(id) {
-    if (quickConfig.value.blurOnHover && ![null, undefined].includes(selectedDatapoint.value) && selectedDatapoint.value !== id) {
+    if (FINAL_CONFIG.value.blurOnHover && ![null, undefined].includes(selectedDatapoint.value) && selectedDatapoint.value !== id) {
         return `url(#blur_${uid.value})`;
       } else {
         return '';
@@ -283,17 +284,17 @@ const donut = computed(() => {
     .map((ds, i) => {
         return {
             ...ds,
-            color: ds.COLOR ? convertColorToHex(ds.COLOR) : customPalette.value[(i + quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
+            color: ds.COLOR ? convertColorToHex(ds.COLOR) : customPalette.value[(i + FINAL_CONFIG.value.paletteStartIndex)] || palette[(i + FINAL_CONFIG.value.paletteStartIndex)] || palette[(i + FINAL_CONFIG.value.paletteStartIndex) % palette.length],
             immutableValue: ds.value
         }
     });
 
     function displayArcPercentage(arc, stepBreakdown) {
-        return isNaN(arc.value / sumValues(stepBreakdown)) ? 0 : ((arc.value / sumValues(stepBreakdown)) * 100).toFixed(quickConfig.value.dataLabelRoundingPercentage) + "%";
+        return isNaN(arc.value / sumValues(stepBreakdown)) ? 0 : ((arc.value / sumValues(stepBreakdown)) * 100).toFixed(FINAL_CONFIG.value.dataLabelRoundingPercentage) + "%";
     }
 
     function isArcBigEnough(arc) {
-        return arc.proportion * 100 > quickConfig.value.donutHideLabelUnderPercentage;
+        return arc.proportion * 100 > FINAL_CONFIG.value.donutHideLabelUnderPercentage;
     }
 
     function getSpaces(datapointId, num2) {
@@ -303,30 +304,30 @@ const donut = computed(() => {
     }
 
     function useTooltip({ datapoint, seriesIndex }) {
-        dataTooltipSlot.value = { datapoint, seriesIndex, config: quickConfig.value, dataset: ds };
+        dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, dataset: ds };
         selectedDatapoint.value = datapoint.id;
-        const customFormat = quickConfig.value.tooltipCustomFormat;
+        const customFormat = FINAL_CONFIG.value.tooltipCustomFormat;
 
         if(isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint,
             seriesIndex,
             series: ds,
-            config: quickConfig.value
+            config: FINAL_CONFIG.value
         }))) {
             tooltipContent.value = customFormat({
                 datapoint,
                 seriesIndex,
                 series: ds,
-                config: quickConfig.value
+                config: FINAL_CONFIG.value
             })
         } else {
             let html = '';
-            html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${quickConfig.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+            html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
             html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-            html += `<b>${ dataLabel({p: quickConfig.value.valuePrefix, v: datapoint.value, s: quickConfig.value.valueSuffix, r: quickConfig.value.dataLabelRoundingValue})}</b>`;
+            html += `<b>${ dataLabel({p: FINAL_CONFIG.value.valuePrefix, v: datapoint.value, s: FINAL_CONFIG.value.valueSuffix, r: FINAL_CONFIG.value.dataLabelRoundingValue})}</b>`;
             
-            html += `<span>(${dataLabel({ v: datapoint.proportion * 100, s: '%', r: quickConfig.value.dataLabelRoundingPercentage})})</span></div>`;
+            html += `<span>(${dataLabel({ v: datapoint.proportion * 100, s: '%', r: FINAL_CONFIG.value.dataLabelRoundingPercentage})})</span></div>`;
             
 
             tooltipContent.value = `<div>${html}</div>`;
@@ -357,7 +358,7 @@ const donut = computed(() => {
 
     const cx = (defaultSizes.value.width) / 2;
     const cy = (defaultSizes.value.height) / 2;
-    const radius = (defaultSizes.value.height) * quickConfig.value.donutRadiusRatio;
+    const radius = (defaultSizes.value.height) * FINAL_CONFIG.value.donutRadiusRatio;
 
     return {
         dataset: legend.filter(s => !segregated.value.includes(s.id)),
@@ -383,7 +384,7 @@ const donut = computed(() => {
             1,
             360,
             105.25,
-            (defaultSizes.value.height) * quickConfig.value.donutThicknessRatio
+            (defaultSizes.value.height) * FINAL_CONFIG.value.donutThicknessRatio
         )
     }
 });
@@ -410,12 +411,12 @@ const line = computed(() => {
     }
 
     const drawingArea = {
-        left: quickConfig.value.xyPaddingLeft,
-        top: quickConfig.value.xyPaddingTop,
-        right: chartDimensions.width - quickConfig.value.xyPaddingRight,
-        bottom: chartDimensions.height - quickConfig.value.xyPaddingBottom,
-        width: chartDimensions.width - quickConfig.value.xyPaddingLeft - quickConfig.value.xyPaddingRight,
-        height: chartDimensions.height - quickConfig.value.xyPaddingTop - quickConfig.value.xyPaddingBottom
+        left: FINAL_CONFIG.value.xyPaddingLeft,
+        top: FINAL_CONFIG.value.xyPaddingTop,
+        right: chartDimensions.width - FINAL_CONFIG.value.xyPaddingRight,
+        bottom: chartDimensions.height - FINAL_CONFIG.value.xyPaddingBottom,
+        width: chartDimensions.width - FINAL_CONFIG.value.xyPaddingLeft - FINAL_CONFIG.value.xyPaddingRight,
+        height: chartDimensions.height - FINAL_CONFIG.value.xyPaddingTop - FINAL_CONFIG.value.xyPaddingBottom
     }
 
     let ds = [];
@@ -425,8 +426,8 @@ const line = computed(() => {
             {
                 values: formattedDataset.value.dataset.slice(slicer.value.start, slicer.value.end),
                 absoluteIndices: formattedDataset.value.dataset.map((d, i) => i).slice(slicer.value.start, slicer.value.end),
-                name: quickConfig.value.title,
-                color: customPalette.value[quickConfig.value.paletteStartIndex] || palette[quickConfig.value.paletteStartIndex],
+                name: FINAL_CONFIG.value.title,
+                color: customPalette.value[FINAL_CONFIG.value.paletteStartIndex] || palette[FINAL_CONFIG.value.paletteStartIndex],
                 id: `line_0`
             }
         ]
@@ -443,7 +444,7 @@ const line = computed(() => {
         }).map((d, i) => {
             return {
                 ...d,
-                color: d.COLOR ? convertColorToHex(d.COLOR) : customPalette.value[i + (quickConfig.value.paletteStartIndex)] || palette[i + (quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
+                color: d.COLOR ? convertColorToHex(d.COLOR) : customPalette.value[i + (FINAL_CONFIG.value.paletteStartIndex)] || palette[i + (FINAL_CONFIG.value.paletteStartIndex)] || palette[(i + FINAL_CONFIG.value.paletteStartIndex) % palette.length],
                 values: d.values.slice(slicer.value.start, slicer.value.end),
                 absoluteIndices: d.values.map((d,i) => i).slice(slicer.value.start, slicer.value.end)
             }
@@ -455,7 +456,7 @@ const line = computed(() => {
         maxSeries: Math.max(...ds.map(d => d.values.length))
     };
 
-    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max < 0 ? 0 : extremes.max, quickConfig.value.xyScaleSegments)
+    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max < 0 ? 0 : extremes.max, FINAL_CONFIG.value.xyScaleSegments)
     const absoluteMin = extremes.min < 0 ? Math.abs(extremes.min) : 0;
     const absoluteZero = extremes.max < 0 ? drawingArea.top : drawingArea.bottom - (absoluteMin / (scale.max + absoluteMin) * drawingArea.height)
     const slotSize = drawingArea.width / extremes.maxSeries;
@@ -499,26 +500,26 @@ const line = computed(() => {
                 absoluteIndex: d.absoluteIndices[index]
             }
         }).filter(d => !segregated.value.includes(d.id))
-        dataTooltipSlot.value = { datapoint: mappedSeries, seriesIndex: index, config: quickConfig.value, dataset: ds };
-        const customFormat = quickConfig.value.tooltipCustomFormat;
+        dataTooltipSlot.value = { datapoint: mappedSeries, seriesIndex: index, config: FINAL_CONFIG.value, dataset: ds };
+        const customFormat = FINAL_CONFIG.value.tooltipCustomFormat;
 
         if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint: mappedSeries,
             seriesIndex: index,
             series: ds,
-            config: quickConfig.value
+            config: FINAL_CONFIG.value
         }))) {
             tooltipContent.value = customFormat({
                 datapoint: mappedSeries,
                 seriesIndex: index,
                 series: ds,
-                config: quickConfig.value
+                config: FINAL_CONFIG.value
             })
         } else {
             let html = '';
 
-            if (quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
-                html += `<div style="border-bottom:1px solid ${quickConfig.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
+            if (FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
+                html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
             mappedSeries.forEach(s => {
@@ -527,10 +528,10 @@ const line = computed(() => {
                         <svg viewBox="0 0 12 12" height="14" width="12"><circle cx="6" cy="6" r="6" stroke="none" fill="${s.color}"/></svg>
                         <span>${s.name}:</span>
                         <b>${dataLabel({
-                            p: quickConfig.value.valuePrefix,
+                            p: FINAL_CONFIG.value.valuePrefix,
                             v: s.value,
-                            s: quickConfig.value.valueSuffix,
-                            r: quickConfig.value.dataLabelRoundingValue
+                            s: FINAL_CONFIG.value.valueSuffix,
+                            r: FINAL_CONFIG.value.dataLabelRoundingValue
                         })}</b>
                     </div>
                 `
@@ -567,12 +568,12 @@ const bar = computed(() => {
     };
 
     const drawingArea = {
-        left: quickConfig.value.xyPaddingLeft,
-        top: quickConfig.value.xyPaddingTop,
-        right: chartDimensions.width - quickConfig.value.xyPaddingRight,
-        bottom: chartDimensions.height - quickConfig.value.xyPaddingBottom,
-        width: chartDimensions.width - quickConfig.value.xyPaddingLeft - quickConfig.value.xyPaddingRight,
-        height: chartDimensions.height - quickConfig.value.xyPaddingTop - quickConfig.value.xyPaddingBottom
+        left: FINAL_CONFIG.value.xyPaddingLeft,
+        top: FINAL_CONFIG.value.xyPaddingTop,
+        right: chartDimensions.width - FINAL_CONFIG.value.xyPaddingRight,
+        bottom: chartDimensions.height - FINAL_CONFIG.value.xyPaddingBottom,
+        width: chartDimensions.width - FINAL_CONFIG.value.xyPaddingLeft - FINAL_CONFIG.value.xyPaddingRight,
+        height: chartDimensions.height - FINAL_CONFIG.value.xyPaddingTop - FINAL_CONFIG.value.xyPaddingBottom
     }
 
     let ds = [];
@@ -582,8 +583,8 @@ const bar = computed(() => {
             {
                 values: formattedDataset.value.dataset.slice(slicer.value.start, slicer.value.end),
                 absoluteIndices: formattedDataset.value.dataset.map((_,i) => i).slice(slicer.value.start, slicer.value.end),
-                name: quickConfig.value.title,
-                color: customPalette.value[quickConfig.value.paletteStartIndex] || palette[quickConfig.value.paletteStartIndex],
+                name: FINAL_CONFIG.value.title,
+                color: customPalette.value[FINAL_CONFIG.value.paletteStartIndex] || palette[FINAL_CONFIG.value.paletteStartIndex],
                 id: 'bar_0'
             }
         ]
@@ -600,7 +601,7 @@ const bar = computed(() => {
         }).map((d, i) => {
             return {
                 ...d,
-                color: d.COLOR ? convertColorToHex(d.COLOR) : customPalette.value[i + (quickConfig.value.paletteStartIndex)] || palette[i + (quickConfig.value.paletteStartIndex)] || palette[(i + quickConfig.value.paletteStartIndex) % palette.length],
+                color: d.COLOR ? convertColorToHex(d.COLOR) : customPalette.value[i + (FINAL_CONFIG.value.paletteStartIndex)] || palette[i + (FINAL_CONFIG.value.paletteStartIndex)] || palette[(i + FINAL_CONFIG.value.paletteStartIndex) % palette.length],
                 values: d.values.slice(slicer.value.start, slicer.value.end),
                 absoluteIndices: d.values.map((_,i) => i).slice(slicer.value.start, slicer.value.end)
             }
@@ -613,7 +614,7 @@ const bar = computed(() => {
         maxSeries: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).map(d => d.values.length))
     }
 
-    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, quickConfig.value.xyScaleSegments)
+    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, FINAL_CONFIG.value.xyScaleSegments)
     const absoluteMin = scale.min < 0 ? Math.abs(scale.min) : 0;
     const absoluteZero = drawingArea.bottom - (absoluteMin / (scale.max + absoluteMin) * drawingArea.height)
     const slotSize = drawingArea.width / extremes.maxSeries;
@@ -633,10 +634,10 @@ const bar = computed(() => {
                 const barHeight = (((v + absoluteMin) / (extremes.max + absoluteMin)) * drawingArea.height)
                 const barHeightNegative = (Math.abs(v) / Math.abs(extremes.min) * (drawingArea.height - absoluteZero))
                 const absoluteMinHeight = (absoluteMin / (extremes.max + absoluteMin)) * drawingArea.height;
-                const barWidth = (slotSize / ds.filter(d => !segregated.value.includes(d.id)).length) - (quickConfig.value.barGap / ds.filter(d => !segregated.value.includes(d.id)).length);
+                const barWidth = (slotSize / ds.filter(d => !segregated.value.includes(d.id)).length) - (FINAL_CONFIG.value.barGap / ds.filter(d => !segregated.value.includes(d.id)).length);
 
                 return {
-                    x: drawingArea.left + (slotSize * j) + (barWidth * i) + (quickConfig.value.barGap / 2),
+                    x: drawingArea.left + (slotSize * j) + (barWidth * i) + (FINAL_CONFIG.value.barGap / 2),
                     y: v > 0 ? drawingArea.bottom - barHeight : absoluteZero,
                     height: v > 0 ? barHeight - absoluteMinHeight : barHeightNegative,
                     value: v,
@@ -653,10 +654,10 @@ const bar = computed(() => {
                 const barHeight = (((v + absoluteMin) / (extremes.max + absoluteMin)) * drawingArea.height)
                 const barHeightNegative = (Math.abs(v) / (extremes.max + absoluteMin) * (drawingArea.height))
                 const absoluteMinHeight = (absoluteMin / (extremes.max + absoluteMin)) * drawingArea.height;
-                const barWidth = (slotSize / ds.filter(d => !segregated.value.includes(d.id)).length) - (quickConfig.value.barGap / ds.filter(d => !segregated.value.includes(d.id)).length);
+                const barWidth = (slotSize / ds.filter(d => !segregated.value.includes(d.id)).length) - (FINAL_CONFIG.value.barGap / ds.filter(d => !segregated.value.includes(d.id)).length);
 
                 return {
-                    x: drawingArea.left + (slotSize * j) + (barWidth * i) + (quickConfig.value.barGap / 2),
+                    x: drawingArea.left + (slotSize * j) + (barWidth * i) + (FINAL_CONFIG.value.barGap / 2),
                     y: v > 0 ? drawingArea.bottom - barHeight : absoluteZero,
                     height: v > 0 ? barHeight - absoluteMinHeight : barHeightNegative,
                     value: v,
@@ -677,26 +678,26 @@ const bar = computed(() => {
             }
         }).filter(d => !segregated.value.includes(d.id));
 
-        dataTooltipSlot.value = { datapoint: mappedSeries, seriesIndex: index, config: quickConfig.value, dataset: ds };
-        const customFormat = quickConfig.value.tooltipCustomFormat;
+        dataTooltipSlot.value = { datapoint: mappedSeries, seriesIndex: index, config: FINAL_CONFIG.value, dataset: ds };
+        const customFormat = FINAL_CONFIG.value.tooltipCustomFormat;
 
         if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint: mappedSeries,
             seriesIndex: index,
             series: ds,
-            config: quickConfig.value
+            config: FINAL_CONFIG.value
         }))) {  
             tooltipContent.value = customFormat({
                 point: mappedSeries,
                 seriesIndex: index,
                 series: ds,
-                config: quickConfig.value
+                config: FINAL_CONFIG.value
             })
         } else {
             let html = '';
 
-            if (quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
-                html += `<div style="border-bottom:1px solid ${quickConfig.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${quickConfig.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
+            if (FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
+                html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
             mappedSeries.forEach(s => {
@@ -705,10 +706,10 @@ const bar = computed(() => {
                         <svg viewBox="0 0 12 12" height="14" width="12"><rect x=0 y="0" width="12" height="12" rx="1" stroke="none" fill="${s.color}"/></svg>
                         <span>${s.name}:</span>
                         <b>${dataLabel({
-                            p: quickConfig.value.valuePrefix,
+                            p: FINAL_CONFIG.value.valuePrefix,
                             v: s.value,
-                            s: quickConfig.value.valueSuffix,
-                            r: quickConfig.value.dataLabelRoundingValue
+                            s: FINAL_CONFIG.value.valueSuffix,
+                            r: FINAL_CONFIG.value.dataLabelRoundingValue
                         })}</b>
                     </div>
                 `
@@ -761,26 +762,26 @@ defineExpose({
         :id="`${chartType}_${uid}`"
         ref="quickChart"
         :class="{'vue-ui-quick-chart': true, 'vue-data-ui-wrapper-fullscreen' : isFullscreen }" 
-        :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color};font-family:${quickConfig.fontFamily}; position: relative; ${quickConfig.responsive ? 'height: 100%' : ''}`"
+        :style="`background:${FINAL_CONFIG.backgroundColor};color:${FINAL_CONFIG.color};font-family:${FINAL_CONFIG.fontFamily}; position: relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
     >
 
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="quickConfig.showUserOptions"
-            :backgroundColor="quickConfig.backgroundColor"
-            :color="quickConfig.color"
+            v-if="FINAL_CONFIG.showUserOptions"
+            :backgroundColor="FINAL_CONFIG.backgroundColor"
+            :color="FINAL_CONFIG.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="quickConfig.userOptionsButtons.tooltip && quickConfig.showTooltip"
-            :hasPdf="quickConfig.userOptionsButtons.pdf"
-            :hasImg="quickConfig.userOptionsButtons.img"
-            :hasFullscreen="quickConfig.userOptionsButtons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptionsButtons.tooltip && FINAL_CONFIG.showTooltip"
+            :hasPdf="FINAL_CONFIG.userOptionsButtons.pdf"
+            :hasImg="FINAL_CONFIG.userOptionsButtons.img"
+            :hasFullscreen="FINAL_CONFIG.userOptionsButtons.fullscreen"
             :hasXls="false"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
-            :titles="{ ...quickConfig.userOptionsButtonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptionsButtonTitles }"
             :chartElement="quickChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -801,13 +802,13 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <div ref="quickChartTitle" class="vue-ui-quick-chart-title" v-if="quickConfig.title" :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color};font-size:${quickConfig.titleFontSize}px;font-weight:${quickConfig.titleBold ? 'bold': 'normal'};text-align:${quickConfig.titleTextAlign}`">
-            {{ quickConfig.title }}
+        <div ref="quickChartTitle" class="vue-ui-quick-chart-title" v-if="FINAL_CONFIG.title" :style="`background:${FINAL_CONFIG.backgroundColor};color:${FINAL_CONFIG.color};font-size:${FINAL_CONFIG.titleFontSize}px;font-weight:${FINAL_CONFIG.titleBold ? 'bold': 'normal'};text-align:${FINAL_CONFIG.titleTextAlign}`">
+            {{ FINAL_CONFIG.title }}
         </div>
         <svg
             :xmlns="XMLNS"
             :viewBox="viewBox" 
-            :style="`max-width:100%;overflow:visible;background:${quickConfig.backgroundColor};color:${quickConfig.color}`"
+            :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.backgroundColor};color:${FINAL_CONFIG.color}`"
         >
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
@@ -816,18 +817,18 @@ defineExpose({
                 </filter>
 
                 <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
-                    <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5" :flood-color="quickConfig.donutShadowColor" />
+                    <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5" :flood-color="FINAL_CONFIG.donutShadowColor" />
                 </filter>
             </defs>
 
             <template v-if="chartType === detector.chartType.DONUT">
-                <g class="donut-label-connectors" v-if="quickConfig.showDataLabels">
+                <g class="donut-label-connectors" v-if="FINAL_CONFIG.showDataLabels">
                     <template v-for="(arc, i) in donut.chart">
                         <path
                             v-if="donut.isArcBigEnough(arc)"
-                            :d="calcNutArrowPath(arc, {x: (quickConfig.width || defaultSizes.width) / 2, y: (quickConfig.height || defaultSizes.height) /2}, 16, 16, false, false, quickConfig.donutLabelMarkerStrokeWidth)"
+                            :d="calcNutArrowPath(arc, {x: (FINAL_CONFIG.width || defaultSizes.width) / 2, y: (FINAL_CONFIG.height || defaultSizes.height) /2}, 16, 16, false, false, FINAL_CONFIG.donutLabelMarkerStrokeWidth)"
                             :stroke="arc.color"
-                            :stroke-width="quickConfig.donutLabelMarkerStrokeWidth"
+                            :stroke-width="FINAL_CONFIG.donutLabelMarkerStrokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             fill="none"
@@ -837,18 +838,18 @@ defineExpose({
                 </g>
                 <circle
                     class="donut-hollow"
-                    :cx="(quickConfig.width || defaultSizes.width) / 2"
-                    :cy="(quickConfig.height || defaultSizes.height) /2"
-                    :r="(quickConfig.height || defaultSizes.height) * quickConfig.donutRadiusRatio"
-                    :fill="quickConfig.backgroundColor"
+                    :cx="(FINAL_CONFIG.width || defaultSizes.width) / 2"
+                    :cy="(FINAL_CONFIG.height || defaultSizes.height) /2"
+                    :r="(FINAL_CONFIG.height || defaultSizes.height) * FINAL_CONFIG.donutRadiusRatio"
+                    :fill="FINAL_CONFIG.backgroundColor"
                 />
 
                 <circle
                     :cx="donut.cx"
                     :cy="donut.cy"
                     :r="donut.radius"
-                    :fill="quickConfig.backgroundColor"
-                    :filter="quickConfig.donutUseShadow ? `url(#shadow_${uid})` : ''"
+                    :fill="FINAL_CONFIG.backgroundColor"
+                    :filter="FINAL_CONFIG.donutUseShadow ? `url(#shadow_${uid})` : ''"
                 />
 
                 <g class="donut">
@@ -856,8 +857,8 @@ defineExpose({
                         v-for="(arc, i) in donut.chart"
                         :d="arc.arcSlice"
                         :fill="arc.color"
-                        :stroke="quickConfig.backgroundColor"
-                        :stroke-width="quickConfig.donutStrokeWidth"
+                        :stroke="FINAL_CONFIG.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.donutStrokeWidth"
                         :filter="getBlurFilter(arc.id)"
                     />
                     <path
@@ -869,7 +870,7 @@ defineExpose({
                         @click="emit('selectDatapoint', arc)"
                     />
                 </g>
-                <g class="donut-labels quick-animation" v-if="quickConfig.showDataLabels">
+                <g class="donut-labels quick-animation" v-if="FINAL_CONFIG.showDataLabels">
                     <template v-for="(arc, i) in donut.chart">
                         <circle
                             v-if="donut.isArcBigEnough(arc)"
@@ -884,60 +885,60 @@ defineExpose({
                             :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
                             :x="calcMarkerOffsetX(arc, true).x"
                             :y="calcMarkerOffsetY(arc)"
-                            :fill="quickConfig.color"
-                            :font-size="quickConfig.dataLabelFontSize"
+                            :fill="FINAL_CONFIG.color"
+                            :font-size="FINAL_CONFIG.dataLabelFontSize"
                             :filter="getBlurFilter(arc.id)"
                         >
                             {{ donut.displayArcPercentage(arc, donut.chart) }} 
                             ({{ dataLabel({
-                                p: quickConfig.valuePrefix,
+                                p: FINAL_CONFIG.valuePrefix,
                                 v: arc.value,
-                                s: quickConfig.valueSuffix,
-                                r: quickConfig.dataLabelRoundingValue
+                                s: FINAL_CONFIG.valueSuffix,
+                                r: FINAL_CONFIG.dataLabelRoundingValue
                             }) }})
                         </text>
                         <text
                             v-if="donut.isArcBigEnough(arc, true, 20)"
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
                             :x="calcMarkerOffsetX(arc, true).x"
-                            :y="calcMarkerOffsetY(arc) + quickConfig.dataLabelFontSize"
-                            :fill="quickConfig.color"
-                            :font-size="quickConfig.dataLabelFontSize"
+                            :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.dataLabelFontSize"
+                            :fill="FINAL_CONFIG.color"
+                            :font-size="FINAL_CONFIG.dataLabelFontSize"
                             :filter="getBlurFilter(arc.id)"
                         >
                             {{ arc.name }}
                         </text>
                     </template>
                 </g>
-                <g class="donut-hollow quick-animation" v-if="quickConfig.donutShowTotal">
+                <g class="donut-hollow quick-animation" v-if="FINAL_CONFIG.donutShowTotal">
                     <text
                         text-anchor="middle"
                         :x="donut.drawingArea.centerX"
-                        :y="donut.drawingArea.centerY - quickConfig.donutTotalLabelFontSize / 2"
-                        :font-size="quickConfig.donutTotalLabelFontSize"
-                        :fill="quickConfig.color"
+                        :y="donut.drawingArea.centerY - FINAL_CONFIG.donutTotalLabelFontSize / 2"
+                        :font-size="FINAL_CONFIG.donutTotalLabelFontSize"
+                        :fill="FINAL_CONFIG.color"
                     >
-                        {{ quickConfig.donutTotalLabelText }}
+                        {{ FINAL_CONFIG.donutTotalLabelText }}
                     </text>
                     <text
                         text-anchor="middle"
                         :x="donut.drawingArea.centerX"
-                        :y="donut.drawingArea.centerY + quickConfig.donutTotalLabelFontSize"
-                        :font-size="quickConfig.donutTotalLabelFontSize"
-                        :fill="quickConfig.color"
+                        :y="donut.drawingArea.centerY + FINAL_CONFIG.donutTotalLabelFontSize"
+                        :font-size="FINAL_CONFIG.donutTotalLabelFontSize"
+                        :fill="FINAL_CONFIG.color"
                     >
                         {{ dataLabel({
-                            p: quickConfig.valuePrefix,
+                            p: FINAL_CONFIG.valuePrefix,
                             v: donut.total,
-                            s: quickConfig.valueSuffix,
-                            r: quickConfig.dataLabelRoundingValue
+                            s: FINAL_CONFIG.valueSuffix,
+                            r: FINAL_CONFIG.dataLabelRoundingValue
                         }) }}
                     </text>
                 </g>
             </template>
 
             <template v-if="chartType === detector.chartType.LINE">
-                <g class="line-grid" v-if="quickConfig.xyShowGrid">
+                <g class="line-grid" v-if="FINAL_CONFIG.xyShowGrid">
                     <template v-for="yGridLine in line.yLabels">
                         <line
                             v-if="yGridLine.y <= line.drawingArea.bottom"
@@ -945,8 +946,8 @@ defineExpose({
                             :x2="line.drawingArea.right"
                             :y1="yGridLine.y"
                             :y2="yGridLine.y"
-                            :stroke="quickConfig.xyGridStroke"
-                            :stroke-width="quickConfig.xyGridStrokeWidth"
+                            :stroke="FINAL_CONFIG.xyGridStroke"
+                            :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
                             stroke-linecap="round"
                         />
                     </template>
@@ -956,19 +957,19 @@ defineExpose({
                             :x2="line.drawingArea.left + (line.slotSize * (i))"
                             :y1="line.drawingArea.top"
                             :y2="line.drawingArea.bottom"
-                            :stroke="quickConfig.xyGridStroke"
-                            :stroke-width="quickConfig.xyGridStrokeWidth"
+                            :stroke="FINAL_CONFIG.xyGridStroke"
+                            :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
                             stroke-linecap="round"
                     />
                 </g>
-                <g class="line-axis" v-if="quickConfig.xyShowAxis">
+                <g class="line-axis" v-if="FINAL_CONFIG.xyShowAxis">
                     <line
                         :x1="line.drawingArea.left"
                         :x2="line.drawingArea.left"
                         :y1="line.drawingArea.top"
                         :y2="line.drawingArea.bottom"
-                        :stroke="quickConfig.xyAxisStroke"
-                        :stroke-width="quickConfig.xyAxisStrokeWidth"
+                        :stroke="FINAL_CONFIG.xyAxisStroke"
+                        :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                         stroke-linecap="round"
                     />
                     <line
@@ -976,12 +977,12 @@ defineExpose({
                         :x2="line.drawingArea.right"
                         :y1="line.absoluteZero"
                         :y2="line.absoluteZero"
-                        :stroke="quickConfig.xyAxisStroke"
-                        :stroke-width="quickConfig.xyAxisStrokeWidth"
+                        :stroke="FINAL_CONFIG.xyAxisStroke"
+                        :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                         stroke-linecap="round"
                     />
                 </g>
-                <g class="yLabels" v-if="quickConfig.xyShowScale">
+                <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
                     <template v-for="label in line.yLabels">   
                         <line
                             v-if="label.y <= line.drawingArea.bottom"
@@ -989,44 +990,44 @@ defineExpose({
                             :x2="line.drawingArea.left"
                             :y1="label.y"
                             :y2="label.y"
-                            :stroke="quickConfig.xyAxisStroke"
-                            :stroke-width="quickConfig.xyAxisStrokeWidth"
+                            :stroke="FINAL_CONFIG.xyAxisStroke"
+                            :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                             stroke-linecap="round"
                         />
                         <text
                             v-if="label.y <= line.drawingArea.bottom"
                             :x="label.x"
-                            :y="label.y + quickConfig.xyLabelsYFontSize / 3"
+                            :y="label.y + FINAL_CONFIG.xyLabelsYFontSize / 3"
                             text-anchor="end"
-                            :font-size="quickConfig.xyLabelsYFontSize"
-                            :fill="quickConfig.color"
+                            :font-size="FINAL_CONFIG.xyLabelsYFontSize"
+                            :fill="FINAL_CONFIG.color"
                         >
                             {{ dataLabel({
-                                p: quickConfig.valuePrefix,
+                                p: FINAL_CONFIG.valuePrefix,
                                 v: label.value,
-                                s: quickConfig.valueSuffix,
-                                r: quickConfig.dataLabelRoundingValue
+                                s: FINAL_CONFIG.valueSuffix,
+                                r: FINAL_CONFIG.dataLabelRoundingValue
                             }) }}
                         </text>
                     </template>
                 </g>
-                <g class="periodLabels" v-if="quickConfig.xyShowScale && quickConfig.xyPeriods.length">
+                <g class="periodLabels" v-if="FINAL_CONFIG.xyShowScale && FINAL_CONFIG.xyPeriods.length">
                     <line
-                        v-for="(_, i) in quickConfig.xyPeriods.slice(slicer.start, slicer.end)"
+                        v-for="(_, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
                         :x1="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
                         :x2="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
                         :y1="line.drawingArea.bottom"
                         :y2="line.drawingArea.bottom + 4"
-                        :stroke="quickConfig.xyAxisStroke"
-                        :stroke-width="quickConfig.xyAxisStrokeWidth"
+                        :stroke="FINAL_CONFIG.xyAxisStroke"
+                        :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                         stroke-linecap="round"
                     />
                     <text
-                        v-for="(period, i) in quickConfig.xyPeriods.slice(slicer.start, slicer.end)"
-                        :font-size="quickConfig.xyLabelsXFontSize"
-                        :text-anchor="quickConfig.xyPeriodLabelsRotation > 0 ? 'start' : quickConfig.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
-                        :fill="quickConfig.color"
-                        :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6}), rotate(${quickConfig.xyPeriodLabelsRotation})`"
+                        v-for="(period, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
+                        :font-size="FINAL_CONFIG.xyLabelsXFontSize"
+                        :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
+                        :fill="FINAL_CONFIG.color"
+                        :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
                     >
                         {{ period }}
                     </text>
@@ -1034,23 +1035,23 @@ defineExpose({
                 <g class="plots">
                     <template v-for="(ds, i) in line.dataset">
                         <g class="line-plot-series">
-                            <template v-if="quickConfig.lineSmooth">
+                            <template v-if="FINAL_CONFIG.lineSmooth">
                                 <path
                                     :d="`M ${createSmoothPath(ds.coordinates)}`"
-                                    :stroke="quickConfig.backgroundColor"
-                                    :stroke-width="quickConfig.lineStrokeWidth + 1"
+                                    :stroke="FINAL_CONFIG.backgroundColor"
+                                    :stroke-width="FINAL_CONFIG.lineStrokeWidth + 1"
                                     stroke-linecap="round"
                                     fill="none"
-                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': quickConfig.lineAnimated }"
+                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated }"
                                     style="transition: all 0.3s ease-in-out"
                                 />
                                 <path
                                     :d="`M ${createSmoothPath(ds.coordinates)}`"
                                     :stroke="ds.color"
-                                    :stroke-width="quickConfig.lineStrokeWidth"
+                                    :stroke-width="FINAL_CONFIG.lineStrokeWidth"
                                     stroke-linecap="round"
                                     fill="none"
-                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': quickConfig.lineAnimated }"
+                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated }"
                                     style="transition: all 0.3s ease-in-out"
                                 >
                             </path>
@@ -1058,20 +1059,20 @@ defineExpose({
                             <template v-else>
                                 <path
                                     :d="`M ${ds.linePath}`"
-                                    :stroke="quickConfig.backgroundColor"
-                                    :stroke-width="quickConfig.lineStrokeWidth + 1"
+                                    :stroke="FINAL_CONFIG.backgroundColor"
+                                    :stroke-width="FINAL_CONFIG.lineStrokeWidth + 1"
                                     stroke-linecap="round"
                                     fill="none"
-                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': quickConfig.lineAnimated }"
+                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated }"
                                     style="transition: all 0.3s ease-in-out"
                                 />
                                 <path
                                     :d="`M ${ds.linePath}`"
                                     :stroke="ds.color"
-                                    :stroke-width="quickConfig.lineStrokeWidth"
+                                    :stroke-width="FINAL_CONFIG.lineStrokeWidth"
                                     stroke-linecap="round"
                                     fill="none"
-                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': quickConfig.lineAnimated }"
+                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated }"
                                     style="transition: all 0.3s ease-in-out"
                                 />
                             </template>
@@ -1081,7 +1082,7 @@ defineExpose({
                                     :cy="plot.y"
                                     :r="3"
                                     :fill="ds.color"
-                                    :stroke="quickConfig.backgroundColor"
+                                    :stroke="FINAL_CONFIG.backgroundColor"
                                     stroke-width="0.5"
                                     class="quick-animation"
                                     style="transition: all 0.3s ease-in-out"
@@ -1090,23 +1091,23 @@ defineExpose({
                         </g>
                     </template>
                 </g>
-                <g class="dataLabels" v-if="quickConfig.showDataLabels">
+                <g class="dataLabels" v-if="FINAL_CONFIG.showDataLabels">
                     <template v-for="(ds, i) in line.dataset">
                         <text 
                             v-for="(plot, j) in ds.coordinates"
                             text-anchor="middle"
-                            :font-size="quickConfig.dataLabelFontSize"
+                            :font-size="FINAL_CONFIG.dataLabelFontSize"
                             :fill="ds.color"
                             :x="plot.x"
-                            :y="plot.y - quickConfig.dataLabelFontSize / 2"
+                            :y="plot.y - FINAL_CONFIG.dataLabelFontSize / 2"
                             class="quick-animation"
                             style="transition: all 0.3s ease-in-out"
                         >
                             {{ dataLabel({
-                                p: quickConfig.valuePrefix,
+                                p: FINAL_CONFIG.valuePrefix,
                                 v: plot.value,
-                                s: quickConfig.valueSuffix,
-                                r: quickConfig.dataLabelRoundingValue
+                                s: FINAL_CONFIG.valueSuffix,
+                                r: FINAL_CONFIG.dataLabelRoundingValue
                             }) }}
                         </text>
                     </template>
@@ -1118,8 +1119,8 @@ defineExpose({
                         :y="line.drawingArea.top"
                         :height="line.drawingArea.height <= 0 ? 0.00001 : line.drawingArea.height"
                         :width="line.slotSize <= 0 ? 0.00001 : line.slotSize"
-                        :fill="selectedDatapoint === i ? quickConfig.xyHighlighterColor : 'transparent'"
-                        :style="`opacity:${quickConfig.xyHighlighterOpacity}`"
+                        :fill="selectedDatapoint === i ? FINAL_CONFIG.xyHighlighterColor : 'transparent'"
+                        :style="`opacity:${FINAL_CONFIG.xyHighlighterOpacity}`"
                         @mouseenter="line.useTooltip(i)"
                         @mouseleave="line.killTooltip()"
                         @click="emit('selectDatapoint', line.dataset.map(d => {
@@ -1133,7 +1134,7 @@ defineExpose({
             </template>
 
             <template v-if="chartType === detector.chartType.BAR">
-                <g class="line-grid" v-if="quickConfig.xyShowGrid">
+                <g class="line-grid" v-if="FINAL_CONFIG.xyShowGrid">
                     <template v-for="yGridLine in bar.yLabels">
                         <line
                             v-if="yGridLine.y <= bar.drawingArea.bottom"
@@ -1141,8 +1142,8 @@ defineExpose({
                             :x2="bar.drawingArea.right"
                             :y1="yGridLine.y"
                             :y2="yGridLine.y"
-                            :stroke="quickConfig.xyGridStroke"
-                            :stroke-width="quickConfig.xyGridStrokeWidth"
+                            :stroke="FINAL_CONFIG.xyGridStroke"
+                            :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
                             stroke-linecap="round"
                         />
                     </template>
@@ -1152,19 +1153,19 @@ defineExpose({
                         :x2="bar.drawingArea.left + (bar.slotSize * (i))"
                         :y1="bar.drawingArea.top"
                         :y2="bar.drawingArea.bottom"
-                        :stroke="quickConfig.xyGridStroke"
-                        :stroke-width="quickConfig.xyGridStrokeWidth"
+                        :stroke="FINAL_CONFIG.xyGridStroke"
+                        :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
                         stroke-linecap="round"
                     />
                 </g>
-                <g class="line-axis" v-if="quickConfig.xyShowAxis">
+                <g class="line-axis" v-if="FINAL_CONFIG.xyShowAxis">
                     <line
                         :x1="bar.drawingArea.left"
                         :x2="bar.drawingArea.left"
                         :y1="bar.drawingArea.top"
                         :y2="bar.drawingArea.bottom"
-                        :stroke="quickConfig.xyAxisStroke"
-                        :stroke-width="quickConfig.xyAxisStrokeWidth"
+                        :stroke="FINAL_CONFIG.xyAxisStroke"
+                        :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                         stroke-linecap="round"
                     />
                     <line
@@ -1172,12 +1173,12 @@ defineExpose({
                         :x2="bar.drawingArea.right"
                         :y1="bar.absoluteZero"
                         :y2="bar.absoluteZero"
-                        :stroke="quickConfig.xyAxisStroke"
-                        :stroke-width="quickConfig.xyAxisStrokeWidth"
+                        :stroke="FINAL_CONFIG.xyAxisStroke"
+                        :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                         stroke-linecap="round"
                     />
                 </g>
-                <g class="yLabels" v-if="quickConfig.xyShowScale">
+                <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
                     <template v-for="label in bar.yLabels">   
                         <line
                             v-if="label.y <= bar.drawingArea.bottom"
@@ -1185,44 +1186,44 @@ defineExpose({
                             :x2="bar.drawingArea.left"
                             :y1="label.y"
                             :y2="label.y"
-                            :stroke="quickConfig.xyAxisStroke"
-                            :stroke-width="quickConfig.xyAxisStrokeWidth"
+                            :stroke="FINAL_CONFIG.xyAxisStroke"
+                            :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                             stroke-linecap="round"
                         />
                         <text
                             v-if="label.y <= bar.drawingArea.bottom"
                             :x="label.x"
-                            :y="label.y + quickConfig.xyLabelsYFontSize / 3"
+                            :y="label.y + FINAL_CONFIG.xyLabelsYFontSize / 3"
                             text-anchor="end"
-                            :font-size="quickConfig.xyLabelsYFontSize"
-                            :fill="quickConfig.color"
+                            :font-size="FINAL_CONFIG.xyLabelsYFontSize"
+                            :fill="FINAL_CONFIG.color"
                         >
                             {{ dataLabel({
-                                p: quickConfig.valuePrefix,
+                                p: FINAL_CONFIG.valuePrefix,
                                 v: label.value,
-                                s: quickConfig.valueSuffix,
-                                r: quickConfig.dataLabelRoundingValue
+                                s: FINAL_CONFIG.valueSuffix,
+                                r: FINAL_CONFIG.dataLabelRoundingValue
                             }) }}
                         </text>
                     </template>
                 </g>
-                <g class="periodLabels" v-if="quickConfig.xyShowScale && quickConfig.xyPeriods.length">
+                <g class="periodLabels" v-if="FINAL_CONFIG.xyShowScale && FINAL_CONFIG.xyPeriods.length">
                     <line
-                        v-for="(_, i) in quickConfig.xyPeriods.slice(slicer.start, slicer.end)"
+                        v-for="(_, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
                         :x1="bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)"
                         :x2="bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)"
                         :y1="bar.drawingArea.bottom"
                         :y2="bar.drawingArea.bottom + 4"
-                        :stroke="quickConfig.xyAxisStroke"
-                        :stroke-width="quickConfig.xyAxisStrokeWidth"
+                        :stroke="FINAL_CONFIG.xyAxisStroke"
+                        :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                         stroke-linecap="round"
                     />
                     <text
-                        v-for="(period, i) in quickConfig.xyPeriods.slice(slicer.start, slicer.end)"
-                        :font-size="quickConfig.xyLabelsXFontSize"
-                        :text-anchor="quickConfig.xyPeriodLabelsRotation > 0 ? 'start' : quickConfig.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
-                        :transform="`translate(${bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)}, ${bar.drawingArea.bottom + quickConfig.xyLabelsXFontSize + 6}) rotate(${quickConfig.xyPeriodLabelsRotation})`"
-                        :fill="quickConfig.color"
+                        v-for="(period, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
+                        :font-size="FINAL_CONFIG.xyLabelsXFontSize"
+                        :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
+                        :transform="`translate(${bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)}, ${bar.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}) rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
+                        :fill="FINAL_CONFIG.color"
                     >
                         {{ period }}
                     </text>
@@ -1236,20 +1237,20 @@ defineExpose({
                             :height="plot.height <= 0 ? 0.00001 : plot.height"
                             :y="plot.y"
                             :fill="ds.color"
-                            :stroke="quickConfig.backgroundColor"
-                            :stroke-width="quickConfig.barStrokeWidth"
+                            :stroke="FINAL_CONFIG.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.barStrokeWidth"
                             stroke-linecap="round"
-                            :class="{'vue-data-ui-bar-animated': quickConfig.barAnimated && plot.value < 0}"
+                            :class="{'vue-data-ui-bar-animated': FINAL_CONFIG.barAnimated && plot.value < 0}"
                             >
                             <animate
-                                v-if="quickConfig.barAnimated && plot.value > 0 && !isPrinting && !isImaging"
+                                v-if="FINAL_CONFIG.barAnimated && plot.value > 0 && !isPrinting && !isImaging"
                                 attributeName="height"
                                 :from="0"
                                 :to="plot.height"
                                 dur="0.5s"
                             />
                             <animate
-                                v-if="quickConfig.barAnimated && plot.value > 0 && !isPrinting && !isImaging"
+                                v-if="FINAL_CONFIG.barAnimated && plot.value > 0 && !isPrinting && !isImaging"
                                 attributeName="y"
                                 :from="bar.absoluteZero"
                                 :to="bar.absoluteZero - plot.height"
@@ -1258,22 +1259,22 @@ defineExpose({
                             </rect>
                     </template>
                 </g>
-                <g class="dataLabels" v-if="quickConfig.showDataLabels">
+                <g class="dataLabels" v-if="FINAL_CONFIG.showDataLabels">
                     <template v-for="(ds, i) in bar.dataset">
                         <text 
                             v-for="(plot, j) in ds.coordinates"
                             :x="plot.x + plot.width / 2"
-                            :y="plot.y - quickConfig.dataLabelFontSize / 2"
+                            :y="plot.y - FINAL_CONFIG.dataLabelFontSize / 2"
                             text-anchor="middle"
-                            :font-size="quickConfig.dataLabelFontSize"
+                            :font-size="FINAL_CONFIG.dataLabelFontSize"
                             :fill="ds.color"
                             class="quick-animation"
                         >
                             {{ dataLabel({
-                                p: quickConfig.valuePrefix,
+                                p: FINAL_CONFIG.valuePrefix,
                                 v: plot.value,
-                                s: quickConfig.valueSuffix,
-                                r: quickConfig.dataLabelRoundingValue
+                                s: FINAL_CONFIG.valueSuffix,
+                                r: FINAL_CONFIG.dataLabelRoundingValue
                             }) }}
                         </text>
                     </template>
@@ -1285,8 +1286,8 @@ defineExpose({
                         :y="bar.drawingArea.top"
                         :height="bar.drawingArea.height <= 0 ? 0.00001 : bar.drawingArea.height"
                         :width="bar.slotSize <= 0 ? 0.00001 : bar.slotSize"
-                        :fill="selectedDatapoint === i ? quickConfig.xyHighlighterColor : 'transparent'"
-                        :style="`opacity:${quickConfig.xyHighlighterOpacity}`"
+                        :fill="selectedDatapoint === i ? FINAL_CONFIG.xyHighlighterColor : 'transparent'"
+                        :style="`opacity:${FINAL_CONFIG.xyHighlighterOpacity}`"
                         @mouseenter="bar.useTooltip(i)"
                         @mouseleave="bar.killTooltip()"
                         @click="emit('selectDatapoint', bar.dataset.map(d => {
@@ -1301,65 +1302,65 @@ defineExpose({
 
             <template v-if="[detector.chartType.LINE, detector.chartType.BAR].includes(chartType)">
                 <g class="axis-labels">
-                    <g v-if="quickConfig.xAxisLabel && chartType === detector.chartType.LINE">
+                    <g v-if="FINAL_CONFIG.xAxisLabel && chartType === detector.chartType.LINE">
                         <text 
-                            :font-size="quickConfig.axisLabelsFontSize"
-                            :fill="quickConfig.color" 
+                            :font-size="FINAL_CONFIG.axisLabelsFontSize"
+                            :fill="FINAL_CONFIG.color" 
                             text-anchor="middle"
                             :x="line.drawingArea.left + (line.drawingArea.width / 2)"
-                            :y="defaultSizes.height - (quickConfig.axisLabelsFontSize / 3)"
+                            :y="defaultSizes.height - (FINAL_CONFIG.axisLabelsFontSize / 3)"
                         >
-                            {{ quickConfig.xAxisLabel }}
+                            {{ FINAL_CONFIG.xAxisLabel }}
                         </text>
                     </g>
-                    <g v-if="quickConfig.xAxisLabel && chartType === detector.chartType.BAR">
+                    <g v-if="FINAL_CONFIG.xAxisLabel && chartType === detector.chartType.BAR">
                         <text 
-                            :font-size="quickConfig.axisLabelsFontSize"
-                            :fill="quickConfig.color" 
+                            :font-size="FINAL_CONFIG.axisLabelsFontSize"
+                            :fill="FINAL_CONFIG.color" 
                             text-anchor="middle"
                             :x="bar.drawingArea.left + (bar.drawingArea.width / 2)"
-                            :y="defaultSizes.height - (quickConfig.axisLabelsFontSize / 3)"
+                            :y="defaultSizes.height - (FINAL_CONFIG.axisLabelsFontSize / 3)"
                         >
-                            {{ quickConfig.xAxisLabel }}
+                            {{ FINAL_CONFIG.xAxisLabel }}
                         </text>
                     </g>
-                    <g v-if="quickConfig.yAxisLabel && chartType === detector.chartType.LINE">
+                    <g v-if="FINAL_CONFIG.yAxisLabel && chartType === detector.chartType.LINE">
                         <text 
-                            :font-size="quickConfig.axisLabelsFontSize"
-                            :fill="quickConfig.color"
-                            :transform="`translate(${quickConfig.axisLabelsFontSize}, ${line.drawingArea.top + (line.drawingArea.height / 2)}) rotate(-90)`"
+                            :font-size="FINAL_CONFIG.axisLabelsFontSize"
+                            :fill="FINAL_CONFIG.color"
+                            :transform="`translate(${FINAL_CONFIG.axisLabelsFontSize}, ${line.drawingArea.top + (line.drawingArea.height / 2)}) rotate(-90)`"
                             text-anchor="middle"
                         >
-                            {{ quickConfig.yAxisLabel }}
+                            {{ FINAL_CONFIG.yAxisLabel }}
                         </text>
                     </g>
-                    <g v-if="quickConfig.yAxisLabel && chartType === detector.chartType.BAR">
+                    <g v-if="FINAL_CONFIG.yAxisLabel && chartType === detector.chartType.BAR">
                         <text 
-                            :font-size="quickConfig.axisLabelsFontSize"
-                            :fill="quickConfig.color"
-                            :transform="`translate(${quickConfig.axisLabelsFontSize}, ${bar.drawingArea.top + (bar.drawingArea.height / 2)}) rotate(-90)`"
+                            :font-size="FINAL_CONFIG.axisLabelsFontSize"
+                            :fill="FINAL_CONFIG.color"
+                            :transform="`translate(${FINAL_CONFIG.axisLabelsFontSize}, ${bar.drawingArea.top + (bar.drawingArea.height / 2)}) rotate(-90)`"
                             text-anchor="middle"
                         >
-                            {{ quickConfig.yAxisLabel }}
+                            {{ FINAL_CONFIG.yAxisLabel }}
                         </text>
                     </g>
                 </g>
             </template>
         </svg>
 
-        <div v-if="[detector.chartType.BAR, detector.chartType.LINE].includes(chartType) && quickConfig.zoomXy && formattedDataset.maxSeriesLength > 1"
+        <div v-if="[detector.chartType.BAR, detector.chartType.LINE].includes(chartType) && FINAL_CONFIG.zoomXy && formattedDataset.maxSeriesLength > 1"
             :key="`slicer_${slicerStep}`" ref="quickChartSlicer">        
             <Slicer
                 :key="`slicer_${slicerStep}`"
-                :background="quickConfig.zoomColor"
-                :borderColor="quickConfig.backgroundColor"
-                :fontSize="quickConfig.zoomFontSize"
-                :useResetSlot="quickConfig.zoomUseResetSlot"
-                :labelLeft="quickConfig.xyPeriods[slicer.start] ? quickConfig.xyPeriods[slicer.start] : ''"
-                :labelRight="quickConfig.xyPeriods[slicer.end-1] ? quickConfig.xyPeriods[slicer.end-1] : ''"
-                :textColor="quickConfig.color"
-                :inputColor="quickConfig.zoomColor"
-                :selectColor="quickConfig.zoomHighlightColor"
+                :background="FINAL_CONFIG.zoomColor"
+                :borderColor="FINAL_CONFIG.backgroundColor"
+                :fontSize="FINAL_CONFIG.zoomFontSize"
+                :useResetSlot="FINAL_CONFIG.zoomUseResetSlot"
+                :labelLeft="FINAL_CONFIG.xyPeriods[slicer.start] ? FINAL_CONFIG.xyPeriods[slicer.start] : ''"
+                :labelRight="FINAL_CONFIG.xyPeriods[slicer.end-1] ? FINAL_CONFIG.xyPeriods[slicer.end-1] : ''"
+                :textColor="FINAL_CONFIG.color"
+                :inputColor="FINAL_CONFIG.zoomColor"
+                :selectColor="FINAL_CONFIG.zoomHighlightColor"
                 :max="formattedDataset.maxSeriesLength"
                 :min="0"
                 :valueStart="slicer.start"
@@ -1375,10 +1376,10 @@ defineExpose({
         </div>
         
         <div
-            v-if="quickConfig.showLegend"
+            v-if="FINAL_CONFIG.showLegend"
             ref="quickChartLegend"
             class="vue-ui-quick-chart-legend" 
-            :style="`background:${quickConfig.backgroundColor};color:${quickConfig.color}`"
+            :style="`background:${FINAL_CONFIG.backgroundColor};color:${FINAL_CONFIG.color}`"
         >
             <template v-if="chartType === detector.chartType.DONUT">
                 <div 
@@ -1387,34 +1388,34 @@ defineExpose({
                     @click="segregateDonut(legendItem, donut.dataset); emit('selectLegend', legendItem)"
                     :style="`cursor: ${donut.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                 >
-                    <template v-if="quickConfig.useCustomLegend">
+                    <template v-if="FINAL_CONFIG.useCustomLegend">
                         <slot name="legend" v-bind="{ legend: legendItem }"/>
                     </template>
 
                     <template v-else>
-                        <BaseIcon :name="quickConfig.legendIcon" :stroke="legendItem.color" :size="quickConfig.legendIconSize"/>
-                        <span :style="`font-size:${quickConfig.legendFontSize}px`">
+                        <BaseIcon :name="FINAL_CONFIG.legendIcon" :stroke="legendItem.color" :size="FINAL_CONFIG.legendIconSize"/>
+                        <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
                             {{ legendItem.name }}
                         </span>
-                        <span :style="`font-size:${quickConfig.legendFontSize}px;font-variant-numeric:tabular-nums`">
+                        <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px;font-variant-numeric:tabular-nums`">
                             {{ segregated.includes(legendItem.id) ? '-' : dataLabel({
-                                p: quickConfig.valuePrefix,
+                                p: FINAL_CONFIG.valuePrefix,
                                 v: legendItem.absoluteValue,
-                                s: quickConfig.valueSuffix,
-                                r: quickConfig.dataLabelRoundingValue,
+                                s: FINAL_CONFIG.valueSuffix,
+                                r: FINAL_CONFIG.dataLabelRoundingValue,
                             }) }}
                         </span>
-                        <span v-if="segregated.includes(legendItem.id)" :style="`font-size:${quickConfig.legendFontSize}px`">
+                        <span v-if="segregated.includes(legendItem.id)" :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
                             ( - % )
                         </span>
-                        <span v-else-if="isSegregatingDonut" :style="`font-size:${quickConfig.legendFontSize}px; font-variant-numeric: tabular-nums;`">
+                        <span v-else-if="isSegregatingDonut" :style="`font-size:${FINAL_CONFIG.legendFontSize}px; font-variant-numeric: tabular-nums;`">
                             ( - % )
                         </span>
-                        <span v-else :style="`font-size:${quickConfig.legendFontSize}px; font-variant-numeric: tabular-nums;`">
+                        <span v-else :style="`font-size:${FINAL_CONFIG.legendFontSize}px; font-variant-numeric: tabular-nums;`">
                             ({{ dataLabel({
                                 v: legendItem.value / donut.total * 100,
                                 s: '%',
-                                r: quickConfig.dataLabelRoundingPercentage
+                                r: FINAL_CONFIG.dataLabelRoundingPercentage
                             }) }})
                         </span>
                     </template>
@@ -1428,12 +1429,12 @@ defineExpose({
                     @click="segregate(legendItem.id, line.legend.length - 1); emit('selectLegend', legendItem)"
                     :style="`cursor: ${line.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                 >
-                    <template v-if="quickConfig.useCustomLegend">
+                    <template v-if="FINAL_CONFIG.useCustomLegend">
                         <slot name="legend" v-bind="{ legend: legendItem }"/>
                     </template>
                     <template v-else>
-                        <BaseIcon :name="quickConfig.legendIcon" :stroke="legendItem.color" :size="quickConfig.legendIconSize"/>
-                        <span :style="`font-size:${quickConfig.legendFontSize}px`">
+                        <BaseIcon :name="FINAL_CONFIG.legendIcon" :stroke="legendItem.color" :size="FINAL_CONFIG.legendIconSize"/>
+                        <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
                             {{ legendItem.name }}
                         </span>
                     </template>
@@ -1447,12 +1448,12 @@ defineExpose({
                     @click="segregate(legendItem.id, bar.legend.length - 1); emit('selectLegend', legendItem)"
                     :style="`cursor: ${bar.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                 >
-                    <template v-if="quickConfig.useCustomLegend">
+                    <template v-if="FINAL_CONFIG.useCustomLegend">
                         <slot name="legend" v-bind="{ legend: legendItem }"/>
                     </template>
                     <template v-else>
-                        <BaseIcon :name="quickConfig.legendIcon" :stroke="legendItem.color" :size="quickConfig.legendIconSize"/>
-                        <span :style="`font-size:${quickConfig.legendFontSize}px`">
+                        <BaseIcon :name="FINAL_CONFIG.legendIcon" :stroke="legendItem.color" :size="FINAL_CONFIG.legendIconSize"/>
+                        <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
                             {{ legendItem.name }}
                         </span>
                     </template>
@@ -1462,14 +1463,14 @@ defineExpose({
 
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="quickConfig.backgroundColor"
-            :color="quickConfig.color"
-            :borderRadius="quickConfig.tooltipBorderRadius"
-            :borderColor="quickConfig.tooltipBorderColor"
-            :borderWidth="quickConfig.tooltipBorderWidth"
+            :backgroundColor="FINAL_CONFIG.backgroundColor"
+            :color="FINAL_CONFIG.color"
+            :borderRadius="FINAL_CONFIG.tooltipBorderRadius"
+            :borderColor="FINAL_CONFIG.tooltipBorderColor"
+            :borderWidth="FINAL_CONFIG.tooltipBorderWidth"
             :parent="quickChart"
             :content="tooltipContent"
-            :isCustom="isFunction(quickConfig.tooltipCustomFormat)"
+            :isCustom="isFunction(FINAL_CONFIG.tooltipCustomFormat)"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

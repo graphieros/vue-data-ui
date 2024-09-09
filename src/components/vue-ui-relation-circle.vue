@@ -11,7 +11,6 @@ convertCustomPalette,
     XMLNS
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -19,6 +18,9 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_relation_circle: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     dataset: {
@@ -40,15 +42,14 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_relation_circle);
 const step = ref(0);
 const relationCircleChart = ref(null);
 const chartTitle = ref(null);
 
-const relationConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -65,11 +66,11 @@ const relationConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `relation_circle_${uid.value}`,
-    fileName: relationConfig.value.style.title.text || 'vue-ui-relation-circle'
+    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-relation-circle'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(relationConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 const circles = ref([]);
@@ -78,19 +79,19 @@ const selectedPlot = ref({});
 const selectedRelations = ref([]);
 const selectedRotation = ref(0);
 const limitedDataset = computed(() => {
-    return props.dataset.slice(0, relationConfig.value.style.limit)
+    return props.dataset.slice(0, FINAL_CONFIG.value.style.limit)
 });
 
-const size = ref(relationConfig.value.style.size);
+const size = ref(FINAL_CONFIG.value.style.size);
 
 const svg = ref({
-    height: relationConfig.value.style.size,
-    width: relationConfig.value.style.size
+    height: FINAL_CONFIG.value.style.size,
+    width: FINAL_CONFIG.value.style.size
 });
 
 const radius = computed({
     get() {
-        return size.value * relationConfig.value.style.circle.radiusProportion;
+        return size.value * FINAL_CONFIG.value.style.circle.radiusProportion;
     },
     set(v) {
         return v
@@ -98,11 +99,11 @@ const radius = computed({
 })
 
 const isCurved = computed(() => {
-    return relationConfig.value.style.links.curved;
+    return FINAL_CONFIG.value.style.links.curved;
 });
 
 const animationSpeed = computed(() => {
-    return `${relationConfig.value.style.animation.speedMs}ms`;
+    return `${FINAL_CONFIG.value.style.animation.speedMs}ms`;
 });
 
 const radiusDash = computed(() => {
@@ -137,16 +138,16 @@ onMounted(() => {
         });
     }
 
-    if (relationConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: relationCircleChart.value,
-                title: relationConfig.value.style.title.text ? chartTitle.value : null,
+                title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
             });
             size.value = Math.min(width, height);
             svg.value.width = width;
             svg.value.height = height;
-            radius.value = size.value * relationConfig.value.style.circle.radiusProportion;
+            radius.value = size.value * FINAL_CONFIG.value.style.circle.radiusProportion;
             circles.value = [];
             relations.value = [];
             createPlots();
@@ -196,7 +197,7 @@ function createPlots() {
     let regAngle = 0;
     limitedDataset.value.forEach((plot, i) => {
         const x = radius.value * Math.cos(angle) + (svg.value.width / 2);
-        const y = radius.value * Math.sin(angle) + svg.value.height / 2 + relationConfig.value.style.circle.offsetY;
+        const y = radius.value * Math.sin(angle) + svg.value.height / 2 + FINAL_CONFIG.value.style.circle.offsetY;
         circles.value.push({x,y, ...plot, color: plot.color ? plot.color : customPalette.value[i] ? customPalette.value[i] : palette[i], regAngle});
         angle += angleGap;
         regAngle += regAngleGap
@@ -303,7 +304,7 @@ function selectPlot(plot) {
 }
 
 function calcLinkWidth(plot) {
-    return plot.weight / maxWeight.value * relationConfig.value.style.links.maxWidth;
+    return plot.weight / maxWeight.value * FINAL_CONFIG.value.style.links.maxWidth;
 }
 
 const isFullscreen = ref(false)
@@ -320,18 +321,18 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="relationCircleChart" class="vue-ui-relation-circle" :style="`width:100%;background:${relationConfig.style.backgroundColor};text-align:center;${relationConfig.responsive ? 'height: 100%' : ''}`" :id="`relation_circle_${uid}`"> 
+    <div ref="relationCircleChart" class="vue-ui-relation-circle" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};text-align:center;${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" :id="`relation_circle_${uid}`"> 
 
-        <div ref="chartTitle" v-if="relationConfig.style.title.text" :style="`width:100%;background:${relationConfig.style.backgroundColor}`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
             <Title
                 :config="{
                     title: {
                         cy: 'relation-div-title',
-                        ...relationConfig.style.title
+                        ...FINAL_CONFIG.style.title
                     },
                     subtitle: {
                         cy: 'relation-div-subtitle',
-                        ...relationConfig.style.title.subtitle
+                        ...FINAL_CONFIG.style.title.subtitle
                     },
                 }"
             />
@@ -340,18 +341,18 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="relationConfig.userOptions.show && isDataset"
-            :backgroundColor="relationConfig.style.backgroundColor"
-            :color="relationConfig.style.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
+            :color="FINAL_CONFIG.style.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="relationConfig.userOptions.buttons.pdf"
-            :hasImg="relationConfig.userOptions.buttons.img"
-            :hasFullscreen="relationConfig.userOptions.buttons.img"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.img"
             :hasXls="false"
             :isFullscreen="isFullscreen"
-            :titles="{ ...relationConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="relationCircleChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -375,15 +376,15 @@ defineExpose({
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             class="relation-circle"
             width="100%"
-            :style="`user-select:none; background:${relationConfig.style.backgroundColor}`"
+            :style="`user-select:none; background:${FINAL_CONFIG.style.backgroundColor}`"
         >
             <circle
                 data-cy="relation-circle" 
                 :cx="(svg.width <= 0 ? 0.0001 : svg.width) / 2" 
-                :cy="(svg.height <= 0 ? 0.0001 : svg.height) / 2 + relationConfig.style.circle.offsetY" 
+                :cy="(svg.height <= 0 ? 0.0001 : svg.height) / 2 + FINAL_CONFIG.style.circle.offsetY" 
                 :r="(radius <= 0 ? 0.0001 : radius)" 
-                :stroke="relationConfig.style.circle.stroke"
-                :stroke-width="relationConfig.style.circle.strokeWidth"
+                :stroke="FINAL_CONFIG.style.circle.stroke"
+                :stroke-width="FINAL_CONFIG.style.circle.strokeWidth"
                 fill="transparent"
                 class="main-circle"
             />
@@ -394,7 +395,7 @@ defineExpose({
                     :style="getLineOpacityAndWidth(relation)"
                     :stroke="getLineColor(relation)" 
                     class="relation"
-                    :d="`M${relation.x1},${relation.y1} C${relation.x1},${relation.y1} ${svg.width/2},${svg.height/2 + relationConfig.style.circle.offsetY} ${relation.x2},${relation.y2}`"
+                    :d="`M${relation.x1},${relation.y1} C${relation.x1},${relation.y1} ${svg.width/2},${svg.height/2 + FINAL_CONFIG.style.circle.offsetY} ${relation.x2},${relation.y2}`"
                     fill="none"
                     :class="{'vue-ui-relation-circle-selected': selectedPlot.hasOwnProperty('id') && selectedRelations.includes(relation.id)}"
                     :stroke-width="calcLinkWidth(relation)"
@@ -426,9 +427,9 @@ defineExpose({
                 class="vue-ui-relation-circle-legend" 
                 transform-origin="start"
                 :font-weight="selectedPlot.id === plot.id ? '900' : '400'"
-                :style="`font-family:${relationConfig.style.fontFamily};${getTextOpacity(plot)}`"
-                :font-size="relationConfig.style.labels.fontSize"
-                :fill="relationConfig.style.labels.color"
+                :style="`font-family:${FINAL_CONFIG.style.fontFamily};${getTextOpacity(plot)}`"
+                :font-size="FINAL_CONFIG.style.labels.fontSize"
+                :fill="FINAL_CONFIG.style.labels.color"
             >
                 {{plot.label}}
             </text>
@@ -440,9 +441,9 @@ defineExpose({
                 :key="`plot_${i}`" 
                 :style="getCircleOpacity(plot)"
                 class="vue-ui-relation-circle-plot" 
-                :fill="relationConfig.style.plot.color" 
+                :fill="FINAL_CONFIG.style.plot.color" 
                 @click="selectPlot(plot)" 
-                :r="relationConfig.style.plot.radius" 
+                :r="FINAL_CONFIG.style.plot.radius" 
             />
             <slot name="svg" :svg="svg"/>
         </svg>
@@ -452,7 +453,7 @@ defineExpose({
             :config="{
                 type: 'relationCircle',
                 style: {
-                    backgroundColor: relationConfig.style.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
                     relationCircle: {
                         color: '#CCCCCC'
                     }

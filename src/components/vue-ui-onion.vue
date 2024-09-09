@@ -16,7 +16,6 @@ import {
     XMLNS
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -28,6 +27,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_onion: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -49,7 +51,6 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_onion);
 const details = ref(null);
 const step = ref(0);
 const isTooltip = ref(false);
@@ -59,10 +60,10 @@ const onionChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 
-const onionConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -79,16 +80,16 @@ const onionConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-onion_${uid.value}`,
-    fileName: onionConfig.value.style.chart.title.text || 'vue-ui-onion'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-onion'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(onionConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
 const mutableConfig = ref({
-    showTable: onionConfig.value.table.show,
-    showTooltip: onionConfig.value.style.chart.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 const svg = ref({
@@ -113,13 +114,13 @@ onMounted(() => {
         })
     }
 
-    if (onionConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const paddingRatio = 64 / 512;
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: onionChart.value,
-                title: onionConfig.value.style.chart.title.text ? chartTitle.value : null,
-                legend: onionConfig.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -194,7 +195,7 @@ const immutableDataset = computed(() => {
 
 const animDataset = ref(immutableDataset.value)
 
-const isAnimated = computed(() => onionConfig.value.useStartAnimation)
+const isAnimated = computed(() => FINAL_CONFIG.value.useStartAnimation)
 const raf = ref(null)
 const maxPercentage = computed(() => Math.max(...immutableDataset.value.map(ds => ds.percentage)))
 const isLoaded = ref(false);
@@ -240,11 +241,11 @@ function anim() {
 const legendConfig = computed(() => {
     return {
         cy: 'onion-div-legend',
-        backgroundColor: onionConfig.value.style.chart.legend.backgroundColor,
-        color: onionConfig.value.style.chart.legend.color,
-        fontSize: onionConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: onionConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 })
 
@@ -256,8 +257,8 @@ const onionSkin = computed(() => {
     const baseThickness = Math.min(drawableArea.value.width, drawableArea.value.height) / 2 / immutableDataset.value.length;
 
     return {
-        gutter: (baseThickness > onionConfig.value.style.chart.layout.maxThickness ? onionConfig.value.style.chart.layout.maxThickness : baseThickness) * onionConfig.value.style.chart.layout.gutter.width,
-        track: (baseThickness > onionConfig.value.style.chart.layout.maxThickness ? onionConfig.value.style.chart.layout.maxThickness : baseThickness) * onionConfig.value.style.chart.layout.track.width,
+        gutter: (baseThickness > FINAL_CONFIG.value.style.chart.layout.maxThickness ? FINAL_CONFIG.value.style.chart.layout.maxThickness : baseThickness) * FINAL_CONFIG.value.style.chart.layout.gutter.width,
+        track: (baseThickness > FINAL_CONFIG.value.style.chart.layout.maxThickness ? FINAL_CONFIG.value.style.chart.layout.maxThickness : baseThickness) * FINAL_CONFIG.value.style.chart.layout.track.width,
     }
 });
 
@@ -306,7 +307,7 @@ function getData() {
 }
 
 const table = computed(() => {
-    const head = [onionConfig.value.table.translations.serie, onionConfig.value.table.translations.percentage, onionConfig.value.table.translations.value];
+    const head = [FINAL_CONFIG.value.table.translations.serie, FINAL_CONFIG.value.table.translations.percentage, FINAL_CONFIG.value.table.translations.value];
 
     const body = mutableDataset.value.map(onion => {
         return [
@@ -324,23 +325,23 @@ const dataTable = computed(() => {
     const body = mutableDataset.value.map(ds => {
         return [
             `<span style="color:${ds.color}">⬤</span> ${ds.name}`,
-            `${Number(ds.percentage ?? 0).toFixed(onionConfig.value.table.td.roundingPercentage).toLocaleString()}%`,
-            `${ds.prefix || ''}${![null, undefined, NaN, 'NaN'].includes(ds.value) ? (ds.value.toFixed(onionConfig.value.table.td.roundingValue)).toLocaleString() : '-'}${ds.suffix || ''}`
+            `${Number(ds.percentage ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage).toLocaleString()}%`,
+            `${ds.prefix || ''}${![null, undefined, NaN, 'NaN'].includes(ds.value) ? (ds.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString() : '-'}${ds.suffix || ''}`
         ]
     })
 
     const config = {
         th: {
-            backgroundColor: onionConfig.value.table.th.backgroundColor,
-            color: onionConfig.value.table.th.color,
-            outline: onionConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: onionConfig.value.table.td.backgroundColor,
-            color: onionConfig.value.table.td.color,
-            outline: onionConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: onionConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     return { head, body, config, colNames: head}
@@ -348,12 +349,12 @@ const dataTable = computed(() => {
 
 function generateCsv() {
     nextTick(() => {
-        const title = [[onionConfig.value.style.chart.title.text], [onionConfig.value.style.chart.title.subtitle.text], [""]];
+        const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
         const head = table.value.head;
         const body = table.value.body;
         const tableXls = title.concat([head]).concat(body);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: onionConfig.value.style.chart.title.text || 'vue-ui-onion'})
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-onion'})
     });
 }
 
@@ -375,33 +376,33 @@ function useTooltip({ datapoint, seriesIndex, show = true }) {
         datapoint,
         seriesIndex: absoluteIndex,
         series: immutableDataset.value,
-        config: onionConfig.value
+        config: FINAL_CONFIG.value
     }
 
     isTooltip.value = show;
 
     let html = "";
 
-    const customFormat = onionConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
         seriesIndex: absoluteIndex,
         datapoint,
         series: immutableDataset.value,
-        config: onionConfig.value
+        config: FINAL_CONFIG.value
     }))) {
         tooltipContent.value = customFormat({
             seriesIndex: absoluteIndex,
             datapoint,
             series: immutableDataset.value,
-            config: onionConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
-        const showPercentage = onionConfig.value.style.chart.tooltip.showPercentage;
-        const showValue = onionConfig.value.style.chart.tooltip.showValue;
+        const showPercentage = FINAL_CONFIG.value.style.chart.tooltip.showPercentage;
+        const showValue = FINAL_CONFIG.value.style.chart.tooltip.showValue;
 
-        html += `<div style="width: 100%; border-bottom: 1px solid ${onionConfig.value.style.chart.tooltip.borderColor}; padding-bottom: 6px;margin-bottom:3px;display:flex;flex-direction:row;gap:3px;align-items:center"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg><span></span>${datapoint.name}</span></div>`;
-        html += `<div style="width:100%;text-align:left;"><b>${showPercentage ? dataLabel({p: '', v: datapoint.percentage, s: '%', r: onionConfig.value.style.chart.tooltip.roundingPercentage}) : ''}</b> ${showPercentage && showValue ? '(' : ''}${showValue ? dataLabel({ p: datapoint.prefix || '', v: datapoint.value, s: datapoint.suffix || '', r: onionConfig.value.style.chart.tooltip.roundingValue }) : ''}${showPercentage && showValue ? ')' : ''}</div>`
+        html += `<div style="width: 100%; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; padding-bottom: 6px;margin-bottom:3px;display:flex;flex-direction:row;gap:3px;align-items:center"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg><span></span>${datapoint.name}</span></div>`;
+        html += `<div style="width:100%;text-align:left;"><b>${showPercentage ? dataLabel({p: '', v: datapoint.percentage, s: '%', r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage}) : ''}</b> ${showPercentage && showValue ? '(' : ''}${showValue ? dataLabel({ p: datapoint.prefix || '', v: datapoint.value, s: datapoint.suffix || '', r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue }) : ''}${showPercentage && showValue ? ')' : ''}</div>`
 
         tooltipContent.value = `<div>${html}</div>`
     }
@@ -428,21 +429,21 @@ defineExpose({
 
 <template>
     <div 
-        :class="`vue-ui-onion ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${onionConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" 
+        :class="`vue-ui-onion ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" 
         ref="onionChart" 
         :id="`vue-ui-onion_${uid}`"
-        :style="`font-family:${onionConfig.style.fontFamily};width:100%; ${onionConfig.responsive ? 'height: 100%;' : ''} text-align:center;background:${onionConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
     >
-        <div ref="chartTitle" v-if="onionConfig.style.chart.title.text" :style="`width:100%;background:${onionConfig.style.chart.backgroundColor}`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`">
             <Title
                 :config="{
                     title: {
                         cy: 'onion-div-title',
-                        ...onionConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'onion-div-subtitle',
-                        ...onionConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     },
                 }"
             />
@@ -452,21 +453,21 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options${step}`"
-            v-if="onionConfig.userOptions.show && isDataset"
-            :backgroundColor="onionConfig.style.chart.backgroundColor"
-            :color="onionConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasTooltip="onionConfig.userOptions.buttons.tooltip && onionConfig.style.chart.tooltip.show"
-            :hasPdf="onionConfig.userOptions.buttons.pdf"
-            :hasImg="onionConfig.userOptions.buttons.img"
-            :hasXls="onionConfig.userOptions.buttons.csv"
-            :hasTable="onionConfig.userOptions.buttons.table"
-            :hasFullscreen="onionConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...onionConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="onionChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -496,7 +497,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 0.0001 : svg.width} ${svg.height <= 0 ? 0.0001 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${onionConfig.style.chart.backgroundColor};color:${onionConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 0.0001 : svg.width} ${svg.height <= 0 ? 0.0001 : svg.height}`" :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`" >
 
             <!-- GUTTERS -->
             <circle 
@@ -505,13 +506,13 @@ defineExpose({
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
                 :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
-                :stroke="onionConfig.style.chart.layout.gutter.color" 
+                :stroke="FINAL_CONFIG.style.chart.layout.gutter.color" 
                 :stroke-width="onionSkin.gutter" 
                 fill="none"
                 :stroke-dasharray="onion.path.bgDashArray"
                 :stroke-dashoffset="onion.path.fullOffset"
                 stroke-linecap="round"
-                :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': onionConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
+                :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
                 style="transform:rotate(-90deg);transform-origin: 50% 50%"
             />
             
@@ -526,7 +527,7 @@ defineExpose({
                 fill="none"
                 :stroke-dasharray="onion.path.dashArray"
                 :stroke-dashoffset="onion.path.dashOffset"
-                :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': onionConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
+                :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
                 stroke-linecap="round"
                 style="transform:rotate(-90deg);transform-origin: 50% 50%"
             />
@@ -534,11 +535,11 @@ defineExpose({
             <!-- GRADIENT -->
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / onionConfig.style.chart.gradientIntensity" />
+                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / FINAL_CONFIG.style.chart.gradientIntensity" />
                 </filter>
             </defs>
 
-            <g :filter="`url(#blur_${uid})`" v-if="onionConfig.style.chart.useGradient">
+            <g :filter="`url(#blur_${uid})`" v-if="FINAL_CONFIG.style.chart.useGradient">
                 <circle
                     v-for="(onion, i) in mutableDataset" 
                     :cx="drawableArea.centerX" 
@@ -579,18 +580,26 @@ defineExpose({
             />
 
             <!-- LABELS -->
-            <g v-if="onionConfig.style.chart.layout.labels.show">
-                <g v-for="(onion, i) in mutableDataset">                
+            <g v-if="FINAL_CONFIG.style.chart.layout.labels.show">
+                <g 
+                    v-for="(onion, i) in mutableDataset" 
+                    @mouseenter="useTooltip({
+                        datapoint: onion,
+                        show: true,
+                        seriesIndex: i,
+                    })"
+                    @mouseleave="selectedSerie = undefined; isTooltip = false"
+                >                
                     <text
                         v-if="!segregated.includes(onion.id)"
-                        :x="svg.width / 2 - onionSkin.gutter * 0.8 + onionConfig.style.chart.layout.labels.offsetX"
-                        :y="onion.labelY + onionConfig.style.chart.layout.labels.offsetY"
+                        :x="svg.width / 2 - onionSkin.gutter * 0.8 + FINAL_CONFIG.style.chart.layout.labels.offsetX"
+                        :y="onion.labelY + FINAL_CONFIG.style.chart.layout.labels.offsetY"
                         text-anchor="end"
-                        :font-size="onionConfig.style.chart.layout.labels.fontSize"
-                        :fill="onionConfig.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie === i ? onion.color:  onionConfig.style.chart.layout.labels.color"
-                        :font-weight="onionConfig.style.chart.layout.labels.bold ? 'bold' : 'normal'"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.fontSize"
+                        :fill="FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie === i ? onion.color:  FINAL_CONFIG.style.chart.layout.labels.color"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.labels.bold ? 'bold' : 'normal'"
                     >
-                        {{ onion.name ? onion.name + ': ' : '' }} {{ onionConfig.style.chart.layout.labels.percentage.show ? `${(onion.percentage || 0).toFixed(onionConfig.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !onionConfig.style.chart.layout.labels.percentage.show && onionConfig.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""}` : '' }` : `${onionConfig.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix || ""}${onion.value.toFixed(onionConfig.style.chart.layout.labels.roundingValue)}${onion.suffix || ""})` : '' : ''}` }}
+                        {{ onion.name ? onion.name + ': ' : '' }} {{ FINAL_CONFIG.style.chart.layout.labels.percentage.show ? `${(onion.percentage || 0).toFixed(FINAL_CONFIG.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !FINAL_CONFIG.style.chart.layout.labels.percentage.show && FINAL_CONFIG.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix || ""}${onion.value.toFixed(FINAL_CONFIG.style.chart.layout.labels.roundingValue)}${onion.suffix || ""}` : '' }` : `${FINAL_CONFIG.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix || ""}${onion.value.toFixed(FINAL_CONFIG.style.chart.layout.labels.roundingValue)}${onion.suffix || ""})` : '' : ''}` }}
                     </text>
                 </g>
             </g>
@@ -602,9 +611,9 @@ defineExpose({
             :config="{
                 type: 'onion',
                 style: {
-                    backgroundColor: onionConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     onion: {
-                        color: onionConfig.style.chart.layout.gutter.color
+                        color: FINAL_CONFIG.style.chart.layout.gutter.color
                     }
                 }
             }"
@@ -613,14 +622,14 @@ defineExpose({
         <!-- LEGEND AS DIV -->
         <div ref="chartLegend">
             <Legend
-                v-if="onionConfig.style.chart.legend.show"
+                v-if="FINAL_CONFIG.style.chart.legend.show"
                 :legendSet="immutableDataset"
                 :config="legendConfig"
                 @clickMarker="({legend}) => segregate(legend.id)"
             >
                 <template #item="{ legend }">
                     <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name ? legend.name + ': ' : '' }} {{ (legend.percentage || 0).toFixed(onionConfig.style.chart.legend.roundingPercentage) }}%
+                        {{ legend.name ? legend.name + ': ' : '' }} {{ (legend.percentage || 0).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage) }}%
                     </div>
                 </template>
             </Legend>
@@ -631,15 +640,15 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="onionConfig.style.chart.tooltip.backgroundColor"
-            :color="onionConfig.style.chart.tooltip.color"
-            :borderRadius="onionConfig.style.chart.tooltip.borderRadius"
-            :borderColor="onionConfig.style.chart.tooltip.borderColor"
-            :borderWidth="onionConfig.style.chart.tooltip.borderWidth"
-            :fontSize="onionConfig.style.chart.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :parent="onionChart"
             :content="tooltipContent"
-            :isCustom="isFunction(onionConfig.style.chart.tooltip.customFormat)"
+            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -654,12 +663,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             head: {
-                backgroundColor: onionConfig.style.chart.backgroundColor,
-                color: onionConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             body: {
-                backgroundColor: onionConfig.style.chart.backgroundColor,
-                color: onionConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
@@ -668,7 +677,7 @@ defineExpose({
                     :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${onionConfig.style.chart.title.text}${onionConfig.style.chart.title.subtitle.text ? ` : ${onionConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

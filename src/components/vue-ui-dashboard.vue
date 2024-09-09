@@ -1,30 +1,29 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import mainConfig from "../default_configs.json";
-import { convertConfigColors, treeShake } from '../lib';
 import pdf from '../pdf';
 import { useNestedProp } from "../useNestedProp";
+import { useConfig } from '../useConfig';
 
 // TODO: prevent default on all chart interactions involving mouse movements
 // TODO: find a way to make height of each item fit the content
+
+const { vue_ui_dashboard: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     dataset: Array,
     config: Object
 });
 
-const defaultConfig = ref(mainConfig.vue_ui_dashboard);
-
-const dashboardConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
 });
 
 const uid = ref(`vue-ui-dashboard-${Math.random()}`);
 
-const isLocked = ref(dashboardConfig.value.locked);
+const isLocked = ref(FINAL_CONFIG.value.locked);
 
 function toggleLock() {
     isLocked.value = !isLocked.value;
@@ -253,19 +252,19 @@ function onTouchEnd() {
 };
 
 const itemBorder = computed(() => {
-    return dashboardConfig.value.style.item.borderColor;
+    return FINAL_CONFIG.value.style.item.borderColor;
 });
 const handleColor = computed(() => {
-    return dashboardConfig.value.style.resizeHandles.backgroundColor;
+    return FINAL_CONFIG.value.style.resizeHandles.backgroundColor;
 });
 const aspectRatio = computed(() => {
-    return dashboardConfig.value.style.board.aspectRatio;
+    return FINAL_CONFIG.value.style.board.aspectRatio;
 });
 const boardColor = computed(() => {
-    return dashboardConfig.value.style.board.backgroundColor;
+    return FINAL_CONFIG.value.style.board.backgroundColor;
 })
 const borderBoard = computed(() => {
-    return dashboardConfig.value.style.board.border;
+    return FINAL_CONFIG.value.style.board.border;
 })
 
 function getItemsPositions() {
@@ -282,9 +281,9 @@ defineExpose({
 
 <template>
     <div>
-        <div data-html2canvas-ignore style="width: 100%; display:flex; justify-content: end;" v-if="dashboardConfig.allowPrint">
-            <button class="vue-ui-dashboard-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${dashboardConfig.style.board.color}`">
-                <svg class="vue-ui-dashboard-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="dashboardConfig.style.board.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <div data-html2canvas-ignore style="width: 100%; display:flex; justify-content: end;" v-if="FINAL_CONFIG.allowPrint">
+            <button class="vue-ui-dashboard-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${FINAL_CONFIG.style.board.color}`">
+                <svg class="vue-ui-dashboard-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="FINAL_CONFIG.style.board.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <path d="M18 16v.01" />
                     <path d="M6 16v.01" />
@@ -303,7 +302,7 @@ defineExpose({
                 @mouseup="stopDragResize"
                 @touchmove="onTouchMove"
                 @touchend="onTouchEnd"
-                :style="`background:${dashboardConfig.style.board.backgroundColor}`"
+                :style="`background:${FINAL_CONFIG.style.board.backgroundColor}`"
             >
                 <div class="vue-ui-dashboard-grid"></div>
                 <div
@@ -318,7 +317,7 @@ defineExpose({
                         cursor: 'move',
                         boxShadow: changeIndex === index ? '0 6px 12px -3px rgba(0,0,0,0.3)' : '',
                         zIndex: changeIndex === index ? '1' : '0',
-                        backgroundColor: dashboardConfig.style.item.backgroundColor
+                        backgroundColor: FINAL_CONFIG.style.item.backgroundColor
                     }"
                     @mousedown="startDrag(index)"
                     @touchstart="onTouchStart(index)"

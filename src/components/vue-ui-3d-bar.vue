@@ -20,7 +20,6 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -29,6 +28,9 @@ import DataTable from "../atoms/DataTable.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_3d_bar: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -52,15 +54,14 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_3d_bar);
 const details = ref(null);
 const bar3dChart = ref(null);
 const selectionIsFixed = ref(false);
 
-const barConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -77,15 +78,15 @@ const barConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `3d_bar_${uid.value}`,
-    fileName: barConfig.value.style.chart.title.text || 'vue-ui-3d-bar'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-3d-bar'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(barConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
 const mutableConfig = ref({
-    showTable: barConfig.value.table.show
+    showTable: FINAL_CONFIG.value.table.show
 });
 
 const hasStack = computed(() => {
@@ -94,14 +95,14 @@ const hasStack = computed(() => {
 
 const svg = computed(() => {
     return {
-        height: barConfig.value.style.chart.box.dimensions.height,
-        width: barConfig.value.style.chart.box.dimensions.width,
-        absoluteWidth: barConfig.value.style.chart.box.dimensions.width * (hasStack.value ? 2 : 1 ),
-        top: barConfig.value.style.chart.box.dimensions.top,
-        bottom: barConfig.value.style.chart.box.dimensions.bottom,
-        left: barConfig.value.style.chart.box.dimensions.left,
-        right: barConfig.value.style.chart.box.dimensions.right,
-        perspective: barConfig.value.style.chart.box.dimensions.perspective
+        height: FINAL_CONFIG.value.style.chart.box.dimensions.height,
+        width: FINAL_CONFIG.value.style.chart.box.dimensions.width,
+        absoluteWidth: FINAL_CONFIG.value.style.chart.box.dimensions.width * (hasStack.value ? 2 : 1 ),
+        top: FINAL_CONFIG.value.style.chart.box.dimensions.top,
+        bottom: FINAL_CONFIG.value.style.chart.box.dimensions.bottom,
+        left: FINAL_CONFIG.value.style.chart.box.dimensions.left,
+        right: FINAL_CONFIG.value.style.chart.box.dimensions.right,
+        perspective: FINAL_CONFIG.value.style.chart.box.dimensions.perspective
     }
 });
 
@@ -145,7 +146,7 @@ const box = computed(() => {
     }
 });
 
-const activeValue = ref(barConfig.value.style.chart.animation.use ? 0 : props.dataset.percentage);
+const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : props.dataset.percentage);
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -198,8 +199,8 @@ onMounted(() => {
     }
 
     let acceleration = 0;
-    let speed = barConfig.value.style.chart.animation.speed;
-    let incr = (0.005) * barConfig.value.style.chart.animation.acceleration;
+    let speed = FINAL_CONFIG.value.style.chart.animation.speed;
+    let incr = (0.005) * FINAL_CONFIG.value.style.chart.animation.acceleration;
     function animate() {
         activeValue.value += speed + acceleration;
         acceleration += incr;
@@ -210,7 +211,7 @@ onMounted(() => {
         }
     }
 
-    if(barConfig.value.style.chart.animation.use) {
+    if(FINAL_CONFIG.value.style.chart.animation.use) {
         activeValue.value = 0;
         animate()
     }
@@ -415,51 +416,51 @@ function generateCsv() {
                 h.name
             ],[table.value.body[i]], [isNaN(table.value.body[i] / total) ? '-' : table.value.body[i] / total * 100]]
         });
-        const tableXls = [[barConfig.value.style.chart.title.text],[barConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: barConfig.value.style.chart.title.text || "vue-ui-3d-bar" })
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-3d-bar" })
     });
 }
 
 const dataTable = computed(() => {
     const total = stack.value.map(ds => ds.value).reduce((a, b) => a + b, 0);
     const head = [
-        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`, dataLabel({p: barConfig.value.style.chart.legend.prefix, v: total, s: barConfig.value.style.chart.legend.suffix, r: barConfig.value.table.td.roundingValue}),
+        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`, dataLabel({p: FINAL_CONFIG.value.style.chart.legend.prefix, v: total, s: FINAL_CONFIG.value.style.chart.legend.suffix, r: FINAL_CONFIG.value.table.td.roundingValue}),
         '100%'
     ];
 
     const body = table.value.head.map((h,i) => {
-        const label = dataLabel({p: barConfig.value.style.chart.legend.prefix, v: table.value.body[i], s: barConfig.value.style.chart.legend.suffix, r: barConfig.value.table.td.roundingValue});
+        const label = dataLabel({p: FINAL_CONFIG.value.style.chart.legend.prefix, v: table.value.body[i], s: FINAL_CONFIG.value.style.chart.legend.suffix, r: FINAL_CONFIG.value.table.td.roundingValue});
         return [
             {
                 color: h.color,
                 name: h.name
             },
             label,
-            isNaN(table.value.body[i] / total) ? "-" : (table.value.body[i] / total * 100).toFixed(barConfig.value.table.td.roundingPercentage) + '%'
+            isNaN(table.value.body[i] / total) ? "-" : (table.value.body[i] / total * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
         ]
     });
 
     const config = {
         th: {
-            backgroundColor: barConfig.value.table.th.backgroundColor,
-            color: barConfig.value.table.th.color,
-            outline: barConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: barConfig.value.table.td.backgroundColor,
-            color: barConfig.value.table.td.color,
-            outline: barConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: barConfig.value.table.responsiveBreakpoint,
-        shape: barConfig.value.style.shape === 'tube' ? 'circle' : 'square'
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+        shape: FINAL_CONFIG.value.style.shape === 'tube' ? 'circle' : 'square'
     }
 
     const colNames = [
-        barConfig.value.table.columnNames.series,
-        barConfig.value.table.columnNames.value,
-        barConfig.value.table.columnNames.percentage
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.percentage
     ]
 
     return {
@@ -486,19 +487,19 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="bar3dChart" :class="`vue-ui-3d-bar`" :style="`font-family:${barConfig.style.fontFamily};width:100%; text-align:center;background:${barConfig.style.chart.backgroundColor}`" :id="`3d_bar_${uid}`">
+    <div ref="bar3dChart" :class="`vue-ui-3d-bar`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`3d_bar_${uid}`">
 
-        <div v-if="barConfig.style.chart.title.text" :style="`width:100%;background:${barConfig.style.chart.backgroundColor}`">
+        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
                     title: {
                         cy: '3dBar-div-title',
-                        ...barConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: '3dBar-div-subtitle',
-                        ...barConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     }
                 }"
             />
@@ -507,18 +508,18 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
-            v-if="barConfig.userOptions.show && isDataset"
-            :backgroundColor="barConfig.style.chart.backgroundColor"
-            :color="barConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="barConfig.userOptions.buttons.pdf"
-            :hasTable="!!hasStack && barConfig.userOptions.buttons.table"
-            :hasXls="!!hasStack && barConfig.userOptions.buttons.csv"
-            :hasImg="barConfig.userOptions.buttons.img"
-            :hasFullscreen="barConfig.userOptions.buttons.fullscreen"
-            :titles="{ ...barConfig.userOptions.buttonTitles }"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasTable="!!hasStack && FINAL_CONFIG.userOptions.buttons.table"
+            :hasXls="!!hasStack && FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="bar3dChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -543,26 +544,26 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="3d-bar-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${barConfig.style.chart.backgroundColor};color:${barConfig.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="3d-bar-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
 
             <!-- DEFS -->
             <defs>
                 <radialGradient :id="`gradient_top${uid}`">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
-                    <stop offset="100%" :stop-color="`${barConfig.style.chart.bar.color}`" />
+                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
+                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}`" />
                 </radialGradient>
                 <radialGradient :id="`gradient_left${uid}`">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
-                    <stop offset="100%" :stop-color="`${barConfig.style.chart.bar.color}33`" />
+                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
+                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}33`" />
                 </radialGradient>
                 <radialGradient :id="`gradient_right${uid}`">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
-                    <stop offset="100%" :stop-color="`${barConfig.style.chart.bar.color}33`" />
+                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
+                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}33`" />
                 </radialGradient>
                 <linearGradient :id="`gradient_tube_body${uid}`" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" :stop-color="`${barConfig.style.chart.bar.color}`"/>
-                    <stop offset="75%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`"/>
-                    <stop offset="100%" :stop-color="`${barConfig.style.chart.bar.color}66`"/>
+                    <stop offset="0%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}`"/>
+                    <stop offset="75%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`"/>
+                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}66`"/>
                 </linearGradient>
             </defs>
 
@@ -587,38 +588,38 @@ defineExpose({
             </defs>
 
             <text
-                v-if="barConfig.style.chart.dataLabel.show && ![null, undefined].includes(props.dataset.percentage) && [null, undefined].includes(props.dataset.series)"
+                v-if="FINAL_CONFIG.style.chart.dataLabel.show && ![null, undefined].includes(props.dataset.percentage) && [null, undefined].includes(props.dataset.series)"
                 :x="svg.width / 2"
-                :y="svg.top - barConfig.style.chart.dataLabel.fontSize / 2"
-                :font-size="barConfig.style.chart.dataLabel.fontSize"
-                :font-weight="barConfig.style.chart.dataLabel.bold ? 'bold': 'normal'"
-                :fill="barConfig.style.chart.dataLabel.color"
+                :y="svg.top - FINAL_CONFIG.style.chart.dataLabel.fontSize / 2"
+                :font-size="FINAL_CONFIG.style.chart.dataLabel.fontSize"
+                :font-weight="FINAL_CONFIG.style.chart.dataLabel.bold ? 'bold': 'normal'"
+                :fill="FINAL_CONFIG.style.chart.dataLabel.color"
                 text-anchor="middle"
             >
-                {{Number((isNaN(activeValue) ? 0 : activeValue).toFixed(barConfig.style.chart.dataLabel.rounding)).toLocaleString() }} %
+                {{Number((isNaN(activeValue) ? 0 : activeValue).toFixed(FINAL_CONFIG.style.chart.dataLabel.rounding)).toLocaleString() }} %
             </text>
             
             <!-- FIX KILLER -->
             <g v-if="selectionIsFixed" @click="selectionIsFixed = false; selectedSerie = null" data-html2canvas-ignore style="cursor:pointer">
                 <rect :x="svg.width / 2 - 6" :y="svg.top - 20" :height="12" :width="12" fill="transparent"/>
-                <path :d="`M${svg.width / 2 - 6},${svg.top - 20} ${svg.width / 2 + 6},${svg.top - 9}`" :stroke="barConfig.style.chart.color" stroke-linecap="round" stroke-width="1"/>
-                <path :d="`M${svg.width / 2 + 6},${svg.top - 20} ${svg.width / 2 - 6},${svg.top - 9}`" :stroke="barConfig.style.chart.color" stroke-linecap="round" stroke-width="1"/>
+                <path :d="`M${svg.width / 2 - 6},${svg.top - 20} ${svg.width / 2 + 6},${svg.top - 9}`" :stroke="FINAL_CONFIG.style.chart.color" stroke-linecap="round" stroke-width="1"/>
+                <path :d="`M${svg.width / 2 + 6},${svg.top - 20} ${svg.width / 2 - 6},${svg.top - 9}`" :stroke="FINAL_CONFIG.style.chart.color" stroke-linecap="round" stroke-width="1"/>
             </g>
 
-            <g v-if="!barConfig.style.shape || barConfig.style.shape === 'bar'">            
+            <g v-if="!FINAL_CONFIG.style.shape || FINAL_CONFIG.style.shape === 'bar'">            
                 <!-- BOX SKELETON -->
                 <g v-if="!hasStack">
-                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.right" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.left" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.side" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.topSides" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.right" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.left" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.side" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.topSides" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
                 </g>
 
                 <!-- FILL BOX -->
                 <g v-if="!hasStack">
-                    <path :d="fill.right" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_right${uid})`"/>
-                    <path :d="fill.left" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_left${uid})`"/>
-                    <path :d="fill.top" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
+                    <path :d="fill.right" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_right${uid})`"/>
+                    <path :d="fill.left" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_left${uid})`"/>
+                    <path :d="fill.top" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
                 </g>
                 
                 <g v-if="hasStack">
@@ -631,18 +632,18 @@ defineExpose({
                         <path :d="`M ${bar.fill.apexTop.x},${bar.fill.apexTop.y} ${bar.fill.apexBottom.x},${bar.fill.apexBottom.y}`" :stroke="`#FFFFFF`" stroke-width="0.5" stroke-linecap="round"/> 
                     </g>
                     <g v-for="(bar, i) in stack">
-                        <path v-if="i !== stack.length - 1" :d="bar.fill.liningTopShade" :stroke="barConfig.style.chart.bar.shadeColor" stroke-width="0.5" stroke-linecap="round" fill="none" style="pointer-events: none;" />
+                        <path v-if="i !== stack.length - 1" :d="bar.fill.liningTopShade" :stroke="FINAL_CONFIG.style.chart.bar.shadeColor" stroke-width="0.5" stroke-linecap="round" fill="none" style="pointer-events: none;" />
                     </g>
                     <!-- LEGEND -->
-                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > barConfig.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
+                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > FINAL_CONFIG.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
 
-                        <path :stroke="barConfig.style.chart.color" stroke-dasharray="1" stroke-width="0.5" stroke-linecap="round" :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x + 20},${bar.fill.sidePointer.y}`"/>
-                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
-                        <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
-                            <div v-if="barConfig.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${barConfig.style.chart.legend.fontSize}px; text-align:left; line-height: ${barConfig.style.chart.legend.fontSize}px; color:${barConfig.style.chart.legend.color}`">
-                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
+                        <path :stroke="FINAL_CONFIG.style.chart.color" stroke-dasharray="1" stroke-width="0.5" stroke-linecap="round" :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x + 20},${bar.fill.sidePointer.y}`"/>
+                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
+                        <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="FINAL_CONFIG.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
+                            <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}`">
+                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: FINAL_CONFIG.style.chart.legend.prefix, v: bar.value, s: FINAL_CONFIG.style.chart.legend.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue})}})
                             </div>
-                            <slot name="legend" v-bind="{ datapoint: bar, config: barConfig, dataset: stack}"/>
+                            <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
                         </foreignObject>
 
                         <!-- BREAKDOWN DONUT -->
@@ -667,20 +668,20 @@ defineExpose({
                                 :data-cy="`donut-arc-${j}`"
                                 :d="arc.arcSlice" 
                                 :fill="`${arc.color}`"
-                                :stroke="barConfig.style.chart.backgroundColor"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                                 :stroke-width="1"
                             />
 
                             <!-- DONUT HOLLOW -->
                             <defs>
                                 <radialGradient :id="`hollow_gradient_${uid}`">
-                                    <stop offset="0%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
+                                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
                                     <stop offset="77%" :stop-color="'#FFFFFF' + '20'" />
-                                    <stop offset="100%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
+                                    <stop offset="100%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
                                 </radialGradient>
                             </defs>
                             <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="28" :fill="`url(#hollow_gradient_${uid})`"/>
-                            <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="14" :fill="barConfig.style.chart.backgroundColor"/>
+                            <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="14" :fill="FINAL_CONFIG.style.chart.backgroundColor"/>
 
                             <!-- DONUT DATALABELS -->
                             <g v-for="(arc, i) in bar.fill.donut">
@@ -689,17 +690,17 @@ defineExpose({
                                         :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
                                         :x="calcMarkerOffsetX(arc, true, 2).x"
                                         :y="calcMarkerOffsetY(arc, 12, 12)"
-                                        :fill="barConfig.style.chart.legend.color"
-                                        :font-size="barConfig.style.chart.legend.fontSize / 1.5"
+                                        :fill="FINAL_CONFIG.style.chart.legend.color"
+                                        :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
                                     >
-                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ dataLabel({p: barConfig.style.chart.legend.prefix, v: arc.value, s: barConfig.style.chart.legend.suffix, rounding: barConfig.style.chart.legend.roundingValue}) }})
+                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ dataLabel({p: FINAL_CONFIG.style.chart.legend.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.legend.suffix, rounding: FINAL_CONFIG.style.chart.legend.roundingValue}) }})
                                     </text>
                                     <text
                                         :text-anchor="calcMarkerOffsetX(arc).anchor"
                                         :x="calcMarkerOffsetX(arc, true, 2).x"
-                                        :y="calcMarkerOffsetY(arc, 12, 12) + barConfig.style.chart.legend.fontSize / 1.5"
-                                        :fill="barConfig.style.chart.legend.color"
-                                        :font-size="barConfig.style.chart.legend.fontSize / 1.5"
+                                        :y="calcMarkerOffsetY(arc, 12, 12) + FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                        :fill="FINAL_CONFIG.style.chart.legend.color"
+                                        :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
                                     >
                                         {{ arc.name }}
                                     </text>
@@ -715,7 +716,7 @@ defineExpose({
                                 :data-cy="`donut-arc-${j}`"
                                 :d="arc.arcSlice" 
                                 :fill="`${arc.color}`"
-                                :stroke="barConfig.style.chart.backgroundColor"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                                 :stroke-width="0.5"
                             />
                         </g>
@@ -723,16 +724,16 @@ defineExpose({
                 </g>
             </g>
 
-            <g v-if="barConfig.style.shape === 'tube'">
+            <g v-if="FINAL_CONFIG.style.shape === 'tube'">
                 <g v-if="!hasStack">
                     <!-- TUBE SKELETON -->
-                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeTop" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeLeft" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeRight" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="barConfig.style.chart.box.strokeDasharray" :d="box.tubeBottom" :stroke="barConfig.style.chart.box.stroke" :stroke-width="barConfig.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeTop" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeLeft" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeRight" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeBottom" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
                     <!-- FILL TUBE -->
-                    <path :d="fill.tubeTop" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
-                    <path :d="fill.tubeBody" :stroke="barConfig.style.chart.bar.stroke" :stroke-width="barConfig.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body${uid})`"/>
+                    <path :d="fill.tubeTop" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
+                    <path :d="fill.tubeBody" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body${uid})`"/>
                 </g>
 
                 <g v-if="hasStack">
@@ -756,14 +757,14 @@ defineExpose({
                         <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie" :d="bar.fill.tubeTop" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_top_${bar.id})`"/>
                     </g>
                     <!-- LEGEND -->
-                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > barConfig.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
-                        <path :stroke="barConfig.style.chart.color" stroke-dasharray="1" stroke-width="0.5" stroke-linecap="round" :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x + 20},${bar.fill.sidePointer.y}`"/>
-                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="barConfig.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
-                        <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - barConfig.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="barConfig.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
-                            <div v-if="barConfig.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${barConfig.style.chart.legend.fontSize}px; text-align:left; line-height: ${barConfig.style.chart.legend.fontSize}px; color:${barConfig.style.chart.legend.color}`">
-                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: barConfig.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: barConfig.style.chart.legend.prefix, v: bar.value, s: barConfig.style.chart.legend.suffix, r: barConfig.style.chart.legend.roundingValue})}})
+                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > FINAL_CONFIG.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
+                        <path :stroke="FINAL_CONFIG.style.chart.color" stroke-dasharray="1" stroke-width="0.5" stroke-linecap="round" :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x + 20},${bar.fill.sidePointer.y}`"/>
+                        <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
+                        <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="FINAL_CONFIG.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
+                            <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}`">
+                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: FINAL_CONFIG.style.chart.legend.prefix, v: bar.value, s: FINAL_CONFIG.style.chart.legend.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue})}})
                             </div>
-                            <slot name="legend" v-bind="{ datapoint: bar, config: barConfig, dataset: stack}"/>
+                            <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
                         </foreignObject>
 
                         <!-- BREAKDOWN DONUT -->
@@ -788,20 +789,20 @@ defineExpose({
                                 :data-cy="`donut-arc-${j}`"
                                 :d="arc.arcSlice" 
                                 :fill="`${arc.color}`"
-                                :stroke="barConfig.style.chart.backgroundColor"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                                 :stroke-width="1"
                             />
 
                             <!-- DONUT HOLLOW -->
                             <defs>
                                 <radialGradient :id="`hollow_gradient_${uid}`">
-                                    <stop offset="0%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
+                                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
                                     <stop offset="77%" :stop-color="'#FFFFFF' + '20'" />
-                                    <stop offset="100%" :stop-color="`${convertColorToHex(barConfig.style.chart.backgroundColor)}00`" />
+                                    <stop offset="100%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
                                 </radialGradient>
                             </defs>
                             <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="28" :fill="`url(#hollow_gradient_${uid})`"/>
-                            <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="14" :fill="barConfig.style.chart.backgroundColor"/>
+                            <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="14" :fill="FINAL_CONFIG.style.chart.backgroundColor"/>
 
                             <!-- DONUT DATALABELS -->
                             <g v-for="(arc, i) in bar.fill.donut">
@@ -810,17 +811,17 @@ defineExpose({
                                         :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
                                         :x="calcMarkerOffsetX(arc, true, 2).x"
                                         :y="calcMarkerOffsetY(arc, 12, 12)"
-                                        :fill="barConfig.style.chart.legend.color"
-                                        :font-size="barConfig.style.chart.legend.fontSize / 1.5"
+                                        :fill="FINAL_CONFIG.style.chart.legend.color"
+                                        :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
                                     >
-                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ dataLabel({p: barConfig.style.chart.legend.prefix, v: arc.value, s: barConfig.style.chart.legend.suffix, rounding: barConfig.style.chart.legend.roundingValue}) }})
+                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ dataLabel({p: FINAL_CONFIG.style.chart.legend.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.legend.suffix, rounding: FINAL_CONFIG.style.chart.legend.roundingValue}) }})
                                     </text>
                                     <text
                                         :text-anchor="calcMarkerOffsetX(arc).anchor"
                                         :x="calcMarkerOffsetX(arc, true, 2).x"
-                                        :y="calcMarkerOffsetY(arc, 12, 12) + barConfig.style.chart.legend.fontSize / 1.5"
-                                        :fill="barConfig.style.chart.legend.color"
-                                        :font-size="barConfig.style.chart.legend.fontSize / 1.5"
+                                        :y="calcMarkerOffsetY(arc, 12, 12) + FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                        :fill="FINAL_CONFIG.style.chart.legend.color"
+                                        :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
                                     >
                                         {{ arc.name }}
                                     </text>
@@ -836,7 +837,7 @@ defineExpose({
                                 :data-cy="`donut-arc-${j}`"
                                 :d="arc.arcSlice" 
                                 :fill="`${arc.color}`"
-                                :stroke="barConfig.style.chart.backgroundColor"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                                 :stroke-width="0.5"
                             />
                         </g>
@@ -852,7 +853,7 @@ defineExpose({
             :config="{
                 type: 'bar3d',
                 style: {
-                    backgroundColor: barConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     bar3d: {
                         color: '#CCCCCC'
                     }
@@ -865,12 +866,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: barConfig.style.chart.backgroundColor,
-                color: barConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
-                backgroundColor: barConfig.style.chart.backgroundColor,
-                color: barConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
@@ -879,7 +880,7 @@ defineExpose({
                     :head="dataTable.head" 
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${barConfig.style.chart.title.text}${barConfig.style.chart.title.subtitle.text ? ` : ${barConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

@@ -12,7 +12,6 @@ import {
     shiftHue,
     XMLNS
 } from "../lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -23,6 +22,9 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_mood_radar:  DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -53,15 +55,14 @@ onMounted(() => {
 })
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_mood_radar);
 const moodRadarChart = ref(null);
 const details = ref(null);
 const selectedKey = ref(null)
 
-const radarConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -77,11 +78,11 @@ const radarConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
-    fileName: radarConfig.value.style.chart.title.text || 'vue-ui-mood-radar'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-mood-radar'
 });
 
 const mutableConfig = ref({
-    showTable: radarConfig.value.table.show,
+    showTable: FINAL_CONFIG.value.table.show,
 });
 
 const svg = computed(() => {
@@ -126,7 +127,7 @@ const convertedDataset = computed(() => {
                 key,
                 value,
                 proportion: value / grandTotal.value,
-                color: radarConfig.value.style.chart.layout.smileys.colors[key]
+                color: FINAL_CONFIG.value.style.chart.layout.smileys.colors[key]
             };
         })
         .sort((a, b) => b.key - a.key);
@@ -168,11 +169,11 @@ const radar = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: "mood-radar-legend",
-        backgroundColor: radarConfig.value.style.chart.legend.backgroundColor,
-        color: radarConfig.value.style.chart.legend.color,
-        fontSize: radarConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: radarConfig.value.style.chart.legend.bold ? "bold" : "",
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? "bold" : "",
     };
 });
 
@@ -202,16 +203,16 @@ function generateCsv() {
                 h.name
             ],[table.value.body[i]], [isNaN(table.value.body[i] / grandTotal.value) ? '-' : table.value.body[i] / grandTotal.value * 100]]
         });
-        const tableXls = [[radarConfig.value.style.chart.title.text],[radarConfig.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: radarConfig.value.style.chart.title.text || "vue-ui-mood-radar"});
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-mood-radar"});
     });
 }
 
 const dataTable = computed(() => {
     const head = [
         ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
-        Number(grandTotal.value.toFixed(radarConfig.value.table.td.roundingValue)).toLocaleString(),
+        Number(grandTotal.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString(),
         '100%'
     ];
 
@@ -221,29 +222,29 @@ const dataTable = computed(() => {
                 color: h.color,
                 name: h.name
             },
-            table.value.body[i].toFixed(radarConfig.value.table.td.roundingValue),
-            isNaN(table.value.body[i] / grandTotal.value) ? "-" : (table.value.body[i] / grandTotal.value * 100).toFixed(radarConfig.value.table.td.roundingPercentage) + '%'
+            table.value.body[i].toFixed(FINAL_CONFIG.value.table.td.roundingValue),
+            isNaN(table.value.body[i] / grandTotal.value) ? "-" : (table.value.body[i] / grandTotal.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
         ]
     });
 
     const config = {
         th: {
-            backgroundColor: radarConfig.value.table.th.backgroundColor,
-            color: radarConfig.value.table.th.color,
-            outline: radarConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: radarConfig.value.table.td.backgroundColor,
-            color: radarConfig.value.table.td.color,
-            outline: radarConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: radarConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-        radarConfig.value.table.columnNames.series,
-        radarConfig.value.table.columnNames.value,
-        radarConfig.value.table.columnNames.percentage
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.percentage
     ]
 
     return {
@@ -278,19 +279,19 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-mood-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${radarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="moodRadarChart"
-        :id="`${uid}`" :style="`font-family:${radarConfig.style.fontFamily};width:100%; text-align:center;${!radarConfig.style.chart.title.text ? 'padding-top:36px' : ''
-            };background:${radarConfig.style.chart.backgroundColor}`">
-        <div v-if="radarConfig.style.chart.title.text"
-            :style="`width:100%;background:${radarConfig.style.chart.backgroundColor}`">
+    <div :class="`vue-ui-mood-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="moodRadarChart"
+        :id="`${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''
+            };background:${FINAL_CONFIG.style.chart.backgroundColor}`">
+        <div v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`">
             <Title :config="{
                 title: {
                     cy: 'mood-radar-title',
-                    ...radarConfig.style.chart.title
+                    ...FINAL_CONFIG.style.chart.title
                 },
                 subtitle: {
                     cy: 'mood-radar-subtitle',
-                    ...radarConfig.style.chart.title.subtitle
+                    ...FINAL_CONFIG.style.chart.title.subtitle
                 },
             }" />
         </div>
@@ -298,18 +299,18 @@ defineExpose({
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
-            v-if="radarConfig.userOptions.show && isDataset"
-            :backgroundColor="radarConfig.style.chart.backgroundColor"
-            :color="radarConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="radarConfig.userOptions.buttons.pdf"
-            :hasXls="radarConfig.userOptions.buttons.csv"
-            :hasImg="radarConfig.userOptions.buttons.img"
-            :hasTable="radarConfig.userOptions.buttons.table"
-            :hasFullscreen="radarConfig.userOptions.buttons.fullscreen"
-            :titles="{ ...radarConfig.userOptions.buttonTitles }"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="moodRadarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -336,73 +337,73 @@ defineExpose({
 
         <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"
         :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :style="`overflow:visible;background:${radarConfig.style.chart.backgroundColor};color:${radarConfig.style.chart.color}`">
+            :style="`overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
             <!-- DEFS -->
             <defs>
                 <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" :id="`mood_radar_gradient_${uid}`">
-                    <stop offset="0%" :stop-color="radarConfig.style.chart.layout.dataPolygon.color +
-                        opacity[radarConfig.style.chart.layout.dataPolygon.opacity]
+                    <stop offset="0%" :stop-color="FINAL_CONFIG.style.chart.layout.dataPolygon.color +
+                        opacity[FINAL_CONFIG.style.chart.layout.dataPolygon.opacity]
                         " />
                     <stop offset="100%" :stop-color="`${shiftHue(
-                        radarConfig.style.chart.layout.dataPolygon.color,
-                        radarConfig.style.chart.layout.dataPolygon.gradient.intensity / 100
-                    )}${opacity[radarConfig.style.chart.layout.dataPolygon.opacity]}`" />
+                        FINAL_CONFIG.style.chart.layout.dataPolygon.color,
+                        FINAL_CONFIG.style.chart.layout.dataPolygon.gradient.intensity / 100
+                    )}${opacity[FINAL_CONFIG.style.chart.layout.dataPolygon.opacity]}`" />
                 </radialGradient>
             </defs>
 
             <!-- GRID -->
             <!-- RADIAL LINES -->
             <line v-for="line in outerPolygon.coordinates" :x1="svg.width / 2" :y1="svg.height / 2" :x2="line.x"
-                :y2="line.y" :stroke="radarConfig.style.chart.layout.grid.stroke"
-                :stroke-width="radarConfig.style.chart.layout.grid.strokeWidth" />
+                :y2="line.y" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" />
             <!-- OUTER POLYGON -->
-            <path :d="outerPolygon.path" fill="none" :stroke="radarConfig.style.chart.layout.outerPolygon.stroke"
-                :stroke-width="radarConfig.style.chart.layout.outerPolygon.strokeWidth" stroke-linejoin="round"
+            <path :d="outerPolygon.path" fill="none" :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" stroke-linejoin="round"
                 stroke-linecap="round" />
 
 
             <!-- ICON 5 -->
-            <path fill="none" :stroke="radarConfig.style.chart.layout.smileys.colors['5']" stroke-width="1"
+            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['5']" stroke-width="1"
                 stroke-linecap="round"
                 d="M119 25A1 1 0 00137 25 1 1 0 00119 25M123 26C124 33 132 33 133 26L123 26M123 22A1 1 0 00126 22 1 1 0 00123 22M130 22A1 1 0 00133 22 1 1 0 00130 22" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 5" @mouseleave="selectedKey = null" cx="128" cy="25" r="20" :fill="selectedKey === 5 ? radarConfig.style.chart.layout.smileys.colors['5']+'33' : 'transparent'"/>
+                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 5" @mouseleave="selectedKey = null" cx="128" cy="25" r="20" :fill="selectedKey === 5 ? FINAL_CONFIG.style.chart.layout.smileys.colors['5']+'33' : 'transparent'"/>
 
             <!-- ICON 4 -->
-            <path fill="none" :stroke="radarConfig.style.chart.layout.smileys.colors['4']" stroke-width="1"
+            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['4']" stroke-width="1"
                 stroke-linecap="round"
                 d="M218 95A1 1 0 00236 95 1 1 0 00218 95M222 97C225 99 229 99 232 97M222 92A1 1 0 00225 92 1 1 0 00222 92M229 92A1 1 0 00232 92 1 1 0 00229 92" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 4" @mouseleave="selectedKey = null"  cx="227" cy="95.5" r="20" :fill="selectedKey === 4 ? radarConfig.style.chart.layout.smileys.colors['4']+'33' : 'transparent'"/>
+                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 4" @mouseleave="selectedKey = null"  cx="227" cy="95.5" r="20" :fill="selectedKey === 4 ? FINAL_CONFIG.style.chart.layout.smileys.colors['4']+'33' : 'transparent'"/>
 
             <!-- ICON 3 -->
-            <path fill="none" :stroke="radarConfig.style.chart.layout.smileys.colors['3']" stroke-width="1"
+            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['3']" stroke-width="1"
                 stroke-linecap="round"
                 d="M181 213A1 1 0 00199 213 1 1 0 00181 213M185 210A1 1 0 00188 210 1 1 0 00185 210M192 210A1 1 0 00195 210 1 1 0 00192 210M185 215 195 215" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 3" @mouseleave="selectedKey = null"  cx="190" cy="213.5" r="20" :fill="selectedKey === 3 ? radarConfig.style.chart.layout.smileys.colors['3']+'33' : 'transparent'"/>
+                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 3" @mouseleave="selectedKey = null"  cx="190" cy="213.5" r="20" :fill="selectedKey === 3 ? FINAL_CONFIG.style.chart.layout.smileys.colors['3']+'33' : 'transparent'"/>
 
 
             <!-- ICON 2 -->
-            <path fill="none" :stroke="radarConfig.style.chart.layout.smileys.colors['2']" stroke-width="1"
+            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['2']" stroke-width="1"
                 stroke-linecap="round"
                 d="M56 213A1 1 0 0074 213 1 1 0 0056 213M60 216C63 214 67 214 70 216M60 210A1 1 0 0063 210 1 1 0 0060 210M67 210A1 1 0 0070 210 1 1 0 0067 210" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 2" @mouseleave="selectedKey = null"  cx="65" cy="213.5" r="20" :fill="selectedKey === 2 ? radarConfig.style.chart.layout.smileys.colors['2']+'33' :  'transparent'"/>
+                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 2" @mouseleave="selectedKey = null"  cx="65" cy="213.5" r="20" :fill="selectedKey === 2 ? FINAL_CONFIG.style.chart.layout.smileys.colors['2']+'33' :  'transparent'"/>
 
             <!-- ICON 1 -->
-            <path fill="none" :stroke="radarConfig.style.chart.layout.smileys.colors['1']" stroke-width="1"
+            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['1']" stroke-width="1"
                 stroke-linecap="round"
                 d="M20 96A1 1 0 0038 96 1 1 0 0020 96M24 100C25 95 33 95 34 100L24 100M24 93A1 1 0 0027 93 1 1 0 0024 93M31 93A1 1 0 0034 93 1 1 0 0031 93" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 1" @mouseleave="selectedKey = null"  cx="29" cy="95.5" r="20" :fill="selectedKey === 1 ? radarConfig.style.chart.layout.smileys.colors['1']+'33' : 'transparent'"/>
+                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 1" @mouseleave="selectedKey = null"  cx="29" cy="95.5" r="20" :fill="selectedKey === 1 ? FINAL_CONFIG.style.chart.layout.smileys.colors['1']+'33' : 'transparent'"/>
 
-            <path :d="makePath(radar.map((r) => r.plots))" :stroke="radarConfig.style.chart.layout.dataPolygon.stroke"
-                :stroke-width="radarConfig.style.chart.layout.dataPolygon.strokeWidth" stroke-linecap="round"
-                stroke-linejoin="round" :fill="radarConfig.style.chart.layout.dataPolygon.gradient.show
+            <path :d="makePath(radar.map((r) => r.plots))" :stroke="FINAL_CONFIG.style.chart.layout.dataPolygon.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth" stroke-linecap="round"
+                stroke-linejoin="round" :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.gradient.show
                         ? `url(#mood_radar_gradient_${uid})`
-                        : radarConfig.style.chart.layout.dataPolygon.color +
-                        opacity[radarConfig.style.chart.layout.dataPolygon.opacity]
+                        : FINAL_CONFIG.style.chart.layout.dataPolygon.color +
+                        opacity[FINAL_CONFIG.style.chart.layout.dataPolygon.opacity]
             " />
 
                 <g v-for="(plot, i) in radar.map(r => r.plots)" class="vue-ui-mood-radar-trap" :style="`opacity:${selectedKey == plot.key ? '1' : '0'}`">
@@ -412,30 +413,30 @@ defineExpose({
                         :y1="plot.y"
                         :x2="128"
                         :y2="128"
-                        :stroke="radarConfig.style.chart.layout.smileys.colors[plot.key]"
+                        :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]"
                     />
-                    <circle  :cx="plot.x" :cy="plot.y" :fill="radarConfig.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="radarConfig.style.chart.backgroundColor" :stroke-width="0.5" />
-                    <circle  :cx="128" :cy="128" :fill="radarConfig.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="radarConfig.style.chart.backgroundColor" :stroke-width="0.5" />
+                    <circle  :cx="plot.x" :cy="plot.y" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
+                    <circle  :cx="128" :cy="128" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
                     <text 
 
                         :x="128"
                         :y="['5', 5].includes(plot.key) ? 145 : 120"
-                        :fill="radarConfig.style.chart.layout.dataLabel.color"
+                        :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"
                         font-size="12"
                         text-anchor="middle"
-                        :font-weight="radarConfig.style.chart.layout.dataLabel.bold ? 'bold' : 'normal'"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.dataLabel.bold ? 'bold' : 'normal'"
                     >
-                        {{ Number(plot.value.toFixed(radarConfig.style.chart.layout.dataLabel.roundingValue)).toLocaleString() }}
+                        {{ Number(plot.value.toFixed(FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue)).toLocaleString() }}
                     </text>
                     <text 
 
                         :x="128"
                         :y="['5', 5].includes(plot.key) ? 163 : 102"
-                        :fill="radarConfig.style.chart.layout.dataLabel.color"
+                        :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"
                         font-size="12"
                         text-anchor="middle"
                     >
-                        ({{ Number((plot.value / grandTotal * 100).toFixed(radarConfig.style.chart.layout.dataLabel.roundingPercentage)).toLocaleString() }}%)
+                        ({{ Number((plot.value / grandTotal * 100).toFixed(FINAL_CONFIG.style.chart.layout.dataLabel.roundingPercentage)).toLocaleString() }}%)
                     </text>
                 </g>
                 <slot name="svg" :svg="svg"/>
@@ -446,7 +447,7 @@ defineExpose({
             :config="{
                 type: 'radar',
                 style: {
-                    backgroundColor: radarConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     radar: {
                         grid: {
                             color: '#CCCCCC'
@@ -460,7 +461,7 @@ defineExpose({
         />
 
         <!-- LEGEND AS DIV -->
-        <Legend v-if="radarConfig.style.chart.legend.show" :legendSet="convertedDataset" :config="legendConfig"
+        <Legend v-if="FINAL_CONFIG.style.chart.legend.show" :legendSet="convertedDataset" :config="legendConfig"
             style="display: flex; row-gap: 6px">
             <template #item="{ legend, index }">
                 <div @click="() => selectKey(legend.key)" style="
@@ -471,18 +472,18 @@ defineExpose({
             margin: 3px 0;
           ">
                     <BaseIcon :strokeWidth="1" v-if="legend.key == 1" name="moodSad"
-                        :stroke="radarConfig.style.chart.layout.smileys.colors[legend.key]" />
+                        :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
                     <BaseIcon :strokeWidth="1" v-if="legend.key == 2" name="moodFlat"
-                        :stroke="radarConfig.style.chart.layout.smileys.colors[legend.key]" />
+                        :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
                     <BaseIcon :strokeWidth="1" v-if="legend.key == 3" name="moodNeutral"
-                        :stroke="radarConfig.style.chart.layout.smileys.colors[legend.key]" />
+                        :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
                     <BaseIcon :strokeWidth="1" v-if="legend.key == 4" name="smiley"
-                        :stroke="radarConfig.style.chart.layout.smileys.colors[legend.key]" />
+                        :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
                     <BaseIcon :strokeWidth="1" v-if="legend.key == 5" name="moodHappy"
-                        :stroke="radarConfig.style.chart.layout.smileys.colors[legend.key]" />
+                        :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
                     <span style="font-weight: bold">{{ legend.value }}</span> ({{
                         (isNaN(legend.proportion) ? 0 : legend.proportion * 100).toFixed(
-                            radarConfig.style.chart.legend.roundingPercentage
+                            FINAL_CONFIG.style.chart.legend.roundingPercentage
                         )
                     }}%)
                 </div>
@@ -496,12 +497,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: radarConfig.style.chart.backgroundColor,
-                color: radarConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
-                backgroundColor: radarConfig.style.chart.backgroundColor,
-                color: radarConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
@@ -510,7 +511,7 @@ defineExpose({
                     :head="dataTable.head" 
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${radarConfig.style.chart.title.text}${radarConfig.style.chart.title.subtitle.text ? ` : ${radarConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{th}">

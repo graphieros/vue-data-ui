@@ -1,13 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useNestedProp } from "../useNestedProp";
-import mainConfig from "../default_configs.json";
-import { XMLNS, createUid, themePalettes, translateSize } from "../lib";
+import { XMLNS, createUid, translateSize } from "../lib";
 import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
 import { Timer } from "../timer";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import Title from "../atoms/Title.vue";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_timer: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -20,7 +22,6 @@ const props = defineProps({
 
 const emit = defineEmits(['start', 'pause', 'reset', 'restart', 'lap']);
 
-const defaultConfig = ref(mainConfig.vue_ui_timer);
 const timerChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
@@ -28,11 +29,11 @@ const resizeObserver = ref(null);
 const uid = ref(createUid());
 
 onMounted(() => {
-    if (timerConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: timerChart.value,
-                title: timerConfig.value.style.title.text ? chartTitle.value : null,
+                title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
                 legend: chartLegend.value
             });
             svg.value.width = width;
@@ -40,24 +41,24 @@ onMounted(() => {
 
             svg.value.tracker.core = translateSize({
                 relator: Math.min(width, height),
-                adjuster: timerConfig.value.style.width,
-                source: 6 * timerConfig.value.stopwatch.tracker.radiusRatio,
+                adjuster: FINAL_CONFIG.value.style.width,
+                source: 6 * FINAL_CONFIG.value.stopwatch.tracker.radiusRatio,
                 threshold: 1,
                 fallback: 1
             });
 
             svg.value.tracker.aura = translateSize({
                 relator: Math.min(width, height),
-                adjuster: timerConfig.value.style.width,
-                source: 12 * timerConfig.value.stopwatch.tracker.aura.radiusRatio,
+                adjuster: FINAL_CONFIG.value.style.width,
+                source: 12 * FINAL_CONFIG.value.stopwatch.tracker.aura.radiusRatio,
                 threshold: 1,
                 fallback: 1
             });
 
             svg.value.label = translateSize({
                 relator: Math.min(width, height),
-                adjuster: timerConfig.value.style.width,
-                source: timerConfig.value.stopwatch.label.fontSize,
+                adjuster: FINAL_CONFIG.value.style.width,
+                source: FINAL_CONFIG.value.stopwatch.label.fontSize,
                 threshold: 10,
                 fallback: 10
             });
@@ -72,36 +73,36 @@ onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
-const timerConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
 });
 
 const placeholder = computed(() => {
-    if (timerConfig.value.stopwatch.showHours && timerConfig.value.stopwatch.showHundredth) {
+    if (FINAL_CONFIG.value.stopwatch.showHours && FINAL_CONFIG.value.stopwatch.showHundredth) {
         return `00:00:00.00`;
     }
-    if (timerConfig.value.stopwatch.showHours && !timerConfig.value.stopwatch.showHundredth) {
+    if (FINAL_CONFIG.value.stopwatch.showHours && !FINAL_CONFIG.value.stopwatch.showHundredth) {
         return `00:00:00`;
     }
-    if (!timerConfig.value.stopwatch.showHours && timerConfig.value.stopwatch.showHundredth) {
+    if (!FINAL_CONFIG.value.stopwatch.showHours && FINAL_CONFIG.value.stopwatch.showHundredth) {
         return `00:00.00`
     }
-    if (!timerConfig.value.stopwatch.showHours && !timerConfig.value.stopwatch.showHundredth) {
+    if (!FINAL_CONFIG.value.stopwatch.showHours && !FINAL_CONFIG.value.stopwatch.showHundredth) {
         return `00:00`
     } 
 });
 
 const svg = ref({
-    height: timerConfig.value.style.height,
-    width: timerConfig.value.style.width,
+    height: FINAL_CONFIG.value.style.height,
+    width: FINAL_CONFIG.value.style.width,
     tracker: {
-        core: 6 * timerConfig.value.stopwatch.tracker.radiusRatio,
-        aura: 12 * timerConfig.value.stopwatch.tracker.aura.radiusRatio
+        core: 6 * FINAL_CONFIG.value.stopwatch.tracker.radiusRatio,
+        aura: 12 * FINAL_CONFIG.value.stopwatch.tracker.aura.radiusRatio
     },
-    label: timerConfig.value.stopwatch.label.fontSize
+    label: FINAL_CONFIG.value.stopwatch.label.fontSize
 });
 
 const currentTime = ref(0);
@@ -110,8 +111,8 @@ const TIMER = new Timer(
     d => useTimer(d),
     10,
     '',
-    timerConfig.value.stopwatch.showHundredth,
-    timerConfig.value.stopwatch.showHours
+    FINAL_CONFIG.value.stopwatch.showHundredth,
+    FINAL_CONFIG.value.stopwatch.showHours
 );
 
 const isLoaded = ref(true);
@@ -162,7 +163,7 @@ function useTimer({ timestamp, elapsed, formatted }) {
 }
 
 const circleRadius = computed(() => {
-    return (Math.min(svg.value.width, svg.value.height) / 2.5) * timerConfig.value.stopwatch.track.radiusRatio;
+    return (Math.min(svg.value.width, svg.value.height) / 2.5) * FINAL_CONFIG.value.stopwatch.track.radiusRatio;
 })
 
 function calculateElapsedAngle(elapsedTime, cycleDurationInSeconds) {
@@ -180,7 +181,7 @@ function getCircleCoordinates(angleInDegrees) {
 }
 
 const tracker = computed(() => {
-    const elapsedAngle = calculateElapsedAngle(currentTime.value.elapsed, timerConfig.value.stopwatch.cycleSeconds);
+    const elapsedAngle = calculateElapsedAngle(currentTime.value.elapsed, FINAL_CONFIG.value.stopwatch.cycleSeconds);
     const { cx, cy } = getCircleCoordinates(elapsedAngle - 90);
     const largeArcFlag = elapsedAngle > 180 ? 1 : 0;
     const sweepFlag = 1;
@@ -207,29 +208,29 @@ defineExpose({
         ref="timerChart" 
         class="vue-ui-timer"
         :style="{
-            fontFamily: timerConfig.style.fontFamily,
+            fontFamily: FINAL_CONFIG.style.fontFamily,
             width: '100%',
-            height: timerConfig.responsive ? '100%' : 'auto',
+            height: FINAL_CONFIG.responsive ? '100%' : 'auto',
             textAlign: 'center'
         }"
     >
         <div 
             ref="chartTitle" 
-            v-if="timerConfig.style.title.text"
+            v-if="FINAL_CONFIG.style.title.text"
             :style="{
                 width: '100%',
-                background: timerConfig.style.backgroundColor,
+                background: FINAL_CONFIG.style.backgroundColor,
             }" 
         >
             <Title
                 :config="{
                     title: {
                         cy: 'title',
-                        ...timerConfig.style.title
+                        ...FINAL_CONFIG.style.title
                     },
                     subtitle: {
                         cy: 'subtitle',
-                        ...timerConfig.style.title.subtitle
+                        ...FINAL_CONFIG.style.title.subtitle
                     }
                 }"
             />
@@ -241,14 +242,14 @@ defineExpose({
             :style="{
                 maxWidth: '100%',
                 overflow: 'visible',
-                background: timerConfig.style.backgroundColor
+                background: FINAL_CONFIG.style.backgroundColor
             }"
         >
             <!-- DEFS -->
-            <defs v-if="timerConfig.stopwatch.tracker.gradient.show">
+            <defs v-if="FINAL_CONFIG.stopwatch.tracker.gradient.show">
                 <radialGradient :id="`tracker_gradient_${uid}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                    <stop offset="0%" :stop-color="timerConfig.stopwatch.tracker.gradient.color"/>
-                    <stop offset="100%" :stop-color="timerConfig.stopwatch.tracker.fill" />
+                    <stop offset="0%" :stop-color="FINAL_CONFIG.stopwatch.tracker.gradient.color"/>
+                    <stop offset="100%" :stop-color="FINAL_CONFIG.stopwatch.tracker.fill" />
                 </radialGradient>
             </defs>
 
@@ -257,17 +258,17 @@ defineExpose({
                 :cx="svg.width / 2" 
                 :cy="svg.height / 2" 
                 :r="circleRadius" 
-                :fill="timerConfig.stopwatch.track.fill" 
-                :stroke="timerConfig.stopwatch.track.stroke"
-                :stroke-width="timerConfig.stopwatch.track.strokeWidth"
+                :fill="FINAL_CONFIG.stopwatch.track.fill" 
+                :stroke="FINAL_CONFIG.stopwatch.track.stroke"
+                :stroke-width="FINAL_CONFIG.stopwatch.track.strokeWidth"
             />
 
             <!-- CYCLE TRACK -->
             <path 
-                v-if="timerConfig.stopwatch.cycleTrack.show"
+                v-if="FINAL_CONFIG.stopwatch.cycleTrack.show"
                 :d="`M ${svg.width / 2},${svg.height / 2 - circleRadius} A ${circleRadius},${circleRadius} 0 ${tracker.largeArcFlag},${tracker.sweepFlag} ${tracker.cx},${tracker.cy}`" 
-                :stroke="timerConfig.stopwatch.cycleTrack.stroke" 
-                :stroke-width="timerConfig.stopwatch.cycleTrack.strokeWidth"
+                :stroke="FINAL_CONFIG.stopwatch.cycleTrack.stroke" 
+                :stroke-width="FINAL_CONFIG.stopwatch.cycleTrack.strokeWidth"
                 stroke-linecap="round"
                 fill="none"
             />
@@ -276,18 +277,18 @@ defineExpose({
             <circle 
                 v-bind="tracker" 
                 :r="svg.tracker.core" 
-                :fill="timerConfig.stopwatch.tracker.gradient.show ? `url(#tracker_gradient_${uid})` : timerConfig.stopwatch.tracker.fill" 
-                :stroke="timerConfig.stopwatch.tracker.stroke"
-                :stroke-width="timerConfig.stopwatch.tracker.strokeWidth"
+                :fill="FINAL_CONFIG.stopwatch.tracker.gradient.show ? `url(#tracker_gradient_${uid})` : FINAL_CONFIG.stopwatch.tracker.fill" 
+                :stroke="FINAL_CONFIG.stopwatch.tracker.stroke"
+                :stroke-width="FINAL_CONFIG.stopwatch.tracker.strokeWidth"
             />
             <!-- TRACKER - AURA -->
             <circle 
-                v-if="timerConfig.stopwatch.tracker.aura.show"
+                v-if="FINAL_CONFIG.stopwatch.tracker.aura.show"
                 v-bind="tracker" 
                 :r="svg.tracker.aura" 
-                :fill="`${timerConfig.stopwatch.tracker.aura.fill}20`"
-                :stroke="timerConfig.stopwatch.tracker.aura.stroke"
-                :stroke-width="timerConfig.stopwatch.tracker.aura.strokeWidth"
+                :fill="`${FINAL_CONFIG.stopwatch.tracker.aura.fill}20`"
+                :stroke="FINAL_CONFIG.stopwatch.tracker.aura.stroke"
+                :stroke-width="FINAL_CONFIG.stopwatch.tracker.aura.strokeWidth"
             />
 
             <!-- TIME LABEL - CUSTOM -->
@@ -301,19 +302,19 @@ defineExpose({
                 :y="svg.height / 2 + (svg.label / 4)"
                 :font-size="svg.label"
                 text-anchor="middle"
-                :fill="timerConfig.stopwatch.label.color"
-                :font-weight="timerConfig.stopwatch.label.bold ? 'bold' : 'normal'"
+                :fill="FINAL_CONFIG.stopwatch.label.color"
+                :font-weight="FINAL_CONFIG.stopwatch.label.bold ? 'bold' : 'normal'"
                 style="font-variant-numeric: tabular-nums !important;"
             >
                 {{ currentTime.formatted || placeholder }}
             </text>
         </svg>
 
-        <div ref="chartLegend" :style="{ width: '100%', backgroundColor: timerConfig.stopwatch.legend.backgroundColor }">
+        <div ref="chartLegend" :style="{ width: '100%', backgroundColor: FINAL_CONFIG.stopwatch.legend.backgroundColor }">
             <div v-if="!$slots.controls" class="vue-ui-timer-controls">
                 <button
-                    v-if="timerConfig.stopwatch.legend.buttons.start"
-                    :title="timerConfig.stopwatch.legend.buttonTitles.start"
+                    v-if="FINAL_CONFIG.stopwatch.legend.buttons.start"
+                    :title="FINAL_CONFIG.stopwatch.legend.buttonTitles.start"
                     @click="start" 
                     class="vue-ui-timer-button" 
                     :style="{ 
@@ -321,12 +322,12 @@ defineExpose({
                         cursor: isRunning ? 'default' : 'pointer' 
                     }"
                 >
-                    <BaseIcon name="play" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
+                    <BaseIcon name="play" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
                 </button>
 
                 <button
-                    v-if="timerConfig.stopwatch.legend.buttons.pause"
-                    :title="isPaused ? timerConfig.stopwatch.legend.buttonTitles.resume : timerConfig.stopwatch.legend.buttonTitles.pause"
+                    v-if="FINAL_CONFIG.stopwatch.legend.buttons.pause"
+                    :title="isPaused ? FINAL_CONFIG.stopwatch.legend.buttonTitles.resume : FINAL_CONFIG.stopwatch.legend.buttonTitles.pause"
                     @click="pause" 
                     class="vue-ui-timer-button" 
                     :style="{
@@ -334,12 +335,12 @@ defineExpose({
                         cursor: isRunning ? 'pointer' : 'default'
                     }"
                     >
-                    <BaseIcon name="pause" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
+                    <BaseIcon name="pause" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
                 </button>
                 
                 <button
-                    v-if="timerConfig.stopwatch.legend.buttons.reset"
-                    :title="timerConfig.stopwatch.legend.buttonTitles.reset"
+                    v-if="FINAL_CONFIG.stopwatch.legend.buttons.reset"
+                    :title="FINAL_CONFIG.stopwatch.legend.buttonTitles.reset"
                     @click="reset" 
                     class="vue-ui-timer-button" 
                     :style="{ 
@@ -347,31 +348,31 @@ defineExpose({
                         cursor: isRunning ? 'pointer' : 'default' 
                     }"
                 >
-                    <BaseIcon name="stop" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
+                    <BaseIcon name="stop" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
                 </button>
 
                 <button
-                    v-if="timerConfig.stopwatch.legend.buttons.restart"
-                    :title="timerConfig.stopwatch.legend.buttonTitles.restart"
+                    v-if="FINAL_CONFIG.stopwatch.legend.buttons.restart"
+                    :title="FINAL_CONFIG.stopwatch.legend.buttonTitles.restart"
                     @click="restart" 
                     class="vue-ui-timer-button" 
                     :style="{ 
                         opacity: isRunning ? 1 : 0.2, 
                         cursor: isRunning ? 'pointer' : 'default' 
                     }">
-                    <BaseIcon name="restart" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
+                    <BaseIcon name="restart" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
                 </button>
 
                 <button
-                    v-if="timerConfig.stopwatch.legend.buttons.lap"
-                    :title="timerConfig.stopwatch.legend.buttonTitles.lap"
+                    v-if="FINAL_CONFIG.stopwatch.legend.buttons.lap"
+                    :title="FINAL_CONFIG.stopwatch.legend.buttonTitles.lap"
                     @click="lap" 
                     class="vue-ui-timer-button" 
                     :style="{ 
                         opacity: isRunning && !isPaused ? 1 : 0.2, 
                         cursor: isRunning && !isPaused ? 'pointer' : 'default' 
                     }">
-                    <BaseIcon name="lap" :stroke="timerConfig.stopwatch.legend.buttons.iconColor"/>
+                    <BaseIcon name="lap" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
                 </button>
             </div>
             <slot name="controls" v-bind="{ 

@@ -4,13 +4,13 @@
       <details
         class="vue-ui-annotator-summary"
         @toggle="toggleSummary"
-        :style="`${isSummaryOpen ? 'padding-bottom: 12px' : ''}; background: ${annotatorConfig.style.backgroundColor}; color:${annotatorConfig.style.color}; ${
-          annotatorConfig.style.fixedTools && isSummaryOpen
+        :style="`${isSummaryOpen ? 'padding-bottom: 12px' : ''}; background: ${FINAL_CONFIG.style.backgroundColor}; color:${FINAL_CONFIG.style.color}; ${
+          FINAL_CONFIG.style.fixedTools && isSummaryOpen
             ? 'position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 1;'
             : ''
         }`"
       >
-        <summary data-cy="annotator-summary">{{ annotatorConfig.translations.title }}</summary>
+        <summary data-cy="annotator-summary">{{ FINAL_CONFIG.translations.title }}</summary>
 
         <div class="tool-selection" style="margin-top:24px">
           <!-- MOVE -->
@@ -18,10 +18,10 @@
             data-cy="annotator-button-move"
             :disabled="shapes.length === 0"
             :style="{
-                background: isMoveMode ? annotatorConfig.style.buttons.controls.selected.backgroundColor :annotatorConfig.style.buttons.controls.backgroundColor,
-                border: isMoveMode ? annotatorConfig.style.buttons.controls.selected.border :annotatorConfig.style.buttons.controls.border,
-                color: isMoveMode ? annotatorConfig.style.buttons.controls.selected.color :annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: isMoveMode ? FINAL_CONFIG.style.buttons.controls.selected.backgroundColor :FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: isMoveMode ? FINAL_CONFIG.style.buttons.controls.selected.border :FINAL_CONFIG.style.buttons.controls.border,
+                color: isMoveMode ? FINAL_CONFIG.style.buttons.controls.selected.color :FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{
               'button-tool': true,
@@ -52,14 +52,14 @@
                 <path d="M15 6l-3 -3l-3 3" />
                 <path d="M12 3v6" />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipMove }}
+              {{ FINAL_CONFIG.translations.tooltipMove }}
             </span>
           </button>
 
@@ -67,10 +67,10 @@
           <button
             :disabled="shapes.length === 0 || activeShape === 'line'"
             :style="{
-                background: isResizeMode ? annotatorConfig.style.buttons.controls.selected.backgroundColor :annotatorConfig.style.buttons.controls.backgroundColor,
-                border: isResizeMode ? annotatorConfig.style.buttons.controls.selected.border :annotatorConfig.style.buttons.controls.border,
-                color: isResizeMode ? annotatorConfig.style.buttons.controls.selected.color :annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: isResizeMode ? FINAL_CONFIG.style.buttons.controls.selected.backgroundColor :FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: isResizeMode ? FINAL_CONFIG.style.buttons.controls.selected.border :FINAL_CONFIG.style.buttons.controls.border,
+                color: isResizeMode ? FINAL_CONFIG.style.buttons.controls.selected.color :FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{
               'button-tool': true,
@@ -95,14 +95,14 @@
                 <path d="M4 11v8a1 1 0 0 0 1 1h8m-9 -14v-1a1 1 0 0 1 1 -1h1m5 0h2m5 0h1a1 1 0 0 1 1 1v1m0 5v2m0 5v1a1 1 0 0 1 -1 1h-1" />
                 <path d="M4 12h7a1 1 0 0 1 1 1v7" />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipResize }}
+              {{ FINAL_CONFIG.translations.tooltipResize }}
             </span>
           </button>
 
@@ -110,10 +110,10 @@
           <button
             :disabled="shapes.length === 0"
             :style="{
-                background: isDeleteMode ? annotatorConfig.style.buttons.controls.selected.backgroundColor :annotatorConfig.style.buttons.controls.backgroundColor,
-                border: isDeleteMode ? annotatorConfig.style.buttons.controls.selected.border :annotatorConfig.style.buttons.controls.border,
-                color: isDeleteMode ? annotatorConfig.style.buttons.controls.selected.color :annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: isDeleteMode ? FINAL_CONFIG.style.buttons.controls.selected.backgroundColor :FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: isDeleteMode ? FINAL_CONFIG.style.buttons.controls.selected.border :FINAL_CONFIG.style.buttons.controls.border,
+                color: isDeleteMode ? FINAL_CONFIG.style.buttons.controls.selected.color :FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{
               'button-tool': true,
@@ -141,14 +141,14 @@
                 <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
                 <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipDelete }}
+              {{ FINAL_CONFIG.translations.tooltipDelete }}
             </span>
           </button>
 
@@ -156,10 +156,10 @@
           <button
             :disabled="!canSelect"
             :style="{
-                background: isSelectMode ? annotatorConfig.style.buttons.controls.selected.backgroundColor :annotatorConfig.style.buttons.controls.backgroundColor,
-                border: isSelectMode ? annotatorConfig.style.buttons.controls.selected.border :annotatorConfig.style.buttons.controls.border,
-                color: isSelectMode ? annotatorConfig.style.buttons.controls.selected.color :annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: isSelectMode ? FINAL_CONFIG.style.buttons.controls.selected.backgroundColor :FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: isSelectMode ? FINAL_CONFIG.style.buttons.controls.selected.border :FINAL_CONFIG.style.buttons.controls.border,
+                color: isSelectMode ? FINAL_CONFIG.style.buttons.controls.selected.color :FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{
               'button-tool': true,
@@ -185,14 +185,14 @@
                 d="M1,1V5H2V19H1V23H5V22H19V23H23V19H22V5H23V1H19V2H5V1M5,4H19V5H20V19H19V20H5V19H4V5H5M6,6V14H9V18H18V9H14V6M8,8H12V12H8M14,11H16V16H11V14H14"
               />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipGroup }}
+              {{ FINAL_CONFIG.translations.tooltipGroup }}
             </span>
           </button>
 
@@ -200,10 +200,10 @@
           <button
             :disabled="shapes.length === 0"
             :style="{
-                background: annotatorConfig.style.buttons.controls.backgroundColor,
-                border: annotatorConfig.style.buttons.controls.border,
-                color: annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: FINAL_CONFIG.style.buttons.controls.border,
+                color: FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{ 'button-tool': true, tooltip: true }"
             @click="
@@ -224,14 +224,14 @@
                 d="M2,2H11V6H9V4H4V9H6V11H2V2M22,13V22H13V18H15V20H20V15H18V13H22M8,8H16V16H8V8Z"
               />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipBringToFront }}
+              {{ FINAL_CONFIG.translations.tooltipBringToFront }}
             </span>
           </button>
 
@@ -239,10 +239,10 @@
           <button
             :disabled="shapes.length === 0"
             :style="{
-                background: annotatorConfig.style.buttons.controls.backgroundColor,
-                border: annotatorConfig.style.buttons.controls.border,
-                color: annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: FINAL_CONFIG.style.buttons.controls.border,
+                color: FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{ 'button-tool': true, tooltip: true }"
             @click="
@@ -263,14 +263,14 @@
                 d="M2,2H11V11H2V2M9,4H4V9H9V4M22,13V22H13V13H22M15,20H20V15H15V20M16,8V11H13V8H16M11,16H8V13H11V16Z"
               />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipBringToBack }}
+              {{ FINAL_CONFIG.translations.tooltipBringToBack }}
             </span>
           </button>
 
@@ -278,10 +278,10 @@
           <button
             :disabled="shapes.length === 0 || activeShape === 'line'"
             :style="{
-                background: annotatorConfig.style.buttons.controls.backgroundColor,
-                border: annotatorConfig.style.buttons.controls.border,
-                color: annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: FINAL_CONFIG.style.buttons.controls.border,
+                color: FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{ 'button-tool': true, tooltip: true }"
             @click="
@@ -303,14 +303,14 @@
                 <path d="M7 3m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" />
                 <path d="M17 17v2a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2" />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipDuplicate }}
+              {{ FINAL_CONFIG.translations.tooltipDuplicate }}
             </span>
           </button>
 
@@ -319,10 +319,10 @@
             data-cy="annotator-button-undo"
             :disabled="shapes.length === 0"
             :style="{
-                background: annotatorConfig.style.buttons.controls.backgroundColor,
-                border: annotatorConfig.style.buttons.controls.border,
-                color: annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: FINAL_CONFIG.style.buttons.controls.border,
+                color: FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{ 'button-tool': true, 'button-tool--one-shot': true, tooltip: true }"
             @click="
@@ -344,25 +344,25 @@
                 <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
             </svg>
 
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipUndo }}
+              {{ FINAL_CONFIG.translations.tooltipUndo }}
             </span>
           </button>
 
           <!-- PRINT -->
           <button
-            v-if="annotatorConfig.style.showPrint"
+            v-if="FINAL_CONFIG.style.showPrint"
             :style="{
-                background: annotatorConfig.style.buttons.controls.backgroundColor,
-                border: annotatorConfig.style.buttons.controls.border,
-                color: annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: FINAL_CONFIG.style.buttons.controls.border,
+                color: FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{ 'button-tool': true, tooltip: true }"
             @click="print"
@@ -373,25 +373,25 @@
                 <path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" />
                 <path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipPdf }}
+              {{ FINAL_CONFIG.translations.tooltipPdf }}
             </span>
           </button>
 
           <!-- SAVE -->
           <button
-            v-if="annotatorConfig.style.showSave"
+            v-if="FINAL_CONFIG.style.showSave"
             :style="{
-                background: annotatorConfig.style.buttons.controls.backgroundColor,
-                border: annotatorConfig.style.buttons.controls.border,
-                color: annotatorConfig.style.buttons.controls.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
+                border: FINAL_CONFIG.style.buttons.controls.border,
+                color: FINAL_CONFIG.style.buttons.controls.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             :class="{ 'button-tool': true, tooltip: true }"
             @click="save"
@@ -402,14 +402,14 @@
                 <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                 <path d="M14 4l0 4l-6 0l0 -4" />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipSave }}
+              {{ FINAL_CONFIG.translations.tooltipSave }}
             </span>
           </button>
         </div>
@@ -424,10 +424,10 @@
               tooltip: true
             }"
             :style="{
-                background: activeShape === 'circle' ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: activeShape === 'circle' ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: activeShape === 'circle' ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: activeShape === 'circle' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: activeShape === 'circle' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: activeShape === 'circle' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             @click="
               setShapeTo('circle');
@@ -449,18 +449,18 @@
                 stroke="currentColor"
               ></circle>
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipShapeCircle }}
+              {{ FINAL_CONFIG.translations.tooltipShapeCircle }}
             </span>
           </button>
           <div class="tool-input" v-if="activeShape === 'circle'">
-            <label for="circleFill">{{ annotatorConfig.translations.filled }}</label>
+            <label for="circleFill">{{ FINAL_CONFIG.translations.filled }}</label>
             <input
               type="checkbox"
               v-model="options.circle.filled"
@@ -478,10 +478,10 @@
               tooltip: true
             }"
             :style="{
-                background: activeShape === 'rect' ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: activeShape === 'rect' ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: activeShape === 'rect' ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: activeShape === 'rect' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: activeShape === 'rect' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: activeShape === 'rect' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             @click="
               setShapeTo('rect');
@@ -505,18 +505,18 @@
                 stroke="currentColor"
               />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipShapeRect }}
+              {{ FINAL_CONFIG.translations.tooltipShapeRect }}
             </span>
           </button>
           <div class="tool-input" v-if="activeShape === 'rect'">
-            <label for="rectFill">{{ annotatorConfig.translations.filled }}</label>
+            <label for="rectFill">{{ FINAL_CONFIG.translations.filled }}</label>
             <input
               id="rectFill"
               type="checkbox"
@@ -535,10 +535,10 @@
               tooltip: true
             }"
             :style="{
-                background: activeShape === 'arrow' ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: activeShape === 'arrow' ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: activeShape === 'arrow' ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: activeShape === 'arrow' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: activeShape === 'arrow' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: activeShape === 'arrow' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             @click="
               setShapeTo('arrow');
@@ -561,14 +561,14 @@
                 stroke-linejoin="round"
               />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipShapeArrow }}
+              {{ FINAL_CONFIG.translations.tooltipShapeArrow }}
             </span>
           </button>
 
@@ -581,10 +581,10 @@
               tooltip: true
             }"
             :style="{
-                background: activeShape === 'line' ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: activeShape === 'line' ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: activeShape === 'line' ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: activeShape === 'line' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: activeShape === 'line' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: activeShape === 'line' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             @click="
               setShapeTo('line');
@@ -595,14 +595,14 @@
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                 <path d="M3 15c2 3 4 4 7 4s7 -3 7 -7s-3 -7 -6 -7s-5 1.5 -5 4s2 5 6 5s8.408 -2.453 10 -5" />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipShapeFreehand }}
+              {{ FINAL_CONFIG.translations.tooltipShapeFreehand }}
             </span>
           </button>
 
@@ -617,7 +617,7 @@
               "
             >
               <label for="textFont" style="font-size: 0.7em">{{
-                annotatorConfig.translations.thickness
+                FINAL_CONFIG.translations.thickness
               }}</label>
               <input
                 id="textFont"
@@ -645,7 +645,7 @@
               "
             >
               <label for="dashStyle" style="font-size: 0.7em">{{
-                annotatorConfig.translations.dashedLines
+                FINAL_CONFIG.translations.dashedLines
               }}</label>
               <svg
                 viewBox="0 0 24 24"
@@ -683,10 +683,10 @@
               tooltip: true
             }"
             :style="{
-                background: isTextMode ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: isTextMode ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: isTextMode ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: isTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: isTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: isTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
             @click="
               deleteEmptyTextElement();
@@ -704,14 +704,14 @@
                 d="M18.5,4L19.66,8.35L18.7,8.61C18.25,7.74 17.79,6.87 17.26,6.43C16.73,6 16.11,6 15.5,6H13V16.5C13,17 13,17.5 13.33,17.75C13.67,18 14.33,18 15,18V19H9V18C9.67,18 10.33,18 10.67,17.75C11,17.5 11,17 11,16.5V6H8.5C7.89,6 7.27,6 6.74,6.43C6.21,6.87 5.75,7.74 5.3,8.61L4.34,8.35L5.5,4H18.5Z"
               />
             </svg>
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                color: annotatorConfig.style.tooltips.color,
-                border: annotatorConfig.style.tooltips.border,
-                borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                color: FINAL_CONFIG.style.tooltips.color,
+                border: FINAL_CONFIG.style.tooltips.border,
+                borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
             }">
-              {{ annotatorConfig.translations.tooltipShapeText }}
+              {{ FINAL_CONFIG.translations.tooltipShapeText }}
             </span>
           </button>
 
@@ -726,7 +726,7 @@
               "
             >
               <label for="textFont" style="font-size: 0.7em">{{
-                annotatorConfig.translations.fontSize
+                FINAL_CONFIG.translations.fontSize
               }}</label>
               <input
                 id="textFont"
@@ -752,10 +752,10 @@
                 tooltip: true
               }"
               :style="{
-                background: textAlign === 'start' ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: textAlign === 'start' ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: textAlign === 'start' ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: textAlign === 'start' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: textAlign === 'start' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: textAlign === 'start' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
               @click="
                 isDeleteMode = false;
@@ -774,14 +774,14 @@
                     <path d="M4 12l10 0" />
                     <path d="M4 18l14 0" />
                 </svg>
-                <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                    backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                    color: annotatorConfig.style.tooltips.color,
-                    border: annotatorConfig.style.tooltips.border,
-                    borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                    boxShadow: annotatorConfig.style.tooltips.boxShadow
+                <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                    backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                    color: FINAL_CONFIG.style.tooltips.color,
+                    border: FINAL_CONFIG.style.tooltips.border,
+                    borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                    boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
                 }">
-                    {{ annotatorConfig.translations.tooltipShapeTextLeft }}
+                    {{ FINAL_CONFIG.translations.tooltipShapeTextLeft }}
                 </span>
             </button>
           </div>
@@ -795,10 +795,10 @@
                 tooltip: true
               }"
               :style="{
-                background: textAlign === 'middle' ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: textAlign === 'middle' ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: textAlign === 'middle' ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: textAlign === 'middle' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: textAlign === 'middle' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: textAlign === 'middle' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
               :disabled="isBulletTextMode"
               @click="
@@ -818,14 +818,14 @@
                     <path d="M8 12l8 0" />
                     <path d="M6 18l12 0" />
                 </svg>
-                <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                    backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                    color: annotatorConfig.style.tooltips.color,
-                    border: annotatorConfig.style.tooltips.border,
-                    borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                    boxShadow: annotatorConfig.style.tooltips.boxShadow
+                <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                    backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                    color: FINAL_CONFIG.style.tooltips.color,
+                    border: FINAL_CONFIG.style.tooltips.border,
+                    borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                    boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
                 }">
-                    {{ annotatorConfig.translations.tooltipShapeTextCenter }}
+                    {{ FINAL_CONFIG.translations.tooltipShapeTextCenter }}
                 </span>
             </button>
           </div>
@@ -839,10 +839,10 @@
                 tooltip: true
               }"
               :style="{
-                background: textAlign === 'end' ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: textAlign === 'end' ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: textAlign === 'end' ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: textAlign === 'end' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: textAlign === 'end' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: textAlign === 'end' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
               :disabled="isBulletTextMode"
               @click="
@@ -862,14 +862,14 @@
                     <path d="M10 12l10 0" />
                     <path d="M6 18l14 0" />
                 </svg>
-                <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                    backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                    color: annotatorConfig.style.tooltips.color,
-                    border: annotatorConfig.style.tooltips.border,
-                    borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                    boxShadow: annotatorConfig.style.tooltips.boxShadow
+                <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                    backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                    color: FINAL_CONFIG.style.tooltips.color,
+                    border: FINAL_CONFIG.style.tooltips.border,
+                    borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                    boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
                 }">
-                    {{ annotatorConfig.translations.tooltipShapeTextRight }}
+                    {{ FINAL_CONFIG.translations.tooltipShapeTextRight }}
                 </span>
             </button>
           </div>
@@ -883,10 +883,10 @@
                 tooltip: true
               }"
               :style="{
-                background: isBulletTextMode ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: isBulletTextMode ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: isBulletTextMode ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: isBulletTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: isBulletTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: isBulletTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
               @click="
                 isDeleteMode = false;
@@ -910,14 +910,14 @@
                     <path d="M5 12l0 .01" />
                     <path d="M5 18l0 .01" />
                 </svg>
-                <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                    backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                    color: annotatorConfig.style.tooltips.color,
-                    border: annotatorConfig.style.tooltips.border,
-                    borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                    boxShadow: annotatorConfig.style.tooltips.boxShadow
+                <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                    backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                    color: FINAL_CONFIG.style.tooltips.color,
+                    border: FINAL_CONFIG.style.tooltips.border,
+                    borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                    boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
                 }">
-                    {{ annotatorConfig.translations.tooltipShapeTextBullet }}
+                    {{ FINAL_CONFIG.translations.tooltipShapeTextBullet }}
                 </span>
             </button>
           </div>
@@ -931,10 +931,10 @@
                 tooltip: true
               }"
               :style="{
-                background: isBold ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: isBold ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: isBold ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: isBold ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: isBold ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: isBold ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
               @click="
                 isDeleteMode = false;
@@ -952,14 +952,14 @@
                     <path d="M7 5h6a3.5 3.5 0 0 1 0 7h-6z" />
                     <path d="M13 12h1a3.5 3.5 0 0 1 0 7h-7v-7" />
                 </svg>
-                <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                    backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                    color: annotatorConfig.style.tooltips.color,
-                    border: annotatorConfig.style.tooltips.border,
-                    borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                    boxShadow: annotatorConfig.style.tooltips.boxShadow
+                <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                    backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                    color: FINAL_CONFIG.style.tooltips.color,
+                    border: FINAL_CONFIG.style.tooltips.border,
+                    borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                    boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
                 }">
-                    {{ annotatorConfig.translations.tooltipShapeTextBold }}
+                    {{ FINAL_CONFIG.translations.tooltipShapeTextBold }}
                 </span>
             </button>
           </div>
@@ -973,10 +973,10 @@
                 tooltip: true
               }"
               :style="{
-                background: isItalic ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: isItalic ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: isItalic ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: isItalic ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: isItalic ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: isItalic ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
               @click="
                 isDeleteMode = false;
@@ -995,14 +995,14 @@
                     <path d="M7 19l6 0" />
                     <path d="M14 5l-4 14" />
                 </svg>
-                <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                    backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                    color: annotatorConfig.style.tooltips.color,
-                    border: annotatorConfig.style.tooltips.border,
-                    borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                    boxShadow: annotatorConfig.style.tooltips.boxShadow
+                <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                    backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                    color: FINAL_CONFIG.style.tooltips.color,
+                    border: FINAL_CONFIG.style.tooltips.border,
+                    borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                    boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
                 }">
-                    {{ annotatorConfig.translations.tooltipShapeTextItalic }}
+                    {{ FINAL_CONFIG.translations.tooltipShapeTextItalic }}
                 </span>
             </button>
           </div>
@@ -1016,10 +1016,10 @@
                 tooltip: true
               }"
               :style="{
-                background: isUnderline ? annotatorConfig.style.buttons.shapes.selected.backgroundColor :annotatorConfig.style.buttons.shapes.backgroundColor,
-                border: isUnderline ? annotatorConfig.style.buttons.shapes.selected.border :annotatorConfig.style.buttons.shapes.border,
-                color: isUnderline ? annotatorConfig.style.buttons.shapes.selected.color :annotatorConfig.style.buttons.shapes.color,
-                borderRadius: `${annotatorConfig.style.buttons.borderRadius}px`
+                background: isUnderline ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
+                border: isUnderline ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
+                color: isUnderline ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
+                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
             }"
               @click="
                 isDeleteMode = false;
@@ -1037,14 +1037,14 @@
                     <path d="M7 5v5a5 5 0 0 0 10 0v-5" />
                     <path d="M5 19h14" />
                 </svg>
-                <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                    backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                    color: annotatorConfig.style.tooltips.color,
-                    border: annotatorConfig.style.tooltips.border,
-                    borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                    boxShadow: annotatorConfig.style.tooltips.boxShadow
+                <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                    backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                    color: FINAL_CONFIG.style.tooltips.color,
+                    border: FINAL_CONFIG.style.tooltips.border,
+                    borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                    boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
                 }">
-                    {{ annotatorConfig.translations.tooltipShapeTextUnderline }}
+                    {{ FINAL_CONFIG.translations.tooltipShapeTextUnderline }}
                 </span>
             </button>
           </div>
@@ -1065,16 +1065,16 @@
               name="colorPicker"
               v-model="selectedColor"
               @input="setColorOfSelectedShape"
-              :style="`height: 30px; width: 30px; border-radius: ${annotatorConfig.style.buttons.borderRadius}px; cursor: pointer`"
+              :style="`height: 30px; width: 30px; border-radius: ${FINAL_CONFIG.style.buttons.borderRadius}px; cursor: pointer`"
             />
-            <span v-if="annotatorConfig.style.showTooltips" class="tooltiptext" :style="{
-                    backgroundColor: annotatorConfig.style.tooltips.backgroundColor,
-                    color: annotatorConfig.style.tooltips.color,
-                    border: annotatorConfig.style.tooltips.border,
-                    borderRadius: `${annotatorConfig.style.tooltips.borderRadius}px`,
-                    boxShadow: annotatorConfig.style.tooltips.boxShadow
+            <span v-if="FINAL_CONFIG.style.showTooltips" class="tooltiptext" :style="{
+                    backgroundColor: FINAL_CONFIG.style.tooltips.backgroundColor,
+                    color: FINAL_CONFIG.style.tooltips.color,
+                    border: FINAL_CONFIG.style.tooltips.border,
+                    borderRadius: `${FINAL_CONFIG.style.tooltips.borderRadius}px`,
+                    boxShadow: FINAL_CONFIG.style.tooltips.boxShadow
                 }">
-                    {{ annotatorConfig.translations.tooltipShapeColor }}
+                    {{ FINAL_CONFIG.translations.tooltipShapeColor }}
                 </span>
           </div>
           <div
@@ -1086,7 +1086,7 @@
             "
           >
             <label for="colorTransparency" style="font-size: 0.7em">
-              {{ annotatorConfig.translations.colorAlpha }}:
+              {{ FINAL_CONFIG.translations.colorAlpha }}:
               {{ transparency > 98 ? 100 : transparency }} %
             </label>
             <input
@@ -1172,7 +1172,7 @@
 import html2canvas from "html2canvas";
 import JsPDF from "jspdf";
 import { opacity, treeShake, convertConfigColors } from "../lib";
-import mainConfig from "../default_configs.json";
+import { useConfig } from "../useConfig";
 
 // TODO: add tooltips for all buttons
 
@@ -1209,7 +1209,6 @@ export default {
         },
       },
       currentTarget: undefined,
-      defaultConfig: mainConfig.vue_ui_annotator,
       hoveredShapeId: undefined,
       isBold: false,
       isBulletTextMode: false,
@@ -1282,13 +1281,15 @@ export default {
     },
   },
   computed: {
-    annotatorConfig() {
+    FINAL_CONFIG() {
+        const DEFAULT_CONFIG = useConfig().vue_ui_annotator;
+
         if(!Object.keys(this.config || {}).length) {
-            return this.defaultConfig
+            return DEFAULT_CONFIG
         }
         
         const reconcilied = this.treeShake({
-            defaultConfig: this.defaultConfig,
+            defaultConfig: DEFAULT_CONFIG,
             userConfig: this.config
         });
 
@@ -2892,8 +2893,8 @@ export default {
             this.isPrinting = false;
             this.walkTheDOM(wrapper, (node) => {
               if (node && node.nodeType === 1) {
-                node.setAttribute("font-family", this.annotatorConfig.style.fontFamily);
-                node.style.fontFamily = this.annotatorConfig.style.fontFamily;
+                node.setAttribute("font-family", this.FINAL_CONFIG.style.fontFamily);
+                node.style.fontFamily = this.FINAL_CONFIG.style.fontFamily;
                 node.replaceWith(node);
               }
             });

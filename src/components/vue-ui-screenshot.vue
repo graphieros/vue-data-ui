@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, nextTick } from "vue";
 import { treeShake, convertConfigColors } from "../lib.js";
 import html2canvas from "html2canvas";
-import mainConfig from "../default_configs.json";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_screenshot: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -15,14 +17,12 @@ const props = defineProps({
 
 const uid = ref(`vue-ui-screenshot-${Math.random()}`);
 
-const defaultConfig = ref(mainConfig.vue_ui_screenshot);
-
-const screenshotConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     if(!Object.keys(props.config || {}).length) {
-        return defaultConfig.value;
+        return DEFAULT_CONFIG;
     }
     const reconcilied = treeShake({
-        defaultConfig: defaultConfig.value,
+        defaultConfig: DEFAULT_CONFIG,
         userConfig: props.config
     });
     return convertConfigColors(reconcilied);
@@ -47,14 +47,14 @@ function createOverlay() {
     const { innerWidth, innerHeight } = window;
 
     o.style.position = 'fixed';
-    o.style.top = `${innerHeight ? (innerHeight / 2) - (screenshotConfig.value.style.captureArea.initialHeight / 2) : 200}px`;
-    o.style.left = `${innerWidth ? (innerWidth / 2) - (screenshotConfig.value.style.captureArea.initialWidth / 2) : 100}px`;
-    o.style.width = `${screenshotConfig.value.style.captureArea.initialWidth}px`;
-    o.style.height = `${screenshotConfig.value.style.captureArea.initialHeight}px`;
-    o.style.background = screenshotConfig.value.style.captureArea.background;
+    o.style.top = `${innerHeight ? (innerHeight / 2) - (FINAL_CONFIG.value.style.captureArea.initialHeight / 2) : 200}px`;
+    o.style.left = `${innerWidth ? (innerWidth / 2) - (FINAL_CONFIG.value.style.captureArea.initialWidth / 2) : 100}px`;
+    o.style.width = `${FINAL_CONFIG.value.style.captureArea.initialWidth}px`;
+    o.style.height = `${FINAL_CONFIG.value.style.captureArea.initialHeight}px`;
+    o.style.background = FINAL_CONFIG.value.style.captureArea.background;
     o.style.cursor = 'move';
     o.style.boxSizing = 'border-box';
-    o.style.border = screenshotConfig.value.style.captureArea.border;
+    o.style.border = FINAL_CONFIG.value.style.captureArea.border;
     o.style.resize = 'both';
     o.style.padding = "none !important";
     o.style.margin = "none !important";
@@ -72,24 +72,24 @@ function close() {
 function createInfoText(o) {
     const infoText = document.createElement("DIV");
     infoText.classList.add("vue-ui-screenshot-info-text");
-    infoText.innerHTML = screenshotConfig.value.translations.info;
+    infoText.innerHTML = FINAL_CONFIG.value.translations.info;
     infoText.dataset.html2canvasIgnore = "true";
     infoText.dataset.cy = "screenshot-info-text";
-    infoText.style.background = screenshotConfig.value.style.info.background;
-    infoText.style.color = screenshotConfig.value.style.info.color;
-    infoText.style.fontWeight = screenshotConfig.value.style.info.bold ? 'bold' : 'normal';
-    infoText.style.minWidth = `${screenshotConfig.value.style.info.minWidth}px`;
+    infoText.style.background = FINAL_CONFIG.value.style.info.background;
+    infoText.style.color = FINAL_CONFIG.value.style.info.color;
+    infoText.style.fontWeight = FINAL_CONFIG.value.style.info.bold ? 'bold' : 'normal';
+    infoText.style.minWidth = `${FINAL_CONFIG.value.style.info.minWidth}px`;
     infoText.style.left = "50%";
-    infoText.style.padding = `${screenshotConfig.value.style.info.padding}px`;
+    infoText.style.padding = `${FINAL_CONFIG.value.style.info.padding}px`;
     infoText.style.position = "absolute";
     infoText.style.textAlign = "center";
-    infoText.style.top = `${screenshotConfig.value.style.info.top}px`;
+    infoText.style.top = `${FINAL_CONFIG.value.style.info.top}px`;
     infoText.style.transform = "translateX(-50%)";
-    infoText.style.borderRadius = `${screenshotConfig.value.style.info.borderRadius}px`;
-    infoText.style.boxShadow = screenshotConfig.value.style.info.boxShadow;
-    infoText.style.fontFamily = screenshotConfig.value.style.info.fontFamily;
-    infoText.style.fontSize = `${screenshotConfig.value.style.info.fontSize}px`;
-    infoText.style.border = screenshotConfig.value.style.info.border;
+    infoText.style.borderRadius = `${FINAL_CONFIG.value.style.info.borderRadius}px`;
+    infoText.style.boxShadow = FINAL_CONFIG.value.style.info.boxShadow;
+    infoText.style.fontFamily = FINAL_CONFIG.value.style.info.fontFamily;
+    infoText.style.fontSize = `${FINAL_CONFIG.value.style.info.fontSize}px`;
+    infoText.style.border = FINAL_CONFIG.value.style.info.border;
     infoText.style.userSelect = "none";
     const closeButton = document.createElement("BUTTON");
     closeButton.classList.add("vue-ui-screenshot-close-button");
@@ -103,14 +103,14 @@ function createInfoText(o) {
     closeButton.style.position = "absolute";
     closeButton.style.justifyContent = "center";
     closeButton.style.transformOrigin = "center";
-    closeButton.style.top = `${screenshotConfig.value.style.cancelButton.top}px`;
-    closeButton.style.right = `${screenshotConfig.value.style.cancelButton.right}px`;
-    closeButton.style.background = screenshotConfig.value.style.cancelButton.background;
-    closeButton.style.color = screenshotConfig.value.style.cancelButton.color;
-    closeButton.style.border = screenshotConfig.value.style.cancelButton.border;
-    closeButton.style.borderRadius = `${screenshotConfig.value.style.cancelButton.borderRadius}px`
-    closeButton.style.height = `${screenshotConfig.value.style.cancelButton.size}px`;
-    closeButton.style.width = `${screenshotConfig.value.style.cancelButton.size}px`;
+    closeButton.style.top = `${FINAL_CONFIG.value.style.cancelButton.top}px`;
+    closeButton.style.right = `${FINAL_CONFIG.value.style.cancelButton.right}px`;
+    closeButton.style.background = FINAL_CONFIG.value.style.cancelButton.background;
+    closeButton.style.color = FINAL_CONFIG.value.style.cancelButton.color;
+    closeButton.style.border = FINAL_CONFIG.value.style.cancelButton.border;
+    closeButton.style.borderRadius = `${FINAL_CONFIG.value.style.cancelButton.borderRadius}px`
+    closeButton.style.height = `${FINAL_CONFIG.value.style.cancelButton.size}px`;
+    closeButton.style.width = `${FINAL_CONFIG.value.style.cancelButton.size}px`;
     closeButton.addEventListener("click", close);
     infoText.appendChild(closeButton);
     o.appendChild(infoText);
@@ -287,20 +287,20 @@ function saveScreenshot() {
             x: overlayRect.left + window.scrollX,
             y: overlayRect.top + window.scrollY,
             useCORS: true,
-            scale: screenshotConfig.value.quality
+            scale: FINAL_CONFIG.value.quality
         })
         .then(canvas => {
             const image = canvas.toDataURL('image/png', 1);
             const base64data = image.split(',')[1];
             const bytes = atob(base64data);
             const fileSize = bytes.length / 1024;
-            if(screenshotConfig.value.mode === 'download') {
+            if(FINAL_CONFIG.value.mode === 'download') {
                 const link = document.createElement("a");
                 link.download = 'screenshot.png';
                 link.href = image;
                 link.click();
             }
-            if(screenshotConfig.value.mode === 'post') {
+            if(FINAL_CONFIG.value.mode === 'post') {
                 emit('postImage', {
                     createdAt: Date.now(),
                     fileSize: `${fileSize.toFixed(2)} KB`,
@@ -317,7 +317,7 @@ function saveScreenshot() {
 }
 
 function createHandles(o) {
-    const offset = screenshotConfig.value.style.handles.size / 2 + 4;
+    const offset = FINAL_CONFIG.value.style.handles.size / 2 + 4;
     const NW = document.createElement("DIV");
     NW.style.top = `${-offset}px`;
     NW.style.left = `${-offset}px`;
@@ -351,7 +351,7 @@ function createHandles(o) {
     SE.dataset.cy = "screenshot-handle-se";
 
     const saveButton = document.createElement("BUTTON");
-    saveButton.innerHTML = `<svg id="saveButtonSvg" xmlns="http://www.w3.org/2000/svg"  width="24" height="24" viewBox="0 0 20 20" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M1 4 1 3C1 2 2 1 3 1L4 1M16 1 17 1C18 1 19 2 19 3L19 4M1 16 1 17C1 18 2 19 3 19L4 19M16 19 17 19C18 19 19 18 19 17L19 16M8 10A1 1 0 0012 10 1 1 0 008 10M5 13 5 8C5 7 5 7 6 7L14 7C15 7 15 7 15 8L15 13C15 14 15 14 14 14L6 14C5 14 5 14 5 13M7 6 13 6" /></svg><span>${screenshotConfig.value.translations.captureButton}</span>`;
+    saveButton.innerHTML = `<svg id="saveButtonSvg" xmlns="http://www.w3.org/2000/svg"  width="24" height="24" viewBox="0 0 20 20" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M1 4 1 3C1 2 2 1 3 1L4 1M16 1 17 1C18 1 19 2 19 3L19 4M1 16 1 17C1 18 2 19 3 19L4 19M16 19 17 19C18 19 19 18 19 17L19 16M8 10A1 1 0 0012 10 1 1 0 008 10M5 13 5 8C5 7 5 7 6 7L14 7C15 7 15 7 15 8L15 13C15 14 15 14 14 14L6 14C5 14 5 14 5 13M7 6 13 6" /></svg><span>${FINAL_CONFIG.value.translations.captureButton}</span>`;
 
     saveButton.classList.add("vue-ui-screenshot-capture-button");
     saveButton.id = `vue-ui-screenshot-button-${uid.value}`;
@@ -359,26 +359,26 @@ function createHandles(o) {
     saveButton.style.top = "50%";
     saveButton.style.left = "50%";
     saveButton.style.transform = "translate(-50%,-50%)";
-    saveButton.style.background = screenshotConfig.value.style.captureButton.background;
-    saveButton.style.color = screenshotConfig.value.style.captureButton.color;
-    saveButton.style.border = screenshotConfig.value.style.captureButton.border;
+    saveButton.style.background = FINAL_CONFIG.value.style.captureButton.background;
+    saveButton.style.color = FINAL_CONFIG.value.style.captureButton.color;
+    saveButton.style.border = FINAL_CONFIG.value.style.captureButton.border;
     saveButton.style.outline = "none";
     saveButton.style.cursor = "pointer";
-    saveButton.style.padding = screenshotConfig.value.style.captureButton.padding;
-    saveButton.style.fontFamily = screenshotConfig.value.style.captureButton.fontFamily;
-    saveButton.style.fontSize = `${screenshotConfig.value.style.captureButton.fontSize}px`;
-    saveButton.style.minHeight = `${screenshotConfig.value.style.captureButton.minHeight}px`;
+    saveButton.style.padding = FINAL_CONFIG.value.style.captureButton.padding;
+    saveButton.style.fontFamily = FINAL_CONFIG.value.style.captureButton.fontFamily;
+    saveButton.style.fontSize = `${FINAL_CONFIG.value.style.captureButton.fontSize}px`;
+    saveButton.style.minHeight = `${FINAL_CONFIG.value.style.captureButton.minHeight}px`;
     saveButton.style.width = "fit-content";
     saveButton.style.display = "flex";
     saveButton.style.alignItems = "center";
     saveButton.style.justifyContent = "center";
     saveButton.style.gap = "3px";
-    saveButton.style.borderRadius = `${screenshotConfig.value.style.captureButton.borderRadius}px`;
-    saveButton.style.boxShadow = screenshotConfig.value.style.captureButton.boxShadow;
+    saveButton.style.borderRadius = `${FINAL_CONFIG.value.style.captureButton.borderRadius}px`;
+    saveButton.style.boxShadow = FINAL_CONFIG.value.style.captureButton.boxShadow;
     saveButton.style.userSelect = "none";
     saveButton.style.opacity = "0.95";
     saveButton.style.textAlign="left";
-    saveButton.style.fontWeight = screenshotConfig.value.style.captureButton.bold ? 'bold' : 'normal';
+    saveButton.style.fontWeight = FINAL_CONFIG.value.style.captureButton.bold ? 'bold' : 'normal';
     saveButton.dataset.cy = "screenshot-save-button";
     saveButton.addEventListener("mouseenter", () => {
         saveButton.style.opacity = "1";
@@ -393,11 +393,11 @@ function createHandles(o) {
         handle.classList.add(`handle-${i}`);
         handle.dataset.html2canvasIgnore = "true";
         handle.style.position = "absolute";
-        handle.style.height = `${screenshotConfig.value.style.handles.size}px`;
-        handle.style.width = `${screenshotConfig.value.style.handles.size}px`;
-        handle.style.background = screenshotConfig.value.style.handles.background;
-        handle.style.border = screenshotConfig.value.style.handles.border;
-        handle.style.borderRadius = `${screenshotConfig.value.style.handles.borderRadius}px`;
+        handle.style.height = `${FINAL_CONFIG.value.style.handles.size}px`;
+        handle.style.width = `${FINAL_CONFIG.value.style.handles.size}px`;
+        handle.style.background = FINAL_CONFIG.value.style.handles.background;
+        handle.style.border = FINAL_CONFIG.value.style.handles.border;
+        handle.style.borderRadius = `${FINAL_CONFIG.value.style.handles.borderRadius}px`;
         handle.style.pointerEvents = "auto !important";
         handle.addEventListener("mousedown" , moveHandle);
         handle.addEventListener("touchstart", moveHandle);

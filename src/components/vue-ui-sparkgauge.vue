@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import { 
@@ -13,6 +12,9 @@ import {
     XMLNS
 } from "../lib";
 import Skeleton from "./vue-ui-skeleton.vue";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -54,12 +56,11 @@ onMounted(() => {
 })
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_sparkgauge);
 
-const sparkgaugeConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -75,9 +76,9 @@ const sparkgaugeConfig = computed(() => {
 
 const svg = computed(() => {
     return {
-        height: sparkgaugeConfig.value.style.height,
+        height: FINAL_CONFIG.value.style.height,
         width: 128,
-        base: sparkgaugeConfig.value.style.basePosition
+        base: FINAL_CONFIG.value.style.basePosition
     }
 })
 
@@ -92,10 +93,10 @@ const bounds = computed(() => {
     }
 })
 
-const currentScore = ref(sparkgaugeConfig.value.style.animation.show ? bounds.value.min : props.dataset.value);
+const currentScore = ref(FINAL_CONFIG.value.style.animation.show ? bounds.value.min : props.dataset.value);
 
 watch(() => props.dataset.value, () => {
-    currentScore.value = ref(sparkgaugeConfig.value.style.animation.show ? bounds.value.min : props.dataset.value)
+    currentScore.value = ref(FINAL_CONFIG.value.style.animation.show ? bounds.value.min : props.dataset.value)
     useAnimation()
 })
 
@@ -110,7 +111,7 @@ const controlScore = computed(() => {
 })
 
 const animationTick = computed(() => {
-    return bounds.value.diff / sparkgaugeConfig.value.style.animation.speedMs;
+    return bounds.value.diff / FINAL_CONFIG.value.style.animation.speedMs;
 })
 
 onMounted(() => {
@@ -126,7 +127,7 @@ function useAnimation() {
             currentScore.value = props.dataset.value
         }
     }
-    if(sparkgaugeConfig.value.style.animation.show) {
+    if(FINAL_CONFIG.value.style.animation.show) {
         currentScore.value = bounds.value.min;
         animate();
     }
@@ -146,20 +147,20 @@ const valueRatio = computed(() => {
 })
 
 const currentColor = computed(() => {
-    return interpolateColorHex(sparkgaugeConfig.value.style.colors.min, sparkgaugeConfig.value.style.colors.max, bounds.value.min, bounds.value.max, currentScore.value)
+    return interpolateColorHex(FINAL_CONFIG.value.style.colors.min, FINAL_CONFIG.value.style.colors.max, bounds.value.min, bounds.value.max, currentScore.value)
 })
 
 const labelColor = computed(() => {
-    if(!sparkgaugeConfig.value.style.dataLabel.autoColor) {
-        return sparkgaugeConfig.value.style.dataLabel.color;
+    if(!FINAL_CONFIG.value.style.dataLabel.autoColor) {
+        return FINAL_CONFIG.value.style.dataLabel.color;
     } else {
         return currentColor.value;
     }
 })
 
 const trackColor = computed(() => {
-    if (!sparkgaugeConfig.value.style.track.autoColor) {
-        return sparkgaugeConfig.value.style.track.color;
+    if (!FINAL_CONFIG.value.style.track.autoColor) {
+        return FINAL_CONFIG.value.style.track.color;
     } else {
         return currentColor.value;
     }
@@ -167,49 +168,49 @@ const trackColor = computed(() => {
 </script>
 
 <template>
-<div :style="`font-family:${sparkgaugeConfig.style.fontFamily};width: 100%; background:${sparkgaugeConfig.style.background}`">
+<div :style="`font-family:${FINAL_CONFIG.style.fontFamily};width: 100%; background:${FINAL_CONFIG.style.background}`">
     <!-- TITLE TOP -->
-    <div v-if="sparkgaugeConfig.style.title.show && nameLabel && sparkgaugeConfig.style.title.position === 'top'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${sparkgaugeConfig.style.title.fontSize}px;text-align:${sparkgaugeConfig.style.title.textAlign};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};color:${sparkgaugeConfig.style.title.color}`">
+    <div v-if="FINAL_CONFIG.style.title.show && nameLabel && FINAL_CONFIG.style.title.position === 'top'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold': 'normal'};color:${FINAL_CONFIG.style.title.color}`">
         {{ nameLabel }}
     </div>
-    <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:${sparkgaugeConfig.style.background}; width:100%;`">
+    <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:${FINAL_CONFIG.style.background}; width:100%;`">
         <defs>
             <linearGradient :id="`gradient_${ uid}`" x1="-10%" y1="100%" x2="110%" y2="100%">
-                <stop offset="0%" :stop-color="sparkgaugeConfig.style.colors.min"/>
-                <stop offset="100%" :stop-color="sparkgaugeConfig.style.colors.max"/>
+                <stop offset="0%" :stop-color="FINAL_CONFIG.style.colors.min"/>
+                <stop offset="100%" :stop-color="FINAL_CONFIG.style.colors.max"/>
             </linearGradient>
         </defs>
         <!-- GUTTER -->
         <path
             :d="`M${10} ${svg.base} A 1 1 0 1 1 ${118} ${svg.base}`"
-            :stroke="sparkgaugeConfig.style.gutter.color"
+            :stroke="FINAL_CONFIG.style.gutter.color"
             :stroke-width="8"
-            :stroke-linecap="sparkgaugeConfig.style.gutter.strokeLinecap"
+            :stroke-linecap="FINAL_CONFIG.style.gutter.strokeLinecap"
             fill="none"
         />
         <!-- TRACK -->
         <path
             v-if="valueRatio !== 0"
             :d="`M${10} ${svg.base} A 1 1 0 1 1 ${118} ${svg.base}`"
-            :stroke="sparkgaugeConfig.style.colors.showGradient ? `url(#gradient_${uid})` : trackColor"
+            :stroke="FINAL_CONFIG.style.colors.showGradient ? `url(#gradient_${uid})` : trackColor"
             :stroke-width="8"
-            :stroke-linecap="sparkgaugeConfig.style.track.strokeLinecap"
+            :stroke-linecap="FINAL_CONFIG.style.track.strokeLinecap"
             fill="none"
             :stroke-dasharray="169.5"
             :stroke-dashoffset="169.5 - (169.5 * valueRatio)"
-            :class="{'vue-ui-sparkgauge-track' : sparkgaugeConfig.style.animation.show }"
-            :style="sparkgaugeConfig.style.animation.show ? `animation: vue-ui-sparkgauge-animation ${sparkgaugeConfig.style.animation.speedMs}ms ease-in;`: ''"
+            :class="{'vue-ui-sparkgauge-track' : FINAL_CONFIG.style.animation.show }"
+            :style="FINAL_CONFIG.style.animation.show ? `animation: vue-ui-sparkgauge-animation ${FINAL_CONFIG.style.animation.speedMs}ms ease-in;`: ''"
         />
         <!-- DATALABEL -->
         <text
             text-anchor="middle"
             :x="svg.width / 2"
-            :y="svg.base + 6 + sparkgaugeConfig.style.dataLabel.offsetY"
-            :font-size="sparkgaugeConfig.style.dataLabel.fontSize"
+            :y="svg.base + 6 + FINAL_CONFIG.style.dataLabel.offsetY"
+            :font-size="FINAL_CONFIG.style.dataLabel.fontSize"
             :fill="labelColor"
-            :font-weight="sparkgaugeConfig.style.dataLabel.bold ? 'bold' : 'normal'"
+            :font-weight="FINAL_CONFIG.style.dataLabel.bold ? 'bold' : 'normal'"
         >
-            {{ dataLabel({ p: sparkgaugeConfig.style.dataLabel.prefix, v: currentScore, s: sparkgaugeConfig.style.dataLabel.suffix, r: sparkgaugeConfig.style.dataLabel.rounding }) }}
+            {{ dataLabel({ p: FINAL_CONFIG.style.dataLabel.prefix, v: currentScore, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.rounding }) }}
         </text>
     </svg>
 
@@ -218,7 +219,7 @@ const trackColor = computed(() => {
             :config="{
                 type: 'gauge',
                 style: {
-                    backgroundColor: sparkgaugeConfig.style.background,
+                    backgroundColor: FINAL_CONFIG.style.background,
                     gauge: {
                         color: '#CCCCCC'
                     }
@@ -227,7 +228,7 @@ const trackColor = computed(() => {
         />
 
     <!-- TITLE BOTTOM -->
-    <div v-if="sparkgaugeConfig.style.title.show && nameLabel && sparkgaugeConfig.style.title.position === 'bottom'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${sparkgaugeConfig.style.title.fontSize}px;text-align:${sparkgaugeConfig.style.title.textAlign};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};font-weight:${sparkgaugeConfig.style.title.bold ? 'bold': 'normal'};color:${sparkgaugeConfig.style.title.color}`">
+    <div v-if="FINAL_CONFIG.style.title.show && nameLabel && FINAL_CONFIG.style.title.position === 'bottom'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold': 'normal'};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold': 'normal'};color:${FINAL_CONFIG.style.title.color}`">
         {{ nameLabel }}
     </div>
 </div>

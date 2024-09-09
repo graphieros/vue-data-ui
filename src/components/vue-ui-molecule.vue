@@ -15,7 +15,6 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -29,6 +28,9 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_molecule: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -59,7 +61,6 @@ onMounted(() => {
 })
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_molecule);
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -70,10 +71,10 @@ const zoomReference = ref(null);
 const selectedNode = ref(null);
 const step = ref(0);
 
-const moleculeConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -90,17 +91,17 @@ const moleculeConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `cluster_${uid.value}`,
-    fileName: moleculeConfig.value.style.chart.title.text || 'vue-ui-molecule'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-molecule'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(moleculeConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 const mutableConfig = ref({
-    showTable: moleculeConfig.value.table.show,
+    showTable: FINAL_CONFIG.value.table.show,
     showDataLabels: true,
-    showTooltip: moleculeConfig.value.style.chart.tooltip.show
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 function calculateDepth(data, depth = 0) {
@@ -261,7 +262,7 @@ function zoomOnNode(node) {
     
         function animateZoom() {
             dynamicViewBox.value = `${startX + stepX * currentStep} ${startY + stepY * currentStep} ${startWidth + stepWidth * currentStep} ${startHeight + stepHeight * currentStep}`;
-            currentStep += moleculeConfig.value.style.chart.zoom.speed;
+            currentStep += FINAL_CONFIG.value.style.chart.zoom.speed;
     
             if (currentStep <= numSteps) {
                 currentAnimationFrame.value = requestAnimationFrame(animateZoom);
@@ -307,29 +308,29 @@ function createTooltipContent(node) {
         datapoint: node,
         seriesIndex: -1,
         series: convertedDataset.value,
-        config: moleculeConfig.value
+        config: FINAL_CONFIG.value
     }
 
-    const customFormat = moleculeConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             seriesIndex: -1,
             datapoint: node,
             series: convertedDataset.value,
-            config: moleculeConfig.value
+            config: FINAL_CONFIG.value
         }))) {
         tooltipContent.value = customFormat({
             seriesIndex: -1, // well, ok
             datapoint: node,
             series: convertedDataset.value,
-            config: moleculeConfig.value
+            config: FINAL_CONFIG.value
         })
     } else {
         let html = "";
     
         html += `<div style="display:flex;align-items:center;gap:3px"><div style="color:${node.color}">⬤</div><div>${node.name}</div></div>`;
         if(node.details) {
-            html += `<div style="width:100%;border-top:1px solid ${moleculeConfig.value.style.chart.tooltip.borderColor};margin-top: 2px">${node.details}</div>`
+            html += `<div style="width:100%;border-top:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};margin-top: 2px">${node.details}</div>`
         }
     
         tooltipContent.value = `<div style="font-family:inherit">${html}</div>`;
@@ -398,9 +399,9 @@ const convertedTableData = computed(() => {
 
 const dataTable = computed(() => {
     const head = [
-        moleculeConfig.value.table.translations.nodeName,
-        moleculeConfig.value.table.translations.details,
-        moleculeConfig.value.table.translations.ancestor,
+        FINAL_CONFIG.value.table.translations.nodeName,
+        FINAL_CONFIG.value.table.translations.details,
+        FINAL_CONFIG.value.table.translations.ancestor,
     ];
 
     const body = convertedTableData.value.map((h,i) => {
@@ -416,22 +417,22 @@ const dataTable = computed(() => {
 
     const config = {
         th: {
-            backgroundColor: moleculeConfig.value.table.th.backgroundColor,
-            color: moleculeConfig.value.table.th.color,
-            outline: moleculeConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: moleculeConfig.value.table.td.backgroundColor,
-            color: moleculeConfig.value.table.td.color,
-            outline: moleculeConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: moleculeConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-        moleculeConfig.value.table.translations.nodeName,
-        moleculeConfig.value.table.translations.details,
-        moleculeConfig.value.table.translations.ancestor
+        FINAL_CONFIG.value.table.translations.nodeName,
+        FINAL_CONFIG.value.table.translations.details,
+        FINAL_CONFIG.value.table.translations.ancestor
     ]
 
     return {
@@ -448,10 +449,10 @@ function generateCsv() {
         const labels = dataTable.value.body.map((b, i) => {
             return [[b[0].name],[b[1]],[b[2]]]
         })
-        const tableXls = [[moleculeConfig.value.style.chart.title.text],[moleculeConfig.value.style.chart.title.subtitle.text],[[...dataTable.value.head]]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[...dataTable.value.head]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: moleculeConfig.value.style.chart.title.text || "vue-ui-molecule" })
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-molecule" })
     });
 }
 
@@ -494,19 +495,19 @@ defineExpose({
         @mouseleave="hoveredNode = null; hoveredUid = null"
         ref="moleculeChart"
         :class="`vue-ui-molecule ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
-        :style="`font-family:${moleculeConfig.style.fontFamily};width:100%; text-align:center;background:${moleculeConfig.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`cluster_${uid}`">
 
-        <div v-if="moleculeConfig.style.chart.title.text" :style="`width:100%;background:${moleculeConfig.style.chart.backgroundColor};`">
+        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <Title
                 :config="{
                     title: {
                         cy: 'molecule-div-title',
-                        ...moleculeConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'molecule-div-subtitle',
-                        ...moleculeConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     }
                 }"
             />
@@ -515,21 +516,21 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="moleculeConfig.userOptions.show && isDataset"
-            :backgroundColor="moleculeConfig.style.chart.backgroundColor"
-            :color="moleculeConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="moleculeConfig.userOptions.buttons.tooltip && moleculeConfig.style.chart.tooltip.show"
-            :hasPdf="moleculeConfig.userOptions.buttons.pdf"
-            :hasXls="moleculeConfig.userOptions.buttons.csv"
-            :hasImg="moleculeConfig.userOptions.buttons.img"
-            :hasTable="moleculeConfig.userOptions.buttons.table"
-            :hasLabel="moleculeConfig.userOptions.buttons.labels"
-            :hasFullscreen="moleculeConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...moleculeConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="moleculeChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -564,7 +565,7 @@ defineExpose({
 
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="cluster-svg" :viewBox="dynamicViewBox"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :style="`overflow: hidden; background:${moleculeConfig.style.chart.backgroundColor};color:${moleculeConfig.style.chart.color}`" @click.stop="unzoom($event)">
+            :style="`overflow: hidden; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`" @click.stop="unzoom($event)">
 
             <defs>
                 <radialGradient v-for="color in Object.keys(gradientIds)" :id="`gradient_${color}`" cx="50%" cy="30%" r="50%" fx="50%" fy="50%">
@@ -576,22 +577,22 @@ defineExpose({
 
             <RecursiveLinks 
                 :dataset="convertedDataset" 
-                :color="moleculeConfig.style.chart.links.stroke"
-                :backgroundColor="moleculeConfig.style.chart.backgroundColor"
+                :color="FINAL_CONFIG.style.chart.links.stroke"
+                :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             />
 
             <RecursiveCircles 
                 :dataset="convertedDataset" 
                 :hoveredUid="hoveredUid"
-                :stroke="moleculeConfig.style.chart.nodes.stroke"
-                :strokeHovered="moleculeConfig.style.chart.nodes.strokeHovered"
+                :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
+                :strokeHovered="FINAL_CONFIG.style.chart.nodes.strokeHovered"
                 @zoom="zoom" 
                 @hover="hover" 
             />
             <RecursiveLabels
                 v-if="mutableConfig.showDataLabels"
                 :dataset="convertedDataset"
-                :color="moleculeConfig.style.chart.color" 
+                :color="FINAL_CONFIG.style.chart.color" 
                 :hoveredUid="hoveredUid"
             />
             <slot name="svg" :svg="svg"/>
@@ -600,7 +601,7 @@ defineExpose({
         <BaseDirectionPad 
             v-if="isZoom"
             :key="`direction_pad_${step}`"
-            :color="moleculeConfig.style.chart.color"
+            :color="FINAL_CONFIG.style.chart.color"
             :isFullscreen="isFullscreen"
             @moveLeft="move('left')"
             @moveRight="move('right')"
@@ -614,7 +615,7 @@ defineExpose({
             :config="{
                 type: 'molecule',
                 style: {
-                    backgroundColor: moleculeConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     molecule: {
                         color: '#CCCCCC'
                     }
@@ -624,15 +625,15 @@ defineExpose({
 
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="moleculeConfig.style.chart.tooltip.backgroundColor"
-            :color="moleculeConfig.style.chart.tooltip.color"
-            :borderRadius="moleculeConfig.style.chart.tooltip.borderRadius"
-            :borderColor="moleculeConfig.style.chart.tooltip.borderColor"
-            :borderWidth="moleculeConfig.style.chart.tooltip.borderWidth"
-            :fontSize="moleculeConfig.style.chart.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :parent="moleculeChart"
             :content="tooltipContent"
-            :isCustom="moleculeConfig.style.chart.tooltip.customFormat && typeof moleculeConfig.style.chart.tooltip.customFormat === 'function'"
+            :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
@@ -646,12 +647,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: moleculeConfig.style.chart.backgroundColor,
-                color: moleculeConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
-                backgroundColor: moleculeConfig.style.chart.backgroundColor,
-                color: moleculeConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
@@ -660,7 +661,7 @@ defineExpose({
                     :head="dataTable.head" 
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${moleculeConfig.style.chart.title.text}${moleculeConfig.style.chart.title.subtitle.text ? ` : ${moleculeConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

@@ -21,7 +21,6 @@ import {
 translateSize
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -33,6 +32,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_strip_plot: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -61,7 +63,6 @@ const isDataset = computed({
 });
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_strip_plot);
 const step = ref(0);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -69,10 +70,10 @@ const stripPlotChart = ref(null);
 const chartTitle = ref(null);
 const animationStarted = ref(false);
 
-const stripConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -128,11 +129,11 @@ onMounted(() => {
         })
     }
 
-    if (stripConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: stripPlotChart.value,
-                title: stripConfig.value.style.chart.title.text ? chartTitle.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
             });
             absoluteHeight.value = height;
 
@@ -143,7 +144,7 @@ onMounted(() => {
             plotRadius.value = translateSize({
                 relator: Math.min(height, width),
                 adjuster: 600,
-                source: stripConfig.value.style.chart.plots.radius,
+                source: FINAL_CONFIG.value.style.chart.plots.radius,
                 threshold: 6,
                 fallback: 6
             });
@@ -166,37 +167,37 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `strip-plot_${uid.value}`,
-    fileName: stripConfig.value.style.chart.title.text || 'vue-ui-strip-plot'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-strip-plot'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(stripConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
-const animationActive = ref(stripConfig.value.useCssAnimation);
+const animationActive = ref(FINAL_CONFIG.value.useCssAnimation);
 
 const mutableConfig = ref({
-    showTable: stripConfig.value.table.show,
+    showTable: FINAL_CONFIG.value.table.show,
     dataLabels: {
-        show: stripConfig.value.style.chart.labels.bestPlotLabel.show
+        show: FINAL_CONFIG.value.style.chart.labels.bestPlotLabel.show
     },
-    showTooltip: stripConfig.value.style.chart.tooltip.show
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 const padding = ref({
-    top: stripConfig.value.style.chart.padding.top,
-    bottom: stripConfig.value.style.chart.padding.bottom,
-    left: stripConfig.value.style.chart.padding.left,
-    right: stripConfig.value.style.chart.padding.right
+    top: FINAL_CONFIG.value.style.chart.padding.top,
+    bottom: FINAL_CONFIG.value.style.chart.padding.bottom,
+    left: FINAL_CONFIG.value.style.chart.padding.left,
+    right: FINAL_CONFIG.value.style.chart.padding.right
 })
 
-const stripWidth = ref(stripConfig.value.style.chart.stripWidth);
-const absoluteHeight = ref(stripConfig.value.style.chart.height);
-const plotRadius = ref(stripConfig.value.style.chart.plots.radius);
+const stripWidth = ref(FINAL_CONFIG.value.style.chart.stripWidth);
+const absoluteHeight = ref(FINAL_CONFIG.value.style.chart.height);
+const plotRadius = ref(FINAL_CONFIG.value.style.chart.plots.radius);
 
 const svg = ref({
     width: stripWidth.value * props.dataset.length + padding.value.left + padding.value.right,
-    height:stripConfig.value.style.chart.height
+    height:FINAL_CONFIG.value.style.chart.height
 })
 
 
@@ -262,7 +263,7 @@ const extremes = computed(() => {
 })
 
 const scale = computed(() => {
-    return calculateNiceScale(extremes.value.min < 0 ? extremes.value.min : 0, extremes.value.max, stripConfig.value.style.chart.grid.scaleSteps);
+    return calculateNiceScale(extremes.value.min < 0 ? extremes.value.min : 0, extremes.value.max, FINAL_CONFIG.value.style.chart.grid.scaleSteps);
 })
 
 const drawableDataset = computed(() => {
@@ -294,33 +295,33 @@ const dataTooltipSlot = ref(null);
 const selectedDatapoint = ref(null);
 
 function useTooltip({ datapoint, seriesIndex }) {
-    dataTooltipSlot.value = { datapoint, seriesIndex, config: stripConfig.value, series: immutableDataset.value };
+    dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: immutableDataset.value };
     isTooltip.value = true;
     selectedDatapoint.value = datapoint;
 
-    const customFormat = stripConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if(isFunction(customFormat) && functionReturnsString(() => customFormat({
         seriesIndex,
         datapoint,
         series: immutableDataset.value,
-        config: stripConfig.value
+        config: FINAL_CONFIG.value
     }))) {
         tooltipContent.value = customFormat({
             seriesIndex,
             datapoint,
             series: immutableDataset.value,
-            config: stripConfig.value
+            config: FINAL_CONFIG.value
         });
     } else {
         let html = "";
 
-        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${stripConfig.value.style.chart.plots.gradient.show ? `url(#${datapoint.parentId})` : datapoint.color}"/></svg>${datapoint.name}</div>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#${datapoint.parentId})` : datapoint.color}"/></svg>${datapoint.name}</div>`;
         html += `<div>${dataLabel({
-            p: stripConfig.value.style.chart.labels.prefix,
+            p: FINAL_CONFIG.value.style.chart.labels.prefix,
             v: datapoint.value,
-            s: stripConfig.value.style.chart.labels.suffix,
-            r: stripConfig.value.style.chart.tooltip.roundingValue
+            s: FINAL_CONFIG.value.style.chart.labels.suffix,
+            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
         })}</div>`
 
         tooltipContent.value = `<div>${html}</div>`
@@ -349,25 +350,25 @@ function generateCsv() {
                 h.name
             ],[table.value.body[i]]]
         });
-        const tableXls = [[stripConfig.value.style.chart.title.text],[stripConfig.value.style.chart.title.subtitle.text],[[stripConfig.value.table.columnNames.series],[stripConfig.value.table.columnNames.value]]].concat(labels);
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[FINAL_CONFIG.value.table.columnNames.series],[FINAL_CONFIG.value.table.columnNames.value]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: stripConfig.value.style.chart.title.text || "vue-ui-strip-plot" })
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-strip-plot" })
     });
 }
 
 
 const dataTable = computed(() => {
     const head = [
-        stripConfig.value.table.columnNames.series,
-        stripConfig.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
     ];
     const body = table.value.head.map((h,i) => {
         const label = dataLabel({
-            p: stripConfig.value.style.chart.labels.prefix,
+            p: FINAL_CONFIG.value.style.chart.labels.prefix,
             v: table.value.body[i],
-            s: stripConfig.value.style.chart.labels.suffix,
-            r: stripConfig.value.table.td.roundingValue
+            s: FINAL_CONFIG.value.style.chart.labels.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
         });
         return [
             {
@@ -380,21 +381,21 @@ const dataTable = computed(() => {
 
     const config = {
         th: {
-            backgroundColor: stripConfig.value.table.th.backgroundColor,
-            color: stripConfig.value.table.th.color,
-            outline: stripConfig.value.table.th.outline
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
         },
         td: {
-            backgroundColor: stripConfig.value.table.td.backgroundColor,
-            color: stripConfig.value.table.td.color,
-            outline: stripConfig.value.table.td.outline
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
         },
-        breakpoint: stripConfig.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
     const colNames = [
-        stripConfig.value.table.columnNames.series,
-        stripConfig.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
     ]
 
     return {
@@ -440,19 +441,19 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="stripPlotChart" :class="`vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${stripConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${stripConfig.style.fontFamily};width:100%; text-align:center;${!stripConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${stripConfig.style.chart.backgroundColor};${stripConfig.responsive ? 'height:100%' : ''}`" :id="`strip-plot_${uid}`">
+    <div ref="stripPlotChart" :class="`vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" :id="`strip-plot_${uid}`">
 
-        <div ref="chartTitle" v-if="stripConfig.style.chart.title.text" :style="`width:100%;background:${stripConfig.style.chart.backgroundColor};padding-bottom:24px`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
             <!-- TITLE AS DIV -->
             <Title
                 :config="{
                     title: {
                         cy: 'donut-div-title',
-                        ...stripConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'donut-div-subtitle',
-                        ...stripConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     }
                 }"
             />
@@ -461,22 +462,22 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="stripConfig.userOptions.show && isDataset"
-            :backgroundColor="stripConfig.style.chart.backgroundColor"
-            :color="stripConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="stripConfig.userOptions.buttons.tooltip && stripConfig.style.chart.tooltip.show"
-            :hasPdf="stripConfig.userOptions.buttons.pdf"
-            :hasXls="stripConfig.userOptions.buttons.csv"
-            :hasImg="stripConfig.userOptions.buttons.img"
-            :hasTable="stripConfig.userOptions.buttons.table"
-            :hasLabel="stripConfig.userOptions.buttons.labels"
-            :hasFullscreen="stripConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
-            :titles="{ ...stripConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="stripPlotChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -509,35 +510,35 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%; overflow: visible; background:${stripConfig.style.chart.backgroundColor};color:${stripConfig.style.chart.color};`">
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%; overflow: visible; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color};`">
             
             <!-- GRID -->
-            <g v-if="stripConfig.style.chart.grid.show">
+            <g v-if="FINAL_CONFIG.style.chart.grid.show">
                 <!-- H GRID -->
-                <g v-if="stripConfig.style.chart.grid.horizontalGrid.show">
+                <g v-if="FINAL_CONFIG.style.chart.grid.horizontalGrid.show">
                     <line 
                         v-for="l in yLines"
                         :x1="l.x1"
                         :x2="l.x2"
                         :y1="l.y"
                         :y2="l.y"
-                        :stroke="stripConfig.style.chart.grid.horizontalGrid.stroke"
-                        :stroke-width="stripConfig.style.chart.grid.horizontalGrid.strokeWidth"
-                        :stroke-dasharray="stripConfig.style.chart.grid.horizontalGrid.strokeDasharray"
+                        :stroke="FINAL_CONFIG.style.chart.grid.horizontalGrid.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.grid.horizontalGrid.strokeWidth"
+                        :stroke-dasharray="FINAL_CONFIG.style.chart.grid.horizontalGrid.strokeDasharray"
                         stroke-linecap="round"
                     />
                 </g>
                 <!-- V GRID -->
-                <g v-if="stripConfig.style.chart.grid.verticalGrid.show">
+                <g v-if="FINAL_CONFIG.style.chart.grid.verticalGrid.show">
                     <line
                         v-for="(l, i) in mutableDataset"
                         :x1="drawingArea.left + ((i+1) * drawingArea.stripWidth)"
                         :x2="drawingArea.left + ((i+1) * drawingArea.stripWidth)"
                         :y1="drawingArea.top"
                         :y2="drawingArea.bottom"
-                        :stroke="stripConfig.style.chart.grid.verticalGrid.stroke"
-                        :stroke-width="stripConfig.style.chart.grid.verticalGrid.strokeWidth"
-                        :stroke-dasharray="stripConfig.style.chart.grid.verticalGrid.strokeDasharray"
+                        :stroke="FINAL_CONFIG.style.chart.grid.verticalGrid.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.grid.verticalGrid.strokeWidth"
+                        :stroke-dasharray="FINAL_CONFIG.style.chart.grid.verticalGrid.strokeDasharray"
                         stroke-linecap="round"
                     />
                 </g>
@@ -547,8 +548,8 @@ defineExpose({
                     :x2="drawingArea.left"
                     :y1="drawingArea.top"
                     :y2="drawingArea.bottom"
-                    :stroke="stripConfig.style.chart.grid.stroke"
-                    :stroke-width="stripConfig.style.chart.grid.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.chart.grid.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.strokeWidth"
                     stroke-linecap="round"
                 />
                 <!-- X AXIS -->
@@ -557,38 +558,38 @@ defineExpose({
                     :x2="drawingArea.right"
                     :y1="drawingArea.bottom"
                     :y2="drawingArea.bottom"
-                    :stroke="stripConfig.style.chart.grid.stroke"
-                    :stroke-width="stripConfig.style.chart.grid.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.chart.grid.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.strokeWidth"
                     stroke-linecap="round"
                 />
             </g>
             <!-- Y AXIS VALUE LABELS -->
-            <template v-if="stripConfig.style.chart.labels.yAxisLabels.show">
+            <template v-if="FINAL_CONFIG.style.chart.labels.yAxisLabels.show">
                 <text
                     v-for="label in yLines"
-                    :x="label.x1 - stripConfig.style.chart.labels.yAxisLabels.fontSize / 2 + stripConfig.style.chart.labels.yAxisLabels.offsetX"
-                    :y="label.y + stripConfig.style.chart.labels.yAxisLabels.fontSize / 3"
-                    :fill="stripConfig.style.chart.labels.yAxisLabels.color"
-                    :font-size="stripConfig.style.chart.labels.yAxisLabels.fontSize"
+                    :x="label.x1 - FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 2 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX"
+                    :y="label.y + FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3"
+                    :fill="FINAL_CONFIG.style.chart.labels.yAxisLabels.color"
+                    :font-size="FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize"
                     text-anchor="end"
                 >
                     {{  dataLabel({
-                        p: stripConfig.style.chart.labels.prefix,
+                        p: FINAL_CONFIG.style.chart.labels.prefix,
                         v: label.value,
-                        s: stripConfig.style.chart.labels.suffix,
-                        r: stripConfig.style.chart.labels.yAxisLabels.rounding
+                        s: FINAL_CONFIG.style.chart.labels.suffix,
+                        r: FINAL_CONFIG.style.chart.labels.yAxisLabels.rounding
                     })  }}
                 </text>
             </template>
 
             <!-- X AXIS LABELS -->
-            <template v-if="stripConfig.style.chart.labels.xAxisLabels.show">
+            <template v-if="FINAL_CONFIG.style.chart.labels.xAxisLabels.show">
                 <text
                     v-for="(label, i) in mutableDataset"
                     :x="drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2"
-                    :y="drawingArea.bottom + stripConfig.style.chart.labels.xAxisLabels.fontSize * 2  + stripConfig.style.chart.labels.xAxisLabels.offsetY"
-                    :font-size="stripConfig.style.chart.labels.xAxisLabels.fontSize"
-                    :fill="stripConfig.style.chart.labels.xAxisLabels.color"
+                    :y="drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY"
+                    :font-size="FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.labels.xAxisLabels.color"
                     text-anchor="middle"
                 >
                     {{ label.name }}
@@ -597,24 +598,24 @@ defineExpose({
 
             <!-- Y AXIS NAME-->
             <text 
-                v-if="stripConfig.style.chart.labels.axis.yLabel"
-                :fill="stripConfig.style.chart.labels.axis.color"
-                :font-size="stripConfig.style.chart.labels.axis.fontSize"
-                :transform="`translate(${stripConfig.style.chart.labels.axis.fontSize + stripConfig.style.chart.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                v-if="FINAL_CONFIG.style.chart.labels.axis.yLabel"
+                :fill="FINAL_CONFIG.style.chart.labels.axis.color"
+                :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
+                :transform="`translate(${FINAL_CONFIG.style.chart.labels.axis.fontSize + FINAL_CONFIG.style.chart.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                 text-anchor="middle"
             >
-                {{ stripConfig.style.chart.labels.axis.yLabel }}
+                {{ FINAL_CONFIG.style.chart.labels.axis.yLabel }}
             </text>
             <!-- X AXIS NAME -->
             <text 
-                v-if="stripConfig.style.chart.labels.axis.xLabel"
-                :fill="stripConfig.style.chart.labels.axis.color"
-                :font-size="stripConfig.style.chart.labels.axis.fontSize"
+                v-if="FINAL_CONFIG.style.chart.labels.axis.xLabel"
+                :fill="FINAL_CONFIG.style.chart.labels.axis.color"
+                :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
                 :x="drawingArea.left + drawingArea.width / 2"
                 :y="drawingArea.absoluteHeight"
                 text-anchor="middle"
             >
-                {{ stripConfig.style.chart.labels.axis.xLabel }}
+                {{ FINAL_CONFIG.style.chart.labels.axis.xLabel }}
             </text>
 
             <template v-if="selectedDatapoint">
@@ -625,28 +626,28 @@ defineExpose({
                     :y2="selectedDatapoint.y"
                     :stroke="selectedDatapoint.color"
                     :stroke-width="1"
-                    :class="{ 'select-circle': stripConfig.useCssAnimation }"
+                    :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
                 />
                 <circle
                     :cx="drawingArea.left"
                     :cy="selectedDatapoint.y"
                     :r="3"
                     :fill="selectedDatapoint.color"
-                    :class="{ 'select-circle': stripConfig.useCssAnimation }"
+                    :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
                 />
                 <circle
                     :cx="drawingArea.right"
                     :cy="selectedDatapoint.y"
                     :r="3"
                     :fill="selectedDatapoint.color"
-                    :class="{ 'select-circle': stripConfig.useCssAnimation }"
+                    :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
                 />
             </template>
 
             <!-- PLOTS -->
             <defs>
                 <radialGradient v-for="ds in mutableDataset" :id="ds.id" fy="30%">
-                    <stop offset="10%" :stop-color="lightenHexColor(ds.color, stripConfig.style.chart.plots.gradient.intensity / 100)"/>
+                    <stop offset="10%" :stop-color="lightenHexColor(ds.color, FINAL_CONFIG.style.chart.plots.gradient.intensity / 100)"/>
                     <stop offset="90%" :stop-color="darkenHexColor(ds.color, 0.1)"/>
                     <stop offset="100%" :stop-color="ds.color"/>
                 </radialGradient>
@@ -657,15 +658,15 @@ defineExpose({
                     v-for="(plot, i) in ds.plots"
                     :plot="{ x:plot.x, y: animationStarted ? plot.y : drawingArea.top }"
                     :radius="selectedDatapoint && selectedDatapoint.id === plot.id ? plotRadius * 1.5 : plotRadius"
-                    :shape="stripConfig.style.chart.plots.shape"
-                    :stroke="stripConfig.style.chart.plots.stroke"
-                    :strokeWidth="stripConfig.style.chart.plots.strokeWidth"
-                    :color="stripConfig.style.chart.plots.gradient.show ? `url(#${ds.id})` : ds.color"
+                    :shape="FINAL_CONFIG.style.chart.plots.shape"
+                    :stroke="FINAL_CONFIG.style.chart.plots.stroke"
+                    :strokeWidth="FINAL_CONFIG.style.chart.plots.strokeWidth"
+                    :color="FINAL_CONFIG.style.chart.plots.gradient.show ? `url(#${ds.id})` : ds.color"
                     @mouseenter="useTooltip({ datapoint: plot, seriesIndex: i })"
                     @mouseleave="isTooltip = false; selectedDatapoint = null"
                     @click="emit('selectDatapoint', plot)"
-                    :style="`transition: all 0.2s ease-in-out; opacity:${selectedDatapoint ? selectedDatapoint.id === plot.id ? 1 : 0.2 : stripConfig.style.chart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
-                    :class="{ 'vue-ui-strip-plot-animated': stripConfig.useCssAnimation && animationActive, 'vue-ui-strip-plot-select-circle': stripConfig.useCssAnimation && !animationActive}"
+                    :style="`transition: all 0.2s ease-in-out; opacity:${selectedDatapoint ? selectedDatapoint.id === plot.id ? 1 : 0.2 : FINAL_CONFIG.style.chart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
+                    :class="{ 'vue-ui-strip-plot-animated': FINAL_CONFIG.useCssAnimation && animationActive, 'vue-ui-strip-plot-select-circle': FINAL_CONFIG.useCssAnimation && !animationActive}"
                     v-bind="$attrs"
                 />
 
@@ -675,17 +676,17 @@ defineExpose({
                         <text 
                             v-if="i === ds.plots.length - 1 || (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip)"
                             :x="plot.x"
-                            :y="plot.y + stripConfig.style.chart.labels.bestPlotLabel.offsetY - plotRadius * (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip ? 2 : 1.5)"
-                            :font-size="stripConfig.style.chart.labels.bestPlotLabel.fontSize"
-                            :fill="stripConfig.style.chart.labels.bestPlotLabel.color"
+                            :y="plot.y + FINAL_CONFIG.style.chart.labels.bestPlotLabel.offsetY - plotRadius * (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip ? 2 : 1.5)"
+                            :font-size="FINAL_CONFIG.style.chart.labels.bestPlotLabel.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.labels.bestPlotLabel.color"
                             text-anchor="middle"
-                            :style="`opacity:${stripConfig.useCssAnimation ? animationActive ? 0 : 1 : 1};transition:opacity 0.2s ease-in;`"
+                            :style="`opacity:${FINAL_CONFIG.useCssAnimation ? animationActive ? 0 : 1 : 1};transition:opacity 0.2s ease-in;`"
                         >
-                            {{ plot.name }} {{ stripConfig.style.chart.labels.bestPlotLabel.showValue ? dataLabel({
-                                p: `(${stripConfig.style.chart.labels.prefix}`,
+                            {{ plot.name }} {{ FINAL_CONFIG.style.chart.labels.bestPlotLabel.showValue ? dataLabel({
+                                p: `(${FINAL_CONFIG.style.chart.labels.prefix}`,
                                 v: plot.value,
-                                s: `${stripConfig.style.chart.labels.suffix})`,
-                                r: stripConfig.style.chart.labels.bestPlotLabel.rounding
+                                s: `${FINAL_CONFIG.style.chart.labels.suffix})`,
+                                r: FINAL_CONFIG.style.chart.labels.bestPlotLabel.rounding
                             }) : '' }}
                         </text>
                     </template>
@@ -699,7 +700,7 @@ defineExpose({
             :config="{
                 type: 'stripPlot',
                 style: {
-                    backgroundColor: stripConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     stripPlot: {
                         color: '#CCCCCC',
                     }
@@ -709,15 +710,15 @@ defineExpose({
 
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="stripConfig.style.chart.tooltip.backgroundColor"
-            :color="stripConfig.style.chart.tooltip.color"
-            :borderRadius="stripConfig.style.chart.tooltip.borderRadius"
-            :borderColor="stripConfig.style.chart.tooltip.borderColor"
-            :borderWidth="stripConfig.style.chart.tooltip.borderWidth"
-            :fontSize="stripConfig.style.chart.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :parent="stripPlotChart"
             :content="tooltipContent"
-            :isCustom="isFunction(stripConfig.style.chart.tooltip.customFormat)"
+            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -731,12 +732,12 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: stripConfig.style.chart.backgroundColor,
-                color: stripConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
-                backgroundColor: stripConfig.style.chart.backgroundColor,
-                color: stripConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
@@ -745,7 +746,7 @@ defineExpose({
                     :head="dataTable.head" 
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="`${stripConfig.style.chart.title.text}${stripConfig.style.chart.title.subtitle.text ? ` : ${stripConfig.style.chart.title.subtitle.text}` : ''}`"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false"
                 >
                     <template #th="{ th }">

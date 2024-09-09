@@ -329,17 +329,6 @@ function selectX(selectedX) {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <div style="width: 100%">
-        <LocalVueUiXy component="VueUiXy" :dataset="dataset" :config="{
-            responsive: false,
-            ...config,
-            chart: {
-                ...config.chart,
-            }
-        }">  
-    </LocalVueUiXy>
-    </div>
-
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
         <LocalVueUiXy component="VueUiXy" :dataset="dataset" :config="{
             ...config,

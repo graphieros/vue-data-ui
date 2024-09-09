@@ -18,7 +18,6 @@ import {
     convertCustomPalette
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
-import mainConfig from "../default_configs.json";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -30,6 +29,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
+import { useConfig } from "../useConfig";
+
+const { vue_ui_vertical_bar: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
     config: {
@@ -51,8 +53,6 @@ const isDataset = computed(() => {
 })
 
 const uid = ref(createUid());
-const defaultConfig = ref(mainConfig.vue_ui_vertical_bar);
-
 const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
@@ -65,10 +65,10 @@ const chartLegend = ref(null);
 
 const emit = defineEmits(['selectLegend']);
 
-const verticalBarConfig = computed(() => {
+const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: defaultConfig.value
+        defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
         return {
@@ -85,17 +85,17 @@ const verticalBarConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-vertical-bar_${uid.value}`,
-    fileName: verticalBarConfig.value.style.chart.title.text || 'vue-ui-vertical-bar'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-vertical-bar'
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(verticalBarConfig.value.customPalette);
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
 const tableContainer = ref(null)
 const isResponsive = ref(false)
 const breakpoint = computed(() => {
-    return verticalBarConfig.value.table.responsiveBreakpoint
+    return FINAL_CONFIG.value.table.responsiveBreakpoint
 });
 
 const resizeObserver = ref(null);
@@ -117,12 +117,12 @@ onMounted(() => {
     }).reduce((a, b) => a + b, 0);
     observeTable();
 
-    if (verticalBarConfig.value.responsive) {
+    if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: verticalBarChart.value,
-                title: verticalBarConfig.value.style.chart.title.text ? chartTitle.value : null,
-                legend: verticalBarConfig.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
             });
 
             baseWidth.value = width;
@@ -148,9 +148,9 @@ function observeTable() {
 }
 
 const mutableConfig = ref({
-    showTable: verticalBarConfig.value.table.show,
-    sortDesc: verticalBarConfig.value.style.chart.layout.bars.sort === "desc",
-    showTooltip: verticalBarConfig.value.style.chart.tooltip.show
+    showTable: FINAL_CONFIG.value.table.show,
+    sortDesc: FINAL_CONFIG.value.style.chart.layout.bars.sort === "desc",
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 
@@ -234,16 +234,16 @@ const immutableDataset = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'vertical-bar-div-legend',
-        backgroundColor: verticalBarConfig.value.style.chart.legend.backgroundColor,
-        color: verticalBarConfig.value.style.chart.legend.color,
-        fontSize: verticalBarConfig.value.style.chart.legend.fontSize,
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: verticalBarConfig.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 });
 
-const barHeight = ref(verticalBarConfig.value.style.chart.layout.bars.height);
-const barGap = ref(verticalBarConfig.value.style.chart.layout.bars.gap);
+const barHeight = ref(FINAL_CONFIG.value.style.chart.layout.bars.height);
+const barGap = ref(FINAL_CONFIG.value.style.chart.layout.bars.gap);
 
 const baseHeight = computed(() => {
     return (barHeight.value + barGap.value) * barCount.value
@@ -256,8 +256,8 @@ const svg = computed(() => {
         height: baseHeight.value,
         padding: {
             top: 12,
-            left: 128 + verticalBarConfig.value.style.chart.layout.bars.offsetX,
-            right: 64 + verticalBarConfig.value.style.chart.layout.bars.paddingRight,
+            left: 128 + FINAL_CONFIG.value.style.chart.layout.bars.offsetX,
+            right: 64 + FINAL_CONFIG.value.style.chart.layout.bars.paddingRight,
             bottom: 12,
         }
     }
@@ -345,10 +345,10 @@ function getParentData(serie, index) {
     const start = drawableArea.value.top + ((barGap.value + barHeight.value) * (index));
     const height = parent.children.length * (barGap.value + barHeight.value);
     return {
-        y: start + (height / 2) - (verticalBarConfig.value.style.chart.layout.bars.parentLabels.fontSize),
+        y: start + (height / 2) - (FINAL_CONFIG.value.style.chart.layout.bars.parentLabels.fontSize),
         name: parent.name,
-        value: [undefined, NaN, null].includes(parent.value) ? '' : parent.value.toFixed(verticalBarConfig.value.style.chart.layout.bars.dataLabels.value.roundingValue),
-        percentageToTotal: isNaN(parent.value / total.value) ? '' : calcProportionToTotal(parent.value, true, verticalBarConfig.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)
+        value: [undefined, NaN, null].includes(parent.value) ? '' : parent.value.toFixed(FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue),
+        percentageToTotal: isNaN(parent.value / total.value) ? '' : calcProportionToTotal(parent.value, true, FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)
     }
 }
 
@@ -365,7 +365,7 @@ function useTooltip(bar, seriesIndex) {
         datapoint: bar,
         seriesIndex,
         series: immutableDataset.value,
-        config: verticalBarConfig.value
+        config: FINAL_CONFIG.value
     }
 
     isTooltip.value = true;
@@ -374,34 +374,34 @@ function useTooltip(bar, seriesIndex) {
     const serieName = bar.isChild ? bar.parentName : bar.name;
     const childName = bar.isChild ? bar.name : "";
 
-    const customFormat = verticalBarConfig.value.style.chart.tooltip.customFormat;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint: bar,
             series: immutableDataset.value,
-            config: verticalBarConfig.value,
+            config: FINAL_CONFIG.value,
             seriesIndex
         }))) {
         tooltipContent.value = customFormat({
             datapoint: bar,
             series: immutableDataset.value,
-            config: verticalBarConfig.value,
+            config: FINAL_CONFIG.value,
             seriesIndex
         })
     } else {
-        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${verticalBarConfig.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;text-align:left;">
+        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;text-align:left;">
                 <div style="display:flex;align-items:center;gap:4px;"><svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" fill="${bar.color}"/></svg> ${ serieName }</div>
                 ${childName ? `<div>${childName}</div>` : ''}
             </div>`;
         
-        if (verticalBarConfig.value.style.chart.tooltip.showValue) {
-            html += `<div>${verticalBarConfig.value.translations.value}: <b>${verticalBarConfig.value.style.chart.tooltip.prefix}${[undefined, NaN, null].includes(bar.value) ? '-' : bar.value.toFixed(verticalBarConfig.value.style.chart.tooltip.roundingValue)}${verticalBarConfig.value.style.chart.tooltip.suffix}</b></div>`;
+        if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+            html += `<div>${FINAL_CONFIG.value.translations.value}: <b>${FINAL_CONFIG.value.style.chart.tooltip.prefix}${[undefined, NaN, null].includes(bar.value) ? '-' : bar.value.toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingValue)}${FINAL_CONFIG.value.style.chart.tooltip.suffix}</b></div>`;
         }    
     
-        if(verticalBarConfig.value.style.chart.tooltip.showPercentage) {
-            html += `<div>${verticalBarConfig.value.translations.percentageToTotal} : <b>${isNaN(bar.value / total.value) ? '-' : `${(bar.value / total.value * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+        if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+            html += `<div>${FINAL_CONFIG.value.translations.percentageToTotal} : <b>${isNaN(bar.value / total.value) ? '-' : `${(bar.value / total.value * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
             if(bar.isChild) {
-                html += `<div>${verticalBarConfig.value.translations.percentageToSerie}: <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(verticalBarConfig.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+                html += `<div>${FINAL_CONFIG.value.translations.percentageToSerie}: <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
             }
         }
     
@@ -410,30 +410,30 @@ function useTooltip(bar, seriesIndex) {
 }
 
 function makeDataLabel(value) {
-    if (isNaN(value) || !verticalBarConfig.value.style.chart.layout.bars.dataLabels.value.show) {
+    if (isNaN(value) || !FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.show) {
         return '';
     }
     const label = dataLabel({
-        p: verticalBarConfig.value.style.chart.layout.bars.dataLabels.value.prefix,
+        p: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.prefix,
         v: value,
-        s: verticalBarConfig.value.style.chart.layout.bars.dataLabels.value.suffix,
-        r: verticalBarConfig.value.style.chart.layout.bars.dataLabels.value.roundingValue
+        s: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.suffix,
+        r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue
     });
 
-    const percentage = `(${calcProportionToTotal(value, true, verticalBarConfig.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)})`;
+    const percentage = `(${calcProportionToTotal(value, true, FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)})`;
 
-    return `${label}${verticalBarConfig.value.style.chart.layout.bars.dataLabels.percentage.show ? ` ${percentage}` : ''}`;
+    return `${label}${FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.show ? ` ${percentage}` : ''}`;
 }
 
 const table = computed(() => {
     const head = [
-        verticalBarConfig.value.translations.parentName,
-        verticalBarConfig.value.translations.value,
-        verticalBarConfig.value.translations.percentageToTotal,
-        verticalBarConfig.value.translations.childName,
-        verticalBarConfig.value.translations.value,
-        verticalBarConfig.value.translations.percentageToSerie,
-        verticalBarConfig.value.translations.percentageToTotal,
+        FINAL_CONFIG.value.translations.parentName,
+        FINAL_CONFIG.value.translations.value,
+        FINAL_CONFIG.value.translations.percentageToTotal,
+        FINAL_CONFIG.value.translations.childName,
+        FINAL_CONFIG.value.translations.value,
+        FINAL_CONFIG.value.translations.percentageToSerie,
+        FINAL_CONFIG.value.translations.percentageToTotal,
     ];
 
     const body = bars.value.map(bar => {
@@ -479,7 +479,7 @@ const table = computed(() => {
 });
 
 function generateCsv() {
-    const title = [[verticalBarConfig.value.style.chart.title.text], [verticalBarConfig.value.style.chart.title.subtitle.text], [""]];
+    const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
     const head = table.value.head;
     const body = table.value.body.map(tr => {
         return [
@@ -495,7 +495,7 @@ function generateCsv() {
     
     const tableXls = title.concat([head]).concat(body);
     const csvContent = createCsvContent(tableXls);
-    downloadCsv({ csvContent, title: verticalBarConfig.value.style.chart.title.text || "vue-ui-vertical-bar"})
+    downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-vertical-bar"})
 }
 
 const isFullscreen = ref(false)
@@ -531,18 +531,18 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${verticalBarConfig.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${verticalBarConfig.style.fontFamily};width:100%; text-align:center;${!verticalBarConfig.style.chart.title.text ? 'padding-top:36px' : ''};background:${verticalBarConfig.style.chart.backgroundColor};${verticalBarConfig.responsive ? 'height: 100%' : ''}`">
+    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`">
     
-        <div ref="chartTitle" v-if="verticalBarConfig.style.chart.title.text" :style="`width:100%;background:${verticalBarConfig.style.chart.backgroundColor};padding-bottom:12px`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
                 :config="{
                     title: {
                         cy: 'vertical-bar-div-title',
-                        ...verticalBarConfig.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title
                     },
                     subtitle: {
                         cy: 'vertical-bar-div-subtitle',
-                        ...verticalBarConfig.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle
                     }
                 }"
             />
@@ -552,22 +552,22 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="verticalBarConfig.userOptions.show && isDataset"
-            :backgroundColor="verticalBarConfig.style.chart.backgroundColor"
-            :color="verticalBarConfig.style.chart.color"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasTooltip="verticalBarConfig.userOptions.buttons.tooltip && verticalBarConfig.style.chart.tooltip.show"
-            :hasPdf="verticalBarConfig.userOptions.buttons.pdf"
-            :hasImg="verticalBarConfig.userOptions.buttons.img"
-            :hasXls="verticalBarConfig.userOptions.buttons.csv"
-            :hasTable="verticalBarConfig.userOptions.buttons.table"
-            :hasSort="verticalBarConfig.userOptions.buttons.sort"
-            :hasFullscreen="verticalBarConfig.userOptions.buttons.fullscreen"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasSort="FINAL_CONFIG.userOptions.buttons.sort"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...verticalBarConfig.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="verticalBarChart"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -604,7 +604,7 @@ defineExpose({
         </UserOptions>
 
          <!-- LEGEND AS DIV : TOP -->
-        <div ref="chartLegend"  v-if="verticalBarConfig.style.chart.legend.show && verticalBarConfig.style.chart.legend.position === 'top'">
+        <div ref="chartLegend"  v-if="FINAL_CONFIG.style.chart.legend.show && FINAL_CONFIG.style.chart.legend.position === 'top'">
             <Legend
                 :legendSet="immutableDataset"
                 :config="legendConfig"
@@ -612,14 +612,14 @@ defineExpose({
             >
                 <template #item="{ legend }">
                     <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
+                        {{ legend.name }}: {{FINAL_CONFIG.style.chart.legend.prefix}}{{ legend.value.toFixed(FINAL_CONFIG.style.chart.legend.roundingValue) }}{{FINAL_CONFIG.style.chart.legend.suffix}}
                     </div>
                 </template>
             </Legend>
         </div>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${verticalBarConfig.style.chart.backgroundColor};color:${verticalBarConfig.style.chart.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`" >
 
             <!-- defs -->
             <linearGradient
@@ -628,7 +628,7 @@ defineExpose({
                     :id="`vertical_bar_gradient_${uid}_${i}`"
                 >
                     <stop offset="0%" :stop-color="bar.color" />
-                    <stop offset="100%" :stop-color="`${shiftHue(bar.color, 0.03)}${opacity[100 - verticalBarConfig.style.chart.layout.bars.gradientIntensity]}`"/>
+                    <stop offset="100%" :stop-color="`${shiftHue(bar.color, 0.03)}${opacity[100 - FINAL_CONFIG.style.chart.layout.bars.gradientIntensity]}`"/>
              </linearGradient>
 
             <g v-for="(serie, i) in bars">
@@ -639,9 +639,9 @@ defineExpose({
                     :y="drawableArea.top + ((barGap + barHeight) * i)"
                     :width="calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)"
                     :height="barHeight <= 0 ? 0.0001 : barHeight"
-                    :fill="verticalBarConfig.style.chart.layout.bars.underlayerColor"
-                    :rx="verticalBarConfig.style.chart.layout.bars.borderRadius"
-                    :class="{ 'animated': verticalBarConfig.useCssAnimation }"
+                    :fill="FINAL_CONFIG.style.chart.layout.bars.underlayerColor"
+                    :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
+                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
                 />
             </g>
             <g v-for="(serie, i) in bars"> 
@@ -651,70 +651,70 @@ defineExpose({
                     :y="drawableArea.top + ((barGap + barHeight) * i)"
                     :width="calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)"
                     :height="barHeight <= 0 ? 0.0001 : barHeight"
-                    :fill="verticalBarConfig.style.chart.layout.bars.useGradient ? `url(#vertical_bar_gradient_${uid}_${i})` : `${serie.color}${opacity[verticalBarConfig.style.chart.layout.bars.fillOpacity]}`"
-                    :rx="verticalBarConfig.style.chart.layout.bars.borderRadius"
-                    :stroke="verticalBarConfig.style.chart.layout.bars.useStroke ? serie.color : 'none'"
-                    :stroke-width="verticalBarConfig.style.chart.layout.bars.useStroke ? verticalBarConfig.style.chart.layout.bars.strokeWidth : 0"
-                    :class="{ 'animated': verticalBarConfig.useCssAnimation }"
+                    :fill="FINAL_CONFIG.style.chart.layout.bars.useGradient ? `url(#vertical_bar_gradient_${uid}_${i})` : `${serie.color}${opacity[FINAL_CONFIG.style.chart.layout.bars.fillOpacity]}`"
+                    :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
+                    :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke ? serie.color : 'none'"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth : 0"
+                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
                 />
 
                 <!-- SEPARATORS -->
                 <line
-                    v-if="(!serie.isChild || serie.isLastChild) && verticalBarConfig.style.chart.layout.separators.show && i !== bars.length -1"
+                    v-if="(!serie.isChild || serie.isLastChild) && FINAL_CONFIG.style.chart.layout.separators.show && i !== bars.length -1"
                     :x1="0"
                     :x2="drawableArea.left"
                     :y1="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
                     :y2="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
-                    :stroke="verticalBarConfig.style.chart.layout.separators.color"
-                    :stroke-width="verticalBarConfig.style.chart.layout.separators.strokeWidth"
+                    :stroke="FINAL_CONFIG.style.chart.layout.separators.color"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth"
                     stroke-linecap="round"
                 />
 
                 <!-- DATALABELS -->
                 <text
                     :data-cy="`vertical-bar-datalabel-${i}`"
-                    :x="calcDataLabelX(serie.value) + 3 + verticalBarConfig.style.chart.layout.bars.dataLabels.offsetX"
-                    :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + verticalBarConfig.style.chart.layout.bars.dataLabels.fontSize / 2"
+                    :x="calcDataLabelX(serie.value) + 3 + FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX"
+                    :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize / 2"
                     text-anchor="start"
-                    :font-size="verticalBarConfig.style.chart.layout.bars.dataLabels.fontSize"
-                    :fill="verticalBarConfig.style.chart.layout.bars.dataLabels.color"
-                    :font-weight="verticalBarConfig.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
+                    :font-size="FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.bars.dataLabels.color"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                 >
                     {{ makeDataLabel(serie.value) }}
                 </text>
 
                 <!-- CHILDREN | LONELY PARENTS NAMES -->
                 <text
-                    v-if="(serie.isChild || !serie.hasChildren) && verticalBarConfig.style.chart.layout.bars.nameLabels.show"
+                    v-if="(serie.isChild || !serie.hasChildren) && FINAL_CONFIG.style.chart.layout.bars.nameLabels.show"
                     text-anchor="end"
-                    :x="drawableArea.left - 3 + verticalBarConfig.style.chart.layout.bars.nameLabels.offsetX"
-                    :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + verticalBarConfig.style.chart.layout.bars.nameLabels.fontSize / 2"
-                    :font-size="verticalBarConfig.style.chart.layout.bars.nameLabels.fontSize"
-                    :fill="verticalBarConfig.style.chart.layout.bars.nameLabels.color"
-                    :font-weight="verticalBarConfig.style.chart.layout.bars.nameLabels.bold ? 'bold' : 'normal'"
+                    :x="drawableArea.left - 3 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX"
+                    :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 2"
+                    :font-size="FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.bars.nameLabels.color"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.bars.nameLabels.bold ? 'bold' : 'normal'"
                 >
                     {{ serie.name }}
                 </text>
 
                 <!-- PARENT NAMES -->
                 <text
-                    v-if="serie.isChild && serie.childIndex === 0 && verticalBarConfig.style.chart.layout.bars.parentLabels.show"
-                    :x="3 + verticalBarConfig.style.chart.layout.bars.parentLabels.offsetX"
+                    v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"
+                    :x="3 + FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX"
                     :y="getParentData(serie, i).y"
-                    :font-size="verticalBarConfig.style.chart.layout.bars.parentLabels.fontSize"
-                    :fill="verticalBarConfig.style.chart.layout.bars.parentLabels.color"
-                    :font-weight="verticalBarConfig.style.chart.layout.bars.parentLabels.bold ? 'bold' : 'normal'"
+                    :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.bars.parentLabels.bold ? 'bold' : 'normal'"
                     text-anchor="start"
                 >
                     {{ getParentData(serie, i).name }}
                 </text>
                 <text 
-                    v-if="serie.isChild && serie.childIndex === 0 && verticalBarConfig.style.chart.layout.bars.parentLabels.show"
-                    :x="3 + verticalBarConfig.style.chart.layout.bars.parentLabels.offsetX"
-                    :y="getParentData(serie, i).y + verticalBarConfig.style.chart.layout.bars.parentLabels.fontSize + 6"
-                    :font-size="verticalBarConfig.style.chart.layout.bars.parentLabels.fontSize"
-                    :fill="verticalBarConfig.style.chart.layout.bars.parentLabels.color"
-                    :font-weight="verticalBarConfig.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
+                    v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"
+                    :x="3 + FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX"
+                    :y="getParentData(serie, i).y + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize + 6"
+                    :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                     text-anchor="start"
                 >
                     {{ makeDataLabel(getParentData(serie, i).value) }}
@@ -728,7 +728,7 @@ defineExpose({
                     :y="drawableArea.top + ((barGap + barHeight) * i) - (barGap/2)"
                     :width="svg.width <= 0 ? 0.0001 : svg.width"
                     :height="barHeight + barGap <= 0 ? 0.0001 : barHeight + barGap"
-                    :fill="selectedBarId === serie.id ? `${verticalBarConfig.style.chart.layout.highlighter.color}${opacity[verticalBarConfig.style.chart.layout.highlighter.opacity]}` : 'transparent'"
+                    :fill="selectedBarId === serie.id ? `${FINAL_CONFIG.style.chart.layout.highlighter.color}${opacity[FINAL_CONFIG.style.chart.layout.highlighter.opacity]}` : 'transparent'"
                     @mouseenter="useTooltip(serie, i)"
                     @mouseleave="hoveredBar = null; isTooltip = false; selectedBarId = null"
                 />
@@ -741,7 +741,7 @@ defineExpose({
             :config="{
                 type: 'verticalBar',
                 style: {
-                    backgroundColor: verticalBarConfig.style.chart.backgroundColor,
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     verticalBar: {
                         axis: {
                             color: '#CCCCCC'
@@ -753,7 +753,7 @@ defineExpose({
         />
 
          <!-- LEGEND AS DIV : BOTTOM -->
-        <div ref="chartLegend" v-if="verticalBarConfig.style.chart.legend.show && verticalBarConfig.style.chart.legend.position === 'bottom'">
+        <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show && FINAL_CONFIG.style.chart.legend.position === 'bottom'">
             <Legend
                 :legendSet="immutableDataset"
                 :config="legendConfig"
@@ -761,7 +761,7 @@ defineExpose({
             >
                 <template #item="{ legend }">
                     <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }} : {{verticalBarConfig.style.chart.legend.prefix}}{{ legend.value.toFixed(verticalBarConfig.style.chart.legend.roundingValue) }}{{verticalBarConfig.style.chart.legend.suffix}}
+                        {{ legend.name }} : {{FINAL_CONFIG.style.chart.legend.prefix}}{{ legend.value.toFixed(FINAL_CONFIG.style.chart.legend.roundingValue) }}{{FINAL_CONFIG.style.chart.legend.suffix}}
                     </div>
                 </template>
             </Legend>
@@ -772,15 +772,15 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip && segregated.length < props.dataset.length"
-            :backgroundColor="verticalBarConfig.style.chart.tooltip.backgroundColor"
-            :color="verticalBarConfig.style.chart.tooltip.color"
-            :borderRadius="verticalBarConfig.style.chart.tooltip.borderRadius"
-            :borderColor="verticalBarConfig.style.chart.tooltip.borderColor"
-            :borderWidth="verticalBarConfig.style.chart.tooltip.borderWidth"
-            :fontSize="verticalBarConfig.style.chart.tooltip.fontSize"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :parent="verticalBarChart"
             :content="tooltipContent"
-            :isCustom="verticalBarConfig.style.chart.tooltip.customFormat && typeof verticalBarConfig.style.chart.tooltip.customFormat === 'function'"
+            :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>  
@@ -795,78 +795,78 @@ defineExpose({
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
-                backgroundColor: verticalBarConfig.style.chart.backgroundColor,
-                color: verticalBarConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
-                backgroundColor: verticalBarConfig.style.chart.backgroundColor,
-                color: verticalBarConfig.style.chart.color,
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color,
             }
         }">
             <template #content>
                 <div ref="tableContainer" class="vue-ui-vertical-bar-table">        
                     <div :style="`width:100%;padding-top: 36px;position:relative`">
-                        <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${verticalBarConfig.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
-                            <BaseIcon name="close" :stroke="verticalBarConfig.table.th.color" :stroke-width="2" />
+                        <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                            <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div> 
                         <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">
                             <table class="vue-ui-data-table">
-                                <caption :style="{backgroundColor: verticalBarConfig.table.th.backgroundColor, color: verticalBarConfig.table.th.color, outline: verticalBarConfig.table.th.outline }" class="vue-ui-data-table__caption">
-                                    {{ verticalBarConfig.style.chart.title.text }} <span v-if="verticalBarConfig.style.chart.title.subtitle.text">{{  verticalBarConfig.style.chart.title.subtitle.text }}</span>
+                                <caption :style="{backgroundColor: FINAL_CONFIG.table.th.backgroundColor, color: FINAL_CONFIG.table.th.color, outline: FINAL_CONFIG.table.th.outline }" class="vue-ui-data-table__caption">
+                                    {{ FINAL_CONFIG.style.chart.title.text }} <span v-if="FINAL_CONFIG.style.chart.title.subtitle.text">{{  FINAL_CONFIG.style.chart.title.subtitle.text }}</span>
                                 </caption>
                                 <thead data-cy="vertical-bar-thead">
-                                    <tr role="row" data-cy="vertical-bar-thead-tr" :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color}`">
-                                        <th v-for="th in table.head" :style="`outline:${verticalBarConfig.table.th.outline}`">
+                                    <tr role="row" data-cy="vertical-bar-thead-tr" :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color}`">
+                                        <th v-for="th in table.head" :style="`outline:${FINAL_CONFIG.table.th.outline}`">
                                             <div style="width:100%">
                                                 {{ th }}
                                             </div>
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
-                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline};text-align:right;padding-right:5px;font-weight:bold`">∑ {{verticalBarConfig.table.td.prefix}}{{ isNaN(total) ? '' : total.toFixed(verticalBarConfig.table.td.roundingValue) }}{{verticalBarConfig.table.td.suffix}}</th>
-                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline};text-align:right;padding-right:5px;font-weight:bold`">100%</th>
-                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
-                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
-                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
-                                        <th :style="`background:${verticalBarConfig.table.th.backgroundColor};color:${verticalBarConfig.table.th.color};outline:${verticalBarConfig.table.th.outline}`"></th>
+                                        <th :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color};outline:${FINAL_CONFIG.table.th.outline}`"></th>
+                                        <th :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color};outline:${FINAL_CONFIG.table.th.outline};text-align:right;padding-right:5px;font-weight:bold`">∑ {{FINAL_CONFIG.table.td.prefix}}{{ isNaN(total) ? '' : total.toFixed(FINAL_CONFIG.table.td.roundingValue) }}{{FINAL_CONFIG.table.td.suffix}}</th>
+                                        <th :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color};outline:${FINAL_CONFIG.table.th.outline};text-align:right;padding-right:5px;font-weight:bold`">100%</th>
+                                        <th :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color};outline:${FINAL_CONFIG.table.th.outline}`"></th>
+                                        <th :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color};outline:${FINAL_CONFIG.table.th.outline}`"></th>
+                                        <th :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color};outline:${FINAL_CONFIG.table.th.outline}`"></th>
+                                        <th :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color};outline:${FINAL_CONFIG.table.th.outline}`"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(tr, i) in table.body" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${verticalBarConfig.table.td.backgroundColor};color:${verticalBarConfig.table.td.color}`">
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline};font-variant-numeric: tabular-nums;`" :data-cell="(table.head[0] ?? '')">
+                                    <tr v-for="(tr, i) in table.body" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${FINAL_CONFIG.table.td.backgroundColor};color:${FINAL_CONFIG.table.td.color}`">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline};font-variant-numeric: tabular-nums;`" :data-cell="(table.head[0] ?? '')">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 <span v-if="tr.color" :style="`color:${tr.color};margin-right:3px`">⬤</span><span>{{ tr.parentName }}</span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[1] ?? '')">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="(table.head[1] ?? '')">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">                                
-                                                {{verticalBarConfig.table.td.prefix}}{{ ["", NaN, undefined].includes(tr.parentValue) ? '' : tr.parentValue.toFixed(verticalBarConfig.table.td.roundingValue) }}{{verticalBarConfig.table.td.suffix}}
+                                                {{FINAL_CONFIG.table.td.prefix}}{{ ["", NaN, undefined].includes(tr.parentValue) ? '' : tr.parentValue.toFixed(FINAL_CONFIG.table.td.roundingValue) }}{{FINAL_CONFIG.table.td.suffix}}
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[2] ?? '')">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="(table.head[2] ?? '')">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">                                
-                                                {{  ["", NaN, undefined].includes(tr.percentageToTotal) ? '' : `${(tr.percentageToTotal * 100).toFixed(verticalBarConfig.table.td.roundingPercentage)}%` }}
+                                                {{  ["", NaN, undefined].includes(tr.percentageToTotal) ? '' : `${(tr.percentageToTotal * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage)}%` }}
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[3] ?? '')">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="(table.head[3] ?? '')">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                                                 {{ tr.childName }}
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[4] ?? '')">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="(table.head[4] ?? '')">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{verticalBarConfig.table.td.prefix}}{{ ["", NaN, undefined].includes(tr.childValue) ? '' : tr.childValue.toFixed(verticalBarConfig.table.td.roundingValue) }}{{verticalBarConfig.table.td.suffix}}
+                                                {{FINAL_CONFIG.table.td.prefix}}{{ ["", NaN, undefined].includes(tr.childValue) ? '' : tr.childValue.toFixed(FINAL_CONFIG.table.td.roundingValue) }}{{FINAL_CONFIG.table.td.suffix}}
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[5] ?? '')">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="(table.head[5] ?? '')">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ ["", NaN, undefined].includes(tr.childPercentageToParent) ? '' : `${(tr.childPercentageToParent * 100).toFixed(verticalBarConfig.table.td.roundingPercentage)}%` }}
+                                                {{ ["", NaN, undefined].includes(tr.childPercentageToParent) ? '' : `${(tr.childPercentageToParent * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage)}%` }}
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${verticalBarConfig.table.td.outline}`" :data-cell="(table.head[6] ?? '')">
+                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="(table.head[6] ?? '')">
                                             <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ ["", NaN, undefined].includes(tr.childPercentageToTotal) ? '' : `${(tr.childPercentageToTotal * 100).toFixed(verticalBarConfig.table.td.roundingPercentage)}%` }}
+                                                {{ ["", NaN, undefined].includes(tr.childPercentageToTotal) ? '' : `${(tr.childPercentageToTotal * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage)}%` }}
                                             </div>
                                         </td>
                                     </tr>
