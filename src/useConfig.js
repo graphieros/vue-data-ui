@@ -991,7 +991,7 @@ export function useConfig() {
                 layout: {
                     display: 'horizontal',
                     crescendo: false,
-                    curved: true,
+                    curved: false,
                     curveAngleX: 10,
                     curveAngleY: 10,
                     activeColor: COLOR_BLUE,
