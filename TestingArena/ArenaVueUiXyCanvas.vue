@@ -256,7 +256,7 @@ const config = computed(() => {
     </div>
 
 
-    <Box>
+    <Box comp="VueUiXyCanvas" :dataset="dataset">
         <template #title>VueUiXyCanvas</template>
 
         <template #local>
