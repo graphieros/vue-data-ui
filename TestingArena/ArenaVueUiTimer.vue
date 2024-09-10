@@ -108,20 +108,34 @@ const localActions = computed(() => {
 
         <template #local>
             <LocalVueUiTimer :config="config" :key="`local_${step}`">
+                <template #laps="{ laps }">
+                    <div v-for="l in laps">{{ l }}</div>
+                </template>
             </LocalVueUiTimer>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiTimer" :config="config" :key="`vdui_local_${step}`"/>
+            <LocalVueDataUi component="VueUiTimer" :config="config" :key="`vdui_local_${step}`">
+                <template #laps="{ laps }">
+                    <div v-for="l in laps">{{ l }}</div>
+                </template>
+            </LocalVueDataUi>
         </template>
 
         <template #build>
             <VueUiTimer :config="config" :key="`build_${step}`">
+                <template #laps="{ laps }">
+                    <div v-for="l in laps">{{ l }}</div>
+                </template>
             </VueUiTimer>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiTimer" :config="config" :key="`vdui_build_${step}`"></VueDataUi>
+            <VueDataUi component="VueUiTimer" :config="config" :key="`vdui_build_${step}`">
+                <template #laps="{ laps }">
+                    <div v-for="l in laps">{{ l }}</div>
+                </template>
+            </VueDataUi>
         </template>
 
         <template #knobs>
