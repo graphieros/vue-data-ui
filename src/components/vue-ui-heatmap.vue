@@ -466,7 +466,7 @@ defineExpose({
             <!-- LEGEND RIGHT -->
             <g v-if="FINAL_CONFIG.style.legend.show && legendPosition === 'right'">
                 <defs>
-                    <linearGradient id="colorScaleVertical" x2="0%" y2="100%" >
+                    <linearGradient :id="`colorScaleVertical_${uid}`" x2="0%" y2="100%" >
                         <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.cells.colors.hot"/>
                         <stop offset="100%" :stop-color="FINAL_CONFIG.style.layout.cells.colors.cold"/>
                     </linearGradient>
@@ -486,7 +486,7 @@ defineExpose({
                     :width="36"
                     :height="sideLegendHeight"
                     :rx="FINAL_CONFIG.style.legend.scaleBorderRadius"
-                    fill="url(#colorScaleVertical)"
+                    :fill="`url(#colorScaleVertical_${uid})`"
                 />
                 <text
                     :x="drawingArea.right + 36 + 18"

@@ -286,7 +286,7 @@ defineExpose({
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" :style="`background:${FINAL_CONFIG.style.chart.backgroundColor}`">
             <defs>
-                <clipPath id="vueUiPill" clipPathUnits="objectBoundingBox">
+                <clipPath :id="vueUiPill" clipPathUnits="objectBoundingBox">
                     <rect 
                         x="0"
                         y="0"
@@ -298,7 +298,7 @@ defineExpose({
                     />
                 </clipPath>
                 <linearGradient 
-                    v-for="(graduation, i) in graduations" :id="`vueUiThermometerGradient_${i}`"
+                    v-for="(graduation, i) in graduations" :id="`vueUiThermometerGradient_${i}_${uid}`"
                     x1="0%" y1="0%" x2="100%" y2="0%"
                 >
                     <stop offset="0%" :stop-color="graduation.color"/>
@@ -321,7 +321,7 @@ defineExpose({
                         :y="graduation.y"
                         :height="graduation.height"
                         :width="drawingArea.width - FINAL_CONFIG.style.chart.padding.left - FINAL_CONFIG.style.chart.padding.right"
-                        :fill="FINAL_CONFIG.style.chart.graduations.gradient.show ? `url(#vueUiThermometerGradient_${i})` : graduation.color"
+                        :fill="FINAL_CONFIG.style.chart.graduations.gradient.show ? `url(#vueUiThermometerGradient_${i}_${uid})` : graduation.color"
                         shape-rendering="crispEdges"
                     />
 

@@ -1368,7 +1368,7 @@ export default {
                 showMedian: false,
                 showTotal: false,
                 fontFamily: this.FINAL_CONFIG.chart.fontFamily,
-                colNames: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values,
+                colNames: JSON.parse(JSON.stringify(this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values)),
                 thead: {
                     backgroundColor: this.FINAL_CONFIG.table.th.backgroundColor,
                     color: this.FINAL_CONFIG.table.th.color,
