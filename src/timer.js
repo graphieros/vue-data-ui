@@ -3,8 +3,75 @@ export class Timer {
         this.interval = interval;
         this.elapsed = 0;
         this.isPaused = false;
-        let startingTime;
-        let pausedTime = 0; 
+
+        const workerCode = `
+            let interval;
+            let elapsed = 0;
+            let paused = false;
+            let startTime;
+            let tickInterval;
+
+            onmessage = function(e) {
+                const { action, data } = e.data;
+
+                switch(action) {
+                    case 'start':
+                        startTime = Date.now();
+                        tickInterval = data.interval;
+                        elapsed = 0;
+                        paused = false;
+                        interval = setInterval(() => {
+                            elapsed += tickInterval;
+                            postMessage({ elapsed, timestamp: Date.now() });
+                        }, tickInterval);
+                        break;
+                    
+                    case 'pause':
+                        paused = true;
+                        clearInterval(interval);
+                        elapsed = Date.now() - startTime;
+                        break;
+
+                    case 'resume':
+                        if (paused) {
+                            startTime = Date.now() - elapsed;
+                            interval = setInterval(() => {
+                                elapsed += tickInterval;
+                                postMessage({ elapsed, timestamp: Date.now() });
+                            }, tickInterval);
+                        }
+                        paused = false;
+                        break;
+
+                    case 'stop':
+                        clearInterval(interval);
+                        elapsed = 0;
+                        postMessage({ elapsed });
+                        break;
+
+                    case 'reset':
+                        elapsed = 0;
+                        clearInterval(interval);
+                        postMessage({ elapsed });
+                        break;
+
+                    case 'lap':
+                        postMessage({
+                            elapsed,
+                            timestamp: Date.now(),
+                            action: 'lap'
+                        });
+                        break;
+
+                    default:
+                        break;
+                }
+            };
+        `;
+
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(blob);
+        const worker = new Worker(workerUrl);
 
         function formatTime(milliseconds) {
             let totalSeconds = Math.floor(milliseconds / 1000);
@@ -31,76 +98,73 @@ export class Timer {
         }
 
         this.start = () => {
-            if (!this.isPaused) {
-                startingTime = Date.now();
-                this.elapsed = 0;
-            } else {
-                startingTime = Date.now() - this.elapsed;
-            }
             this.isPaused = false;
-            this.expected = startingTime + this.interval;
-            this.timeout = setTimeout(this.cycle, this.interval);
-            callback({
-                timestamp: startingTime,
-                elapsed: this.elapsed,
-                formatted: formatTime(this.elapsed)
-            });
-        };
-
-        this.stop = () => {
-            clearTimeout(this.timeout);
-            this.elapsed = 0;
-            pausedTime = 0;
-            this.isPaused = false;
-            callback({
-                timestamp:  0,
-                elapsed: 0,
-                formatted: 0
-            });
+            worker.postMessage({ action: 'start', data: { interval: this.interval } });
         };
 
         this.pause = () => {
-            if (this.isPaused) {
-                this.isPaused = false;
-                startingTime = Date.now() - this.elapsed;
-                this.expected = Date.now() + (this.interval - (this.elapsed % this.interval));
-                this.timeout = setTimeout(this.cycle, this.expected - Date.now());
+            if(this.isPaused) {
+                this.resume();
             } else {
-                clearTimeout(this.timeout);
-                pausedTime = Date.now();
-                this.elapsed = pausedTime - startingTime;
                 this.isPaused = true;
+                worker.postMessage({ action: 'pause' });
             }
         };
 
-        let drift;
-
-        this.cycle = () => {
-            drift = Date.now() - this.expected;
-            if (drift > this.interval) {
-                // FIXME: auto correct expected interval
-                !!error && error();
+        this.resume = () => {
+            if (this.isPaused) {
+                worker.postMessage({ action: 'resume' });
+                this.isPaused = false;
             }
-            this.expected += this.interval;
-            this.timeout = setTimeout(this.cycle, this.interval - drift);
-            this.elapsed += this.interval;
-            callback({
-                timestamp: this.expected || 0,
-                elapsed: this.elapsed,
-                formatted: formatTime(this.elapsed)
-            });
         };
 
-        this.lap = () => {
-            return {
-                elapsed: this.elapsed,
-                formatted: formatTime(this.elapsed)
-            }
+        this.stop = () => {
+            worker.postMessage({ action: 'stop' });
+            this.isPaused = false;
+        };
+
+        this.reset = () => {
+            worker.postMessage({ action: 'reset' });
+            this.elapsed = 0;
+            this.isPaused = false;
         };
 
         this.restart = () => {
             this.stop();
             this.start();
+        }
+
+        this.lap = () => {
+            return new Promise((resolve) => {
+                worker.postMessage({ action: 'lap' });
+                const handleLap = (event) => {
+                    const { elapsed, timestamp, action } = event.data;
+                    if (action === 'lap') {
+                        const formattedTime = formatTime(elapsed);
+                        const lapData = {
+                            timestamp: timestamp || 0,
+                            elapsed: elapsed,
+                            formatted: formattedTime
+                        };
+                        resolve(lapData);
+                    }
+                };
+                worker.addEventListener('message', handleLap, { once: true });
+            });
+        };
+
+        worker.onmessage = (event) => {
+            const { elapsed, timestamp } = event.data;
+            this.elapsed = elapsed;
+            callback({
+                timestamp: timestamp || 0,
+                elapsed: this.elapsed,
+                formatted: formatTime(this.elapsed)
+            });
+        };
+
+        worker.onerror = (e) => {
+            !!error && error(e);
         };
     }
 }
