@@ -286,7 +286,7 @@ defineExpose({
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" :style="`background:${FINAL_CONFIG.style.chart.backgroundColor}`">
             <defs>
-                <clipPath :id="vueUiPill" clipPathUnits="objectBoundingBox">
+                <clipPath id="vueUiPill" clipPathUnits="objectBoundingBox">
                     <rect 
                         x="0"
                         y="0"
