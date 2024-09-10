@@ -151,11 +151,13 @@ function restart() {
 
 const laps = ref([]);
 
-function lap() {
+async function lap() {
     if (!isRunning.value || isPaused.value) return;
-    laps.value.push(TIMER.lap());
-    emit('lap', laps.value);
-    return TIMER.lap()
+    const lapData = await TIMER.lap();
+    if (lapData) {
+        laps.value.push(lapData);
+        emit('lap', laps.value);
+    }
 }
 
 function useTimer({ timestamp, elapsed, formatted }) {
