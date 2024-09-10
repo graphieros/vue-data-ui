@@ -1,4 +1,15 @@
 <script setup>
+import LocalVueDataUi from "../src/components/vue-data-ui.vue";
+
+defineProps({
+    comp: {
+        type: String
+    },
+    dataset: {
+        type: [Object, Array]
+    }
+})
+
 function refresh() {
     location.reload()
 }
@@ -8,6 +19,11 @@ function refresh() {
 <template>
     <button class="reset" @click="refresh">RESET</button>
     <h1><slot name="title"/></h1>
+
+    <div style="width: 100%; max-width: 600px; padding: 12px" v-if="comp">
+        <div style="margin: 12px 0; color: grey">Default config (local VueDataUi universal component):</div>
+        <LocalVueDataUi :component="comp" :dataset="dataset"/>
+    </div>
 
     <div class="knobs">
         <details>

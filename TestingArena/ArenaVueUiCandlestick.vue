@@ -180,7 +180,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiCandlestick" :dataset="dataset">
         <template #title>VueUiCandlestick</template>
 
         <template #local>

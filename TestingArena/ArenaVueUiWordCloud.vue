@@ -97,7 +97,7 @@ const step = ref(0)
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiWordCloud" :dataset="dataset">
         <template #title>VueUiWordCloud</template>
 
         <template #local>

@@ -150,7 +150,7 @@ const step = ref(0)
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiRelationCircle" :dataset="dataset">
         <template #title>VueUiRelationCircle</template>
 
         <template #local>

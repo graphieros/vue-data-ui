@@ -165,7 +165,7 @@ const dataset = computed(() => datasets.value[selectedDataset.value])
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUi3dBar" :dataset="dataset">
         <template #title>VueUi3dBar</template>
 
         <template #local>

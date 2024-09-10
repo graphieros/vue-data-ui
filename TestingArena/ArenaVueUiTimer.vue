@@ -103,7 +103,7 @@ const localActions = computed(() => {
         </LocalVueUiTimer>
     </div>
 
-    <Box>
+    <Box comp="VueUiTimer">
         <template #title>VueUiTimer</template>
 
         <template #local>

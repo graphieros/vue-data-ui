@@ -102,7 +102,7 @@ const showTitleSlot = ref(false);
         <input type="checkbox" v-model="showTitleSlot" id="toggle-title-slot"/>
         <label for="toggle-title-slot">Toggle title slot</label>
     </div>
-    <Box>
+    <Box comp="VueUiSparkbar" :dataset="dataset"> 
         <template #title>VueUiSparkbar</template>
         
         <template #local>

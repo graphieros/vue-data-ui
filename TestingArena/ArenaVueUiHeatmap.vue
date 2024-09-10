@@ -166,7 +166,7 @@ const step = ref(0)
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
-    <Box>
+    <Box comp="VueUiHeatmap" :dataset="dataset">
         <template #title>VueUiHeatmap</template>
         
         <template #local>

@@ -76,7 +76,7 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
-    <Box>
+    <Box comp="VueUiSparkTrend" :dataset="datasets.positive">
         <template #title>VueUiSparkTrend</template>
 
         <template #local>

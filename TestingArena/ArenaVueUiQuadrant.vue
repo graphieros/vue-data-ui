@@ -255,7 +255,7 @@ function selectSide(side) {
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiQuadrant" :dataset="dataset">
         <template #title>VueUiQuadrant</template>
 
         <template #local>

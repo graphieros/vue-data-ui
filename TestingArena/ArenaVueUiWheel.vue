@@ -85,7 +85,7 @@ const step = ref(0)
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiWheel" :dataset="dataset">
         <template #title>VueUiWheel</template>
         
         <template #local>

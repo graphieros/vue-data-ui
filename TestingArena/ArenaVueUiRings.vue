@@ -160,7 +160,7 @@ const step = ref(0)
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiRings" :dataset="dataset">
         <template #title>VueUiRings</template>
 
         <template #local>

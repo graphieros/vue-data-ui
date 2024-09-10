@@ -239,7 +239,7 @@ const step = ref(0)
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiStripPlot" :dataset="dataset">
         <template #title>VueUiStripPlot</template>
 
         <template #local>

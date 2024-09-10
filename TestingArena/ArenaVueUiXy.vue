@@ -341,7 +341,7 @@ function selectX(selectedX) {
         </template>      
     </LocalVueUiXy>
     </div>
-    <Box>
+    <Box comp="VueUiXy" :dataset="dataset">
         <template #title>VueUiXy</template>
 
         <template #local>

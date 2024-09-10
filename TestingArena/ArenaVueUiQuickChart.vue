@@ -215,7 +215,7 @@ function selectDatapoint(datapoint) {
         }"/>
     </div>
 
-<Box>
+<Box comp="VueUiQuickChart" :dataset="dataset">
     <template #title>VueUiQuickChart</template>
 
     <template #local>

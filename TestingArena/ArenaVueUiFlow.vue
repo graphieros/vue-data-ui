@@ -92,7 +92,7 @@ const step = ref(0);
         </select>
     </div>
 
-    <Box>
+    <Box comp="VueUiFlow" :dataset="dataset">
         <template #title>VueUiFlow</template>
 
         <template #local>

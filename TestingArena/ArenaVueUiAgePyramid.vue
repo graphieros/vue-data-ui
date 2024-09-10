@@ -159,7 +159,7 @@ function toggleTable() {
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiAgePyramid" :dataset="dataset">
         <template #title>VueUiAgePyramid</template>
 
         <template #local>

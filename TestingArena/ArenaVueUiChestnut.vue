@@ -362,7 +362,7 @@ function selectNut(nut) {
         }"/>
     </div>
 
-<Box>
+<Box comp="VueUiChestnut" :dataset="dataset">
     <template #title>VueUiChestnut</template>
 
     <template #local>

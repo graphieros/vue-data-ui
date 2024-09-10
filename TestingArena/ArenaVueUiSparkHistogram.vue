@@ -171,7 +171,7 @@ function selectDatapoint(datapoint) {
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
-    <Box>
+    <Box comp="VueUiSparkHistogram" :dataset="dataset">
         <template #title>VueUiSparkHistogram</template>
 
         <template #local>

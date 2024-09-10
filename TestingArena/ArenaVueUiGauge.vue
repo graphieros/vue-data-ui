@@ -116,7 +116,7 @@ const step = ref(0);
     </div>
 
     
-    <Box>
+    <Box comp="VueUiGauge" :dataset="dataset">
         <template #title>VueUiGauge</template>
 
         <template #local :key="`local_${step}`">

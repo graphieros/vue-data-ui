@@ -246,7 +246,7 @@ function toggleLabels() {
     </LocalVueUiDonut>
     </div>
 
-    <Box>
+    <Box comp="VueUiDonut" :dataset="dataset">
         <template #title>VueUiDonut</template>
 
         <template #local>

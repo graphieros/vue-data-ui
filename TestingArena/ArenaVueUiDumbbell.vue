@@ -152,7 +152,7 @@ const step = ref(0);
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiDumbbell" :dataset="dataset">
         <template #title>VueUiDumbbell</template>
         <template #local>
             <LocalVueUiDumbbell :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">

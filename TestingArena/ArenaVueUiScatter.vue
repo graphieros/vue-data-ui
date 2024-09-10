@@ -235,7 +235,7 @@ function selectLegend(legend) {
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiScatter" :dataset="dataset">
         <template #title>VueUiScatter</template>
         
         <template #local>

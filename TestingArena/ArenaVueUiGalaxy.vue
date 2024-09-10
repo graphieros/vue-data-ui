@@ -146,7 +146,7 @@ function selectDatapoint(datapoint) {
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
-    <Box>
+    <Box comp="VueUiGalaxy" :dataset="dataset">
         <template #title>VueUiGalaxy</template>
 
         <template #local>

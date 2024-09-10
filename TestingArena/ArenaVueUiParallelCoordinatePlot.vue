@@ -193,7 +193,7 @@ function selectDatapoint(dp) {
     </LocalVueUiParallelCoordinatePlot>
     </div>
 
-    <Box>
+    <Box comp="VueUiParallelCoordinatePlot" :dataset="dataset">
         <template #title>VueUiParallelCoordinatePlot</template>
 
         <template #local>

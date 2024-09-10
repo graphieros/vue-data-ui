@@ -208,7 +208,7 @@ function selectDatapoint(datapoint) {
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiNestedDonuts" :dataset="dataset">
         <template #title>VueUiNestedDonuts</template>
 
         <template #local>

@@ -251,7 +251,7 @@ function selectDatapoint(datapoint) {
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiTreemap" :dataset="dataset">
         <template #title>VueUiTreemap</template>
 
         <template #local>

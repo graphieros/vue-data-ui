@@ -219,7 +219,7 @@ function selectLegend(legend) {
         }"/>
     </div>
 
-    <Box>
+    <Box comp="VueUiVerticalBar" :dataset="dataset">
         <template #title>VueUiVerticalBar</template>
 
         <template #local>
