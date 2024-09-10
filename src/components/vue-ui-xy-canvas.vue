@@ -70,8 +70,8 @@ const xy = ref(null);
 const canvas = ref(null);
 const container = ref(null);
 const ctx = ref(null);
-const w = ref(0);
-const h = ref(0);
+const w = ref(1);
+const h = ref(1);
 const isTooltip = ref(false);
 const tooltipIndex = ref(null);
 const tooltipContent = ref('');
@@ -498,7 +498,7 @@ function setupChart() {
         // VERTICAL LINES
 
         if (FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
-            formattedDataset.value.forEach((ds, i) => {
+            formattedDataset.value.forEach((ds) => {
                 for (let k = 0; k < (slicer.value.end - slicer.value.start) + 1; k += 1) {
                     line(
                         ctx.value,
@@ -579,7 +579,7 @@ function setupChart() {
 
         // AXES LABELS
         if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
-            formattedDataset.value.forEach((ds, i) => {
+            formattedDataset.value.forEach((ds) => {
                 // INDIVIDUAL Y AXES
                 line(
                     ctx.value,
@@ -624,7 +624,7 @@ function setupChart() {
         }
 
         // DS NAME
-        formattedDataset.value.forEach((ds, i) => {
+        formattedDataset.value.forEach((ds) => {
             text(
                 ctx.value,
                 ds.name,
@@ -1307,8 +1307,7 @@ defineExpose({
             <canvas 
                 v-if="isDataset" 
                 ref="canvas" 
-                style="width:100%; 
-                height:100%" 
+                style="width:100%; height:100%;" 
                 @mousemove="handleMousemove($event)"
                 @mouseleave="handleMouseLeave"
             />

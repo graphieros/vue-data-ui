@@ -459,8 +459,10 @@ export function debounce(func, wait, immediate = false) {
 
 export function cloneCanvas(oldCanvas) {
     const newCanvas = document.createElement('canvas');
-    newCanvas.width = oldCanvas.width || Number.MIN_VALUE;
-    newCanvas.height = oldCanvas.height || Number.MIN_VALUE;
+    newCanvas.width = oldCanvas.width || 1;
+    newCanvas.height = oldCanvas.height || 1;
+    if (!oldCanvas.width) oldCanvas.width = 1;
+    if (!oldCanvas.height) oldCanvas.height = 1;
     const context = newCanvas.getContext('2d');
     context.drawImage(oldCanvas, 0, 0);
     return newCanvas;
