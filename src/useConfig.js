@@ -1679,7 +1679,6 @@ export function useConfig() {
                     },
                     gradient: {
                         show: true,
-                        intensity: 40,
                         underlayer: COLOR_WHITE
                     },
                     widthRatio: 0.5
@@ -3372,7 +3371,6 @@ export function useConfig() {
         theme: '',
         useCssAnimation: true,
         customPalette: [],
-        variables: [],
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,

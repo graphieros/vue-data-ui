@@ -1678,7 +1678,6 @@ declare module 'vue-data-ui' {
                     };
                     gradient?: {
                         show?: boolean;
-                        intensity?: number;
                         underlayer?: string;
                     };
                     widthRatio?: number;
@@ -4939,7 +4938,6 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         useCssAnimation?: boolean;
         customPalette?: string[];
-        variables?: string[];
         userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
