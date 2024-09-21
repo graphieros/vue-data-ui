@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed, watch } from "vue";
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from "./BaseIcon.vue";
 
@@ -85,6 +85,10 @@ const props = defineProps({
         default() {
             return {}
         }
+    },
+    showTooltips: {
+        type: Boolean,
+        default: true
     }
 });
 
@@ -112,6 +116,7 @@ const isOpen = ref(false);
 const preventClose = ref(true);
 
 function toggle() {
+    isDesktop.value = window.innerWidth > 600;
     isOpen.value = !isOpen.value;
     if(isOpen.value) {
         preventClose.value = false;
@@ -164,7 +169,7 @@ function toggleFullscreen(state) {
         emit('toggleFullscreen', true)
     }else {
         isFullscreen.value = false;
-        document.exitFullscreen();
+        document && document.exitFullscreen();
         emit('toggleFullscreen', false)
     }
 }
@@ -185,6 +190,19 @@ onBeforeUnmount(() => {
     document.removeEventListener('fullscreenchange', fullscreenchanged)
 })
 
+const isDesktop = ref(window.innerWidth > 600)
+
+const isInfo = ref({
+    tooltip: false,
+    pdf: false,
+    csv: false,
+    img: false,
+    table: false,
+    labels: false,
+    sort: false,
+    stack: false,
+    fullscreen: false,
+})
 
 </script>
 
@@ -193,92 +211,119 @@ onBeforeUnmount(() => {
         <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:${backgroundColor};`" @click.stop="toggle" @keypress.enter="toggle">
             <BaseIcon  :name="isOpen ? 'close' : 'menu'" stroke="#CCCCCC" :stroke-width="2" />
         </div>
-        <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}`">
+        <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor};`">
 
-            <button :title="titles.tooltip || ''" tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip">
+            <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
                 <template v-if="$slots.optionTooltip">
                     <slot name="optionTooltip"/>
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color"/>
-                    <BaseIcon v-else name="tooltipDisabled" :stroke="color"/>
+                    <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color" style="pointer-events: none;"/>
+                    <BaseIcon v-else name="tooltipDisabled" :stroke="color" style="pointer-events: none"/>
                 </template>
+                <div v-if="isDesktop && titles.tooltip && !$slots.optionTooltip" :class="{'button-info' : true, 'button-info-visible': isInfo.tooltip }" :style="{ background: backgroundColor }">
+                    {{ titles.tooltip }}
+                </div>
             </button>
 
-            <button :title="titles.pdf || ''" tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf">
+            <button tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf" @mouseenter="isInfo.pdf = true" @mouseout="isInfo.pdf = false">
                 <template v-if="$slots.optionPdf">
                     <slot name="optionPdf"/>
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isPrinting" name="spin" isSpin :stroke="color" />
-                    <BaseIcon v-else name="pdf" :stroke="color" />
+                    <BaseIcon v-if="isPrinting" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-else name="pdf" :stroke="color" style="pointer-events: none;" />
                 </template>
+                <div v-if="isDesktop && titles.pdf && !$slots.optionPdf" :class="{'button-info' : true, 'button-info-visible': isInfo.pdf }" :style="{ background: backgroundColor }">
+                    {{ titles.pdf }}
+                </div>
             </button>
             
-            <button :title="titles.csv || ''" tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateCsv">
+            <button tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateCsv" @mouseenter="isInfo.csv = true" @mouseout="isInfo.csv = false">
                 <template v-if="$slots.optionCsv">
                     <slot name="optionCsv"/>
                 </template>
                 <template v-else>
-                    <BaseIcon name="excel" :stroke="color" />
+                    <BaseIcon name="excel" :stroke="color" style="pointer-events: none"/>
                 </template>
+                <div v-if="isDesktop && titles.csv && !$slots.optionCsv" :class="{'button-info' : true, 'button-info-visible': isInfo.csv }" :style="{ background: backgroundColor }">
+                    {{ titles.csv }}
+                </div>
             </button>
 
-            <button :title="titles.img || ''" tabindex="0" v-if="hasImg" data-cy="user-options-img" class="vue-ui-user-options-button" @click="generateImage">
+            <button tabindex="0" v-if="hasImg" data-cy="user-options-img" class="vue-ui-user-options-button" @click="generateImage" @mouseenter="isInfo.img = true" @mouseout="isInfo.img = false">
                 <template v-if="$slots.optionImg">
                     <slot name="optionImg"/>
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isImaging" name="spin" isSpin :stroke="color" />
-                    <BaseIcon v-else name="image" :stroke="color" />
+                    <BaseIcon v-if="isImaging" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-else name="image" :stroke="color" style="pointer-events: none;" />
                 </template>
+                <div v-if="isDesktop && titles.img && !$slots.optionImg" :class="{'button-info' : true, 'button-info-visible': isInfo.img }" :style="{ background: backgroundColor }">
+                    {{ titles.img }}
+                </div>
             </button>
 
-            <button :title="titles.table || ''" tabindex="0" v-if="hasTable" data-cy="user-options-table" class="vue-ui-user-options-button" @click="toggleTable">
+            <button tabindex="0" v-if="hasTable" data-cy="user-options-table" class="vue-ui-user-options-button" @click="toggleTable" @mouseenter="isInfo.table = true" @mouseout="isInfo.table = false">
                 <template v-if="$slots.optionTable">
                     <slot name="optionTable"/>
                 </template>
                 <template v-else>
-                    <BaseIcon :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" />
+                    <BaseIcon :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" style="pointer-events: none;" />
                 </template>
+                <div v-if="isDesktop && titles.table && !$slots.optionTable" :class="{'button-info' : true, 'button-info-visible': isInfo.table }" :style="{ background: backgroundColor }">
+                    {{ titles.table }}
+                </div>
             </button>
 
-            <button :title="titles.labels || ''" tabindex="0" v-if="hasLabel" data-cy="user-options-label" class="vue-ui-user-options-button" @click="toggleLabels">
+            <button tabindex="0" v-if="hasLabel" data-cy="user-options-label" class="vue-ui-user-options-button" @click="toggleLabels" @mouseenter="isInfo.labels = true" @mouseout="isInfo.labels = false">
                 <template v-if="$slots.optionLabels">
                     <slot name="optionLabels"/>
                 </template>
                 <template v-else>
-                    <BaseIcon :name="isLabel ? 'labelClose' : 'labelOpen'" :stroke="color"/>
+                    <BaseIcon :name="isLabel ? 'labelClose' : 'labelOpen'" :stroke="color" style="pointer-events: none;"/>
                 </template>
+                <div v-if="isDesktop && titles.labels && !$slots.optionLabels" :class="{'button-info' : true, 'button-info-visible': isInfo.labels }" :style="{ background: backgroundColor }">
+                    {{ titles.labels }}
+                </div>
             </button>
 
-            <button :title="titles.sort || ''" tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort">
+            <button tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort" @mouseenter="isInfo.sort = true" @mouseout="isInfo.sort = false">
                 <template v-if="$slots.optionSort">
                     <slot name="optionSort"/>
                 </template>
                 <template v-else>
-                    <BaseIcon name="sort" :stroke="color"/>
+                    <BaseIcon name="sort" :stroke="color" style="pointer-events: none;"/>
                 </template>
+                <div v-if="isDesktop && titles.sort && !$slots.optionSort" :class="{'button-info' : true, 'button-info-visible': isInfo.sort }" :style="{ background: backgroundColor }">
+                    {{ titles.sort }}
+                </div>
             </button>
 
-            <button :title="titles.stack || ''" tabindex="0" v-if="hasStack" data-cy="user-options-stack" class="vue-ui-user-options-button" @click="toggleStack">
+            <button tabindex="0" v-if="hasStack" data-cy="user-options-stack" class="vue-ui-user-options-button" @click="toggleStack" @mouseenter="isInfo.stack = true" @mouseout="isInfo.stack = false">
                 <template v-if="$slots.optionStack">
                     <slot name="optionStack"/>
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isItStacked" name="unstack" :stroke="color"/>
-                    <BaseIcon v-else name="stack" :stroke="color"/>
+                    <BaseIcon v-if="isItStacked" name="unstack" :stroke="color" style="pointer-events: none;"/>
+                    <BaseIcon v-else name="stack" :stroke="color" style="pointer-events: none;"/>
                 </template>
+                <div v-if="isDesktop && titles.stack && !$slots.optionStack" :class="{'button-info' : true, 'button-info-visible': isInfo.stack }" :style="{ background: backgroundColor }">
+                    {{ titles.stack }}
+                </div>
             </button>
 
-            <button :title="titles.fullscreen || ''" tabindex="0" v-if="hasFullscreen" data-cy="user-options-sort" class="vue-ui-user-options-button">
+            <button tabindex="0" v-if="hasFullscreen" data-cy="user-options-sort" class="vue-ui-user-options-button" @mouseenter="isInfo.fullscreen = true" @mouseout="isInfo.fullscreen = false" @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">
                 <template v-if="$slots.optionFullscreen">
                     <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isFullscreen" name="exitFullscreen" :stroke="color" @click="toggleFullscreen('out')"/>
-                    <BaseIcon v-if="!isFullscreen" name="fullscreen" :stroke="color" @click="toggleFullscreen('in')"/>
+                    <BaseIcon v-if="isFullscreen" name="exitFullscreen" :stroke="color" style="pointer-events: none;"/>
+                    <BaseIcon v-if="!isFullscreen" name="fullscreen" :stroke="color" style="pointer-events: none;"/>
                 </template>
+                <div v-if="isDesktop && titles.fullscreen && !$slots.optionFullscreen" :class="{'button-info' : true, 'button-info-visible': isInfo.fullscreen }" :style="{ background: backgroundColor }">
+                    {{ titles.fullscreen }}
+                </div>
             </button>
 
         </div>
@@ -348,11 +393,36 @@ onBeforeUnmount(() => {
     /* width: fit-content; */
     white-space: nowrap;
     cursor: pointer;
+    position: relative;
 }
 .vue-ui-user-options-button:hover {
     background: rgba(0,0,0,0.05) !important;
 }
 .vue-ui-user-options-button:focus-visible {
     outline: 1px solid #CCCCCC;
+}
+.button-info {
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px 12px;
+    pointer-events: none;
+    opacity: 0;
+    border-radius: 4px 0 0 4px;
+}
+.button-info-visible {
+    animation: showInfo 0.2s ease-in forwards;
+}
+
+@keyframes showInfo {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) scale(0.9, 1);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) scale(1, 1);
+    }
 }
 </style>
