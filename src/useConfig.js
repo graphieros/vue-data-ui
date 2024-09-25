@@ -76,7 +76,8 @@ export function useConfig() {
         customFormat: null,
         borderRadius: 4,
         borderColor: COLOR_GREY_LIGHT,
-        borderWidth: 1
+        borderWidth: 1,
+        backgroundOpacity: 100,
     }
 
     const USER_OPTIONS = ({
@@ -2104,9 +2105,11 @@ export function useConfig() {
         titleFontSize: 16,
         titleTextAlign: 'center',
         tooltipCustomFormat: null,
+        tooltipBackgroundOpacity: 100,
         tooltipBorderRadius: 4,
         tooltipBorderColor: COLOR_GREY_LIGHT,
         tooltipBorderWidth: 1,
+        tooltipFontSize: 14,
         useCustomLegend: false,
         valuePrefix: '',
         valueSuffix: '',
