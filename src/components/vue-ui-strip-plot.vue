@@ -716,6 +716,7 @@ defineExpose({
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
             :parent="stripPlotChart"
             :content="tooltipContent"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
