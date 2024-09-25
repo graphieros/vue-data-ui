@@ -727,6 +727,7 @@ defineExpose({
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :parent="radarChart"
             :content="tooltipContent"
@@ -737,7 +738,7 @@ defineExpose({
             </template>
             <template #tooltip-after>
                 <div style="max-width: 200px;margin:0 auto" v-if="!['function'].includes(typeof FINAL_CONFIG.style.chart.tooltip.customFormat)">
-                    <SparkBar :dataset="sparkBarData" :config="sparkBarConfig"/>
+                    <SparkBar :dataset="sparkBarData" :config="sparkBarConfig" :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"/>
                 </div>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
