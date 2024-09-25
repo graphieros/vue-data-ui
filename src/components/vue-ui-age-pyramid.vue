@@ -656,6 +656,7 @@ defineExpose({
             :borderColor="FINAL_CONFIG.style.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.tooltip.borderWidth"
             :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
+            :backgroundOpacity="FINAL_CONFIG.style.tooltip.backgroundOpacity"
             :parent="agePyramid"
             :content="tooltipContent"
             :isCustom="FINAL_CONFIG.style.tooltip.customFormat && typeof FINAL_CONFIG.style.tooltip.customFormat === 'function'"
