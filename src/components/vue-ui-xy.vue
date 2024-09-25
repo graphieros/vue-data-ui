@@ -986,6 +986,7 @@
             :borderRadius="FINAL_CONFIG.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.chart.tooltip.borderWidth"
+            :backgroundOpacity="FINAL_CONFIG.chart.tooltip.backgroundOpacity"
             :parent="$refs.chart"
             :content="tooltipContent"
             :isCustom="FINAL_CONFIG.chart.tooltip.customFormat && typeof FINAL_CONFIG.chart.tooltip.customFormat === 'function'"
@@ -1931,7 +1932,7 @@ export default {
 
                     }
                 });
-                return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums; background:${this.FINAL_CONFIG.chart.tooltip.backgroundColor};color:${this.FINAL_CONFIG.chart.tooltip.color}">${html}</div>`;
+                return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums;color:${this.FINAL_CONFIG.chart.tooltip.color}">${html}</div>`;
             }            
         },
         svg() {
