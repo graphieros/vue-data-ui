@@ -33,6 +33,13 @@ const props = defineProps({
         default() {
             return [];
         }
+    },
+    /**
+     * Used in VueUiRadar's tooltip exclusively
+     */
+    backgroundOpacity: {
+        type: Number,
+        default: 100
     }
 });
 
@@ -184,7 +191,7 @@ function selectDatapoint(datapoint, index) {
         :style="{
             width: '100%',
             fontFamily: FINAL_CONFIG.style.fontFamily,
-            background: FINAL_CONFIG.style.backgroundColor
+            background: FINAL_CONFIG.style.backgroundColor + opacity[props.backgroundOpacity]
         }"
     >
         <!-- CUSTOM TITLE -->
