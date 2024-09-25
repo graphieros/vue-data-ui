@@ -1338,7 +1338,10 @@ defineExpose({
                 :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize" 
                 :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
                 :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
-                :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth" :parent="canvas" :content="tooltipContent"
+                :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth" 
+                :parent="canvas" 
+                :content="tooltipContent"
+                :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
                 :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)">
                 <template #tooltip-before>
                     <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
