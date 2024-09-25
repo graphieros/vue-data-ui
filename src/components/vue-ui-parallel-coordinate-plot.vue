@@ -760,6 +760,7 @@ defineExpose({
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
             :parent="pcpChart"
             :content="tooltipContent"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
