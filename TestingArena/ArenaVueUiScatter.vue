@@ -148,6 +148,7 @@ const model = ref([
     { key: 'style.legend.fontSize', def: 14, type: 'number', min: 6, max: 42 },
     { key: 'style.legend.bold', def: false, type: 'checkbox'},
     { key: 'style.legend.roundingValue', def: 0, type: 'number', min: 0, max: 6},
+
     { key: 'style.tooltip.show', def: true, type: 'checkbox' },
     { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color' },
@@ -157,6 +158,8 @@ const model = ref([
     { key: 'style.tooltip.showShape', def: true, type: 'checkbox' },
     { key: 'style.tooltip.prefix', def: 'P', type: 'text'},
     { key: 'style.tooltip.suffix', def: 'S', type: 'text'},
+    { key: 'style.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+
     { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color' },

@@ -174,6 +174,9 @@ const model = ref([
     { key: 'table.td.color', def: '#1A1A1A', type: 'color'},
     { key: 'table.td.outline', def: 'none', type: 'text'},
     { key: 'table.td.roundingValue', def: 2, type: 'range', min: 0, max: 12},
+
+    { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100 },
 ])
 
 const testCustomTooltip = ref(false);

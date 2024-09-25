@@ -83,6 +83,7 @@ const model = ref([
     { key: 'style.chart.legend.roundingValue', def: 0, type: 'number', min: 0, max: 6, label: ['rounding', 'is', 'value'], category: 'legend' },
     { key: 'style.chart.legend.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'legend' },
     { key: 'style.chart.legend.offsetY', def: 0, type: 'number', min: -100, max: 100}, // DEPRECATED (used with useDiv set to false)
+
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox' },
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color' },
@@ -92,6 +93,8 @@ const model = ref([
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6 },
     { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox' },
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6},
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+
     { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color' },

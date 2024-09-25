@@ -68,6 +68,7 @@ const model = ref([
     { key: 'style.chart.title.subtitle.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
+
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.backgroundColor', def: "#FFFFFF", type: 'color'},
     { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color'},
@@ -78,7 +79,8 @@ const model = ref([
     { key: 'style.chart.tooltip.roundingPercentage', def: 2, type: 'range', min: 0, max: 12},
     { key: 'style.chart.tooltip.animation.show', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.animation.animationFrames', def: 60, type: 'range', min: 0, max: 1000},
-    { key: 'style.chart.tooltip.customFormat', def: null, type: 'text'},
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+
     { key: 'style.chart.legend.show', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.bold', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},

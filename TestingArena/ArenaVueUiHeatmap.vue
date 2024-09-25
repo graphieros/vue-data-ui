@@ -82,11 +82,14 @@ const model = ref([
     { key: 'style.legend.roundingValue', def: 2, type: 'range', min: 0, max: 12},
     { key: 'style.legend.position', def: 'right', type: 'select', options: ['right', 'bottom']},
     { key: 'style.legend.scaleBorderRadius', def: 18, type: 'number', min: 0, max: 48},
+
     { key: 'style.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.tooltip.fontSize', def: 12, type: 'range', min: 8, max: 48},
     { key: 'style.tooltip.roundingValue', def: 0, type: 'range', min: 0, max: 12},
+    { key: 'style.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.colNames.xAxis', def: 'X AXIS', type: 'text'},

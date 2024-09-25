@@ -165,10 +165,13 @@ const model = ref([
     { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sot amet', type: 'text'},
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type:'number', min: 8, max: 48},
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
+
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.tooltip.fontSize', def: 14, type: 'number', min: 8, max: 24},
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+
     { key: 'style.chart.zoom.speed', def: 1, type: 'number', min: 0, max: 2, step: 0.01},
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type:'number', min: 300, max: 800},

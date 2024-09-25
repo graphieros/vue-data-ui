@@ -61,6 +61,7 @@ const model = ref([
     { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 48},
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
+
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -69,6 +70,8 @@ const model = ref([
     { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.roundingValue', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.tooltip.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 300, type: 'number', min: 300, max: 800},
     { key: 'table.th.color', def: '#1A1A1A', type: 'color'},

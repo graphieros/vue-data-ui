@@ -71,11 +71,14 @@ const model = ref([
     { key: 'style.title.subtitle.text', def: 'Lorem ipsum sit amet', type: 'text' },
     { key: 'style.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 48},
     { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'},
+
     { key: 'style.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.tooltip.backgroundColor', def:'#FFFFFF', type: 'color'},
     { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.tooltip.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'style.tooltip.roundingValue', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+
     { key: 'translations.age', def: 'age', type: 'text'},
     { key: 'translations.male', def: 'male', type: 'text'},
     { key: 'translations.female', def: 'female', type: 'text'},

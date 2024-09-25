@@ -89,6 +89,7 @@ const model = ref([
     { key: 'style.chart.selector.show', def: true, type: 'checkbox' },
     { key: 'style.chart.selector.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.selector.dashed', def: false, type: 'checkbox' },
+
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox' },
     { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },
@@ -96,6 +97,8 @@ const model = ref([
     { key: 'style.chart.tooltip.borderRadius', def: 4, type: 'number', min: 0, max: 12 },
     { key: 'style.chart.tooltip.borderColor', def: '#e1e5e6', type: 'color' },
     { key: 'style.chart.tooltip.borderWidth', def: 1, type: 'number', min: 0, max: 12 },
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.legend.show', def: true, type: 'checkbox' },

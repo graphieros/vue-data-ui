@@ -116,7 +116,8 @@ const model = ref([
     { key: 'style.chart.tooltip.fontSize', def: 14, type: 'number', min: 8, max: 42 },
     { key: 'style.chart.tooltip.borderRadius', def: 4, type: 'number', min: 0, max: 12 },
     { key: 'style.chart.tooltip.borderColor', def: '#e1e5e8', type: 'color'},
-    { key: 'style.chart.tooltip.borderWidth', def: 1, type: 'number', min: 0, max: 12 }
+    { key: 'style.chart.tooltip.borderWidth', def: 1, type: 'number', min: 0, max: 12 },
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100 }
 ])
 
 const themeOptions = ref([

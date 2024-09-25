@@ -89,6 +89,7 @@ const model = ref([
     { key: 'style.title.subtitle.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
     { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'},
+
     { key: 'style.tooltip.show', def: true, type: 'checkbox' },
     { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color' },
@@ -97,6 +98,8 @@ const model = ref([
     { key: 'style.tooltip.roundingValue', def: 0, type: 'number', min: 0, max: 6},
     { key: 'style.tooltip.prefix', def: 'P', type: 'text'},
     { key: 'style.tooltip.suffix', def: 'S', type: 'text'},
+    { key: 'style.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100 },
+
     { key: 'translations.period', def: 'Period', type: 'text'},
     { key: 'translations.open', def: 'Open', type: 'text'},
     { key: 'translations.high', def: 'High', type: 'text'},
