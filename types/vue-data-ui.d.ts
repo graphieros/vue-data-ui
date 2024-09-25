@@ -87,6 +87,7 @@ declare module 'vue-data-ui' {
         borderRadius?: number;
         borderColor?: string;
         borderWidth?: number;
+        backgroundOpacity?: number;
     }
 
     export type Theme = "" | "zen" | "hack" | "concrete";
@@ -4245,10 +4246,12 @@ declare module 'vue-data-ui' {
         titleBold?: boolean;
         titleFontSize?: number;
         titleTextAlign?: TextAlign;
+        tooltipBackgroundOpacity?: number;
         tooltipCustomFormat?: any;
         tooltipBorderRadius?: number;
         tooltipBorderColor?: string;
         tooltipBorderWidth?: number;
+        tooltipFontSize?: number;
         useCustomLegend?: boolean;
         valuePrefix?: string;
         valueSuffix?: string;
