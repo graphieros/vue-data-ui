@@ -11,7 +11,7 @@ export default defineConfig({
     vue(),
     removeAttr({
       extensions: [ 'vue' ],
-      attributes: prod ?  [ 'data-cy' ] : [],  
+      attributes: prod ?  [ 'data-cy' ] : [],
   })
   ],
   build: {
@@ -21,7 +21,7 @@ export default defineConfig({
       name: "VueDataUi",
       // the name of the output files when the build is run
       fileName: "vue-data-ui",
-      formats: ['es']
+      formats: ['es', 'cjs']
     },
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
