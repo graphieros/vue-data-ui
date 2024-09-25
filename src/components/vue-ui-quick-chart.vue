@@ -1468,6 +1468,8 @@ defineExpose({
             :borderRadius="FINAL_CONFIG.tooltipBorderRadius"
             :borderColor="FINAL_CONFIG.tooltipBorderColor"
             :borderWidth="FINAL_CONFIG.tooltipBorderWidth"
+            :fontSize="FINAL_CONFIG.tooltipFontSize"
+            :backgroundOpacity="FINAL_CONFIG.tooltipBackgroundOpacity"
             :parent="quickChart"
             :content="tooltipContent"
             :isCustom="isFunction(FINAL_CONFIG.tooltipCustomFormat)"
