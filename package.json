@@ -52,23 +52,29 @@
   "author": "Alec Lloyd Probert",
   "repository": {
     "type": "git",
-    "url": "https://github.com/graphieros/vue-data-ui"
+    "url": "git+https://github.com/graphieros/vue-data-ui.git"
   },
   "homepage": "https://vue-data-ui.graphieros.com/",
   "license": "MIT",
   "files": [
     "dist"
   ],
-  "main": "./dist/vue-data-ui.umd.cjs",
-  "module": "./dist/vue-data-ui.js",
   "exports": {
     ".": {
-      "import": "./dist/vue-data-ui.js",
-      "export": "./dist/vue-data-ui.umd.cjs",
-      "types": "./dist/types/vue-data-ui.d.ts"
+      "import": {
+        "types": "./dist/types/vue-data-ui.d.ts",
+        "default": "./dist/vue-data-ui.js"
+      },
+      "default": {
+        "types": "./dist/types/vue-data-ui.d.cts",
+        "default": "./dist/vue-data-ui.cjs"
+      }
     },
     "./style.css": "./dist/style.css"
   },
+  "main": "dist/vue-data-ui.cjs",
+  "module": "dist/vue-data-ui.js",
+  "types": "dist/types/vue-data-ui.d.ts",
   "scripts": {
     "dev": "node add-dev-dep.cjs && npm i && vite",
     "clean": "node cleanup.cjs",
