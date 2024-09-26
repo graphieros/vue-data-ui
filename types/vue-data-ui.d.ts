@@ -4661,7 +4661,7 @@ declare module 'vue-data-ui' {
                     proximity?: number;
                     packingWeight?: number;
                     color?: string;
-                    usePalette?: string;
+                    usePalette?: boolean;
                 };
                 title?: ChartTitle;
             }
