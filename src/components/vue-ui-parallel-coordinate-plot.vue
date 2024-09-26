@@ -277,8 +277,8 @@ const filteredDs = computed(() => {
 const scales = computed(() => {
     let s = [];
     for (let i = 0; i < maxSeries.value; i += 1 ) {
-        const min = Math.min(...filteredDs.value.flatMap(ds => ds.series.map(s => s.values[i]) || 0));
-        const max = Math.max(...filteredDs.value.flatMap(ds => ds.series.map(s => s.values[i]) || 0));
+        const min = Math.min(...filteredDs.value.flatMap(ds => ds.series.map(s => s.values[i] || 0) || 0));
+        const max = Math.max(...filteredDs.value.flatMap(ds => ds.series.map(s => s.values[i] || 0) || 0));
         const opMin = max === min ? min / 4 : min;
         const opMax = max === min ? max * 2 : max;
         const scale = calculateNiceScale(opMin, opMax, FINAL_CONFIG.value.style.chart.yAxis.scaleTicks);
@@ -317,9 +317,9 @@ const mutableDataset = computed(() => {
                                 axisIndex: k,
                                 datapointIndex: j,
                                 seriesIndex: i,
-                                value: v,
+                                value: v || 0,
                                 x: drawingArea.value.left + (slot.value * k) + (slot.value / 2),
-                                y: drawingArea.value.bottom - (drawingArea.value.height * (senseValue / senseMax)),
+                                y: (drawingArea.value.bottom - (drawingArea.value.height * ((senseValue) / senseMax))),
                                 comment: s.comments ? s.comments[k] || '' : ''
                             }
                         })
