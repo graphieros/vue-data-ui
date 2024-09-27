@@ -487,7 +487,7 @@ function setupChart() {
                     label.y,
                     {
                         align: 'right',
-                        font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                        font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                         color: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.color
                     }
                 );
@@ -615,7 +615,7 @@ function setupChart() {
                         entry.y,
                         {
                             align: 'right',
-                            font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                            font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                             color: ds.color
                         }
                     );
@@ -634,7 +634,7 @@ function setupChart() {
                     align: 'center',
                     rotation: -90,
                     color: ds.color,
-                    font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`
+                    font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`
                 }
             );
         });
@@ -648,7 +648,7 @@ function setupChart() {
             w.value - w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio * 1.2,
             drawingArea.value.bottom - drawingArea.value.height / 2,
             {
-                font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                 color: FINAL_CONFIG.value.style.chart.color,
                 align: 'center',
                 rotation: 90
@@ -663,7 +663,7 @@ function setupChart() {
             w.value / 2,
             h.value,
             {
-                font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                 color: FINAL_CONFIG.value.style.chart.color,
                 align: 'center'
             }
@@ -701,7 +701,7 @@ function drawDataLabels(ds) {
             ds.coordinatesLine[i].y + FINAL_CONFIG.value.style.chart.dataLabels.offsetY,
             {
                 align: 'center',
-                font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                 color: FINAL_CONFIG.value.style.chart.dataLabels.useSerieColor ? ds.color : FINAL_CONFIG.value.style.chart.dataLabels.color,
                 strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
                 lineWidth: 0.8
@@ -720,7 +720,7 @@ function drawTimeLabels() {
                 drawingArea.value.bottom + (w.value / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.offsetY),
                 {
                     align: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation === 0 ? 'center' : FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation > 0 ? 'left' : 'right',
-                    font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.timeLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                    font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.timeLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                     color: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color + opacity[tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100],
                     rotation: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation,
                 }
@@ -825,7 +825,7 @@ function drawBars() {
                         (ds.coordinatesLine[k].value < 0 ? (mutableConfig.value.stacked ? ds.localZero : absoluteExtremes.value.zero) : ds.coordinatesLine[k].y) + FINAL_CONFIG.value.style.chart.dataLabels.offsetY ,
                         {
                             align: 'center',
-                            font: `${w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                            font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                             color: FINAL_CONFIG.value.style.chart.dataLabels.useSerieColor ? ds.color : FINAL_CONFIG.value.style.chart.dataLabels.color,
                             strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
                             lineWidth: 0.8
@@ -1303,7 +1303,6 @@ defineExpose({
 
         <div class="vue-ui-xy-canvas" :style="`position: relative; aspect-ratio: ${aspectRatio}`"
         ref="container">
-    
             <canvas 
                 v-if="isDataset" 
                 ref="canvas" 
