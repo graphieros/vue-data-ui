@@ -3212,7 +3212,7 @@ export function useConfig() {
             stack: true
         }),
         style: {
-            fontFamily: 'inherit',
+            fontFamily: 'Arial', // A defined font must be provided as 'inherit' fails with canvas
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
