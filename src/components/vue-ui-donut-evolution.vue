@@ -341,7 +341,7 @@ const legendSet = computed(() => {
         .map((serie, i) => {
             return {
                 name: serie.name,
-                value: serie.values.reduce((a,b) => a + b, 0),
+                value: serie.values.slice(slicer.value.start, slicer.value.end).reduce((a,b) => a + b, 0),
                 shape: 'circle',
                 uid: serie.uid,
                 color: serie.color
