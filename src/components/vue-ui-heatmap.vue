@@ -410,7 +410,7 @@ defineExpose({
                         :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing"
                         :height="cellSize.height - FINAL_CONFIG.style.layout.cells.spacing"
                         :fill="cell.color"
-                        :stroke="hoveredCell && hoveredCell === cell.id ? FINAL_CONFIG.style.layout.cells.selected.color : FINAL_CONFIG.style.backgroundColor"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
                         :stroke-width="FINAL_CONFIG.style.layout.cells.spacing"
                     />
                     <text 
@@ -469,10 +469,10 @@ defineExpose({
             <g v-if="selectedClone">
                 <rect
                     style="pointer-events: none;"
-                    :x="selectedClone.x - FINAL_CONFIG.style.layout.cells.selected.border / 2"
-                    :y="selectedClone.y - FINAL_CONFIG.style.layout.cells.selected.border / 2"
-                    :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing + FINAL_CONFIG.style.layout.cells.selected.border"
-                    :height="cellSize.height - FINAL_CONFIG.style.layout.cells.spacing + FINAL_CONFIG.style.layout.cells.selected.border"
+                    :x="selectedClone.x - ((FINAL_CONFIG.style.layout.cells.selected.border) / 2) + FINAL_CONFIG.style.layout.cells.spacing"
+                    :y="selectedClone.y - (FINAL_CONFIG.style.layout.cells.selected.border / 2) + FINAL_CONFIG.style.layout.cells.spacing"
+                    :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing + FINAL_CONFIG.style.layout.cells.selected.border - (FINAL_CONFIG.style.layout.cells.spacing)"
+                    :height="cellSize.height - FINAL_CONFIG.style.layout.cells.spacing + FINAL_CONFIG.style.layout.cells.selected.border - (FINAL_CONFIG.style.layout.cells.spacing)"
                     fill="transparent"
                     :stroke="FINAL_CONFIG.style.layout.cells.selected.color"
                     :stroke-width="FINAL_CONFIG.style.layout.cells.selected.border"
