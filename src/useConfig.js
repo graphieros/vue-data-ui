@@ -1408,7 +1408,7 @@ export function useConfig() {
                     },
                     spacing: 2,
                     selected: {
-                        border: 2,
+                        border: 4,
                         color: COLOR_BLACK
                     }
                 },
