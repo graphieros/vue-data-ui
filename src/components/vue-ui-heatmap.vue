@@ -59,6 +59,7 @@ const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const hoveredCell = ref(undefined);
+const selectedClone = ref(null);
 const step = ref(0);
 const tableContainer = ref(null);
 const isResponsive = ref(false);
@@ -219,11 +220,12 @@ const mutableDataset = computed(() => {
 });
 
 const hoveredValue = ref(null);
-
 const dataTooltipSlot = ref(null);
 
-function useTooltip(datapoint, seriesIndex) {
-    const { value, yAxisName, xAxisName,id } = datapoint;
+function useTooltip(datapoint, seriesIndex, x, y) {
+    selectedClone.value = { x, y };
+    console.log(datapoint)
+    const { value, yAxisName, xAxisName, id } = datapoint;
     hoveredCell.value = id;
     hoveredValue.value = value;
 
@@ -433,8 +435,8 @@ defineExpose({
                         :height="cellSize.height"
                         fill="transparent"
                         stroke="none"
-                        @mouseover="useTooltip(cell, i)"
-                        @mouseout="isTooltip = false; hoveredCell = undefined; hoveredValue = null"
+                        @mouseover="useTooltip(cell, i, drawingArea.left + cellSize.width * j, drawingArea.top + cellSize.height * i)"
+                        @mouseout="isTooltip = false; hoveredCell = undefined; hoveredValue = null; selectedClone = null"
                     />
                 </g>
                 <g v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show">
@@ -461,6 +463,21 @@ defineExpose({
                 >
                     {{ label }}
                 </text>
+            </g>
+
+            <!-- BORDER FOR SELECTED RECT, PAINTED LAST -->
+            <g v-if="selectedClone">
+                <rect
+                    style="pointer-events: none;"
+                    :x="selectedClone.x - FINAL_CONFIG.style.layout.cells.selected.border / 2"
+                    :y="selectedClone.y - FINAL_CONFIG.style.layout.cells.selected.border / 2"
+                    :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing + FINAL_CONFIG.style.layout.cells.selected.border"
+                    :height="cellSize.height - FINAL_CONFIG.style.layout.cells.spacing + FINAL_CONFIG.style.layout.cells.selected.border"
+                    fill="transparent"
+                    :stroke="FINAL_CONFIG.style.layout.cells.selected.color"
+                    :stroke-width="FINAL_CONFIG.style.layout.cells.selected.border"
+                    :rx="1"
+                />
             </g>
 
             <!-- LEGEND RIGHT -->
