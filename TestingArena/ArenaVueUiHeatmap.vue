@@ -50,7 +50,7 @@ const model = ref([
     { key: 'style.layout.cells.colors.cold', def: '#3366cc', type: 'color'},
     { key: 'style.layout.cells.colors.underlayer', def: '#FFFFFF', type: 'color'},
     { key: 'style.layout.cells.spacing', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'style.layout.cells.selected.border', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.layout.cells.selected.border', def: 4, type: 'number', min: 0, max: 12}, //
     { key: 'style.layout.cells.selected.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.layout.dataLabels.suffix', def: 'S', type: 'text'},
