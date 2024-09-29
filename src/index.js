@@ -1,122 +1,67 @@
-import VueUiXy from "./components/vue-ui-xy.vue";
-import VueUiTable from "./components/vue-ui-table.vue";
-import VueUiDonut from "./components/vue-ui-donut.vue";
-import VueUiWaffle from "./components/vue-ui-waffle.vue";
-import VueUiRadar from "./components/vue-ui-radar.vue";
-import VueUiQuadrant from "./components/vue-ui-quadrant.vue";
-import VueUiGauge from "./components/vue-ui-gauge.vue";
-import VueUiChestnut from "./components/vue-ui-chestnut.vue";
-import VueUiOnion from "./components/vue-ui-onion.vue";
-import VueUiVerticalBar from "./components/vue-ui-vertical-bar.vue";
-import VueUiScreenshot from "./components/vue-ui-screenshot.vue";
-import VueUiRating from "./components/vue-ui-rating.vue";
-import VueUiSkeleton from "./components/vue-ui-skeleton.vue";
-import VueUiSparkline from "./components/vue-ui-sparkline.vue";
-import VueUiHeatmap from "./components/vue-ui-heatmap.vue";
-import VueUiScatter from "./components/vue-ui-scatter.vue";
-import VueUiCandlestick from "./components/vue-ui-candlestick.vue";
-import VueUiAgePyramid from "./components/vue-ui-age-pyramid.vue";
-import VueUiSparkbar from "./components/vue-ui-sparkbar.vue";
-import VueUiDashboard from "./components/vue-ui-dashboard.vue";
-import VueUiAnnotator from "./components/vue-ui-annotator.vue";
-import VueUiSmiley from "./components/vue-ui-smiley.vue";
-import VueUiRelationCircle from "./components/vue-ui-relation-circle.vue";
-import VueUiThermometer from "./components/vue-ui-thermometer.vue";
-import VueUiSparkStackbar from "./components/vue-ui-sparkstackbar.vue";
-import VueUiSparkHistogram from "./components/vue-ui-sparkhistogram.vue";
-import VueUiRings from "./components/vue-ui-rings.vue";
-import VueUiWheel from "./components/vue-ui-wheel.vue";
-import VueUiTiremarks from "./components/vue-ui-tiremarks.vue";
-import VueUiDonutEvolution from "./components/vue-ui-donut-evolution.vue";
-import VueUiIcon from "./atoms/BaseIcon.vue";
-import VueUiMoodRadar from "./components/vue-ui-mood-radar.vue";
-import VueUi3dBar from "./components/vue-ui-3d-bar.vue";
-import VueUiDigits from "./components/vue-ui-digits.vue";
-import VueUiMolecule from "./components/vue-ui-molecule.vue";
-import VueUiTableSparkline from "./components/vue-ui-table-sparkline.vue";
-import Arrow from "./atoms/Arrow.vue"
-import VueUiMiniLoader from "./components/vue-ui-mini-loader.vue";
+import { defineAsyncComponent } from "vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
 import getThemeConfig from "./getThemeConfig";
-import VueUiNestedDonuts from "./components/vue-ui-nested-donuts.vue";
-import VueUiSparkgauge from './components/vue-ui-sparkgauge.vue';
-import VueDataUi from "./components/vue-data-ui.vue";
-import VueUiGalaxy from "./components/vue-ui-galaxy.vue";
-import VueUiKpi from "./components/vue-ui-kpi.vue";
-import VueUiTreemap from "./components/vue-ui-treemap.vue";
-import VueUiTableHeatmap from "./components/vue-ui-table-heatmap.vue";
-import VueUiAccordion from "./components/vue-ui-accordion.vue";
-import VueUiQuickChart from "./components/vue-ui-quick-chart.vue";
-import VueUiCursor from "./components/vue-ui-cursor.vue";
-import VueUiSparkTrend from "./components/vue-ui-spark-trend.vue";
-import VueUiStripPlot from "./components/vue-ui-strip-plot.vue";
-import VueUiDumbbell from "./components/vue-ui-dumbbell.vue";
-import VueUiWordCloud from "./components/vue-ui-word-cloud.vue";
-import VueUiXyCanvas from "./components/vue-ui-xy-canvas.vue";
-import VueUiFlow from "./components/vue-ui-flow.vue";
-import VueUiParallelCoordinatePlot from "./components/vue-ui-parallel-coordinate-plot.vue";
-import VueUiTimer from "./components/vue-ui-timer.vue";
 import { getPalette, createWordCloudDatasetFromPlainText } from "./lib";
 
-export { 
-    VueUiXy, 
-    VueUiTable, 
-    VueUiDonut, 
-    VueUiWaffle,
-    VueUiRadar,
-    VueUiQuadrant,
-    VueUiGauge,
-    VueUiChestnut,
-    VueUiOnion,
-    VueUiVerticalBar,
-    VueUiScreenshot,
-    VueUiRating,
-    VueUiSkeleton,
-    VueUiSparkline,
-    VueUiHeatmap,
-    VueUiScatter,
-    VueUiCandlestick,
-    VueUiAgePyramid,
-    VueUiSparkbar,
-    VueUiDashboard,
-    VueUiAnnotator,
-    VueUiSmiley,
-    VueUiRelationCircle,
-    VueUiThermometer,
-    VueUiSparkStackbar,
-    VueUiSparkHistogram,
-    VueUiRings,
-    VueUiWheel,
-    VueUiTiremarks,
-    VueUiDonutEvolution,
-    VueUiIcon,
-    VueUiMoodRadar,
-    VueUi3dBar,
-    VueUiDigits,
-    VueUiMolecule,
-    VueUiTableSparkline,
-    Arrow,
-    VueUiMiniLoader,
-    getPalette,
-    getVueDataUiConfig,
-    getThemeConfig,
+export const Arrow = defineAsyncComponent(() => import("./atoms/Arrow.vue"))
+export const VueDataUi = defineAsyncComponent(() => import("./components/vue-data-ui.vue"))
+export const VueUi3dBar = defineAsyncComponent(() => import("./components/vue-ui-3d-bar.vue"))
+export const VueUiAccordion = defineAsyncComponent(() => import("./components/vue-ui-accordion.vue"))
+export const VueUiAgePyramid = defineAsyncComponent(() => import("./components/vue-ui-age-pyramid.vue"))
+export const VueUiAnnotator = defineAsyncComponent(() => import("./components/vue-ui-annotator.vue"))
+export const VueUiCandlestick = defineAsyncComponent(() => import("./components/vue-ui-candlestick.vue"))
+export const VueUiChestnut = defineAsyncComponent(() => import("./components/vue-ui-chestnut.vue"))
+export const VueUiCursor = defineAsyncComponent(() => import("./components/vue-ui-cursor.vue"))
+export const VueUiDashboard = defineAsyncComponent(() => import("./components/vue-ui-dashboard.vue"))
+export const VueUiDigits = defineAsyncComponent(() => import("./components/vue-ui-digits.vue"))
+export const VueUiDonut = defineAsyncComponent(() => import("./components/vue-ui-donut.vue"))
+export const VueUiDonutEvolution = defineAsyncComponent(() => import("./components/vue-ui-donut-evolution.vue"))
+export const VueUiDumbbell = defineAsyncComponent(() => import("./components/vue-ui-dumbbell.vue"))
+export const VueUiFlow = defineAsyncComponent(() => import("./components/vue-ui-flow.vue"))
+export const VueUiGalaxy = defineAsyncComponent(() => import("./components/vue-ui-galaxy.vue"))
+export const VueUiGauge = defineAsyncComponent(() => import("./components/vue-ui-gauge.vue"))
+export const VueUiHeatmap = defineAsyncComponent(() => import("./components/vue-ui-heatmap.vue"))
+export const VueUiIcon = defineAsyncComponent(() => import("./atoms/BaseIcon.vue"))
+export const VueUiKpi = defineAsyncComponent(() => import("./components/vue-ui-kpi.vue"))
+export const VueUiMiniLoader = defineAsyncComponent(() => import("./components/vue-ui-mini-loader.vue"))
+export const VueUiMolecule = defineAsyncComponent(() => import("./components/vue-ui-molecule.vue"))
+export const VueUiMoodRadar = defineAsyncComponent(() => import("./components/vue-ui-mood-radar.vue"))
+export const VueUiNestedDonuts = defineAsyncComponent(() => import("./components/vue-ui-nested-donuts.vue"))
+export const VueUiOnion = defineAsyncComponent(() => import("./components/vue-ui-onion.vue"))
+export const VueUiParallelCoordinatePlot = defineAsyncComponent(() => import("./components/vue-ui-parallel-coordinate-plot.vue"))
+export const VueUiQuadrant = defineAsyncComponent(() => import("./components/vue-ui-quadrant.vue"))
+export const VueUiQuickChart = defineAsyncComponent(() => import("./components/vue-ui-quick-chart.vue"))
+export const VueUiRadar = defineAsyncComponent(() => import("./components/vue-ui-radar.vue"))
+export const VueUiRating = defineAsyncComponent(() => import("./components/vue-ui-rating.vue"))
+export const VueUiRelationCircle = defineAsyncComponent(() => import("./components/vue-ui-relation-circle.vue"))
+export const VueUiRings = defineAsyncComponent(() => import("./components/vue-ui-rings.vue"))
+export const VueUiScatter = defineAsyncComponent(() => import("./components/vue-ui-scatter.vue"))
+export const VueUiScreenshot = defineAsyncComponent(() => import("./components/vue-ui-screenshot.vue"))
+export const VueUiSkeleton = defineAsyncComponent(() => import("./components/vue-ui-skeleton.vue"))
+export const VueUiSmiley = defineAsyncComponent(() => import("./components/vue-ui-smiley.vue"))
+export const VueUiSparkHistogram = defineAsyncComponent(() => import("./components/vue-ui-sparkhistogram.vue"))
+export const VueUiSparkStackbar = defineAsyncComponent(() => import("./components/vue-ui-sparkstackbar.vue"))
+export const VueUiSparkTrend = defineAsyncComponent(() => import("./components/vue-ui-spark-trend.vue"))
+export const VueUiSparkbar = defineAsyncComponent(() => import("./components/vue-ui-sparkbar.vue"))
+export const VueUiSparkgauge = defineAsyncComponent(() => import('./components/vue-ui-sparkgauge.vue'))
+export const VueUiSparkline = defineAsyncComponent(() => import("./components/vue-ui-sparkline.vue"))
+export const VueUiStripPlot = defineAsyncComponent(() => import("./components/vue-ui-strip-plot.vue"))
+export const VueUiTable = defineAsyncComponent(() => import("./components/vue-ui-table.vue"))
+export const VueUiTableHeatmap = defineAsyncComponent(() => import("./components/vue-ui-table-heatmap.vue"))
+export const VueUiTableSparkline = defineAsyncComponent(() => import("./components/vue-ui-table-sparkline.vue"))
+export const VueUiThermometer = defineAsyncComponent(() => import("./components/vue-ui-thermometer.vue"))
+export const VueUiTimer = defineAsyncComponent(() => import("./components/vue-ui-timer.vue"))
+export const VueUiTiremarks = defineAsyncComponent(() => import("./components/vue-ui-tiremarks.vue"))
+export const VueUiTreemap = defineAsyncComponent(() => import("./components/vue-ui-treemap.vue"))
+export const VueUiVerticalBar = defineAsyncComponent(() => import("./components/vue-ui-vertical-bar.vue"))
+export const VueUiWaffle = defineAsyncComponent(() => import("./components/vue-ui-waffle.vue"))
+export const VueUiWheel = defineAsyncComponent(() => import("./components/vue-ui-wheel.vue"))
+export const VueUiWordCloud = defineAsyncComponent(() => import("./components/vue-ui-word-cloud.vue"))
+export const VueUiXy = defineAsyncComponent(() => import("./components/vue-ui-xy.vue"))
+export const VueUiXyCanvas = defineAsyncComponent(() => import("./components/vue-ui-xy-canvas.vue"))
+export {
     createWordCloudDatasetFromPlainText,
-    VueUiNestedDonuts,
-    VueUiSparkgauge,
-    VueDataUi,
-    VueUiGalaxy,
-    VueUiKpi,
-    VueUiTreemap,
-    VueUiTableHeatmap,
-    VueUiAccordion,
-    VueUiQuickChart,
-    VueUiCursor,
-    VueUiSparkTrend,
-    VueUiStripPlot,
-    VueUiDumbbell,
-    VueUiWordCloud,
-    VueUiXyCanvas,
-    VueUiFlow,
-    VueUiParallelCoordinatePlot,
-    VueUiTimer
-};
+    getPalette,
+    getThemeConfig,
+    getVueDataUiConfig,
+}
