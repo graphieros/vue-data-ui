@@ -208,7 +208,7 @@ const isInfo = ref({
 
 <template>
     <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; right:${isFullscreen ? '12px': '0'}; padding: 4px; background:transparent; z-index: 1`">
-        <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:${backgroundColor};`" @click.stop="toggle" @keypress.enter="toggle">
+        <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:${backgroundColor}`" @click.stop="toggle" @keypress.enter="toggle">
             <BaseIcon  :name="isOpen ? 'close' : 'menu'" stroke="#CCCCCC" :stroke-width="2" />
         </div>
         <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor};`">
@@ -221,7 +221,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-else name="tooltipDisabled" :stroke="color" style="pointer-events: none"/>
                 </template>
-                <div v-if="isDesktop && titles.tooltip && !$slots.optionTooltip" :class="{'button-info' : true, 'button-info-visible': isInfo.tooltip }" :style="{ background: backgroundColor }">
+                <div v-if="isDesktop && titles.tooltip && !$slots.optionTooltip" :class="{'button-info' : true, 'button-info-visible': isInfo.tooltip }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.tooltip }}
                 </div>
             </button>
@@ -234,7 +234,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isPrinting" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="pdf" :stroke="color" style="pointer-events: none;" />
                 </template>
-                <div v-if="isDesktop && titles.pdf && !$slots.optionPdf" :class="{'button-info' : true, 'button-info-visible': isInfo.pdf }" :style="{ background: backgroundColor }">
+                <div v-if="isDesktop && titles.pdf && !$slots.optionPdf" :class="{'button-info' : true, 'button-info-visible': isInfo.pdf }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.pdf }}
                 </div>
             </button>
@@ -246,7 +246,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon name="excel" :stroke="color" style="pointer-events: none"/>
                 </template>
-                <div v-if="isDesktop && titles.csv && !$slots.optionCsv" :class="{'button-info' : true, 'button-info-visible': isInfo.csv }" :style="{ background: backgroundColor }">
+                <div v-if="isDesktop && titles.csv && !$slots.optionCsv" :class="{'button-info' : true, 'button-info-visible': isInfo.csv }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.csv }}
                 </div>
             </button>
@@ -259,7 +259,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isImaging" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="image" :stroke="color" style="pointer-events: none;" />
                 </template>
-                <div v-if="isDesktop && titles.img && !$slots.optionImg" :class="{'button-info' : true, 'button-info-visible': isInfo.img }" :style="{ background: backgroundColor }">
+                <div v-if="isDesktop && titles.img && !$slots.optionImg" :class="{'button-info' : true, 'button-info-visible': isInfo.img }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.img }}
                 </div>
             </button>
@@ -271,7 +271,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" style="pointer-events: none;" />
                 </template>
-                <div v-if="isDesktop && titles.table && !$slots.optionTable" :class="{'button-info' : true, 'button-info-visible': isInfo.table }" :style="{ background: backgroundColor }">
+                <div v-if="isDesktop && titles.table && !$slots.optionTable" :class="{'button-info' : true, 'button-info-visible': isInfo.table }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.table }}
                 </div>
             </button>
@@ -283,7 +283,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon :name="isLabel ? 'labelClose' : 'labelOpen'" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div v-if="isDesktop && titles.labels && !$slots.optionLabels" :class="{'button-info' : true, 'button-info-visible': isInfo.labels }" :style="{ background: backgroundColor }">
+                <div v-if="isDesktop && titles.labels && !$slots.optionLabels" :class="{'button-info' : true, 'button-info-visible': isInfo.labels }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.labels }}
                 </div>
             </button>
@@ -295,7 +295,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon name="sort" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div v-if="isDesktop && titles.sort && !$slots.optionSort" :class="{'button-info' : true, 'button-info-visible': isInfo.sort }" :style="{ background: backgroundColor }">
+                <div v-if="isDesktop && titles.sort && !$slots.optionSort" :class="{'button-info' : true, 'button-info-visible': isInfo.sort }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.sort }}
                 </div>
             </button>
@@ -308,7 +308,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isItStacked" name="unstack" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-else name="stack" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div v-if="isDesktop && titles.stack && !$slots.optionStack" :class="{'button-info' : true, 'button-info-visible': isInfo.stack }" :style="{ background: backgroundColor }">
+                <div v-if="isDesktop && titles.stack && !$slots.optionStack" :class="{'button-info' : true, 'button-info-visible': isInfo.stack }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.stack }}
                 </div>
             </button>
@@ -321,7 +321,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isFullscreen" name="exitFullscreen" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-if="!isFullscreen" name="fullscreen" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div v-if="isDesktop && titles.fullscreen && !$slots.optionFullscreen" :class="{'button-info' : true, 'button-info-visible': isInfo.fullscreen }" :style="{ background: backgroundColor }">
+                <div v-if="isDesktop && titles.fullscreen && !$slots.optionFullscreen" :class="{'button-info' : true, 'button-info-visible': isInfo.fullscreen }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.fullscreen }}
                 </div>
             </button>
