@@ -557,7 +557,7 @@ defineExpose({
             'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
           }"
           :style="`animation-delay:${i * 100}ms`"
-          stroke="none"
+          :stroke="FINAL_CONFIG.style.chart.layout.rings.stroke"
           :stroke-width="ring.strokeWidth < 0.5 ? 0.5 : ring.strokeWidth"
           :cx="svg.width / 2"
           :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
