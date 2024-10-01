@@ -6,8 +6,8 @@ declare module 'vue-data-ui' {
     }
 
     export const VueDataUi: DefineComponent<{
-        dataset?: VueUi3dBarDataset | VueUiAgePyramidDataset | VueUiAnnotatorDataset | Array<Array<string | number>> | VueUiChestnutDatasetRoot[] | VueUiDashboardElement[] | number | string | VueUiDonutEvolutionDatasetItem[] | VueUiDonutDatasetItem[] | VueUiGaugeDataset | VueUiHeatmapDatasetItem[] | VueUiMoleculeDatasetNode[] | VueUiMoodRadarDataset | VueUiNestedDonutsDatasetItem[] | VueUiOnionDatasetItem[] | VueUiQuadrantDatasetItem[] | VueUiRadarDataset | VueUiRatingDataset | VueUiRelationCircleDatasetItem[] | VueUiRingsDatasetItem[] | VueUiScatterDatasetItem[] | VueUiSparkbarDatasetItem[] | VueUiSparkgaugeDataset | VueUiSparkHistogramDatasetItem[] | VueUiSparklineDatasetItem[] | VueUiSparkStackBarDatasetItem[] | VueUiTableSparklineDatasetItem[] | VueUiTableDataset | VueUiThermometerDataset | VueUiTiremarksDataset | VueUiVerticalBarDatasetItem[] | VueUiWaffleDatasetItem[] | VueUiWheelDataset | VueUiXyDatasetItem[] | VueUiTreemapDatasetItem[] | VueUiQuickChartDataset | number[] | VueUiStripPlotDataset[] | VueUiWordCloudDatasetItem[] | VueUiXyCanvasDatasetItem[] | VueUiFlowDatasetItem[] | VueUiParallelCoordinatePlotDatasetItem[],
-        config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackBarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig;
+        dataset?: VueUi3dBarDataset | VueUiAgePyramidDataset | VueUiAnnotatorDataset | Array<Array<string | number>> | VueUiChestnutDatasetRoot[] | VueUiDashboardElement[] | number | string | VueUiDonutEvolutionDatasetItem[] | VueUiDonutDatasetItem[] | VueUiGaugeDataset | VueUiHeatmapDatasetItem[] | VueUiMoleculeDatasetNode[] | VueUiMoodRadarDataset | VueUiNestedDonutsDatasetItem[] | VueUiOnionDatasetItem[] | VueUiQuadrantDatasetItem[] | VueUiRadarDataset | VueUiRatingDataset | VueUiRelationCircleDatasetItem[] | VueUiRingsDatasetItem[] | VueUiScatterDatasetItem[] | VueUiSparkbarDatasetItem[] | VueUiSparkgaugeDataset | VueUiSparkHistogramDatasetItem[] | VueUiSparklineDatasetItem[] | VueUiSparkStackBarDatasetItem[] | VueUiTableSparklineDatasetItem[] | VueUiTableDataset | VueUiThermometerDataset | VueUiTiremarksDataset | VueUiVerticalBarDatasetItem[] | VueUiWaffleDatasetItem[] | VueUiWheelDataset | VueUiXyDatasetItem[] | VueUiTreemapDatasetItem[] | VueUiQuickChartDataset | number[] | VueUiStripPlotDataset[] | VueUiWordCloudDatasetItem[] | VueUiXyCanvasDatasetItem[] | VueUiFlowDatasetItem[] | VueUiParallelCoordinatePlotDatasetItem[] | VueUiCarouselTableDataset,
+        config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackBarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig;
     }>
 
     export type ChartTitle = {
@@ -92,6 +92,7 @@ declare module 'vue-data-ui' {
 
     export type Theme = "" | "zen" | "hack" | "concrete";
     export type TextAlign = "left" | "center" | "right";
+    export type FontVariantNumeric = "normal" | "slashed-zero" | "tabular-nums" | "oldstyle-nums";
 
 
     export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar = any, TLine = any, TPlot = any> = {
@@ -5105,7 +5106,7 @@ declare module 'vue-data-ui' {
                     pause?: boolean;
                     reset?: boolean;
                     restart?: boolean;
-                    lap?: true,
+                    lap?: boolean;
                     iconColor?: string;
                 };
                 buttonTitles?: {
@@ -5124,9 +5125,108 @@ declare module 'vue-data-ui' {
         config?: VueUiTimerConfig;
     }>
 
-    export type VueDataUiConfig = VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutConfig | VueUiDonutEvolutionConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkHistogramConfig | VueUiSparkStackBarConfig | VueUiSparkbarConfig | VueUiSparklineConfig | VueUiTableConfig | VueUiTableSparklineConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiNestedDonutsConfig | VueUiGalaxyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiTableHeatmapConfig | VueUiAccordionConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig;
+    export type VueUiCarouselTableDataset = {
+        head: string[];
+        body: Array<Array<string | number>>;
+    }
 
-    export type VueDataUiConfigKey = "vue_ui_3d_bar" | "vue_ui_age_pyramid" | "vue_ui_annotator" | "vue_ui_candlestick" | "vue_ui_chestnut" | "vue_ui_dashboard" | "vue_ui_digits" | "vue_ui_donut" | "vue_ui_donut_evolution" | "vue_ui_gauge" | "vue_ui_heatmap" | "vue_ui_mini_loader" | "vue_ui_molecule" | "vue_ui_mood_radar" | "vue_ui_onion" | "vue_ui_quadrant" | "vue_ui_radar" | "vue_ui_rating" | "vue_ui_relation_circle" | "vue_ui_rings" | "vue_ui_scatter" | "vue_ui_screenshot" | "vue_ui_skeleton" | "vue_ui_smiley" | "vue_ui_sparkhistogram" | "vue_ui_sparkstackbar" | "vue_ui_sparkbar" | "vue_ui_sparkline" | "vue_ui_table" | "vue_ui_table_sparkline" | "vue_ui_thermometer" | "vue_ui_tiremarks" | "vue_ui_vertical_bar" | "vue_ui_waffle" | "vue_ui_wheel" | "vue_ui_xy" | "vue_ui_nested_donuts" | "vue_ui_galaxy" | "vue_ui_kpi" | "vue_ui_treemap" | "vue_ui_table_heatmap" | "vue_ui_accordion" | "vue_ui_quick_chart" | "vue_ui_cursor" | "vue_ui_spark_trend" | "vue_ui_strip_plot" | "vue_ui_dumbbell" | "vue_ui_word_cloud" | "vue_ui_xy_canvas" | "vue_ui_flow" | "vue_ui_parallel_coordinate_plot" | "vue_ui_timer";
+    export type TableBorder = {
+        size?: number;
+        color?: string;
+    }
+
+    export type VueUiCarouselTableConfig = {
+        responsiveBreakpoint?: number;
+        animation?: {
+            use?: boolean;
+            speedMs?: number;
+            pauseOnHover?: boolean;
+        };
+        border?: TableBorder;
+        style?: {
+            backgroundColor?: string;
+            color?: string;
+            fontFamily?: string;
+        };
+        caption?: {
+            text?: string;
+            padding?: ChartPadding;
+            style?: {
+                backgroundColor?: string;
+                color?: string;
+                fontSize?: string;
+                fontWeight?: string;
+                textAlign?: TextAlign;
+            };
+        };
+        thead?: {
+            tr?: {
+                style?: {
+                    backgroundColor?: string;
+                    boxShadow?: string;
+                };
+                border?: TableBorder;
+                th?: {
+                    border?: TableBorder;
+                    style?: {
+                        textAlign?: TextAlign;
+                        fontVariantNumeric: FontVariantNumeric;
+                    };
+                    padding?: ChartPadding;
+                };
+            };
+        };
+        tbody?: {
+            tr?: {
+                visible?: number;
+                height?: number;
+                style?: {
+                    backgroundColor: string;
+                    color?: string;
+                };
+                border?: TableBorder;
+                td?: {
+                    alternateColor?: boolean;
+                    alternateOpacity?: number;
+                    style?: {
+                        fontVariantNumeric?: FontVariantNumeric;
+                        textAlign?: TextAlign;
+                        backgroundColor?: string;
+                    };
+                    border?: TableBorder;
+                    padding?: ChartPadding;
+                };
+            };
+        };
+        userOptions?: {
+            show?: boolean;
+            buttons?: {
+                pdf?: boolean;
+                img?: boolean;
+                csv?: boolean;
+                animation?: boolean;
+                fullscreen?: boolean;
+            },
+            buttonTitles?: {
+                pdf?: string;
+                csv?: string;
+                img?: string;
+                animation?: string;
+                fullscreen?: string;
+                open?: string;
+                close?: string;
+            };
+        }
+    };
+
+    export const VueUiCarouselTable: DefineComponent<{
+        config?: VueUiCarouselTableConfig,
+        dataset: VueUiCarouselTableDataset
+    }>
+
+    export type VueDataUiConfig = VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutConfig | VueUiDonutEvolutionConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkHistogramConfig | VueUiSparkStackBarConfig | VueUiSparkbarConfig | VueUiSparklineConfig | VueUiTableConfig | VueUiTableSparklineConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiNestedDonutsConfig | VueUiGalaxyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiTableHeatmapConfig | VueUiAccordionConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig;
+
+    export type VueDataUiConfigKey = "vue_ui_3d_bar" | "vue_ui_age_pyramid" | "vue_ui_annotator" | "vue_ui_candlestick" | "vue_ui_chestnut" | "vue_ui_dashboard" | "vue_ui_digits" | "vue_ui_donut" | "vue_ui_donut_evolution" | "vue_ui_gauge" | "vue_ui_heatmap" | "vue_ui_mini_loader" | "vue_ui_molecule" | "vue_ui_mood_radar" | "vue_ui_onion" | "vue_ui_quadrant" | "vue_ui_radar" | "vue_ui_rating" | "vue_ui_relation_circle" | "vue_ui_rings" | "vue_ui_scatter" | "vue_ui_screenshot" | "vue_ui_skeleton" | "vue_ui_smiley" | "vue_ui_sparkhistogram" | "vue_ui_sparkstackbar" | "vue_ui_sparkbar" | "vue_ui_sparkline" | "vue_ui_table" | "vue_ui_table_sparkline" | "vue_ui_thermometer" | "vue_ui_tiremarks" | "vue_ui_vertical_bar" | "vue_ui_waffle" | "vue_ui_wheel" | "vue_ui_xy" | "vue_ui_nested_donuts" | "vue_ui_galaxy" | "vue_ui_kpi" | "vue_ui_treemap" | "vue_ui_table_heatmap" | "vue_ui_accordion" | "vue_ui_quick_chart" | "vue_ui_cursor" | "vue_ui_spark_trend" | "vue_ui_strip_plot" | "vue_ui_dumbbell" | "vue_ui_word_cloud" | "vue_ui_xy_canvas" | "vue_ui_flow" | "vue_ui_parallel_coordinate_plot" | "vue_ui_timer" | "vue_ui_carousel_table";
 
     export const getVueDataUiConfig: () => VueDataUiConfig;
 }
