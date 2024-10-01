@@ -241,7 +241,7 @@ defineExpose({
 </script>
 
 <template>
-    <div style="position:relative" ref="chartContainer">
+    <div style="position:relative; overflow:visible;" ref="chartContainer">
         <div 
             ref="tableContainer"
             :id="`carousel-table_${uid}`"
@@ -268,7 +268,6 @@ defineExpose({
                 <caption
                     ref="caption"
                     class="vue-data-ui-carousel-table-caption" 
-                    v-if="FINAL_CONFIG.caption.text || $slots.caption" 
                     :style="{
                         ...FINAL_CONFIG.caption.style, 
                         fontFamily: 'inherit',
@@ -279,7 +278,8 @@ defineExpose({
                         paddingRight: FINAL_CONFIG.caption.padding.right + 'px',
                         paddingBottom: FINAL_CONFIG.caption.padding.bottom +'px',
                         paddingLeft: FINAL_CONFIG.caption.padding.left + 'px',
-                        boxShadow: isResponsive ? FINAL_CONFIG.thead.tr.style.boxShadow : 'none'
+                        boxShadow: isResponsive ? FINAL_CONFIG.thead.tr.style.boxShadow : 'none',
+                        minHeight: '36px'
                     }">
                     {{ FINAL_CONFIG.caption.text && !$slots.caption ? FINAL_CONFIG.caption.text : '' }}
                     <slot name="caption"/>
@@ -320,8 +320,7 @@ defineExpose({
                         v-for="(tr, i) in dataset.body"
                         :style="{ 
                             ...FINAL_CONFIG.tbody.tr.style,
-                            border: `${FINAL_CONFIG.tbody.tr.border.size}px solid ${FINAL_CONFIG.tbody.tr.border.color}`,
-                            zIndex: 0,
+                            border: `${FINAL_CONFIG.tbody.tr.border.size}px solid ${FINAL_CONFIG.tbody.tr.border.color}`
                         }"
                     >
                         <td 
