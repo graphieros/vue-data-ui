@@ -89,7 +89,8 @@ export function useConfig() {
         labels = false,
         fullscreen = false,
         sort = false,
-        stack = false
+        stack = false,
+        animation = false
     }) => {
 
         const buttonTitles = {
@@ -103,7 +104,8 @@ export function useConfig() {
             labels: 'Toggle labels',
             fullscreen: 'Toggle fullscreen',
             sort: "Toggle sort",
-            stack: "Toggle stack mode"
+            stack: "Toggle stack mode",
+            animation: "Toggle animation"
         }
 
         if (!tooltip) delete buttonTitles.tooltip
@@ -115,6 +117,7 @@ export function useConfig() {
         if (!fullscreen) delete buttonTitles.fullscreen
         if (!sort) delete buttonTitles.sort
         if (!stack) delete buttonTitles.stack
+        if (!animation) delete buttonTitles.animation
 
         return {
             show: true,
@@ -127,7 +130,8 @@ export function useConfig() {
                 labels,
                 fullscreen,
                 sort,
-                stack
+                stack,
+                animation
             },
             buttonTitles
         }
@@ -4247,6 +4251,104 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_carousel_table = {
+        responsiveBreakpoint: 400,
+        userOptions: USER_OPTIONS({
+            tooltip: false,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: false,
+            labels: false,
+            fullscreen: true,
+            stack: false,
+            animation: true
+        }),
+        animation: {
+            use: true,
+            speedMs: 1000,
+            pauseOnHover: true,
+        },
+        style: {
+            backgroundColor: COLOR_WHITE,
+            color: COLOR_BLACK,
+            fontFamily: 'inherit',
+        },
+        border: {
+            size: 0,
+            color: COLOR_BLACK
+        },
+        caption: {
+            text: '',
+            padding: PADDING([12, 12, 12, 12]),
+            style: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                fontSize: `${FONT._16}px`,
+                fontWeight: 'bold',
+                textAlign: 'left'
+            }
+        },
+        thead: {
+            style: {
+                verticalAlign: 'middle',
+            },
+            tr: {
+                height: 32,
+                border: {
+                    size: 0,
+                    color: COLOR_BLACK
+                },
+                style: {
+                    backgroundColor: COLOR_WHITE,
+                    color: COLOR_BLACK,
+                    boxShadow: `0px 6px 12px -6px ${COLOR_BLACK}50`
+                },
+                th: {
+                    border: {
+                        size: 0,
+                        color: COLOR_BLACK
+                    },
+                    padding: PADDING([0, 12, 0, 0]),
+                    style: {
+                        borderSpacing: 0,
+                        border: 'none',
+                        textAlign: 'right',
+                        fontVariantNumeric: 'tabular-nums',
+                    }
+                }
+            },
+        },
+        tbody: {
+            tr: {
+                visible: 5,
+                height: 32,
+                border: {
+                    size: 0,
+                    color: COLOR_BLACK,
+                },
+                style: {
+                    backgroundColor: COLOR_WHITE,
+                    color: COLOR_BLACK
+                },
+                td: {
+                    alternateColor: true,
+                    alternateOpacity: 0.5,
+                    border: {
+                        size: 0,
+                        color: COLOR_BLACK,
+                    },
+                    padding: PADDING([0, 12, 0, 0]),
+                    style: {
+                        fontVariantNumeric: 'tabular-nums',
+                        textAlign: 'right',
+                        backgroundColor: COLOR_GREY_LIGHT
+                    }
+                }
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -4289,6 +4391,7 @@ export function useConfig() {
         vue_ui_flow,
         vue_ui_parallel_coordinate_plot,
         vue_ui_timer,
+        vue_ui_carousel_table,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,
@@ -4301,6 +4404,6 @@ export function useConfig() {
         vue_ui_skeleton,
         vue_ui_screenshot,
         vue_ui_table,
-        vue_ui_digits
+        vue_ui_digits,
     }
 }
