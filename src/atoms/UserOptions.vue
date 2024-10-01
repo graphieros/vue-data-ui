@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, watch } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from "./BaseIcon.vue";
 
@@ -80,6 +80,14 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    hasAnimation: {
+        type: Boolean,
+        default: false,
+    },
+    isAnimation: {
+        type: Boolean,
+        default: false,
+    },
     titles: {
         type: Object,
         default() {
@@ -89,10 +97,18 @@ const props = defineProps({
     showTooltips: {
         type: Boolean,
         default: true
+    },
+    zIndex: {
+        type: Number,
+        default: 1
+    },
+    noOffset: {
+        type: Boolean,
+        default: false
     }
 });
 
-const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack', 'toggleTooltip']);
+const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack', 'toggleTooltip', 'toggleAnimation']);
 
 function generatePdf() {
     emit('generatePdf');
@@ -141,6 +157,13 @@ function toggleLabels() {
     emit('toggleLabels')
 }
 
+const isAnimated = ref(props.isAnimation);
+
+function toggleAnimation() {
+    isAnimated.value = !isAnimated.value;
+    emit('toggleAnimation');
+}
+
 function toggleSort() {
     emit('toggleSort')
 }
@@ -174,7 +197,7 @@ function toggleFullscreen(state) {
     }
 }
 
-function fullscreenchanged(event) {
+function fullscreenchanged(_event) {
   if (document.fullscreenElement) {
     isFullscreen.value = true;
   } else {
@@ -202,16 +225,17 @@ const isInfo = ref({
     sort: false,
     stack: false,
     fullscreen: false,
+    animation: false,
 })
 
 </script>
 
 <template>
-    <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; right:${isFullscreen ? '12px': '0'}; padding: 4px; background:transparent; z-index: 1`">
-        <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:${backgroundColor}`" @click.stop="toggle" @keypress.enter="toggle">
+    <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`z-index: ${zIndex}; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; right:${isFullscreen ? '12px': '0'}; padding: 4px; background:transparent;`">
+        <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right: ${noOffset ? 0 : 4}px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:${backgroundColor}`" @click.stop="toggle" @keypress.enter="toggle">
             <BaseIcon  :name="isOpen ? 'close' : 'menu'" stroke="#CCCCCC" :stroke-width="2" />
         </div>
-        <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor};`">
+        <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}; right:${noOffset ? 0 : 4}px`">
 
             <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
                 <template v-if="$slots.optionTooltip">
@@ -326,21 +350,30 @@ const isInfo = ref({
                 </div>
             </button>
 
+            <button tabindex="0" v-if="hasAnimation" data-cy="user-options-anim" class="vue-ui-user-options-button" @mouseenter="isInfo.animation = true" @mouseout="isInfo.animation = false" @click="toggleAnimation">
+                <template v-if="$slots.optionAnimation">
+                    <slot name="optionAnimation" v-bind="{ toggleAnimation, isAnimated }"/>
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isAnimated" name="play" :stroke="color" style="pointer-events: none;"/>
+                    <BaseIcon v-if="!isAnimated" name="pause" :stroke="color" style="pointer-events: none;"/>
+                </template>
+                <div v-if="isDesktop && titles.fullscreen && !$slots.optionAnimation" :class="{'button-info' : true, 'button-info-visible': isInfo.animation }" :style="{ background: backgroundColor, color: color }">
+                    {{ titles.animation }}
+                </div>
+            </button>
+
         </div>
     </div>
 </template>
 
 <style scoped>
-.vue-ui-user-options {
-    z-index: 1;
-}
 .vue-ui-user-options-drawer[data-open="false"] {
     display: none;
 }
 
 .vue-ui-user-options-drawer[data-open="true"] {
     position: absolute;
-    right: 4px;
     top: 36px;
     display: flex;
     flex-direction: column;

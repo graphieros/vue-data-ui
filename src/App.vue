@@ -43,6 +43,7 @@ import ArenaVueUiXyCanvas from "../TestingArena/ArenaVueUiXyCanvas.vue";
 import ArenaVueUiFlow from "../TestingArena/ArenaVueUiFlow.vue";
 import ArenaVueUiParallelCoordinatePlot from "../TestingArena/ArenaVueUiParallelCoordinatePlot.vue";
 import ArenaVueUiTimer from "../TestingArena/ArenaVueUiTimer.vue";
+import ArenaVueUiCarouselTable from "../TestingArena/ArenaVueUiCarouselTable.vue";
 
 const showOldArena = ref(false);
 
@@ -89,12 +90,13 @@ const components = ref([
   /*__________________*/"VueUiFlow", // 39
   /**/"VueUiParallelCoordinatePlot", // 40
   /*_________________*/"VueUiTimer", // 41
+  /*_________*/"VueUiCarouselTable", // 42
   // screenshot
   // dashboard
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[0]);
+const selectedComponent = ref(components.value[42]);
 
 </script>
 
@@ -234,4 +236,7 @@ const selectedComponent = ref(components.value[0]);
 
   <!-- 41 -->
   <ArenaVueUiTimer v-if="selectedComponent === 'VueUiTimer'" />
+
+  <!-- 42 -->
+  <ArenaVueUiCarouselTable v-if="selectedComponent === 'VueUiCarouselTable'" />
 </template>
