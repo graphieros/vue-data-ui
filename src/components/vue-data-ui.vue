@@ -65,7 +65,8 @@ const components = {
     VueUiXyCanvas: defineAsyncComponent(() => import('./vue-ui-xy-canvas.vue')),
     VueUiFlow: defineAsyncComponent(() => import('./vue-ui-flow.vue')),
     VueUiParallelCoordinatePlot: defineAsyncComponent(() => import('./vue-ui-parallel-coordinate-plot.vue')),
-    VueUiTimer: defineAsyncComponent(() => import('./vue-ui-timer.vue'))
+    VueUiTimer: defineAsyncComponent(() => import('./vue-ui-timer.vue')),
+    VueUiCarouselTable: defineAsyncComponent(() => import('./vue-ui-carousel-table.vue'))
 };
 
 const componentProps = {
@@ -121,7 +122,8 @@ const componentProps = {
     VueUiXyCanvas: ['config', 'dataset'],
     VueUiFlow: ['config', 'dataset'],
     VueUiParallelCoordinatePlot: ['config', 'dataset'],
-    VueUiTimer: ['config']
+    VueUiTimer: ['config'],
+    VueUiCarouselTable: ['config', 'dataset']
 };
 
 const emit = defineEmits([
@@ -182,6 +184,9 @@ const pause = ref(() => null);
 const reset = ref(() => null);
 const restart = ref(() => null);
 const lap = ref(() => null);
+const toggleAnimation = ref(() => null);
+const pauseAnimation = ref(() => null);
+const resumeAnimation = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -252,6 +257,15 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.lap) {
             lap.value = newRef.lap;
         }
+        if (newRef.toggleAnimation) {
+            toggleAnimation.value = newRef.toggleAnimation;
+        }
+        if (newRef.pauseAnimation) {
+            pauseAnimation.value = newRef.pauseAnimation;
+        }
+        if (newRef.resumeAnimation) {
+            resumeAnimation.value = newRef.resumeAnimation;
+        }
     }
 })
 
@@ -277,7 +291,10 @@ const getEventHandlers = () => {
         'pause',
         'reset',
         'restart',
-        'lap'
+        'lap',
+        'toggleAnimation',
+        'pauseAnimation',
+        'resumeAnimation'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -319,7 +336,10 @@ defineExpose({
     pause,
     reset,
     restart,
-    lap
+    lap,
+    pauseAnimation,
+    resumeAnimation,
+    toggleAnimation
 });
 </script>
 
