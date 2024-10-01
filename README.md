@@ -9,10 +9,10 @@
 # vue-data-ui
 
 ![npm](https://img.shields.io/npm/v/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-54-blue)
-[![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
+![Static Badge](https://img.shields.io/badge/components-55-blue)
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 ![npm](https://img.shields.io/npm/dt/vue-data-ui)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
@@ -73,6 +73,7 @@ Available components
 - [VueUiTableHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-table-heatmap)
 - [VueUiTableSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-table-sparkline)
 - [VueUiTable](https://vue-data-ui.graphieros.com/docs#vue-ui-table)
+- [VueUiCarouselTable](https://vue-data-ui.graphieros.com/docs#vue-ui-carousel-table)
 
 ## Rating
 
@@ -353,14 +354,14 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Mini charts
 
-| Name                  | dataset type                       | config type                 | emits / exposed methods | slots                      | custom tooltip | themes |
-| --------------------- | ---------------------------------- | --------------------------- | ----------------------- | -------------------------- | -------------- | ------ |
-| `VueUiSparkline`      | `VueUiSparklineDatasetItem[]`      | `VueUiSparklineConfig`      | `@selectDatapoint`      | `#svg`, `#before`          | ❌             | ✅     |
-| `VueUiSparkbar`       | `VueUiSparkbarDatasetItem[]`       | `VueUiSparkbarConfig`       | `@selectDatapoint`      | `#data-label`, `#title`    | ❌             | ✅     |
-| `VueUiSparkStackbar`  | `VueUiSparkStackbarDatasetItem[]`  | `VueUiSparkStackbarConfig`  | `@selectDatapoint`      | ❌                         | ❌             | ✅     |
-| `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`      | ❌                         | ❌             | ✅     |
-| `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                      | ❌                         | ❌             | ✅     |
-| `VueUiSparkTrend`     | `number[]`                         | `VueUiSparkTrendConfig`     | ❌                      | ❌                         | ❌             | ✅     |
+| Name                  | dataset type                       | config type                 | emits / exposed methods | slots                   | custom tooltip | themes |
+| --------------------- | ---------------------------------- | --------------------------- | ----------------------- | ----------------------- | -------------- | ------ |
+| `VueUiSparkline`      | `VueUiSparklineDatasetItem[]`      | `VueUiSparklineConfig`      | `@selectDatapoint`      | `#svg`, `#before`       | ❌             | ✅     |
+| `VueUiSparkbar`       | `VueUiSparkbarDatasetItem[]`       | `VueUiSparkbarConfig`       | `@selectDatapoint`      | `#data-label`, `#title` | ❌             | ✅     |
+| `VueUiSparkStackbar`  | `VueUiSparkStackbarDatasetItem[]`  | `VueUiSparkStackbarConfig`  | `@selectDatapoint`      | ❌                      | ❌             | ✅     |
+| `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`      | ❌                      | ❌             | ✅     |
+| `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                      | ❌                      | ❌             | ✅     |
+| `VueUiSparkTrend`     | `number[]`                         | `VueUiSparkTrendConfig`     | ❌                      | ❌                      | ❌             | ✅     |
 
 ### Charts
 
@@ -404,11 +405,12 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Data tables
 
-| Name                  | dataset type                       | config type                 | emits / exposed methods                       | slots                                                           | themes |
-| --------------------- | ---------------------------------- | --------------------------- | --------------------------------------------- | --------------------------------------------------------------- | ------ |
-| `VueUiTable`          | `VueUiTableDataset`                | `VueUiTableConfig`          | ❌                                            | ❌                                                              | ❌     |
-| `VueUiTableHeatmap`   | `VueUiTableHeatmapDatasetItem[]`   | `VueUiTableHeatmapConfig`   | `generatePdf`, `generateCsv`, `generateImage` | `#caption`, `#rowTitle`, `#cell`, `#sum`, `#average`, `#median` | ✅     |
-| `VueUiTableSparkline` | `VueUiTableSparklineDatasetItem[]` | `VueUiTableSparklineConfig` | `generatePdf`, `generateCsv`, `generateImage` | ❌                                                              | ✅     |
+| Name                  | dataset type                       | config type                 | emits / exposed methods                                                                               | slots                                                           | themes |
+| --------------------- | ---------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------ |
+| `VueUiTable`          | `VueUiTableDataset`                | `VueUiTableConfig`          | ❌                                                                                                    | ❌                                                              | ❌     |
+| `VueUiTableHeatmap`   | `VueUiTableHeatmapDatasetItem[]`   | `VueUiTableHeatmapConfig`   | `generatePdf`, `generateCsv`, `generateImage`                                                         | `#caption`, `#rowTitle`, `#cell`, `#sum`, `#average`, `#median` | ✅     |
+| `VueUiTableSparkline` | `VueUiTableSparklineDatasetItem[]` | `VueUiTableSparklineConfig` | `generatePdf`, `generateCsv`, `generateImage`                                                         | ❌                                                              | ✅     |
+| `VueUiCarouselTable`  | `VueUiCarouselTableDataset`        | `VueUiCarouselTableConfig`  | `generatePdf`, `generateImage`, `generateCsv`, `toggleAnimation`, `pauseAnimation`, `resumeAnimation` | `#caption`, `#th`, `#td`                                        | ❌     |
 
 ### Rating
 
@@ -497,6 +499,7 @@ User options actions available per chart:
 | VueUi3dBar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
 | VueUiAgePyramid             | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
 | VueUiCandlestick            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
+| VueUiCarouselTable          | optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen                                       |
 | VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
 | VueUiDonut                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
 | VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
@@ -581,6 +584,7 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUi3dBar                  | -                              |
 | VueUiAgePyramid             | ✅                             |
 | VueUiCandlestick            | ✅                             |
+| VueUiCarouselTable          | -                              |
 | VueUiChestnut               | -                              |
 | VueUiDonut                  | ✅                             |
 | VueUiDonutEvolution         | -                              |
