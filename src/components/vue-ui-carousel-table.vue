@@ -166,6 +166,18 @@ function pauseOnHover() {
     pauseAnimation();
 }
 
+const resumeTouchTimeout = ref(null);
+
+function pauseOnTouch() {
+    pauseAnimation();
+    clearTimeout(resumeTouchTimeout.value);
+}
+
+function resumeAfterDelay() {
+    clearTimeout(resumeTouchTimeout.value);
+    resumeTouchTimeout.value = setTimeout(resumeAnimation, 1000);
+}
+
 watch(
     () => FINAL_CONFIG.value.animation.use,
     (newVal) => {
@@ -255,6 +267,9 @@ defineExpose({
             :class="{ 'vue-ui-responsive' : isResponsive, 'is-playing': !isPaused }"
             @mouseenter="pauseOnHover()"
             @mouseleave="resumeAnimation()"
+            @touchstart="pauseOnTouch()"
+            @touchend="resumeAfterDelay()"
+            @touchcancel="resumeAfterDelay()"
         >
             <table 
                 class="vue-data-ui-carousel-table"
