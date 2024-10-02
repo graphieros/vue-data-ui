@@ -157,6 +157,7 @@ const icons = computed(() => {
         stop: `<path fill="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 10 8 L 4 2 L 3 2 L 2 3 L 2 4 L 8 10 L 2 16 L 2 17 L 3 18 L 4 18 L 10 12 L 16 18 L 17 18 L 18 17 L 18 16 L 12 10 L 18 4 L 18 3 L 17 2 L 16 2 L 10 8"/>`,
         restart: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 3 10 A 1 1 0 0 0 17 10 C 17 6 14 3 10 3 L 10 2 L 7 4 M 5 10 A 1 1 0 0 0 15 10 C 15 7 13 5 10 5 L 10 6 L 7 4 M 3 10 L 5 10"/>`,
         lap: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 3 10 A 1 1 0 0 0 17 10 A 1 1 0 0 0 3 10 M 8 2 L 12 2 M 5 3 L 6 4 M 15 3 L 14 4 M 10 7 L 10 10 L 13 13"/>`,
+        carouselTable: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 16 2 L 16 18 M 14 4 L 16 2 L 18 4 M 14 16 L 16 18 L 18 16 M 3 2 L 11 2 C 12 2 12 3 12 3 L 12 17 C 12 18 11 18 11 18 L 3 18 C 2 18 2 17 2 17 L 2 3 C 2 3 2 2 3 2 M 2 6 L 12 6 M 2 9 L 12 9 M 2 12 L 12 12 M 2 15 L 12 15 M 7 2 L 7 18 M 4 4 L 5 4 M 9 4 L 10 4"/>`,
 
     }
 });
