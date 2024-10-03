@@ -224,7 +224,6 @@ const dataTooltipSlot = ref(null);
 
 function useTooltip(datapoint, seriesIndex, x, y) {
     selectedClone.value = { x, y };
-    console.log(datapoint)
     const { value, yAxisName, xAxisName, id } = datapoint;
     hoveredCell.value = id;
     hoveredValue.value = value;
@@ -514,7 +513,7 @@ defineExpose({
                 >
                     {{ Number(minValue.toFixed(FINAL_CONFIG.style.legend.roundingValue)).toLocaleString() }}
                 </text>
-                <line v-if="hoveredValue !== null" :stroke="FINAL_CONFIG.style.backgroundColor" stroke-width="2" :x1="drawingArea.right + 36" :x2="drawingArea.right + 72" :y1="sideLegendIndicatorY" :y2="sideLegendIndicatorY" />
+                <line v-if="hoveredValue !== null" :stroke="adaptColorToBackground(dataTooltipSlot.datapoint.color)" stroke-width="2" :x1="drawingArea.right + 36" :x2="drawingArea.right + 72" :y1="sideLegendIndicatorY" :y2="sideLegendIndicatorY" />
                 <path v-if="hoveredValue !== null" :fill="FINAL_CONFIG.style.color" stroke="none" :d="`M ${drawingArea.right + 36},${sideLegendIndicatorY} ${drawingArea.right + 26},${sideLegendIndicatorY - 8} ${drawingArea.right + 26},${sideLegendIndicatorY + 8}z`" />
             </g>
 
@@ -552,7 +551,7 @@ defineExpose({
                 >
                     {{ Number(maxValue.toFixed(FINAL_CONFIG.style.legend.roundingValue)).toLocaleString() }}
                 </text>
-                <line v-if="hoveredValue !== null" :stroke="FINAL_CONFIG.style.backgroundColor" stroke-width="2" :x1="bottomLegendIndicatorX" :x2="bottomLegendIndicatorX" :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height" :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height * 2" />
+                <line v-if="hoveredValue !== null" :stroke="adaptColorToBackground(dataTooltipSlot.datapoint.color)" stroke-width="2" :x1="bottomLegendIndicatorX" :x2="bottomLegendIndicatorX" :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height" :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height * 2" />
                 <path v-if="hoveredValue !== null" :fill="FINAL_CONFIG.style.color" stroke="none" :d="`M ${bottomLegendIndicatorX},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height} ${bottomLegendIndicatorX - 12},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height - 20} ${bottomLegendIndicatorX + 12},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height - 20}z`" />
             </g>
 
