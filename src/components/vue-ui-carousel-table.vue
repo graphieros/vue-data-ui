@@ -137,10 +137,12 @@ function animate(timestamp) {
             init.value = 0;
         }
 
-        tableContainer.value.scrollTo({
-            top: init.value,
-            behavior: 'smooth'
-        });
+        if (tableContainer.value) {
+            tableContainer.value.scrollTo({
+                top: init.value,
+                behavior: 'smooth'
+            });
+        }
 
         lastTimestamp.value = timestamp;
     }
