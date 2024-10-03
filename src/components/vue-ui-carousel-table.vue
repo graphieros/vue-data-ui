@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from "vue";
 import { useConfig } from "../useConfig";
 import { useNestedProp } from "../useNestedProp";
 import { createCsvContent, createUid, downloadCsv, error, objectIsEmpty, opacity } from "../lib";
@@ -59,8 +59,8 @@ const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
-    })
-})
+    });
+});
 
 const { isPrinting, isImaging, generatePdf: makePdf, generateImage } = usePrinter({
     elementId: `carousel-table_${uid.value}`,
@@ -69,7 +69,7 @@ const { isPrinting, isImaging, generatePdf: makePdf, generateImage } = usePrinte
 
 const mutableConfig = ref({
     showAnimation: FINAL_CONFIG.value.animation.use
-})
+});
 
 const tableContainer = ref(null);
 const chartContainer = ref(null);
@@ -80,19 +80,34 @@ const captionHeight = ref(0);
 const tableRowHeight = ref(0);
 const isResponsive = ref(false);
 
+const tbody = ref(null);
+const allTr = ref(null);
+const scrollIndex = ref(0);
+
+function setTrElements() {
+    if (tbody.value) {
+        allTr.value = {
+            elements: tbody.value.getElementsByTagName('tr'),
+            heights: Array.from(tbody.value.getElementsByTagName('tr')).map(el => el.getBoundingClientRect().height)
+        }
+    }
+}
+
+onMounted(setTrElements);
+
+const maxTrHeight = computed(() => {
+    if(!allTr.value || !allTr.value.heights.length) return 0;
+    return Math.max(...allTr.value.heights) + captionHeight.value + tableRowHeight.value;
+})
+
 const visibleCells = computed(() => {
     if(!props.dataset.body) return 0;
     return FINAL_CONFIG.value.tbody.tr.visible <= props.dataset.body.length ? FINAL_CONFIG.value.tbody.tr.visible :props.dataset.body.length;
-})
+});
 
 const rowHeight = computed(() => {
     return ((FINAL_CONFIG.value.tbody.tr.height + FINAL_CONFIG.value.tbody.tr.td.padding.top + FINAL_CONFIG.value.tbody.tr.td.padding.bottom + FINAL_CONFIG.value.tbody.tr.border.size * 2) * visibleCells.value + captionHeight.value + tableRowHeight.value)
 });
-
-const maxHeight = computed(() => {
-    if (!props.dataset || !props.dataset.body || !props.dataset.head) return 0;
-    return ((props.dataset.body.length * (isResponsive.value ? props.dataset.head.length : 1)) - visibleCells.value) * (FINAL_CONFIG.value.tbody.tr.height + FINAL_CONFIG.value.tbody.tr.td.padding.top + FINAL_CONFIG.value.tbody.tr.td.padding.bottom + (FINAL_CONFIG.value.tbody.tr.border.size * 2));
-})
 
 const init = ref(0);
 const raf = ref(null);
@@ -109,7 +124,7 @@ onMounted(() => {
         tableRowHeight.value = tableRow.value.getBoundingClientRect().height;
     }
 
-    if (mutableConfig.value.showAnimation) {
+    if (mutableConfig.value.showAnimation && !!allTr.value) {
         startAnimation();
     }
 });
@@ -125,6 +140,12 @@ function startAnimation() {
     }
 }
 
+function hasReachedScrollBottom() {
+    if(!tableContainer.value) return false;
+    const { scrollTop, scrollHeight, clientHeight } = tableContainer.value;
+    return scrollTop + clientHeight >= scrollHeight;
+}
+
 function animate(timestamp) {
     if (isPaused.value) return;
     if (!lastTimestamp.value) lastTimestamp.value = timestamp;
@@ -132,16 +153,18 @@ function animate(timestamp) {
     const deltaTime = timestamp - lastTimestamp.value;
 
     if (deltaTime >= FINAL_CONFIG.value.animation.speedMs) {
-        init.value += (FINAL_CONFIG.value.tbody.tr.height + FINAL_CONFIG.value.tbody.tr.td.padding.top + FINAL_CONFIG.value.tbody.tr.td.padding.bottom + (FINAL_CONFIG.value.tbody.tr.border.size));
-        if (init.value > maxHeight.value) {
+        init.value += allTr.value.heights[scrollIndex.value];
+        if (hasReachedScrollBottom() || scrollIndex.value >= allTr.value.heights.length) {
             init.value = 0;
-        }
+            scrollIndex.value = 0;
+        } 
 
         if (tableContainer.value) {
             tableContainer.value.scrollTo({
                 top: init.value,
                 behavior: 'smooth'
             });
+            scrollIndex.value += 1;
         }
 
         lastTimestamp.value = timestamp;
@@ -155,6 +178,8 @@ function pauseAnimation() {
     cancelAnimationFrame(raf.value);
     raf.value = null;
 }
+
+onBeforeUnmount(pauseAnimation)
 
 function resumeAnimation() {
     if (!isPaused.value || !mutableConfig.value.showAnimation) return;
@@ -202,6 +227,8 @@ onMounted(() => {
         })
         captionHeight.value = caption.value ? caption.value.getBoundingClientRect().height : 0;
         tableRowHeight.value = tableRow.value ? tableRow.value.getBoundingClientRect().height : 0;
+        scrollIndex.value = 0;
+        setTrElements();
     })
     if(tableContainer.value) {
         observer.observe(tableContainer.value);
@@ -260,7 +287,7 @@ defineExpose({
             ref="tableContainer"
             :id="`carousel-table_${uid}`"
             :style="{
-                height: isPrinting || isImaging ? 'auto' : `${rowHeight}px`,
+                height: isPrinting || isImaging ? 'auto' : `${Math.max(rowHeight, maxTrHeight)}px`,
                 containerType: 'inline-size',
                 position: 'relative',
                 overflow: 'auto',
@@ -332,18 +359,19 @@ defineExpose({
                     </tr>
                 </thead>
     
-                <tbody v-if="dataset.body && dataset.head">
+                <tbody v-if="dataset.body && dataset.head" ref="tbody">
                     <tr 
                         v-for="(tr, i) in dataset.body"
                         :style="{ 
                             ...FINAL_CONFIG.tbody.tr.style,
-                            border: `${FINAL_CONFIG.tbody.tr.border.size}px solid ${FINAL_CONFIG.tbody.tr.border.color}`
+                            border: `${FINAL_CONFIG.tbody.tr.border.size}px solid ${FINAL_CONFIG.tbody.tr.border.color}`,
+                            verticalAlign: 'middle'
                         }"
                     >
                         <td 
                             role="cell" 
                             v-for="(td, j) in tr" 
-                            :data-cell="(isResponsive && dataset.head[j].length > 50) ? dataset.head[j].slice(0, 50) + '...' : dataset.head[j] || ''"
+                            :data-cell="dataset.head[j] || ''"
                             :style="{ 
                                 ...FINAL_CONFIG.tbody.tr.td.style,
                                 border: `${FINAL_CONFIG.tbody.tr.td.border.size}px solid ${FINAL_CONFIG.tbody.tr.td.border.color}`,
@@ -352,10 +380,11 @@ defineExpose({
                                 paddingRight: FINAL_CONFIG.tbody.tr.td.padding.right + 'px',
                                 paddingBottom: FINAL_CONFIG.tbody.tr.td.padding.bottom + 'px',
                                 paddingLeft: FINAL_CONFIG.tbody.tr.td.padding.left + 'px',
+                                verticalAlign: 'middle'
                             }" 
                             :height="`${FINAL_CONFIG.tbody.tr.height}px`"
                         >
-                            {{ $slots.td ? '' : isResponsive ? typeof td === 'string' ? td.slice(0, 30) + '...' : td : td }}
+                            {{ $slots.td ? '' : td }}
                             <slot name="td" v-bind="{ td, rowIndex: i, colIndex: j}"/>
                         </td>
                     </tr>
@@ -436,21 +465,14 @@ thead th, tbody td {
         display: grid;
         gap: 0.5rem;
         grid-template-columns: repeat(2, 1fr);
+        align-items: center;
         padding: 0.5rem 1rem;
         outline: none !important;
         text-align: left;
-        vertical-align: middle;
+        height:max-content;
     }
     tr {
-        outline: v-bind(tdo);
-    }
-
-    td:first-child {
-        padding-top: 1rem;
-    }
-
-    td:last-child {
-        padding-bottom: 1rem;
+        height: fit-content;
     }
 
     td::before {
@@ -458,7 +480,7 @@ thead th, tbody td {
         font-weight: 700;
         text-transform: capitalize;
         font-size: 10px;
-        height: 100%;
+        height: auto;
     }
 }
 
