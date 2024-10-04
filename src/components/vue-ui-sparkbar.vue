@@ -282,7 +282,6 @@ function selectDatapoint(datapoint, index) {
                         textAlign: ['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? 'left' : ['top', 'top-left'].includes(FINAL_CONFIG.style.labels.name.position) ? 'left' : FINAL_CONFIG.style.labels.name.position === 'top-center' ? 'center' : 'right' 
                     }"
                 >
-                {{ FINAL_CONFIG.style.labels.name.position  }}
                     <span :data-cy="`sparkbar-name-${i}`">{{ bar.name }}</span>
                     <span 
                         :data-cy="`sparkbar-value-${i}`"

@@ -1823,7 +1823,7 @@ export function useConfig() {
             labels: {
                 fontSize: FONT._16,
                 name: {
-                    position: POSITION.TOP,
+                    position: 'top-left',
                     width: '100%',
                     color: COLOR_BLACK,
                     bold: false
