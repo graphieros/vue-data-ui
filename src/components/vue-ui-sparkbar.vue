@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import {
     convertColorToHex,
     convertCustomPalette,
@@ -78,14 +78,19 @@ const safeDatasetCopy = ref(props.dataset.map(d => {
     }
 }));
 
-onMounted(() => {
+const rafId = ref(null);
+
+onMounted(async () => {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkbar',
             type: 'dataset'
         })
     }
+    useAnimation();
+})
 
+function useAnimation() {
     if (FINAL_CONFIG.value.style.animation.show) {
         const chunks = FINAL_CONFIG.value.style.animation.animationFrames;
         const chunkSet = props.dataset.map((d, i) => d.value / chunks);
@@ -101,7 +106,7 @@ onMounted(() => {
                         value: d.value += chunkSet[i]
                     }
                 });
-                requestAnimationFrame(animate)
+                rafId.value = requestAnimationFrame(animate)
             } else {
                 safeDatasetCopy.value = props.dataset.map(d => {
                     return {
@@ -113,7 +118,19 @@ onMounted(() => {
         }
         animate()
     }
-})
+}
+
+watch(() => props.dataset, async (v) => {
+    cancelAnimationFrame(rafId.value);
+
+    safeDatasetCopy.value = props.dataset.map(d => {
+    return {
+        ...d,
+        value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0
+    }});
+
+    nextTick(useAnimation);
+}, { deep: true })
 
 
 const svg = ref({
