@@ -251,7 +251,7 @@ function selectDatapoint(datapoint, index) {
             </div>
         </div>
         <template v-for="(bar, i) in drawableDataset">
-            <div v-if="isDataset" :style="`display:flex !important;${['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? 'flex-direction:row !important' : 'flex-direction:column !important'};gap:${FINAL_CONFIG.style.gap}px !important;${FINAL_CONFIG.style.labels.name.position === 'right' ? 'row-reverse !important' : ''};align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`" @click="() => selectDatapoint(bar, i)">
+            <div v-if="isDataset" :style="`display:flex !important;${['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? `flex-direction: ${FINAL_CONFIG.style.labels.name.position === 'right' ? 'row-reverse' : 'row'} !important` : 'flex-direction:column !important'};gap:${FINAL_CONFIG.style.gap}px !important;align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`" @click="() => selectDatapoint(bar, i)">
                 <!-- CUSTOM DATALABEL -->
                 <slot name="data-label" v-bind="{ bar: {
                     ...bar,
@@ -272,7 +272,17 @@ function selectDatapoint(datapoint, index) {
                 } }"/>
 
                 <!-- DEFAULT DATALABEL -->
-                <div v-if="!$slots['data-label']" :style="`width:${FINAL_CONFIG.style.labels.name.width};${['right','top'].includes(FINAL_CONFIG.style.labels.name.position) ? 'text-align:left' : 'text-align:right'};color:${FINAL_CONFIG.style.labels.name.color};font-size:${FINAL_CONFIG.style.labels.fontSize}px;font-weight:${FINAL_CONFIG.style.labels.name.bold ? 'bold' : 'normal'}`">
+                <div 
+                    v-if="!$slots['data-label']" 
+                    :style="{
+                        width: FINAL_CONFIG.style.labels.name.width,
+                        color: FINAL_CONFIG.style.labels.name.color,
+                        fontSize: FINAL_CONFIG.style.labels.fontSize + 'px',
+                        fontWeight: FINAL_CONFIG.style.labels.name.bold ? 'bold' : 'normal',
+                        textAlign: ['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? 'left' : ['top', 'top-left'].includes(FINAL_CONFIG.style.labels.name.position) ? 'left' : FINAL_CONFIG.style.labels.name.position === 'top-center' ? 'center' : 'right' 
+                    }"
+                >
+                {{ FINAL_CONFIG.style.labels.name.position  }}
                     <span :data-cy="`sparkbar-name-${i}`">{{ bar.name }}</span>
                     <span 
                         :data-cy="`sparkbar-value-${i}`"
