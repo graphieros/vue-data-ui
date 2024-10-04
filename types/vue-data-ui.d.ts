@@ -1429,7 +1429,7 @@ declare module 'vue-data-ui' {
         value: number;
         suffix?: string;
         prefix?: string;
-        rounding?: string;
+        rounding?: number;
         color?: string;
         target?: number;
     }
@@ -1465,7 +1465,7 @@ declare module 'vue-data-ui' {
             labels?: {
                 fontSize?: number;
                 name?: {
-                    position?: TextAlign;
+                    position?: "top" | "left";
                     width?: string;
                     color?: string;
                     bold?: boolean;
