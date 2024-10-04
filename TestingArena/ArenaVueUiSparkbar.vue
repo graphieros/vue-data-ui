@@ -56,7 +56,7 @@ const model = ref([
     { key: 'style.bar.gradient.intensity', def: 40, type: 'range', min: 0, max: 100},
     { key: 'style.bar.gradient.underlayerColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.labels.fontSize', def: 16, type: 'number', min: 8, max: 48},
-    { key: 'style.labels.name.position', def: 'top', type: 'select', options: ['left', 'top']},
+    { key: 'style.labels.name.position', def: 'top', type: 'select', options: ['left', 'top', 'top-left', 'top-center', 'top-right', 'right']},
     { key: 'style.labels.name.width', def: '100%', type: 'text'},
     { key: 'style.labels.name.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.labels.name.bold', def: false, type: 'checkbox'},
@@ -125,11 +125,11 @@ const showTitleSlot = ref(false);
                     </div>
                 </template>
 
-                <template #data-label="{ bar }">
+                <!-- <template #data-label="{ bar }">
                     <div style="width:100%">
                         {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
                     </div>
-                </template>
+                </template> -->
             </LocalVueUiSparkbar>
         </template>
         

@@ -11,6 +11,7 @@ const dataset = ref([
         valueLabel: "20.35%",
         timeLabel: "09:00",
         intensity: 1,
+        color: '#FF0000'
     },
     {
         value: 1.3,
@@ -24,6 +25,7 @@ const dataset = ref([
         valueLabel: "60%",
         timeLabel: "11:00",
         intensity: 0.6,
+        color: '#00FF00'
 
     },
     {
