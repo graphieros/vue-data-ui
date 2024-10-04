@@ -1103,6 +1103,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiSparkHistogramDatasetItem = {
         intensity?: number & { 0: 0; 1: 1 };
+        color?: string;
         gradient?: string;
         height?: number;
         proportion?: number;
@@ -1465,7 +1466,7 @@ declare module 'vue-data-ui' {
             labels?: {
                 fontSize?: number;
                 name?: {
-                    position?: "top" | "left";
+                    position?: "left" | "top" | "top-left" | "top-center" | "top-right" | "right"; // "top" legacy converts to "top-left"
                     width?: string;
                     color?: string;
                     bold?: boolean;
