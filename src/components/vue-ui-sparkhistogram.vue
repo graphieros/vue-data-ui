@@ -120,9 +120,9 @@ const computedDataset = computed(() => {
         const x = drawingArea.value.left + (gap / 2  + (i * unitWidth));
         const trapX = drawingArea.value.left + (i * unitWidth);
         const intensity = typeof dp.intensity === 'undefined' ? 100 : Math.round(dp.intensity * 100);
-        const color = dp.value >= 0 ? `${FINAL_CONFIG.value.style.bars.colors.positive}${opacity[intensity]}` : `${FINAL_CONFIG.value.style.bars.colors.negative}${opacity[intensity]}`;
-        const stroke = dp.value >= 0 ? FINAL_CONFIG.value.style.bars.colors.positive : FINAL_CONFIG.value.style.bars.colors.negative;
-        const gradient = dp.value >=  0 ? `url(#gradient_positive_${i}_${uid.value})` : `url(#gradient_negative_${i}_${uid.value})`;
+        const color = dp.color ? dp.color : dp.value >= 0 ? `${FINAL_CONFIG.value.style.bars.colors.positive}${opacity[intensity]}` : `${FINAL_CONFIG.value.style.bars.colors.negative}${opacity[intensity]}`;
+        const stroke = dp.color ? dp.color : dp.value >= 0 ? FINAL_CONFIG.value.style.bars.colors.positive : FINAL_CONFIG.value.style.bars.colors.negative;
+        const gradient = dp.color ? `url(#gradient_datapoint_${i}_${uid.value})` :  dp.value >=  0 ? `url(#gradient_positive_${i}_${uid.value})` : `url(#gradient_negative_${i}_${uid.value})`;
         const textAnchor = x + width / 2;
         return {
             ...dp,
@@ -178,6 +178,11 @@ const animation = computed(() => {
                 <radialGradient v-for="(negGrad, i) in computedDataset" :id="`gradient_negative_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
                     <stop offset="0%" :stop-color="`${shiftHue(FINAL_CONFIG.style.bars.colors.negative, 0.05)}${opacity[negGrad.intensity]}`"/>
                     <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.bars.colors.negative}${opacity[negGrad.intensity]}`"/>
+                </radialGradient>
+
+                <radialGradient v-for="(dp, i) in computedDataset" :id="`gradient_datapoint_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
+                    <stop offset="0%" :stop-color="`${shiftHue(dp.color, 0.05)}${opacity[dp.intensity]}`"/>
+                    <stop offset="100%" :stop-color="`${dp.color}${opacity[dp.intensity]}`"/>
                 </radialGradient>
             </defs>
             
