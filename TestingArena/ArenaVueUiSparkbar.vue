@@ -31,6 +31,15 @@ const dataset = ref([
     },
 ]);
 
+function addDatapoint() {
+    dataset.value.push({
+        name: 'additional',
+        value: Math.random() * 100,
+        rounding: 0,
+        target: 100
+    })
+}
+
 const model = ref([
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
@@ -102,6 +111,8 @@ const showTitleSlot = ref(false);
         <input type="checkbox" v-model="showTitleSlot" id="toggle-title-slot"/>
         <label for="toggle-title-slot">Toggle title slot</label>
     </div>
+
+    <button @click="addDatapoint">ADD DATAPOINT</button>
     <Box comp="VueUiSparkbar" :dataset="dataset"> 
         <template #title>VueUiSparkbar</template>
         
