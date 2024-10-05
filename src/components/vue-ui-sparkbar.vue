@@ -171,12 +171,14 @@ function ratioToMax(val) {
 }
 
 function ratioTo(bar) {
-
     if (FINAL_CONFIG.value.style.layout.independant) {
         if (bar.target) {
             return bar.value / bar.target;
         }
         if (FINAL_CONFIG.value.style.layout.percentage) {
+            if (bar.value > 100) {
+                return 1;
+            }
             return bar.value / 100;
         } else if(FINAL_CONFIG.value.style.layout.target === 0) {
             return 1;
