@@ -142,6 +142,8 @@ const model = ref([
     { key: 'chart.title.bold', def: true, type: 'checkbox', label: 'bold', category: 'title' },
     { key: 'chart.title.offsetX', def: 0, type: 'number', label: 'offsetX', category: 'title' },
     { key: 'chart.title.offsetY', def: 0, type: 'number', label: 'offsetY', category: 'title' },
+    { key: 'chart.title.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'chart.title.paddingLeft', def: 12, type: 'number', min: 0, max: 24},
 
     { key: 'chart.title.subtitle.text', def: 'Subtitle', type: 'text', label: 'textContent', category: 'subtitle' },
     { key: 'chart.title.subtitle.color', def: '#CCCCCC', type: 'color', label: 'textColor', category: 'subtitle' },

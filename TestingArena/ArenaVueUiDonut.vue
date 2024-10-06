@@ -106,6 +106,10 @@ const model = ref([
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'title' },
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 6, max: 48, label: 'fontSize', category: 'title' },
     { key: 'style.chart.title.bold', def: true, type: 'checkbox', label: 'bold', category: 'title' },
+    { key: 'style.chart.title.textAlign', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.chart.title.paddingLeft', def: 0, type: 'number', min: 0, max: 24 },
+    { key: 'style.chart.title.paddingRight', def: 0, type: 'number', min: 0, max: 24 },
+
     { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sit amet', type: 'text', label: 'textContent', category: 'subtitle' },
     { key: 'style.chart.title.subtitle.color', def: '#A1A1A1', type: 'color', label: 'textColor', category: 'subtitle' },
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 6, max: 42, label: 'fontSize', category: 'subtitle' },
