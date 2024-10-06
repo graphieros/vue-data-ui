@@ -57,4 +57,15 @@ const CONFIG = useNestedProp({
   >
     {{ CONFIG.subtitle.text }}
   </div>
+  <div
+    :data-cy="CONFIG.subtitle.cy"
+    v-if="CONFIG.subtitle.text"
+    :style="`width: calc(100% - ${CONFIG.title.paddingLeft + CONFIG.title.paddingRight}px); text-align:${CONFIG.title.textAlign};color:${
+      CONFIG.subtitle.color
+    };font-size:${CONFIG.subtitle.fontSize}px;font-weight:${
+      CONFIG.subtitle.bold ? 'bold' : ''
+    };padding-left:${CONFIG.title.paddingLeft}px;padding-right:${CONFIG.title.paddingRight}px;`"
+  >
+    <slot/>
+  </div>
 </template>
