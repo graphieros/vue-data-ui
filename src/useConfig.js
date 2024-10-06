@@ -52,6 +52,9 @@ export function useConfig() {
         color: COLOR_BLACK,
         fontSize: FONT._20,
         bold: true,
+        textAlign: POSITION.CENTER,
+        paddingLeft: 0,
+        paddingRight: 0,
         subtitle: {
             color: COLOR_GREY,
             text: "",

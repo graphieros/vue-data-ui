@@ -15,6 +15,9 @@ declare module 'vue-data-ui' {
         color?: string;
         fontSize?: number;
         bold?: boolean;
+        textAlign?: TextAlign;
+        paddingLeft?: number;
+        paddingRight?: number;
         subtitle?: {
             color?: string;
             text?: string;
