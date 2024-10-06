@@ -19,6 +19,7 @@ import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
@@ -357,17 +358,24 @@ defineExpose({
         :id="`vue-ui-gauge_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
     >
-        <!-- TITLE AS DIV -->
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px;${FINAL_CONFIG.userOptions.show ? 'padding-top:36px' : ''}`">
-            <div data-cy="gauge-div-title" :style="`width:100%;text-align:center;color:${FINAL_CONFIG.style.chart.title.color};font-size:${FINAL_CONFIG.style.chart.title.fontSize}px;font-weight:${FINAL_CONFIG.style.chart.title.bold ? 'bold': ''}`">
-                {{ FINAL_CONFIG.style.chart.title.text }}
-            </div>
-            <div data-cy="gauge-div-subtitle" v-if="FINAL_CONFIG.style.chart.title.subtitle.text" :style="`width:100%;text-align:center;color:${FINAL_CONFIG.style.chart.title.subtitle.color};font-size:${FINAL_CONFIG.style.chart.title.subtitle.fontSize}px;font-weight:${FINAL_CONFIG.style.chart.title.subtitle.bold ? 'bold': ''}`">
-                {{ FINAL_CONFIG.style.chart.title.subtitle.text }}
-            </div>
-            <div data-cy="gauge-div-base" v-if="!isNaN(dataset.base)" :style="`width:100%;text-align:center;color:${FINAL_CONFIG.style.chart.title.subtitle.color};font-size:${FINAL_CONFIG.style.chart.title.subtitle.fontSize}px;font-weight:${FINAL_CONFIG.style.chart.title.subtitle.bold ? 'bold': ''}`">
-                {{ FINAL_CONFIG.translations.base }} : {{ dataset.base }}
-            </div>
+    
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
+            <Title
+                :config="{
+                    title: {
+                        cy: 'gauge-div-title',
+                        ...FINAL_CONFIG.style.chart.title,
+                    },
+                    subtitle: {
+                        cy: 'gauge-div-subtitle',
+                        ...FINAL_CONFIG.style.chart.title.subtitle
+                    }
+                }"
+            >
+                <span v-if="FINAL_CONFIG.translations.base && dataset.base">
+                    {{ FINAL_CONFIG.translations.base }}: {{ dataset.base }}
+                </span>
+        </Title>
         </div>
 
         <!-- OPTIONS -->
