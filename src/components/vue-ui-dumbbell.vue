@@ -628,6 +628,10 @@ defineExpose({
             <slot name="svg" :svg="drawingArea"/>
         </svg>
 
+        <div v-if="$slots.watermark" class="vue-data-ui-watermark">
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
         <Skeleton 
             v-if="!isDataset"
             :config="{
