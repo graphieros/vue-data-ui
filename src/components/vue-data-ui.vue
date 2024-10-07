@@ -358,8 +358,8 @@ defineExpose({
         v-bind="relevantProps"
         v-on="getEventHandlers()"
     >
-        <template v-for="(slotContent, slotName) in $slots" v-slot:[slotName]="slotProps">
-            <slot :name="slotName" v-bind="slotProps">{{ slotContent }}</slot>
+        <template v-for="(_slotContent, slotName) in $slots" v-slot:[slotName]="slotProps">
+            <slot :name="slotName" v-bind="slotProps"></slot>
         </template>
     </component>
 </template>
