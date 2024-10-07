@@ -1391,6 +1391,10 @@ defineExpose({
             <slot v-else name="legend" v-bind:legend="legendSet" />
         </div>
 
+        <div v-if="$slots.watermark" class="vue-data-ui-watermark">
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
         <Accordion v-if="slicer.end - slicer.start < 200" hideDetails :config="{
             open: mutableConfig.showTable,
             maxHeight: 10000,
