@@ -190,7 +190,13 @@ function selectDatapoint(dp) {
             <div :style="`width: 100%; text-align:center; color:${plot.color}`">
                 {{  plot.comment }}
             </div>
-        </template>    
+        </template>
+        
+        <template #watermark="{ isPrinting }">
+            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                WATERMARK
+            </div>
+        </template> 
     </LocalVueUiParallelCoordinatePlot>
     </div>
 

@@ -249,7 +249,13 @@ function toggleLabels() {
             <div :style="`text-align:${plot.textAlign};font-size: 10px; padding: 6px;`">
                 {{ plot.comment }}
             </div>
-        </template>    
+        </template>
+
+        <template #watermark="{ isPrinting }">
+            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                WATERMARK
+            </div>
+        </template> 
     </LocalVueUiDonut>
     </div>
 
@@ -297,6 +303,11 @@ function toggleLabels() {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
             </LocalVueUiDonut>
         </template>
         
@@ -341,6 +352,11 @@ function toggleLabels() {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
             </LocalVueDataUi>
         </template>
         
@@ -385,6 +401,11 @@ function toggleLabels() {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
             </VueUiDonut>
         </template>
 
@@ -429,6 +450,11 @@ function toggleLabels() {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
             </VueDataUi>
         </template>
 

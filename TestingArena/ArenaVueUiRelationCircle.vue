@@ -147,7 +147,13 @@ const step = ref(0)
         <LocalVueUiRelationCircle :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
             responsive: true
-        }"/>
+        }">
+        <template #watermark="{ isPrinting }">
+            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                WATERMARK
+            </div>
+        </template>    
+    </LocalVueUiRelationCircle>
     </div>
 
     <Box comp="VueUiRelationCircle" :dataset="dataset">
@@ -162,6 +168,11 @@ const step = ref(0)
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template>  
             </LocalVueUiRelationCircle>
         </template>
 

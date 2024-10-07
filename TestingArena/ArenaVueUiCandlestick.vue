@@ -180,7 +180,13 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
         <LocalVueUiCandlestick :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
             responsive: true
-        }"/>
+        }">
+        <template #watermark="{ isPrinting }">
+            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                WATERMARK
+            </div>
+        </template>     
+    </LocalVueUiCandlestick>
     </div>
 
     <Box comp="VueUiCandlestick" :dataset="dataset">

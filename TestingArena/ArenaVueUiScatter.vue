@@ -235,7 +235,13 @@ function selectLegend(legend) {
         <LocalVueUiScatter :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
             responsive: true
-        }"/>
+        }">
+        <template #watermark="{ isPrinting }">
+            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                WATERMARK
+            </div>
+        </template>    
+    </LocalVueUiScatter>
     </div>
 
     <Box comp="VueUiScatter" :dataset="dataset">
@@ -261,6 +267,11 @@ function selectLegend(legend) {
                 </template>
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
                 </template>
             </LocalVueUiScatter>
         </template>

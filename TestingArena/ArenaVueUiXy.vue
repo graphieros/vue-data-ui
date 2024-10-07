@@ -342,7 +342,13 @@ function selectX(selectedX) {
             <div :style="`font-size: 12px; color:${plot.color}; text-align:center`">
                 {{ plot.comment }}
             </div>
-        </template>      
+        </template>
+        
+        <template #watermark="{ isPrinting }">
+            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.2; transform: rotate(-10deg)">
+                WATERMARK
+            </div>
+        </template>  
     </LocalVueUiXy>
     </div>
     <Box comp="VueUiXy" :dataset="dataset">
@@ -376,6 +382,11 @@ function selectX(selectedX) {
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
             </LocalVueUiXy>
         </template>
 
@@ -401,6 +412,11 @@ function selectX(selectedX) {
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
             </LocalVueDataUi>
         </template>
 
@@ -426,6 +442,11 @@ function selectX(selectedX) {
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
             </VueUiXy>
         </template>
 
@@ -451,6 +472,11 @@ function selectX(selectedX) {
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
             </VueDataUi>
         </template>
 

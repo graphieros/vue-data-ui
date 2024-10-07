@@ -255,7 +255,13 @@ function selectSide(side) {
         <LocalVueUiQuadrant :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
             responsive: true
-        }"/>
+        }">
+        <template #watermark="{ isPrinting }">
+            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                WATERMARK
+            </div>
+        </template>      
+    </LocalVueUiQuadrant>
     </div>
 
     <Box comp="VueUiQuadrant" :dataset="dataset">
@@ -282,6 +288,11 @@ function selectSide(side) {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
             </LocalVueUiQuadrant>
         </template>
 

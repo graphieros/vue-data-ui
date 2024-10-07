@@ -94,7 +94,13 @@ const step = ref(0)
         <LocalVueUiWordCloud :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
             responsive: true
-        }"/>
+        }">
+        <template #watermark="{ isPrinting }">
+            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                WATERMARK
+            </div>
+        </template>    
+    </LocalVueUiWordCloud>
     </div>
 
     <Box comp="VueUiWordCloud" :dataset="dataset">
@@ -109,6 +115,11 @@ const step = ref(0)
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template>  
             </LocalVueUiWordCloud>
         </template>
 
