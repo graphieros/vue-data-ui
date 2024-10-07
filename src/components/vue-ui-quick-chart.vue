@@ -1348,6 +1348,10 @@ defineExpose({
             </template>
         </svg>
 
+        <div v-if="$slots.watermark" class="vue-data-ui-watermark">
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
         <div v-if="[detector.chartType.BAR, detector.chartType.LINE].includes(chartType) && FINAL_CONFIG.zoomXy && formattedDataset.maxSeriesLength > 1"
             :key="`slicer_${slicerStep}`" ref="quickChartSlicer">        
             <Slicer
