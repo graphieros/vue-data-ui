@@ -385,6 +385,10 @@ defineExpose({
             <slot name="svg" :svg="{ height: svg.height, width: svg.width }"/>
         </svg>
 
+        <div v-if="$slots.watermark" class="vue-data-ui-watermark">
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
         <Accordion hideDetails v-if="isDataset" :config="{
         open: mutableConfig.showTable,
         maxHeight: 10000,
