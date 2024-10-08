@@ -137,6 +137,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`      | ❌                      | ❌             | ✅     |
 | `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                      | ❌                      | ❌             | ✅     |
 | `VueUiSparkTrend`     | `number[]`                         | `VueUiSparkTrendConfig`     | ❌                      | ❌                      | ❌             | ✅     |
+| `VueUiGizmo`          | `VueUiGizmoDataset`                | `VueUiGizmoConfig`          | ❌                      | ❌                      | ❌             | ❌     |
 
 ### Charts
 

@@ -9,7 +9,7 @@
 # vue-data-ui
 
 ![npm](https://img.shields.io/npm/v/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-55-blue)
+![Static Badge](https://img.shields.io/badge/components-56-blue)
 ![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -63,6 +63,7 @@ Available components
 - [VueUiSparkline](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkline)
 - [VueUiSparkStackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
 - [VueUiSparkTrend](https://vue-data-ui.graphieros.com/docs#vue-ui-spark-trend)
+- [VueUiGizmo](https://vue-data-ui.graphieros.com/docs#vue-ui-gizmo)
 
 ## 3d
 
@@ -380,6 +381,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`      | ❌                      | ❌             | ✅     |
 | `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                      | ❌                      | ❌             | ✅     |
 | `VueUiSparkTrend`     | `number[]`                         | `VueUiSparkTrendConfig`     | ❌                      | ❌                      | ❌             | ✅     |
+| `VueUiGizmo`          | `VueUiGizmoDataset`                | `VueUiGizmoConfig`          | ❌                      | ❌                      | ❌             | ❌     |
 
 ### Charts
 
