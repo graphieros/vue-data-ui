@@ -56,7 +56,8 @@ import {
     VueUiFlow,
     VueUiParallelCoordinatePlot,
     VueUiTimer,
-    VueUiCarouselTable
+    VueUiCarouselTable,
+    VueUiGizmo
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -116,4 +117,5 @@ app.component("VueUiFlow", VueUiFlow);
 app.component("VueUiParallelCoordinatePlot", VueUiParallelCoordinatePlot);
 app.component("VueUiTimer", VueUiTimer);
 app.component("VueUiCarouselTable", VueUiCarouselTable);
+app.component("VueUiGizmo", VueUiGizmo);
 app.mount('#app');
