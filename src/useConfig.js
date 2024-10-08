@@ -4352,6 +4352,18 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_gizmo = {
+        type: 'battery', // battery | gauge
+        size: 64,
+        stroke: COLOR_GREY_MID,
+        color: COLOR_BLUE,
+        useGradient: true,
+        gradientColor: '#9db5ed',
+        showPercentage: true,
+        textColor: COLOR_BLACK,
+        fontFamily: 'inherit'
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -4395,6 +4407,7 @@ export function useConfig() {
         vue_ui_parallel_coordinate_plot,
         vue_ui_timer,
         vue_ui_carousel_table,
+        vue_ui_gizmo,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,
