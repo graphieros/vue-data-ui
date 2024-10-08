@@ -66,7 +66,8 @@ const components = {
     VueUiFlow: defineAsyncComponent(() => import('./vue-ui-flow.vue')),
     VueUiParallelCoordinatePlot: defineAsyncComponent(() => import('./vue-ui-parallel-coordinate-plot.vue')),
     VueUiTimer: defineAsyncComponent(() => import('./vue-ui-timer.vue')),
-    VueUiCarouselTable: defineAsyncComponent(() => import('./vue-ui-carousel-table.vue'))
+    VueUiCarouselTable: defineAsyncComponent(() => import('./vue-ui-carousel-table.vue')),
+    VueUiGizmo: defineAsyncComponent(() => import('./vue-ui-gizmo.vue'))
 };
 
 const componentProps = {
@@ -123,7 +124,8 @@ const componentProps = {
     VueUiFlow: ['config', 'dataset'],
     VueUiParallelCoordinatePlot: ['config', 'dataset'],
     VueUiTimer: ['config'],
-    VueUiCarouselTable: ['config', 'dataset']
+    VueUiCarouselTable: ['config', 'dataset'],
+    VueUiGizmo: ['config', 'dataset']
 };
 
 const emit = defineEmits([
