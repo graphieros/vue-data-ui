@@ -666,6 +666,8 @@ defineExpose({
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.style.chart.tooltip.position"
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="treemapChart"
             :content="tooltipContent"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
