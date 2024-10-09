@@ -91,10 +91,13 @@ declare module 'vue-data-ui' {
         borderColor?: string;
         borderWidth?: number;
         backgroundOpacity?: number;
+        position?: TooltipPosition;
+        offsetY?: number;
     }
 
     export type Theme = "" | "zen" | "hack" | "concrete";
     export type TextAlign = "left" | "center" | "right";
+    export type TooltipPosition = TextAlign;
     export type FontVariantNumeric = "normal" | "slashed-zero" | "tabular-nums" | "oldstyle-nums";
 
 
@@ -4257,6 +4260,8 @@ declare module 'vue-data-ui' {
         tooltipBorderColor?: string;
         tooltipBorderWidth?: number;
         tooltipFontSize?: number;
+        tooltipPosition?: TooltipPosition;
+        tooltipOffsetY?: number;
         useCustomLegend?: boolean;
         valuePrefix?: string;
         valueSuffix?: string;
