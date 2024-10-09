@@ -1030,6 +1030,8 @@ defineExpose({
             :borderWidth="FINAL_CONFIG.style.tooltip.borderWidth"
             :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
             :backgroundOpacity="FINAL_CONFIG.style.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.style.tooltip.position"
+            :offsetY="FINAL_CONFIG.style.tooltip.offsetY"
             :parent="scatterChart"
             :content="tooltipContent"
             :isCustom="FINAL_CONFIG.style.tooltip.customFormat && typeof FINAL_CONFIG.style.tooltip.customFormat === 'function'"
