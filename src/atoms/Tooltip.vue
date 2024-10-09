@@ -48,6 +48,14 @@ const props = defineProps({
     backgroundOpacity: {
         type: Number,
         default: 100,
+    },
+    position: {
+        type: String,
+        default: "center"
+    },
+    offsetY: {
+        type: Number,
+        default: 24
     }
 });
 
@@ -59,7 +67,9 @@ const position = computed(() => {
     return calcTooltipPosition({
         tooltip: tooltip.value,
         chart: props.parent,
-        clientPosition: clientPosition.value
+        clientPosition: clientPosition.value,
+        positionPreference: props.position,
+        defaultOffsetY: props.offsetY
     });
 })
 
@@ -71,7 +81,7 @@ const position = computed(() => {
         data-cy="tooltip"
         :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
         v-if="show"
-        :style="`top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${backgroundColor}${opacity[backgroundOpacity]};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};`"
+        :style="`pointer-events:none;top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${backgroundColor}${opacity[backgroundOpacity]};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};`"
     >
         <slot name="tooltip-before"/>
         <slot/>
