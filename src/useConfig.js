@@ -81,6 +81,8 @@ export function useConfig() {
         borderColor: COLOR_GREY_LIGHT,
         borderWidth: 1,
         backgroundOpacity: 100,
+        position: POSITION.CENTER,
+        offsetY: 24
     }
 
     const USER_OPTIONS = ({
@@ -2117,6 +2119,8 @@ export function useConfig() {
         tooltipBorderColor: COLOR_GREY_LIGHT,
         tooltipBorderWidth: 1,
         tooltipFontSize: 14,
+        tooltipPosition: POSITION.CENTER,
+        tooltipOffsetY: 24,
         useCustomLegend: false,
         valuePrefix: '',
         valueSuffix: '',
