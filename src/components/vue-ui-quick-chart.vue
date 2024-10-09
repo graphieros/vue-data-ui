@@ -1474,6 +1474,8 @@ defineExpose({
             :borderWidth="FINAL_CONFIG.tooltipBorderWidth"
             :fontSize="FINAL_CONFIG.tooltipFontSize"
             :backgroundOpacity="FINAL_CONFIG.tooltipBackgroundOpacity"
+            :position="FINAL_CONFIG.tooltipPosition"
+            :offsetY="FINAL_CONFIG.tooltipOffsetY"
             :parent="quickChart"
             :content="tooltipContent"
             :isCustom="isFunction(FINAL_CONFIG.tooltipCustomFormat)"
