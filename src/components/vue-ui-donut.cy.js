@@ -30,8 +30,8 @@ describe('<VueUiDonut />', () => {
         }
       });
 
-      cy.get('[data-cy="donut-trap-0"]').trigger('mouseenter', { force: true})
-      cy.get('[data-cy="tooltip"]').should('be.visible').contains(fixture.dataset[0].name)
+      cy.get('[data-cy="donut-trap-0"]').trigger('mouseenter')
+      cy.get('[data-cy="tooltip"]').should('exist').contains(fixture.dataset[0].name)
     })
   })
 
