@@ -831,6 +831,8 @@ defineExpose({
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.style.chart.tooltip.position"
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="waffleChart"
             :content="tooltipContent"
             :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
