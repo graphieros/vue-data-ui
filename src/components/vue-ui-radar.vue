@@ -733,6 +733,8 @@ defineExpose({
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :position="FINAL_CONFIG.style.chart.tooltip.position"
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="radarChart"
             :content="tooltipContent"
             :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
