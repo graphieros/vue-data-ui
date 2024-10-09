@@ -78,6 +78,8 @@ const model = ref([
     { key: 'style.tooltip.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'style.tooltip.roundingValue', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'style.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48 },
 
     { key: 'translations.age', def: 'age', type: 'text'},
     { key: 'translations.male', def: 'male', type: 'text'},

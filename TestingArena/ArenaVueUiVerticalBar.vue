@@ -136,6 +136,8 @@ const model = ref([
     { key: 'style.chart.tooltip.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.tooltip.suffix', def: 'S', type: 'text'},
     { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},

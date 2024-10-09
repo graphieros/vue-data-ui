@@ -137,6 +137,8 @@ const model = ref([
     { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox', label: 'showPercentage', category: 'tooltip' },
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'tooltip' },
     { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
     { key: 'style.chart.comments.show', def: true, type: 'checkbox'},
     { key: 'style.chart.comments.showInTooltip', def: true, type: 'checkbox'},

@@ -171,6 +171,8 @@ const model = ref([
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.tooltip.fontSize', def: 14, type: 'number', min: 8, max: 24},
     { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
     { key: 'style.chart.zoom.speed', def: 1, type: 'number', min: 0, max: 2, step: 0.01},
     { key: 'table.show', def: false, type: 'checkbox'},

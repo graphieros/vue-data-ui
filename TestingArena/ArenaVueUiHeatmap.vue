@@ -89,6 +89,8 @@ const model = ref([
     { key: 'style.tooltip.fontSize', def: 12, type: 'range', min: 8, max: 48},
     { key: 'style.tooltip.roundingValue', def: 0, type: 'range', min: 0, max: 12},
     { key: 'style.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'style.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},

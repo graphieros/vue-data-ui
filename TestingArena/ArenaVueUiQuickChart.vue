@@ -136,6 +136,8 @@ const model = ref([
 
     { key: 'tooltipFontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'tooltipBackgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'tooltipPosition', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'tooltipOffsetY', def: 24, type: 'number', min: 0, max: 48 },
     
     { key: 'useCustomLegend', def: false, type: 'checkbox'},
     { key: 'valuePrefix', def: 'P', type: 'text'},

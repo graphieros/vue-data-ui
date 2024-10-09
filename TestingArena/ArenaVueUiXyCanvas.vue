@@ -98,6 +98,8 @@ const model = ref([
     { key: 'style.chart.tooltip.borderColor', def: '#e1e5e6', type: 'color' },
     { key: 'style.chart.tooltip.borderWidth', def: 1, type: 'number', min: 0, max: 12 },
     { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48 },
 
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color' },

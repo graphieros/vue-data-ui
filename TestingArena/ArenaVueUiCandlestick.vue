@@ -99,6 +99,8 @@ const model = ref([
     { key: 'style.tooltip.prefix', def: 'P', type: 'text'},
     { key: 'style.tooltip.suffix', def: 'S', type: 'text'},
     { key: 'style.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100 },
+    { key: 'style.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
     { key: 'translations.period', def: 'Period', type: 'text'},
     { key: 'translations.open', def: 'Open', type: 'text'},

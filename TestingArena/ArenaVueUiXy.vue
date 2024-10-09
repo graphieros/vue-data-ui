@@ -158,6 +158,8 @@ const model = ref([
     { key: 'chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'tooltip' },
     { key: 'chart.tooltip.fontSize', def: 14, type: 'range', min: 8, max: 48},
     { key: 'chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100 },
+    { key: 'chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
     { key: 'bar.borderRadius', def: 2, type: 'number', min: 0, max: 120, label: 'borderRadius', category: 'bar' },
     { key: 'bar.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'bar' },
