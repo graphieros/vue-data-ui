@@ -991,6 +991,8 @@
             :borderColor="FINAL_CONFIG.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.chart.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.chart.tooltip.position"
+            :offsetY="FINAL_CONFIG.chart.tooltip.offsetY"
             :parent="$refs.chart"
             :content="tooltipContent"
             :isCustom="FINAL_CONFIG.chart.tooltip.customFormat && typeof FINAL_CONFIG.chart.tooltip.customFormat === 'function'"
