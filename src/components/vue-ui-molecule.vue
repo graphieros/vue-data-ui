@@ -636,6 +636,8 @@ defineExpose({
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.style.chart.tooltip.position"
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="moleculeChart"
             :content="tooltipContent"
             :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
