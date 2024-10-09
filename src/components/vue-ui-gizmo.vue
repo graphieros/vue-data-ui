@@ -48,18 +48,16 @@ const svg = computed(() => {
     return options[FINAL_CONFIG.value.type];
 });
 
-const barBody = computed(() => {
-    const x = 70 * (props.dataset / 100)
-    return `M 5 10 L 5 10 C 5 13 7 15 10 15 L ${x} 15 C ${x + 3} 15 ${x + 5} 13 ${x + 5} 10 L ${x + 5} 10 C ${x + 5} 7 ${x + 3} 5 ${x} 5 L 10 5 C 7 5 5 7 5 10`
-})
-
 const gaugeBody = computed(() => {
-    const circumference = 35 * (2 + (props.dataset / 100 > 1 ? 0 : 1 - props.dataset / 100)) * Math.PI;
+    const radius = 35;
+    const circumference = 2 * Math.PI * radius;
+    const dashoffset = circumference - (props.dataset / 100) * circumference;
+
     return {
         dasharray: `${circumference} ${circumference}`,
-        dashoffset: circumference - props.dataset / 100 * circumference,
-    }
-})
+        dashoffset: dashoffset
+    };
+});
 
 </script>
 
