@@ -605,7 +605,7 @@ declare module 'vue-data-ui' {
                 box?: {
                     stroke?: string;
                     strokeWidth?: number;
-                    strokeDasharray?: number; 2,
+                    strokeDasharray?: number;
                     dimensions?: {
                         width?: number;
                         height?: number;
