@@ -129,6 +129,33 @@ onMounted(() => {
     }
 });
 
+
+onMounted(() => {
+    if (tableContainer.value) {
+        const thead = tableContainer.value.querySelector('thead');
+        const trElements = Array.from(tbody.value.querySelectorAll('tr'));
+
+        function updateVisibility() {
+            const theadBottom = thead.getBoundingClientRect().bottom;
+            trElements.forEach(tr => {
+                const trTop = tr.getBoundingClientRect().top;
+                if (trTop < theadBottom) {
+                    tr.style.visibility = 'hidden';
+                } else {
+                    tr.style.visibility = 'visible';
+                }
+            });
+        }
+
+        tableContainer.value.addEventListener('scroll', updateVisibility);
+        updateVisibility();
+    
+        onBeforeUnmount(() => {
+            tableContainer.value.removeEventListener('scroll', updateVisibility);
+        });
+    }
+});
+
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -156,15 +183,15 @@ function animate(timestamp) {
         init.value += allTr.value.heights[scrollIndex.value];
         if (hasReachedScrollBottom() || scrollIndex.value >= allTr.value.heights.length) {
             init.value = 0;
-            scrollIndex.value = 0;
+            scrollIndex.value = -1;
         } 
 
+        scrollIndex.value += 1;
         if (tableContainer.value) {
             tableContainer.value.scrollTo({
                 top: init.value,
                 behavior: 'smooth'
             });
-            scrollIndex.value += 1;
         }
 
         lastTimestamp.value = timestamp;
@@ -291,7 +318,7 @@ defineExpose({
                 containerType: 'inline-size',
                 position: 'relative',
                 overflow: 'auto',
-                fontFamily: FINAL_CONFIG.fontFamily
+                fontFamily: FINAL_CONFIG.fontFamily,
             }"
             :class="{ 'vue-ui-responsive' : isResponsive, 'is-playing': !isPaused }"
             @mouseenter="pauseOnHover()"
@@ -307,7 +334,7 @@ defineExpose({
                     ...FINAL_CONFIG.style,
                     border: `${FINAL_CONFIG.border.size}px solid ${FINAL_CONFIG.border.color}`,
                     width: '100%',
-                    borderCollapse: 'collapse' 
+                    borderCollapse: 'collapse'
                 }">
                 <caption
                     ref="caption"
@@ -359,13 +386,18 @@ defineExpose({
                     </tr>
                 </thead>
     
-                <tbody v-if="dataset.body && dataset.head" ref="tbody">
+                <tbody 
+                    v-if="dataset.body && dataset.head" ref="tbody"
+                    :style="{
+                        clipPath: 'inset(0,0,0,0)'
+                    }"
+                >
                     <tr 
                         v-for="(tr, i) in dataset.body"
                         :style="{ 
                             ...FINAL_CONFIG.tbody.tr.style,
                             border: `${FINAL_CONFIG.tbody.tr.border.size}px solid ${FINAL_CONFIG.tbody.tr.border.color}`,
-                            verticalAlign: 'middle'
+                            verticalAlign: 'middle',
                         }"
                     >
                         <td 
@@ -493,4 +525,5 @@ thead th, tbody td {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
 }
+
 </style>
