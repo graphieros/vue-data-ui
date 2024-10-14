@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import { dataLabel } from "../lib";
 import { useConfig } from "../useConfig";
@@ -10,41 +10,58 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
+            return {};
         }
     },
     dataset: {
         type: Number,
         default: 0
-    },
+    }
 });
 
 const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
-    })
+    });
 });
 
 const formattedValue = ref(typeof props.dataset === 'number' ? props.dataset : props.dataset);
-const displayedValue = ref(FINAL_CONFIG.value.useAnimation ? FINAL_CONFIG.value.animationValueStart : formattedValue.value );
+const displayedValue = ref(FINAL_CONFIG.value.useAnimation ? FINAL_CONFIG.value.animationValueStart : formattedValue.value);
 
-onMounted(() => {
+const animateToValue = (targetValue) => {
     const chunks = FINAL_CONFIG.value.animationFrames;
-    const chunk = props.dataset / chunks;
+    const chunk = Math.abs(targetValue - displayedValue.value) / chunks;
 
     function animate() {
-        displayedValue.value += chunk;
-        if (displayedValue.value < props.dataset) {
-            requestAnimationFrame(animate)
-        } else {
-            displayedValue.value = props.dataset;
+        if (displayedValue.value < targetValue) {
+            displayedValue.value = Math.min(displayedValue.value + chunk, targetValue);
+        } else if (displayedValue.value > targetValue) {
+            displayedValue.value = Math.max(displayedValue.value - chunk, targetValue);
+        }
+
+        if (displayedValue.value !== targetValue) {
+            requestAnimationFrame(animate);
         }
     }
 
+    animate();
+};
+
+onMounted(() => {
     if (FINAL_CONFIG.value.useAnimation) {
-        displayedValue.value = 0;
-        animate()
+        displayedValue.value = FINAL_CONFIG.value.animationValueStart;
+        animateToValue(props.dataset);
+    } else {
+        displayedValue.value = props.dataset;
+    }
+});
+
+watch(() => props.dataset, (newValue) => {
+    if (FINAL_CONFIG.value.useAnimation) {
+        animateToValue(newValue);
+    } else {
+        displayedValue.value = newValue;
     }
 });
 
