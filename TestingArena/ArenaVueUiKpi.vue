@@ -1,0 +1,39 @@
+<script setup>
+import { ref, computed, onMounted } from "vue";
+import LocalVueUiKpi from '../src/components/vue-ui-kpi.vue';
+import LocalVueDataUi from '../src/components/vue-data-ui.vue';
+import Box from "./Box.vue";
+import convertArrayToObject from "./convertModel";
+import { useArena } from "../src/useArena";
+
+const dataset = ref(12012012);
+
+function updateVal() {
+    dataset.value = Math.random() * 10000
+}
+
+    
+</script>
+
+<template>
+    <div>
+        <button @click="updateVal">NEW VAL</button>
+        <LocalVueUiKpi :dataset="dataset"/>
+    </div>
+    <Box>
+        <template #title>VueUiKpi</template>
+        
+        <template #local>
+            <LocalVueUiKpi :dataset="dataset"/>
+        </template>
+        <template #VDUI-local>
+            <LocalVueDataUi component="VueUiKpi" :dataset="dataset"/>
+        </template>
+        <template #build>
+            <VueUiKpi :dataset="dataset"/>
+        </template>
+        <template #VDUI-build>
+            <VueDataUi component="VueUiKpi" :dataset="dataset"/>
+        </template>
+    </Box>
+</template>
