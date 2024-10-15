@@ -175,16 +175,23 @@ const absoluteRectDimensionY = computed(() => {
 })
 
 function calculateProportions(numbers) {
+    const totalSquares = FINAL_CONFIG.value.style.chart.layout.grid.size * FINAL_CONFIG.value.style.chart.layout.grid.size;
     const totalSum = numbers.reduce((a, b) => a + b, 0);
-    const proportions = numbers.map(num => Math.round((num / totalSum) * 100) / 100);
-    const roundedSum = proportions.reduce((a, b) => a + b, 0);
+    const proportions = numbers.map(num => (num / totalSum) * totalSquares);
 
-    if (roundedSum !== 1) {
-        const lastIndex = proportions.length - 1;
-        proportions[lastIndex] += (1 - roundedSum);
-        proportions[lastIndex] = Math.round(proportions[lastIndex] * 100) / 100;
+    const intParts = proportions.map(Math.floor);
+    const fractionalParts = proportions.map(num => num % 1);
+
+    let remainingSquares = totalSquares - intParts.reduce((a, b) => a + b, 0);
+
+    while (remainingSquares > 0) {
+        let maxIndex = fractionalParts.indexOf(Math.max(...fractionalParts));
+        intParts[maxIndex] += 1;
+        fractionalParts[maxIndex] = 0;
+        remainingSquares -= 1;
     }
-    return proportions;
+
+    return intParts;
 }
 
 const datasetCopyReference = computed(() => {
@@ -234,7 +241,7 @@ const waffleSet = computed(() => {
                 color: serie.color,
                 value: (serie.values || []).reduce((a,b) => a + b, 0),
                 absoluteValues: serie.values || [],
-                proportion: proportions.value[i] * Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2)
+                proportion: proportions.value[i]
             }
         })
 });
@@ -249,7 +256,7 @@ const immutableSet = computed(() => {
                 color: serie.color,
                 value: (serie.values || []).reduce((a,b) => a + b, 0),
                 absoluteValues: serie.values || [],
-                proportion: immutableProportions.value[i] * Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2)
+                proportion: immutableProportions.value[i]
             }
         })
 });
@@ -260,24 +267,30 @@ function getData() {
             name: ds.name,
             color: ds.color,
             value: ds.value,
-            proportion: ds.proportion  / (Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2))
+            proportion: ds.proportion
         }
     });
 }
 
 const cumulatedSet = computed(() => {
+    let cumulativeProportion = 0; 
+
     return waffleSet.value.map((serie, i) => {
-        const start = i > 0 ? waffleSet.value.filter((_,j) => j < i).map(el => el.proportion).reduce((a,b) => a + b) + serie.proportion - waffleSet.value[i - 1].proportion: serie.proportion - serie.proportion;
-        const end = start + serie.proportion;
+        const start = cumulativeProportion;
+        const end = start + serie.proportion; 
+
         const rects = [];
-        for(let j = start; j <= end; j += 1) {
-            rects.push(j)
+        for (let j = Math.floor(start); j < Math.floor(end); j += 1) {
+            rects.push(j);
         }
+
+        cumulativeProportion = end;
+
         return {
             ...serie,
-            start: i > 0 ? waffleSet.value.filter((_,j) => j < i).map(el => el.proportion).reduce((a,b) => a + b) + serie.proportion - waffleSet.value[i - 1].proportion: serie.proportion - serie.proportion,
-            rects
-        }
+            start, 
+            rects,
+        };
     });
 });
 
