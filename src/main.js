@@ -58,7 +58,8 @@ import {
     VueUiTimer,
     VueUiCarouselTable,
     VueUiGizmo,
-    VueUiKpi
+    VueUiKpi,
+    VueUiStackbar
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -120,5 +121,6 @@ app.component("VueUiTimer", VueUiTimer);
 app.component("VueUiCarouselTable", VueUiCarouselTable);
 app.component("VueUiGizmo", VueUiGizmo);
 app.component("VueUiKpi", VueUiKpi);
+app.component("VueUiStackbar", VueUiStackbar);
 
 app.mount('#app');
