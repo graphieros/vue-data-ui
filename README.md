@@ -8,12 +8,12 @@
 
 # vue-data-ui
 
-![npm](https://img.shields.io/npm/v/vue-data-ui)
-![Static Badge](https://img.shields.io/badge/components-56-blue)
-![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)
-[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-57-blue)](https://github.com/graphieros/vue-data-ui)
+[![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
-![npm](https://img.shields.io/npm/dt/vue-data-ui)
+[![npm](https://img.shields.io/npm/dt/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
 
@@ -44,6 +44,7 @@ Available components
 - [VueUiRelationCircle](https://vue-data-ui.graphieros.com/docs#vue-ui-relation-circle)
 - [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
 - [VueUiScatter](https://vue-data-ui.graphieros.com/docs#vue-ui-scatter)
+- [VueUiStackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-stackbar)
 - [VueUiStripPlot](https://vue-data-ui.graphieros.com/docs#vue-ui-strip-plot)
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
 - [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
@@ -249,6 +250,7 @@ The following charts bear these slots:
 - VueUiRadar
 - VueUiRings
 - VueUiScatter
+- VueUiStackbar
 - VueUiTreemap
 - VueUiVerticalBar
 - VueUiXy \*
@@ -390,8 +392,8 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiAgePyramid`             | `Array<Array<string / number>>`            | `VueUiSparklineConfig`              | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`                                                                           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
 | `VueUiCandlestick`            | `Array<Array<string / number>>`            | `VueUiCandlestickConfig`            | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`                                                                           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`                 | ✅             | ✅     |
 | `VueUiChestnut`               | `VueUiChestnutDatasetRoot[]`               | `VueUiChestnutConfig`               | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                   | `#svg`, `#legend`, `#watermark`                                                                       | ❌             | ✅     |
-| `VueUiDonut`                  | `VueUiDonutDatasetItem[]`                  | `VueUiDonutConfig`                  | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`           | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`   | ✅             | ✅     |
 | `VueUiDonutEvolution`         | `VueUiDonutEvolutionDatasetItem[]`         | `VueUiDonutEvolutionConfig`         | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                | `#svg`, `#legend`, `#reset-action`, `#watermark`                                                      | ❌             | ✅     |
+| `VueUiDonut`                  | `VueUiDonutDatasetItem[]`                  | `VueUiDonutConfig`                  | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`           | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`   | ✅             | ✅     |
 | `VueUiDumbbell`               | `VueUiDumbbellDataset[]`                   | `VueUiDumbbellConfig`               | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`, `#legend`, `#watermark`                                                                       | ❌             | ✅     |
 | `VueUiFlow`                   | `VueUiFlowDatasetItem[]`                   | `VueUiFlowConfig`                   | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`,, `#watermark`                                                                                 | ❌             | ✅     |
 | `VueUiGalaxy`                 | `VueUiGalaxyDatasetItem[]`                 | `VueUiGalaxyConfig`                 | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                                                 | ✅             | ✅     |
@@ -406,6 +408,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiRadar`                  | `VueUiRadarDataset`                        | `VueUiRadarConfig`                  | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
 | `VueUiRings`                  | `VueUiRingsDatasetItem[]`                  | `VueUiRingsConfig`                  | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
 | `VueUiScatter`                | `VueUiScatterDatasetItem[]`                | `VueUiScatterConfig`                | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
+| `VueUiStackbar`               | `VueUiStackbarDatasetItem[]`               | `VueUiStackbarConfig`               | `@selectLegend`, `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`                 | ✅             | ✅     |
 | `VueUiStripPlot`              | `VueUiStripPlotDataset[]`                  | `VueUiStripPlotConfig`              | `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`                            | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
 | `VueUiThermometer`            | `VueUiThermometerDataset`                  | `VueUiThermometerConfig`            | `generatePdf`, `generateImage`                                                                                                                          | `#svg`, `#watermark`                                                                                  | ❌             | ✅     |
 | `VueUiTiremarks`              | `VueUiTiremarksDataset`                    | `VueUiTiremarksConfig`              | `generatePdf`, `generateImage`                                                                                                                          | `#svg`, `#legend`, `#watermark`                                                                       | ❌             | ✅     |
@@ -414,8 +417,8 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiWaffle`                 | `VueUiWaffleDatasetItem[]`                 | `VueUiWaffleConfig`                 | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
 | `VueUiWheel`                  | `VueUiWheelDataset`                        | `VueUiWheelConfig`                  | `generatePdf`, `generateImage`                                                                                                                          | `#svg`, `#watermark`                                                                                  | ❌             | ✅     |
 | `VueUiWordCloud`              | `VueUiWordCloudDatasetItem[] / string`     | `VueUiWordCloudConfig`              | `getData`, `generatePdf`, `generateImage`, `generateCsv`                                                                                                | `#svg`, `#watermark`                                                                                  | ❌             | ✅     |
-| `VueUiXy`                     | `VueUiXyDatasetItem[]`                     | `VueUiXyConfig`                     | `@selectLegend`, `@selectX`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip`    | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#plot-comment`,`#watermark` | ✅             | ✅     |
 | `VueUiXyCanvas`               | `VueUiXyCanvasDatasetItem[]`               | `VueUiXyCanvasConfig`               | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip`                | `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`                         | ✅             | ✅     |
+| `VueUiXy`                     | `VueUiXyDatasetItem[]`                     | `VueUiXyConfig`                     | `@selectLegend`, `@selectX`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip`    | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#plot-comment`,`#watermark` | ✅             | ✅     |
 
 ### 3D charts
 
@@ -545,6 +548,7 @@ User options actions available per chart:
 | VueUiSparkbar               | (no user options menu)                                                                                   |
 | VueUiSparkgauge             | (no user options menu)                                                                                   |
 | VueUiSparkline              | (no user options menu)                                                                                   |
+| VueUiStackbar               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
 | VueUiStripPlot              | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
 | VueUiTableHeatmap           | optionPdf, optionImg, optionCsv, optionFullscreen                                                        |
 | VueUiTableSparkline         | optionPdf, optionImg, optionCsv, optionFullscreen                                                        |
@@ -581,6 +585,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiScatter
 - VueUiSparkStackbar
 - VueUiSparkbar
+- VueUiStackbar
 - VueUiStripPlot
 - VueUiTableSparkline
 - VueUiThermometer
@@ -630,6 +635,7 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiSparkbar               | -                              |
 | VueUiSparkgauge             | -                              |
 | VueUiSparkline              | -                              |
+| VueUiStackbar               | ✅                             |
 | VueUiStripPlot              | ✅                             |
 | VueUiTableHeatmap           | -                              |
 | VueUiTableSparkline         | -                              |
