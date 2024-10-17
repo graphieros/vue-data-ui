@@ -190,7 +190,7 @@ export function getPalette(palette = 'default') {
 
         case 'zen':
             return themePalettes.zen;
-    
+
         case 'concrete':
             return themePalettes.concrete;
 
@@ -1509,7 +1509,7 @@ export function createWordCloudDatasetFromPlainText(text, callback = null) {
 
     const isCJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Tibetan}\p{Script=Myanmar}\p{Script=Devanagari}]/u.test(text);
 
-    const words = isCJK 
+    const words = isCJK
         ? [...textWithoutPunctuation]
         : textWithoutPunctuation.split(/\s+/);
 
@@ -1527,7 +1527,7 @@ export function createWordCloudDatasetFromPlainText(text, callback = null) {
     return Object.keys(wordCountMap).map(word => {
         let w = word;
 
-        if(typeof callback === 'function' && typeof callback(word) === 'string') {
+        if (typeof callback === 'function' && typeof callback(word) === 'string') {
             w = callback(word)
         }
 
@@ -1548,7 +1548,7 @@ export function assignStackRatios(arr) {
         ...item,
         stackRatio: item.stackRatio !== undefined ? item.stackRatio : defaultRatio
     }));
-    
+
     let cumulatedRatio = 0;
     output = output.map(item => {
         cumulatedRatio += item.stackRatio;
@@ -1580,13 +1580,13 @@ export function getPathLengthFromCoordinates(d) {
             const tSquared = t * t;
 
             const x = oneMinusTSquared * oneMinusT * p0.x +
-                      3 * oneMinusTSquared * t * p1.x +
-                      3 * oneMinusT * tSquared * p2.x +
-                      tSquared * t * p3.x;
+                3 * oneMinusTSquared * t * p1.x +
+                3 * oneMinusT * tSquared * p2.x +
+                tSquared * t * p3.x;
             const y = oneMinusTSquared * oneMinusT * p0.y +
-                      3 * oneMinusTSquared * t * p1.y +
-                      3 * oneMinusT * tSquared * p2.y +
-                      tSquared * t * p3.y;
+                3 * oneMinusTSquared * t * p1.y +
+                3 * oneMinusT * tSquared * p2.y +
+                tSquared * t * p3.y;
             length += distance(prevX, prevY, x, y);
             prevX = x;
             prevY = y;
@@ -1679,9 +1679,20 @@ export function translateSize({
         return max
     }
 
-    return computedVal < threshold 
-        ? fallback 
+    return computedVal < threshold
+        ? fallback
         : computedVal;
+}
+
+export function sumSeries(source) {
+    return source.reduce((acc, obj) => {
+        obj.series.forEach((num, i) => {
+            if (![undefined, null, Infinity, -Infinity].includes(num) && !isNaN(num)) {
+                acc[i] = (acc[i] || 0) + num;
+            }
+        });
+        return acc;
+    }, []);
 }
 
 const lib = {
@@ -1740,6 +1751,7 @@ const lib = {
     themePalettes,
     translateSize,
     treeShake,
-    XMLNS
+    XMLNS,
+    sumSeries
 };
 export default lib;

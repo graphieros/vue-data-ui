@@ -47,7 +47,8 @@ import {
     sumByAttribute,
     translateSize,
     treeShake,
-    getPathLengthFromCoordinates
+    getPathLengthFromCoordinates,
+    sumSeries
 } from "../src/lib"
 
 describe('calcTrend', () => {
@@ -1616,5 +1617,24 @@ describe('translateSize', () => {
             source: 10,
             fallback: 5
         })).toBe(5)
+    });
+});
+
+describe('sumSeries', () => {
+    const items = [
+        { series: [1, 1, 1] },
+        { series: [1, 1, 1] },
+        { series: [1, 1, null] },
+        { series: [1, 1, undefined] },
+        { series: [1, 1, NaN] },
+        { series: [0, 0, Infinity] },
+        { series: [0, 0, -Infinity] },
+        { series: [1, 1] },
+        { series: [null, undefined, NaN, Infinity, -Infinity] },
+    ];
+
+    test('return an array if sums', () => {
+        expect(sumSeries(items)).toStrictEqual([6, 6, 2]);
+        expect(sumSeries([{series: []}])).toStrictEqual([]);
     })
 })
