@@ -179,6 +179,135 @@ export function useConfig() {
         useResetSlot: false
     }
 
+    const vue_ui_stackbar = {
+        theme: '',
+        responsive: false,
+        customPalette: [],
+        useCssAnimation: true,
+        table: {
+            ...TABLE,
+            columnNames: {
+                period: 'Period',
+                total: 'Total'
+            },
+            th: TABLE_TH,
+            td: {
+                ...TABLE_TD,
+                roundingValue: 0
+            },
+        },
+        userOptions: USER_OPTIONS({
+            tooltip: true,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: true,
+            fullscreen: true,
+            // IDEA : add a distributed toggle ?
+        }),
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                height: 500,
+                width: 800,
+                padding: PADDING([24, 24, 36, 48]),
+                title: TITLE,
+                legend: LEGEND,
+                zoom: ZOOM,
+                tooltip: {
+                    ...TOOLTIP,
+                    showValue: true,
+                    showPercentage: true,
+                    roundingValue: 0,
+                    roundingPercentage: 0
+                },
+                highlighter: {
+                    color: COLOR_BLACK,
+                    opacity: 5
+                },
+                bars: {
+                    gapRatio: 0.5,
+                    distributed: false,
+                    showDistributedPercentage: true,
+                    borderRadius: 0,
+                    strokeWidth: 1,
+                    gradient: {
+                        show: true,
+                        intensity: 20
+                    },
+                    totalValues: {
+                        show: true,
+                        offsetY: 0,
+                        fontSize: FONT._16,
+                        bold: false,
+                        color: COLOR_BLACK
+                    },
+                    dataLabels: {
+                        show: true,
+                        adaptColorToBackground: true,
+                        color: COLOR_BLACK,
+                        fontSize: FONT._14,
+                        bold: false,
+                        rounding: 0,
+                        prefix: '',
+                        suffix: ''
+                    }
+                },
+                grid: {
+                    scale: {
+                        ticks: 10
+                    },
+                    x: {
+                        showAxis: true,
+                        showHorizontalLines: false,
+                        axisColor: COLOR_GREY_LIGHT,
+                        axisThickness: 2,
+                        axisName: {
+                            show: true,
+                            text: '',
+                            fontSize: FONT._14,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            offsetY: 0,
+                        },
+                        timeLabels: {
+                            show: true,
+                            values: [],
+                            offsetY: 0,
+                            rotation: 0,
+                            fontSize: FONT._14,
+                            color: COLOR_BLACK,
+                            bold: false
+                        }
+                    },
+                    y: {
+                        showAxis: true,
+                        showVerticalLines: false,
+                        axisColor: COLOR_GREY_LIGHT,
+                        axisThickness: 2,
+                        axisName: {
+                            show: true,
+                            text: '',
+                            fontSize: FONT._14,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            offsetX: 0,
+                        },
+                        axisLabels: {
+                            show: true,
+                            color: COLOR_BLACK,
+                            fontSize: FONT._14,
+                            bold: false,
+                        }
+                    },
+                }
+            }
+        }
+    }
+
     const vue_ui_xy = {
         theme: '',
         responsive: false,
@@ -4412,6 +4541,7 @@ export function useConfig() {
         vue_ui_timer,
         vue_ui_carousel_table,
         vue_ui_gizmo,
+        vue_ui_stackbar,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,
