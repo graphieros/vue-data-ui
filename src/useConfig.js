@@ -382,7 +382,8 @@ export function useConfig() {
                         useIndividualScale: false,
                         stacked: false,
                         gap: 12,
-                        labelWidth: 40
+                        labelWidth: 40,
+                        formatter: null
                     },
                     xAxisLabels: {
                         color: COLOR_BLACK,
@@ -451,7 +452,8 @@ export function useConfig() {
                 show: false,
                 offsetY: -6,
                 rounding: 0,
-                color: COLOR_BLACK
+                color: COLOR_BLACK,
+                formatter: null
             },
             serieName: {
                 show: false,
@@ -471,7 +473,8 @@ export function useConfig() {
                 show: false,
                 offsetY: -6,
                 rounding: 0,
-                color: COLOR_BLACK
+                color: COLOR_BLACK,
+                formatter: null
             },
             area: {
                 useGradient: true,
@@ -485,7 +488,8 @@ export function useConfig() {
                 show: false,
                 offsetY: -6,
                 rounding: 0,
-                color: COLOR_BLACK
+                color: COLOR_BLACK,
+                formatter: null
             }
         },
         table: {

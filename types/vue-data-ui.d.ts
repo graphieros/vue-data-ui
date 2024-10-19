@@ -2110,6 +2110,7 @@ declare module 'vue-data-ui' {
                         gap?: number;
                         labelWidth?: number;
                         showBaseline?: boolean;
+                        formatter?: Formatter;
                     };
                     xAxis?: {
                         showBaseline?: boolean;
@@ -2175,6 +2176,7 @@ declare module 'vue-data-ui' {
                 offsetY?: number;
                 rounding?: number;
                 color?: string;
+                formatter?: Formatter;
             };
             serieName?: {
                 abbreviationSize?: number;
@@ -2195,6 +2197,7 @@ declare module 'vue-data-ui' {
                 offsetY?: number;
                 rounding?: number;
                 color?: string;
+                formatter?: Formatter;
             };
             area?: {
                 useGradient?: boolean;
@@ -2209,6 +2212,7 @@ declare module 'vue-data-ui' {
                 offsetY?: number;
                 rounding?: number;
                 color?: string;
+                formatter?: Formatter;
             };
         };
         table?: {
