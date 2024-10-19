@@ -3,6 +3,7 @@ import {
     abbreviate,
     adaptColorToBackground,
     addVector,
+    applyDataLabel,
     assignStackRatios,
     calcLinearProgression,
     calcMedian,
@@ -1718,5 +1719,66 @@ describe('checkFormatter', () => {
             value: num
         })
     })
+})
 
+describe('applyDataLabel', () => {
+    const num = 12;
+    const expected = `expected${num}`
+    const testFunc = (num) => {
+        return `expected${num}`
+    }
+
+    const failingFunc = () => {
+        throw new Error('ERROR')
+    }
+
+    const functionFunc = () => {
+        return () => {
+            return 1
+        }
+    }
+
+    const functionObject = () => {
+        return {
+            a: 1,
+        }
+    }
+
+    const functionBool = () => {
+        return false
+    }
+
+    const fallback = "fallback";
+
+    test('returns the output of the callback', () => {
+        expect(applyDataLabel(
+            testFunc,
+            num,
+            fallback
+        )).toStrictEqual(expected)
+
+        expect(applyDataLabel(
+            failingFunc,
+            num,
+            fallback
+        )).toStrictEqual(fallback)
+
+        expect(applyDataLabel(
+            functionFunc,
+            num,
+            fallback
+        )).toStrictEqual(fallback)
+
+        expect(applyDataLabel(
+            functionObject,
+            num,
+            fallback
+        )).toStrictEqual(fallback)
+
+        expect(applyDataLabel(
+            functionBool,
+            num,
+            fallback
+        )).toStrictEqual(fallback)
+    })
 })
