@@ -724,7 +724,17 @@ defineExpose({
                 </foreignObject>
             </template> 
 
-            <template v-else>
+            <rect v-if="!rects.length"
+                :x="12"
+                :y="12"
+                :height="drawingArea.height - 24"
+                :width="drawingArea.width - 24"
+                :rx="3"
+                fill="none"
+                stroke="black"
+            />
+
+            <template v-else-if="rects.length">
                 <rect
                     v-for="(position, i) in positions"
                     :data-cy="`waffle-rect-underlayer-${i}`"
@@ -755,7 +765,7 @@ defineExpose({
             <!-- DATA LABELS -->
             <template v-for="(position, i) in positions">
                 <foreignObject
-                    v-if="!isAnimating && !FINAL_CONFIG.style.chart.layout.grid.vertical && FINAL_CONFIG.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < FINAL_CONFIG.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % FINAL_CONFIG.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
+                    v-if="rects.length && !isAnimating && !FINAL_CONFIG.style.chart.layout.grid.vertical && FINAL_CONFIG.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < FINAL_CONFIG.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % FINAL_CONFIG.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
                     :x="position.x + FINAL_CONFIG.style.chart.layout.labels.captions.offsetX + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                     :y="position.y + FINAL_CONFIG.style.chart.layout.labels.captions.offsetY + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                     :height="absoluteRectDimensionY <= 0 ? 0.0001 : absoluteRectDimensionY"

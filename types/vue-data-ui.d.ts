@@ -109,7 +109,7 @@ declare module 'vue-data-ui' {
     export type FontVariantNumeric = "normal" | "slashed-zero" | "tabular-nums" | "oldstyle-nums";
     export type NumberLocale = string | null;
 
-    export type NumberFormatter = (value: number) => string | number;
+    export type Formatter = (value: number) => string | number;
 
     export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar = any, TLine = any, TPlot = any> = {
         seriesIndex?: number;
@@ -2329,11 +2329,14 @@ declare module 'vue-data-ui' {
                         value?: {
                             rounding?: number;
                             show?: boolean;
+                            formatter?: Formatter;
                         };
                         percentage?: {
                             color?: string;
                             bold?: boolean;
                             fontSize?: number;
+                            rounding?: number;
+                            formatter?: Formatter;
                         };
                         name?: {
                             color?: string;
@@ -2357,6 +2360,7 @@ declare module 'vue-data-ui' {
                                     prefix?: string;
                                     offsetY?: number;
                                     rounding?: number;
+                                    formatter?: Formatter;
                                 };
                             };
                             average?: {
@@ -2374,6 +2378,7 @@ declare module 'vue-data-ui' {
                                     prefix?: string;
                                     offsetY?: number;
                                     rounding?: number;
+                                    formatter?: Formatter;
                                 };
                             };
                         };

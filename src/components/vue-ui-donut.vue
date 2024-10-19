@@ -344,7 +344,16 @@ function isArcBigEnough(arc) {
 }
 
 function displayArcPercentage(arc, stepBreakdown) {
-    return isNaN(arc.value / sumValues(stepBreakdown)) ? 0 : ((arc.value / sumValues(stepBreakdown)) * 100).toFixed(0) + "%";
+    const p = arc.value / sumValues(stepBreakdown);
+    return isNaN(p) ? 0 : applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.labels.percentage.formatter,
+        p * 100,
+        dataLabel({
+            v: p * 100,
+            s: '%',
+            r: FINAL_CONFIG.value.style.chart.layout.labels.percentage.rounding
+        })
+    )
 }
 
 function sumValues(source) {
@@ -397,7 +406,7 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
 
         if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
             html += `<b data-cy="donut-tooltip-value">${ applyDataLabel(
-                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter, 
+                FINAL_CONFIG.value.style.chart.layout.labels.value.formatter, 
                 datapoint.value,
                 dataLabel({
                     p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
@@ -743,11 +752,15 @@ defineExpose({
                 :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.fontSize"
                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.bold ? 'bold': ''}`"
             >
-                {{ dataLabel({
-                    p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix, 
-                    v: total, 
-                    s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
-                }) }}
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.formatter,
+                    total,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix, 
+                        v: total, 
+                        s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
+                    })) 
+                }}
             </text>
 
             <text 
@@ -770,12 +783,16 @@ defineExpose({
                 :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.fontSize"
                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.bold ? 'bold': ''}`"
             >
-                {{ isAnimating ? '--' : dataLabel({
-                    p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
-                    v: average,
-                    s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
-                    r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
-                }) }}
+                {{ isAnimating ? '--' : applyDataLabel(
+                    FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.formatter,
+                    average,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
+                        v: average,
+                        s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
+                        r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
+                    })) 
+                }}
             </text>
 
             <!-- DATALABELS -->
@@ -823,7 +840,14 @@ defineExpose({
                         :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold': ''}`"
                         @click="selectDatapoint(arc, i)"
                     >
-                        {{ displayArcPercentage(arc, currentDonut)  }} {{ FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, rounding: FINAL_CONFIG.style.chart.layout.labels.value.rounding})})` : '' }}
+                        {{ displayArcPercentage(arc, currentDonut)  }} {{ FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                            arc.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                                r: FINAL_CONFIG.style.chart.layout.labels.value.rounding
+                            }))})` : '' }}
                     </text>
                     <text
                         :data-cy="`donut-datalabel-name-${i}`"
@@ -886,13 +910,26 @@ defineExpose({
             >
                 <template #item="{ legend, index }">
                     <div :data-cy="`legend-item-${index}`" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{ dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue}) }}
+                        {{ legend.name }}: {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                            legend.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                                v: legend.value, 
+                                s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                            }))
+                        }}
                         <span v-if="!segregated.includes(index)" style="font-variant-numeric: tabular-nums;">
-                            ({{ isNaN(legend.value / total) ? '-' : dataLabel({
-                                v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
-                                s: '%',
-                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                            })}})
+                            ({{ isNaN(legend.value / total) ? '-' : applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.percentage.formatter,
+                                isAnimating ? legend.proportion * 100 : legend.value / total * 100,
+                                dataLabel({
+                                    v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
+                                    s: '%',
+                                    r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                                }))
+                            }})
                         </span>
                         <span v-else>
                             ( {{ dashLabel(legend.proportion * 100) }} % )
@@ -954,7 +991,24 @@ defineExpose({
                         <div v-html="th" style="display:flex;align-items:center"></div>
                     </template>
                     <template #td="{ td }">
-                        {{ td.name || td }}
+                        {{ td.name ? td.name : isNaN(Number(td)) ? !td.includes('%') ? td : applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.percentage.formatter,
+                            td,
+                            dataLabel({
+                                v: td,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.layout.labels.percentage.rounding
+                            })
+                        ) : applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                            td,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                v: td,
+                                s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.labels.value.rounding
+                            })
+                        ) }}
                     </template>
                 </DataTable>
             </template>

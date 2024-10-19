@@ -179,8 +179,7 @@ const config = computed(() => {
                     tooltip: {
                         ...c.style.chart.tooltip,
                         customFormat: (data) => {
-                            console.log('XY CUSTOM TOOLTIP', data);
-                            return "CUSTOM TOOLTIP"
+                            return "CUSTOM TOOLTIP " + data
                         }
                     }
                 }
@@ -197,15 +196,42 @@ const config = computed(() => {
                         ...c.style.chart.layout,
                         labels: {
                             ...c.style.chart.layout.labels,
+                            hollow: {
+                                ...c.style.chart.layout.labels.hollow,
+                                total: {
+                                    ...c.style.chart.layout.labels.hollow.total,
+                                    value: {
+                                        ...c.style.chart.layout.labels.hollow.total.value,
+                                        formatter: (val) => {
+                                            return `f  - ${val}`
+                                        }
+                                    }
+                                },
+                                average: {
+                                    ...c.style.chart.layout.labels.hollow.average,
+                                    value: {
+                                        ...c.style.chart.layout.labels.hollow.average.value,
+                                        formatter: (val) => {
+                                            return `f  - ${val}`
+                                        }
+                                    }
+                                },
+                            },
+                            value: {
+                                ...c.style.chart.layout.labels.value,
+                                formatter: (val) => {
+                                    return `f  - ${val}`
+                                }
+                            },
                             percentage: {
                                 formatter: (val) => {
-                                    return `booya ${val}`
+                                    return `f - ${val}`
                                 }
                             },
                             dataLabels: {
                                 ...c.style.chart.layout.labels.dataLabels,
                                 formatter: (val) => {
-                                    return `hey ${val}`
+                                    return `f - ${val}`
                                 }
                             }
                         }

@@ -530,7 +530,6 @@ export function useConfig() {
                 ...TABLE_TD,
                 roundingValue: 0,
                 roundingPercentage: 0,
-                formatter: null
             },
             columnNames: {
                 serie: 'Series',
@@ -553,7 +552,6 @@ export function useConfig() {
                             hideUnderValue: 3,
                             prefix: '',
                             suffix: '',
-                            formatter: null
                         },
                         value: {
                             rounding: 0,
@@ -564,6 +562,7 @@ export function useConfig() {
                             color: COLOR_BLACK,
                             bold: true,
                             fontSize: FONT._18,
+                            rounding: 0,
                             formatter: null
                         },
                         name: {
@@ -587,7 +586,8 @@ export function useConfig() {
                                     suffix: '',
                                     prefix: '',
                                     offsetY: 0,
-                                    rounding: 0
+                                    rounding: 0,
+                                    formatter: null
                                 }
                             },
                             average: {
@@ -635,8 +635,6 @@ export function useConfig() {
                     showPercentage: true,
                     roundingValue: 0,
                     roundingPercentage: 0,
-                    valueFormatter: null,
-                    percentageFormatter: null
                 },
                 title: TITLE,
             }
