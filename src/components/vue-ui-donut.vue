@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
 import { 
+adaptColorToBackground,
     applyDataLabel,
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
@@ -680,22 +681,34 @@ defineExpose({
                 :filter="FINAL_CONFIG.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
             />
 
-            <path 
-                v-for="(arc, i) in currentDonut"
-                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                :d="arc.arcSlice"
-                fill="#FFFFFF"
-            />
-            <path 
-                v-for="(arc, i) in currentDonut"
-                class="vue-ui-donut-arc-path"
-                :data-cy="`donut-arc-${i}`"
-                :d="arc.arcSlice" 
-                :fill="`${arc.color}CC`"
-                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
-                :filter="getBlurFilter(i)"
-            />
+            <template v-if="total">
+                <path 
+                    v-for="(arc, i) in currentDonut"
+                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    :d="arc.arcSlice"
+                    fill="#FFFFFF"
+                />
+                <path 
+                    v-for="(arc, i) in currentDonut"
+                    class="vue-ui-donut-arc-path"
+                    :data-cy="`donut-arc-${i}`"
+                    :d="arc.arcSlice" 
+                    :fill="`${arc.color}CC`"
+                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                    :filter="getBlurFilter(i)"
+                />
+            </template>
+
+            <template v-else>
+                <circle
+                    :cx="svg.width / 2"
+                    :cy="svg.height / 2"
+                    :r="minSize <= 0 ? 10 : minSize"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                    :stroke="adaptColorToBackground(FINAL_CONFIG.style.chart.background)"
+                />
+            </template>
 
             <!-- HOLLOW -->
             <circle
@@ -708,21 +721,23 @@ defineExpose({
             />
 
             <!-- TOOLTIP TRAPS -->
-            <path 
-                v-for="(arc, i) in currentDonut"
-                :data-cy="`donut-trap-${i}`"
-                data-cy-donut-trap
-                :d="arc.arcSlice" 
-                :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
-                @mouseenter="useTooltip({
-                    datapoint: arc,
-                    relativeIndex: i,
-                    seriesIndex: arc.seriesIndex,
-                    show: true
-                })"
-                @mouseleave="isTooltip = false; selectedSerie = null"
-                @click="selectDatapoint(arc, i)"
-            />
+            <template v-if="total">
+                <path 
+                    v-for="(arc, i) in currentDonut"
+                    :data-cy="`donut-trap-${i}`"
+                    data-cy-donut-trap
+                    :d="arc.arcSlice" 
+                    :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
+                    @mouseenter="useTooltip({
+                        datapoint: arc,
+                        relativeIndex: i,
+                        seriesIndex: arc.seriesIndex,
+                        show: true
+                    })"
+                    @mouseleave="isTooltip = false; selectedSerie = null"
+                    @click="selectDatapoint(arc, i)"
+                />
+            </template>
 
             <circle
                 v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.show"
