@@ -55,6 +55,11 @@ const model = ref([
     { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 6},
     { key: 'table.td.prefix', def: 'P', type: 'text'},
     { key: 'table.td.suffix', def: 'S', type: 'text'},
+
+    { key: 'style.chart.zoom.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color'},
+    { key: 'style.chart.zoom.highlightColor', def: '#4A4A4A', type: 'color'},
+    { key: 'style.chart.zoom.useResetSlot', def: false,  type: 'checkbox'}
 ]);
 
 const themeOptions = ref([
@@ -119,7 +124,10 @@ const step = ref(0)
                     <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                         WATERMARK
                     </div>
-                </template>  
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
             </LocalVueUiWordCloud>
         </template>
 
