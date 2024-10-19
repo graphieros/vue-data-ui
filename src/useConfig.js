@@ -3309,6 +3309,10 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 height: 300,
                 width: 512,
+                zoom: {
+                    ...ZOOM,
+                    show: false
+                },
                 words: {
                     maxFontSize: 100,
                     minFontSize: FONT._10,
