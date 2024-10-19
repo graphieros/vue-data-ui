@@ -180,7 +180,6 @@ export function useConfig() {
     }
 
     const vue_ui_stackbar = {
-        locale: null,
         theme: '',
         responsive: false,
         customPalette: [],
@@ -310,7 +309,6 @@ export function useConfig() {
     }
 
     const vue_ui_xy = {
-        locale: null,
         theme: '',
         responsive: false,
         customPalette: [],
@@ -3203,7 +3201,6 @@ export function useConfig() {
     }
 
     const vue_ui_table_sparkline = {
-        locale: null,
         theme: '',
         customPalette: [],
         responsiveBreakpoint: 500,

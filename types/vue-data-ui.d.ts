@@ -107,7 +107,6 @@ declare module 'vue-data-ui' {
     export type TextAlign = "left" | "center" | "right";
     export type TooltipPosition = TextAlign;
     export type FontVariantNumeric = "normal" | "slashed-zero" | "tabular-nums" | "oldstyle-nums";
-    export type NumberLocale = string | null;
 
     export type Formatter = (value: number) => string | number;
 
@@ -441,7 +440,6 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiTableSparklineConfig = {
-        locale?: NumberLocale;
         theme?: Theme;
         customPalette?: string[];
         responsiveBreakpoint?: number;
@@ -2042,7 +2040,6 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiXyConfig = {
-        locale?: NumberLocale;
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -5274,7 +5271,6 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiStackbarConfig = {
-        locale?: NumberLocale;
         theme?: Theme;
         responsive?: boolean;
         customPalette?: string[];

@@ -404,8 +404,7 @@ defineExpose({
                                 p: FINAL_CONFIG.prefix,
                                 v: Number(tr.values[j]),
                                 s: FINAL_CONFIG.suffix,
-                                r: FINAL_CONFIG.roundingValues,
-                                locale: FINAL_CONFIG.locale
+                                r: FINAL_CONFIG.roundingValues
                             }) }}
                         </td>
                         <td dir="auto" role="cell" v-if="FINAL_CONFIG.showTotal" :style="{
@@ -419,7 +418,6 @@ defineExpose({
                                 v: tr.sum,
                                 s: FINAL_CONFIG.suffix,
                                 r: FINAL_CONFIG.roundingTotal,
-                                locale: FINAL_CONFIG.locale
                             }) }}
                         </td>
                         <td dir="auto" role="cell" v-if="FINAL_CONFIG.showAverage" :style="{
@@ -433,7 +431,6 @@ defineExpose({
                                 v: tr.average,
                                 s: FINAL_CONFIG.suffix,
                                 r: FINAL_CONFIG.roundingAverage,
-                                locale: FINAL_CONFIG.locale
                             }) }}
                         </td>
                         <td dir="auto" role="cell" v-if="FINAL_CONFIG.showMedian" :style="{
@@ -447,7 +444,6 @@ defineExpose({
                                 v: tr.median,
                                 s: FINAL_CONFIG.suffix,
                                 r: FINAL_CONFIG.roundingMedian,
-                                locale: FINAL_CONFIG.locale
                             }) }}
                         </td>
                         <td role="cell" v-if="FINAL_CONFIG.showSparklines" :data-cell="FINAL_CONFIG.translations.chart" :style="{

@@ -296,7 +296,6 @@ function barDataLabel(val) {
         v: val,
         s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
         r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
-        locale: FINAL_CONFIG.value.locale
     });
 }
 
@@ -305,7 +304,6 @@ function barDataLabelPercentage(val) {
         v: val,
         s: '%',
         r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
-        locale: FINAL_CONFIG.value.locale
     });
 }
 
@@ -382,12 +380,10 @@ function useTooltip(seriesIndex) {
                         v: ds.value,
                         s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
                         r: roundingValue,
-                        locale: FINAL_CONFIG.locale
                     }) : ''} ${parenthesis[0]}${showPercentage ? dataLabel({
                         v: isNaN(ds.value / sum) ? 0 : ds.value / sum * 100,
                         s: '%',
                         r: roundingPercentage,
-                        locale: FINAL_CONFIG.locale
                     }) : ''}${parenthesis[1]}
                 </div>
             `
@@ -775,7 +771,6 @@ defineExpose({
                         v: yLabel.value,
                         s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
                         r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
-                        locale: FINAL_CONFIG.locale
                     }) }}
                 </text>
             </template>
@@ -926,7 +921,6 @@ defineExpose({
                             v: td,
                             s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
                             r: FINAL_CONFIG.table.td.roundingValue,
-                            locale: FINAL_CONFIG.locale
                         }) : td }}
                     </template>
                 </DataTable>

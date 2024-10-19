@@ -256,7 +256,6 @@
                                     v: calcLinearProgression(serie.plots).trend * 100,
                                     s: '%',
                                     r: 2,
-                                    locale: FINAL_CONFIG.locale
                                 }) }}
                             </text>
                         </g>
@@ -336,7 +335,6 @@
                                 v: calcLinearProgression(serie.plots).trend * 100,
                                 s: '%',
                                 r: 2,
-                                locale: FINAL_CONFIG.locale
                             }) }}
                         </text>
                     </g>
@@ -465,7 +463,6 @@
                                 v: calcLinearProgression(serie.plots).trend * 100,
                                 s: '%',
                                 r: 2,
-                                locale: FINAL_CONFIG.locale
                             }) }}
                         </text>
                     </g>
@@ -489,7 +486,6 @@
                                     v: plot.value, 
                                     s: FINAL_CONFIG.chart.labels.suffix, 
                                     r: FINAL_CONFIG.bar.labels.rounding,
-                                    locale: FINAL_CONFIG.locale
                                 }) : '' }}
                             </text>
                             <text 
@@ -525,7 +521,6 @@
                                     v: plot.value, 
                                     s: FINAL_CONFIG.chart.labels.suffix, 
                                     r: FINAL_CONFIG.plot.labels.rounding,
-                                    locale: FINAL_CONFIG.locale
                                 }) : '' }}
                             </text>
                             <foreignObject
@@ -576,7 +571,6 @@
                                     v: plot.value, 
                                     s: FINAL_CONFIG.chart.labels.suffix, 
                                     r: FINAL_CONFIG.line.labels.rounding,
-                                    locale: FINAL_CONFIG.locale
                                 }) : '' }}
                             </text>
                             <foreignObject
@@ -775,7 +769,6 @@
                                         v: yLabel.value, 
                                         s: FINAL_CONFIG.chart.labels.suffix, 
                                         r: 1,
-                                        locale: FINAL_CONFIG.locale
                                     })
                                 }}
                             </text>
@@ -807,7 +800,6 @@
                                     v: yLabel.value, 
                                     s: FINAL_CONFIG.chart.labels.suffix, 
                                     r: 1,
-                                    locale: FINAL_CONFIG.locale
                                 }) : '' }}
                             </text>
                         </g>
@@ -1078,7 +1070,6 @@
                             v: td,
                             s: FINAL_CONFIG.chart.labels.suffix,
                             r: FINAL_CONFIG.table.rounding,
-                            locale: FINAL_CONFIG.locale
                         }) : td }}
                     </template>
                     </DataTable>
@@ -1408,7 +1399,6 @@ export default {
         },
         tableSparklineConfig() {
             return {
-                locale: this.FINAL_CONFIG.locale,
                 responsiveBreakpoint: this.FINAL_CONFIG.table.responsiveBreakpoint,
                 roundingValues: this.FINAL_CONFIG.table.rounding,
                 showAverage: false,
@@ -1977,8 +1967,7 @@ export default {
                             v: s.value, 
                             s: this.FINAL_CONFIG.chart.labels.suffix, 
                             r: this.FINAL_CONFIG.chart.tooltip.roundingValue,
-                            locale: this.FINAL_CONFIG.locale
-                        }) : ''}</b> ${this.FINAL_CONFIG.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.FINAL_CONFIG.chart.tooltip.roundingPercentage).toLocaleString(this.FINAL_CONFIG.locale)}%)` : ''}</div>`;
+                        }) : ''}</b> ${this.FINAL_CONFIG.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.FINAL_CONFIG.chart.tooltip.roundingPercentage).toLocaleString()}%)` : ''}</div>`;
 
                         if (this.FINAL_CONFIG.chart.comments.showInTooltip && s.comments.length && s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]) {
                             html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]}</div>`
