@@ -4,6 +4,7 @@ import themes from "../themes.json";
 import Title from '../atoms/Title.vue';
 import UserOptions from '../atoms/UserOptions.vue';
 import { createUid, createWordCloudDatasetFromPlainText } from '../lib';
+import { debounce } from '../canvas-lib';
 import {
     downloadCsv,
     error,
@@ -18,6 +19,7 @@ import {
 import { throttle } from '../canvas-lib';
 import Accordion from "./vue-ui-accordion.vue";
 import DataTable from '../atoms/DataTable.vue';
+import MonoSlicer from '../atoms/MonoSlicer.vue';
 import { useNestedProp } from '../useNestedProp';
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
@@ -74,12 +76,40 @@ const FINAL_CONFIG = computed(() => {
     }
 });
 
+const chartSlicer = ref(null);
+const slicer = ref(FINAL_CONFIG.value.style.chart.width);
+
 const svg = ref({
-    width: FINAL_CONFIG.value.style.chart.width,
-    height: FINAL_CONFIG.value.style.chart.height,
+    width: slicer.value,
+    height: FINAL_CONFIG.value.style.chart.height / FINAL_CONFIG.value.style.chart.height * slicer.value,
     maxFontSize: FINAL_CONFIG.value.style.chart.words.maxFontSize,
     minFontSize: FINAL_CONFIG.value.style.chart.words.minFontSize
-})
+});
+
+const handleResize = throttle(() => {
+    const { width, height } = useResponsive({
+        chart: wordCloudChart.value,
+        title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+        slicer: FINAL_CONFIG.value.style.chart.zoom.show && chartSlicer.value
+    });
+    svg.value.width = width;
+    svg.value.height = height;
+    nextTick(generateWordCloud)
+});
+
+watch(() => slicer.value, () => {
+    debounceUpdateCloud()
+});
+
+const debounceUpdateCloud = debounce(() => {
+    svg.value.width = Number(slicer.value)
+    svg.value.height = FINAL_CONFIG.value.style.chart.height / FINAL_CONFIG.value.style.chart.height * Number(slicer.value)
+    generateWordCloud()
+}, 10);
+
+function refreshSlicer() {
+    slicer.value = FINAL_CONFIG.value.style.chart.width;
+}
 
 const resizeObserver = ref(null);
 
@@ -88,7 +118,7 @@ onMounted(() => {
         error({
             componentName: 'VueUiWordCloud',
             type: 'dataset'
-        })
+        });
     } else {
         drawableDataset.value.forEach((w, i) => {
             getMissingDatasetAttributes({
@@ -101,21 +131,11 @@ onMounted(() => {
                     type: 'datasetSerieAttribute',
                     property: attr,
                     index: i
-                })
-            })
-        })   
+                });
+            });
+        });
     }
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
-                chart: wordCloudChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-            });
-            svg.value.width = width;
-            svg.value.height = height;
-            nextTick(generateWordCloud)
-        });
-
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(wordCloudChart.value.parentNode);
     }
@@ -311,6 +331,7 @@ defineExpose({
 <template>
     <div class="vue-ui-word-cloud" ref="wordCloudChart" :id="`wordCloud_${uid}`"
         :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`">
+
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
             <Title :config="{
                 title: {
@@ -387,6 +408,27 @@ defineExpose({
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
+        <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-html2canvas-ignore>
+            <MonoSlicer
+                v-if="FINAL_CONFIG.style.chart.zoom.show"
+                v-model:value="slicer"
+                :min="100"
+                :max="FINAL_CONFIG.style.chart.width * 3"
+                :textColor="FINAL_CONFIG.style.chart.color"
+                :inputColor="FINAL_CONFIG.style.chart.zoom.color"
+                :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
+                :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
+                :background="FINAL_CONFIG.style.chart.zoom.color"
+                :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
+                :source="FINAL_CONFIG.style.chart.width"
+                @reset="refreshSlicer"
+            >
+                <template #reset-action="{ reset }">
+                    <slot name="reset-action" v-bind="{ reset }"/>
+                </template>
+            </MonoSlicer>
         </div>
 
         <Accordion hideDetails v-if="isDataset" :config="{
