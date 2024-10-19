@@ -103,7 +103,7 @@ const components = ref([
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[45]);
+const selectedComponent = ref(components.value[1]);
 
 </script>
 

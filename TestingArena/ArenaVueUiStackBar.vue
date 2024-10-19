@@ -9,28 +9,16 @@ import { useArena } from "../src/useArena";
 const dataset = ref([
     {
         name: "Serie 1",
-        series: [2, 20.07, 30, 40, 50, 60, 10, 20],
+        series: [11111.11, 22222.22],
     },
     {
         name: "Serie 2",
-        series: [0, 3, 9, 13, 25, 31, 12, 16],
-    },
-    {
-        name: "Serie 3",
-        series: [5, 3, 9, 13, 25, 31, 12, 16],
-    },
-    {
-        name: "Serie 4",
-        series: [5, 3, 9, 13, 25, 31, 12, 16],
-
-    },
-    {
-        name: "Serie 5",
-        series: [5, 9, 12],
+        series: [13333.33, 11111.22],
     },
 ]);
 
 const model = ref([
+    { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA']},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'theme', def: '', type: 'select', options: ['', 'zen', 'hack', 'concrete']},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
@@ -141,6 +129,8 @@ const model = ref([
     { key: 'style.chart.grid.y.axisLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.grid.y.axisLabels.fontSize', def: 14, type: 'number', min: -100, max: 100},
     { key: 'style.chart.grid.y.axisLabels.bold', def: false, type: 'checkbox'},
+
+    { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 6},
 
 ])
 

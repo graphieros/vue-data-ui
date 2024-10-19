@@ -180,6 +180,7 @@ export function useConfig() {
     }
 
     const vue_ui_stackbar = {
+        locale: null,
         theme: '',
         responsive: false,
         customPalette: [],
@@ -309,6 +310,7 @@ export function useConfig() {
     }
 
     const vue_ui_xy = {
+        locale: null,
         theme: '',
         responsive: false,
         customPalette: [],
@@ -527,7 +529,8 @@ export function useConfig() {
             td: {
                 ...TABLE_TD,
                 roundingValue: 0,
-                roundingPercentage: 0
+                roundingPercentage: 0,
+                formatter: null
             },
             columnNames: {
                 serie: 'Series',
@@ -549,16 +552,19 @@ export function useConfig() {
                             useLabelSlots: false,
                             hideUnderValue: 3,
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
+                            formatter: null
                         },
                         value: {
                             rounding: 0,
-                            show: true
+                            show: true,
+                            formatter: null
                         },
                         percentage: {
                             color: COLOR_BLACK,
                             bold: true,
-                            fontSize: FONT._18
+                            fontSize: FONT._18,
+                            formatter: null
                         },
                         name: {
                             color: COLOR_BLACK,
@@ -598,7 +604,8 @@ export function useConfig() {
                                     suffix: '',
                                     prefix: '',
                                     offsetY: 0,
-                                    rounding: 0
+                                    rounding: 0,
+                                    formatter: null
                                 }
                             }
                         }
@@ -627,7 +634,9 @@ export function useConfig() {
                     showValue: true,
                     showPercentage: true,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
+                    valueFormatter: null,
+                    percentageFormatter: null
                 },
                 title: TITLE,
             }
@@ -3196,6 +3205,7 @@ export function useConfig() {
     }
 
     const vue_ui_table_sparkline = {
+        locale: null,
         theme: '',
         customPalette: [],
         responsiveBreakpoint: 500,
@@ -3206,6 +3216,8 @@ export function useConfig() {
         roundingMedian: 0,
         roundingValues: 0,
         roundingTotal: 0,
+        prefix: '',
+        suffix: '',
         showSparklines: true,
         fontFamily: 'inherit',
         colNames: [],
@@ -3246,7 +3258,7 @@ export function useConfig() {
             fontSize: FONT._14,
             outline: "none",
             textAlign: POSITION.LEFT,
-            bold: false
+            bold: false,
         },
         userOptions: USER_OPTIONS({
             pdf: true,

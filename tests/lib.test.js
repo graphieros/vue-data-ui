@@ -21,11 +21,11 @@ import {
     createArc,
     createPolygonPath,
     createSmoothPath,
-    createStraightPath,
     createSpiralPath,
     createStar,
     createTSpans,
     createWordCloudDatasetFromPlainText,
+    checkFormatter,
     dataLabel,
     degreesToRadians,
     error,
@@ -763,30 +763,48 @@ describe('dataLabel', () => {
         expect(dataLabel({ v: 1.1 })).toBe('1');
         expect(dataLabel({ v: 1.9 })).toBe('2');
     });
+
     test('returns a formatted dataLabel with rounding', () => {
         expect(dataLabel({ v: 1, r: 1 })).toBe('1');
         expect(dataLabel({ v: 1.1, r: 1 })).toBe('1.1');
         expect(dataLabel({ v: 1.96, r: 1 })).toBe('2');
     });
+
     test('returns a formatted dataLabel with prefix and suffix', () => {
         expect(dataLabel({ p: '$', v: 1, s: '$' })).toBe('$1$');
         expect(dataLabel({ p: '$', v: 1.1, s: '$', r: 1 })).toBe('$1.1$');
     });
+
     test('returns a formatted dataLabel with spaced prefix and suffix', () => {
-        expect(dataLabel({ p: '$', v: 1, s: '$', space: true })).toBe('$ 1 $')
-        expect(dataLabel({ p: '$', v: 1.1, s: '$', r: 1, space: true })).toBe('$ 1.1 $')
-    })
+        expect(dataLabel({ p: '$', v: 1, s: '$', space: true })).toBe('$ 1 $');
+        expect(dataLabel({ p: '$', v: 1.1, s: '$', r: 1, space: true })).toBe('$ 1.1 $');
+    });
+
     test('returns a formatted dataLabel in loading mode', () => {
-        expect(dataLabel({ p: '$', v: 1, s: '$', isAnimating: true})).toBe('---')
-    })
+        expect(dataLabel({ p: '$', v: 1, s: '$', isAnimating: true })).toBe('---');
+    });
+
     test('returns a formatted percentage datalabel in loading mode', () => {
-        expect(dataLabel({ v: 10, s: '%',  isAnimating: true})).toBe('--%')
-    })
+        expect(dataLabel({ v: 10, s: '%', isAnimating: true })).toBe('--%');
+    });
+
     test('returns a formatted dataLabel in loading mode with a custom regex', () => {
-        expect(dataLabel({ p: '$', v: 10, isAnimating: true, regex: /[^$]/g })).toBe('$--')
-        expect(dataLabel({ p: '$', v: 10, s: '$', isAnimating: true, regex: /[^$]/g })).toBe('$--$')
-    })
-})
+        expect(dataLabel({ p: '$', v: 10, isAnimating: true, regex: /[^$]/g })).toBe('$--');
+        expect(dataLabel({ p: '$', v: 10, s: '$', isAnimating: true, regex: /[^$]/g })).toBe('$--$');
+    });
+
+    test('returns a formatted dataLabel with locale', () => {
+        expect(dataLabel({ v: 1000, locale: 'de-DE' })).toBe('1.000');
+        expect(dataLabel({ v: 1000.5, locale: 'de-DE', r: 1 })).toBe('1.000,5');
+        expect(dataLabel({ v: 1000.5, locale: 'en-US', r: 1 })).toBe('1,000.5');
+    });
+
+    test('returns a formatted dataLabel with prefix, suffix, and locale', () => {
+        expect(dataLabel({ p: '$', v: 1000, s: ' USD', locale: 'en-US' })).toBe('$1,000 USD');
+        expect(dataLabel({ p: '€', v: 1000.5, s: ' EUR', locale: 'de-DE', r: 1 })).toBe('€1.000,5 EUR');
+    });
+});
+
 
 describe('abbreviate', () => {
     test('returns an empty string for a falsy value', () => {
@@ -1637,4 +1655,68 @@ describe('sumSeries', () => {
         expect(sumSeries(items)).toStrictEqual([6, 6, 2]);
         expect(sumSeries([{series: []}])).toStrictEqual([]);
     })
+})
+
+describe('checkFormatter', () => {
+    const num = 12;
+    const expected = `expected${num}`
+    const testFunc = (num) => {
+        return `expected${num}`
+    }
+
+    const failingFunc = () => {
+        throw new Error('ERROR')
+    }
+
+    const functionFunc = () => {
+        return () => {
+            return 1
+        }
+    }
+
+    const functionObject = () => {
+        return {
+            a: 1,
+        }
+    }
+
+    const functionBool = () => {
+        return false
+    }
+
+    test('returns the callback content', () => {
+        expect(checkFormatter(testFunc, num)).toStrictEqual({
+            isValid: true,
+            value: expected
+        })
+    })
+
+    test('returns proper values when the callback throws', () => {
+        expect(checkFormatter(failingFunc, num)).toStrictEqual({
+            isValid: false,
+            value: num
+        })
+    })
+
+    test('returns proper values when the callback returns a function', () => {
+        expect(checkFormatter(functionFunc, num)).toStrictEqual({
+            isValid: false,
+            value: num
+        })
+    })
+    
+    test('returns proper values when the callback returns an object', () => {
+        expect(checkFormatter(functionObject, num)).toStrictEqual({
+            isValid: false,
+            value: num
+        })
+    })
+    
+    test('returns proper values when the callback returns a boolean', () => {
+        expect(checkFormatter(functionBool, num)).toStrictEqual({
+            isValid: false,
+            value: num
+        })
+    })
+
 })

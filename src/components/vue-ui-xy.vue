@@ -255,7 +255,8 @@
                                 {{  dataLabel({
                                     v: calcLinearProgression(serie.plots).trend * 100,
                                     s: '%',
-                                    r: 2
+                                    r: 2,
+                                    locale: FINAL_CONFIG.locale
                                 }) }}
                             </text>
                         </g>
@@ -334,7 +335,8 @@
                             {{  dataLabel({
                                 v: calcLinearProgression(serie.plots).trend * 100,
                                 s: '%',
-                                r: 2
+                                r: 2,
+                                locale: FINAL_CONFIG.locale
                             }) }}
                         </text>
                     </g>
@@ -462,7 +464,8 @@
                             {{  dataLabel({
                                 v: calcLinearProgression(serie.plots).trend * 100,
                                 s: '%',
-                                r: 2
+                                r: 2,
+                                locale: FINAL_CONFIG.locale
                             }) }}
                         </text>
                     </g>
@@ -481,7 +484,13 @@
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.bar.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: plot.value, s: FINAL_CONFIG.chart.labels.suffix, r: FINAL_CONFIG.bar.labels.rounding}) : '' }}
+                                {{ canShowValue(plot.value) ? dataLabel({
+                                    p:FINAL_CONFIG.chart.labels.prefix, 
+                                    v: plot.value, 
+                                    s: FINAL_CONFIG.chart.labels.suffix, 
+                                    r: FINAL_CONFIG.bar.labels.rounding,
+                                    locale: FINAL_CONFIG.locale
+                                }) : '' }}
                             </text>
                             <text 
                                 v-if="plot && FINAL_CONFIG.bar.serieName.show"
@@ -511,7 +520,13 @@
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.plot.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: plot.value, s: FINAL_CONFIG.chart.labels.suffix, r: FINAL_CONFIG.plot.labels.rounding}) : '' }}
+                                {{ canShowValue(plot.value) ? dataLabel({
+                                    p:FINAL_CONFIG.chart.labels.prefix,
+                                    v: plot.value, 
+                                    s: FINAL_CONFIG.chart.labels.suffix, 
+                                    r: FINAL_CONFIG.plot.labels.rounding,
+                                    locale: FINAL_CONFIG.locale
+                                }) : '' }}
                             </text>
                             <foreignObject
                                 :data-cy="`xy-plot-tag-start-${i}`"
@@ -556,7 +571,13 @@
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.line.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: plot.value, s: FINAL_CONFIG.chart.labels.suffix, r: FINAL_CONFIG.line.labels.rounding}) : '' }}
+                                {{ canShowValue(plot.value) ? dataLabel({
+                                    p:FINAL_CONFIG.chart.labels.prefix, 
+                                    v: plot.value, 
+                                    s: FINAL_CONFIG.chart.labels.suffix, 
+                                    r: FINAL_CONFIG.line.labels.rounding,
+                                    locale: FINAL_CONFIG.locale
+                                }) : '' }}
                             </text>
                             <foreignObject
                                 :data-cy="`xy-line-tag-start-${i}`"
@@ -749,7 +770,13 @@
                                 :fill="el.color"
                             >
                                 {{
-                                    dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: yLabel.value, s: FINAL_CONFIG.chart.labels.suffix, r: 1})
+                                    dataLabel({
+                                        p:FINAL_CONFIG.chart.labels.prefix, 
+                                        v: yLabel.value, 
+                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        r: 1,
+                                        locale: FINAL_CONFIG.locale
+                                    })
                                 }}
                             </text>
                         </g>
@@ -775,7 +802,13 @@
                                 text-anchor="end"
                                 :fill="FINAL_CONFIG.chart.grid.labels.color"
                             >
-                                {{ canShowValue(yLabel.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: yLabel.value, s: FINAL_CONFIG.chart.labels.suffix, r: 1}) : '' }}
+                                {{ canShowValue(yLabel.value) ? dataLabel({
+                                    p:FINAL_CONFIG.chart.labels.prefix, 
+                                    v: yLabel.value, 
+                                    s: FINAL_CONFIG.chart.labels.suffix, 
+                                    r: 1,
+                                    locale: FINAL_CONFIG.locale
+                                }) : '' }}
                             </text>
                         </g>
                     </template>
@@ -1040,8 +1073,14 @@
                             <div v-html="th"/>
                         </template>
                         <template #td="{ td }">
-                            {{ td }}
-                        </template>
+                        {{ !isNaN(Number(td)) ? dataLabel({
+                            p: FINAL_CONFIG.chart.labels.prefix,
+                            v: td,
+                            s: FINAL_CONFIG.chart.labels.suffix,
+                            r: FINAL_CONFIG.table.rounding,
+                            locale: FINAL_CONFIG.locale
+                        }) : td }}
+                    </template>
                     </DataTable>
                 </div>
             </template>
@@ -1369,12 +1408,15 @@ export default {
         },
         tableSparklineConfig() {
             return {
+                locale: this.FINAL_CONFIG.locale,
                 responsiveBreakpoint: this.FINAL_CONFIG.table.responsiveBreakpoint,
                 roundingValues: this.FINAL_CONFIG.table.rounding,
                 showAverage: false,
                 showMedian: false,
                 showTotal: false,
                 fontFamily: this.FINAL_CONFIG.chart.fontFamily,
+                prefix: this.FINAL_CONFIG.chart.labels.prefix,
+                suffix: this.FINAL_CONFIG.chart.labels.suffix,
                 colNames: JSON.parse(JSON.stringify(this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values)),
                 thead: {
                     backgroundColor: this.FINAL_CONFIG.table.th.backgroundColor,
@@ -1930,7 +1972,13 @@ export default {
                             default:
                                 break;
                         }
-                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${this.FINAL_CONFIG.chart.tooltip.showValue ? this.dataLabel({p:this.FINAL_CONFIG.chart.labels.prefix, v: s.value, s: this.FINAL_CONFIG.chart.labels.suffix, r:this.FINAL_CONFIG.chart.tooltip.roundingValue}) : ''}</b> ${this.FINAL_CONFIG.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.FINAL_CONFIG.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${this.FINAL_CONFIG.chart.tooltip.showValue ? this.dataLabel({
+                            p: this.FINAL_CONFIG.chart.labels.prefix, 
+                            v: s.value, 
+                            s: this.FINAL_CONFIG.chart.labels.suffix, 
+                            r: this.FINAL_CONFIG.chart.tooltip.roundingValue,
+                            locale: this.FINAL_CONFIG.locale
+                        }) : ''}</b> ${this.FINAL_CONFIG.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.FINAL_CONFIG.chart.tooltip.roundingPercentage).toLocaleString(this.FINAL_CONFIG.locale)}%)` : ''}</div>`;
 
                         if (this.FINAL_CONFIG.chart.comments.showInTooltip && s.comments.length && s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]) {
                             html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]}</div>`

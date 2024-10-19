@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const dataset = ref([
         {
             name: "Long name serie",
-            series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12],
+            series: [11111.11, 22222.22, 33333.33, 20000.12],
             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
             type: "line",
             smooth: false,
@@ -19,24 +19,34 @@ const dataset = ref([
             dataLabels: true,
             scaleSteps: 2,
         },
-        {
-            name: "S1",
-            series: [-20, 20, 8, 16, 12, 13, -16, 55, 12, 3, 7, 12, 6],
-            comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
-            type: "bar",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2,
-        },
-        {
-            name: "S2",
-            series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
-            comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
-            type: "plot",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2
-        },
+        // {
+        //     name: "Long name serie",
+        //     series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12],
+        //     comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+        //     type: "line",
+        //     smooth: false,
+        //     useArea: true,
+        //     dataLabels: true,
+        //     scaleSteps: 2,
+        // },
+        // {
+        //     name: "S1",
+        //     series: [-20, 20, 8, 16, 12, 13, -16, 55, 12, 3, 7, 12, 6],
+        //     comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
+        //     type: "bar",
+        //     smooth: false,
+        //     useArea: true,
+        //     scaleSteps: 2,
+        // },
+        // {
+        //     name: "S2",
+        //     series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
+        //     comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
+        //     type: "plot",
+        //     smooth: false,
+        //     useArea: true,
+        //     scaleSteps: 2
+        // },
         // {
         //     name: "S3",
         //     series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
@@ -50,6 +60,7 @@ const dataset = ref([
     ])
 
 const model = ref([
+    { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA']},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox'},

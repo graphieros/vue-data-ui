@@ -1,9 +1,10 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
 import { 
+    applyDataLabel,
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
-    calcNutArrowPath, 
+    calcNutArrowPath,
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
@@ -11,7 +12,6 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getMissingDatasetAttributes,
     isFunction, 
     makeDonut,
@@ -361,6 +361,8 @@ const average = computed(() => {
 
 const dataTooltipSlot = ref(null);
 
+const useCustomFormat = ref(false);
+
 function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
     dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: immutableSet.value};
     isTooltip.value = show;
@@ -369,38 +371,64 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
 
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
-    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
-        seriesIndex,
-        datapoint,
-        series: immutableSet.value,
-        config: FINAL_CONFIG.value
-    }))) {
-        tooltipContent.value = customFormat({
-            seriesIndex,
-            datapoint,
-            series: immutableSet.value,
-            config: FINAL_CONFIG.value
-        })
-    } else {
+    useCustomFormat.value = false;
+
+    if (isFunction(customFormat)) {
+        try {
+            const customFormatString = customFormat({
+                seriesIndex,
+                datapoint,
+                series: immutableSet.value,
+                config: FINAL_CONFIG.value
+            });
+            if (typeof customFormatString === 'string') {
+                tooltipContent.value = customFormatString;
+                useCustomFormat.value = true;
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied.');
+            useCustomFormat.value = false;
+        }
+    }
+    
+    if (!useCustomFormat.value) {
         html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-        if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-            html += `<b data-cy="donut-tooltip-value">${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
+        if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+            html += `<b data-cy="donut-tooltip-value">${ applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter, 
+                datapoint.value,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+                    v: datapoint.value, 
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                })
+            )}</b>`;
         }
 
-        if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+        if (FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+            const percentageLabel = applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.percentage.formatter,
+                datapoint.proportion * 100,
+                dataLabel({
+                    v: datapoint.proportion * 100,
+                    s: '%',
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+                })
+            );
+
             if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-                html += `<b>${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+                html += `<b>${percentageLabel}%</b></div>`;
             } else {
-                html += `<span>(${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+                html += `<span>(${percentageLabel})</span></div>`;
             }
         }
 
         if (FINAL_CONFIG.value.style.chart.comments.showInTooltip && datapoint.comment) {
             html += `<div class="vue-data-ui-tooltip-comment" style="background:${datapoint.color}20; padding: 6px; margin-bottom: 6px; margin-top:6px; border-left: 1px solid ${datapoint.color}">${datapoint.comment}</div>`
         }
-
         tooltipContent.value = `<div>${html}</div>`;
     }
 }
@@ -890,7 +918,7 @@ defineExpose({
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="donutChart"
             :content="tooltipContent"
-            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
+            :isCustom="useCustomFormat"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

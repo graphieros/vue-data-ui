@@ -296,6 +296,7 @@ function barDataLabel(val) {
         v: val,
         s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
         r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
+        locale: FINAL_CONFIG.value.locale
     });
 }
 
@@ -304,6 +305,7 @@ function barDataLabelPercentage(val) {
         v: val,
         s: '%',
         r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
+        locale: FINAL_CONFIG.value.locale
     });
 }
 
@@ -379,11 +381,13 @@ function useTooltip(seriesIndex) {
                         p: FINAL_CONFIG.value.style.chart.bars.dataLabels.prefix,
                         v: ds.value,
                         s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
-                        r: roundingValue
+                        r: roundingValue,
+                        locale: FINAL_CONFIG.locale
                     }) : ''} ${parenthesis[0]}${showPercentage ? dataLabel({
                         v: isNaN(ds.value / sum) ? 0 : ds.value / sum * 100,
                         s: '%',
-                        r: roundingPercentage
+                        r: roundingPercentage,
+                        locale: FINAL_CONFIG.locale
                     }) : ''}${parenthesis[1]}
                 </div>
             `
@@ -453,7 +457,7 @@ const dataTable = computed(() => {
             return ds.series[i] ?? 0
         }).reduce((a,b ) => a + b, 0);
 
-        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.rounding))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)));
+        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue)));
     }
 
     const config = {
@@ -770,7 +774,8 @@ defineExpose({
                         p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
                         v: yLabel.value,
                         s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
-                        r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding
+                        r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
+                        locale: FINAL_CONFIG.locale
                     }) }}
                 </text>
             </template>
@@ -916,7 +921,13 @@ defineExpose({
                         <div v-html="th"/>
                     </template>
                     <template #td="{ td }">
-                        {{ td }}
+                        {{ !isNaN(Number(td)) ? dataLabel({
+                            p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
+                            v: td,
+                            s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
+                            r: FINAL_CONFIG.table.td.roundingValue,
+                            locale: FINAL_CONFIG.locale
+                        }) : td }}
                     </template>
                 </DataTable>
             </template>
