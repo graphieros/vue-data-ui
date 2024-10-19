@@ -687,7 +687,8 @@ export function useConfig() {
                         hideUnderProportion: 0.03,
                         prefix: 'Value: ',
                         suffix: '',
-                        rounding: 0
+                        rounding: 0,
+                        formatter: null
                     }
                 },
                 legend: {
