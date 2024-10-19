@@ -4654,6 +4654,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 height?: string;
                 width?: string;
+                zoom?: Omit<ChartZoom, 'fontSize'>;
                 words?: {
                     maxFontSize?: number;
                     minFontSize?: number;
