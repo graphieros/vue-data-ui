@@ -510,7 +510,12 @@ function useTooltip(index) {
                     v: selected.value, 
                     s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-                })
+                }),
+                { 
+                    datapoint: selected,
+                    seriesIndex: rects.value[index].absoluteIndex,
+                    series: datasetCopy.value
+                }
             )}</b>`;
         }
         if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
@@ -824,7 +829,8 @@ defineExpose({
                                     v: rects[i].value, 
                                     s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                                     r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue 
-                                })
+                                }),
+                                { datapoint: rects[i], position }
                             )}})
                         </span>
                         <span v-if="!FINAL_CONFIG.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.style.chart.layout.labels.captions.showValue">
@@ -835,7 +841,8 @@ defineExpose({
                                     v: rects[i].value, 
                                     s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                                     r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue 
-                                }) 
+                                }),
+                                { datapoint: rects[i], position }
                             )
                             }}
                         </span>
@@ -893,7 +900,9 @@ defineExpose({
                                 v: legend.value, 
                                 s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                                 r:FINAL_CONFIG.style.chart.legend.roundingValue, isAnimating
-                            }))
+                            }),
+                            { datapoint: legend }
+                            )
                         }}
                         <span v-if="!segregated.includes(legend.uid)">
                             ({{ isNaN(legend.value / total) ? '-' : dataLabel({v: legend.value /total * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage, isAnimating }) }})
