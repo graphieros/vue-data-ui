@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
-import { 
+import {
+    applyDataLabel,
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
     calcNutArrowPath, 
@@ -10,6 +11,7 @@ import {
     convertCustomPalette, 
     createCsvContent, 
     createUid, 
+    dataLabel,
     downloadCsv,
     error,
     getMissingDatasetAttributes,
@@ -273,7 +275,16 @@ const drawableDataset = computed(() => {
 });
 
 function labellizeValue(val) {
-    return `${FINAL_CONFIG.value.style.chart.layout.dataLabels.prefix}${isNaN(val) ? '-' : Number(val.toFixed(FINAL_CONFIG.value.style.chart.layout.dataLabels.rounding)).toLocaleString()}${FINAL_CONFIG.value.style.chart.layout.dataLabels.suffix}`;
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.dataLabels.formatter,
+        val,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.layout.dataLabels.prefix,
+            v: val,
+            s: FINAL_CONFIG.value.style.chart.layout.dataLabels.suffix,
+            r: FINAL_CONFIG.value.style.chart.layout.dataLabels.rounding
+        })
+    );
 }
 
 const extremes = computed(() => {
@@ -573,7 +584,17 @@ defineExpose({
                         :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
                         :font-weight="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
                     >
-                        {{ FINAL_CONFIG.style.chart.layout.dataLabels.prefix }} {{ canShowValue(yLabel.value) ? yLabel.value.toFixed(FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.roundingValue) : '' }} {{ FINAL_CONFIG.style.chart.layout.dataLabels.suffix }}
+                        {{ canShowValue(yLabel.value) ? applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.dataLabels.formatter,
+                            yLabel.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.dataLabels.prefix,
+                                v: yLabel.value,
+                                s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.roundingValue
+                            })
+                        ) : '' 
+                        }}
                     </text>
                 </g>
             </g>
@@ -904,9 +925,23 @@ defineExpose({
         >
             <template #item="{legend, index}">
                 <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                    {{ legend.name }}: {{ Number(legend.value.toFixed(FINAL_CONFIG.style.chart.legend.roundingValue)).toLocaleString() }}
+                    {{ legend.name }}: {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.dataLabels.formatter,
+                        legend.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.dataLabels.prefix,
+                            v: legend.value,
+                            s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
+                            r: FINAL_CONFIG.style.chart.legend.roundingValue
+                        })) 
+                    }}
+
                     <span v-if="!segregated.includes(legend.uid)">
-                        ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}}%)
+                        ({{ isNaN(legend.value / grandTotal) ? '-' : dataLabel({
+                            v: legend.value / grandTotal * 100,
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                        })}})
                     </span>
                     <span v-else>
                         ( - % )

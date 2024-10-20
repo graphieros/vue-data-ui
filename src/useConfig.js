@@ -2633,7 +2633,8 @@ export function useConfig() {
                         rounding: 0,
                         prefix: '',
                         suffix: '',
-                        offsetY: 0
+                        offsetY: 0,
+                        formatter: null
                     }
                 },
                 title: TITLE,
