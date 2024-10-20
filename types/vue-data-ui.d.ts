@@ -1552,6 +1552,7 @@ declare module 'vue-data-ui' {
                         bold?: boolean;
                         scale?: number;
                         translation?: string;
+                        formatter?: Formatter;
                     };
                     yAxis?: {
                         show?: boolean;
@@ -1560,6 +1561,7 @@ declare module 'vue-data-ui' {
                         color?: string;
                         bold?: boolean;
                         showEvery?: number;
+                        formatter?: Formatter;
                     };
                 };
                 centerSlit?: {

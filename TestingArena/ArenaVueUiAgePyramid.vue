@@ -127,6 +127,27 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            style: {
+                ...c.style,
+                layout: {
+                    ...c.style.layout,
+                    dataLabels: {
+                        ...c.style.layout.dataLabels,
+                        xAxis: {
+                            ...c.style.layout.dataLabels.xAxis,
+                            formatter: (val) => {
+                                return `X | ${val}`
+                            }
+                        },
+                        yAxis: {
+                            ...c.style.layout.dataLabels.yAxis,
+                            formatter: (val) => {
+                                return `Y | ${val}`
+                            }
+                        },
+                    }
+                }
+            },
             theme: currentTheme.value
         }
     }

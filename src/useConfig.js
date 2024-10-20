@@ -2352,7 +2352,8 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         bold: false,
                         scale: 1000,
-                        translation: 'in thousands'
+                        translation: 'in thousands',
+                        formatter: null
                     },
                     yAxis: {
                         show: true,
@@ -2360,7 +2361,8 @@ export function useConfig() {
                         fontSize: FONT._12,
                         color: COLOR_BLACK,
                         bold: false,
-                        showEvery: 5
+                        showEvery: 5,
+                        formatter: null
                     }
                 },
                 centerSlit: {
