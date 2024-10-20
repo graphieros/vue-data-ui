@@ -2827,6 +2827,7 @@ declare module 'vue-data-ui' {
         values: number[];
         color?: string;
         target?: number;
+        formatter?: Formatter;
     };
 
     export type VueUiRadarDataset = {
@@ -2886,6 +2887,13 @@ declare module 'vue-data-ui' {
                             fontSize?: number;
                             color?: string;
                             offsetY?: number;
+                            rounding?: number;
+                            x?: {
+                                formatter?: Formatter;
+                            };
+                            y?: {
+                                formatter?: Formatter;
+                            };
                         };
                         axisLabels?: {
                             show?: boolean;

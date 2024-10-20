@@ -933,7 +933,14 @@ export function useConfig() {
                             show: true,
                             fontSize: FONT._10,
                             color: COLOR_BLACK,
-                            offsetY: 8
+                            offsetY: 8,
+                            rounding: 0,
+                            x: {
+                                formatter: null
+                            },
+                            y: {
+                                formatter: null
+                            }
                         },
                         axisLabels: {
                             show: true,
@@ -986,7 +993,7 @@ export function useConfig() {
                 tooltip: {
                     ...TOOLTIP,
                     roundingValue: 0,
-                    showShape: true
+                    showShape: true,
                 },
                 legend: LEGEND
             }
