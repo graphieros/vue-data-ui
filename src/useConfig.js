@@ -3109,6 +3109,7 @@ export function useConfig() {
                 labels: {
                     prefix: '',
                     suffix: '',
+                    formatter: null,
                     yAxisLabels: {
                         show: true,
                         fontSize: FONT._14,

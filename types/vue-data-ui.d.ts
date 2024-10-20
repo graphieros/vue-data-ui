@@ -4634,6 +4634,7 @@ declare module 'vue-data-ui' {
                 labels?: {
                     prefix?: string;
                     suffix?: string;
+                    formatter?: Formatter;
                     yAxisLabels?: {
                         bold?: boolean;
                         color?: string;
