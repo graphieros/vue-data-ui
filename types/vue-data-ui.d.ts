@@ -377,6 +377,7 @@ declare module 'vue-data-ui' {
                 rounding?: number;
                 prefix?: string;
                 suffix?: string;
+                formatter?: Formatter;
             };
             colors?: {
                 min?: string;

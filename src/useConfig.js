@@ -2152,7 +2152,8 @@ export function useConfig() {
                 bold: true,
                 rounding: 0,
                 prefix: '',
-                suffix: ''
+                suffix: '',
+                formatter: null
             },
             colors: {
                 min: COLOR_RED,

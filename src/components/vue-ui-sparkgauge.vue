@@ -2,7 +2,8 @@
 import { ref, computed, onMounted, watch } from "vue";
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
-import { 
+import {
+    applyDataLabel,
     createUid, 
     dataLabel, 
     error, 
@@ -210,7 +211,16 @@ const trackColor = computed(() => {
             :fill="labelColor"
             :font-weight="FINAL_CONFIG.style.dataLabel.bold ? 'bold' : 'normal'"
         >
-            {{ dataLabel({ p: FINAL_CONFIG.style.dataLabel.prefix, v: currentScore, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.rounding }) }}
+            {{ applyDataLabel(
+                FINAL_CONFIG.style.dataLabel.formatter,
+                currentScore,
+                dataLabel({ 
+                    p: FINAL_CONFIG.style.dataLabel.prefix, 
+                    v: currentScore, 
+                    s: FINAL_CONFIG.style.dataLabel.suffix, 
+                    r: FINAL_CONFIG.style.dataLabel.rounding 
+                })) 
+            }}
         </text>
     </svg>
 
