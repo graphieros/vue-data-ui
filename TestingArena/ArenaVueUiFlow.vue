@@ -75,7 +75,22 @@ const config = computed(() => {
 
     return {
         theme: currentTheme.value,
-        ...c
+        ...c,
+        style: {
+            ...c.style,
+            chart: {
+                ...c.style.chart,
+                nodes: {
+                    ...c.style.chart.nodes,
+                    labels: {
+                        ...c.style.chart.nodes.labels,
+                        formatter: (val) => {
+                            return `f | ${val}`
+                        }
+                    }
+                }
+            }
+        }
     }
 })
 

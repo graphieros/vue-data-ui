@@ -3545,7 +3545,8 @@ export function useConfig() {
                         },
                         prefix: '',
                         suffix: '',
-                        rounding: 0
+                        rounding: 0,
+                        formatter: null
                     },
                     stroke: COLOR_WHITE,
                     strokeWidth: 1

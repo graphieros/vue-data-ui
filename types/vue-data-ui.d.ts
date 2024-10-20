@@ -4940,6 +4940,7 @@ declare module 'vue-data-ui' {
                         prefix?: string;
                         suffix?: string;
                         rounding?: number;
+                        formatter?: Formatter;
                     };
                     stroke?: string;
                     strokeWidth?: number;
