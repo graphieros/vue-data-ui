@@ -1941,7 +1941,8 @@ export function useConfig() {
                 roundingValue: 0,
                 valueType: 'latest',
                 prefix: '',
-                suffix: ''
+                suffix: '',
+                formatter: null
             },
             title: {
                 show: true,

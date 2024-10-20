@@ -3613,6 +3613,7 @@ declare module 'vue-data-ui' {
                 valueType?: "latest" | "sum" | "average";
                 prefix?: string;
                 suffix?: string;
+                formatter?: Formatter;
             };
             title?: {
                 show?: boolean;
