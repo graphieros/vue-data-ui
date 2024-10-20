@@ -3112,6 +3112,7 @@ declare module 'vue-data-ui' {
                         color?: string;
                         text?: string;
                         offsetY?: number;
+                        formatter?: Formatter;
                     };
                     roots?: {
                         stroke?: string;
@@ -3128,6 +3129,7 @@ declare module 'vue-data-ui' {
                             roundingValue?: number;
                             prefix?: string;
                             suffix?: string;
+                            formatter?: Formatter;
                             name?: {
                                 color?: string;
                                 fontSize?: number;
@@ -3163,6 +3165,7 @@ declare module 'vue-data-ui' {
                                 roundingPercentage?: number;
                                 prefix?: string;
                                 suffix?: string;
+                                formatter?: Formatter;
                             };
                         };
                     };
@@ -3184,6 +3187,7 @@ declare module 'vue-data-ui' {
                                     bold?: boolean;
                                     prefix?: string;
                                     suffix?: string;
+                                    formatter?: Formatter;
                                 };
                                 core?: {
                                     total?: {

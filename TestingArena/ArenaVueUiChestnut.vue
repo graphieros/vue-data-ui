@@ -322,8 +322,60 @@ const themeOptions = ref([
 const currentTheme = ref(themeOptions.value[1])
 
 const config = computed(() => {
+    const c = convertArrayToObject(model.value);
     return {
-        ...convertArrayToObject(model.value),
+        ...c,
+        style: {
+            ...c.style,
+            chart: {
+                ...c.style.chart,
+                layout: {
+                    ...c.style.chart.layout,
+                    grandTotal: {
+                        ...c.style.chart.layout.grandTotal,
+                        formatter: (val) => {
+                            return `tot - ${val}`
+                        }
+                    },
+                    roots: {
+                        ...c.style.chart.layout.roots,
+                        labels: {
+                            ...c.style.chart.layout.roots.labels,
+                            formatter: (val) => {
+                                return `root - ${val}`
+                            }
+                        }
+                    },
+                    branches: {
+                        ...c.style.chart.layout.branches,
+                        labels: {
+                            ...c.style.chart.layout.branches.labels,
+                            dataLabels: {
+                                ...c.style.chart.layout.branches.labels.dataLabels,
+                                formatter: (val) => {
+                                    return `branch - ${val}`
+                                }
+                            }
+                        }
+                    },
+                    nuts: {
+                        ...c.style.chart.layout.nuts,
+                        selected: {
+                            ...c.style.chart.layout.nuts.selected,
+                            labels: {
+                                ...c.style.chart.layout.nuts.selected.labels,
+                                dataLabels: {
+                                    ...c.style.chart.layout.nuts.selected.labels.dataLabels,
+                                    formatter: (val) => {
+                                        return `nut - ${val}`
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
     }

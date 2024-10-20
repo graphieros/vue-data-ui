@@ -1201,7 +1201,8 @@ export function useConfig() {
                         roundingValue: 0,
                         color: COLOR_BLACK,
                         text: 'Grand total',
-                        offsetY: 0
+                        offsetY: 0,
+                        formatter: null,
                     },
                     roots: {
                         stroke: COLOR_WHITE,
@@ -1218,6 +1219,7 @@ export function useConfig() {
                             roundingValue: 0,
                             prefix: '',
                             suffix: '',
+                            formatter: null,
                             name: {
                                 color: COLOR_BLACK,
                                 fontSize: FONT._16,
@@ -1252,7 +1254,8 @@ export function useConfig() {
                                 roundingValue: 0,
                                 roundingPercentage: 0,
                                 prefix: '',
-                                suffix: ''
+                                suffix: '',
+                                formatter: null
                             }
                         }
                     },
@@ -1273,7 +1276,8 @@ export function useConfig() {
                                     fontSize: FONT._12,
                                     bold: true,
                                     prefix: '',
-                                    suffix: ''
+                                    suffix: '',
+                                    formatter: null
                                 },
                                 core: {
                                     total: {

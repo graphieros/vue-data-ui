@@ -1,14 +1,16 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import { 
-    adaptColorToBackground, 
+    adaptColorToBackground,
+    applyDataLabel,
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
     calcNutArrowPath, 
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
-    createUid, 
+    createUid,
+    dataLabel,
     downloadCsv,
     error,
     getMissingDatasetAttributes,
@@ -629,7 +631,16 @@ defineExpose({
                     text-anchor="middle"
                     @click="resetTree"
                 >
-                    {{FINAL_CONFIG.style.chart.layout.grandTotal.prefix}} {{ treeTotal.toFixed(FINAL_CONFIG.style.chart.layout.grandTotal.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.grandTotal.suffix }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.grandTotal.formatter,
+                        treeTotal,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.grandTotal.prefix,
+                            v: treeTotal,
+                            s: FINAL_CONFIG.style.chart.layout.grandTotal.suffix,
+                            r: FINAL_CONFIG.style.chart.layout.grandTotal.roundingValue
+                        })) 
+                    }}
                 </text>
                 
             </g>
@@ -688,7 +699,16 @@ defineExpose({
                     :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
                     @click="pickRoot(root)"
                 >
-                    {{ FINAL_CONFIG.style.chart.layout.roots.labels.prefix }} {{ root.total.toFixed(FINAL_CONFIG.style.chart.layout.roots.labels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.roots.labels.suffix }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
+                        root.total,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.roots.labels.prefix,
+                            v: root.total,
+                            s: FINAL_CONFIG.style.chart.layout.roots.labels.suffix,
+                            r: FINAL_CONFIG.style.chart.layout.roots.labels.roundingValue
+                        })) 
+                    }}
                 </text>
                 <!-- ROOT NAME LABEL -->
                 <g v-for="root in roots"> 
@@ -749,7 +769,16 @@ defineExpose({
                         :style="`cursor:pointer; opacity:${isFocused(branch) ? 1 : 0.05}`"
                         @click="pickBranch(branch)"
                     >
-                        {{ FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix }} {{ branch.value.toFixed(FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix }}
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.formatter,
+                            branch.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix,
+                                v: branch.value,
+                                s: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue
+                            }))
+                        }}
                     </text>
                 </g>
 
@@ -837,7 +866,24 @@ defineExpose({
                             <svg viewBox="0 0 20 20" height="16" width="16">
                                 <circle cx="10" cy="10" r="10" :fill="root.color" stroke="none"/>
                             </svg>
-                            <span>{{ root.name }}:</span> <b>{{ FINAL_CONFIG.style.chart.layout.legend.prefix }} {{ root.total.toFixed(FINAL_CONFIG.style.chart.layout.legend.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.legend.suffix }}</b>({{ (root.total / treeTotal * 100).toFixed(FINAL_CONFIG.style.chart.layout.legend.roundingPercentage) }}%)
+                            <span>{{ root.name }}:</span>
+                            <b>
+                                {{ applyDataLabel(
+                                    FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
+                                    root.total,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.chart.layout.legend.prefix,
+                                        v: root.total,
+                                        s: FINAL_CONFIG.style.chart.layout.legend.suffix,
+                                        r: FINAL_CONFIG.style.chart.layout.legend.roundingValue
+                                    })
+                                ) }}
+                            </b>
+                            ({{ dataLabel({
+                                v: root.total / treeTotal * 100,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.layout.legend.roundingPercentage
+                            }) }})
                         </div>
                     </div>
                 </div>
@@ -945,7 +991,16 @@ defineExpose({
                     @click="leaveNut"
                     :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 >
-                    {{ FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.prefix }} {{ selectedNut.value.toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.suffix }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.formatter,
+                        selectedNut.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.prefix,
+                            v: selectedNut.value,
+                            s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.suffix,
+                            r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
+                        })
+                    ) }}
                 </text>
 
                 <!-- NUT PICK DATALABELS -->
@@ -986,7 +1041,24 @@ defineExpose({
                         :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
                         :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     >
-                        {{ (selectedNut.breakdown[i].value / selectedNut.value * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].branchName }} ({{FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.prefix}} {{ selectedNut.breakdown[i].value }} {{FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.suffix}})
+                        {{ dataLabel({
+                            v: (selectedNut.breakdown[i].value / selectedNut.value * 100),
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
+                        }) }}
+
+                        {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].branchName }}
+
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.formatter,
+                            selectedNut.breakdown[i].value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.prefix,
+                                v: selectedNut.breakdown[i].value,
+                                s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
+                            })
+                        ) }}
                     </text>
                     <text
                         v-if="isArcBigEnough(arc)"
@@ -998,7 +1070,12 @@ defineExpose({
                         :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
                         :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     >
-                        {{ (selectedNut.breakdown[i].proportionToRoot * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].rootName }}
+                        {{ dataLabel({
+                            v: (selectedNut.breakdown[i].proportionToRoot * 100),
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
+                        })}} 
+                        {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].rootName }}
                     </text>
                     <text
                         v-if="isArcBigEnough(arc)"
@@ -1010,7 +1087,11 @@ defineExpose({
                         :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
                         :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     >
-                        {{ (selectedNut.breakdown[i].proportionToTree * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.proportionToTree }}
+                        {{ dataLabel({
+                            v: (selectedNut.breakdown[i].proportionToTree * 100),
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
+                        }) }} {{ FINAL_CONFIG.translations.proportionToTree }}
                     </text>
                 </g>
             </g>
@@ -1027,7 +1108,17 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
                     @click="resetTree"
                 >
-                    {{ branch.name }}: {{ FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix }} {{ branch.value.toFixed(FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix }}
+                    {{ branch.name }}:
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.formatter,
+                        branch.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix,
+                            v: branch.value,
+                            s: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix,
+                            r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue
+                        })
+                    )}}
                 </text>
                 <text 
                     v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
@@ -1038,7 +1129,13 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
                     @click="resetTree"
                 >
-                    {{ (branch.proportionToRoot * 100).toFixed(FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.of }} {{ branch.rootName }}
+                    {{ dataLabel({
+                        v: branch.proportionToRoot * 100,
+                        s: '%',
+                        r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage
+                    })}}
+                    {{ FINAL_CONFIG.translations.of }} 
+                    {{ branch.rootName }}
                 </text>
                 <text 
                     v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
@@ -1049,7 +1146,12 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
                     @click="resetTree"
                 >
-                    {{ (branch.value / treeTotal * 100).toFixed(FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage) }}% {{ FINAL_CONFIG.translations.proportionToTree }}
+                    {{ dataLabel({
+                        v: branch.value / treeTotal * 100,
+                        s: '%',
+                        r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage
+                    }) }}
+                    {{ FINAL_CONFIG.translations.proportionToTree }}
                 </text>
         </g>
         <slot name="svg" :svg="svg"/>
