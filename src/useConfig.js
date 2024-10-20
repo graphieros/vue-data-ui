@@ -1121,7 +1121,8 @@ export function useConfig() {
                         show: true,
                         fontSize: FONT._48,
                         rounding: 1,
-                        bold: true
+                        bold: true,
+                        formatter: null
                     }
                 },
                 title: TITLE

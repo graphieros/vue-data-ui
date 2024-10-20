@@ -942,6 +942,7 @@ declare module 'vue-data-ui' {
                         fontSize?: number;
                         rounding?: number;
                         bold?: boolean;
+                        formatter?: Formatter;
                     };
                 };
                 title?: ChartTitle;
