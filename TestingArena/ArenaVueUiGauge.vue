@@ -98,8 +98,8 @@ const config = computed(() => {
                 ...c.style.chart,
                 legend: {
                     ...c.style.chart.legend,
-                    formatter: (val) => {
-                        return `f - ${val}`
+                    formatter: ({value}) => {
+                        return `f - ${value}`
                     }
                 }
             }
