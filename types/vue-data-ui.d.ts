@@ -719,6 +719,7 @@ declare module 'vue-data-ui' {
                         roundingPercentage?: number;
                         roundingValue?: number;
                         bold?: boolean;
+                        formatter?: Formatter;
                     };
                 };
                 title?: ChartTitle;

@@ -2708,7 +2708,10 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         roundingValue: 0,
                         roundingPercentage: 0,
-                        bold: true
+                        bold: true,
+                        prefix: '',
+                        suffix: '',
+                        formatter: null
                     }
                 },
                 title: TITLE,
