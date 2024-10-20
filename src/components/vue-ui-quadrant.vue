@@ -691,7 +691,8 @@ function useTooltip(category, plot, categoryIndex) {
             dataLabel({
                 v: plot.xValue,
                 r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-            })
+            }),
+            { datapoint: plot, category, categoryIndex }
         )}</b></div>`;  
         html += `<div>${FINAL_CONFIG.value.style.chart.layout.grid.yAxis.name ? FINAL_CONFIG.value.style.chart.layout.grid.yAxis.name : 'y'}: <b>${applyDataLabel(
             FINAL_CONFIG.value.style.chart.layout.labels.plotLabels.y.formatter,
@@ -699,7 +700,8 @@ function useTooltip(category, plot, categoryIndex) {
             dataLabel({
                 v: plot.yValue,
                 r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-            })
+            }),
+            { datapoint: plot, category, categoryIndex }
         )}</b></div>`;  
     
         tooltipContent.value = `<div style="text-align:left;font-size:${FINAL_CONFIG.value.style.chart.tooltip.fontSize}px">${html}</div>`;

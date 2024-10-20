@@ -228,13 +228,13 @@ const config = computed(() => {
                             plotLabels: {
                                 ...c.style.chart.layout.labels.plotLabels,
                                 x: {
-                                    formatter: (val) => {
-                                        return `fX - ${val}`
+                                    formatter: ({value}) => {
+                                        return `fX | ${value}`
                                     }
                                 },
                                 y: {
-                                    formatter: (val) => {
-                                        return `fY - ${val}`
+                                    formatter: ({value}) => {
+                                        return `fY | ${value}`
                                     }
                                 }
                             }
