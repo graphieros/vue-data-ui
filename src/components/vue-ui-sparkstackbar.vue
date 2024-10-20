@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { 
+import {
+    applyDataLabel,
     convertColorToHex, 
     convertCustomPalette, 
     createUid,
@@ -295,12 +296,16 @@ function selectDatapoint(datapoint, index) {
                         v-if="FINAL_CONFIG.style.legend.value.show" 
                         :style="`font-weight:${FINAL_CONFIG.style.legend.value.bold ? 'bold' : 'normal'};color:${FINAL_CONFIG.style.legend.value.color}`"
                     >
-                        ({{ dataLabel({
-                            p: FINAL_CONFIG.style.legend.value.prefix,
-                            v: rect.value,
-                            s: FINAL_CONFIG.style.legend.value.suffix,
-                            r: FINAL_CONFIG.style.legend.value.rounding
-                        }) }})
+                        ({{ applyDataLabel(
+                            FINAL_CONFIG.style.legend.value.formatter,
+                            rect.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.legend.value.prefix,
+                                v: rect.value,
+                                s: FINAL_CONFIG.style.legend.value.suffix,
+                                r: FINAL_CONFIG.style.legend.value.rounding
+                            }))  
+                        }})
                     </span> 
                 </div>
             </div>

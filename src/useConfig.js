@@ -2043,7 +2043,8 @@ export function useConfig() {
                     color: COLOR_BLACK,
                     prefix: '',
                     suffix: '',
-                    rounding: 0
+                    rounding: 0,
+                    formatter: null
                 },
                 percentage: {
                     show: true,
