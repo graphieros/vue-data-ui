@@ -3493,7 +3493,8 @@ export function useConfig() {
                     fontSizeRatio: 1,
                     useSerieColor: true,
                     color: COLOR_BLACK,
-                    offsetY: -12
+                    offsetY: -12,
+                    formatter: null
                 },
                 paddingProportions: {
                     top: 0.1,

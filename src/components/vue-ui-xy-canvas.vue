@@ -7,12 +7,15 @@ import {
     onBeforeUnmount
 } from "vue";
 import {
+    applyDataLabel,
     assignStackRatios,
     calculateNiceScale,
     convertColorToHex,
     convertCustomPalette,
+    createCsvContent,
     createUid,
     dataLabel,
+    downloadCsv,
     error,
     functionReturnsString,
     isFunction,
@@ -21,8 +24,6 @@ import {
     opacity,
     palette,
     themePalettes,
-    downloadCsv,
-    createCsvContent
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import {
@@ -221,12 +222,16 @@ const tootlipDataset = computed(() => {
                     <circle cx="5" cy="5" r="5" fill="${ds.color}"/>
                 </svg>
                 <span>${ds.name ? ds.name + ': ' : ''}</span>
-                <span>${dataLabel({
-            p: ds.prefix || '',
-            v: ds.series[tooltipIndex.value],
-            s: ds.suffix || '',
-            r: ds.rounding || 0
-        })}</span>
+                <span>${ applyDataLabel(
+                    FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                    ds.series[tooltipIndex.value],
+                    dataLabel({
+                        p: ds.prefix || '',
+                        v: ds.series[tooltipIndex.value],
+                        s: ds.suffix || '',
+                        r: ds.rounding || 0
+                    })
+                )}</span>
             </div>
         `
     });
@@ -477,12 +482,16 @@ function setupChart() {
             absoluteExtremes.value.yLabels.forEach(label => {
                 text(
                     ctx.value,
-                    dataLabel({
-                        p: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
-                        v: label.value,
-                        s: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
-                        r: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
-                    }),
+                    applyDataLabel(
+                        FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                        label.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
+                            v: label.value,
+                            s: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
+                            r: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
+                        })
+                    ),
                     label.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
                     label.y,
                     {
@@ -605,12 +614,15 @@ function setupChart() {
                 ds.localYLabels.forEach(entry => {
                     text(
                         ctx.value,
-                        dataLabel({
-                            p: ds.prefix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
-                            v: entry.value,
-                            s: ds.suffix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
-                            r: ds.rounding || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
-                        }),
+                        applyDataLabel(
+                            FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                            entry.value,
+                            dataLabel({
+                                p: ds.prefix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
+                                v: entry.value,
+                                s: ds.suffix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
+                                r: ds.rounding || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
+                            })),
                         entry.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
                         entry.y,
                         {
@@ -691,12 +703,16 @@ function drawDataLabels(ds) {
     for (let i = 0; i < ds.coordinatesLine.length; i += 1) {
         text(
             ctx.value,
-            dataLabel({
-                p: ds.prefix || '',
-                v: ds.coordinatesLine[i].value,
-                s: ds.suffix || '',
-                r: ds.rounding || 0
-            }),
+            applyDataLabel(
+                FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                ds.coordinatesLine[i].value,
+                dataLabel({
+                    p: ds.prefix || '',
+                    v: ds.coordinatesLine[i].value,
+                    s: ds.suffix || '',
+                    r: ds.rounding || 0
+                })
+            ),
             ds.coordinatesLine[i].x,
             ds.coordinatesLine[i].y + FINAL_CONFIG.value.style.chart.dataLabels.offsetY,
             {
@@ -810,12 +826,16 @@ function drawBars() {
                 if ([true, undefined].includes(ds.dataLabels)) {
                     text(
                         ctx.value,
-                        dataLabel({
-                            p: ds.prefix || '',
-                            v: ds.coordinatesLine[k].value,
-                            s: ds.suffix || '',
-                            r: ds.rounding || 0
-                        }),
+                        applyDataLabel(
+                            FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                            ds.coordinatesLine[k].value,
+                            dataLabel({
+                                p: ds.prefix || '',
+                                v: ds.coordinatesLine[k].value,
+                                s: ds.suffix || '',
+                                r: ds.rounding || 0
+                            })
+                        ),
                         drawingArea.value.left +
                                 (drawingArea.value.slot * k) +
                                 (drawingArea.value.slot / 10) +

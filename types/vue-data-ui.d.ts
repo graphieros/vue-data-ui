@@ -4873,6 +4873,7 @@ declare module 'vue-data-ui' {
                     useSerieColor?: boolean;
                     color?: string;
                     offsetY?: number;
+                    formatter?: Formatter;
                 };
                 paddingProportions?: {
                     top?: number;

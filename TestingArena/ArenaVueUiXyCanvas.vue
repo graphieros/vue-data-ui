@@ -187,6 +187,12 @@ const config = computed(() => {
             ...c.style,
             chart: {
                 ...c.style.chart,
+                dataLabels: {
+                    ...c.style.chart.dataLabels,
+                    formatter: (val) => {
+                        return `f | ${val}`
+                    }
+                },
                 // tooltip: {
                 //     ...c.style.chart.tooltip,
                 //     customFormat: ({ datapoint }) => {
