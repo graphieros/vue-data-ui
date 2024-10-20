@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
 import { 
+    applyDataLabel,
     convertColorToHex, 
     convertCustomPalette, 
     createUid,
+    dataLabel,
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
@@ -578,7 +580,16 @@ defineExpose({
                 font-weight="bold"
                 :fill="FINAL_CONFIG.style.chart.legend.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.legend.color"
             >
-                {{ FINAL_CONFIG.style.chart.legend.prefix }} {{ FINAL_CONFIG.style.chart.legend.showPlusSymbol && activeRating > 0 ? '+' : '' }}{{ activeRating.toFixed(FINAL_CONFIG.style.chart.legend.roundingValue) }} {{ FINAL_CONFIG.style.chart.legend.suffix }}
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.chart.legend.formatter,
+                    activeRating,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.chart.legend.prefix + (FINAL_CONFIG.style.chart.legend.showPlusSymbol && activeRating > 0 ? '+' : ''),
+                        v: activeRating,
+                        s: FINAL_CONFIG.style.chart.legend.suffix,
+                        r: FINAL_CONFIG.style.chart.legend.roundingValue
+                    })) 
+                }}
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>

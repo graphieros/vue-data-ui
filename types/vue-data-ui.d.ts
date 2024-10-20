@@ -3057,6 +3057,7 @@ declare module 'vue-data-ui' {
                     showPlusSymbol?: boolean;
                     useRatingColor?: boolean;
                     color?: string;
+                    formatter?: Formatter;
                 };
                 title?: ChartTitle;
             };

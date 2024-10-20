@@ -1071,7 +1071,8 @@ export function useConfig() {
                     roundingValue: 1,
                     showPlusSymbol: true,
                     useRatingColor: true,
-                    color: COLOR_BLACK
+                    color: COLOR_BLACK,
+                    formatter: null
                 },
                 title: TITLE
             }

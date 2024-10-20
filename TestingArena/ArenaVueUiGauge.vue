@@ -21,7 +21,7 @@ const dataset = computed(() => {
 
 onMounted(() => {
     setTimeout(() => {
-        source.value.value = -30
+        source.value.value = 50
         step.value += 1
     }, 3000)
 })
@@ -89,8 +89,21 @@ const themeOptions = ref([
 const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
+    const c = convertArrayToObject(model.value)
     return {
-        ...convertArrayToObject(model.value),
+        ...c,
+        style: {
+            ...c.style,
+            chart: {
+                ...c.style.chart,
+                legend: {
+                    ...c.style.chart.legend,
+                    formatter: (val) => {
+                        return `f - ${val}`
+                    }
+                }
+            }
+        },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
     }
