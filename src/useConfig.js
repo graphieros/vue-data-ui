@@ -2251,6 +2251,7 @@ export function useConfig() {
         donutUseShadow: false,
         donutShadowColor: COLOR_BLACK,
         fontFamily: 'inherit',
+        formatter: null,
         height: 338,
         legendFontSize: FONT._12,
         legendIcon: 'circleFill',

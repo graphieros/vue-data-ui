@@ -4271,6 +4271,7 @@ declare module 'vue-data-ui' {
         donutUseShadow?: boolean;
         donutShadowColor?: string;
         fontFamily?: string;
+        formatter?: Formatter;
         height?: number | null;
         legendFontSize?: number;
         legendIcon?: VueUiIconName;
