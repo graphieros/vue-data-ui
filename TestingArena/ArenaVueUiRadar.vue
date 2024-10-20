@@ -18,12 +18,18 @@ const dataset = ref({
         {
             name: 'Serie 1',
             values: [60, 20, 30],
-            target: 100
+            target: 100,
+            formatter: (val) => {
+                return `f1 - ${val}`
+            }
         },
         {
             name: 'Serie 2',
             values: [20, 80, 40],
-            target: 100
+            target: 100,
+            formatter: (val) => {
+                return `f2 - ${val}`
+            }
         },
         {
             name: 'Serie 3',
