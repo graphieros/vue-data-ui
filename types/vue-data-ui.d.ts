@@ -645,6 +645,7 @@ declare module 'vue-data-ui' {
                     color?: string;
                     fontSize?: number;
                     rounding?: number;
+                    formatter?: Formatter;
                 };
             };
         };

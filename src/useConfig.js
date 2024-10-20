@@ -3220,7 +3220,8 @@ export function useConfig() {
                     bold: true,
                     color: COLOR_BLUE,
                     fontSize: FONT._12,
-                    rounding: 1
+                    rounding: 1,
+                    formatter: null
                 }
             }
         },
