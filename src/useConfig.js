@@ -1466,7 +1466,8 @@ export function useConfig() {
                                 show: true,
                                 roundingValue: 0,
                                 prefix: '',
-                                suffix: ''
+                                suffix: '',
+                                formatter: null
                             },
                             percentage: {
                                 show: true,

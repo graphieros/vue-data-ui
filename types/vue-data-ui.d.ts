@@ -3435,6 +3435,7 @@ declare module 'vue-data-ui' {
                                 roundingValue?: number;
                                 prefix?: string;
                                 suffix?: string;
+                                formatter?: Formatter;
                             };
                             percentage?: {
                                 show?: boolean;

@@ -189,6 +189,27 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            style: {
+                ...c.style,
+                chart: {
+                    ...c.style.chart,
+                    layout: {
+                        ...c.style.chart.layout,
+                        bars: {
+                            ...c.style.chart.layout.bars,
+                            dataLabels: {
+                                ...c.style.chart.layout.bars.dataLabels,
+                                value: {
+                                    ...c.style.chart.layout.bars.dataLabels.value,
+                                    formatter: (val) => {
+                                        return `f - ${val}`
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             theme: currentTheme.value,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }

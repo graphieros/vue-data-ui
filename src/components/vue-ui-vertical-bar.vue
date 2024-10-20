@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import {
+    applyDataLabel,
     convertColorToHex,
     createCsvContent,
     createUid,
@@ -306,7 +307,11 @@ const total = computed(() => {
 
 function calcProportionToTotal(val, formatted = false, rounding = 0) {
     if(formatted) {
-        return (val / total.value * 100).toFixed(rounding) + '%';
+        return dataLabel({
+            v: val / total.value * 100,
+            s: '%',
+            r: rounding
+        });
     }
     return val / total.value;
 }
@@ -395,16 +400,32 @@ function useTooltip(bar, seriesIndex) {
             </div>`;
         
         if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-            html += `<div>${FINAL_CONFIG.value.translations.value}: <b>${FINAL_CONFIG.value.style.chart.tooltip.prefix}${[undefined, NaN, null].includes(bar.value) ? '-' : bar.value.toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingValue)}${FINAL_CONFIG.value.style.chart.tooltip.suffix}</b></div>`;
+            html += `<div>${FINAL_CONFIG.value.translations.value}: <b>${applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.formatter,
+                bar.value,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.tooltip.prefix,
+                    v: bar.value,
+                    s: FINAL_CONFIG.value.style.chart.tooltip.suffix,
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                })
+            )}</b></div>`;
         }    
     
         if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
-            html += `<div>${FINAL_CONFIG.value.translations.percentageToTotal} : <b>${isNaN(bar.value / total.value) ? '-' : `${(bar.value / total.value * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+            html += `<div>${FINAL_CONFIG.value.translations.percentageToTotal} : <b>${dataLabel({
+                v: bar.value / total.value * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+            })}</b></div>`;
             if(bar.isChild) {
-                html += `<div>${FINAL_CONFIG.value.translations.percentageToSerie}: <b>${isNaN(bar.value / bar.parentValue) ? '-' : `${(bar.value / bar.parentValue * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}`}%</b></div>`;
+                html += `<div>${FINAL_CONFIG.value.translations.percentageToSerie}: <b>${dataLabel({
+                    v: bar.value / bar.parentValue * 100,
+                    s: '%',
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+                })}</b></div>`;
             }
         }
-    
         tooltipContent.value = `<div style="text-align:left">${html}</div>`;
     }
 }
@@ -413,12 +434,16 @@ function makeDataLabel(value) {
     if (isNaN(value) || !FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.show) {
         return '';
     }
-    const label = dataLabel({
-        p: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.prefix,
-        v: value,
-        s: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.suffix,
-        r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue
-    });
+    const label = applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.formatter,
+        value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.prefix,
+            v: value,
+            s: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.suffix,
+            r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue
+        })
+    );
 
     const percentage = `(${calcProportionToTotal(value, true, FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)})`;
 
@@ -603,7 +628,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-         <!-- LEGEND AS DIV : TOP -->
+        <!-- LEGEND AS DIV : TOP -->
         <div ref="chartLegend"  v-if="FINAL_CONFIG.style.chart.legend.show && FINAL_CONFIG.style.chart.legend.position === 'top'">
             <Legend
                 :legendSet="immutableDataset"
@@ -612,7 +637,17 @@ defineExpose({
             >
                 <template #item="{ legend }">
                     <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{FINAL_CONFIG.style.chart.legend.prefix}}{{ legend.value.toFixed(FINAL_CONFIG.style.chart.legend.roundingValue) }}{{FINAL_CONFIG.style.chart.legend.suffix}}
+                        {{ legend.name }}: 
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.bars.dataLabels.value.formatter,
+                            legend.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.legend.prefix,
+                                v: legend.value,
+                                s: FINAL_CONFIG.style.chart.legend.suffix,
+                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                            })
+                        ) }}
                     </div>
                 </template>
             </Legend>
@@ -756,7 +791,7 @@ defineExpose({
             }"
         />
 
-         <!-- LEGEND AS DIV : BOTTOM -->
+        <!-- LEGEND AS DIV : BOTTOM -->
         <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show && FINAL_CONFIG.style.chart.legend.position === 'bottom'">
             <Legend
                 :legendSet="immutableDataset"
@@ -765,7 +800,17 @@ defineExpose({
             >
                 <template #item="{ legend }">
                     <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }} : {{FINAL_CONFIG.style.chart.legend.prefix}}{{ legend.value.toFixed(FINAL_CONFIG.style.chart.legend.roundingValue) }}{{FINAL_CONFIG.style.chart.legend.suffix}}
+                        {{ legend.name }}: 
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.bars.dataLabels.value.formatter,
+                            legend.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.legend.prefix,
+                                v: legend.value,
+                                s: FINAL_CONFIG.style.chart.legend.suffix,
+                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                            })
+                        ) }}
                     </div>
                 </template>
             </Legend>
