@@ -5,7 +5,9 @@ import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import { 
+applyDataLabel,
     createUid,
+    dataLabel,
     error,
     objectIsEmpty, 
     shiftHue,
@@ -206,8 +208,8 @@ const ticks = computed(() => {
     return arr;
 });
 
-const dataLabel = computed(() => {
-    let x,y,textAnchor,fontSize;
+const tireLabel = computed(() => {
+    let x,y,textAnchor;
     const fontSizeOffset = FINAL_CONFIG.value.style.chart.percentage.fontSize / 3;
 
     if(isVertical.value) {
@@ -330,14 +332,22 @@ defineExpose({
             </g>
             <text
                 v-if="FINAL_CONFIG.style.chart.percentage.show"
-                :x="dataLabel.x"
-                :y="dataLabel.y"
-                :font-size="dataLabel.fontSize"
+                :x="tireLabel.x"
+                :y="tireLabel.y"
+                :font-size="tireLabel.fontSize"
                 :fill="FINAL_CONFIG.style.chart.layout.ticks.gradient.show && FINAL_CONFIG.style.chart.percentage.useGradientColor ? shiftHue(FINAL_CONFIG.style.chart.layout.activeColor, activeValue / 100 * (FINAL_CONFIG.style.chart.layout.ticks.gradient.shiftHueIntensity / 100)) : FINAL_CONFIG.style.chart.percentage.color"
-                :font-weight="dataLabel.bold ? 'bold': 'normal'"
-                :text-anchor="dataLabel.textAnchor"
+                :font-weight="tireLabel.bold ? 'bold': 'normal'"
+                :text-anchor="tireLabel.textAnchor"
             >
-                {{ activeValue.toFixed(FINAL_CONFIG.style.chart.percentage.rounding) + '%' }}
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.chart.percentage.formatter,
+                    activeValue,
+                    dataLabel({
+                        v: activeValue,
+                        s: '%',
+                        r: FINAL_CONFIG.style.chart.percentage.rounding
+                    }))
+                }}
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>

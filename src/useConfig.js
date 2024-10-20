@@ -1170,7 +1170,8 @@ export function useConfig() {
                     bold: true,
                     rounding: 1,
                     verticalPosition: POSITION.BOTTOM,
-                    horizontalPosition: POSITION.LEFT
+                    horizontalPosition: POSITION.LEFT,
+                    formatter: null
                 },
                 title: TITLE
             }

@@ -892,6 +892,7 @@ declare module 'vue-data-ui' {
                     rounding?: 1;
                     verticalPosition?: "bottom" | "top";
                     horizontalPosition?: "left" | "right";
+                    formatter?: Formatter;
                 };
                 title?: ChartTitle;
             };
