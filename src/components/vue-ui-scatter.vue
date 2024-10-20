@@ -1,8 +1,12 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { 
+import {
+    applyDataLabel,
+    convertCustomPalette,
     createCsvContent, 
-    createUid, 
+    createSmoothPath,
+    createUid,
+    dataLabel,
     downloadCsv,
     error,
     functionReturnsString,
@@ -12,11 +16,8 @@ import {
     objectIsEmpty,
     opacity, 
     palette,
-    createSmoothPath,
     themePalettes,
     XMLNS,
-dataLabel,
-convertCustomPalette
 } from '../lib';
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
@@ -431,19 +432,27 @@ function useTooltip(plot, seriesIndex) {
     
         html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}">`;
 
-        html += `<div>${FINAL_CONFIG.value.style.layout.dataLabels.xAxis.name}: <b>${isNaN(plot.v.x) ? '-' : dataLabel({
-            p: FINAL_CONFIG.value.style.tooltip.prefix,
-            v: plot.v.x,
-            s: FINAL_CONFIG.value.style.tooltip.suffix,
-            r: FINAL_CONFIG.value.style.tooltip.roundingValue
-        })}</b></div>`;
+        html += `<div>${FINAL_CONFIG.value.style.layout.dataLabels.xAxis.name}: <b>${isNaN(plot.v.x) ? '-' : applyDataLabel(
+            FINAL_CONFIG.value.style.layout.plots.selectors.labels.x.formatter,
+            plot.v.x,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.tooltip.prefix,
+                v: plot.v.x,
+                s: FINAL_CONFIG.value.style.tooltip.suffix,
+                r: FINAL_CONFIG.value.style.tooltip.roundingValue
+            })
+        )}</b></div>`;
 
-        html += `<div>${FINAL_CONFIG.value.style.layout.dataLabels.yAxis.name}: <b>${isNaN(plot.v.y) ? '-' :  dataLabel({
-            p: FINAL_CONFIG.value.style.tooltip.prefix,
-            v: plot.v.y,
-            s: FINAL_CONFIG.value.style.tooltip.suffix,
-            r: FINAL_CONFIG.value.style.tooltip.roundingValue
-        })}</b></div>`;
+        html += `<div>${FINAL_CONFIG.value.style.layout.dataLabels.yAxis.name}: <b>${isNaN(plot.v.y) ? '-' :  applyDataLabel(
+            FINAL_CONFIG.value.style.layout.plots.selectors.labels.y.formatter,
+            plot.v.y,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.tooltip.prefix,
+                v: plot.v.y,
+                s: FINAL_CONFIG.value.style.tooltip.suffix,
+                r: FINAL_CONFIG.value.style.tooltip.roundingValue
+            })
+        )}</b></div>`;
         
         html += `${FINAL_CONFIG.value.style.layout.plots.deviation.translation}: <b>${dataLabel({
             v: plot.deviation,
@@ -818,12 +827,16 @@ defineExpose({
                     :font-weight="FINAL_CONFIG.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
                     :text-anchor="selectedPlot.x > zero.x ? 'end' : 'start'"
                 >
-                    {{ dataLabel({
-                        p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                        v: selectedPlot.v.y,
-                        s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
-                        r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
-                    }) }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
+                        selectedPlot.v.y,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
+                            v: selectedPlot.v.y,
+                            s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                            r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
+                        })
+                    ) }}
                 </text>
                 <text
                     :x="selectedPlot.x"
@@ -833,12 +846,16 @@ defineExpose({
                     :font-weight="FINAL_CONFIG.style.layout.plots.selectors.labels.bold ? 'bold' : 'normal'"
                     :text-anchor="'middle'"
                 >
-                    {{ dataLabel({
-                        p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                        v: selectedPlot.v.x,
-                        s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
-                        r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
-                    }) }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
+                        selectedPlot.v.x,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
+                            v: selectedPlot.v.x,
+                            s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                            r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
+                        })
+                    ) }}
                 </text>
                 <circle
                     :cx="zero.x"
@@ -881,7 +898,16 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
                     :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
                 >
-                    {{ Number(extremes.xMin.toFixed(FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding)).toLocaleString() }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.plots.selectors.labels.x.formatter,
+                        extremes.xMin,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
+                            v: extremes.xMin,
+                            s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                            r: FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding
+                        })) 
+                    }}
                 </text>
                 <text
                     data-cy="scatter-x-max-axis-label"
@@ -891,7 +917,16 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
                     :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
                 >
-                    {{ Number(extremes.xMax.toFixed(FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding)).toLocaleString() }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.plots.selectors.labels.x.formatter,
+                        extremes.xMax,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
+                            v: extremes.xMax,
+                            s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                            r: FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding
+                        })) 
+                    }}
                 </text>
                 <text
                     data-cy="scatter-x-label-name"
@@ -915,7 +950,16 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
                     :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
                 >
-                    {{ Number(extremes.yMin.toFixed(FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding)).toLocaleString() }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
+                        extremes.yMin,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
+                            v: extremes.yMin,
+                            s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                            r: FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding
+                        })) 
+                    }}
                 </text>
                 <text
                     data-cy="scatter-y-max-axis-label"
@@ -925,7 +969,16 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
                     :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
                 >
-                    {{ Number(extremes.yMax.toFixed(FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding)).toLocaleString() }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
+                        extremes.yMax,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
+                            v: extremes.yMax,
+                            s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                            r: FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding
+                        })) 
+                    }}
                 </text>
                 <text
                     data-cy="scatter-y-label-name"

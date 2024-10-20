@@ -1699,7 +1699,13 @@ export function useConfig() {
                             bold: false,
                             showName: true,
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
+                            x: {
+                                formatter: null
+                            },
+                            y: {
+                                formatter: null
+                            }
                         },
                         markers: {
                             radius: 1.5,

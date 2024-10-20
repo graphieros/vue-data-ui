@@ -1812,6 +1812,12 @@ declare module 'vue-data-ui' {
                             showName?: boolean;
                             prefix?: string;
                             suffix?: string;
+                            x?: {
+                                formatter?: Formatter;
+                            };
+                            y?: {
+                                formatter?: Formatter;
+                            };
                         };
                         markers?: {
                             radius?: number;
