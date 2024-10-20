@@ -1564,7 +1564,8 @@ export function useConfig() {
                         fontSize: FONT._18,
                         bold: false,
                         roundingValue: 0,
-                        color: COLOR_BLACK
+                        color: COLOR_BLACK,
+                        formatter: null
                     },
                     colors: {
                         hot: COLOR_RED,

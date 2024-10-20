@@ -1956,6 +1956,7 @@ declare module 'vue-data-ui' {
                         bold?: boolean;
                         roundingValue?: number;
                         color?: string;
+                        formatter?: Formatter;
                     };
                     colors?: {
                         hot?: string;
