@@ -108,7 +108,10 @@ declare module 'vue-data-ui' {
     export type TooltipPosition = TextAlign;
     export type FontVariantNumeric = "normal" | "slashed-zero" | "tabular-nums" | "oldstyle-nums";
 
-    export type Formatter = (value: number) => string | number;
+    export type FormatterParams = {
+        value: number;
+    }
+    export type Formatter = (params : FormatterParams) => string | number;
 
     export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar = any, TLine = any, TPlot = any> = {
         seriesIndex?: number;

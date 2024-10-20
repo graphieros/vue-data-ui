@@ -263,8 +263,9 @@ const config = computed(() => {
                 ...c.line,
                 labels: {
                     ...c.line.labels,
-                    formatter: (val) => {
-                        return `f - ${val}`
+                    formatter: ({value, config}) => {
+                        console.log(config)
+                        return `f - ${value}`
                     }
                 }
             },
@@ -272,8 +273,8 @@ const config = computed(() => {
                 ...c.plot,
                 labels: {
                     ...c.plot.labels,
-                    formatter: (val) => {
-                        return `f - ${val}`
+                    formatter: ({value, config}) => {
+                        return `f - ${value}`
                     }
                 }
             },
@@ -281,8 +282,8 @@ const config = computed(() => {
                 ...c.bar,
                 labels: {
                     ...c.bar.labels,
-                    formatter: (val) => {
-                        return `f - ${val}`
+                    formatter: ({value, config}) => {
+                        return `f - ${value}`
                     }
                 }
             },
@@ -294,8 +295,8 @@ const config = computed(() => {
                         ...c.chart.grid.labels,
                         yAxis: {
                             ...c.chart.grid.labels.yAxis,
-                            formatter: (val) => {
-                                return `f - ${val}`
+                            formatter: ({value}) => {
+                                return `f - ${value}`
                             }
                         },
                         xAxisLabels: {

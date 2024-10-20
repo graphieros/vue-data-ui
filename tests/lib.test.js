@@ -1659,126 +1659,152 @@ describe('sumSeries', () => {
 })
 
 describe('checkFormatter', () => {
-    const num = 12;
-    const expected = `expected${num}`
-    const testFunc = (num) => {
-        return `expected${num}`
-    }
+    const params = { value: 12, config: { key: 'configValue' } };
+    const expected = `expected${params.value}`;
+    
+    const testFunc = ({ value }) => {
+        return `expected${value}`;
+    };
 
     const failingFunc = () => {
-        throw new Error('ERROR')
-    }
+        throw new Error('ERROR');
+    };
 
     const functionFunc = () => {
         return () => {
-            return 1
-        }
-    }
+            return 1;
+        };
+    };
 
     const functionObject = () => {
         return {
             a: 1,
-        }
-    }
+        };
+    };
 
     const functionBool = () => {
-        return false
-    }
+        return false;
+    };
 
     test('returns the callback content', () => {
-        expect(checkFormatter(testFunc, num)).toStrictEqual({
+        expect(checkFormatter(testFunc, params)).toStrictEqual({
             isValid: true,
             value: expected
-        })
-    })
+        });
+    });
 
     test('returns proper values when the callback throws', () => {
-        expect(checkFormatter(failingFunc, num)).toStrictEqual({
+        expect(checkFormatter(failingFunc, params)).toStrictEqual({
             isValid: false,
-            value: num
-        })
-    })
+            value: params.value
+        });
+    });
 
     test('returns proper values when the callback returns a function', () => {
-        expect(checkFormatter(functionFunc, num)).toStrictEqual({
+        expect(checkFormatter(functionFunc, params)).toStrictEqual({
             isValid: false,
-            value: num
-        })
-    })
-    
+            value: params.value
+        });
+    });
+
     test('returns proper values when the callback returns an object', () => {
-        expect(checkFormatter(functionObject, num)).toStrictEqual({
+        expect(checkFormatter(functionObject, params)).toStrictEqual({
             isValid: false,
-            value: num
-        })
-    })
-    
+            value: params.value
+        });
+    });
+
     test('returns proper values when the callback returns a boolean', () => {
-        expect(checkFormatter(functionBool, num)).toStrictEqual({
+        expect(checkFormatter(functionBool, params)).toStrictEqual({
             isValid: false,
-            value: num
-        })
-    })
-})
+            value: params.value
+        });
+    });
+
+    test('handles config object in params but doesn\'t use it', () => {
+        const configTestFunc = ({ value }) => `formatted ${value}`;
+        expect(checkFormatter(configTestFunc, { value: 15, config: { key: 'unused' } }))
+            .toStrictEqual({
+                isValid: true,
+                value: 'formatted 15'
+            });
+    });
+});
 
 describe('applyDataLabel', () => {
-    const num = 12;
-    const expected = `expected${num}`
-    const testFunc = (num) => {
-        return `expected${num}`
-    }
+    const params = { value: 12, config: { key: 'configValue' } };
+    const expected = `expected${params.value}`;
+    
+    const testFunc = ({ value }) => {
+        return `expected${value}`;
+    };
 
     const failingFunc = () => {
-        throw new Error('ERROR')
-    }
+        throw new Error('ERROR');
+    };
 
     const functionFunc = () => {
         return () => {
-            return 1
-        }
-    }
+            return 1;
+        };
+    };
 
     const functionObject = () => {
         return {
             a: 1,
-        }
-    }
+        };
+    };
 
     const functionBool = () => {
-        return false
-    }
+        return false;
+    };
 
     const fallback = "fallback";
 
     test('returns the output of the callback', () => {
         expect(applyDataLabel(
             testFunc,
-            num,
-            fallback
-        )).toStrictEqual(expected)
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(expected);
 
         expect(applyDataLabel(
             failingFunc,
-            num,
-            fallback
-        )).toStrictEqual(fallback)
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(fallback);
 
         expect(applyDataLabel(
             functionFunc,
-            num,
-            fallback
-        )).toStrictEqual(fallback)
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(fallback);
 
         expect(applyDataLabel(
             functionObject,
-            num,
-            fallback
-        )).toStrictEqual(fallback)
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(fallback);
 
         expect(applyDataLabel(
             functionBool,
-            num,
-            fallback
-        )).toStrictEqual(fallback)
-    })
-})
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(fallback);
+    });
+
+    test('handles custom config in applyDataLabel', () => {
+        const configFunc = ({ value, config }) => `${config.prefix}${value}${config.suffix}`;
+        expect(applyDataLabel(
+            configFunc,
+            params.value,
+            fallback,
+            { prefix: 'p-', suffix: '-s' }
+        )).toStrictEqual('p-12-s');
+    });
+});

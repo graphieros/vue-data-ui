@@ -489,7 +489,12 @@
                                         v: plot.value, 
                                         s: FINAL_CONFIG.chart.labels.suffix, 
                                         r: FINAL_CONFIG.bar.labels.rounding,
-                                    })) : '' 
+                                    }),
+                                    { 
+                                        datapoint: plot,
+                                        serie,
+                                    }
+                                    ) : '' 
                                 }}
                             </text>
                             <text 
@@ -528,7 +533,12 @@
                                         v: plot.value, 
                                         s: FINAL_CONFIG.chart.labels.suffix, 
                                         r: FINAL_CONFIG.plot.labels.rounding,
-                                    })) : '' 
+                                    }),
+                                    { 
+                                        datapoint: plot,
+                                        serie,
+                                    }
+                                    ) : '' 
                                 }}
                             </text>
                             <foreignObject
@@ -582,7 +592,12 @@
                                         v: plot.value, 
                                         s: FINAL_CONFIG.chart.labels.suffix, 
                                         r: FINAL_CONFIG.line.labels.rounding,
-                                    })) : '' 
+                                    }),
+                                    { 
+                                        datapoint: plot,
+                                        serie,
+                                    }
+                                    ) : '' 
                                 }}
                             </text>
                             <foreignObject
@@ -1994,7 +2009,8 @@ export default {
                                         v: s.value, 
                                         s: this.FINAL_CONFIG.chart.labels.suffix, 
                                         r: this.FINAL_CONFIG.chart.tooltip.roundingValue,
-                                    })
+                                    }),
+                                    { datapoint: s }
                                 ) : ''}</b> ${this.FINAL_CONFIG.chart.tooltip.showPercentage ? `(${dataLabel({
                                     v: this.checkNaN(Math.abs(s.value) / sum * 100),
                                     s: '%',

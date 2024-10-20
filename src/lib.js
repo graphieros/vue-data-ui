@@ -1086,8 +1086,8 @@ export function interpolateColorHex(minColor, maxColor, minValue, maxValue, valu
  * @type {DataLabel}
  */
 export function dataLabel({ p = '', v, s = '', r = 0, space = false, isAnimating = false, regex = /[^%]/g, replacement = '-', locale = null }) {
-    const num = locale ? 
-        Number(Number(v).toFixed(r)).toLocaleString(locale) : 
+    const num = locale ?
+        Number(Number(v).toFixed(r)).toLocaleString(locale) :
         Number(Number(v).toFixed(r)).toLocaleString();
     const numStr = num === Infinity ? '∞' : num === -Infinity ? '-∞' : num;
     const result = `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
@@ -1698,41 +1698,34 @@ export function sumSeries(source) {
     }, []);
 }
 
-/**
- * Checks if a custom format function is valid and applies it to a number.
- *
- * @param {Function} func - The custom function to apply to the number.
- * @param {number|string} num - The number or string to format.
- * @returns {{isValid: boolean, value: number|string}} An object containing:
- * - isValid: `true` if the function was applied successfully, otherwise `false`.
- * - value: The formatted value if the function is valid, otherwise the original number.
- */
-export function checkFormatter(func, num) {
+export function checkFormatter(func, { value, config }) {
     let isValid = false;
-    let value = num;
-    if (isFunction(func)) {
+    let formattedValue = value;
+    
+    if (typeof func === 'function') {
         try {
-            value = func(num);
-            if (['number', 'string'].includes(typeof value)) {
+            // Ensure that the function is called with an object containing `value` and `config`
+            formattedValue = func({ value, config });
+
+            if (['number', 'string'].includes(typeof formattedValue)) {
                 isValid = true;
             } else {
-                value = num;
+                formattedValue = value;
             }
-        }
-        catch (err) {
-            console.warn('Formatter could not be applied');
+        } catch (err) {
+            console.warn('Formatter could not be applied:', err);
             isValid = false;
         }
     }
 
     return {
         isValid,
-        value
-    }
+        value: formattedValue
+    };
 }
 
-export function applyDataLabel(func, data, fallbackValue) {
-    const { isValid, value } = checkFormatter(func, data);
+export function applyDataLabel(func, data, fallbackValue, config) {
+    const { isValid, value } = checkFormatter(func, { value: data, config });
     return isValid ? value : fallbackValue;
 }
 
