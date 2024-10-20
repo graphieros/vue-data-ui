@@ -2524,6 +2524,7 @@ declare module 'vue-data-ui' {
                             donutNameAbbreviation?: boolean;
                             donutNameOffsetY?: number;
                             donutNameMaxAbbreviationSize?: number;
+                            formatter?: Formatter;
                         };
                     };
                     donut?: {

@@ -2832,7 +2832,8 @@ export function useConfig() {
                             boldDonutName: true,
                             donutNameAbbreviation: true,
                             donutNameMaxAbbreviationSize: 3,
-                            donutNameOffsetY: 0
+                            donutNameOffsetY: 0,
+                            formatter: null
                         }
                     },
                     donut: {
