@@ -2096,7 +2096,8 @@ export function useConfig() {
                     rounding: 1,
                     prefix: '',
                     suffix: '',
-                    offsetY: 0
+                    offsetY: 0,
+                    formatter: null
                 },
                 valueLabel: {
                     fontSize: FONT._14,

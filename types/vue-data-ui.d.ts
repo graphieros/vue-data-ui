@@ -1079,6 +1079,7 @@ declare module 'vue-data-ui' {
                     prefix?: string;
                     suffix?: string;
                     offsetY?: number;
+                    formatter?: Formatter;
                 };
                 valueLabel?: {
                     fontSize?: number;
