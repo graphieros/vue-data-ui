@@ -3003,6 +3003,7 @@ export function useConfig() {
                 labels: {
                     prefix: '',
                     suffix: '',
+                    formatter: null,
                     bestPlotLabel: {
                         show: true,
                         showValue: true,

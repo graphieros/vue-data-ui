@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { 
-    XMLNS,
+import {
+    applyDataLabel,
     calculateNiceScale,
     convertColorToHex,
     convertCustomPalette,
@@ -18,7 +18,8 @@ import {
     objectIsEmpty,
     palette,
     themePalettes,
-translateSize
+    translateSize,
+    XMLNS,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
@@ -317,12 +318,16 @@ function useTooltip({ datapoint, seriesIndex }) {
         let html = "";
 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#${datapoint.parentId})` : datapoint.color}"/></svg>${datapoint.name}</div>`;
-        html += `<div>${dataLabel({
-            p: FINAL_CONFIG.value.style.chart.labels.prefix,
-            v: datapoint.value,
-            s: FINAL_CONFIG.value.style.chart.labels.suffix,
-            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-        })}</div>`
+        html += `<div>${applyDataLabel(
+            FINAL_CONFIG.value.style.chart.labels.formatter,
+            datapoint.value,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.chart.labels.prefix,
+                v: datapoint.value,
+                s: FINAL_CONFIG.value.style.chart.labels.suffix,
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+            })
+        )}</div>`
 
         tooltipContent.value = `<div>${html}</div>`
     }
@@ -573,12 +578,16 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize"
                     text-anchor="end"
                 >
-                    {{  dataLabel({
-                        p: FINAL_CONFIG.style.chart.labels.prefix,
-                        v: label.value,
-                        s: FINAL_CONFIG.style.chart.labels.suffix,
-                        r: FINAL_CONFIG.style.chart.labels.yAxisLabels.rounding
-                    })  }}
+                    {{  applyDataLabel(
+                        FINAL_CONFIG.style.chart.labels.formatter,
+                        label.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.labels.prefix,
+                            v: label.value,
+                            s: FINAL_CONFIG.style.chart.labels.suffix,
+                            r: FINAL_CONFIG.style.chart.labels.yAxisLabels.rounding
+                        }))
+                    }}
                 </text>
             </template>
 
@@ -682,12 +691,16 @@ defineExpose({
                             text-anchor="middle"
                             :style="`opacity:${FINAL_CONFIG.useCssAnimation ? animationActive ? 0 : 1 : 1};transition:opacity 0.2s ease-in;`"
                         >
-                            {{ plot.name }} {{ FINAL_CONFIG.style.chart.labels.bestPlotLabel.showValue ? dataLabel({
-                                p: `(${FINAL_CONFIG.style.chart.labels.prefix}`,
-                                v: plot.value,
-                                s: `${FINAL_CONFIG.style.chart.labels.suffix})`,
-                                r: FINAL_CONFIG.style.chart.labels.bestPlotLabel.rounding
-                            }) : '' }}
+                            {{ plot.name }} {{ FINAL_CONFIG.style.chart.labels.bestPlotLabel.showValue ? applyDataLabel(
+                                FINAL_CONFIG.style.chart.labels.formatter,
+                                plot.value,
+                                dataLabel({
+                                    p: `(${FINAL_CONFIG.style.chart.labels.prefix}`,
+                                    v: plot.value,
+                                    s: `${FINAL_CONFIG.style.chart.labels.suffix})`,
+                                    r: FINAL_CONFIG.style.chart.labels.bestPlotLabel.rounding
+                                })
+                            ) : '' }}
                         </text>
                     </template>
                 </g>

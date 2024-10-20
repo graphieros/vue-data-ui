@@ -4506,6 +4506,7 @@ declare module 'vue-data-ui' {
                 labels?: {
                     prefix?: string;
                     suffix?: string;
+                    formatter?: Formatter;
                     bestPlotLabel?: {
                         show?: boolean;
                         showValue?: boolean;
