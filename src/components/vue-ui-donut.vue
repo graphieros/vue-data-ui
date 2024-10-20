@@ -414,7 +414,12 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
                     v: datapoint.value, 
                     s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-                })
+                }),
+                {
+                    datapoint,
+                    relativeIndex,
+                    seriesIndex,
+                }
             )}</b>`;
         }
 
@@ -426,7 +431,12 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
                     v: datapoint.proportion * 100,
                     s: '%',
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
-                })
+                }),
+                {
+                    datapoint,
+                    relativeIndex,
+                    seriesIndex,
+                }
             );
 
             if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
@@ -862,7 +872,9 @@ defineExpose({
                                 p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
                                 v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                                 r: FINAL_CONFIG.style.chart.layout.labels.value.rounding
-                            }))})` : '' }}
+                            }),
+                            { datapoint: arc }
+                            )})` : '' }}
                     </text>
                     <text
                         :data-cy="`donut-datalabel-name-${i}`"
@@ -933,7 +945,12 @@ defineExpose({
                                 v: legend.value, 
                                 s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                                 r: FINAL_CONFIG.style.chart.legend.roundingValue
-                            }))
+                            }),
+                            {
+                                datapoint: legend,
+                                index
+                            }
+                            )
                         }}
                         <span v-if="!segregated.includes(index)" style="font-variant-numeric: tabular-nums;">
                             ({{ isNaN(legend.value / total) ? '-' : applyDataLabel(

@@ -202,8 +202,8 @@ const config = computed(() => {
                                     ...c.style.chart.layout.labels.hollow.total,
                                     value: {
                                         ...c.style.chart.layout.labels.hollow.total.value,
-                                        formatter: (val) => {
-                                            return `f  - ${val}`
+                                        formatter: ({value}) => {
+                                            return `f  - ${value}`
                                         }
                                     }
                                 },
@@ -211,27 +211,28 @@ const config = computed(() => {
                                     ...c.style.chart.layout.labels.hollow.average,
                                     value: {
                                         ...c.style.chart.layout.labels.hollow.average.value,
-                                        formatter: (val) => {
-                                            return `f  - ${val}`
+                                        formatter: ({value}) => {
+                                            return `f  - ${value}`
                                         }
                                     }
                                 },
                             },
                             value: {
                                 ...c.style.chart.layout.labels.value,
-                                formatter: (val) => {
-                                    return `f  - ${val}`
+                                formatter: ({value, config}) => {
+
+                                    return `f  - ${value}`
                                 }
                             },
                             percentage: {
-                                formatter: (val) => {
-                                    return `f - ${val}`
+                                formatter: ({value}) => {
+                                    return `f - ${value}`
                                 }
                             },
                             dataLabels: {
                                 ...c.style.chart.layout.labels.dataLabels,
-                                formatter: (val) => {
-                                    return `f - ${val}`
+                                formatter: ({value}) => {
+                                    return `f - ${value}`
                                 }
                             }
                         }
