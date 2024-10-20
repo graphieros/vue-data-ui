@@ -3310,6 +3310,7 @@ declare module 'vue-data-ui' {
                         offsetX?: number;
                         value?: {
                             show?: boolean;
+                            formatter?: Formatter;
                         };
                         percentage?: {
                             show?: boolean;

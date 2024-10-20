@@ -1387,7 +1387,8 @@ export function useConfig() {
                         offsetX: 0,
                         offsetY: 0,
                         value: {
-                            show: true
+                            show: true,
+                            formatter: null
                         },
                         percentage: {
                             show: true
