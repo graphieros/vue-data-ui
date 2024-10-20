@@ -978,6 +978,7 @@ declare module 'vue-data-ui' {
                         dataLabels?: {
                             prefix?: string;
                             suffix?: string;
+                            formatter?: Formatter;
                         };
                     };
                     rings?: {

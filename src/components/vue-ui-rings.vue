@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, nextTick, onMounted, onBeforeUnmount } from "vue";
 import {
+  applyDataLabel,
   convertColorToHex,
   convertCustomPalette,
   createCsvContent,
@@ -308,25 +309,35 @@ function useTooltip(index, datapoint) {
   
     html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="waffle-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${selected.color}" /></svg>`;
     if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-      html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r:FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
+      html += `<b data-cy="waffle-tooltip-value">${applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+        selected.value,
+        dataLabel({
+          p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+          v: selected.value, 
+          s:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+          r:FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+        })
+      )}
+      </b>`;
     }
     if (FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
       if (!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-        html += `<b>${((selected.value / grandTotal.value) * 100).toFixed(
-          FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
-        )}%</b></div>`;
+        html += `<b>${dataLabel({
+          v: (selected.value / grandTotal.value) * 100,
+          s: '%',
+          r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+        })}</b></div>`;
       } else {
-        html += `<span data-cy="waffle-tooltip-percentage">(${(
-          (selected.value / grandTotal.value) *
-          100
-        ).toFixed(
-          FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
-        )}%)</span></div>`;
+        html += `<span data-cy="waffle-tooltip-percentage">(${dataLabel({
+          v: (selected.value / grandTotal.value) * 100,
+          s: '%',
+          r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+        })})</span></div>`;
       }
     }
     tooltipContent.value = html;
   }
-  
   isTooltip.value = true;
 }
 
@@ -613,9 +624,23 @@ defineExpose({
       >
         <template #item="{legend}">
             <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                {{ legend.name }}: {{ dataLabel({p:FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r:FINAL_CONFIG.style.chart.legend.roundingValue}) }}
+                {{ legend.name }}: {{ applyDataLabel(
+                  FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                  legend.value,
+                  dataLabel({
+                    p:FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                    v: legend.value, 
+                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                    r:FINAL_CONFIG.style.chart.legend.roundingValue
+                  }))
+                }}
                 <span v-if="!segregated.includes(legend.uid)">
-                    ({{ isNaN(legend.value / grandTotal) ? '-' : (legend.value / grandTotal * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}}%)
+                  ({{ isNaN(legend.value / grandTotal) ? '-' : dataLabel({
+                    v: legend.value / grandTotal * 100,
+                    s: '%',
+                    r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                  })
+                  }})
                 </span>
                 <span v-else>
                     ( - % )
