@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import {
+    applyDataLabel,
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
@@ -243,14 +244,31 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="galaxy-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
         if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-            html += `<b data-cy="galaxy-tooltip-value">${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
+            html += `<b data-cy="galaxy-tooltip-value">${ applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                datapoint.value,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+                    v: datapoint.value, 
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                })
+            )}</b>`;
         }
 
         if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
             if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-                html += `<b>${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+                html += `<b>${dataLabel({
+                    v: datapoint.proportion * 100,
+                    s: '%',
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+                })}</b></div>`;
             } else {
-                html += `<span>(${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+                html += `<span>(${dataLabel({
+                    v: datapoint.proportion * 100,
+                    s: '%',
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+                })})</span></div>`;
             }
         }
 
@@ -322,7 +340,11 @@ const dataTable = computed(() => {
                 name: h.name
             },
             label,
-            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
+            isNaN(table.value.body[i] / total.value) ? "-" : dataLabel({
+                v: table.value.body[i] / total.value * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage
+            })
         ]
     });
 
@@ -526,9 +548,22 @@ defineExpose({
         >
             <template #item="{ legend, index }">
                 <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }}: {{ dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue}) }}
+                    {{ legend.name }}: {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                        legend.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                            v: legend.value, 
+                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                            r: FINAL_CONFIG.style.chart.legend.roundingValue
+                        }))
+                    }}
                     <span v-if="!segregated.includes(legend.id)">
-                        ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}}%)
+                        ({{ isNaN(legend.value / total) ? '-' : dataLabel({
+                            v: legend.value / total * 100,
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                        })}})
                     </span>
                     <span v-else>
                         ( - % )

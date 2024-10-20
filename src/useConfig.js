@@ -2905,7 +2905,8 @@ export function useConfig() {
                     labels: {
                         dataLabels: {
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
+                            formatter: null
                         }
                     }
                 },
