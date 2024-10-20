@@ -4413,6 +4413,7 @@ declare module 'vue-data-ui' {
                 prefix?: string;
                 suffix?: string;
                 rounding?: number;
+                formatter?: Formatter;
             };
             trendLabel?: {
                 trendType?: "global" | "n-1" | "lastToFirst",

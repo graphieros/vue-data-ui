@@ -2202,7 +2202,8 @@ export function useConfig() {
                 bold: false,
                 prefix: '',
                 suffix: '',
-                rounding: 0
+                rounding: 0,
+                formatter: null
             },
             trendLabel: {
                 trendType: 'global',
