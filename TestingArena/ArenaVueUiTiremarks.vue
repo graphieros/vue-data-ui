@@ -73,8 +73,8 @@ const config = computed(() => {
                 ...c.style.chart,
                 percentage: {
                     ...c.style.chart.percentage,
-                    formatter: (val) => {
-                        return `f - ${val}`
+                    formatter: ({value}) => {
+                        return `f - ${value}`
                     }
                 }
             }

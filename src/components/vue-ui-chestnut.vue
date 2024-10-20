@@ -707,7 +707,9 @@ defineExpose({
                             v: root.total,
                             s: FINAL_CONFIG.style.chart.layout.roots.labels.suffix,
                             r: FINAL_CONFIG.style.chart.layout.roots.labels.roundingValue
-                        })) 
+                        }),
+                        { datapoint: root }
+                        ) 
                     }}
                 </text>
                 <!-- ROOT NAME LABEL -->
@@ -777,7 +779,9 @@ defineExpose({
                                 v: branch.value,
                                 s: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix,
                                 r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue
-                            }))
+                            }),
+                            { datapoint: branch }
+                            )
                         }}
                     </text>
                 </g>
@@ -876,7 +880,8 @@ defineExpose({
                                         v: root.total,
                                         s: FINAL_CONFIG.style.chart.layout.legend.suffix,
                                         r: FINAL_CONFIG.style.chart.layout.legend.roundingValue
-                                    })
+                                    }),
+                                    { datapoint: root }
                                 ) }}
                             </b>
                             ({{ dataLabel({
@@ -999,7 +1004,8 @@ defineExpose({
                             v: selectedNut.value,
                             s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.suffix,
                             r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
-                        })
+                        }),
+                        { datapoint: selectedNut }
                     ) }}
                 </text>
 
@@ -1057,7 +1063,8 @@ defineExpose({
                                 v: selectedNut.breakdown[i].value,
                                 s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.suffix,
                                 r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
-                            })
+                            }),
+                            { datapoint: openNut, seriesIndex: i }
                         ) }}
                     </text>
                     <text
@@ -1117,7 +1124,8 @@ defineExpose({
                             v: branch.value,
                             s: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix,
                             r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue
-                        })
+                        }),
+                        { datapoint: branch }
                     )}}
                 </text>
                 <text 

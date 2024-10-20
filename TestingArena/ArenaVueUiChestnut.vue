@@ -333,16 +333,17 @@ const config = computed(() => {
                     ...c.style.chart.layout,
                     grandTotal: {
                         ...c.style.chart.layout.grandTotal,
-                        formatter: (val) => {
-                            return `tot - ${val}`
+                        formatter: ({value}) => {
+                            return `tot - ${value}`
                         }
                     },
                     roots: {
                         ...c.style.chart.layout.roots,
                         labels: {
                             ...c.style.chart.layout.roots.labels,
-                            formatter: (val) => {
-                                return `root - ${val}`
+                            formatter: ({value, config }) => {
+                                // console.log({config})
+                                return `root - ${value}`
                             }
                         }
                     },
@@ -352,8 +353,8 @@ const config = computed(() => {
                             ...c.style.chart.layout.branches.labels,
                             dataLabels: {
                                 ...c.style.chart.layout.branches.labels.dataLabels,
-                                formatter: (val) => {
-                                    return `branch - ${val}`
+                                formatter: ({value}) => {
+                                    return `branch - ${value}`
                                 }
                             }
                         }
@@ -366,8 +367,8 @@ const config = computed(() => {
                                 ...c.style.chart.layout.nuts.selected.labels,
                                 dataLabels: {
                                     ...c.style.chart.layout.nuts.selected.labels.dataLabels,
-                                    formatter: (val) => {
-                                        return `nut - ${val}`
+                                    formatter: ({value}) => {
+                                        return `nut - ${value}`
                                     }
                                 }
                             }
