@@ -1249,6 +1249,7 @@ declare module 'vue-data-ui' {
                     bold?: boolean;
                     prefix?: string;
                     suffix?: string;
+                    formatter?: Formatter;
                 };
             };
             title?: ChartTitle;

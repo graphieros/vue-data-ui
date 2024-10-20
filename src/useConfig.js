@@ -2493,7 +2493,8 @@ export function useConfig() {
                     bold: true,
                     color: COLOR_BLACK,
                     prefix: '',
-                    suffix: ''
+                    suffix: '',
+                    formatter: null
                 }
             },
             title: TITLE,
