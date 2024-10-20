@@ -130,6 +130,24 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            style: {
+                ...c.style,
+                chart: {
+                    ...c.style.chart,
+                    layout: {
+                        ...c.style.chart.layout,
+                        labels: {
+                            ...c.style.chart.layout.labels,
+                            dataLabels: {
+                                ...c.style.chart.layout.labels.dataLabels,
+                                formatter: (val) => {
+                                    return `f - ${val}`
+                                }
+                            }
+                        }
+                    }
+                }  
+            },
             theme: currentTheme.value,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }
