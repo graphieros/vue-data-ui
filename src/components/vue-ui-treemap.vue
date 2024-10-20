@@ -376,7 +376,9 @@ function useTooltip({ datapoint, seriesIndex }) {
                 v: datapoint.value, 
                 s: FINAL_CONFIG.value.style.chart.layout.labels.suffix, 
                 r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-            }))}</b>`;
+            }),
+            { datapoint, seriesIndex }
+            )}</b>`;
 
         tooltipContent.value = `<div>${html}</div>`;
     }
@@ -620,7 +622,9 @@ defineExpose({
                                         v: rect.value,
                                         s: FINAL_CONFIG.style.chart.layout.labels.suffix,
                                         r: FINAL_CONFIG.style.chart.layout.labels.rounding
-                                    }))  
+                                    }),
+                                    { datapoint: rect }
+                                    )
                                 }}
                             </span>
                         </div>
@@ -675,7 +679,9 @@ defineExpose({
                                 v: legend.value, 
                                 s: FINAL_CONFIG.style.chart.layout.labels.suffix, 
                                 r: FINAL_CONFIG.style.chart.legend.roundingValue
-                            })) 
+                            }),
+                            { datapoint: legend }
+                            ) 
                         }}
                         <span v-if="!segregated.includes(legend.id)">
                             ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}}%)
