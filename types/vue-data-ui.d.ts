@@ -458,6 +458,7 @@ declare module 'vue-data-ui' {
         showSparklines?: boolean;
         fontFamily?: string;
         colNames?: string[];
+        formatter?: Formatter;
         sparkline?: {
             useGradient?: boolean;
             showArea?: boolean;

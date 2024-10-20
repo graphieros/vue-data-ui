@@ -3261,6 +3261,7 @@ export function useConfig() {
         roundingTotal: 0,
         prefix: '',
         suffix: '',
+        formatter: null,
         showSparklines: true,
         fontFamily: 'inherit',
         colNames: [],
