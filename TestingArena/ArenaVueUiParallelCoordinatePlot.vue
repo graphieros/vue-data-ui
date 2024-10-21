@@ -153,7 +153,21 @@ const config = computed(() => {
                         ...c.style.chart.yAxis.labels,
                         roundings: [0, 0, 0, 1],
                         suffixes: ['$', '€', '£', '%'],
-                        axisNames: ['Axis 1', 'Axis 2', 'Axis 3', '']
+                        axisNames: ['Axis 1', 'Axis 2', 'Axis 3', ''],
+                        formatters: [
+                            ({value, config}) => {
+                                return `f0 | ${value}`
+                            },
+                            ({value, config}) => {
+                                return `f1 | ${value}`
+                            },
+                            ({value, config}) => {
+                                return `f2 | ${value}`
+                            },
+                            ({value, config}) => {
+                                return `f3 | ${value}`
+                            },
+                        ]
                     }
                 }
             }

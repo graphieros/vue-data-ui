@@ -3624,6 +3624,7 @@ export function useConfig() {
                         roundings: [],
                         prefixes: [],
                         suffixes: [],
+                        formatters: [],
                         ticks: {
                             show: true,
                             fontSize: FONT._14,

@@ -347,13 +347,18 @@ const mutableDataset = computed(() => {
 });
 
 
-function makeDataLabel({ value, index }) {
-    return dataLabel({
-        p: FINAL_CONFIG.value.style.chart.yAxis.labels.prefixes[index] || '',
-        v: value,
-        s: FINAL_CONFIG.value.style.chart.yAxis.labels.suffixes[index] || '',
-        r: FINAL_CONFIG.value.style.chart.yAxis.labels.roundings[index] || 0
-    });
+function makeDataLabel({ value, index, datapoint }) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.yAxis.labels.formatters[index] || null,
+        value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.yAxis.labels.prefixes[index] || '',
+            v: value,
+            s: FINAL_CONFIG.value.style.chart.yAxis.labels.suffixes[index] || '',
+            r: FINAL_CONFIG.value.style.chart.yAxis.labels.roundings[index] || 0
+        }),
+        { datapoint, seriesIndex: index }
+    )
 }
 
 const selectedItem = ref(null);
@@ -390,12 +395,17 @@ function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex }) {
                 <div class="vue-ui-tooltip-item" style="text-align:left">
                     <span>${s}: </span>
                     <span>
-                        ${dataLabel({
-                            p: FINAL_CONFIG.value.style.chart.yAxis.labels.prefixes[i] || '',
-                            v: serie.datapoints[i].value,
-                            s: FINAL_CONFIG.value.style.chart.yAxis.labels.suffixes[i] || '',
-                            r: FINAL_CONFIG.value.style.chart.yAxis.labels.roundings[i] || '',
-                        })}    
+                        ${applyDataLabel(
+                            FINAL_CONFIG.value.style.chart.yAxis.labels.formatters[i] || null,
+                            serie.datapoints[i].value,
+                            dataLabel({
+                                p: FINAL_CONFIG.value.style.chart.yAxis.labels.prefixes[i] || '',
+                                v: serie.datapoints[i].value,
+                                s: FINAL_CONFIG.value.style.chart.yAxis.labels.suffixes[i] || '',
+                                r: FINAL_CONFIG.value.style.chart.yAxis.labels.roundings[i] || '',
+                            }),
+                            { datapoint: serie.datapoints[i], seriesIndex: i }
+                        )}    
                     </span>
                 </div>
             `;
@@ -624,7 +634,7 @@ defineExpose({
                         :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.ticks.bold ? 'bold' : 'normal'"
                         :style="`opacity:${selectedItem && !mutableConfig.showTooltip ? 0.2 : 1}`"
                     >
-                        {{ makeDataLabel({ value: tick.value, index: i }) }}
+                        {{ makeDataLabel({ value: tick.value, index: i, datapoint: tick }) }}
                     </text>
                 </template>
             </g>
@@ -699,7 +709,7 @@ defineExpose({
                             @mouseleave="selectedItem = null; isTooltip = false;"
                             :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? 1 : 0.2 : 1}`"
                         >
-                            {{ makeDataLabel({ value: dp.value, index: k }) }}
+                            {{ makeDataLabel({ value: dp.value, index: k, datapoint: dp }) }}
                         </text>
                     </template>
 

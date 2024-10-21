@@ -5038,6 +5038,7 @@ declare module 'vue-data-ui' {
                         roundings?: number[];
                         prefixes?: string[];
                         suffixes?: string[];
+                        formatters?: Formatter[];
                         ticks?: {
                             show?: boolean;
                             fontSize?: number;
