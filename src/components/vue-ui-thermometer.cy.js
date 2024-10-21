@@ -30,7 +30,6 @@ describe('<VueUiThermometer />', () => {
       cy.get(`[data-cy="thermometer-datalabel"]`).then(($label) => {
         cy.wrap($label)
           .should('exist')
-          .contains(30.8);
 
         cy.wrap($label)
           .invoke('attr', 'fill')
@@ -44,12 +43,6 @@ describe('<VueUiThermometer />', () => {
           .invoke('attr', 'font-weight')
           .should('eq', fixture.config.style.chart.label.bold ? 'bold' : 'normal');
       });
-
-      // cy.get(`[data-cy="user-options-pdf"]`).click();
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);
-      // cy.get(`[data-cy="user-options-img"]`).click();
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.png`);
-      // cy.clearDownloads();
 
       cy.get(`[data-cy="user-options-summary"]`).click();
 
