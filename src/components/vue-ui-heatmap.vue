@@ -263,7 +263,8 @@ function useTooltip(datapoint, seriesIndex, x, y) {
                 v: value, 
                 s: FINAL_CONFIG.value.style.layout.dataLabels.suffix, 
                 r:FINAL_CONFIG.value.style.tooltip.roundingValue 
-            })
+            }),
+            { datapoint, seriesIndex }
         )}</span></div>`
         tooltipContent.value = `<div style="font-size:${FINAL_CONFIG.value.style.tooltip.fontSize}px">${html}</div>`;
     }
@@ -439,7 +440,9 @@ defineExpose({
                                 v: cell.value,
                                 s: FINAL_CONFIG.style.layout.dataLabels.suffix,
                                 r: FINAL_CONFIG.style.layout.cells.value.roundingValue
-                            })) 
+                            }),
+                            { datapoint: cell }
+                        )
                         }}
                     </text>
                 </g>

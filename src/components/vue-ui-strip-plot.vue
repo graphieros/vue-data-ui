@@ -326,7 +326,8 @@ function useTooltip({ datapoint, seriesIndex }) {
                 v: datapoint.value,
                 s: FINAL_CONFIG.value.style.chart.labels.suffix,
                 r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-            })
+            }),
+            { datapoint, seriesIndex }
         )}</div>`
 
         tooltipContent.value = `<div>${html}</div>`
@@ -571,7 +572,7 @@ defineExpose({
             <!-- Y AXIS VALUE LABELS -->
             <template v-if="FINAL_CONFIG.style.chart.labels.yAxisLabels.show">
                 <text
-                    v-for="label in yLines"
+                    v-for="(label, i) in yLines"
                     :x="label.x1 - FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 2 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX"
                     :y="label.y + FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3"
                     :fill="FINAL_CONFIG.style.chart.labels.yAxisLabels.color"
@@ -586,7 +587,9 @@ defineExpose({
                             v: label.value,
                             s: FINAL_CONFIG.style.chart.labels.suffix,
                             r: FINAL_CONFIG.style.chart.labels.yAxisLabels.rounding
-                        }))
+                        }),
+                        { datapoint: label, seriesIndex: i }
+                        )
                     }}
                 </text>
             </template>
@@ -699,7 +702,8 @@ defineExpose({
                                     v: plot.value,
                                     s: `${FINAL_CONFIG.style.chart.labels.suffix})`,
                                     r: FINAL_CONFIG.style.chart.labels.bestPlotLabel.rounding
-                                })
+                                }),
+                                { datapoint: plot, seriesIndex: i }
                             ) : '' }}
                         </text>
                     </template>

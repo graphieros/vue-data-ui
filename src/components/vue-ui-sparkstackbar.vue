@@ -304,7 +304,9 @@ function selectDatapoint(datapoint, index) {
                                 v: rect.value,
                                 s: FINAL_CONFIG.style.legend.value.suffix,
                                 r: FINAL_CONFIG.style.legend.value.rounding
-                            }))  
+                            }),
+                            { datapoint: rect, seriesIndex: i}
+                            )  
                         }})
                     </span> 
                 </div>

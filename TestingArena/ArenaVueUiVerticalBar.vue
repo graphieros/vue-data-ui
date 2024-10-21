@@ -201,8 +201,9 @@ const config = computed(() => {
                                 ...c.style.chart.layout.bars.dataLabels,
                                 value: {
                                     ...c.style.chart.layout.bars.dataLabels.value,
-                                    formatter: (val) => {
-                                        return `f - ${val}`
+                                    formatter: ({value, config}) => {
+                                        // console.log(config)
+                                        return `f - ${value}`
                                     }
                                 }
                             }

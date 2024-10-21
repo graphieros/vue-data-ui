@@ -78,8 +78,9 @@ const config = computed(() => {
                 ...c.style.legend,
                 value: {
                     ...c.style.legend.value,
-                    formatter: (val) => {
-                        return `f - ${val}`
+                    formatter: ({value, config }) => {
+                        console.log(config)
+                        return `f - ${value}`
                     }
                 }
             }

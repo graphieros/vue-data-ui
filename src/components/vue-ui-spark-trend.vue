@@ -328,7 +328,9 @@ const straightLine = computed(() => {
                         v: mutableDataset.at(-1).value,
                         s: FINAL_CONFIG.style.dataLabel.suffix,
                         r: FINAL_CONFIG.style.dataLabel.rounding
-                    })) 
+                    }),
+                    { datapoint: mutableDataset.at(-1)}
+                    ) 
                 }}
             </text>
         </svg>

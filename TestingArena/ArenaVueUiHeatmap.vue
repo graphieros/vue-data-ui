@@ -146,8 +146,9 @@ const config = computed(() => {
                         ...c.style.layout.cells,
                         value: {
                             ...c.style.layout.cells.value,
-                            formatter: (val) => {
-                                return `f - ${val}`
+                            formatter: ({value, config}) => {
+                                console.log(config)
+                                return `f - ${value}`
                             }
                         }
                     },

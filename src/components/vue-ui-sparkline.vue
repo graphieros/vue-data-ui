@@ -406,11 +406,11 @@ function selectDatapoint(datapoint, index) {
             {{ selectedPlot ? applyDataLabel(
                     FINAL_CONFIG.style.dataLabel.formatter,
                     selectedPlot.absoluteValue,
-                    dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: selectedPlot.absoluteValue, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue })
+                    dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: selectedPlot.absoluteValue, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }), { datapoint: selectedPlot }
                 ) : applyDataLabel(
                     FINAL_CONFIG.style.dataLabel.formatter,
                     dataLabel,
-                    dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: dataLabel, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue })
+                    dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: dataLabel, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }),
                 ) 
             }}
             </text>

@@ -98,8 +98,9 @@ const config = computed(() => {
                     ...c.style.chart.layout,
                     dataLabel: {
                         ...c.style.chart.layout.dataLabel,
-                        formatter: (val) => {
-                            return `f | ${val}`
+                        formatter: ({value, config }) => {
+                            // console.log(config)
+                            return `f | ${value}`
                         }
                     }
                 }

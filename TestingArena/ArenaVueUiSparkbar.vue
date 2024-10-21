@@ -13,8 +13,9 @@ const dataset = ref([
         suffix: "%",
         prefix: 'P',
         target: 1000,
-        formatter: (val) => {
-            return `f1 - ${val}`
+        formatter: ({value, config}) => {
+            // console.log(config)
+            return `f1 - ${value}`
         }
     },
     {
@@ -24,8 +25,8 @@ const dataset = ref([
         suffix: "%",
         prefix: 'P',
         target: 2.3,
-        formatter: (val) => {
-            return `f2 - ${val}`
+        formatter: ({value}) => {
+            return `f2 - ${value}`
         }
     },
     {
@@ -43,8 +44,8 @@ function addDatapoint() {
         value: Math.random() * 100,
         rounding: 0,
         target: 100,
-        formatter: (val) => {
-            return `f - ${val}`
+        formatter: ({value}) => {
+            return `f - ${value}`
         }
     })
 }

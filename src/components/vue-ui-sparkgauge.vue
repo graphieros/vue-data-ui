@@ -219,7 +219,9 @@ const trackColor = computed(() => {
                     v: currentScore, 
                     s: FINAL_CONFIG.style.dataLabel.suffix, 
                     r: FINAL_CONFIG.style.dataLabel.rounding 
-                })) 
+                }),
+                { datapoint: currentScore, color: labelColor }
+                )
             }}
         </text>
     </svg>

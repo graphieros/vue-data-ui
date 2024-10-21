@@ -410,7 +410,9 @@ defineExpose({
                                     v: Number(tr.values[j]),
                                     s: FINAL_CONFIG.suffix,
                                     r: FINAL_CONFIG.roundingValues
-                                }))
+                                }),
+                                { datapoint: tr, seriesIndex: i, datapointIndex: j }
+                                )
                             }}
                         </td>
                         <td dir="auto" role="cell" v-if="FINAL_CONFIG.showTotal" :style="{
@@ -427,7 +429,9 @@ defineExpose({
                                     v: tr.sum,
                                     s: FINAL_CONFIG.suffix,
                                     r: FINAL_CONFIG.roundingTotal,
-                                }))
+                                }),
+                                { datapoint: tr.sum, seriesIndex: i }
+                                )
                             }}
                         </td>
                         <td dir="auto" role="cell" v-if="FINAL_CONFIG.showAverage" :style="{
@@ -444,7 +448,9 @@ defineExpose({
                                     v: tr.average,
                                     s: FINAL_CONFIG.suffix,
                                     r: FINAL_CONFIG.roundingAverage,
-                                })) 
+                                }),
+                                { datapoint: tr.average, seriesIndex: i }
+                                ) 
                             }}
                         </td>
                         <td dir="auto" role="cell" v-if="FINAL_CONFIG.showMedian" :style="{
@@ -461,7 +467,8 @@ defineExpose({
                                     v: tr.median,
                                     s: FINAL_CONFIG.suffix,
                                     r: FINAL_CONFIG.roundingMedian,
-                                })
+                                }),
+                                { datapoint: tr.median, seriesIndex: i }
                             )}}
                         </td>
                         <td role="cell" v-if="FINAL_CONFIG.showSparklines" :data-cell="FINAL_CONFIG.translations.chart" :style="{

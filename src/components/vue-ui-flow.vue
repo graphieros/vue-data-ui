@@ -573,7 +573,9 @@ defineExpose({
                         v: node.value,
                         s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
                         r: FINAL_CONFIG.style.chart.nodes.labels.rounding
-                    }))
+                    }),
+                    { datapoint: node, seriesIndex: i }
+                    )
                 }}
             </text>
 

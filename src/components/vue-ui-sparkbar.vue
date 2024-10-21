@@ -270,7 +270,8 @@ function selectDatapoint(datapoint, index) {
                             v: bar.value,
                             s: bar.suffix || '',
                             r: bar.rounding || 0
-                        })
+                        }),
+                        { datapoint: bar, seriesIndex: i }
                     ),
                     targetLabel: applyDataLabel(
                         bar.formatter,
@@ -280,7 +281,9 @@ function selectDatapoint(datapoint, index) {
                             v: getTarget(bar),
                             s: bar.suffix || '',
                             r: bar.rounding || 0
-                        }))
+                        }),
+                        { datapoint: bar, seriesIndex: i }
+                    ),
                 }}"/>
 
                 <!-- DEFAULT DATALABEL -->
@@ -307,7 +310,9 @@ function selectDatapoint(datapoint, index) {
                             v: bar.value,
                             s: bar.suffix || '',
                             r: bar.rounding || 0
-                        })) 
+                        }),
+                        { datapoint: bar, seriesIndex: i }
+                        ) 
                     }}
                     </span>
                     <span
@@ -323,7 +328,9 @@ function selectDatapoint(datapoint, index) {
                                 v: getTarget(bar),
                                 s: bar.suffix || '',
                                 r: bar.rounding || 0
-                            }))
+                            }),
+                            { datapoint: bar, seriesIndex: i }
+                            )
                         }}
                     </span>
                 </div>

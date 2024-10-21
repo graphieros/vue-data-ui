@@ -93,8 +93,9 @@ const currentTheme = ref(themeOptions.value[2])
 const config = computed(() => {
     return {
         ...convertArrayToObject(model.value),
-        formatter: (val) => {
-            return `f | ${val}`
+        formatter: ({value, config }) => {
+            // console.log(config)
+            return `f | ${value}`
         },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],

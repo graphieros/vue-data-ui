@@ -349,6 +349,7 @@ function getParentData(serie, index) {
     const parent = mutableDataset.value.find(el => el.id === serie.parentId);
     const start = drawableArea.value.top + ((barGap.value + barHeight.value) * (index));
     const height = parent.children.length * (barGap.value + barHeight.value);
+
     return {
         y: start + (height / 2) - (FINAL_CONFIG.value.style.chart.layout.bars.parentLabels.fontSize),
         name: parent.name,
@@ -408,7 +409,8 @@ function useTooltip(bar, seriesIndex) {
                     v: bar.value,
                     s: FINAL_CONFIG.value.style.chart.tooltip.suffix,
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-                })
+                }),
+                { datapoint: bar, seriesIndex }
             )}</b></div>`;
         }    
     
@@ -430,8 +432,8 @@ function useTooltip(bar, seriesIndex) {
     }
 }
 
-function makeDataLabel(value) {
-    if (isNaN(value) || !FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.show) {
+function makeDataLabel(value, datapoint, seriesIndex) {
+    if (!FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.show) {
         return '';
     }
     const label = applyDataLabel(
@@ -442,7 +444,8 @@ function makeDataLabel(value) {
             v: value,
             s: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.suffix,
             r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue
-        })
+        }),
+        { datapoint, seriesIndex }
     );
 
     const percentage = `(${calcProportionToTotal(value, true, FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)})`;
@@ -635,7 +638,7 @@ defineExpose({
                 :config="legendConfig"
                 @clickMarker="({ legend }) => segregate(legend.id)"
             >
-                <template #item="{ legend }">
+                <template #item="{ legend, index }">
                     <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                         {{ legend.name }}: 
                         {{ applyDataLabel(
@@ -646,7 +649,8 @@ defineExpose({
                                 v: legend.value,
                                 s: FINAL_CONFIG.style.chart.legend.suffix,
                                 r: FINAL_CONFIG.style.chart.legend.roundingValue
-                            })
+                            }),
+                            { datapoint: legend, seriesIndex: index }
                         ) }}
                     </div>
                 </template>
@@ -715,7 +719,7 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.layout.bars.dataLabels.color"
                     :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                 >
-                    {{ makeDataLabel(serie.value) }}
+                    {{ makeDataLabel(serie.value, serie, i) }}
                 </text>
 
                 <!-- CHILDREN | LONELY PARENTS NAMES -->
@@ -752,7 +756,7 @@ defineExpose({
                     :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                     text-anchor="start"
                 >
-                    {{ makeDataLabel(getParentData(serie, i).value) }}
+                    {{ makeDataLabel(getParentData(serie, i).value), getParentData(serie, i), i }}
                 </text>
 
                 <!-- TOOLTIP TRAPS -->
@@ -798,7 +802,7 @@ defineExpose({
                 :config="legendConfig"
                 @clickMarker="({ legend }) => segregate(legend.id)"
             >
-                <template #item="{ legend }">
+                <template #item="{ legend, index }">
                     <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                         {{ legend.name }}: 
                         {{ applyDataLabel(
@@ -809,7 +813,8 @@ defineExpose({
                                 v: legend.value,
                                 s: FINAL_CONFIG.style.chart.legend.suffix,
                                 r: FINAL_CONFIG.style.chart.legend.roundingValue
-                            })
+                            }),
+                            { datapoint: legend, seriesIndex: index }
                         ) }}
                     </div>
                 </template>

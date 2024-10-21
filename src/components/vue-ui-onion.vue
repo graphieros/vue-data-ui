@@ -411,7 +411,8 @@ function useTooltip({ datapoint, seriesIndex, show = true }) {
                 v: datapoint.value, 
                 s: datapoint.suffix || '', 
                 r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue 
-            })
+            }),
+            { datapoint, seriesIndex }
         ) : ''}${showPercentage && showValue ? ')' : ''}</div>`
 
         tooltipContent.value = `<div>${html}</div>`
@@ -623,7 +624,8 @@ defineExpose({
                                 v: onion.value || 0,
                                 s: onion.suffix || '',
                                 r: FINAL_CONFIG.style.chart.layout.labels.roundingValue
-                            })
+                            }),
+                            { datapoint: onion, seriesIndex: i }
                         )}` : `${FINAL_CONFIG.style.chart.layout.labels.value.show ? onion.value ? `(${applyDataLabel(
                             FINAL_CONFIG.style.chart.layout.labels.value.formatter,
                             onion.value,
@@ -632,7 +634,8 @@ defineExpose({
                                 v: onion.value || 0,
                                 s: onion.suffix || '',
                                 r: FINAL_CONFIG.style.chart.layout.labels.roundingValue
-                            })
+                            }),
+                            { datapoint: onion, seriesIndex: i }
                         )})` : '' : ''}` }}
                     </text>
                 </g>

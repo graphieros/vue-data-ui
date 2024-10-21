@@ -252,7 +252,8 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
                     v: datapoint.value, 
                     s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-                })
+                }),
+                { datapoint, seriesIndex }
             )}</b>`;
         }
 
@@ -556,7 +557,9 @@ defineExpose({
                             v: legend.value, 
                             s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                             r: FINAL_CONFIG.style.chart.legend.roundingValue
-                        }))
+                        }),
+                        { datapoint: legend, seriesIndex: index }
+                        )
                     }}
                     <span v-if="!segregated.includes(legend.id)">
                         ({{ isNaN(legend.value / total) ? '-' : dataLabel({

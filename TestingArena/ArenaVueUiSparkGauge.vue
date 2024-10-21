@@ -67,8 +67,9 @@ const config = computed(() => {
             ...c.style,
             dataLabel: {
                 ...c.style.dataLabel,
-                formatter: (val) => {
-                    return `f - ${val}`
+                formatter: ({value, config}) => {
+                    // console.log(config)
+                    return `f - ${value}`
                 }
             }
         },

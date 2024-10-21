@@ -161,8 +161,9 @@ const config = computed(() => {
                 ...c.style.labels,
                 value: {
                     ...c.style.labels.value,
-                    formatter: (val) => {
-                        return `f - ${val}`
+                    formatter: ({value, config}) => {
+                        console.log(config)
+                        return `f - ${value}`
                     }
                 }
             }

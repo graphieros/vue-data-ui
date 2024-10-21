@@ -134,8 +134,9 @@ const config = computed(() => {
                 ...c.style.chart,
                 labels: {
                     ...c.style.chart.labels,
-                    formatter: (val) => {
-                        return `f | ${val}`
+                    formatter: ({value, config}) => {
+                        // console.log(config)
+                        return `f | ${value}`
                     }
                 }
             }

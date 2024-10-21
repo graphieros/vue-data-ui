@@ -142,8 +142,9 @@ const config = computed(() => {
                 ...c.style.chart,
                 dataLabel: {
                     ...c.style.chart.dataLabel,
-                    formatter: (val) => {
-                        return `f | ${val}`
+                    formatter: ({value, config}) => {
+                        // console.log(config)
+                        return `f | ${value}`
                     }
                 }
             }

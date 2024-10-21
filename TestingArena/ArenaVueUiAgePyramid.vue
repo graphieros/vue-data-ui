@@ -135,14 +135,15 @@ const config = computed(() => {
                         ...c.style.layout.dataLabels,
                         xAxis: {
                             ...c.style.layout.dataLabels.xAxis,
-                            formatter: (val) => {
-                                return `X | ${val}`
+                            formatter: ({value, config}) => {
+                                console.log(config)
+                                return `X | ${value}`
                             }
                         },
                         yAxis: {
                             ...c.style.layout.dataLabels.yAxis,
-                            formatter: (val) => {
-                                return `Y | ${val}`
+                            formatter: ({value}) => {
+                                return `Y | ${value}`
                             }
                         },
                     }

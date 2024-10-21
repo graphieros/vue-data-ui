@@ -657,7 +657,9 @@ defineExpose({
                                         v: bar.value, 
                                         s: FINAL_CONFIG.style.chart.legend.suffix, 
                                         r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                    }))
+                                    }),
+                                    { datapoint: bar, seriesIndex: i }
+                                    )
                                 }})
                             </div>
                             <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
@@ -718,7 +720,8 @@ defineExpose({
                                                 v: arc.value, 
                                                 s: FINAL_CONFIG.style.chart.legend.suffix, 
                                                 r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                            })
+                                            }),
+                                            { datapoint: arc, seriesIndex: i }
                                         )}})
                                     </text>
                                     <text
@@ -796,7 +799,8 @@ defineExpose({
                                         v: bar.value, 
                                         s: FINAL_CONFIG.style.chart.legend.suffix, 
                                         r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                    })
+                                    }),
+                                    { datapoint: bar, seriesIndex: i }
                                 )}})
                             </div>
                             <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
@@ -857,7 +861,8 @@ defineExpose({
                                                 v: arc.value, 
                                                 s: FINAL_CONFIG.style.chart.legend.suffix, 
                                                 r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                            })
+                                            }),
+                                            { datapoint: arc, seriesIndex: i }
                                         )}})
                                     </text>
                                     <text

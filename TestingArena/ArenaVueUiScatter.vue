@@ -223,13 +223,15 @@ const config = computed(() => {
                             labels: {
                                 ...c.style.layout.plots.selectors.labels,
                                 x: {
-                                    formatter: (val) => {
-                                        return `X | ${val}`
+                                    formatter: ({value, config}) => {
+                                        console.log(config)
+                                        return `X | ${value}`
                                     }
                                 },
                                 y: {
-                                    formatter: (val) => {
-                                        return `Y | ${val}`
+                                    formatter: ({value, config}) => {
+                                        console.log(config)
+                                        return `Y | ${value}`
                                     }
                                 }
                             }

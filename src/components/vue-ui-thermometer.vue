@@ -441,7 +441,9 @@ defineExpose({
                         v: dataset.value, 
                         s: FINAL_CONFIG.style.chart.label.suffix, 
                         r: FINAL_CONFIG.style.chart.label.rounding
-                    }))
+                    }),
+                    { datapoint: dataset }
+                    )
                 }}
             </text>
             <slot name="svg" :svg="svg"/>

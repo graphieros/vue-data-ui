@@ -184,8 +184,9 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
-        formatter: (val) => {
-            return `f - ${val}`
+        formatter: ({value, config}) => {
+            // console.log(config)
+            return `f - ${value}`
         },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],

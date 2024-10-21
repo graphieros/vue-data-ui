@@ -274,7 +274,7 @@ const drawableDataset = computed(() => {
     })
 });
 
-function labellizeValue(val) {
+function labellizeValue(val, datapoint, index) {
     return applyDataLabel(
         FINAL_CONFIG.value.style.chart.layout.dataLabels.formatter,
         val,
@@ -283,7 +283,8 @@ function labellizeValue(val) {
             v: val,
             s: FINAL_CONFIG.value.style.chart.layout.dataLabels.suffix,
             r: FINAL_CONFIG.value.style.chart.layout.dataLabels.rounding
-        })
+        }),
+        { datapoint, index }
     );
 }
 
@@ -592,7 +593,8 @@ defineExpose({
                                 v: yLabel.value,
                                 s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
                                 r: FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.roundingValue
-                            })
+                            }),
+                            { datapoint: yLabel, seriesIndex: i }
                         ) : '' 
                         }}
                     </text>
@@ -666,7 +668,7 @@ defineExpose({
                                 :font-size="8"
                                 :font-weight="'bold'"
                             >
-                            {{ arc.name}}: {{ displayArcPercentage(arc, datapoint.donut)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value) }})
+                            {{ arc.name}}: {{ displayArcPercentage(arc, datapoint.donut)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value, arc, i) }})
                             </text>
                         </g>
                         <g>
@@ -722,7 +724,7 @@ defineExpose({
                     :font-weight="'bold'"
                     :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
                 >
-                    {{ labellizeValue(datapoint.subtotal) }}
+                    {{ labellizeValue(datapoint.subtotal, datapoint, i) }}
                 </text>
             </g>
 
@@ -831,7 +833,7 @@ defineExpose({
                         :font-size="10"
                         :font-weight="'bold'"
                     >
-                    {{ arc.name}}: {{ displayArcPercentage(arc, fixedDatapoint.donutFocus)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value) }})
+                    {{ arc.name}}: {{ displayArcPercentage(arc, fixedDatapoint.donutFocus)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value, arc, i) }})
                     </text>
                 </g>
                 <circle
@@ -855,7 +857,7 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
                     class="vue-ui-donut-evolution-focus"
                 >
-                    {{ labellizeValue(fixedDatapoint.subtotal) }}
+                    {{ labellizeValue(fixedDatapoint.subtotal, fixedDatapoint, i) }}
                 </text>
                 <text 
                     v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[fixedDatapoint.index]"
@@ -933,7 +935,9 @@ defineExpose({
                             v: legend.value,
                             s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
                             r: FINAL_CONFIG.style.chart.legend.roundingValue
-                        })) 
+                        }),
+                        { datapoint: legend, seriesIndex: index }
+                        ) 
                     }}
 
                     <span v-if="!segregated.includes(legend.uid)">

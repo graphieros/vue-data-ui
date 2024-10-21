@@ -516,7 +516,9 @@ defineExpose({
                             v: tick,
                             s: FINAL_CONFIG.style.chart.labels.suffix,
                             r: FINAL_CONFIG.style.chart.labels.xAxisLabels.rounding
-                        })) 
+                        }),
+                        { datapoint: tick, seriesIndex: i }
+                        ) 
                     }}
                 </text>
             </g>
@@ -610,7 +612,9 @@ defineExpose({
                                 v: plot.start,
                                 s: FINAL_CONFIG.style.chart.labels.suffix,
                                 r: FINAL_CONFIG.style.chart.labels.startLabels.rounding
-                            }))
+                            }),
+                            { datapoint: plot, seriesIndex: i }
+                            )
                         }}
                     </text>
                 </g>
@@ -633,7 +637,9 @@ defineExpose({
                                 v: plot.end,
                                 s: FINAL_CONFIG.style.chart.labels.suffix,
                                 r: FINAL_CONFIG.style.chart.labels.endLabels.rounding
-                            }))
+                            }),
+                            { datapoint: plot, seriesIndex: i }
+                            )
                         }}
                     </text>
                 </g>

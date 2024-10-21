@@ -84,8 +84,9 @@ const config = computed(() => {
                     ...c.style.chart.nodes,
                     labels: {
                         ...c.style.chart.nodes.labels,
-                        formatter: (val) => {
-                            return `f | ${val}`
+                        formatter: ({value, config}) => {
+                            console.log(config)
+                            return `f | ${value}`
                         }
                     }
                 }

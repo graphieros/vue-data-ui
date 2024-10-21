@@ -440,7 +440,8 @@ function useTooltip(plot, seriesIndex) {
                 v: plot.v.x,
                 s: FINAL_CONFIG.value.style.tooltip.suffix,
                 r: FINAL_CONFIG.value.style.tooltip.roundingValue
-            })
+            }),
+            { datapoint: plot, seriesIndex }
         )}</b></div>`;
 
         html += `<div>${FINAL_CONFIG.value.style.layout.dataLabels.yAxis.name}: <b>${isNaN(plot.v.y) ? '-' :  applyDataLabel(
@@ -451,7 +452,8 @@ function useTooltip(plot, seriesIndex) {
                 v: plot.v.y,
                 s: FINAL_CONFIG.value.style.tooltip.suffix,
                 r: FINAL_CONFIG.value.style.tooltip.roundingValue
-            })
+            }),
+            { datapoint: plot, seriesIndex }
         )}</b></div>`;
         
         html += `${FINAL_CONFIG.value.style.layout.plots.deviation.translation}: <b>${dataLabel({
@@ -835,7 +837,8 @@ defineExpose({
                             v: selectedPlot.v.y,
                             s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
                             r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
-                        })
+                        }),
+                        { datapoint: selectedPlot }
                     ) }}
                 </text>
                 <text
@@ -854,7 +857,8 @@ defineExpose({
                             v: selectedPlot.v.x,
                             s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
                             r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
-                        })
+                        }),
+                        { datapoint: selectedPlot }
                     ) }}
                 </text>
                 <circle

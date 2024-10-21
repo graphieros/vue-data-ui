@@ -464,7 +464,8 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
                                     v: datapoint.value, 
                                     s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
                                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-                                })
+                                }),
+                                { datapoint, seriesIndex }
                             )}
                         </b>` : ''}
                             ${FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `(${dataLabel({ 
@@ -489,7 +490,8 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
                             v: datapoint.value, 
                             s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
                             r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-                        })
+                        }),
+                        { datapoint, seriesIndex }
                     )}</b>`;
                 }
 
@@ -866,7 +868,8 @@ defineExpose({
                                     v: arc.value, 
                                     s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                                     r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue 
-                                })
+                                }),
+                                { datapoint: arc, seriesIndex: i, datapointIndex: j }
                             )}})
                         </text>
                         <text
@@ -887,7 +890,8 @@ defineExpose({
                                     v: arc.value, 
                                     s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                                     r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue 
-                                })
+                                }),
+                                { datapoint: arc, seriesIndex: i, datapointIndex: j }
                             )}}
                         </text>
                     </g>
@@ -978,7 +982,9 @@ defineExpose({
                             v: legend.value, 
                             s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                             r: FINAL_CONFIG.style.chart.legend.roundingValue
-                        }))
+                        }),
+                        { datapoint: legend, seriesIndex: index }
+                        )
                     }}
                     <template v-if="!segregated.includes(legend.id)">
                         ({{ isNaN(legend.value / legend.total) ? '-' : dataLabel({ v: legend.value / legend.total * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage }) }})

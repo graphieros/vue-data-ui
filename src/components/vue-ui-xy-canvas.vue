@@ -230,7 +230,8 @@ const tootlipDataset = computed(() => {
                         v: ds.series[tooltipIndex.value],
                         s: ds.suffix || '',
                         r: ds.rounding || 0
-                    })
+                    }),
+                    { datapoint: ds, seriesIndex: tooltipIndex.value }
                 )}</span>
             </div>
         `
@@ -479,7 +480,7 @@ function setupChart() {
 
         // AXES LABELS
         if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
-            absoluteExtremes.value.yLabels.forEach(label => {
+            absoluteExtremes.value.yLabels.forEach((label, i) => {
                 text(
                     ctx.value,
                     applyDataLabel(
@@ -490,7 +491,8 @@ function setupChart() {
                             v: label.value,
                             s: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
                             r: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
-                        })
+                        }),
+                        { datapoint: label, seriesIndex: i }
                     ),
                     label.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
                     label.y,
@@ -611,7 +613,7 @@ function setupChart() {
                     }
                 );
 
-                ds.localYLabels.forEach(entry => {
+                ds.localYLabels.forEach((entry, i) => {
                     text(
                         ctx.value,
                         applyDataLabel(
@@ -622,7 +624,9 @@ function setupChart() {
                                 v: entry.value,
                                 s: ds.suffix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
                                 r: ds.rounding || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
-                            })),
+                            }),
+                            { datapoint: entry, seriesIndex: i}
+                            ),
                         entry.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
                         entry.y,
                         {
@@ -711,7 +715,8 @@ function drawDataLabels(ds) {
                     v: ds.coordinatesLine[i].value,
                     s: ds.suffix || '',
                     r: ds.rounding || 0
-                })
+                }),
+                { datapoint: ds.coordinatesLine[i], seriesIndex: i }
             ),
             ds.coordinatesLine[i].x,
             ds.coordinatesLine[i].y + FINAL_CONFIG.value.style.chart.dataLabels.offsetY,
@@ -834,7 +839,8 @@ function drawBars() {
                                 v: ds.coordinatesLine[k].value,
                                 s: ds.suffix || '',
                                 r: ds.rounding || 0
-                            })
+                            }),
+                            { datapoint: ds.coordinatesLine[k], seriesIndex: k }
                         ),
                         drawingArea.value.left +
                                 (drawingArea.value.slot * k) +

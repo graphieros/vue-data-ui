@@ -174,7 +174,9 @@ const animation = computed(() => {
                             v: computedDataset[selectedIndex].value,
                             s: FINAL_CONFIG.style.labels.value.suffix,
                             r: FINAL_CONFIG.style.labels.value.rounding
-                        })) 
+                        }),
+                        { datapoint: computedDataset[selectedIndex], seriesIndex: selectedIndex }
+                        ) 
                     }}
                 </span>
                 <span v-if="![undefined, null].includes(selectedIndex) && ![null, undefined].includes(computedDataset[selectedIndex].valueLabel)">({{ computedDataset[selectedIndex].valueLabel || 0 }})</span>

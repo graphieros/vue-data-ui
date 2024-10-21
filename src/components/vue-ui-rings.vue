@@ -317,7 +317,8 @@ function useTooltip(index, datapoint) {
           v: selected.value, 
           s:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
           r:FINAL_CONFIG.value.style.chart.tooltip.roundingValue
-        })
+        }),
+        { datapoint, seriesIndex: index }
       )}
       </b>`;
     }
@@ -622,7 +623,7 @@ defineExpose({
         :config="legendConfig"
         @clickMarker="({legend}) => segregate(legend.uid)"
       >
-        <template #item="{legend}">
+        <template #item="{legend, index }">
             <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
                 {{ legend.name }}: {{ applyDataLabel(
                   FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
@@ -632,7 +633,9 @@ defineExpose({
                     v: legend.value, 
                     s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
                     r:FINAL_CONFIG.style.chart.legend.roundingValue
-                  }))
+                  }),
+                  { datapoint: legend, seriesIndex: index }
+                  )
                 }}
                 <span v-if="!segregated.includes(legend.uid)">
                   ({{ isNaN(legend.value / grandTotal) ? '-' : dataLabel({

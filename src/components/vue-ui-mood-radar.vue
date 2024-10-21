@@ -436,7 +436,9 @@ defineExpose({
                                 v: plot.value,
                                 s: FINAL_CONFIG.style.chart.layout.dataLabel.suffix,
                                 r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue
-                            })) 
+                            }),
+                            { datapoint: plot, seriesIndex: i }
+                            ) 
                         }}
                     </text>
                     <text 
@@ -508,7 +510,8 @@ defineExpose({
                             v: legend.value,
                             s: FINAL_CONFIG.style.chart.layout.dataLabel.suffix,
                             r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue
-                        })
+                        }),
+                        { datapoint: legend, seriesIndex: index }
                     ) }}</span> ({{ dataLabel({
                         v: legend.proportion * 100,
                         s: '%',

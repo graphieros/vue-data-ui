@@ -338,7 +338,9 @@ const donut = computed(() => {
                     v: datapoint.value, 
                     s: FINAL_CONFIG.value.valueSuffix, 
                     r: FINAL_CONFIG.value.dataLabelRoundingValue
-                }))
+                }),
+                { datapoint, seriesIndex }
+                )
             }</b>`;
             
             html += `<span>(${dataLabel({ v: datapoint.proportion * 100, s: '%', r: FINAL_CONFIG.value.dataLabelRoundingPercentage})})</span></div>`;
@@ -536,7 +538,7 @@ const line = computed(() => {
                 html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
-            mappedSeries.forEach(s => {
+            mappedSeries.forEach((s, i) => {
                 html += `
                     <div style="display:flex; flex-wrap: wrap; align-items:center; gap:3px;">
                         <svg viewBox="0 0 12 12" height="14" width="12"><circle cx="6" cy="6" r="6" stroke="none" fill="${s.color}"/></svg>
@@ -549,7 +551,9 @@ const line = computed(() => {
                                 v: s.value,
                                 s: FINAL_CONFIG.value.valueSuffix,
                                 r: FINAL_CONFIG.value.dataLabelRoundingValue
-                            }))}
+                            }),
+                            { datapoint: s, seriesIndex: i}
+                            )}
                         </b>
                     </div>
                 `
@@ -718,7 +722,7 @@ const bar = computed(() => {
                 html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
-            mappedSeries.forEach(s => {
+            mappedSeries.forEach((s, i) => {
                 html += `
                     <div style="display:flex; flex-wrap: wrap; align-items:center; gap:3px;">
                         <svg viewBox="0 0 12 12" height="14" width="12"><rect x=0 y="0" width="12" height="12" rx="1" stroke="none" fill="${s.color}"/></svg>
@@ -731,7 +735,9 @@ const bar = computed(() => {
                                 v: s.value,
                                 s: FINAL_CONFIG.value.valueSuffix,
                                 r: FINAL_CONFIG.value.dataLabelRoundingValue
-                            }))}
+                            }),
+                            { datapoint: s, seriesIndex: i }
+                            )}
                         </b>
                     </div>
                 `
@@ -919,7 +925,9 @@ defineExpose({
                                     v: arc.value,
                                     s: FINAL_CONFIG.valueSuffix,
                                     r: FINAL_CONFIG.dataLabelRoundingValue
-                                })) 
+                                }),
+                                { datapoint: arc, seriesIndex: i }
+                                ) 
                             }})
                         </text>
                         <text
@@ -1008,7 +1016,7 @@ defineExpose({
                     />
                 </g>
                 <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
-                    <template v-for="label in line.yLabels">   
+                    <template v-for="(label, i) in line.yLabels">   
                         <line
                             v-if="label.y <= line.drawingArea.bottom"
                             :x1="label.x + 4"
@@ -1035,7 +1043,9 @@ defineExpose({
                                     v: label.value,
                                     s: FINAL_CONFIG.valueSuffix,
                                     r: FINAL_CONFIG.dataLabelRoundingValue
-                                }))
+                                }),
+                                { datapoint: label, seriesIndex: i}
+                                )
                             }}
                         </text>
                     </template>
@@ -1140,7 +1150,9 @@ defineExpose({
                                     v: plot.value,
                                     s: FINAL_CONFIG.valueSuffix,
                                     r: FINAL_CONFIG.dataLabelRoundingValue
-                                })) 
+                                }),
+                                { datapoint: plot, seriesIndex: j}
+                                ) 
                             }}
                         </text>
                     </template>
@@ -1212,7 +1224,7 @@ defineExpose({
                     />
                 </g>
                 <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
-                    <template v-for="label in bar.yLabels">   
+                    <template v-for="(label, i) in bar.yLabels">   
                         <line
                             v-if="label.y <= bar.drawingArea.bottom"
                             :x1="label.x + 4"
@@ -1239,7 +1251,9 @@ defineExpose({
                                     v: label.value,
                                     s: FINAL_CONFIG.valueSuffix,
                                     r: FINAL_CONFIG.dataLabelRoundingValue
-                                })) 
+                                }),
+                                { datapoint: label, seriesIndex: i}
+                                ) 
                             }}
                         </text>
                     </template>
@@ -1315,7 +1329,9 @@ defineExpose({
                                     v: plot.value,
                                     s: FINAL_CONFIG.valueSuffix,
                                     r: FINAL_CONFIG.dataLabelRoundingValue
-                                })) 
+                                }),
+                                { datapoint: plot, seriesIndex: j }
+                                ) 
                             }}
                         </text>
                     </template>
@@ -1451,7 +1467,9 @@ defineExpose({
                                     v: legendItem.absoluteValue,
                                     s: FINAL_CONFIG.valueSuffix,
                                     r: FINAL_CONFIG.dataLabelRoundingValue,
-                                })) 
+                                }),
+                                { datapoint: legendItem, seriesIndex: i}
+                                ) 
                             }}
                         </span>
                         <span v-if="segregated.includes(legendItem.id)" :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
