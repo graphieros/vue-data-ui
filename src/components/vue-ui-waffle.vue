@@ -766,7 +766,7 @@ defineExpose({
                 </foreignObject>
             </template> 
 
-            <rect v-if="!rects.length"
+            <rect v-if="!rects.length && !FINAL_CONFIG.useCustomCells"
                 :x="12"
                 :y="12"
                 :height="drawingArea.height - 24"
@@ -776,7 +776,7 @@ defineExpose({
                 stroke="black"
             />
 
-            <template v-else-if="rects.length">
+            <template v-else-if="rects.length && !FINAL_CONFIG.useCustomCells">
                 <rect
                     v-for="(position, i) in positions"
                     :data-cy="`waffle-rect-underlayer-${i}`"

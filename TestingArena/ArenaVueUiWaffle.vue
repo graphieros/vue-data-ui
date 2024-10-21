@@ -32,7 +32,7 @@ const model = ref([
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
-    { key: 'useCustomCells', def: false, type: 'checkbox'},
+    { key: 'useCustomCells', def: true, type: 'checkbox'},
     { key: 'useAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
