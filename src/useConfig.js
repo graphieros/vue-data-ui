@@ -253,7 +253,8 @@ export function useConfig() {
                         bold: false,
                         rounding: 0,
                         prefix: '',
-                        suffix: ''
+                        suffix: '',
+                        formatter: null
                     }
                 },
                 grid: {

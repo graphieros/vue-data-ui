@@ -249,7 +249,7 @@ declare module 'vue-data-ui' {
         valueCss?: string;
         valueFontSize?: number;
         valueRounding?: number;
-        formatter?: null;
+        formatter?: Formatter;
     }
 
     export const VueUiKpi: DefineComponent<{
@@ -5394,6 +5394,7 @@ declare module 'vue-data-ui' {
                         rounding?: number;
                         prefix?: string;
                         suffix?: string;
+                        formatter?: Formatter;
                     };
                 };
                 grid?: {

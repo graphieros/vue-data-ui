@@ -142,6 +142,16 @@ const config = computed(() => {
             ...c.style,
             chart: {
                 ...c.style.chart,
+                bars: {
+                    ...c.style.chart.bars,
+                    dataLabels: {
+                        ...c.style.chart.bars.dataLabels,
+                        formatter: ({value, config}) => {
+                            // console.log(config)
+                            return `f | ${value}`
+                        }
+                    }
+                },
                 grid: {
                     ...c.style.chart.grid,
                     x: {
