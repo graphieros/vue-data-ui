@@ -3792,7 +3792,8 @@ export function useConfig() {
         valueClass: '',
         valueCss: '',
         valueFontSize: FONT._32,
-        valueRounding: 0
+        valueRounding: 0,
+        formatter: null
     }
 
     const vue_ui_mini_loader = {

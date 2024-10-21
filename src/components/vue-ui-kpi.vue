@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { useNestedProp } from "../useNestedProp";
-import { dataLabel } from "../lib";
+import { applyDataLabel, dataLabel } from "../lib";
 import { useConfig } from "../useConfig";
 
 const { vue_ui_kpi: DEFAULT_CONFIG } = useConfig();
@@ -76,7 +76,16 @@ watch(() => props.dataset, (newValue) => {
         <slot name="comment-before" :comment="dataset"></slot>
         <div :class="`vue-ui-kpi-value ${FINAL_CONFIG.valueClass}`" :style="`font-family: ${FINAL_CONFIG.fontFamily}; font-size:${FINAL_CONFIG.valueFontSize}px; color:${FINAL_CONFIG.valueColor}; font-weight:${FINAL_CONFIG.valueBold ? 'bold': 'normal'}; ${FINAL_CONFIG.valueCss}`">
             <slot name="value" :comment="dataset"></slot>
-            {{ dataLabel({ p: FINAL_CONFIG.prefix, v: displayedValue, s: FINAL_CONFIG.suffix, r: FINAL_CONFIG.valueRounding }) }}
+            {{ applyDataLabel(
+                FINAL_CONFIG.formatter,
+                displayedValue,
+                dataLabel({ 
+                    p: FINAL_CONFIG.prefix, 
+                    v: displayedValue, 
+                    s: FINAL_CONFIG.suffix, 
+                    r: FINAL_CONFIG.valueRounding 
+                }))
+            }}
         </div>
         <slot name="comment-after" :comment="dataset"></slot>
     </div>

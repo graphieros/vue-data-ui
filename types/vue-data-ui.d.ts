@@ -249,6 +249,7 @@ declare module 'vue-data-ui' {
         valueCss?: string;
         valueFontSize?: number;
         valueRounding?: number;
+        formatter?: null;
     }
 
     export const VueUiKpi: DefineComponent<{
