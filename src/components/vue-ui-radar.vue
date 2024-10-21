@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { 
+import {
+    applyDataLabel,
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
@@ -257,7 +258,7 @@ const datasetCopy = computed(() => {
             categoryId: `radar_category_${uid.value}_${i}`,
             color: convertColorToHex(c.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             prefix: c.prefix ?? '',
-            suffix: c.suffix ?? ''
+            suffix: c.suffix ?? '',
         }
     });
 });
@@ -271,7 +272,8 @@ const seriesCopy = computed(() => {
             return {
                 ...s,
                 color: convertColorToHex(s.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
-                serieId: `radar_serie_${uid.value}_${i}`
+                serieId: `radar_serie_${uid.value}_${i}`,
+                formatter: s.formatter || null
             }
         });
 });
@@ -390,9 +392,26 @@ const dataTable = computed(() => {
     const body = props.dataset.series.map(ds => {
         return [
             ds.name,
-            ds.target,
+            applyDataLabel(
+                ds.formatter,
+                ds.target,
+                dataLabel({
+                    p: ds.prefix,
+                    v: ds.target,
+                    s: ds.suffix,
+                    r: FINAL_CONFIG.value.table.td.roundingValue
+                })
+            ),
             ...ds.values.map((v, i) => {
-                return `${dataLabel({p: datasetCopy.value[i].prefix, v, s: datasetCopy.value[i].suffix, r:FINAL_CONFIG.value.table.td.roundingValue})} (${isNaN(v / ds.target) ? '' : (v / ds.target * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage)}%)`
+                return `${applyDataLabel(
+                    ds.formatter,
+                    v,
+                    dataLabel({p: datasetCopy.value[i].prefix, v, s: datasetCopy.value[i].suffix, r:FINAL_CONFIG.value.table.td.roundingValue})
+                )} (${isNaN(v / ds.target) ? '' : dataLabel({
+                    v: v / ds.target * 100,
+                    s: '%',
+                    r: FINAL_CONFIG.value.table.td.roundingPercentage
+                })})`
             })
         ]
     });
@@ -459,7 +478,8 @@ function useTooltip(apex, i) {
                     color: datasetCopy.value[k].color,
                     suffix: '%)',
                     prefix: `${dataLabel({p: datasetCopy.value[k].prefix ?? '',v:apex.values[k],s:datasetCopy.value[k].suffix ?? '', r:FINAL_CONFIG.value.style.chart.tooltip.roundingValue})} (`,
-                    rounding: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+                    rounding: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+                    formatter: apex.formatter
                 })
             }
         }
@@ -715,7 +735,13 @@ defineExpose({
             >
                 <template #item="{ legend, index }">
                     <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{ (legend.totalProportion * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage) }}%
+                        {{ legend.name }}: {{ 
+                            dataLabel({
+                                v: legend.totalProportion * 100,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                            })
+                        }}
                     </div>
                 </template>
             </Legend>

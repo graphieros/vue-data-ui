@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { 
-    XMLNS,
+import {
+    applyDataLabel,
     calculateNiceScale,
     createCsvContent,
     createUid,
@@ -10,8 +10,9 @@ import {
     downloadCsv,
     error,
     getMissingDatasetAttributes,
-    objectIsEmpty,
     lightenHexColor,
+    objectIsEmpty,
+    XMLNS,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
@@ -507,12 +508,18 @@ defineExpose({
                     :font-weight="FINAL_CONFIG.style.chart.labels.xAxisLabels.bold ? 'bold': 'normal'"
                     text-anchor="middle"
                 >
-                    {{ dataLabel({
-                        p: FINAL_CONFIG.style.chart.labels.prefix,
-                        v: tick,
-                        s: FINAL_CONFIG.style.chart.labels.suffix,
-                        r: FINAL_CONFIG.style.chart.labels.xAxisLabels.rounding
-                    }) }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.labels.formatter,
+                        tick,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.labels.prefix,
+                            v: tick,
+                            s: FINAL_CONFIG.style.chart.labels.suffix,
+                            r: FINAL_CONFIG.style.chart.labels.xAxisLabels.rounding
+                        }),
+                        { datapoint: tick, seriesIndex: i }
+                        ) 
+                    }}
                 </text>
             </g>
 
@@ -597,12 +604,18 @@ defineExpose({
                         text-anchor="middle"
                         
                     >
-                        {{ dataLabel({
-                            p: FINAL_CONFIG.style.chart.labels.prefix,
-                            v: plot.start,
-                            s: FINAL_CONFIG.style.chart.labels.suffix,
-                            r: FINAL_CONFIG.style.chart.labels.startLabels.rounding
-                        }) }}
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.labels.formatter,
+                            plot.start,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.labels.prefix,
+                                v: plot.start,
+                                s: FINAL_CONFIG.style.chart.labels.suffix,
+                                r: FINAL_CONFIG.style.chart.labels.startLabels.rounding
+                            }),
+                            { datapoint: plot, seriesIndex: i }
+                            )
+                        }}
                     </text>
                 </g>
                 <!-- END LABELS -->
@@ -616,12 +629,18 @@ defineExpose({
                         text-anchor="middle"
                         
                     >
-                        {{ dataLabel({
-                            p: FINAL_CONFIG.style.chart.labels.prefix,
-                            v: plot.end,
-                            s: FINAL_CONFIG.style.chart.labels.suffix,
-                            r: FINAL_CONFIG.style.chart.labels.endLabels.rounding
-                        }) }}
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.labels.formatter,
+                            plot.end,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.labels.prefix,
+                                v: plot.end,
+                                s: FINAL_CONFIG.style.chart.labels.suffix,
+                                r: FINAL_CONFIG.style.chart.labels.endLabels.rounding
+                            }),
+                            { datapoint: plot, seriesIndex: i }
+                            )
+                        }}
                     </text>
                 </g>
             </g>

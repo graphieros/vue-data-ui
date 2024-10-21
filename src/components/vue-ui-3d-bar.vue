@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import {
+    applyDataLabel,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
     calcNutArrowPath,
@@ -438,7 +439,11 @@ const dataTable = computed(() => {
                 name: h.name
             },
             label,
-            isNaN(table.value.body[i] / total) ? "-" : (table.value.body[i] / total * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
+            isNaN(table.value.body[i] / total) ? "-" : dataLabel({
+                v: table.value.body[i] / total * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage
+            })
         ]
     });
 
@@ -577,7 +582,6 @@ defineExpose({
                     <stop offset="100%" :stop-color="`${darkenHexColor(bar.color, 0.5)}FF`" />
                 </linearGradient>
                 <linearGradient v-for="bar in stack" :id="`grad_right_${bar.id}`">
-                    <!-- <stop offset="0%" :stop-color="`${bar.color}DD`" /> -->
                     <stop offset="2%" :stop-color="`${lightenHexColor(bar.color, 0.5)}FF`" />
                     <stop offset="100%" :stop-color="`${bar.color}DD`" />
                 </linearGradient>
@@ -596,7 +600,11 @@ defineExpose({
                 :fill="FINAL_CONFIG.style.chart.dataLabel.color"
                 text-anchor="middle"
             >
-                {{Number((isNaN(activeValue) ? 0 : activeValue).toFixed(FINAL_CONFIG.style.chart.dataLabel.rounding)).toLocaleString() }} %
+                {{ dataLabel({
+                    v: activeValue,
+                    s: '%',
+                    r: FINAL_CONFIG.style.chart.dataLabel.rounding
+                })}}
             </text>
             
             <!-- FIX KILLER -->
@@ -641,7 +649,18 @@ defineExpose({
                         <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
                         <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="FINAL_CONFIG.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
                             <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}`">
-                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: FINAL_CONFIG.style.chart.legend.prefix, v: bar.value, s: FINAL_CONFIG.style.chart.legend.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue})}})
+                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage}) }} ({{ applyDataLabel(
+                                    FINAL_CONFIG.style.chart.dataLabel.formatter,
+                                    bar.value,
+                                    dataLabel({ 
+                                        p: FINAL_CONFIG.style.chart.legend.prefix, 
+                                        v: bar.value, 
+                                        s: FINAL_CONFIG.style.chart.legend.suffix, 
+                                        r: FINAL_CONFIG.style.chart.legend.roundingValue
+                                    }),
+                                    { datapoint: bar, seriesIndex: i }
+                                    )
+                                }})
                             </div>
                             <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
                         </foreignObject>
@@ -693,7 +712,17 @@ defineExpose({
                                         :fill="FINAL_CONFIG.style.chart.legend.color"
                                         :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
                                     >
-                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ dataLabel({p: FINAL_CONFIG.style.chart.legend.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.legend.suffix, rounding: FINAL_CONFIG.style.chart.legend.roundingValue}) }})
+                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ applyDataLabel(
+                                            FINAL_CONFIG.style.chart.dataLabel.formatter,
+                                            arc.value,
+                                            dataLabel({
+                                                p: FINAL_CONFIG.style.chart.legend.prefix, 
+                                                v: arc.value, 
+                                                s: FINAL_CONFIG.style.chart.legend.suffix, 
+                                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                                            }),
+                                            { datapoint: arc, seriesIndex: i }
+                                        )}})
                                     </text>
                                     <text
                                         :text-anchor="calcMarkerOffsetX(arc).anchor"
@@ -762,7 +791,17 @@ defineExpose({
                         <circle :cx="bar.fill.sidePointer.x + 20" :cy="bar.fill.sidePointer.y" :r="2" :fill="bar.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor" v-if="!bar.fill.miniDonut || !!selectedSerie"/>
                         <foreignObject :x="bar.fill.sidePointer.x + 30" :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize" :width="svg.absoluteWidth / 2 - 12" :height="FINAL_CONFIG.style.chart.legend.fontSize * 2" style="overflow: visible; position: relative">
                             <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}`">
-                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage}) }} ({{ dataLabel({ p: FINAL_CONFIG.style.chart.legend.prefix, v: bar.value, s: FINAL_CONFIG.style.chart.legend.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue})}})
+                                {{ bar.name }}: {{ dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage}) }} ({{ applyDataLabel(
+                                    FINAL_CONFIG.style.chart.dataLabel.formatter,
+                                    bar.value,
+                                    dataLabel({ 
+                                        p: FINAL_CONFIG.style.chart.legend.prefix, 
+                                        v: bar.value, 
+                                        s: FINAL_CONFIG.style.chart.legend.suffix, 
+                                        r: FINAL_CONFIG.style.chart.legend.roundingValue
+                                    }),
+                                    { datapoint: bar, seriesIndex: i }
+                                )}})
                             </div>
                             <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
                         </foreignObject>
@@ -814,7 +853,17 @@ defineExpose({
                                         :fill="FINAL_CONFIG.style.chart.legend.color"
                                         :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
                                     >
-                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ dataLabel({p: FINAL_CONFIG.style.chart.legend.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.legend.suffix, rounding: FINAL_CONFIG.style.chart.legend.roundingValue}) }})
+                                        {{ displayArcPercentage(arc, bar.fill.donut)  }} ({{ applyDataLabel(
+                                            FINAL_CONFIG.style.chart.dataLabel.formatter,
+                                            arc.value,
+                                            dataLabel({
+                                                p: FINAL_CONFIG.style.chart.legend.prefix, 
+                                                v: arc.value, 
+                                                s: FINAL_CONFIG.style.chart.legend.suffix, 
+                                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                                            }),
+                                            { datapoint: arc, seriesIndex: i }
+                                        )}})
                                     </text>
                                     <text
                                         :text-anchor="calcMarkerOffsetX(arc).anchor"

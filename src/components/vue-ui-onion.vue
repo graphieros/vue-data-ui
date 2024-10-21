@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
-import { 
+import {
+    applyDataLabel,
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
@@ -402,7 +403,17 @@ function useTooltip({ datapoint, seriesIndex, show = true }) {
         const showValue = FINAL_CONFIG.value.style.chart.tooltip.showValue;
 
         html += `<div style="width: 100%; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; padding-bottom: 6px;margin-bottom:3px;display:flex;flex-direction:row;gap:3px;align-items:center"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg><span></span>${datapoint.name}</span></div>`;
-        html += `<div style="width:100%;text-align:left;"><b>${showPercentage ? dataLabel({p: '', v: datapoint.percentage, s: '%', r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage}) : ''}</b> ${showPercentage && showValue ? '(' : ''}${showValue ? dataLabel({ p: datapoint.prefix || '', v: datapoint.value, s: datapoint.suffix || '', r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue }) : ''}${showPercentage && showValue ? ')' : ''}</div>`
+        html += `<div style="width:100%;text-align:left;"><b>${showPercentage ? dataLabel({p: '', v: datapoint.percentage, s: '%', r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage}) : ''}</b> ${showPercentage && showValue ? '(' : ''}${showValue ? applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.labels.value.formatter,
+            datapoint.value,
+            dataLabel({ 
+                p: datapoint.prefix || '', 
+                v: datapoint.value, 
+                s: datapoint.suffix || '', 
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue 
+            }),
+            { datapoint, seriesIndex }
+        ) : ''}${showPercentage && showValue ? ')' : ''}</div>`
 
         tooltipContent.value = `<div>${html}</div>`
     }
@@ -599,7 +610,33 @@ defineExpose({
                         :fill="FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie === i ? onion.color:  FINAL_CONFIG.style.chart.layout.labels.color"
                         :font-weight="FINAL_CONFIG.style.chart.layout.labels.bold ? 'bold' : 'normal'"
                     >
-                        {{ onion.name ? onion.name + ': ' : '' }} {{ FINAL_CONFIG.style.chart.layout.labels.percentage.show ? `${(onion.percentage || 0).toFixed(FINAL_CONFIG.style.chart.layout.labels.roundingPercentage)}%` : '' }} {{ !FINAL_CONFIG.style.chart.layout.labels.percentage.show && FINAL_CONFIG.style.chart.layout.labels.value.show ? ` : ${onion.value ? `${onion.prefix || ""}${onion.value.toFixed(FINAL_CONFIG.style.chart.layout.labels.roundingValue)}${onion.suffix || ""}` : '' }` : `${FINAL_CONFIG.style.chart.layout.labels.value.show ? onion.value ? `(${onion.prefix || ""}${onion.value.toFixed(FINAL_CONFIG.style.chart.layout.labels.roundingValue)}${onion.suffix || ""})` : '' : ''}` }}
+                        {{ onion.name ? onion.name + ': ' : '' }}
+                        {{ FINAL_CONFIG.style.chart.layout.labels.percentage.show ? dataLabel({
+                            v: onion.percentage,
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.layout.labels.roundingPercentage
+                        }) : '' }} 
+                        {{ !FINAL_CONFIG.style.chart.layout.labels.percentage.show && FINAL_CONFIG.style.chart.layout.labels.value.show ? `: ${applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                            onion.value,
+                            dataLabel({
+                                p: onion.prefix || '',
+                                v: onion.value || 0,
+                                s: onion.suffix || '',
+                                r: FINAL_CONFIG.style.chart.layout.labels.roundingValue
+                            }),
+                            { datapoint: onion, seriesIndex: i }
+                        )}` : `${FINAL_CONFIG.style.chart.layout.labels.value.show ? onion.value ? `(${applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                            onion.value,
+                            dataLabel({
+                                p: onion.prefix || '',
+                                v: onion.value || 0,
+                                s: onion.suffix || '',
+                                r: FINAL_CONFIG.style.chart.layout.labels.roundingValue
+                            }),
+                            { datapoint: onion, seriesIndex: i }
+                        )})` : '' : ''}` }}
                     </text>
                 </g>
             </g>

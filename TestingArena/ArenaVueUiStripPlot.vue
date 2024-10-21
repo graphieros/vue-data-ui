@@ -213,6 +213,19 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            style: {
+                ...c.style,
+                chart: {
+                    ...c.style.chart,
+                    labels: {
+                        ...c.style.chart.labels,
+                        formatter: ({value, config}) => {
+                            // console.log(config)
+                            return `f | ${value}`
+                        }
+                    }
+                }
+            },
             theme: currentTheme.value,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }

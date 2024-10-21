@@ -51,48 +51,48 @@ import ArenaVueUiStackbar from "../TestingArena/ArenaVueUiStackbar.vue";
 const showOldArena = ref(false);
 
 const components = ref([
-  /*____________________*/"VueUiXy", //  0 
-  /*_________________*/"VueUiDonut", //  1 
-  /*_______________*/"VueUiTreemap", //  2 
-  /*________________*/"VueUiWaffle", //  3 
-  /*_________________*/"VueUiRadar", //  4 
-  /*______________*/"VueUiQuadrant", //  5 
-  /*_________________*/"VueUiGauge", //  6
-  /*_________________*/"VueUiWheel", //  7
-  /*_____________*/"VueUiTiremarks", //  8
-  /*______________*/"VueUiChestnut", //  9 
-  /*_________________*/"VueUiOnion", // 10 
-  /*___________*/"VueUiVerticalBar", // 11 
-  /*_______________*/"VueUiHeatmap", // 12
-  /*_______________*/"VueUiScatter", // 13 
-  /*___________*/"VueUiCandlestick", // 14 
-  /*_____________*/"VueUiSparkline", // 15
-  /*______________*/"VueUiSparkbar", // 16
-  /*_________*/"VueUiSparkStackbar", // 17
-  /*________*/"VueUiSparkHistogram", // 18
-  /*____________*/"VueUiSparkgauge", // 19
-  /*____________*/"VueUiSparkTrend", // 20
-  /*____________*/"VueUiQuickChart", // 21 
-  /*____________*/"VueUiAgePyramid", // 22 
-  /*________*/"VueUiRelationCircle", // 23
-  /*___________*/"VueUiThermometer", // 24
-  /*_________________*/"VueUiRings", // 25 
-  /*________*/"VueUiDonutEvolution", // 26 
-  /*__________________*/"VueUiIcon", // 27
-  /*_____________*/"VueUiMoodRadar", // 28
-  /*______________*/"VueUiMolecule", // 29
-  /*__________*/"VueUiNestedDonuts", // 30 
-  /*________________*/"VueUiGalaxy", // 31 
-  /*_____________*/"VueUiStripPlot", // 32
-  /*______________*/"VueUiDumbbell", // 33
-  /*_________________*/"VueUi3dBar", // 34 
-  /*________*/"VueUiTableSparkline", // 35
-  /*__________*/"VueUiTableHeatmap", // 36
-  /*____________ */"VueUiWordCloud", // 37
-  /*______________*/"VueUiXyCanvas", // 38 
-  /*__________________*/"VueUiFlow", // 39
+  /*____________________*/"VueUiXy", //  0 DONE | OK
+  /*_________________*/"VueUiDonut", //  1 DONE | OK
+  /*_______________*/"VueUiTreemap", //  2 DONE | OK
+  /*________________*/"VueUiWaffle", //  3 DONE | OK
+  /*_________________*/"VueUiRadar", //  4 DONE | OK
+  /*______________*/"VueUiQuadrant", //  5 DONE | OK
+  /*_________________*/"VueUiGauge", //  6 DONE | OK
+  /*_________________*/"VueUiWheel", //  7 DONE | OK
+  /*_____________*/"VueUiTiremarks", //  8 DONE | OK
+  /*______________*/"VueUiChestnut", //  9 DONE | OK
+  /*_________________*/"VueUiOnion", // 10 DONE | OK
+  /*___________*/"VueUiVerticalBar", // 11 DONE | OK
+  /*_______________*/"VueUiHeatmap", // 12 DONE | OK
+  /*_______________*/"VueUiScatter", // 13 DONE | OK
+  /*___________*/"VueUiCandlestick", // 14 _
+  /*_____________*/"VueUiSparkline", // 15 DONE | OK
+  /*______________*/"VueUiSparkbar", // 16 DONE | OK
+  /*_________*/"VueUiSparkStackbar", // 17 DONE | OK
+  /*________*/"VueUiSparkHistogram", // 18 DONE | OK
+  /*____________*/"VueUiSparkgauge", // 19 DONE | OK
+  /*____________*/"VueUiSparkTrend", // 20 DONE | OK
+  /*____________*/"VueUiQuickChart", // 21 DONE | OK
+  /*____________*/"VueUiAgePyramid", // 22 DONE | OK
+  /*________*/"VueUiRelationCircle", // 23 _
+  /*___________*/"VueUiThermometer", // 24 DONE | OK
+  /*_________________*/"VueUiRings", // 25 DONE | OK
+  /*________*/"VueUiDonutEvolution", // 26 DONE | OK
+  /*__________________*/"VueUiIcon", // 27 _
+  /*_____________*/"VueUiMoodRadar", // 28 DONE | OK
+  /*______________*/"VueUiMolecule", // 29 _
+  /*__________*/"VueUiNestedDonuts", // 30 DONE | OK
+  /*________________*/"VueUiGalaxy", // 31 DONE | OK
+  /*_____________*/"VueUiStripPlot", // 32 DONE | OK
+  /*______________*/"VueUiDumbbell", // 33 DONE | OK
+  /*_________________*/"VueUi3dBar", // 34 DONE |
+  /*________*/"VueUiTableSparkline", // 35 DONE |
+  /*__________*/"VueUiTableHeatmap", // 36 _
+  /*____________ */"VueUiWordCloud", // 37 _
+  /*______________*/"VueUiXyCanvas", // 38 DONE |
+  /*__________________*/"VueUiFlow", // 39 DONE |
   /**/"VueUiParallelCoordinatePlot", // 40
-  /*_________________*/"VueUiTimer", // 41
+  /*_________________*/"VueUiTimer", // 41 _
   /*_________*/"VueUiCarouselTable", // 42
   /*_________________*/"VueUiGizmo", // 43
   /*___________________*/"VueUiKpi", // 44
@@ -103,7 +103,7 @@ const components = ref([
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[45]);
+const selectedComponent = ref(components.value[34]);
 
 </script>
 

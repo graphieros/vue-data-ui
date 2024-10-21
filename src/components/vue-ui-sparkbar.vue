@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import {
+    applyDataLabel,
     convertColorToHex,
     convertCustomPalette,
     createUid,
@@ -74,7 +75,8 @@ const customPalette = computed(() => {
 const safeDatasetCopy = ref(props.dataset.map(d => {
     return {
         ...d,
-        value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0
+        value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
+        formatter: d.formatter || null
     }
 }));
 
@@ -111,7 +113,8 @@ function useAnimation() {
                 safeDatasetCopy.value = props.dataset.map(d => {
                     return {
                         ...d,
-                        value: d.value || 0
+                        value: d.value || 0,
+                        formatter: d.formatter || null
                     }
                 })
             }
@@ -126,7 +129,8 @@ watch(() => props.dataset, async (v) => {
     safeDatasetCopy.value = props.dataset.map(d => {
     return {
         ...d,
-        value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0
+        value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
+        formatter: d.formatter || null
     }});
 
     nextTick(useAnimation);
@@ -258,20 +262,29 @@ function selectDatapoint(datapoint, index) {
                 <slot name="data-label" v-bind="{ bar: {
                     ...bar,
                     target: getTarget(bar),
-                    valueLabel: dataLabel({
+                    valueLabel: applyDataLabel(
+                        bar.formatter,
+                        bar.value,
+                        dataLabel({
                             p: bar.prefix || '',
                             v: bar.value,
                             s: bar.suffix || '',
                             r: bar.rounding || 0
                         }),
-                    targetLabel:
-                    dataLabel({
+                        { datapoint: bar, seriesIndex: i }
+                    ),
+                    targetLabel: applyDataLabel(
+                        bar.formatter,
+                        getTarget(bar),
+                        dataLabel({
                             p: bar.prefix || '',
                             v: getTarget(bar),
                             s: bar.suffix || '',
                             r: bar.rounding || 0
-                        })
-                } }"/>
+                        }),
+                        { datapoint: bar, seriesIndex: i }
+                    ),
+                }}"/>
 
                 <!-- DEFAULT DATALABEL -->
                 <div 
@@ -289,24 +302,36 @@ function selectDatapoint(datapoint, index) {
                         :data-cy="`sparkbar-value-${i}`"
                         v-if="FINAL_CONFIG.style.labels.value.show"
                         :style="`font-weight:${FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'}`"
-                    >: {{ dataLabel({
+                    >: {{ applyDataLabel(
+                        bar.formatter,
+                        bar.value,
+                        dataLabel({
                             p: bar.prefix || '',
                             v: bar.value,
                             s: bar.suffix || '',
                             r: bar.rounding || 0
-                        })}}
+                        }),
+                        { datapoint: bar, seriesIndex: i }
+                        ) 
+                    }}
                     </span>
                     <span
                         :data-cy="`sparkbar-target-value-${i}`"
                         v-if="FINAL_CONFIG.style.layout.showTargetValue"
                         >
                         {{ ' ' + FINAL_CONFIG.style.layout.targetValueText }}  
-                        {{ dataLabel({
-                            p: bar.prefix || '',
-                            v: getTarget(bar),
-                            s: bar.suffix || '',
-                            r: bar.rounding || 0
-                        })}}
+                        {{ applyDataLabel(
+                            bar.formatter,
+                            getTarget(bar),
+                            dataLabel({
+                                p: bar.prefix || '',
+                                v: getTarget(bar),
+                                s: bar.suffix || '',
+                                r: bar.rounding || 0
+                            }),
+                            { datapoint: bar, seriesIndex: i }
+                            )
+                        }}
                     </span>
                 </div>
 

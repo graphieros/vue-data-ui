@@ -3,6 +3,7 @@ import {
     abbreviate,
     adaptColorToBackground,
     addVector,
+    applyDataLabel,
     assignStackRatios,
     calcLinearProgression,
     calcMedian,
@@ -21,11 +22,11 @@ import {
     createArc,
     createPolygonPath,
     createSmoothPath,
-    createStraightPath,
     createSpiralPath,
     createStar,
     createTSpans,
     createWordCloudDatasetFromPlainText,
+    checkFormatter,
     dataLabel,
     degreesToRadians,
     error,
@@ -763,30 +764,48 @@ describe('dataLabel', () => {
         expect(dataLabel({ v: 1.1 })).toBe('1');
         expect(dataLabel({ v: 1.9 })).toBe('2');
     });
+
     test('returns a formatted dataLabel with rounding', () => {
         expect(dataLabel({ v: 1, r: 1 })).toBe('1');
         expect(dataLabel({ v: 1.1, r: 1 })).toBe('1.1');
         expect(dataLabel({ v: 1.96, r: 1 })).toBe('2');
     });
+
     test('returns a formatted dataLabel with prefix and suffix', () => {
         expect(dataLabel({ p: '$', v: 1, s: '$' })).toBe('$1$');
         expect(dataLabel({ p: '$', v: 1.1, s: '$', r: 1 })).toBe('$1.1$');
     });
+
     test('returns a formatted dataLabel with spaced prefix and suffix', () => {
-        expect(dataLabel({ p: '$', v: 1, s: '$', space: true })).toBe('$ 1 $')
-        expect(dataLabel({ p: '$', v: 1.1, s: '$', r: 1, space: true })).toBe('$ 1.1 $')
-    })
+        expect(dataLabel({ p: '$', v: 1, s: '$', space: true })).toBe('$ 1 $');
+        expect(dataLabel({ p: '$', v: 1.1, s: '$', r: 1, space: true })).toBe('$ 1.1 $');
+    });
+
     test('returns a formatted dataLabel in loading mode', () => {
-        expect(dataLabel({ p: '$', v: 1, s: '$', isAnimating: true})).toBe('---')
-    })
+        expect(dataLabel({ p: '$', v: 1, s: '$', isAnimating: true })).toBe('---');
+    });
+
     test('returns a formatted percentage datalabel in loading mode', () => {
-        expect(dataLabel({ v: 10, s: '%',  isAnimating: true})).toBe('--%')
-    })
+        expect(dataLabel({ v: 10, s: '%', isAnimating: true })).toBe('--%');
+    });
+
     test('returns a formatted dataLabel in loading mode with a custom regex', () => {
-        expect(dataLabel({ p: '$', v: 10, isAnimating: true, regex: /[^$]/g })).toBe('$--')
-        expect(dataLabel({ p: '$', v: 10, s: '$', isAnimating: true, regex: /[^$]/g })).toBe('$--$')
-    })
-})
+        expect(dataLabel({ p: '$', v: 10, isAnimating: true, regex: /[^$]/g })).toBe('$--');
+        expect(dataLabel({ p: '$', v: 10, s: '$', isAnimating: true, regex: /[^$]/g })).toBe('$--$');
+    });
+
+    test('returns a formatted dataLabel with locale', () => {
+        expect(dataLabel({ v: 1000, locale: 'de-DE' })).toBe('1.000');
+        expect(dataLabel({ v: 1000.5, locale: 'de-DE', r: 1 })).toBe('1.000,5');
+        expect(dataLabel({ v: 1000.5, locale: 'en-US', r: 1 })).toBe('1,000.5');
+    });
+
+    test('returns a formatted dataLabel with prefix, suffix, and locale', () => {
+        expect(dataLabel({ p: '$', v: 1000, s: ' USD', locale: 'en-US' })).toBe('$1,000 USD');
+        expect(dataLabel({ p: '€', v: 1000.5, s: ' EUR', locale: 'de-DE', r: 1 })).toBe('€1.000,5 EUR');
+    });
+});
+
 
 describe('abbreviate', () => {
     test('returns an empty string for a falsy value', () => {
@@ -1638,3 +1657,154 @@ describe('sumSeries', () => {
         expect(sumSeries([{series: []}])).toStrictEqual([]);
     })
 })
+
+describe('checkFormatter', () => {
+    const params = { value: 12, config: { key: 'configValue' } };
+    const expected = `expected${params.value}`;
+    
+    const testFunc = ({ value }) => {
+        return `expected${value}`;
+    };
+
+    const failingFunc = () => {
+        throw new Error('ERROR');
+    };
+
+    const functionFunc = () => {
+        return () => {
+            return 1;
+        };
+    };
+
+    const functionObject = () => {
+        return {
+            a: 1,
+        };
+    };
+
+    const functionBool = () => {
+        return false;
+    };
+
+    test('returns the callback content', () => {
+        expect(checkFormatter(testFunc, params)).toStrictEqual({
+            isValid: true,
+            value: expected
+        });
+    });
+
+    test('returns proper values when the callback throws', () => {
+        expect(checkFormatter(failingFunc, params)).toStrictEqual({
+            isValid: false,
+            value: params.value
+        });
+    });
+
+    test('returns proper values when the callback returns a function', () => {
+        expect(checkFormatter(functionFunc, params)).toStrictEqual({
+            isValid: false,
+            value: params.value
+        });
+    });
+
+    test('returns proper values when the callback returns an object', () => {
+        expect(checkFormatter(functionObject, params)).toStrictEqual({
+            isValid: false,
+            value: params.value
+        });
+    });
+
+    test('returns proper values when the callback returns a boolean', () => {
+        expect(checkFormatter(functionBool, params)).toStrictEqual({
+            isValid: false,
+            value: params.value
+        });
+    });
+
+    test('handles config object in params but doesn\'t use it', () => {
+        const configTestFunc = ({ value }) => `formatted ${value}`;
+        expect(checkFormatter(configTestFunc, { value: 15, config: { key: 'unused' } }))
+            .toStrictEqual({
+                isValid: true,
+                value: 'formatted 15'
+            });
+    });
+});
+
+describe('applyDataLabel', () => {
+    const params = { value: 12, config: { key: 'configValue' } };
+    const expected = `expected${params.value}`;
+    
+    const testFunc = ({ value }) => {
+        return `expected${value}`;
+    };
+
+    const failingFunc = () => {
+        throw new Error('ERROR');
+    };
+
+    const functionFunc = () => {
+        return () => {
+            return 1;
+        };
+    };
+
+    const functionObject = () => {
+        return {
+            a: 1,
+        };
+    };
+
+    const functionBool = () => {
+        return false;
+    };
+
+    const fallback = "fallback";
+
+    test('returns the output of the callback', () => {
+        expect(applyDataLabel(
+            testFunc,
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(expected);
+
+        expect(applyDataLabel(
+            failingFunc,
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(fallback);
+
+        expect(applyDataLabel(
+            functionFunc,
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(fallback);
+
+        expect(applyDataLabel(
+            functionObject,
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(fallback);
+
+        expect(applyDataLabel(
+            functionBool,
+            params.value,
+            fallback,
+            params.config
+        )).toStrictEqual(fallback);
+    });
+
+    test('handles custom config in applyDataLabel', () => {
+        const configFunc = ({ value, config }) => `${config.prefix}${value}${config.suffix}`;
+        expect(applyDataLabel(
+            configFunc,
+            params.value,
+            fallback,
+            { prefix: 'p-', suffix: '-s' }
+        )).toStrictEqual('p-12-s');
+    });
+});

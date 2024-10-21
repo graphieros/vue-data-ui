@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
 import { 
+adaptColorToBackground,
+    applyDataLabel,
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
-    calcNutArrowPath, 
+    calcNutArrowPath,
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
@@ -11,7 +13,6 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getMissingDatasetAttributes,
     isFunction, 
     makeDonut,
@@ -344,7 +345,17 @@ function isArcBigEnough(arc) {
 }
 
 function displayArcPercentage(arc, stepBreakdown) {
-    return isNaN(arc.value / sumValues(stepBreakdown)) ? 0 : ((arc.value / sumValues(stepBreakdown)) * 100).toFixed(0) + "%";
+    const p = arc.value / sumValues(stepBreakdown);
+    return isNaN(p) ? 0 : applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.labels.percentage.formatter,
+        p * 100,
+        dataLabel({
+            v: p * 100,
+            s: '%',
+            r: FINAL_CONFIG.value.style.chart.layout.labels.percentage.rounding
+        }),
+        { datapoint: arc }
+    )
 }
 
 function sumValues(source) {
@@ -361,6 +372,8 @@ const average = computed(() => {
 
 const dataTooltipSlot = ref(null);
 
+const useCustomFormat = ref(false);
+
 function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
     dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: immutableSet.value};
     isTooltip.value = show;
@@ -369,38 +382,74 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
 
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
-    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
-        seriesIndex,
-        datapoint,
-        series: immutableSet.value,
-        config: FINAL_CONFIG.value
-    }))) {
-        tooltipContent.value = customFormat({
-            seriesIndex,
-            datapoint,
-            series: immutableSet.value,
-            config: FINAL_CONFIG.value
-        })
-    } else {
+    useCustomFormat.value = false;
+
+    if (isFunction(customFormat)) {
+        try {
+            const customFormatString = customFormat({
+                seriesIndex,
+                datapoint,
+                series: immutableSet.value,
+                config: FINAL_CONFIG.value
+            });
+            if (typeof customFormatString === 'string') {
+                tooltipContent.value = customFormatString;
+                useCustomFormat.value = true;
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied.');
+            useCustomFormat.value = false;
+        }
+    }
+    
+    if (!useCustomFormat.value) {
         html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-        if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-            html += `<b data-cy="donut-tooltip-value">${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
+        if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
+            html += `<b data-cy="donut-tooltip-value">${ applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.value.formatter, 
+                datapoint.value,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+                    v: datapoint.value, 
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                }),
+                {
+                    datapoint,
+                    relativeIndex,
+                    seriesIndex,
+                }
+            )}</b>`;
         }
 
-        if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+        if (FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+            const percentageLabel = applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.percentage.formatter,
+                datapoint.proportion * 100,
+                dataLabel({
+                    v: datapoint.proportion * 100,
+                    s: '%',
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+                }),
+                {
+                    datapoint,
+                    relativeIndex,
+                    seriesIndex,
+                }
+            );
+
             if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-                html += `<b>${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+                html += `<b>${percentageLabel}%</b></div>`;
             } else {
-                html += `<span>(${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+                html += `<span>(${percentageLabel})</span></div>`;
             }
         }
 
         if (FINAL_CONFIG.value.style.chart.comments.showInTooltip && datapoint.comment) {
             html += `<div class="vue-data-ui-tooltip-comment" style="background:${datapoint.color}20; padding: 6px; margin-bottom: 6px; margin-top:6px; border-left: 1px solid ${datapoint.color}">${datapoint.comment}</div>`
         }
-
         tooltipContent.value = `<div>${html}</div>`;
     }
 }
@@ -643,22 +692,34 @@ defineExpose({
                 :filter="FINAL_CONFIG.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
             />
 
-            <path 
-                v-for="(arc, i) in currentDonut"
-                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                :d="arc.arcSlice"
-                fill="#FFFFFF"
-            />
-            <path 
-                v-for="(arc, i) in currentDonut"
-                class="vue-ui-donut-arc-path"
-                :data-cy="`donut-arc-${i}`"
-                :d="arc.arcSlice" 
-                :fill="`${arc.color}CC`"
-                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
-                :filter="getBlurFilter(i)"
-            />
+            <template v-if="total">
+                <path 
+                    v-for="(arc, i) in currentDonut"
+                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    :d="arc.arcSlice"
+                    fill="#FFFFFF"
+                />
+                <path 
+                    v-for="(arc, i) in currentDonut"
+                    class="vue-ui-donut-arc-path"
+                    :data-cy="`donut-arc-${i}`"
+                    :d="arc.arcSlice" 
+                    :fill="`${arc.color}CC`"
+                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                    :filter="getBlurFilter(i)"
+                />
+            </template>
+
+            <template v-else>
+                <circle
+                    :cx="svg.width / 2"
+                    :cy="svg.height / 2"
+                    :r="minSize <= 0 ? 10 : minSize"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                    :stroke="adaptColorToBackground(FINAL_CONFIG.style.chart.background)"
+                />
+            </template>
 
             <!-- HOLLOW -->
             <circle
@@ -671,21 +732,23 @@ defineExpose({
             />
 
             <!-- TOOLTIP TRAPS -->
-            <path 
-                v-for="(arc, i) in currentDonut"
-                :data-cy="`donut-trap-${i}`"
-                data-cy-donut-trap
-                :d="arc.arcSlice" 
-                :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
-                @mouseenter="useTooltip({
-                    datapoint: arc,
-                    relativeIndex: i,
-                    seriesIndex: arc.seriesIndex,
-                    show: true
-                })"
-                @mouseleave="isTooltip = false; selectedSerie = null"
-                @click="selectDatapoint(arc, i)"
-            />
+            <template v-if="total">
+                <path 
+                    v-for="(arc, i) in currentDonut"
+                    :data-cy="`donut-trap-${i}`"
+                    data-cy-donut-trap
+                    :d="arc.arcSlice" 
+                    :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
+                    @mouseenter="useTooltip({
+                        datapoint: arc,
+                        relativeIndex: i,
+                        seriesIndex: arc.seriesIndex,
+                        show: true
+                    })"
+                    @mouseleave="isTooltip = false; selectedSerie = null"
+                    @click="selectDatapoint(arc, i)"
+                />
+            </template>
 
             <circle
                 v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.show"
@@ -715,11 +778,15 @@ defineExpose({
                 :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.fontSize"
                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.bold ? 'bold': ''}`"
             >
-                {{ dataLabel({
-                    p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix, 
-                    v: total, 
-                    s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
-                }) }}
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.formatter,
+                    total,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix, 
+                        v: total, 
+                        s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
+                    })) 
+                }}
             </text>
 
             <text 
@@ -742,12 +809,16 @@ defineExpose({
                 :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.fontSize"
                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.bold ? 'bold': ''}`"
             >
-                {{ isAnimating ? '--' : dataLabel({
-                    p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
-                    v: average,
-                    s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
-                    r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
-                }) }}
+                {{ isAnimating ? '--' : applyDataLabel(
+                    FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.formatter,
+                    average,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
+                        v: average,
+                        s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
+                        r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
+                    })) 
+                }}
             </text>
 
             <!-- DATALABELS -->
@@ -795,7 +866,16 @@ defineExpose({
                         :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold': ''}`"
                         @click="selectDatapoint(arc, i)"
                     >
-                        {{ displayArcPercentage(arc, currentDonut)  }} {{ FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, rounding: FINAL_CONFIG.style.chart.layout.labels.value.rounding})})` : '' }}
+                        {{ displayArcPercentage(arc, currentDonut)  }} {{ FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                            arc.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                                r: FINAL_CONFIG.style.chart.layout.labels.value.rounding
+                            }),
+                            { datapoint: arc }
+                            )})` : '' }}
                     </text>
                     <text
                         :data-cy="`donut-datalabel-name-${i}`"
@@ -858,13 +938,31 @@ defineExpose({
             >
                 <template #item="{ legend, index }">
                     <div :data-cy="`legend-item-${index}`" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{ dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue}) }}
+                        {{ legend.name }}: {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                            legend.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                                v: legend.value, 
+                                s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                            }),
+                            {
+                                datapoint: legend,
+                                index
+                            }
+                            )
+                        }}
                         <span v-if="!segregated.includes(index)" style="font-variant-numeric: tabular-nums;">
-                            ({{ isNaN(legend.value / total) ? '-' : dataLabel({
-                                v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
-                                s: '%',
-                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                            })}})
+                            ({{ isNaN(legend.value / total) ? '-' : applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.percentage.formatter,
+                                isAnimating ? legend.proportion * 100 : legend.value / total * 100,
+                                dataLabel({
+                                    v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
+                                    s: '%',
+                                    r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                                }))
+                            }})
                         </span>
                         <span v-else>
                             ( {{ dashLabel(legend.proportion * 100) }} % )
@@ -890,7 +988,7 @@ defineExpose({
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="donutChart"
             :content="tooltipContent"
-            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
+            :isCustom="useCustomFormat"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -926,7 +1024,24 @@ defineExpose({
                         <div v-html="th" style="display:flex;align-items:center"></div>
                     </template>
                     <template #td="{ td }">
-                        {{ td.name || td }}
+                        {{ td.name ? td.name : isNaN(Number(td)) ? !td.includes('%') ? td : applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.percentage.formatter,
+                            td,
+                            dataLabel({
+                                v: td,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.layout.labels.percentage.rounding
+                            })
+                        ) : applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                            td,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                v: td,
+                                s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.labels.value.rounding
+                            })
+                        ) }}
                     </template>
                 </DataTable>
             </template>

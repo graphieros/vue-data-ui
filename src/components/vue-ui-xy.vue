@@ -255,7 +255,7 @@
                                 {{  dataLabel({
                                     v: calcLinearProgression(serie.plots).trend * 100,
                                     s: '%',
-                                    r: 2
+                                    r: 2,
                                 }) }}
                             </text>
                         </g>
@@ -334,7 +334,7 @@
                             {{  dataLabel({
                                 v: calcLinearProgression(serie.plots).trend * 100,
                                 s: '%',
-                                r: 2
+                                r: 2,
                             }) }}
                         </text>
                     </g>
@@ -462,7 +462,7 @@
                             {{  dataLabel({
                                 v: calcLinearProgression(serie.plots).trend * 100,
                                 s: '%',
-                                r: 2
+                                r: 2,
                             }) }}
                         </text>
                     </g>
@@ -481,7 +481,21 @@
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.bar.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: plot.value, s: FINAL_CONFIG.chart.labels.suffix, r: FINAL_CONFIG.bar.labels.rounding}) : '' }}
+                                {{ canShowValue(plot.value) ? applyDataLabel(
+                                    FINAL_CONFIG.bar.labels.formatter,
+                                    plot.value,
+                                    dataLabel({
+                                        p:FINAL_CONFIG.chart.labels.prefix, 
+                                        v: plot.value, 
+                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        r: FINAL_CONFIG.bar.labels.rounding,
+                                    }),
+                                    { 
+                                        datapoint: plot,
+                                        serie,
+                                    }
+                                    ) : '' 
+                                }}
                             </text>
                             <text 
                                 v-if="plot && FINAL_CONFIG.bar.serieName.show"
@@ -511,7 +525,21 @@
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.plot.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: plot.value, s: FINAL_CONFIG.chart.labels.suffix, r: FINAL_CONFIG.plot.labels.rounding}) : '' }}
+                                {{ canShowValue(plot.value) ? applyDataLabel(
+                                    FINAL_CONFIG.plot.labels.formatter,
+                                    plot.value,
+                                    dataLabel({
+                                        p:FINAL_CONFIG.chart.labels.prefix,
+                                        v: plot.value, 
+                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        r: FINAL_CONFIG.plot.labels.rounding,
+                                    }),
+                                    { 
+                                        datapoint: plot,
+                                        serie,
+                                    }
+                                    ) : '' 
+                                }}
                             </text>
                             <foreignObject
                                 :data-cy="`xy-plot-tag-start-${i}`"
@@ -556,7 +584,21 @@
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.line.labels.color"
                             >
-                                {{ canShowValue(plot.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: plot.value, s: FINAL_CONFIG.chart.labels.suffix, r: FINAL_CONFIG.line.labels.rounding}) : '' }}
+                                {{ canShowValue(plot.value) ? applyDataLabel(
+                                    FINAL_CONFIG.line.labels.formatter,
+                                    plot.value,
+                                    dataLabel({
+                                        p:FINAL_CONFIG.chart.labels.prefix, 
+                                        v: plot.value, 
+                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        r: FINAL_CONFIG.line.labels.rounding,
+                                    }),
+                                    { 
+                                        datapoint: plot,
+                                        serie,
+                                    }
+                                    ) : '' 
+                                }}
                             </text>
                             <foreignObject
                                 :data-cy="`xy-line-tag-start-${i}`"
@@ -749,7 +791,16 @@
                                 :fill="el.color"
                             >
                                 {{
-                                    dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: yLabel.value, s: FINAL_CONFIG.chart.labels.suffix, r: 1})
+                                    applyDataLabel(
+                                        FINAL_CONFIG.chart.grid.labels.yAxis.formatter,
+                                        yLabel.value,
+                                        dataLabel({
+                                            p:FINAL_CONFIG.chart.labels.prefix, 
+                                            v: yLabel.value, 
+                                            s: FINAL_CONFIG.chart.labels.suffix, 
+                                            r: 1,
+                                        })
+                                    )
                                 }}
                             </text>
                         </g>
@@ -775,7 +826,16 @@
                                 text-anchor="end"
                                 :fill="FINAL_CONFIG.chart.grid.labels.color"
                             >
-                                {{ canShowValue(yLabel.value) ? dataLabel({p:FINAL_CONFIG.chart.labels.prefix, v: yLabel.value, s: FINAL_CONFIG.chart.labels.suffix, r: 1}) : '' }}
+                                {{ canShowValue(yLabel.value) ? applyDataLabel(
+                                    FINAL_CONFIG.chart.grid.labels.yAxis.formatter,
+                                    yLabel.value,
+                                    dataLabel({
+                                        p:FINAL_CONFIG.chart.labels.prefix, 
+                                        v: yLabel.value, 
+                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        r: 1,
+                                    })) : '' 
+                                    }}
                             </text>
                         </g>
                     </template>
@@ -1040,8 +1100,13 @@
                             <div v-html="th"/>
                         </template>
                         <template #td="{ td }">
-                            {{ td }}
-                        </template>
+                        {{ !isNaN(Number(td)) ? dataLabel({
+                            p: FINAL_CONFIG.chart.labels.prefix,
+                            v: td,
+                            s: FINAL_CONFIG.chart.labels.suffix,
+                            r: FINAL_CONFIG.table.rounding,
+                        }) : td }}
+                    </template>
                     </DataTable>
                 </div>
             </template>
@@ -1056,6 +1121,7 @@ import {
     abbreviate,
     adaptColorToBackground,
     assignStackRatios,
+    applyDataLabel,
     calcLinearProgression,
     calculateNiceScale,
     checkNaN, 
@@ -1375,6 +1441,8 @@ export default {
                 showMedian: false,
                 showTotal: false,
                 fontFamily: this.FINAL_CONFIG.chart.fontFamily,
+                prefix: this.FINAL_CONFIG.chart.labels.prefix,
+                suffix: this.FINAL_CONFIG.chart.labels.suffix,
                 colNames: JSON.parse(JSON.stringify(this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values)),
                 thead: {
                     backgroundColor: this.FINAL_CONFIG.table.th.backgroundColor,
@@ -1930,7 +1998,24 @@ export default {
                             default:
                                 break;
                         }
-                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${this.FINAL_CONFIG.chart.tooltip.showValue ? this.dataLabel({p:this.FINAL_CONFIG.chart.labels.prefix, v: s.value, s: this.FINAL_CONFIG.chart.labels.suffix, r:this.FINAL_CONFIG.chart.tooltip.roundingValue}) : ''}</b> ${this.FINAL_CONFIG.chart.tooltip.showPercentage ? `(${(this.checkNaN(Math.abs(s.value) / sum * 100)).toFixed(this.FINAL_CONFIG.chart.tooltip.roundingPercentage)}%)` : ''}</div>`;
+                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${this.FINAL_CONFIG.chart.tooltip.showValue ? 
+                                this.applyDataLabel(
+                                    s.type === 'line' ? this.FINAL_CONFIG.line.labels.formatter :
+                                    s.type === 'bar' ? this.FINAL_CONFIG.bar.labels.formatter :
+                                    this.FINAL_CONFIG.plot.labels.formatter,
+                                    s.value,
+                                    this.dataLabel({
+                                        p: this.FINAL_CONFIG.chart.labels.prefix, 
+                                        v: s.value, 
+                                        s: this.FINAL_CONFIG.chart.labels.suffix, 
+                                        r: this.FINAL_CONFIG.chart.tooltip.roundingValue,
+                                    }),
+                                    { datapoint: s }
+                                ) : ''}</b> ${this.FINAL_CONFIG.chart.tooltip.showPercentage ? `(${dataLabel({
+                                    v: this.checkNaN(Math.abs(s.value) / sum * 100),
+                                    s: '%',
+                                    r: this.FINAL_CONFIG.chart.tooltip.roundingPercentage
+                                })})` : ''}</div>`;
 
                         if (this.FINAL_CONFIG.chart.comments.showInTooltip && s.comments.length && s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]) {
                             html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]}</div>`
@@ -2076,6 +2161,7 @@ export default {
     methods: {
         abbreviate,
         assignStackRatios,
+        applyDataLabel,
         calculateNiceScale,
         checkNaN,
         createSmoothPath,

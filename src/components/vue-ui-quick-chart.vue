@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import themes from "../themes.json";
 import * as detector from "../chartDetector";
 import {
+    applyDataLabel,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
     calcNutArrowPath,
@@ -165,9 +166,9 @@ function sumValues(source) {
 function getBlurFilter(id) {
     if (FINAL_CONFIG.value.blurOnHover && ![null, undefined].includes(selectedDatapoint.value) && selectedDatapoint.value !== id) {
         return `url(#blur_${uid.value})`;
-      } else {
+    } else {
         return '';
-      }
+    }
 }
 
 function segregate(id, len) {
@@ -290,7 +291,11 @@ const donut = computed(() => {
     });
 
     function displayArcPercentage(arc, stepBreakdown) {
-        return isNaN(arc.value / sumValues(stepBreakdown)) ? 0 : ((arc.value / sumValues(stepBreakdown)) * 100).toFixed(FINAL_CONFIG.value.dataLabelRoundingPercentage) + "%";
+        return dataLabel({
+            v: isNaN(arc.value / sumValues(stepBreakdown)) ? 0 : (arc.value / sumValues(stepBreakdown)) * 100,
+            s: '%',
+            r: FINAL_CONFIG.value.dataLabelRoundingPercentage
+        });
     }
 
     function isArcBigEnough(arc) {
@@ -325,7 +330,18 @@ const donut = computed(() => {
             html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
             html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-            html += `<b>${ dataLabel({p: FINAL_CONFIG.value.valuePrefix, v: datapoint.value, s: FINAL_CONFIG.value.valueSuffix, r: FINAL_CONFIG.value.dataLabelRoundingValue})}</b>`;
+            html += `<b>${applyDataLabel(
+                FINAL_CONFIG.value.formatter,
+                datapoint.value,
+                dataLabel({
+                    p: FINAL_CONFIG.value.valuePrefix, 
+                    v: datapoint.value, 
+                    s: FINAL_CONFIG.value.valueSuffix, 
+                    r: FINAL_CONFIG.value.dataLabelRoundingValue
+                }),
+                { datapoint, seriesIndex }
+                )
+            }</b>`;
             
             html += `<span>(${dataLabel({ v: datapoint.proportion * 100, s: '%', r: FINAL_CONFIG.value.dataLabelRoundingPercentage})})</span></div>`;
             
@@ -522,17 +538,23 @@ const line = computed(() => {
                 html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
-            mappedSeries.forEach(s => {
+            mappedSeries.forEach((s, i) => {
                 html += `
                     <div style="display:flex; flex-wrap: wrap; align-items:center; gap:3px;">
                         <svg viewBox="0 0 12 12" height="14" width="12"><circle cx="6" cy="6" r="6" stroke="none" fill="${s.color}"/></svg>
                         <span>${s.name}:</span>
-                        <b>${dataLabel({
-                            p: FINAL_CONFIG.value.valuePrefix,
-                            v: s.value,
-                            s: FINAL_CONFIG.value.valueSuffix,
-                            r: FINAL_CONFIG.value.dataLabelRoundingValue
-                        })}</b>
+                        <b>${applyDataLabel(
+                            FINAL_CONFIG.value.formatter,
+                            s.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.value.valuePrefix,
+                                v: s.value,
+                                s: FINAL_CONFIG.value.valueSuffix,
+                                r: FINAL_CONFIG.value.dataLabelRoundingValue
+                            }),
+                            { datapoint: s, seriesIndex: i}
+                            )}
+                        </b>
                     </div>
                 `
             });
@@ -700,23 +722,28 @@ const bar = computed(() => {
                 html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
             }
 
-            mappedSeries.forEach(s => {
+            mappedSeries.forEach((s, i) => {
                 html += `
                     <div style="display:flex; flex-wrap: wrap; align-items:center; gap:3px;">
                         <svg viewBox="0 0 12 12" height="14" width="12"><rect x=0 y="0" width="12" height="12" rx="1" stroke="none" fill="${s.color}"/></svg>
                         <span>${s.name}:</span>
-                        <b>${dataLabel({
-                            p: FINAL_CONFIG.value.valuePrefix,
-                            v: s.value,
-                            s: FINAL_CONFIG.value.valueSuffix,
-                            r: FINAL_CONFIG.value.dataLabelRoundingValue
-                        })}</b>
+                        <b>${applyDataLabel(
+                            FINAL_CONFIG.value.formatter,
+                            s.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.value.valuePrefix,
+                                v: s.value,
+                                s: FINAL_CONFIG.value.valueSuffix,
+                                r: FINAL_CONFIG.value.dataLabelRoundingValue
+                            }),
+                            { datapoint: s, seriesIndex: i }
+                            )}
+                        </b>
                     </div>
                 `
             });
             tooltipContent.value = html;
         }
-
         isTooltip.value = true;
     }
 
@@ -890,12 +917,18 @@ defineExpose({
                             :filter="getBlurFilter(arc.id)"
                         >
                             {{ donut.displayArcPercentage(arc, donut.chart) }} 
-                            ({{ dataLabel({
-                                p: FINAL_CONFIG.valuePrefix,
-                                v: arc.value,
-                                s: FINAL_CONFIG.valueSuffix,
-                                r: FINAL_CONFIG.dataLabelRoundingValue
-                            }) }})
+                            ({{ applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                arc.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.valuePrefix,
+                                    v: arc.value,
+                                    s: FINAL_CONFIG.valueSuffix,
+                                    r: FINAL_CONFIG.dataLabelRoundingValue
+                                }),
+                                { datapoint: arc, seriesIndex: i }
+                                ) 
+                            }})
                         </text>
                         <text
                             v-if="donut.isArcBigEnough(arc, true, 20)"
@@ -983,7 +1016,7 @@ defineExpose({
                     />
                 </g>
                 <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
-                    <template v-for="label in line.yLabels">   
+                    <template v-for="(label, i) in line.yLabels">   
                         <line
                             v-if="label.y <= line.drawingArea.bottom"
                             :x1="label.x + 4"
@@ -1002,12 +1035,18 @@ defineExpose({
                             :font-size="FINAL_CONFIG.xyLabelsYFontSize"
                             :fill="FINAL_CONFIG.color"
                         >
-                            {{ dataLabel({
-                                p: FINAL_CONFIG.valuePrefix,
-                                v: label.value,
-                                s: FINAL_CONFIG.valueSuffix,
-                                r: FINAL_CONFIG.dataLabelRoundingValue
-                            }) }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                label.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.valuePrefix,
+                                    v: label.value,
+                                    s: FINAL_CONFIG.valueSuffix,
+                                    r: FINAL_CONFIG.dataLabelRoundingValue
+                                }),
+                                { datapoint: label, seriesIndex: i}
+                                )
+                            }}
                         </text>
                     </template>
                 </g>
@@ -1103,12 +1142,18 @@ defineExpose({
                             class="quick-animation"
                             style="transition: all 0.3s ease-in-out"
                         >
-                            {{ dataLabel({
-                                p: FINAL_CONFIG.valuePrefix,
-                                v: plot.value,
-                                s: FINAL_CONFIG.valueSuffix,
-                                r: FINAL_CONFIG.dataLabelRoundingValue
-                            }) }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                plot.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.valuePrefix,
+                                    v: plot.value,
+                                    s: FINAL_CONFIG.valueSuffix,
+                                    r: FINAL_CONFIG.dataLabelRoundingValue
+                                }),
+                                { datapoint: plot, seriesIndex: j}
+                                ) 
+                            }}
                         </text>
                     </template>
                 </g>
@@ -1179,7 +1224,7 @@ defineExpose({
                     />
                 </g>
                 <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
-                    <template v-for="label in bar.yLabels">   
+                    <template v-for="(label, i) in bar.yLabels">   
                         <line
                             v-if="label.y <= bar.drawingArea.bottom"
                             :x1="label.x + 4"
@@ -1198,12 +1243,18 @@ defineExpose({
                             :font-size="FINAL_CONFIG.xyLabelsYFontSize"
                             :fill="FINAL_CONFIG.color"
                         >
-                            {{ dataLabel({
-                                p: FINAL_CONFIG.valuePrefix,
-                                v: label.value,
-                                s: FINAL_CONFIG.valueSuffix,
-                                r: FINAL_CONFIG.dataLabelRoundingValue
-                            }) }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                label.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.valuePrefix,
+                                    v: label.value,
+                                    s: FINAL_CONFIG.valueSuffix,
+                                    r: FINAL_CONFIG.dataLabelRoundingValue
+                                }),
+                                { datapoint: label, seriesIndex: i}
+                                ) 
+                            }}
                         </text>
                     </template>
                 </g>
@@ -1270,12 +1321,18 @@ defineExpose({
                             :fill="ds.color"
                             class="quick-animation"
                         >
-                            {{ dataLabel({
-                                p: FINAL_CONFIG.valuePrefix,
-                                v: plot.value,
-                                s: FINAL_CONFIG.valueSuffix,
-                                r: FINAL_CONFIG.dataLabelRoundingValue
-                            }) }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                plot.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.valuePrefix,
+                                    v: plot.value,
+                                    s: FINAL_CONFIG.valueSuffix,
+                                    r: FINAL_CONFIG.dataLabelRoundingValue
+                                }),
+                                { datapoint: plot, seriesIndex: j }
+                                ) 
+                            }}
                         </text>
                     </template>
                 </g>
@@ -1402,12 +1459,18 @@ defineExpose({
                             {{ legendItem.name }}
                         </span>
                         <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px;font-variant-numeric:tabular-nums`">
-                            {{ segregated.includes(legendItem.id) ? '-' : dataLabel({
-                                p: FINAL_CONFIG.valuePrefix,
-                                v: legendItem.absoluteValue,
-                                s: FINAL_CONFIG.valueSuffix,
-                                r: FINAL_CONFIG.dataLabelRoundingValue,
-                            }) }}
+                            {{ segregated.includes(legendItem.id) ? '-' : applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                legendItem.absoluteValue,
+                                dataLabel({
+                                    p: FINAL_CONFIG.valuePrefix,
+                                    v: legendItem.absoluteValue,
+                                    s: FINAL_CONFIG.valueSuffix,
+                                    r: FINAL_CONFIG.dataLabelRoundingValue,
+                                }),
+                                { datapoint: legendItem, seriesIndex: i}
+                                ) 
+                            }}
                         </span>
                         <span v-if="segregated.includes(legendItem.id)" :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
                             ( - % )

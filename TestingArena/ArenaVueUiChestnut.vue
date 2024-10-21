@@ -322,8 +322,61 @@ const themeOptions = ref([
 const currentTheme = ref(themeOptions.value[1])
 
 const config = computed(() => {
+    const c = convertArrayToObject(model.value);
     return {
-        ...convertArrayToObject(model.value),
+        ...c,
+        style: {
+            ...c.style,
+            chart: {
+                ...c.style.chart,
+                layout: {
+                    ...c.style.chart.layout,
+                    grandTotal: {
+                        ...c.style.chart.layout.grandTotal,
+                        formatter: ({value}) => {
+                            return `tot - ${value}`
+                        }
+                    },
+                    roots: {
+                        ...c.style.chart.layout.roots,
+                        labels: {
+                            ...c.style.chart.layout.roots.labels,
+                            formatter: ({value, config }) => {
+                                // console.log({config})
+                                return `root - ${value}`
+                            }
+                        }
+                    },
+                    branches: {
+                        ...c.style.chart.layout.branches,
+                        labels: {
+                            ...c.style.chart.layout.branches.labels,
+                            dataLabels: {
+                                ...c.style.chart.layout.branches.labels.dataLabels,
+                                formatter: ({value}) => {
+                                    return `branch - ${value}`
+                                }
+                            }
+                        }
+                    },
+                    nuts: {
+                        ...c.style.chart.layout.nuts,
+                        selected: {
+                            ...c.style.chart.layout.nuts.selected,
+                            labels: {
+                                ...c.style.chart.layout.nuts.selected.labels,
+                                dataLabels: {
+                                    ...c.style.chart.layout.nuts.selected.labels.dataLabels,
+                                    formatter: ({value}) => {
+                                        return `nut - ${value}`
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
     }

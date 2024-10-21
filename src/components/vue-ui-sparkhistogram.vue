@@ -1,7 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { 
+    applyDataLabel,
     createUid,
+    dataLabel,
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
@@ -161,7 +163,23 @@ const animation = computed(() => {
         <!-- TITLE -->
         <div v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:${FINAL_CONFIG.style.backgroundColor};margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
             <div :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
-                {{ FINAL_CONFIG.style.title.text }} <span v-if="selectedIndex !== null">- {{ computedDataset[selectedIndex].timeLabel || '' }} {{ FINAL_CONFIG.style.labels.value.prefix }}{{ isNaN(computedDataset[selectedIndex].value) ? '' : ': ' + Number(computedDataset[selectedIndex].value.toFixed(FINAL_CONFIG.style.labels.value.rounding)).toLocaleString() }}{{ FINAL_CONFIG.style.labels.value.suffix }}</span> <span v-if="![undefined, null].includes(selectedIndex) && ![null, undefined].includes(computedDataset[selectedIndex].valueLabel)">({{ computedDataset[selectedIndex].valueLabel || 0 }})</span>
+                {{ FINAL_CONFIG.style.title.text }} 
+                <span v-if="selectedIndex !== null">- 
+                    {{ computedDataset[selectedIndex].timeLabel || '' }} 
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.labels.value.formatter,
+                        computedDataset[selectedIndex].value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.labels.value.prefix,
+                            v: computedDataset[selectedIndex].value,
+                            s: FINAL_CONFIG.style.labels.value.suffix,
+                            r: FINAL_CONFIG.style.labels.value.rounding
+                        }),
+                        { datapoint: computedDataset[selectedIndex], seriesIndex: selectedIndex }
+                        ) 
+                    }}
+                </span>
+                <span v-if="![undefined, null].includes(selectedIndex) && ![null, undefined].includes(computedDataset[selectedIndex].valueLabel)">({{ computedDataset[selectedIndex].valueLabel || 0 }})</span>
             </div>
             <div v-if="FINAL_CONFIG.style.title.subtitle.text" :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`">
                 {{ FINAL_CONFIG.style.title.subtitle.text }}

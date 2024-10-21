@@ -152,8 +152,22 @@ const themeOptions = ref([
 const currentTheme = ref(themeOptions.value[2])
 
 const config = computed(() => {
+    const c = convertArrayToObject(model.value);
     return {
-        ...convertArrayToObject(model.value),
+        ...c,
+        style: {
+            ...c.style,
+            labels: {
+                ...c.style.labels,
+                value: {
+                    ...c.style.labels.value,
+                    formatter: ({value, config}) => {
+                        console.log(config)
+                        return `f - ${value}`
+                    }
+                }
+            }
+        },
         theme: currentTheme.value
     }
 })

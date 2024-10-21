@@ -181,8 +181,13 @@ const themeOptions = ref([
 const currentTheme = ref(themeOptions.value[3])
 
 const config = computed(() => {
+    const c = convertArrayToObject(model.value);
     return {
-        ...convertArrayToObject(model.value),
+        ...c,
+        formatter: ({value, config}) => {
+            // console.log(config)
+            return `f - ${value}`
+        },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         xyPeriods: ['01-2025', '02-2025', '03-2025', '04-2025', '05-2025', '06-2025', '07-2025', '08-2025', '09-2025', '10-2025', '11-2025', '12-2025']

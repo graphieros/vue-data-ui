@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import {
+    applyDataLabel,
     createSmoothPath,
     createUid,
     opacity,
@@ -319,15 +320,20 @@ const straightLine = computed(() => {
                 :fill="FINAL_CONFIG.style.dataLabel.useColorTrend ? trendColor : FINAL_CONFIG.style.dataLabel.color"
                 :font-weight="FINAL_CONFIG.style.dataLabel.bold ? 'bold': 'normal'"
             >
-                {{ dataLabel({
-                    p: FINAL_CONFIG.style.dataLabel.prefix,
-                    v: mutableDataset.at(-1).value,
-                    s: FINAL_CONFIG.style.dataLabel.suffix,
-                    r: FINAL_CONFIG.style.dataLabel.rounding
-                }) }}
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.dataLabel.formatter,
+                    mutableDataset.at(-1).value,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.dataLabel.prefix,
+                        v: mutableDataset.at(-1).value,
+                        s: FINAL_CONFIG.style.dataLabel.suffix,
+                        r: FINAL_CONFIG.style.dataLabel.rounding
+                    }),
+                    { datapoint: mutableDataset.at(-1)}
+                    ) 
+                }}
             </text>
         </svg>
-    
     </div>
 </template>
 

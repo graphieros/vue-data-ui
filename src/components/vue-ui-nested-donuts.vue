@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
 import {
     abbreviate,
+    applyDataLabel,
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
     convertColorToHex, 
@@ -455,8 +456,22 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
                             </span>
                         </div>
                         <span>
-                            ${FINAL_CONFIG.value.style.chart.tooltip.showValue ? `<b>${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>` : ''}
-                            ${FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `(${dataLabel({ v: item.proportion * 100, s: '%', r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage })})` : ''}
+                            ${FINAL_CONFIG.value.style.chart.tooltip.showValue ? `<b>${ applyDataLabel(
+                                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                                datapoint.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+                                    v: datapoint.value, 
+                                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+                                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                                }),
+                                { datapoint, seriesIndex }
+                            )}
+                        </b>` : ''}
+                            ${FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `(${dataLabel({ 
+                                v: item.proportion * 100, 
+                                s: '%', 
+                                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage })})` : ''}
                         </span>
                     </div>
                 `;
@@ -467,14 +482,32 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }){
             html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
                 if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-                    html += `<b data-cy="donut-tooltip-value">${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
+                    html += `<b data-cy="donut-tooltip-value">${ applyDataLabel(
+                        FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                        datapoint.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+                            v: datapoint.value, 
+                            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+                            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                        }),
+                        { datapoint, seriesIndex }
+                    )}</b>`;
                 }
 
                 if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
                     if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-                        html += `<b>${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+                        html += `<b>${dataLabel({
+                            v: datapoint.proportion * 100,
+                            s: '%',
+                            r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+                        })}</b></div>`;
                     } else {
-                        html += `<span>(${(datapoint.proportion * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+                        html += `<span>(${dataLabel({
+                            v: datapoint.proportion * 100,
+                            s: '%',
+                            r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+                        })})</span></div>`;
                     }
                 }
         }
@@ -591,7 +624,11 @@ const dataTable = computed(() => {
                 name: h.name
             },
             label,
-            isNaN(table.value.body[i] / h.total) ? "-" : (table.value.body[i] / h.total * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
+            isNaN(table.value.body[i] / h.total) ? "-" : dataLabel({
+                v: table.value.body[i] / h.total * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage
+            })
         ]
     });
 
@@ -752,7 +789,7 @@ defineExpose({
                 :fill="FINAL_CONFIG.style.chart.backgroundColor"
                 :filter="FINAL_CONFIG.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
             />
-           
+
             <!-- NESTED DONUTS -->
             <g v-for="(item, i) in donuts">
                 <g v-for="(arc, j) in item.donut">
@@ -823,7 +860,17 @@ defineExpose({
                             :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
                             :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue ? 'bold': 'normal'"
                         >
-                            ({{ dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue }) }})
+                            ({{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                arc.value,
+                                dataLabel({ 
+                                    p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                                    v: arc.value, 
+                                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                                    r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue 
+                                }),
+                                { datapoint: arc, seriesIndex: i, datapointIndex: j }
+                            )}})
                         </text>
                         <text
                             :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
@@ -835,7 +882,17 @@ defineExpose({
                             :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
                             :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue ? 'bold': 'normal'"
                         >
-                            {{ dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue }) }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                arc.value,
+                                dataLabel({ 
+                                    p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                                    v: arc.value, 
+                                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                                    r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue 
+                                }),
+                                { datapoint: arc, seriesIndex: i, datapointIndex: j }
+                            )}}
                         </text>
                     </g>
                 </g>
@@ -878,8 +935,8 @@ defineExpose({
             }"
         />
 
-         <!-- TOOLTIP -->
-         <Tooltip
+        <!-- TOOLTIP -->
+        <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
             :color="FINAL_CONFIG.style.chart.tooltip.color"
@@ -917,7 +974,18 @@ defineExpose({
                 </template>
                 <template #item="{ legend, index }">
                     <div :data-cy="`legend-item-${index}`" @click="segregateDonut(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }}: {{ dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue}) }}
+                    {{ legend.name }}: {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                        legend.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                            v: legend.value, 
+                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                            r: FINAL_CONFIG.style.chart.legend.roundingValue
+                        }),
+                        { datapoint: legend, seriesIndex: index }
+                        )
+                    }}
                     <template v-if="!segregated.includes(legend.id)">
                         ({{ isNaN(legend.value / legend.total) ? '-' : dataLabel({ v: legend.value / legend.total * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage }) }})
                     </template>

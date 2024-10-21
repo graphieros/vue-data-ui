@@ -4,7 +4,9 @@ import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import { 
+    applyDataLabel,
     createUid,
+    dataLabel,
     error,
     objectIsEmpty,
     shiftHue,
@@ -263,7 +265,15 @@ defineExpose({
                 :font-weight="FINAL_CONFIG.style.chart.layout.percentage.bold ? 'bold' : 'normal'"
                 style="font-variant-numeric:tabluar-nums"
             >
-                {{ Number(activeValue.toFixed(FINAL_CONFIG.style.chart.layout.percentage.rounding)).toLocaleString() }}%
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.chart.layout.percentage.formatter,
+                    activeValue,
+                    dataLabel({
+                        v: activeValue,
+                        s: '%',
+                        r: FINAL_CONFIG.style.chart.layout.percentage.rounding
+                    }))
+                }}
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>

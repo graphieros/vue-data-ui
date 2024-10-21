@@ -13,7 +13,7 @@ const props = defineProps({
     head: Array,
     body: Array,
     title: String,
-    config: Object
+    config: Object,
 });
 
 const { backgroundColor:thbg, color:thc, outline:tho } = props.config.th;
@@ -66,7 +66,7 @@ const emit = defineEmits(['close'])
             <tbody>
                 <tr v-for="(tr, i) in body" role="row" style="font-variant-numeric: tabular-nums;" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="{backgroundColor: tdbg, color: tdc }">
                     <td role="cell" v-for="(td, j) in tr" :data-cell="(colNames[j] && colNames[j].name ? colNames[j].name : '') || colNames[j] || ''" :style="{ outline: tdo}" class="vue-ui-data-table__tbody__td">
-                        <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                        <div dir="auto" style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
                             <svg height="12" width="12" v-if="td.color" viewBox="0 0 20 20" style="background: none;overflow: visible">
                                 <Shape
                                     :plot="{ x: 10, y: 10 }"

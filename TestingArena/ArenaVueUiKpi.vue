@@ -12,6 +12,12 @@ function updateVal() {
     dataset.value = Math.random() * 10000
 }
 
+const config = ref({
+    formatter: ({ value }) => {
+        return `f | ${value}`
+    }
+})
+
     
 </script>
 
@@ -24,16 +30,16 @@ function updateVal() {
         <template #title>VueUiKpi</template>
         
         <template #local>
-            <LocalVueUiKpi :dataset="dataset"/>
+            <LocalVueUiKpi :dataset="dataset" :config="config"/>
         </template>
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiKpi" :dataset="dataset"/>
+            <LocalVueDataUi component="VueUiKpi" :dataset="dataset" :config="config"/>
         </template>
         <template #build>
-            <VueUiKpi :dataset="dataset"/>
+            <VueUiKpi :dataset="dataset" :config="config"/>
         </template>
         <template #VDUI-build>
-            <VueDataUi component="VueUiKpi" :dataset="dataset"/>
+            <VueDataUi component="VueUiKpi" :dataset="dataset" :config="config"/>
         </template>
     </Box>
 </template>

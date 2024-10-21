@@ -63,9 +63,23 @@ const themeOptions = ref([
 const currentTheme = ref(themeOptions.value[3])
 
 const config = computed(() => {
+    const c = convertArrayToObject(model.value);
     return {
         theme: currentTheme.value,
-        ...convertArrayToObject(model.value),
+        ...c,
+        style: {
+            ...c.style,
+            chart: {
+                ...c.style.chart,
+                label: {
+                    ...c.style.chart.label,
+                    formatter: ({value, config}) => {
+                        console.log(config)
+                        return `f | ${value}`
+                    }
+                }
+            }
+        },
         customPalette: ["#DD3322", "#66DDAA"],
     }
 })

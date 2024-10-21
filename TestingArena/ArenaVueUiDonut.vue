@@ -179,8 +179,7 @@ const config = computed(() => {
                     tooltip: {
                         ...c.style.chart.tooltip,
                         customFormat: (data) => {
-                            console.log('XY CUSTOM TOOLTIP', data);
-                            return "CUSTOM TOOLTIP"
+                            return "CUSTOM TOOLTIP " + data
                         }
                     }
                 }
@@ -189,6 +188,57 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            style: {
+                ...c.style,
+                chart: {
+                    ...c.style.chart,
+                    layout: {
+                        ...c.style.chart.layout,
+                        labels: {
+                            ...c.style.chart.layout.labels,
+                            hollow: {
+                                ...c.style.chart.layout.labels.hollow,
+                                total: {
+                                    ...c.style.chart.layout.labels.hollow.total,
+                                    value: {
+                                        ...c.style.chart.layout.labels.hollow.total.value,
+                                        formatter: ({value}) => {
+                                            return `f  - ${value}`
+                                        }
+                                    }
+                                },
+                                average: {
+                                    ...c.style.chart.layout.labels.hollow.average,
+                                    value: {
+                                        ...c.style.chart.layout.labels.hollow.average.value,
+                                        formatter: ({value}) => {
+                                            return `f  - ${value}`
+                                        }
+                                    }
+                                },
+                            },
+                            value: {
+                                ...c.style.chart.layout.labels.value,
+                                formatter: ({value, config}) => {
+
+                                    return `f  - ${value}`
+                                }
+                            },
+                            percentage: {
+                                formatter: ({value}) => {
+                                    return `f - ${value}`
+                                }
+                            },
+                            dataLabels: {
+                                ...c.style.chart.layout.labels.dataLabels,
+                                formatter: ({value}) => {
+                                    return `f - ${value}`
+                                }
+                            }
+                        }
+                    },
+                }
+            },
             theme: currentTheme.value,
             // customPalette: ['#6376DD', "#DD3322", "#66DDAA"]
         }

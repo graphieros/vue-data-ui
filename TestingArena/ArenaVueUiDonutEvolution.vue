@@ -129,6 +129,13 @@ const config = computed(() => {
                 ...c.style.chart,
                 layout: {
                     ...c.style.chart.layout,
+                    dataLabels: {
+                        ...c.style.chart.layout.dataLabels,
+                        formatter: ({value, config}) => {
+                            console.log(config)
+                            return `f | ${value}`
+                        }
+                    },
                     grid: {
                         ...c.style.chart.layout.grid,
                         xAxis: {

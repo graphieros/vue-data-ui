@@ -1082,10 +1082,13 @@ export function interpolateColorHex(minColor, maxColor, minValue, maxValue, valu
  * @property {boolean=} isAnimating
  * @property {RegExp=} regex - replacements when isAnimating is true
  * @property {string=} replacement - the replacement for regex result when isAnimating is true
+ * @property {locale=} locale - the region code
  * @type {DataLabel}
  */
-export function dataLabel({ p = '', v, s = '', r = 0, space = false, isAnimating = false, regex = /[^%]/g, replacement = '-' }) {
-    const num = Number(Number(v).toFixed(r).toLocaleString())
+export function dataLabel({ p = '', v, s = '', r = 0, space = false, isAnimating = false, regex = /[^%]/g, replacement = '-', locale = null }) {
+    const num = locale ?
+        Number(Number(v).toFixed(r)).toLocaleString(locale) :
+        Number(Number(v).toFixed(r)).toLocaleString();
     const numStr = num === Infinity ? '∞' : num === -Infinity ? '-∞' : num;
     const result = `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
     return isAnimating ? result.replace(regex, replacement) : result
@@ -1695,10 +1698,42 @@ export function sumSeries(source) {
     }, []);
 }
 
+export function checkFormatter(func, { value, config }) {
+    let isValid = false;
+    let formattedValue = value;
+    
+    if (typeof func === 'function') {
+        try {
+            // Ensure that the function is called with an object containing `value` and `config`
+            formattedValue = func({ value, config });
+
+            if (['number', 'string'].includes(typeof formattedValue)) {
+                isValid = true;
+            } else {
+                formattedValue = value;
+            }
+        } catch (err) {
+            console.warn('Formatter could not be applied:', err);
+            isValid = false;
+        }
+    }
+
+    return {
+        isValid,
+        value: formattedValue
+    };
+}
+
+export function applyDataLabel(func, data, fallbackValue, config) {
+    const { isValid, value } = checkFormatter(func, { value: data, config });
+    return isValid ? value : fallbackValue;
+}
+
 const lib = {
     abbreviate,
     adaptColorToBackground,
     addVector,
+    applyDataLabel,
     assignStackRatios,
     calcLinearProgression,
     calcMarkerOffsetX,
@@ -1723,6 +1758,7 @@ const lib = {
     createTSpans,
     createUid,
     createWordCloudDatasetFromPlainText,
+    checkFormatter,
     darkenHexColor,
     dataLabel,
     degreesToRadians,

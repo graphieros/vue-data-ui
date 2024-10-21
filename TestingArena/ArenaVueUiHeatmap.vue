@@ -142,6 +142,16 @@ const config = computed(() => {
                 ...c.style,
                 layout: {
                     ...c.style.layout,
+                    cells: {
+                        ...c.style.layout.cells,
+                        value: {
+                            ...c.style.layout.cells.value,
+                            formatter: ({value, config}) => {
+                                console.log(config)
+                                return `f - ${value}`
+                            }
+                        }
+                    },
                     dataLabels: {
                         ...c.style.layout.dataLabels,
                         xAxis: {

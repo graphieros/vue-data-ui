@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { 
+import { ref, computed, nextTick, onMounted } from "vue";
+import {
+    applyDataLabel,
     createCsvContent, 
-    createUid, 
+    createUid,
+    dataLabel,
     downloadCsv,
     error,
     functionReturnsString,
@@ -275,13 +277,33 @@ function useTooltip(index, datapoint) {
     
         const selectedSet = drawableDataset.value[index];
         html += `<div><b>${selectedSet.segment}</b></div>`;
-        html += `<div>${FINAL_CONFIG.value.translations.age}: ${selectedSet.age}</div>`
+        html += `<div>${FINAL_CONFIG.value.translations.age}: ${applyDataLabel(
+            FINAL_CONFIG.value.style.layout.dataLabels.yAxis.formatter,
+            selectedSet.age,
+            dataLabel({ v: selectedSet.age }),
+            { datapoint, seriesIndex: index}
+        )}</div>`
         html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}">`;
         html += `<div style="display:flex; flex-direction:row;gap:12px">`;
-        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : FINAL_CONFIG.value.style.layout.bars.left.color}"/></svg><div>${FINAL_CONFIG.value.translations.female}</div><div><b>${selectedSet.left.value.toLocaleString()}</b></div></div>`;
-        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : FINAL_CONFIG.value.style.layout.bars.right.color}"/></svg><div>${FINAL_CONFIG.value.translations.male}</div><div><b>${selectedSet.right.value.toLocaleString()}</b></div></div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : FINAL_CONFIG.value.style.layout.bars.left.color}"/></svg><div>${FINAL_CONFIG.value.translations.female}</div><div><b>${applyDataLabel(
+            FINAL_CONFIG.value.style.layout.dataLabels.xAxis.formatter,
+            selectedSet.left.value,
+            dataLabel({ v: selectedSet.left.value }),
+            { datapoint, seriesIndex: index }
+        )}</b></div></div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : FINAL_CONFIG.value.style.layout.bars.right.color}"/></svg><div>${FINAL_CONFIG.value.translations.male}</div><div><b>${applyDataLabel(
+            FINAL_CONFIG.value.style.layout.dataLabels.xAxis.formatter,
+            selectedSet.right.value,
+            dataLabel({ v: selectedSet.right.value }),
+            { datapoint, seriesIndex: index }
+        )}</b></div></div>`;
         html += `</div>`;
-        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}"><div>${FINAL_CONFIG.value.translations.total}</div><div><b>${(selectedSet.left.value + selectedSet.right.value).toLocaleString()}</b></div></div>`
+        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}"><div>${FINAL_CONFIG.value.translations.total}</div><div><b>${applyDataLabel(
+            FINAL_CONFIG.value.style.layout.dataLabels.xAxis.formatter,
+            selectedSet.right.value + selectedSet.left.value,
+            dataLabel({ v: selectedSet.right.value + selectedSet.left.value }),
+            { datapoint, seriesIndex: index }
+        )}</b></div></div>`
         html += `</div>`;
     
         tooltipContent.value = `<div>${html}</div>`;
@@ -535,7 +557,12 @@ defineExpose({
                             :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
                             :font-weight="FINAL_CONFIG.style.layout.dataLabels.yAxis.bold ? 'bold': 'normal'"
                         >
-                            {{ label }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.layout.dataLabels.yAxis.formatter,
+                                label,
+                                dataLabel({ v: label }),
+                                { datapoint: label, seriesIndex: i}
+                            ) }}
                         </text>
                     </template>
                 </g>
@@ -561,7 +588,7 @@ defineExpose({
                             stroke-linecap="round"
                         />
                     </g>
-                    <g v-for="rightLabel in xLabels.right">
+                    <g v-for="(rightLabel, i) in xLabels.right">
                         <line v-if="FINAL_CONFIG.style.layout.grid.show"
                             :x1="rightLabel.x"
                             :x2="rightLabel.x"
@@ -579,10 +606,17 @@ defineExpose({
                             text-anchor="middle"
                             :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
                         >
-                            {{ Number((rightLabel.value / FINAL_CONFIG.style.layout.dataLabels.xAxis.scale).toFixed(0)).toLocaleString() }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.layout.dataLabels.xAxis.formatter,
+                                rightLabel.value / FINAL_CONFIG.style.layout.dataLabels.xAxis.scale,
+                                dataLabel({
+                                    v: rightLabel.value / FINAL_CONFIG.style.layout.dataLabels.xAxis.scale
+                                }),
+                                { datapoint: rightLabel, seriesIndex: i }
+                            ) }}
                         </text>
                     </g>
-                    <g v-for="leftLabel in xLabels.left">
+                    <g v-for="(leftLabel, i) in xLabels.left">
                         <line v-if="FINAL_CONFIG.style.layout.grid.show"
                             :x1="leftLabel.x"
                             :x2="leftLabel.x"
@@ -600,7 +634,14 @@ defineExpose({
                             text-anchor="middle"
                             :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
                         >
-                            {{ Number((leftLabel.value / FINAL_CONFIG.style.layout.dataLabels.xAxis.scale).toFixed(0)).toLocaleString() }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.layout.dataLabels.xAxis.formatter,
+                                leftLabel.value / FINAL_CONFIG.style.layout.dataLabels.xAxis.scale,
+                                dataLabel({
+                                    v: leftLabel.value / FINAL_CONFIG.style.layout.dataLabels.xAxis.scale
+                                }),
+                                { datapoint: leftLabel, seriesIndex: i}
+                            ) }}
                         </text>
                     </g>
                     <text

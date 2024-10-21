@@ -10,6 +10,7 @@ import DataTable from '../atoms/DataTable.vue';
 import Accordion from './vue-ui-accordion.vue';
 import {
     adaptColorToBackground,
+    applyDataLabel,
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
@@ -367,7 +368,17 @@ function useTooltip({ datapoint, seriesIndex }) {
 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="treemap-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-        html += `<b data-cy="treemap-tooltip-value">${ dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.prefix, v: datapoint.value, s: FINAL_CONFIG.value.style.chart.layout.labels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
+        html += `<b data-cy="treemap-tooltip-value">${ applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.labels.formatter,
+            datapoint.value,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.chart.layout.labels.prefix, 
+                v: datapoint.value, 
+                s: FINAL_CONFIG.value.style.chart.layout.labels.suffix, 
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+            }),
+            { datapoint, seriesIndex }
+            )}</b>`;
 
         tooltipContent.value = `<div>${html}</div>`;
     }
@@ -408,7 +419,16 @@ const dataTable = computed(() => {
     ];
 
     const body = table.value.head.map((h,i) => {
-        const label = dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.prefix, v: table.value.body[i], s:FINAL_CONFIG.value.style.chart.layout.labels.suffix, r:FINAL_CONFIG.value.table.td.roundingValue});
+        const label = applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.labels.formatter,
+            table.value.body[i],
+            dataLabel({
+                p:FINAL_CONFIG.value.style.chart.layout.labels.prefix, 
+                v: table.value.body[i], 
+                s:FINAL_CONFIG.value.style.chart.layout.labels.suffix, 
+                r:FINAL_CONFIG.value.table.td.roundingValue
+            })
+        );
         return [
             {
                 color: h.color,
@@ -416,7 +436,11 @@ const dataTable = computed(() => {
                 shape: 'square'
             },
             label,
-            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
+            isNaN(table.value.body[i] / total.value) ? "-" : dataLabel({
+                v: table.value.body[i] / total.value * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage
+            })
         ]
     });
 
@@ -590,12 +614,18 @@ defineExpose({
                                 {{ rect.name }}
                             </span><br>
                             <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
-                                {{  dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.labels.prefix,
-                                    v: rect.value,
-                                    s: FINAL_CONFIG.style.chart.layout.labels.suffix,
-                                    r: FINAL_CONFIG.style.chart.layout.labels.rounding
-                                }) }}
+                                {{ applyDataLabel(
+                                    FINAL_CONFIG.style.chart.layout.labels.formatter,
+                                    rect.value,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.chart.layout.labels.prefix,
+                                        v: rect.value,
+                                        s: FINAL_CONFIG.style.chart.layout.labels.suffix,
+                                        r: FINAL_CONFIG.style.chart.layout.labels.rounding
+                                    }),
+                                    { datapoint: rect }
+                                    )
+                                }}
                             </span>
                         </div>
                         <slot 
@@ -641,7 +671,18 @@ defineExpose({
             >
                 <template #item="{ legend, index }">
                     <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{ dataLabel({p: FINAL_CONFIG.style.chart.layout.labels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.suffix, r: FINAL_CONFIG.style.chart.legend.roundingValue}) }}
+                        {{ legend.name }}: {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.formatter,
+                            legend.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.prefix, 
+                                v: legend.value, 
+                                s: FINAL_CONFIG.style.chart.layout.labels.suffix, 
+                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                            }),
+                            { datapoint: legend }
+                            ) 
+                        }}
                         <span v-if="!segregated.includes(legend.id)">
                             ({{ isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}}%)
                         </span>

@@ -50,6 +50,7 @@ const dataset = ref([
     ])
 
 const model = ref([
+    { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA']},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -258,12 +259,46 @@ const config = computed(() => {
             ...c,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
             theme: currentTheme.value,
+            line: {
+                ...c.line,
+                labels: {
+                    ...c.line.labels,
+                    formatter: ({value, config}) => {
+                        console.log(config)
+                        return `f - ${value}`
+                    }
+                }
+            },
+            plot: {
+                ...c.plot,
+                labels: {
+                    ...c.plot.labels,
+                    formatter: ({value, config}) => {
+                        return `f - ${value}`
+                    }
+                }
+            },
+            bar: {
+                ...c.bar,
+                labels: {
+                    ...c.bar.labels,
+                    formatter: ({value, config}) => {
+                        return `f - ${value}`
+                    }
+                }
+            },
             chart: {
                 ...c.chart,
                 grid: {
                     ...c.chart.grid,
                     labels: {
                         ...c.chart.grid.labels,
+                        yAxis: {
+                            ...c.chart.grid.labels.yAxis,
+                            formatter: ({value}) => {
+                                return `f - ${value}`
+                            }
+                        },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
                             values: [

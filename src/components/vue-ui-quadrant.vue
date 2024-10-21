@@ -1,12 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch, onBeforeUnmount } from "vue";
 import { 
-    XMLNS,
     adaptColorToBackground,
+    applyDataLabel,
     convertColorToHex, 
     convertCustomPalette,
     createCsvContent, 
-    createUid, 
+    createUid,
+    dataLabel,
     downloadCsv,
     error,
     functionReturnsString,
@@ -17,6 +18,7 @@ import {
     palette, 
     shiftHue,
     themePalettes,
+    XMLNS,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
@@ -551,8 +553,22 @@ const dataTable = computed(() => {
                 name: ds.category
             },
             ds.name,
-            ds.x,
-            ds.y,
+            applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.plotLabels.x.formatter,
+                ds.x,
+                dataLabel({
+                    v: ds.x,
+                    r: FINAL_CONFIG.value.style.chart.layout.labels.plotLabels.rounding
+                })
+            ),
+            applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.plotLabels.y.formatter,
+                ds.y,
+                dataLabel({
+                    v: ds.y,
+                    r: FINAL_CONFIG.value.style.chart.layout.labels.plotLabels.rounding
+                })
+            ),
             ds.sideName || ds.quadrantSide
         ]
     })
@@ -669,8 +685,24 @@ function useTooltip(category, plot, categoryIndex) {
         }
         html += `<div>${category.name}</div>`;
         html += `<div style="padding-bottom:6px;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};margin-bottom:3px">${plot.name}</div>`;
-        html += `<div>${FINAL_CONFIG.value.style.chart.layout.grid.xAxis.name ? FINAL_CONFIG.value.style.chart.layout.grid.xAxis.name : 'x'}: <b>${plot.xValue.toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingValue)}</b></div>`;  
-        html += `<div>${FINAL_CONFIG.value.style.chart.layout.grid.yAxis.name ? FINAL_CONFIG.value.style.chart.layout.grid.yAxis.name : 'y'}: <b>${plot.yValue.toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingValue)}</b></div>`;  
+        html += `<div>${FINAL_CONFIG.value.style.chart.layout.grid.xAxis.name ? FINAL_CONFIG.value.style.chart.layout.grid.xAxis.name : 'x'}: <b>${applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.labels.plotLabels.x.formatter,
+            plot.xValue,
+            dataLabel({
+                v: plot.xValue,
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+            }),
+            { datapoint: plot, category, categoryIndex }
+        )}</b></div>`;  
+        html += `<div>${FINAL_CONFIG.value.style.chart.layout.grid.yAxis.name ? FINAL_CONFIG.value.style.chart.layout.grid.yAxis.name : 'y'}: <b>${applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.labels.plotLabels.y.formatter,
+            plot.yValue,
+            dataLabel({
+                v: plot.yValue,
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+            }),
+            { datapoint: plot, category, categoryIndex }
+        )}</b></div>`;  
     
         tooltipContent.value = `<div style="text-align:left;font-size:${FINAL_CONFIG.value.style.chart.tooltip.fontSize}px">${html}</div>`;
     }
@@ -1076,7 +1108,14 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
                     :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
                 >
-                    {{ axisValues.y.max }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.labels.plotLabels.y.formatter,
+                        axisValues.y.max,
+                        dataLabel({
+                            v: axisValues.y.max,
+                            r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
+                        })) 
+                    }}
                 </text>
                 <text
                     :x="svg.centerX"
@@ -1096,7 +1135,14 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
                     :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.negative"
                 >
-                    {{ axisValues.y.min }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.labels.plotLabels.y.formatter,
+                        axisValues.y.min,
+                        dataLabel({
+                            v: axisValues.y.min,
+                            r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
+                        })) 
+                    }}
                 </text>
 
                 <!-- X MIN -->
@@ -1107,7 +1153,14 @@ defineExpose({
                     :transform="`translate(${svg.padding - FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize}, ${svg.height / 2}), rotate(-90)`"
                     :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.negative"
                 >
-                    {{ axisValues.x.min }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.labels.plotLabels.x.formatter,
+                        axisValues.x.min,
+                        dataLabel({
+                            v: axisValues.x.min,
+                            r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
+                        })) 
+                    }}
                 </text>
 
                 <!-- X MAX -->
@@ -1118,7 +1171,14 @@ defineExpose({
                     :transform="`translate(${svg.width - svg.padding + FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize}, ${svg.height / 2}), rotate(90)`"
                     :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
                 >
-                    {{ axisValues.x.max }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.labels.plotLabels.x.formatter,
+                        axisValues.x.max,
+                        dataLabel({
+                            v: axisValues.x.max,
+                            r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
+                        })) 
+                    }}
                 </text>       
                 <text
                     :id="`xLabelMaxName_${uid}`"

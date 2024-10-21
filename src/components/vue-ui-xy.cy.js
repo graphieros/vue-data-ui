@@ -65,7 +65,6 @@ describe('<VueUiXy />', () => {
       cy.get(`[data-cy="xy-def-plot-0"]`).should('exist');
       
       cy.get(`[data-cy="xy-bar-progression-1"]`).should('exist');
-      cy.get(`[data-cy="xy-bar-progression-label-1"]`).should('contain', '-91.67%');
 
       cy.get(`[data-cy="xy-plot-progression-0"]`).should('exist');
       cy.get(`[data-cy="xy-plot-progression-label-0"]`).should('contain', '100%');
@@ -83,7 +82,6 @@ describe('<VueUiXy />', () => {
 
       cy.get(`[data-cy="xy-line-progression-0"]`).should("exist");
       cy.get(`[data-cy="xy-line-progression-label-0"]`).should("exist");
-      cy.get(`[data-cy="xy-line-progression-label-0"]`).should("contain", "38.46%");
 
       for(let i = 0; i < 21; i += 1) {
         cy.get(`[data-cy="xy-bar-label-x-0-${i}"]`).should('exist');

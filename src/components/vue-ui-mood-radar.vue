@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
 import { 
+    applyDataLabel,
     createCsvContent, 
     createPolygonPath, 
     createUid, 
+    dataLabel,
     downloadCsv,
     error,
     makePath,
@@ -426,7 +428,18 @@ defineExpose({
                         text-anchor="middle"
                         :font-weight="FINAL_CONFIG.style.chart.layout.dataLabel.bold ? 'bold' : 'normal'"
                     >
-                        {{ Number(plot.value.toFixed(FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue)).toLocaleString() }}
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.dataLabel.formatter,
+                            plot.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.dataLabel.prefix,
+                                v: plot.value,
+                                s: FINAL_CONFIG.style.chart.layout.dataLabel.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue
+                            }),
+                            { datapoint: plot, seriesIndex: i }
+                            ) 
+                        }}
                     </text>
                     <text 
 
@@ -436,7 +449,11 @@ defineExpose({
                         font-size="12"
                         text-anchor="middle"
                     >
-                        ({{ Number((plot.value / grandTotal * 100).toFixed(FINAL_CONFIG.style.chart.layout.dataLabel.roundingPercentage)).toLocaleString() }}%)
+                        ({{ dataLabel({
+                            v: plot.value / grandTotal * 100,
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingPercentage
+                        }) }})
                     </text>
                 </g>
                 <slot name="svg" :svg="svg"/>
@@ -474,7 +491,7 @@ defineExpose({
             gap: 3px;
             align-items: center;
             margin: 3px 0;
-          ">
+        ">
                     <BaseIcon :strokeWidth="1" v-if="legend.key == 1" name="moodSad"
                         :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
                     <BaseIcon :strokeWidth="1" v-if="legend.key == 2" name="moodFlat"
@@ -485,11 +502,21 @@ defineExpose({
                         :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
                     <BaseIcon :strokeWidth="1" v-if="legend.key == 5" name="moodHappy"
                         :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
-                    <span style="font-weight: bold">{{ legend.value }}</span> ({{
-                        (isNaN(legend.proportion) ? 0 : legend.proportion * 100).toFixed(
-                            FINAL_CONFIG.style.chart.legend.roundingPercentage
-                        )
-                    }}%)
+                    <span style="font-weight: bold">{{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.dataLabel.formatter,
+                        legend.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.dataLabel.prefix,
+                            v: legend.value,
+                            s: FINAL_CONFIG.style.chart.layout.dataLabel.suffix,
+                            r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue
+                        }),
+                        { datapoint: legend, seriesIndex: index }
+                    ) }}</span> ({{ dataLabel({
+                        v: legend.proportion * 100,
+                        s: '%',
+                        r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                    })}})
                 </div>
             </template>
         </Legend>

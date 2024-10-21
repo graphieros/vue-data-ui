@@ -2,9 +2,9 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import themes from "../themes.json";
 import { 
-    XMLNS, 
-    abbreviate, 
+    abbreviate,
     adaptColorToBackground, 
+    applyDataLabel,
     convertCustomPalette, 
     createCsvContent, 
     createUid, 
@@ -14,6 +14,7 @@ import {
     objectIsEmpty, 
     palette, 
     themePalettes,
+    XMLNS, 
 } from "../lib";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -564,12 +565,18 @@ defineExpose({
                 text-anchor="middle"
                 :style="`pointer-events: none; opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0 : 1}`"
             >
-                {{ dataLabel({
-                    p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
-                    v: node.value,
-                    s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
-                    r: FINAL_CONFIG.style.chart.nodes.labels.rounding
-                }) }}
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.chart.nodes.labels.formatter,
+                    node.value,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
+                        v: node.value,
+                        s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
+                        r: FINAL_CONFIG.style.chart.nodes.labels.rounding
+                    }),
+                    { datapoint: node, seriesIndex: i }
+                    )
+                }}
             </text>
 
             <slot name="svg" :svg="drawingArea"/>

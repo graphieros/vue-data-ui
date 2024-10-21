@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { 
-    XMLNS,
+import {
+    applyDataLabel,
     calculateNiceScale, 
     convertColorToHex, 
     convertCustomPalette, 
@@ -14,12 +14,13 @@ import {
     error, 
     functionReturnsString, 
     getMissingDatasetAttributes, 
+    getPathLengthFromCoordinates,
     isFunction, 
     objectIsEmpty,
     palette, 
     themePalettes,
-    getPathLengthFromCoordinates,
-    translateSize
+    translateSize,
+    XMLNS,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";

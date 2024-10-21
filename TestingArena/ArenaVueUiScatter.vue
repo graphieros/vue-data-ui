@@ -212,6 +212,33 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            style: {
+                ...c.style,
+                layout: {
+                    ...c.style.layout,
+                    plots: {
+                        ...c.style.layout.plots,
+                        selectors: {
+                            ...c.style.layout.plots.selectors,
+                            labels: {
+                                ...c.style.layout.plots.selectors.labels,
+                                x: {
+                                    formatter: ({value, config}) => {
+                                        console.log(config)
+                                        return `X | ${value}`
+                                    }
+                                },
+                                y: {
+                                    formatter: ({value, config}) => {
+                                        console.log(config)
+                                        return `Y | ${value}`
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             theme: currentTheme.value,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }

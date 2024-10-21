@@ -127,6 +127,28 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            style: {
+                ...c.style,
+                layout: {
+                    ...c.style.layout,
+                    dataLabels: {
+                        ...c.style.layout.dataLabels,
+                        xAxis: {
+                            ...c.style.layout.dataLabels.xAxis,
+                            formatter: ({value, config}) => {
+                                console.log(config)
+                                return `X | ${value}`
+                            }
+                        },
+                        yAxis: {
+                            ...c.style.layout.dataLabels.yAxis,
+                            formatter: ({value}) => {
+                                return `Y | ${value}`
+                            }
+                        },
+                    }
+                }
+            },
             theme: currentTheme.value
         }
     }

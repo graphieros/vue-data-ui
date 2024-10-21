@@ -1,8 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import {
-calcLinearProgression,
-calcMedian,
+    applyDataLabel,
+    calcLinearProgression,
+    calcMedian,
     createSmoothPath,
     createUid,
     dataLabel as dl,
@@ -402,7 +403,16 @@ function selectDatapoint(datapoint, index) {
                 :font-weight="FINAL_CONFIG.style.dataLabel.bold ? 'bold' : 'normal'"
                 :fill="FINAL_CONFIG.style.dataLabel.color"
             >
-            {{ selectedPlot ? dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: selectedPlot.absoluteValue, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }) : dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: dataLabel, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }) }}
+            {{ selectedPlot ? applyDataLabel(
+                    FINAL_CONFIG.style.dataLabel.formatter,
+                    selectedPlot.absoluteValue,
+                    dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: selectedPlot.absoluteValue, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }), { datapoint: selectedPlot }
+                ) : applyDataLabel(
+                    FINAL_CONFIG.style.dataLabel.formatter,
+                    dataLabel,
+                    dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: dataLabel, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }),
+                ) 
+            }}
             </text>
 
             <!-- MOUSE TRAP -->

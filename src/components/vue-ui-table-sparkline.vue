@@ -2,17 +2,20 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
-import { calcMedian, 
+import {
+    applyDataLabel,
+    calcMedian, 
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
     createUid, 
+    dataLabel, 
     downloadCsv,
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
     palette,
-    themePalettes
+    themePalettes,
 } from "../lib";
 import SparkLine from "./vue-ui-sparkline.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
@@ -374,12 +377,12 @@ defineExpose({
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign
                         }" :data-cell="FINAL_CONFIG.translations.serie" class="vue-ui-data-table__tbody__td sticky-col-first">
-                            <div style="display: flex; flex-direction: row; align-items: center; gap: 6px">
+                            <div dir="auto" style="display: flex; flex-direction: row; align-items: center; gap: 6px">
                                 <span :style="{ color: tr.color }">⬤</span>
                                 <span>{{ tr.name ?? "-" }}</span>
                             </div>
                         </td>
-                        <td role="cell" v-for="(_, j) in maxSeries" :style="{
+                        <td dir="auto" role="cell" v-for="(_, j) in maxSeries" :style="{
                             outline: FINAL_CONFIG.tbody.outline,
                             fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
@@ -399,31 +402,74 @@ defineExpose({
                                     ? '3px'
                                     : '',
                         }" :data-cell="colNames[j]" class="vue-ui-data-table__tbody__td" @pointerenter="selectedSerieIndex = i; selectedDataIndex = j">
-                            {{ [null, undefined].includes(tr.values[j]) ? '-' : Number(tr.values[j].toFixed(FINAL_CONFIG.roundingValues)).toLocaleString() }}
+                            {{ [null, undefined].includes(tr.values[j]) ? '-' : applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                Number(tr.values[j]),
+                                dataLabel({
+                                    p: FINAL_CONFIG.prefix,
+                                    v: Number(tr.values[j]),
+                                    s: FINAL_CONFIG.suffix,
+                                    r: FINAL_CONFIG.roundingValues
+                                }),
+                                { datapoint: tr, seriesIndex: i, datapointIndex: j }
+                                )
+                            }}
                         </td>
-                        <td role="cell" v-if="FINAL_CONFIG.showTotal" :style="{
+                        <td dir="auto" role="cell" v-if="FINAL_CONFIG.showTotal" :style="{
                             outline: FINAL_CONFIG.tbody.outline,
                             fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
                         }" :data-cell="FINAL_CONFIG.translations.total" class="vue-ui-data-table__tbody__td">
-                            {{ Number(tr.sum.toFixed(FINAL_CONFIG.roundingTotal)).toLocaleString() }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                tr.sum,
+                                dataLabel({
+                                    p: FINAL_CONFIG.prefix,
+                                    v: tr.sum,
+                                    s: FINAL_CONFIG.suffix,
+                                    r: FINAL_CONFIG.roundingTotal,
+                                }),
+                                { datapoint: tr.sum, seriesIndex: i }
+                                )
+                            }}
                         </td>
-                        <td role="cell" v-if="FINAL_CONFIG.showAverage" :style="{
+                        <td dir="auto" role="cell" v-if="FINAL_CONFIG.showAverage" :style="{
                             outline: FINAL_CONFIG.tbody.outline,
                             fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
                         }" :data-cell="FINAL_CONFIG.translations.average" class="vue-ui-data-table__tbody__td">
-                            {{ Number(tr.average.toFixed(FINAL_CONFIG.roundingAverage)).toLocaleString() }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                tr.average,
+                                dataLabel({
+                                    p: FINAL_CONFIG.prefix,
+                                    v: tr.average,
+                                    s: FINAL_CONFIG.suffix,
+                                    r: FINAL_CONFIG.roundingAverage,
+                                }),
+                                { datapoint: tr.average, seriesIndex: i }
+                                ) 
+                            }}
                         </td>
-                        <td role="cell" v-if="FINAL_CONFIG.showMedian" :style="{
+                        <td dir="auto" role="cell" v-if="FINAL_CONFIG.showMedian" :style="{
                             outline: FINAL_CONFIG.tbody.outline,
                             fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
                         }" :data-cell="FINAL_CONFIG.translations.median" class="vue-ui-data-table__tbody__td">
-                            {{ Number(tr.median.toFixed(FINAL_CONFIG.roundingMedian)).toLocaleString() }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.formatter,
+                                tr.median,
+                                dataLabel({
+                                    p: FINAL_CONFIG.prefix,
+                                    v: tr.median,
+                                    s: FINAL_CONFIG.suffix,
+                                    r: FINAL_CONFIG.roundingMedian,
+                                }),
+                                { datapoint: tr.median, seriesIndex: i }
+                            )}}
                         </td>
                         <td role="cell" v-if="FINAL_CONFIG.showSparklines" :data-cell="FINAL_CONFIG.translations.chart" :style="{
                             outline: FINAL_CONFIG.tbody.outline,

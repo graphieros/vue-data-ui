@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, onMounted } from "vue";
 import { 
     adaptColorToBackground, 
+    applyDataLabel,
     createCsvContent, 
     createUid, 
     dataLabel,
@@ -254,7 +255,17 @@ function useTooltip(datapoint, seriesIndex, x, y) {
         })
     } else {
         html += `<div data-cy="heatmap-tootlip-name">${yAxisName} ${xAxisName ? `${xAxisName}` : ''}</div>`;
-        html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(FINAL_CONFIG.value.style.layout.cells.colors.cold, FINAL_CONFIG.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : dataLabel({p:FINAL_CONFIG.value.style.layout.dataLabels.prefix, v: value, s: FINAL_CONFIG.value.style.layout.dataLabels.suffix, r:FINAL_CONFIG.value.style.tooltip.roundingValue })}</span></div>`
+        html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(FINAL_CONFIG.value.style.layout.cells.colors.cold, FINAL_CONFIG.value.style.layout.cells.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${isNaN(value) ? "-" : applyDataLabel(
+            FINAL_CONFIG.value.style.layout.cells.value.formatter,
+            value,
+            dataLabel({
+                p:FINAL_CONFIG.value.style.layout.dataLabels.prefix, 
+                v: value, 
+                s: FINAL_CONFIG.value.style.layout.dataLabels.suffix, 
+                r:FINAL_CONFIG.value.style.tooltip.roundingValue 
+            }),
+            { datapoint, seriesIndex }
+        )}</span></div>`
         tooltipContent.value = `<div style="font-size:${FINAL_CONFIG.value.style.tooltip.fontSize}px">${html}</div>`;
     }
 }
@@ -421,7 +432,18 @@ defineExpose({
                         :x="(drawingArea.left + cellSize.width * j) + (cellSize.width / 2)"
                         :y="(drawingArea.top + cellSize.height * i) + (cellSize.height / 2) + FINAL_CONFIG.style.layout.cells.value.fontSize / 3"
                     >
-                        {{ FINAL_CONFIG.style.layout.dataLabels.prefix }}{{ Number(cell.value.toFixed(FINAL_CONFIG.style.layout.cells.value.roundingValue)).toLocaleString() }}{{ FINAL_CONFIG.style.layout.dataLabels.suffix }}
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.layout.cells.value.formatter,
+                            cell.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.layout.dataLabels.prefix,
+                                v: cell.value,
+                                s: FINAL_CONFIG.style.layout.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.layout.cells.value.roundingValue
+                            }),
+                            { datapoint: cell }
+                        )
+                        }}
                     </text>
                 </g>
                 <g v-for="(cell, j) in serie.temperatures">
@@ -494,7 +516,16 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.legend.fontSize * 2"
                     :fill="FINAL_CONFIG.style.legend.color"
                 >
-                    {{ Number(maxValue.toFixed(FINAL_CONFIG.style.legend.roundingValue)).toLocaleString() }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.cells.value.formatter,
+                        maxValue,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.dataLabels.prefix,
+                            v: maxValue,
+                            s: FINAL_CONFIG.style.layout.dataLabels.suffix,
+                            r: FINAL_CONFIG.style.legend.roundingValue
+                        })) 
+                    }}
                 </text>
                 <rect
                     :x="drawingArea.right + 36"
@@ -511,7 +542,16 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.legend.fontSize * 2"
                     :fill="FINAL_CONFIG.style.legend.color"
                 >
-                    {{ Number(minValue.toFixed(FINAL_CONFIG.style.legend.roundingValue)).toLocaleString() }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.cells.value.formatter,
+                        minValue,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.dataLabels.prefix,
+                            v: minValue,
+                            s: FINAL_CONFIG.style.layout.dataLabels.suffix,
+                            r: FINAL_CONFIG.style.legend.roundingValue
+                        })) 
+                    }}
                 </text>
                 <line v-if="hoveredValue !== null" :stroke="adaptColorToBackground(dataTooltipSlot.datapoint.color)" stroke-width="2" :x1="drawingArea.right + 36" :x2="drawingArea.right + 72" :y1="sideLegendIndicatorY" :y2="sideLegendIndicatorY" />
                 <path v-if="hoveredValue !== null" :fill="FINAL_CONFIG.style.color" stroke="none" :d="`M ${drawingArea.right + 36},${sideLegendIndicatorY} ${drawingArea.right + 26},${sideLegendIndicatorY - 8} ${drawingArea.right + 26},${sideLegendIndicatorY + 8}z`" />

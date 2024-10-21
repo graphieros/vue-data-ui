@@ -12,7 +12,11 @@ const dataset = ref([
         rounding: 2,
         suffix: "%",
         prefix: 'P',
-        target: 1000
+        target: 1000,
+        formatter: ({value, config}) => {
+            // console.log(config)
+            return `f1 - ${value}`
+        }
     },
     {
         name: "popularity",
@@ -20,7 +24,10 @@ const dataset = ref([
         rounding: 2,
         suffix: "%",
         prefix: 'P',
-        target: 2.3
+        target: 2.3,
+        formatter: ({value}) => {
+            return `f2 - ${value}`
+        }
     },
     {
         name: "maintenance",
@@ -36,7 +43,10 @@ function addDatapoint() {
         name: 'additional',
         value: Math.random() * 100,
         rounding: 0,
-        target: 100
+        target: 100,
+        formatter: ({value}) => {
+            return `f - ${value}`
+        }
     })
 }
 
@@ -142,11 +152,11 @@ const showTitleSlot = ref(false);
                     </div>
                 </template>
 
-                <template #data-label="{ bar }">
+                <!-- <template #data-label="{ bar }">
                     <div style="width:100%">
                         {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
                     </div>
-                </template>
+                </template> -->
             </LocalVueDataUi>
         </template>
         

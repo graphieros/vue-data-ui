@@ -108,6 +108,10 @@ declare module 'vue-data-ui' {
     export type TooltipPosition = TextAlign;
     export type FontVariantNumeric = "normal" | "slashed-zero" | "tabular-nums" | "oldstyle-nums";
 
+    export type FormatterParams = {
+        value: number;
+    }
+    export type Formatter = (params : FormatterParams) => string | number;
 
     export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar = any, TLine = any, TPlot = any> = {
         seriesIndex?: number;
@@ -164,6 +168,7 @@ declare module 'vue-data-ui' {
                         prefix?: string;
                         suffix?: string;
                         rounding?: number;
+                        formatter?: Formatter;
                     };
                 };
                 legend?: ChartBaseLegend & {
@@ -244,6 +249,7 @@ declare module 'vue-data-ui' {
         valueCss?: string;
         valueFontSize?: number;
         valueRounding?: number;
+        formatter?: Formatter;
     }
 
     export const VueUiKpi: DefineComponent<{
@@ -283,6 +289,7 @@ declare module 'vue-data-ui' {
                         dataLabels?: {
                             prefix?: string;
                             suffix?: string;
+                            formatter?: Formatter;
                         };
                     };
                 };
@@ -375,6 +382,7 @@ declare module 'vue-data-ui' {
                 rounding?: number;
                 prefix?: string;
                 suffix?: string;
+                formatter?: Formatter;
             };
             colors?: {
                 min?: string;
@@ -449,9 +457,12 @@ declare module 'vue-data-ui' {
         roundingMedian?: number;
         roundingValues?: number;
         roundingTotal?: number;
+        prefix?: string;
+        suffix?: string;
         showSparklines?: boolean;
         fontFamily?: string;
         colNames?: string[];
+        formatter?: Formatter;
         sparkline?: {
             useGradient?: boolean;
             showArea?: boolean;
@@ -639,6 +650,7 @@ declare module 'vue-data-ui' {
                     color?: string;
                     fontSize?: number;
                     rounding?: number;
+                    formatter?: Formatter;
                 };
             };
         };
@@ -714,6 +726,7 @@ declare module 'vue-data-ui' {
                         roundingPercentage?: number;
                         roundingValue?: number;
                         bold?: boolean;
+                        formatter?: Formatter;
                     };
                 };
                 title?: ChartTitle;
@@ -815,6 +828,7 @@ declare module 'vue-data-ui' {
                         prefix?: string;
                         suffix?: string;
                         offsetY?: number;
+                        formatter?: Formatter;
                     };
                 };
                 title?: ChartTitle;
@@ -888,6 +902,7 @@ declare module 'vue-data-ui' {
                     rounding?: 1;
                     verticalPosition?: "bottom" | "top";
                     horizontalPosition?: "left" | "right";
+                    formatter?: Formatter;
                 };
                 title?: ChartTitle;
             };
@@ -938,6 +953,7 @@ declare module 'vue-data-ui' {
                         fontSize?: number;
                         rounding?: number;
                         bold?: boolean;
+                        formatter?: Formatter;
                     };
                 };
                 title?: ChartTitle;
@@ -971,6 +987,7 @@ declare module 'vue-data-ui' {
                         dataLabels?: {
                             prefix?: string;
                             suffix?: string;
+                            formatter?: Formatter;
                         };
                     };
                     rings?: {
@@ -1073,6 +1090,7 @@ declare module 'vue-data-ui' {
                     prefix?: string;
                     suffix?: string;
                     offsetY?: number;
+                    formatter?: Formatter;
                 };
                 valueLabel?: {
                     fontSize?: number;
@@ -1165,6 +1183,7 @@ declare module 'vue-data-ui' {
                     prefix?: string;
                     suffix?: string;
                     rounding?: number;
+                    formatter?: Formatter;
                 };
                 percentage?: {
                     show?: boolean;
@@ -1240,6 +1259,7 @@ declare module 'vue-data-ui' {
                     bold?: boolean;
                     prefix?: string;
                     suffix?: string;
+                    formatter?: Formatter;
                 };
             };
             title?: ChartTitle;
@@ -1441,6 +1461,7 @@ declare module 'vue-data-ui' {
         rounding?: number;
         color?: string;
         target?: number;
+        formatter?: Formatter;
     }
 
     export type VueUiSparkbarConfig = {
@@ -1542,6 +1563,7 @@ declare module 'vue-data-ui' {
                         bold?: boolean;
                         scale?: number;
                         translation?: string;
+                        formatter?: Formatter;
                     };
                     yAxis?: {
                         show?: boolean;
@@ -1550,6 +1572,7 @@ declare module 'vue-data-ui' {
                         color?: string;
                         bold?: boolean;
                         showEvery?: number;
+                        formatter?: Formatter;
                     };
                 };
                 centerSlit?: {
@@ -1805,6 +1828,12 @@ declare module 'vue-data-ui' {
                             showName?: boolean;
                             prefix?: string;
                             suffix?: string;
+                            x?: {
+                                formatter?: Formatter;
+                            };
+                            y?: {
+                                formatter?: Formatter;
+                            };
                         };
                         markers?: {
                             radius?: number;
@@ -1949,6 +1978,7 @@ declare module 'vue-data-ui' {
                         bold?: boolean;
                         roundingValue?: number;
                         color?: string;
+                        formatter?: Formatter;
                     };
                     colors?: {
                         hot?: string;
@@ -2107,6 +2137,7 @@ declare module 'vue-data-ui' {
                         gap?: number;
                         labelWidth?: number;
                         showBaseline?: boolean;
+                        formatter?: Formatter;
                     };
                     xAxis?: {
                         showBaseline?: boolean;
@@ -2172,6 +2203,7 @@ declare module 'vue-data-ui' {
                 offsetY?: number;
                 rounding?: number;
                 color?: string;
+                formatter?: Formatter;
             };
             serieName?: {
                 abbreviationSize?: number;
@@ -2192,6 +2224,7 @@ declare module 'vue-data-ui' {
                 offsetY?: number;
                 rounding?: number;
                 color?: string;
+                formatter?: Formatter;
             };
             area?: {
                 useGradient?: boolean;
@@ -2206,6 +2239,7 @@ declare module 'vue-data-ui' {
                 offsetY?: number;
                 rounding?: number;
                 color?: string;
+                formatter?: Formatter;
             };
         };
         table?: {
@@ -2323,11 +2357,14 @@ declare module 'vue-data-ui' {
                         value?: {
                             rounding?: number;
                             show?: boolean;
+                            formatter?: Formatter;
                         };
                         percentage?: {
                             color?: string;
                             bold?: boolean;
                             fontSize?: number;
+                            rounding?: number;
+                            formatter?: Formatter;
                         };
                         name?: {
                             color?: string;
@@ -2351,6 +2388,7 @@ declare module 'vue-data-ui' {
                                     prefix?: string;
                                     offsetY?: number;
                                     rounding?: number;
+                                    formatter?: Formatter;
                                 };
                             };
                             average?: {
@@ -2368,6 +2406,7 @@ declare module 'vue-data-ui' {
                                     prefix?: string;
                                     offsetY?: number;
                                     rounding?: number;
+                                    formatter?: Formatter;
                                 };
                             };
                         };
@@ -2492,6 +2531,7 @@ declare module 'vue-data-ui' {
                             donutNameAbbreviation?: boolean;
                             donutNameOffsetY?: number;
                             donutNameMaxAbbreviationSize?: number;
+                            formatter?: Formatter;
                         };
                     };
                     donut?: {
@@ -2599,6 +2639,7 @@ declare module 'vue-data-ui' {
                         dataLabels?: {
                             prefix?: string;
                             suffix?: string;
+                            formatter?: Formatter;
                         };
                         captions?: {
                             show?: boolean;
@@ -2812,6 +2853,7 @@ declare module 'vue-data-ui' {
         values: number[];
         color?: string;
         target?: number;
+        formatter?: Formatter;
     };
 
     export type VueUiRadarDataset = {
@@ -2871,6 +2913,13 @@ declare module 'vue-data-ui' {
                             fontSize?: number;
                             color?: string;
                             offsetY?: number;
+                            rounding?: number;
+                            x?: {
+                                formatter?: Formatter;
+                            };
+                            y?: {
+                                formatter?: Formatter;
+                            };
                         };
                         axisLabels?: {
                             show?: boolean;
@@ -3034,6 +3083,7 @@ declare module 'vue-data-ui' {
                     showPlusSymbol?: boolean;
                     useRatingColor?: boolean;
                     color?: string;
+                    formatter?: Formatter;
                 };
                 title?: ChartTitle;
             };
@@ -3086,6 +3136,7 @@ declare module 'vue-data-ui' {
                         color?: string;
                         text?: string;
                         offsetY?: number;
+                        formatter?: Formatter;
                     };
                     roots?: {
                         stroke?: string;
@@ -3102,6 +3153,7 @@ declare module 'vue-data-ui' {
                             roundingValue?: number;
                             prefix?: string;
                             suffix?: string;
+                            formatter?: Formatter;
                             name?: {
                                 color?: string;
                                 fontSize?: number;
@@ -3137,6 +3189,7 @@ declare module 'vue-data-ui' {
                                 roundingPercentage?: number;
                                 prefix?: string;
                                 suffix?: string;
+                                formatter?: Formatter;
                             };
                         };
                     };
@@ -3158,6 +3211,7 @@ declare module 'vue-data-ui' {
                                     bold?: boolean;
                                     prefix?: string;
                                     suffix?: string;
+                                    formatter?: Formatter;
                                 };
                                 core?: {
                                     total?: {
@@ -3280,6 +3334,7 @@ declare module 'vue-data-ui' {
                         offsetX?: number;
                         value?: {
                             show?: boolean;
+                            formatter?: Formatter;
                         };
                         percentage?: {
                             show?: boolean;
@@ -3404,6 +3459,7 @@ declare module 'vue-data-ui' {
                                 roundingValue?: number;
                                 prefix?: string;
                                 suffix?: string;
+                                formatter?: Formatter;
                             };
                             percentage?: {
                                 show?: boolean;
@@ -3574,6 +3630,7 @@ declare module 'vue-data-ui' {
                 valueType?: "latest" | "sum" | "average";
                 prefix?: string;
                 suffix?: string;
+                formatter?: Formatter;
             };
             title?: {
                 show?: boolean;
@@ -4228,6 +4285,7 @@ declare module 'vue-data-ui' {
         donutUseShadow?: boolean;
         donutShadowColor?: string;
         fontFamily?: string;
+        formatter?: Formatter;
         height?: number | null;
         legendFontSize?: number;
         legendIcon?: VueUiIconName;
@@ -4370,6 +4428,7 @@ declare module 'vue-data-ui' {
                 prefix?: string;
                 suffix?: string;
                 rounding?: number;
+                formatter?: Formatter;
             };
             trendLabel?: {
                 trendType?: "global" | "n-1" | "lastToFirst",
@@ -4453,6 +4512,7 @@ declare module 'vue-data-ui' {
                 labels?: {
                     prefix?: string;
                     suffix?: string;
+                    formatter?: Formatter;
                     bestPlotLabel?: {
                         show?: boolean;
                         showValue?: boolean;
@@ -4580,6 +4640,7 @@ declare module 'vue-data-ui' {
                 labels?: {
                     prefix?: string;
                     suffix?: string;
+                    formatter?: Formatter;
                     yAxisLabels?: {
                         bold?: boolean;
                         color?: string;
@@ -4816,6 +4877,7 @@ declare module 'vue-data-ui' {
                     useSerieColor?: boolean;
                     color?: string;
                     offsetY?: number;
+                    formatter?: Formatter;
                 };
                 paddingProportions?: {
                     top?: number;
@@ -4882,6 +4944,7 @@ declare module 'vue-data-ui' {
                         prefix?: string;
                         suffix?: string;
                         rounding?: number;
+                        formatter?: Formatter;
                     };
                     stroke?: string;
                     strokeWidth?: number;
@@ -5228,6 +5291,7 @@ declare module 'vue-data-ui' {
         showPercentage?: boolean;
         textColor?: string;
         fontFamily?: string;
+        formatter?: Formatter;
     }
 
     export type VueUiGizmoDataset = number;
@@ -5330,6 +5394,7 @@ declare module 'vue-data-ui' {
                         rounding?: number;
                         prefix?: string;
                         suffix?: string;
+                        formatter?: Formatter;
                     };
                 };
                 grid?: {

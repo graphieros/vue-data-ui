@@ -220,6 +220,21 @@ const config = computed(() => {
         return {
             ...c,
             theme: currentTheme.value,
+            style: {
+                ...c.style,
+                chart: {
+                    ...c.style.chart,
+                    layout: {
+                        ...c.style.chart.layout,
+                        labels: {
+                            ...c.style.chart.layout.labels,
+                            formatter: ({value, config }) => {
+                                return `f - ${value}`
+                            }
+                        }
+                    },
+                }
+            }
             // customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }
     }

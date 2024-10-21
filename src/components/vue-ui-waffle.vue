@@ -3,6 +3,7 @@ import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { 
     abbreviate,
     adaptColorToBackground,
+    applyDataLabel,
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
@@ -501,13 +502,32 @@ function useTooltip(index) {
         html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" rx="1" fill="${selected.color}" /></svg>`;
         if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-            html += `<b data-cy="waffle-tooltip-value">${dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: selected.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue})}</b>`;
+            html += `<b data-cy="waffle-tooltip-value">${applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                selected.value,
+                dataLabel({
+                    p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+                    v: selected.value, 
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                }),
+                { 
+                    datapoint: selected,
+                    seriesIndex: rects.value[index].absoluteIndex,
+                    series: datasetCopy.value
+                }
+            )}</b>`;
         }
         if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
+            const dp = dataLabel({
+                v: selected.value / total.value * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+            });
             if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-                html += `<b>${(selected.value / total.value * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%</b></div>`;
+                html += `<b>${dp}%</b></div>`;
             } else {
-                html += `<span data-cy="waffle-tooltip-percentage">(${(selected.value / total.value * 100).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage)}%)</span></div>`;
+                html += `<span data-cy="waffle-tooltip-percentage">(${dp})</span></div>`;
             }
         }
         tooltipContent.value = html;
@@ -552,7 +572,16 @@ function generateCsv() {
 const dataTable = computed(() => {
     const head = [
         ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
-        dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v:total.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.table.td.roundingValue}),
+        applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+            total.value,
+            dataLabel({
+                p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+                v:total.value, 
+                s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+                r: FINAL_CONFIG.value.table.td.roundingValue
+            })
+        ),
         '100%'
     ];
 
@@ -562,8 +591,21 @@ const dataTable = computed(() => {
                 color: h.color,
                 name: h.name
             },
-            dataLabel({p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r:FINAL_CONFIG.value.table.td.roundingValue }),
-            isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
+            applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                table.value.body[i],
+                dataLabel({
+                    p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+                    v: table.value.body[i], 
+                    s:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+                    r:FINAL_CONFIG.value.table.td.roundingValue 
+                })
+            ),
+            isNaN(table.value.body[i] / total.value) ? "-" : dataLabel({
+                v: table.value.body[i] / total.value * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage
+            })
         ]
     });
 
@@ -724,7 +766,17 @@ defineExpose({
                 </foreignObject>
             </template> 
 
-            <template v-else>
+            <rect v-if="!rects.length"
+                :x="12"
+                :y="12"
+                :height="drawingArea.height - 24"
+                :width="drawingArea.width - 24"
+                :rx="3"
+                fill="none"
+                stroke="black"
+            />
+
+            <template v-else-if="rects.length">
                 <rect
                     v-for="(position, i) in positions"
                     :data-cy="`waffle-rect-underlayer-${i}`"
@@ -755,7 +807,7 @@ defineExpose({
             <!-- DATA LABELS -->
             <template v-for="(position, i) in positions">
                 <foreignObject
-                    v-if="!isAnimating && !FINAL_CONFIG.style.chart.layout.grid.vertical && FINAL_CONFIG.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < FINAL_CONFIG.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % FINAL_CONFIG.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
+                    v-if="rects.length && !isAnimating && !FINAL_CONFIG.style.chart.layout.grid.vertical && FINAL_CONFIG.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < FINAL_CONFIG.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % FINAL_CONFIG.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
                     :x="position.x + FINAL_CONFIG.style.chart.layout.labels.captions.offsetX + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                     :y="position.y + FINAL_CONFIG.style.chart.layout.labels.captions.offsetY + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                     :height="absoluteRectDimensionY <= 0 ? 0.0001 : absoluteRectDimensionY"
@@ -770,10 +822,29 @@ defineExpose({
                             {{ dataLabel({ v: rects[i].proportion, s: '%', r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingPercentage }) }}
                         </span>
                         <span v-if="FINAL_CONFIG.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.style.chart.layout.labels.captions.showValue">
-                            ({{ dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: rects[i].value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue }) }})
+                            ({{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                rects[i].value,
+                                dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                                    v: rects[i].value, 
+                                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                                    r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue 
+                                }),
+                                { datapoint: rects[i], position }
+                            )}})
                         </span>
                         <span v-if="!FINAL_CONFIG.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.style.chart.layout.labels.captions.showValue">
-                            {{ dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: rects[i].value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue }) }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                rects[i].value,
+                                dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                                    v: rects[i].value, 
+                                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                                    r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue 
+                                }),
+                                { datapoint: rects[i], position }
+                            )
+                            }}
                         </span>
                     </div>
                 </foreignObject>
@@ -821,7 +892,18 @@ defineExpose({
             >
                 <template #item="{ legend }">
                     <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                        {{ legend.name }}: {{ dataLabel({p:FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, v: legend.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, r:FINAL_CONFIG.style.chart.legend.roundingValue, isAnimating})}}
+                        {{ legend.name }}: {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                            legend.value,
+                            dataLabel({
+                                p:FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                                v: legend.value, 
+                                s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                                r:FINAL_CONFIG.style.chart.legend.roundingValue, isAnimating
+                            }),
+                            { datapoint: legend }
+                            )
+                        }}
                         <span v-if="!segregated.includes(legend.uid)">
                             ({{ isNaN(legend.value / total) ? '-' : dataLabel({v: legend.value /total * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage, isAnimating }) }})
                         </span>

@@ -60,8 +60,24 @@ const themeOptions = ref([
 const currentTheme = ref(themeOptions.value[3])
 
 const config = computed(() => {
+    const c = convertArrayToObject(model.value);
     return {
-        ...convertArrayToObject(model.value),
+        ...c,
+        style: {
+            ...c.style,
+            chart: {
+                ...c.style.chart,
+                layout: {
+                    ...c.style.chart.layout,
+                    percentage: {
+                        ...c.style.chart.layout.percentage,
+                        formatter: ({value}) => {
+                            return `f - ${value}`
+                        }
+                    }
+                }
+            }
+        },
         theme: currentTheme.value
     }
 });

@@ -253,7 +253,8 @@ export function useConfig() {
                         bold: false,
                         rounding: 0,
                         prefix: '',
-                        suffix: ''
+                        suffix: '',
+                        formatter: null
                     }
                 },
                 grid: {
@@ -382,7 +383,8 @@ export function useConfig() {
                         useIndividualScale: false,
                         stacked: false,
                         gap: 12,
-                        labelWidth: 40
+                        labelWidth: 40,
+                        formatter: null
                     },
                     xAxisLabels: {
                         color: COLOR_BLACK,
@@ -451,7 +453,8 @@ export function useConfig() {
                 show: false,
                 offsetY: -6,
                 rounding: 0,
-                color: COLOR_BLACK
+                color: COLOR_BLACK,
+                formatter: null
             },
             serieName: {
                 show: false,
@@ -471,7 +474,8 @@ export function useConfig() {
                 show: false,
                 offsetY: -6,
                 rounding: 0,
-                color: COLOR_BLACK
+                color: COLOR_BLACK,
+                formatter: null
             },
             area: {
                 useGradient: true,
@@ -485,7 +489,8 @@ export function useConfig() {
                 show: false,
                 offsetY: -6,
                 rounding: 0,
-                color: COLOR_BLACK
+                color: COLOR_BLACK,
+                formatter: null
             }
         },
         table: {
@@ -527,7 +532,7 @@ export function useConfig() {
             td: {
                 ...TABLE_TD,
                 roundingValue: 0,
-                roundingPercentage: 0
+                roundingPercentage: 0,
             },
             columnNames: {
                 serie: 'Series',
@@ -549,16 +554,19 @@ export function useConfig() {
                             useLabelSlots: false,
                             hideUnderValue: 3,
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
                         },
                         value: {
                             rounding: 0,
-                            show: true
+                            show: true,
+                            formatter: null
                         },
                         percentage: {
                             color: COLOR_BLACK,
                             bold: true,
-                            fontSize: FONT._18
+                            fontSize: FONT._18,
+                            rounding: 0,
+                            formatter: null
                         },
                         name: {
                             color: COLOR_BLACK,
@@ -581,7 +589,8 @@ export function useConfig() {
                                     suffix: '',
                                     prefix: '',
                                     offsetY: 0,
-                                    rounding: 0
+                                    rounding: 0,
+                                    formatter: null
                                 }
                             },
                             average: {
@@ -598,7 +607,8 @@ export function useConfig() {
                                     suffix: '',
                                     prefix: '',
                                     offsetY: 0,
-                                    rounding: 0
+                                    rounding: 0,
+                                    formatter: null
                                 }
                             }
                         }
@@ -627,7 +637,7 @@ export function useConfig() {
                     showValue: true,
                     showPercentage: true,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
                 },
                 title: TITLE,
             }
@@ -678,7 +688,8 @@ export function useConfig() {
                         hideUnderProportion: 0.03,
                         prefix: 'Value: ',
                         suffix: '',
-                        rounding: 0
+                        rounding: 0,
+                        formatter: null
                     }
                 },
                 legend: {
@@ -725,7 +736,8 @@ export function useConfig() {
                     labels: {
                         dataLabels: {
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
+                            formatter: null
                         },
                         captions: {
                             show: false,
@@ -922,7 +934,14 @@ export function useConfig() {
                             show: true,
                             fontSize: FONT._10,
                             color: COLOR_BLACK,
-                            offsetY: 8
+                            offsetY: 8,
+                            rounding: 0,
+                            x: {
+                                formatter: null
+                            },
+                            y: {
+                                formatter: null
+                            }
                         },
                         axisLabels: {
                             show: true,
@@ -975,7 +994,7 @@ export function useConfig() {
                 tooltip: {
                     ...TOOLTIP,
                     roundingValue: 0,
-                    showShape: true
+                    showShape: true,
                 },
                 legend: LEGEND
             }
@@ -1053,7 +1072,8 @@ export function useConfig() {
                     roundingValue: 1,
                     showPlusSymbol: true,
                     useRatingColor: true,
-                    color: COLOR_BLACK
+                    color: COLOR_BLACK,
+                    formatter: null
                 },
                 title: TITLE
             }
@@ -1102,7 +1122,8 @@ export function useConfig() {
                         show: true,
                         fontSize: FONT._48,
                         rounding: 1,
-                        bold: true
+                        bold: true,
+                        formatter: null
                     }
                 },
                 title: TITLE
@@ -1150,7 +1171,8 @@ export function useConfig() {
                     bold: true,
                     rounding: 1,
                     verticalPosition: POSITION.BOTTOM,
-                    horizontalPosition: POSITION.LEFT
+                    horizontalPosition: POSITION.LEFT,
+                    formatter: null
                 },
                 title: TITLE
             }
@@ -1180,7 +1202,8 @@ export function useConfig() {
                         roundingValue: 0,
                         color: COLOR_BLACK,
                         text: 'Grand total',
-                        offsetY: 0
+                        offsetY: 0,
+                        formatter: null,
                     },
                     roots: {
                         stroke: COLOR_WHITE,
@@ -1197,6 +1220,7 @@ export function useConfig() {
                             roundingValue: 0,
                             prefix: '',
                             suffix: '',
+                            formatter: null,
                             name: {
                                 color: COLOR_BLACK,
                                 fontSize: FONT._16,
@@ -1231,7 +1255,8 @@ export function useConfig() {
                                 roundingValue: 0,
                                 roundingPercentage: 0,
                                 prefix: '',
-                                suffix: ''
+                                suffix: '',
+                                formatter: null
                             }
                         }
                     },
@@ -1252,7 +1277,8 @@ export function useConfig() {
                                     fontSize: FONT._12,
                                     bold: true,
                                     prefix: '',
-                                    suffix: ''
+                                    suffix: '',
+                                    formatter: null
                                 },
                                 core: {
                                     total: {
@@ -1362,7 +1388,8 @@ export function useConfig() {
                         offsetX: 0,
                         offsetY: 0,
                         value: {
-                            show: true
+                            show: true,
+                            formatter: null
                         },
                         percentage: {
                             show: true
@@ -1440,7 +1467,8 @@ export function useConfig() {
                                 show: true,
                                 roundingValue: 0,
                                 prefix: '',
-                                suffix: ''
+                                suffix: '',
+                                formatter: null
                             },
                             percentage: {
                                 show: true,
@@ -1537,7 +1565,8 @@ export function useConfig() {
                         fontSize: FONT._18,
                         bold: false,
                         roundingValue: 0,
-                        color: COLOR_BLACK
+                        color: COLOR_BLACK,
+                        formatter: null
                     },
                     colors: {
                         hot: COLOR_RED,
@@ -1671,7 +1700,13 @@ export function useConfig() {
                             bold: false,
                             showName: true,
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
+                            x: {
+                                formatter: null
+                            },
+                            y: {
+                                formatter: null
+                            }
                         },
                         markers: {
                             radius: 1.5,
@@ -1907,7 +1942,8 @@ export function useConfig() {
                 roundingValue: 0,
                 valueType: 'latest',
                 prefix: '',
-                suffix: ''
+                suffix: '',
+                formatter: null
             },
             title: {
                 show: true,
@@ -2008,7 +2044,8 @@ export function useConfig() {
                     color: COLOR_BLACK,
                     prefix: '',
                     suffix: '',
-                    rounding: 0
+                    rounding: 0,
+                    formatter: null
                 },
                 percentage: {
                     show: true,
@@ -2060,7 +2097,8 @@ export function useConfig() {
                     rounding: 1,
                     prefix: '',
                     suffix: '',
-                    offsetY: 0
+                    offsetY: 0,
+                    formatter: null
                 },
                 valueLabel: {
                     fontSize: FONT._14,
@@ -2115,7 +2153,8 @@ export function useConfig() {
                 bold: true,
                 rounding: 0,
                 prefix: '',
-                suffix: ''
+                suffix: '',
+                formatter: null
             },
             colors: {
                 min: COLOR_RED,
@@ -2164,7 +2203,8 @@ export function useConfig() {
                 bold: false,
                 prefix: '',
                 suffix: '',
-                rounding: 0
+                rounding: 0,
+                formatter: null
             },
             trendLabel: {
                 trendType: 'global',
@@ -2212,6 +2252,7 @@ export function useConfig() {
         donutUseShadow: false,
         donutShadowColor: COLOR_BLACK,
         fontFamily: 'inherit',
+        formatter: null,
         height: 338,
         legendFontSize: FONT._12,
         legendIcon: 'circleFill',
@@ -2312,7 +2353,8 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         bold: false,
                         scale: 1000,
-                        translation: 'in thousands'
+                        translation: 'in thousands',
+                        formatter: null
                     },
                     yAxis: {
                         show: true,
@@ -2320,7 +2362,8 @@ export function useConfig() {
                         fontSize: FONT._12,
                         color: COLOR_BLACK,
                         bold: false,
-                        showEvery: 5
+                        showEvery: 5,
+                        formatter: null
                     }
                 },
                 centerSlit: {
@@ -2451,7 +2494,8 @@ export function useConfig() {
                     bold: true,
                     color: COLOR_BLACK,
                     prefix: '',
-                    suffix: ''
+                    suffix: '',
+                    formatter: null
                 }
             },
             title: TITLE,
@@ -2478,7 +2522,8 @@ export function useConfig() {
                     labels: {
                         dataLabels: {
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
+                            formatter: null
                         }
                     },
                     rings: {
@@ -2589,7 +2634,8 @@ export function useConfig() {
                         rounding: 0,
                         prefix: '',
                         suffix: '',
-                        offsetY: 0
+                        offsetY: 0,
+                        formatter: null
                     }
                 },
                 title: TITLE,
@@ -2663,7 +2709,10 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         roundingValue: 0,
                         roundingPercentage: 0,
-                        bold: true
+                        bold: true,
+                        prefix: '',
+                        suffix: '',
+                        formatter: null
                     }
                 },
                 title: TITLE,
@@ -2784,7 +2833,8 @@ export function useConfig() {
                             boldDonutName: true,
                             donutNameAbbreviation: true,
                             donutNameMaxAbbreviationSize: 3,
-                            donutNameOffsetY: 0
+                            donutNameOffsetY: 0,
+                            formatter: null
                         }
                     },
                     donut: {
@@ -2856,7 +2906,8 @@ export function useConfig() {
                     labels: {
                         dataLabels: {
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
+                            formatter: null
                         }
                     }
                 },
@@ -2953,6 +3004,7 @@ export function useConfig() {
                 labels: {
                     prefix: '',
                     suffix: '',
+                    formatter: null,
                     bestPlotLabel: {
                         show: true,
                         showValue: true,
@@ -3058,6 +3110,7 @@ export function useConfig() {
                 labels: {
                     prefix: '',
                     suffix: '',
+                    formatter: null,
                     yAxisLabels: {
                         show: true,
                         fontSize: FONT._14,
@@ -3168,7 +3221,8 @@ export function useConfig() {
                     bold: true,
                     color: COLOR_BLUE,
                     fontSize: FONT._12,
-                    rounding: 1
+                    rounding: 1,
+                    formatter: null
                 }
             }
         },
@@ -3206,6 +3260,9 @@ export function useConfig() {
         roundingMedian: 0,
         roundingValues: 0,
         roundingTotal: 0,
+        prefix: '',
+        suffix: '',
+        formatter: null,
         showSparklines: true,
         fontFamily: 'inherit',
         colNames: [],
@@ -3246,7 +3303,7 @@ export function useConfig() {
             fontSize: FONT._14,
             outline: "none",
             textAlign: POSITION.LEFT,
-            bold: false
+            bold: false,
         },
         userOptions: USER_OPTIONS({
             pdf: true,
@@ -3437,7 +3494,8 @@ export function useConfig() {
                     fontSizeRatio: 1,
                     useSerieColor: true,
                     color: COLOR_BLACK,
-                    offsetY: -12
+                    offsetY: -12,
+                    formatter: null
                 },
                 paddingProportions: {
                     top: 0.1,
@@ -3488,7 +3546,8 @@ export function useConfig() {
                         },
                         prefix: '',
                         suffix: '',
-                        rounding: 0
+                        rounding: 0,
+                        formatter: null
                     },
                     stroke: COLOR_WHITE,
                     strokeWidth: 1
@@ -3734,7 +3793,8 @@ export function useConfig() {
         valueClass: '',
         valueCss: '',
         valueFontSize: FONT._32,
-        valueRounding: 0
+        valueRounding: 0,
+        formatter: null
     }
 
     const vue_ui_mini_loader = {
@@ -4498,7 +4558,8 @@ export function useConfig() {
         gradientColor: '#9db5ed',
         showPercentage: true,
         textColor: COLOR_BLACK,
-        fontFamily: 'inherit'
+        fontFamily: 'inherit',
+        formatter: null
     }
 
     return {

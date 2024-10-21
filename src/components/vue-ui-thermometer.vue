@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { 
+import {
+    applyDataLabel,
     convertColorToHex, 
     convertCustomPalette, 
     createUid, 
@@ -432,7 +433,18 @@ defineExpose({
                 :font-size="FINAL_CONFIG.style.chart.label.fontSize"
                 :font-weight="FINAL_CONFIG.style.chart.label.bold ? 'bold' : 'normal'"
             >
-                {{ dataLabel({p: FINAL_CONFIG.style.chart.label.prefix, v: dataset.value, s: FINAL_CONFIG.style.chart.label.suffix, r: FINAL_CONFIG.style.chart.label.rounding}) }}
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.chart.label.formatter,
+                    dataset.value,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.chart.label.prefix, 
+                        v: dataset.value, 
+                        s: FINAL_CONFIG.style.chart.label.suffix, 
+                        r: FINAL_CONFIG.style.chart.label.rounding
+                    }),
+                    { datapoint: dataset }
+                    )
+                }}
             </text>
             <slot name="svg" :svg="svg"/>
         </svg>

@@ -4,7 +4,7 @@ describe('<VueUiKpi />', () => {
     it('renders', () => {
         cy.mount(VueUiKpi, {
             props: {
-                dataset: 1000
+                dataset: 100
             },
             slots: {
                 title: () => "TITLE SLOT",
@@ -23,6 +23,6 @@ describe('<VueUiKpi />', () => {
 
         cy.get('@container').should('contain', 0)
         cy.wait(1000)
-        cy.get('@container').should('contain', 1000)
+        cy.get('@container').should('contain', 100)
     })
 })

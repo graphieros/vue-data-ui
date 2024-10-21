@@ -1,7 +1,28 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useConfig } from "../useConfig";
-import { convertCustomPalette, createUid, palette, themePalettes, sumSeries, convertColorToHex, XMLNS, calculateNiceScale, dataLabel, adaptColorToBackground, isFunction, opacity, lightenHexColor, functionReturnsString, objectIsEmpty, getMissingDatasetAttributes, error, createCsvContent, downloadCsv } from "../lib";
+import { 
+    adaptColorToBackground,
+    applyDataLabel,
+    calculateNiceScale, 
+    convertColorToHex, 
+    convertCustomPalette, 
+    createCsvContent, 
+    createUid, 
+    dataLabel, 
+    downloadCsv,
+    error, 
+    functionReturnsString, 
+    getMissingDatasetAttributes, 
+    isFunction, 
+    lightenHexColor, 
+    objectIsEmpty, 
+    opacity, 
+    palette, 
+    sumSeries, 
+    themePalettes, 
+    XMLNS, 
+} from "../lib";
 import { useNestedProp } from "../useNestedProp";
 import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
@@ -290,21 +311,31 @@ const totalLabels = computed(() => {
 });
 
 
-function barDataLabel(val) {
-    return dataLabel({
-        p: FINAL_CONFIG.value.style.chart.bars.dataLabels.prefix,
-        v: val,
-        s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
-        r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
-    });
+function barDataLabel(val, datapoint, index, dpIndex) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.bars.dataLabels.formatter,
+        val,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.bars.dataLabels.prefix,
+            v: val,
+            s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
+            r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
+        }),
+        { datapoint, seriesIndex: index, datapointIndex: dpIndex }
+    )
 }
 
-function barDataLabelPercentage(val) {
-    return dataLabel({
-        v: val,
-        s: '%',
-        r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
-    });
+function barDataLabelPercentage(val, datapoint, index, dpIndex) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.bars.dataLabels.formatter,
+        val,
+        dataLabel({
+            v: val,
+            s: '%',
+            r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
+        }),
+        { datapoint, seriesIndex: index, datapointIndex: dpIndex }
+    )
 }
 
 function selectDatapoint(index) {
@@ -379,11 +410,11 @@ function useTooltip(seriesIndex) {
                         p: FINAL_CONFIG.value.style.chart.bars.dataLabels.prefix,
                         v: ds.value,
                         s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
-                        r: roundingValue
+                        r: roundingValue,
                     }) : ''} ${parenthesis[0]}${showPercentage ? dataLabel({
                         v: isNaN(ds.value / sum) ? 0 : ds.value / sum * 100,
                         s: '%',
-                        r: roundingPercentage
+                        r: roundingPercentage,
                     }) : ''}${parenthesis[1]}
                 </div>
             `
@@ -453,7 +484,7 @@ const dataTable = computed(() => {
             return ds.series[i] ?? 0
         }).reduce((a,b ) => a + b, 0);
 
-        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.rounding))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)));
+        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue)));
     }
 
     const config = {
@@ -726,7 +757,7 @@ defineExpose({
                         :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
                         text-anchor="middle"
                     >
-                        {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? barDataLabelPercentage(dp.proportions[j] * 100) : barDataLabel(dp.series[j]) }}
+                        {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : barDataLabel(dp.series[j], dp, i, j) }}
                     </text>
                 </g>
 
@@ -741,7 +772,7 @@ defineExpose({
                         :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
                         :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
                     >
-                        {{ barDataLabel(total.value) }}
+                        {{ barDataLabel(total.value, total, i) }}
                     </text>
                 </g>
             </template>
@@ -770,7 +801,7 @@ defineExpose({
                         p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
                         v: yLabel.value,
                         s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
-                        r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding
+                        r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
                     }) }}
                 </text>
             </template>
@@ -916,7 +947,12 @@ defineExpose({
                         <div v-html="th"/>
                     </template>
                     <template #td="{ td }">
-                        {{ td }}
+                        {{ !isNaN(Number(td)) ? dataLabel({
+                            p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
+                            v: td,
+                            s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
+                            r: FINAL_CONFIG.table.td.roundingValue,
+                        }) : td }}
                     </template>
                 </DataTable>
             </template>
