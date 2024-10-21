@@ -353,7 +353,8 @@ function displayArcPercentage(arc, stepBreakdown) {
             v: p * 100,
             s: '%',
             r: FINAL_CONFIG.value.style.chart.layout.labels.percentage.rounding
-        })
+        }),
+        { datapoint: arc }
     )
 }
 
