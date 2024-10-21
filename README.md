@@ -171,6 +171,21 @@ customFormat: ({ seriesIndex, datapoint, series, config }) => {
 
 ```
 
+# Data formatting
+
+Data labels can be customized using the `formatter` config attribute (since v2.3.29 on all chart components):
+
+```
+// the formatter attribute is generally placed under label or dataLabel config attribute objects
+
+const config = ref({
+  formatter: ({ value, config }) => {
+    return `formatted ${value}`;
+  }
+})
+
+```
+
 # Slots
 
 ## #svg slot
