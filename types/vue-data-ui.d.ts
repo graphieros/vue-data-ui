@@ -110,6 +110,7 @@ declare module 'vue-data-ui' {
 
     export type FormatterParams = {
         value: number;
+        config?: any;
     }
     export type Formatter = (params : FormatterParams) => string | number;
 
