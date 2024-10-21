@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useConfig } from "../useConfig";
-import { createUid, error, objectIsEmpty, shiftHue } from "../lib";
+import { createUid, error, applyDataLabel, dataLabel } from "../lib";
 import { useNestedProp } from "../useNestedProp";
 
 const { vue_ui_gizmo: DEFAULT_CONFIG } = useConfig();
@@ -109,7 +109,14 @@ const gaugeBody = computed(() => {
                 font-size="20"
                 :fill="FINAL_CONFIG.textColor"
             >
-                {{ Math.round(props.dataset) }}%
+                {{ applyDataLabel(
+                    FINAL_CONFIG.formatter,
+                    props.dataset,
+                    dataLabel({
+                        v: props.dataset,
+                        s: '%',
+                    })
+                ) }}
             </text>
         </template>
 
@@ -161,7 +168,14 @@ const gaugeBody = computed(() => {
                 font-size="20"
                 :fill="FINAL_CONFIG.textColor"
             >
-                {{ Math.round(props.dataset) }}%
+                {{ applyDataLabel(
+                    FINAL_CONFIG.formatter,
+                    props.dataset,
+                    dataLabel({
+                        v: props.dataset,
+                        s: '%',
+                    })
+                )}}
             </text>
         </template>
     </svg>

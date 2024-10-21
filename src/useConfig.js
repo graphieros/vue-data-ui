@@ -4556,7 +4556,8 @@ export function useConfig() {
         gradientColor: '#9db5ed',
         showPercentage: true,
         textColor: COLOR_BLACK,
-        fontFamily: 'inherit'
+        fontFamily: 'inherit',
+        formatter: null
     }
 
     return {

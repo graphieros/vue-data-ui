@@ -5290,6 +5290,7 @@ declare module 'vue-data-ui' {
         showPercentage?: boolean;
         textColor?: string;
         fontFamily?: string;
+        formatter?: Formatter;
     }
 
     export type VueUiGizmoDataset = number;

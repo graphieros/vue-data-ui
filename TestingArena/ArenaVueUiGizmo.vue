@@ -21,7 +21,10 @@ const model= ref([
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
-        ...c
+        ...c,
+        formatter: ({value}) => {
+            return `f | ${value}`
+        } 
     }
 })
 
