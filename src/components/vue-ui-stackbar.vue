@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
@@ -78,6 +78,7 @@ const chartSlicer = ref(null);
 const slicerStep = ref(0);
 const isFullscreen = ref(false);
 const trapIndex = ref(null);
+const isLoaded = ref(false);
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -101,6 +102,9 @@ onMounted(() => {
             })
         })
     }
+    setTimeout(() => {
+        isLoaded.value = true;
+    }, 10)
 })
 
 const FINAL_CONFIG = computed(() => {
@@ -150,10 +154,11 @@ const customPalette = computed(() => {
 });
 
 const resizeObserver = ref(null);
-
+const to = ref(null)
 onMounted(() => {
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
+            isLoaded.value = false; // unset rect transitions as it looks janky during resizing process
             const { width, height } = useResponsive({
                 chart: stackbarChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
@@ -162,6 +167,10 @@ onMounted(() => {
             });
             defaultSizes.value.width = width;
             defaultSizes.value.height = height;
+            clearTimeout(to.value);
+            to.value = setTimeout(() => {
+                isLoaded.value = true;
+            },10)
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
@@ -189,7 +198,7 @@ const drawingArea = computed(() => {
         bottom,
         left,
         width,
-        height,
+        height: height < 0 ? 0 : height,
     }
 });
 
@@ -198,6 +207,12 @@ const unmutableDataset = computed(() => {
         const color = convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
         return {
             ...ds,
+            // In distributed mode, all values are converted to positive
+            series: JSON.parse(JSON.stringify(ds.series)).map(v => {
+                return FINAL_CONFIG.value.style.chart.bars.distributed ? Math.abs(v) : v
+            }),
+            // Store signs to manage display of neg values in distributed mode
+            signedSeries: ds.series.map(v => v >= 0 ? 1 : -1),
             absoluteIndex: i,
             id: createUid(),
             color
@@ -208,7 +223,6 @@ const unmutableDataset = computed(() => {
 const maxSeries = computed(() => {
     return Math.max(...unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)).map(ds => ds.series.length))
 });
-
 
 const slicer = ref({
     start: 0,
@@ -232,12 +246,33 @@ const datasetTotals = computed(() => {
     return sumSeries(unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id))).slice(slicer.value.start, slicer.value.end);
 });
 
+const datasetSignedTotals = computed(() => {
+    const src = unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id))
+    return { 
+        positive: sumSeries(src.map(s => {
+            return {
+                ...s,
+                series: s.series.slice(slicer.value.start, slicer.value.end).map(v => v >= 0 ? v : 0)
+            }
+        })),
+        negative: sumSeries(src.map(s => {
+            return {
+                ...s,
+                series: s.series.slice(slicer.value.start, slicer.value.end).map(v => v < 0 ? v : 0)
+            }
+        }))
+    }
+});
+
 const yLabels = computed(() => {
-    const MAX = Math.max(...datasetTotals.value); 
-    const scale = calculateNiceScale(0, MAX, FINAL_CONFIG.value.style.chart.grid.scale.ticks);
+    const MAX = Math.max(...datasetSignedTotals.value.positive);
+    const workingMin = Math.min(...datasetSignedTotals.value.negative);
+    const MIN = [-Infinity, Infinity, NaN, undefined, null].includes(workingMin) ? 0 : workingMin;
+    const scale = calculateNiceScale((MIN > 0 ? 0 : MIN), MAX < 0 ? 0 : MAX, FINAL_CONFIG.value.style.chart.grid.scale.ticks);
     return scale.ticks.map(t => {
         return {
-            y: drawingArea.value.bottom - (drawingArea.value.height * (t / scale.max)),
+            zero: drawingArea.value.bottom - (drawingArea.value.height * ((Math.abs(scale.min)) / (scale.max + Math.abs(scale.min)))),
+            y: drawingArea.value.bottom - (drawingArea.value.height * ((t + Math.abs(scale.min)) / ((scale.max) + Math.abs(scale.min)))),
             x: drawingArea.value.left - 8,
             value: t
         }
@@ -251,16 +286,63 @@ const timeLabels = computed(() => {
 
 const formattedDataset = computed(() => {
     if (!isDataset.value) return [];
+
     let cumulativeY = Array(maxSeries.value).fill(0);
+    let cumulativeNegY = Array(maxSeries.value).fill(0);
+    
+    const premax = Math.max(...datasetSignedTotals.value.positive) || 0;
+    const workingMin = Math.min(...datasetSignedTotals.value.negative);
+    const premin = [-Infinity, Infinity, NaN, undefined, null].includes(workingMin) ? 0 : workingMin;
+
+    const scale = calculateNiceScale((premin > 0 ? 0 : premin), premax < 0 ? 0 : premax, FINAL_CONFIG.value.style.chart.grid.scale.ticks);
+    const { min: MIN, max: MAX } = scale;
+    
+    const maxTotal = (MAX + (MIN >= 0 ? 0 : Math.abs(MIN))) || 1
+
     const totalHeight = drawingArea.value.height;
-    const MAX = Math.max(...datasetTotals.value);
-    const scale = calculateNiceScale(0, MAX, FINAL_CONFIG.value.style.chart.grid.scale.ticks);
-    const maxTotal = scale.max;
+    const ZERO_POSITION = yLabels.value[0] ? yLabels.value[0].zero : drawingArea.value.bottom;
 
     return unmutableDataset.value
         .filter(ds => !segregated.value.includes(ds.id))
         .map(ds => {
             const slicedSeries = ds.series.slice(slicer.value.start, slicer.value.end);
+            const signedSliced = ds.signedSeries.slice(slicer.value.start, slicer.value.end);
+
+            const x = slicedSeries.map((_dp, i) => {
+                return drawingArea.value.left + (barSlot.value * i) + (barSlot.value * FINAL_CONFIG.value.style.chart.bars.gapRatio / 4);
+            });
+
+            const y = slicedSeries.map((dp, i) => {
+                const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
+                    ? (dp || 0) / datasetTotals.value[i]
+                    : (dp || 0) / maxTotal;
+
+                let currentY, height;
+                if (dp > 0) {
+                    height = totalHeight * proportion; 
+                    currentY = ZERO_POSITION - height - cumulativeY[i];
+                    cumulativeY[i] += height;
+                } else {
+                    height = totalHeight * proportion;
+                    currentY = ZERO_POSITION + cumulativeNegY[i]
+                    cumulativeNegY[i] += Math.abs(height)
+                }
+                return currentY;
+            });
+
+            const height = slicedSeries.map((dp, i) => {
+                const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
+                    ? (dp || 0) / datasetTotals.value[i]
+                    : (dp || 0) / maxTotal;
+
+                    if (dp > 0) {
+                        return totalHeight * proportion
+                    } else {
+                        return totalHeight * Math.abs(proportion)
+                    }
+            });
+
+            const absoluteTotal = slicedSeries.map(v => Math.abs(v)).reduce((a, b) => a + b, 0);
 
             return {
                 ...ds,
@@ -268,31 +350,14 @@ const formattedDataset = computed(() => {
                     if (FINAL_CONFIG.value.style.chart.bars.distributed) {
                         return (dp || 0) / datasetTotals.value[i];
                     } else {
-                        return (dp || 0) / maxTotal;
+                        return (dp || 0) / absoluteTotal;
                     }
                 }),
                 series: slicedSeries,
-                x: slicedSeries.map((_dp, i) => {
-                    return drawingArea.value.left + (barSlot.value * i) + (barSlot.value * FINAL_CONFIG.value.style.chart.bars.gapRatio / 4);
-                }),
-                y: slicedSeries.map((dp, i) => {
-                    const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
-                        ? (dp || 0) / datasetTotals.value[i]
-                        : (dp || 0) / maxTotal;
-
-                    const height = totalHeight * proportion;
-                    const currentY = totalHeight - height - cumulativeY[i];
-                    cumulativeY[i] += height;
-
-                    return currentY + drawingArea.value.top;
-                }),
-                height: slicedSeries.map((dp, i) => {
-                    const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
-                        ? (dp || 0) / datasetTotals.value[i]
-                        : (dp || 0) / maxTotal;
-
-                    return totalHeight * proportion <= 0 ? 0 : totalHeight * proportion;
-                }),
+                signedSeries: signedSliced,
+                x,
+                y,
+                height,
             };
         });
 });
@@ -311,13 +376,15 @@ const totalLabels = computed(() => {
 });
 
 
-function barDataLabel(val, datapoint, index, dpIndex) {
+function barDataLabel(val, datapoint, index, dpIndex, signed) {
+
+    const appliedValue = FINAL_CONFIG.value.style.chart.bars.distributed ? signed === 1 ? val : -val : val;
     return applyDataLabel(
         FINAL_CONFIG.value.style.chart.bars.dataLabels.formatter,
-        val,
+        appliedValue,
         dataLabel({
             p: FINAL_CONFIG.value.style.chart.bars.dataLabels.prefix,
-            v: val,
+            v: appliedValue,
             s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
             r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
         }),
@@ -368,7 +435,7 @@ function useTooltip(seriesIndex) {
         }
     });
 
-    const sum = datapoint.map(d => d.value).reduce((a, b) => a + b, 0);
+    const sum = datapoint.map(d => Math.abs(d.value)).reduce((a, b) => a + b, 0);
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
         seriesIndex,
@@ -412,7 +479,7 @@ function useTooltip(seriesIndex) {
                         s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
                         r: roundingValue,
                     }) : ''} ${parenthesis[0]}${showPercentage ? dataLabel({
-                        v: isNaN(ds.value / sum) ? 0 : ds.value / sum * 100,
+                        v: isNaN(ds.value / sum) ? 0 : Math.abs(ds.value) / sum * 100, // Negs are absed to show relative proportion to absolute total. It's opinionated.
                         s: '%',
                         r: roundingPercentage,
                     }) : ''}${parenthesis[1]}
@@ -670,28 +737,21 @@ defineExpose({
             </template>
 
             <!-- STACKED BARS -->
-            <g v-for="(dp, i) in formattedDataset">            
-                <path
+            <g v-for="(dp, i) in formattedDataset">
+                <rect 
                     v-for="(rect, j) in dp.x"
-                    :d="(i === formattedDataset.length - 1 && formattedDataset.at(-1).series[j]) || (!formattedDataset.at(-1).series[j] && i < formattedDataset.length - 1 && formattedDataset[i].series[j] && !formattedDataset[i+1].series[j])
-                        ? `M ${rect},${dp.y[j]} 
-                            h ${barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) - FINAL_CONFIG.style.chart.bars.borderRadius} 
-                            a ${FINAL_CONFIG.style.chart.bars.borderRadius},${FINAL_CONFIG.style.chart.bars.borderRadius} 0 0 1 ${FINAL_CONFIG.style.chart.bars.borderRadius},${FINAL_CONFIG.style.chart.bars.borderRadius} 
-                            v ${dp.height[j] - FINAL_CONFIG.style.chart.bars.borderRadius < 0 ? 0 : dp.height[j] - FINAL_CONFIG.style.chart.bars.borderRadius} 
-                            h -${barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)} 
-                            v -${dp.height[j] - FINAL_CONFIG.style.chart.bars.borderRadius < 0 ? 0 : dp.height[j] - FINAL_CONFIG.style.chart.bars.borderRadius} 
-                            a ${FINAL_CONFIG.style.chart.bars.borderRadius},${FINAL_CONFIG.style.chart.bars.borderRadius} 0 0 1 ${FINAL_CONFIG.style.chart.bars.borderRadius},-${FINAL_CONFIG.style.chart.bars.borderRadius} z`
-                        : `M ${rect},${dp.y[j]} 
-                            h ${barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)} 
-                            v ${dp.height[j] < 0 ? 0 : dp.height[j]} 
-                            h -${barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)} z`"
+                    :x="rect"
+                    :y="dp.y[j] < 0 ? 0 : dp.y[j]"
+                    :height="dp.height[j] < 0 ? 0.0001 : dp.height[j]"
+                    :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
+                    :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
                     :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
                     :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                     :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation }"
-                />
+                    :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
+                />           
             </g>
 
             <!-- X AXIS -->
@@ -751,13 +811,15 @@ defineExpose({
                     <text 
                         v-for="(rect, j) in dp.x"
                         :x="rect + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2)"
-                        :y="dp.y[j] + (dp.proportions[j] * drawingArea.height / 2) + FINAL_CONFIG.style.chart.bars.dataLabels.fontSize / 3"
+                        :y="dp.y[j] + dp.height[j] / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.fontSize / 3"
                         :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
                         :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
                         :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
                         text-anchor="middle"
                     >
-                        {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : barDataLabel(dp.series[j], dp, i, j) }}
+                        {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
+                            barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
+                            barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
                     </text>
                 </g>
 
@@ -766,7 +828,7 @@ defineExpose({
                     <text
                         v-for="(total, i) in totalLabels"
                         :x="drawingArea.left + (barSlot * i) + barSlot / 2"
-                        :y="(FINAL_CONFIG.style.chart.bars.distributed ? drawingArea.top - FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3 : total.y) + FINAL_CONFIG.style.chart.bars.totalValues.offsetY"
+                        :y="drawingArea.top - FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
                         text-anchor="middle"
                         :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
                         :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
@@ -827,7 +889,7 @@ defineExpose({
                     :x="drawingArea.left + (i * barSlot)"
                     :y="drawingArea.top"
                     :width="barSlot"
-                    :height="drawingArea.height"
+                    :height="drawingArea.height < 0 ? 0 : drawingArea.height"
                     @click="selectDatapoint(i)"
                     @mouseenter="useTooltip(i)"
                     @mouseleave="trapIndex = null; isTooltip = false"
@@ -974,6 +1036,10 @@ defineExpose({
 .vue-data-ui-bar-animated {
     animation: vueDataUiBarAnimation 0.5s ease-in-out;
     transform-origin: center;
+}
+
+.vue-data-ui-bar-transition {
+    transition: all 0.2s ease-in-out !important;
 }
 
 @keyframes vueDataUiBarAnimation {
