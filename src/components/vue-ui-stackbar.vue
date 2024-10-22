@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
@@ -246,6 +246,17 @@ const datasetTotals = computed(() => {
     return sumSeries(unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id))).slice(slicer.value.start, slicer.value.end);
 });
 
+const displayTotals = computed(() => {
+    return sumSeries(unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)).map(s => {
+        return {
+            ...s,
+            series: s.series.map((dp,i) => {
+                return s.signedSeries[i] === -1 ? (dp >= 0 ? -dp : dp) : dp
+            })
+        }
+    })).slice(slicer.value.start, slicer.value.end);
+})
+
 const datasetSignedTotals = computed(() => {
     const src = unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id))
     return { 
@@ -363,14 +374,10 @@ const formattedDataset = computed(() => {
 });
 
 const totalLabels = computed(() => {
-    const MAX = Math.max(...datasetTotals.value);
-    const scale = calculateNiceScale(0, MAX, FINAL_CONFIG.value.style.chart.grid.scale.ticks);
-    const maxTotal = scale.max;
-
-    return datasetTotals.value.map((t, i) => {
+    return displayTotals.value.map((t, i) => {
         return {
             value: t,
-            y: (1 - (t / maxTotal)) * drawingArea.value.height
+            sign: t >= 0 ? 1 : -1
         }
     });
 });
@@ -378,7 +385,7 @@ const totalLabels = computed(() => {
 
 function barDataLabel(val, datapoint, index, dpIndex, signed) {
 
-    const appliedValue = FINAL_CONFIG.value.style.chart.bars.distributed ? signed === 1 ? val : -val : val;
+    const appliedValue = signed === - 1 ? (val >= 0 ? -val : val) : val
     return applyDataLabel(
         FINAL_CONFIG.value.style.chart.bars.dataLabels.formatter,
         appliedValue,
@@ -428,7 +435,7 @@ function useTooltip(seriesIndex) {
     const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(fd => {
         return {
             name: fd.name,
-            value: fd.series[seriesIndex] === 0 ? 0 : fd.series[seriesIndex] || null,
+            value: fd.series[seriesIndex] === 0 ? 0 : (fd.signedSeries[seriesIndex] === -1 ? (fd.series[seriesIndex] >= 0 ? -fd.series[seriesIndex] : fd.series[seriesIndex]) : fd.series[seriesIndex]) || null,
             proportion: fd.proportions[seriesIndex] || null,
             color: fd.color,
             id: fd.id
@@ -834,7 +841,7 @@ defineExpose({
                         :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
                         :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
                     >
-                        {{ barDataLabel(total.value, total, i) }}
+                        {{ barDataLabel(total.value, total, i, total.sign) }}
                     </text>
                 </g>
             </template>
