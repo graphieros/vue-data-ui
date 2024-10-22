@@ -106,7 +106,7 @@ onMounted(() => {
         error({
             componentName: 'VueUiVerticalBar',
             type: 'dataset'
-        })
+        });
     }
 
     barCount.value = props.dataset.flatMap(serie => {
@@ -189,15 +189,14 @@ const immutableDataset = computed(() => {
         .map((serie, i) => {
             const id = `vertical_parent_${i}_${uid.value}`;
         const hasChildren = !!serie.children && serie.children.length > 0;
-        if (![null, undefined].includes(serie.value) && serie.value < 0) {
-            console.warn(`VueUiVerticalBar is not designed to graph negative values. ${serie.name || 'serie at index' + i} has the following value: ${serie.value}`)
-        }
+
         return {
             ...serie,
             id,
             shape: 'square',
             opacity: segregated.value.includes(id) ? 0.5 : 1,
-            value: hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : (serie.value || 0),
+            value: hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : (Math.abs(serie.value) || 0),
+            sign: serie.value >= 0 ? 1 : -1,
             hasChildren,
             isChild: false,
             segregate: () => segregate(id),
@@ -206,16 +205,14 @@ const immutableDataset = computed(() => {
             children: !serie.children || !serie.children.length ? [] : serie.children
                 .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
                 .map((c, j) => {
-                    if (![null, undefined].includes(c.value) && c.value < 0) {
-                            console.warn(`VueUiVerticalBar is not designed to graph negative values. ${c.name + ' child serie' || 'child serie at index' + i + ', ' + j } has the following value: ${c.value}`)
-                        }
                     return {
                         ...c,
-                        value: c.value || 0,
+                        value: Math.abs(c.value) || 0,
+                        sign: c.value >= 0 ? 1 : -1,
                         isChild: true,
                         parentId: id,
                         parentName: serie.name,
-                        parentValue: serie.value,
+                        parentValue: serie.value || hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : 0,
                         id: `vertical_child_${i}_${j}_${uid.value}`,
                         childIndex: j,
                         color: convertColorToHex(c.color) || convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length]
@@ -302,18 +299,18 @@ const mutableDataset = computed(() => {
 });
 
 const total = computed(() => {
-    return mutableDataset.value.map(serie => serie.value).reduce((a,b) => a + b);
+    return mutableDataset.value.map(serie => Math.abs(serie.value)).reduce((a,b) => a + b, 0);
 });
 
 function calcProportionToTotal(val, formatted = false, rounding = 0) {
     if(formatted) {
         return dataLabel({
-            v: val / total.value * 100,
+            v: Math.abs(val) / total.value * 100,
             s: '%',
             r: rounding
         });
     }
-    return val / total.value;
+    return Math.abs(val) / total.value;
 }
 
 const bars = computed(() => {
@@ -325,6 +322,10 @@ const bars = computed(() => {
         }
     })
 })
+
+const hasNegative = computed(() => {
+    return bars.value.map(b => b.sign).includes(-1)
+});
 
 const max = computed(() => {
     return Math.max(...mutableDataset.value.flatMap(serie => {
@@ -338,7 +339,7 @@ const max = computed(() => {
 
 function calcBarWidth(val) {
     const ratio = val / max.value;
-    return drawableArea.value.width * ratio;
+    return (drawableArea.value.width / (hasNegative.value ? 2 : 1)) * ratio;
 }
 
 function calcDataLabelX(val) {
@@ -353,8 +354,9 @@ function getParentData(serie, index) {
     return {
         y: start + (height / 2) - (FINAL_CONFIG.value.style.chart.layout.bars.parentLabels.fontSize),
         name: parent.name,
-        value: [undefined, NaN, null].includes(parent.value) ? '' : parent.value.toFixed(FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue),
-        percentageToTotal: isNaN(parent.value / total.value) ? '' : calcProportionToTotal(parent.value, true, FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage)
+        value: [undefined, NaN, null].includes(parent.value) ? '' : parent.sign === 1 ? parent.value : -parent.value,
+        percentageToTotal: isNaN(parent.value / total.value) ? '' : calcProportionToTotal(parent.value, true, FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage),
+        sign: parent.sign
     }
 }
 
@@ -403,10 +405,10 @@ function useTooltip(bar, seriesIndex) {
         if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
             html += `<div>${FINAL_CONFIG.value.translations.value}: <b>${applyDataLabel(
                 FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.formatter,
-                bar.value,
+                bar.sign === 1 ? bar.value : -bar.value,
                 dataLabel({
                     p: FINAL_CONFIG.value.style.chart.tooltip.prefix,
-                    v: bar.value,
+                    v: bar.sign === 1 ? bar.value : -bar.value,
                     s: FINAL_CONFIG.value.style.chart.tooltip.suffix,
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
                 }),
@@ -416,13 +418,13 @@ function useTooltip(bar, seriesIndex) {
     
         if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
             html += `<div>${FINAL_CONFIG.value.translations.percentageToTotal} : <b>${dataLabel({
-                v: bar.value / total.value * 100,
+                v: Math.abs(bar.value) / total.value * 100,
                 s: '%',
                 r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
             })}</b></div>`;
             if(bar.isChild) {
                 html += `<div>${FINAL_CONFIG.value.translations.percentageToSerie}: <b>${dataLabel({
-                    v: bar.value / bar.parentValue * 100,
+                    v: Math.abs(bar.value) / Math.abs(bar.parentValue) * 100,
                     s: '%',
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
                 })}</b></div>`;
@@ -432,16 +434,16 @@ function useTooltip(bar, seriesIndex) {
     }
 }
 
-function makeDataLabel(value, datapoint, seriesIndex) {
+function makeDataLabel(value, datapoint, seriesIndex, sign) {
     if (!FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.show) {
         return '';
     }
     const label = applyDataLabel(
         FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.formatter,
-        value,
+        sign === 1 ? value : -value,
         dataLabel({
             p: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.prefix,
-            v: value,
+            v: sign === 1 ? value : -value,
             s: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.suffix,
             r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue
         }),
@@ -469,8 +471,8 @@ const table = computed(() => {
             return {
                 color: bar.color,
                 parentName: bar.name,
-                parentValue: bar.value,
-                percentageToTotal: bar.value / total.value,
+                parentValue: bar.sign === 1 ? bar.value : -bar.value,
+                percentageToTotal: Math.abs(bar.value) / total.value,
                 childName: "",
                 childValue: "",
                 childPercentageToParent: "",
@@ -484,9 +486,9 @@ const table = computed(() => {
                     parentValue: bar.parentValue,
                     percentageToTotal: bar.parentValue / total.value,
                     childName: bar.name,
-                    childValue: bar.value,
-                    childPercentageToParent: bar.value / bar.parentValue,
-                    childPercentageToTotal: bar.value / total.value
+                    childValue: bar.sign === 1 ? bar.value : -bar.value,
+                    childPercentageToParent: Math.abs(bar.value) / Math.abs(bar.parentValue),
+                    childPercentageToTotal: Math.abs(bar.value) / total.value
                 }
             }else{
                 return {
@@ -495,9 +497,9 @@ const table = computed(() => {
                     parentValue: "",
                     percentageToTotal: "",
                     childName: bar.name,
-                    childValue: bar.value,
-                    childPercentageToParent: bar.value / bar.parentValue,
-                    childPercentageToTotal: bar.value / total.value
+                    childValue: bar.sign === 1 ? bar.value : -bar.value,
+                    childPercentageToParent: Math.abs(bar.value) / Math.abs(bar.parentValue),
+                    childPercentageToTotal: Math.abs(bar.value) / total.value
                 }
             }
         }
@@ -674,7 +676,7 @@ defineExpose({
                 <!-- UNDERLAYER -->
                 <rect
                     :data-cy="`vertical-bar-rect-underlayer-${i}`"
-                    :x="drawableArea.left"
+                    :x="hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left"
                     :y="drawableArea.top + ((barGap + barHeight) * i)"
                     :width="calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)"
                     :height="barHeight <= 0 ? 0.0001 : barHeight"
@@ -686,7 +688,7 @@ defineExpose({
             <g v-for="(serie, i) in bars"> 
                 <!-- BARS -->
                 <rect 
-                    :x="drawableArea.left"
+                    :x="hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left"
                     :y="drawableArea.top + ((barGap + barHeight) * i)"
                     :width="calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)"
                     :height="barHeight <= 0 ? 0.0001 : barHeight"
@@ -707,19 +709,30 @@ defineExpose({
                     :stroke="FINAL_CONFIG.style.chart.layout.separators.color"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth"
                     stroke-linecap="round"
+                    />
+                    
+                <line
+                    v-if="hasNegative && FINAL_CONFIG.style.chart.layout.separators.show"
+                    :x1="drawableArea.left + drawableArea.width / 2"
+                    :x2="drawableArea.left + drawableArea.width / 2"
+                    :y1="drawableArea.top"
+                    :y2="drawableArea.bottom"
+                    :stroke="FINAL_CONFIG.style.chart.layout.separators.color"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth"
+                    stroke-linecap="round"
                 />
 
                 <!-- DATALABELS -->
                 <text
                     :data-cy="`vertical-bar-datalabel-${i}`"
-                    :x="calcDataLabelX(serie.value) + 3 + FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX"
+                    :x="!hasNegative ? calcDataLabelX(serie.value) + 3 + FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX : (drawableArea.left + (drawableArea.width / 2) + (serie.sign === 1 ? -12: 12) + (serie.sign === 1 ? -FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX : FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX))"
                     :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize / 2"
-                    text-anchor="start"
+                    :text-anchor="!hasNegative || serie.sign === - 1 ? 'start' : 'end'"
                     :font-size="FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize"
                     :fill="FINAL_CONFIG.style.chart.layout.bars.dataLabels.color"
                     :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                 >
-                    {{ makeDataLabel(serie.value, serie, i) }}
+                    {{ makeDataLabel(serie.value, serie, i, serie.sign) }}
                 </text>
 
                 <!-- CHILDREN | LONELY PARENTS NAMES -->
@@ -756,7 +769,7 @@ defineExpose({
                     :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                     text-anchor="start"
                 >
-                    {{ makeDataLabel(getParentData(serie, i).value), getParentData(serie, i), i }}
+                    {{ makeDataLabel(getParentData(serie, i).value), getParentData(serie, i), i, getParentData(serie, i).sign }}
                 </text>
 
                 <!-- TOOLTIP TRAPS -->
