@@ -440,10 +440,10 @@ function makeDataLabel(value, datapoint, seriesIndex, sign) {
     }
     const label = applyDataLabel(
         FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.formatter,
-        sign === 1 ? value : -value,
+        sign === -1 ? (value >= 0 ? -value : value) : value,
         dataLabel({
             p: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.prefix,
-            v: sign === 1 ? value : -value,
+            v: sign === -1 ? (value >= 0 ? -value : value) : value,
             s: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.suffix,
             r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue
         }),
