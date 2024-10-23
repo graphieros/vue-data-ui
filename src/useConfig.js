@@ -3795,7 +3795,13 @@ export function useConfig() {
         valueCss: '',
         valueFontSize: FONT._32,
         valueRounding: 0,
-        formatter: null
+        formatter: null,
+        analogDigits: {
+            show: false,
+            height: 40,
+            color: COLOR_BLACK,
+            skeletonColor: COLOR_GREY_LIGHT
+        }
     }
 
     const vue_ui_mini_loader = {
