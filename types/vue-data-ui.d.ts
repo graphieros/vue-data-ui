@@ -251,7 +251,13 @@ declare module 'vue-data-ui' {
         valueFontSize?: number;
         valueRounding?: number;
         formatter?: Formatter;
-    }
+        analogDigits?: {
+            show?: boolean;
+            height?: number;
+            color?: string;
+            skeletonColor?: string;
+        };
+    };
 
     export const VueUiKpi: DefineComponent<{
         dataset: number,
