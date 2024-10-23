@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import { applyDataLabel, dataLabel } from "../lib";
 import { useConfig } from "../useConfig";
+import Digits from "./vue-ui-digits.vue";
 
 const { vue_ui_kpi: DEFAULT_CONFIG } = useConfig();
 
@@ -35,9 +36,9 @@ const animateToValue = (targetValue) => {
 
     function animate() {
         if (displayedValue.value < targetValue) {
-            displayedValue.value = Math.min(displayedValue.value + chunk, targetValue);
+            displayedValue.value = Number(Math.min(displayedValue.value + chunk, targetValue).toFixed(FINAL_CONFIG.value.valueRounding));
         } else if (displayedValue.value > targetValue) {
-            displayedValue.value = Math.max(displayedValue.value - chunk, targetValue);
+            displayedValue.value = Number(Math.max(displayedValue.value - chunk, targetValue).toFixed(FINAL_CONFIG.value.valueRounding));
         }
 
         if (displayedValue.value !== targetValue) {
@@ -76,16 +77,32 @@ watch(() => props.dataset, (newValue) => {
         <slot name="comment-before" :comment="dataset"></slot>
         <div :class="`vue-ui-kpi-value ${FINAL_CONFIG.valueClass}`" :style="`font-family: ${FINAL_CONFIG.fontFamily}; font-size:${FINAL_CONFIG.valueFontSize}px; color:${FINAL_CONFIG.valueColor}; font-weight:${FINAL_CONFIG.valueBold ? 'bold': 'normal'}; ${FINAL_CONFIG.valueCss}`">
             <slot name="value" :comment="dataset"></slot>
-            {{ applyDataLabel(
-                FINAL_CONFIG.formatter,
-                displayedValue,
-                dataLabel({ 
-                    p: FINAL_CONFIG.prefix, 
-                    v: displayedValue, 
-                    s: FINAL_CONFIG.suffix, 
-                    r: FINAL_CONFIG.valueRounding 
-                }))
-            }}
+            <template v-if="FINAL_CONFIG.analogDigits.show">
+                <div :style="{ height: FINAL_CONFIG.analogDigits.height + 'px'}">
+                    <Digits 
+                        :dataset="displayedValue"
+                        :config="{
+                            backgroundColor: FINAL_CONFIG.backgroundColor,
+                            digits: {
+                                color: FINAL_CONFIG.analogDigits.color,
+                                skeletonColor: FINAL_CONFIG.analogDigits.skeletonColor
+                            }
+                        }"
+                    />
+                </div>
+            </template>
+            <template v-else>
+                {{ applyDataLabel(
+                    FINAL_CONFIG.formatter,
+                    displayedValue,
+                    dataLabel({ 
+                        p: FINAL_CONFIG.prefix, 
+                        v: displayedValue, 
+                        s: FINAL_CONFIG.suffix, 
+                        r: FINAL_CONFIG.valueRounding 
+                    }))
+                }}
+            </template>
         </div>
         <slot name="comment-after" :comment="dataset"></slot>
     </div>
