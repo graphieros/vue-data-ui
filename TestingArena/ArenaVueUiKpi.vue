@@ -6,15 +6,19 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
-const dataset = ref(12012012);
+const dataset = ref(1201);
 
 function updateVal() {
-    dataset.value = Math.random() * 10000
+    dataset.value = Math.round(Math.random() * 10000)
 }
 
 const config = ref({
     formatter: ({ value }) => {
         return `f | ${value}`
+    },
+    title: 'Lorem ipsum dolor sit amet',
+    analogDigits: {
+        show: true
     }
 })
 
