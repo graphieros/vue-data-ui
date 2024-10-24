@@ -24,6 +24,27 @@ export function useConfig() {
         _48: 48
     }
 
+    // -------------------------
+    // COMBOS TO APPLY
+
+    /**
+     * Sets background and text color.
+     * 
+     * @param {string} [backgroundColor] - Background color (default is #FFFFFF).
+     * @param {string} [color] - Text color (default is #2D353C).
+     * @returns {{backgroundColor: string, color: string}} An object with the background color and text color.
+     */
+    const BG_AND_COLOR = (backgroundColor = COLOR_WHITE, color = COLOR_BLACK) => {
+        return { backgroundColor, color }
+    }
+
+    const PREFIX_SUFFIX = {
+        prefix: '',
+        suffix: ''
+    }
+
+    // --------------------------
+
     const SHAPE = {
         LINE: 'line',
         SQUARE: 'square',
@@ -426,7 +447,7 @@ export function useConfig() {
                 ...TOOLTIP,
                 showValue: true,
                 showPercentage: true,
-                rondingValue: 0,
+                roundingValue: 0,
                 roundingPercentage: 0
             },
             userOptions: USER_OPTIONS({
@@ -535,7 +556,7 @@ export function useConfig() {
                 roundingPercentage: 0,
             },
             columnNames: {
-                serie: 'Series',
+                series: 'Series',
                 value: 'Value',
                 percentage: 'Percentage'
             }
@@ -760,7 +781,7 @@ export function useConfig() {
                     },
                     rect: {
                         rounded: true,
-                        ronding: 2,
+                        rounding: 2,
                         stroke: COLOR_BLACK,
                         strokeWidth: 1,
                         useGradient: true,
@@ -2004,9 +2025,18 @@ export function useConfig() {
                 }
             },
             title: {
-                ...TITLE,
+                text: '',
+                color: COLOR_BLACK,
+                fontSize: FONT._16,
+                bold: true,
                 textAlign: POSITION.LEFT,
-                margin: '0 auto'
+                margin: '0 0 6px 0',
+                subtitle: { 
+                    color: COLOR_GREY,
+                    text: '', 
+                    fontSize: FONT._12, 
+                    bold: false 
+                },
             },
             gap: 4
         }
@@ -2119,9 +2149,18 @@ export function useConfig() {
                 borderRadius: 2
             },
             title: {
-                ...TITLE,
+                text: '',
+                color: COLOR_BLACK,
+                fontSize: FONT._16,
+                bold: true,
                 textAlign: POSITION.LEFT,
-                margin: '0 0 6px 0'
+                subtitle: { 
+                    color: COLOR_GREY,
+                    text: '', 
+                    fontSize: FONT._12, 
+                    bold: false 
+                },
+                margin: '0 0 6px 0',
             }
         }
     }
@@ -3285,9 +3324,18 @@ export function useConfig() {
             chart: 'Evolution'
         },
         title: {
-            ...TITLE,
-            textAlign: POSITION.CENTER,
-            backgroundColor: COLOR_WHITE
+            text: '',
+            color: COLOR_BLACK,
+            fontSize: FONT._20,
+            bold: true,
+            textAlign: 'center',
+            backgroundColor: COLOR_WHITE,
+            subtitle: { 
+                color: COLOR_GREY,
+                text: '', 
+                fontSize: FONT._16, 
+                bold: false 
+            },
         },
         thead: {
             backgroundColor: COLOR_WHITE,
@@ -3367,8 +3415,10 @@ export function useConfig() {
                 height: 300,
                 width: 512,
                 zoom: {
-                    ...ZOOM,
-                    show: false
+                    show: false,
+                    color: COLOR_GREY_MID,
+                    highlightColor: COLOR_GREY_DARK,
+                    useResetSlot: false
                 },
                 words: {
                     maxFontSize: 100,
