@@ -2202,6 +2202,7 @@ declare module 'vue-data-ui' {
                     fontSize?: number;
                     color?: string;
                     text?: string;
+                    bold?: boolean;
                 };
             };
             tooltip?: ChartTooltip & {
@@ -2299,6 +2300,7 @@ declare module 'vue-data-ui' {
         stackRatio?: number;
         comments?: string[];
         shape?: Shape;
+        smooth?: boolean;
     };
 
     export type VueUiXyDatasetBarItem = {
