@@ -440,8 +440,6 @@ export function useConfig() {
             title: {
                 ...TITLE,
                 show: true,
-                offsetX: 0,
-                offsetY: 0
             },
             tooltip: {
                 ...TOOLTIP,
