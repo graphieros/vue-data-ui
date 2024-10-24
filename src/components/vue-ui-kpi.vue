@@ -85,7 +85,7 @@ watch(() => props.dataset, (newValue) => {
                             backgroundColor: FINAL_CONFIG.backgroundColor,
                             digits: {
                                 color: FINAL_CONFIG.analogDigits.color,
-                                skeletonColor: FINAL_CONFIG.analogDigits.skeleton
+                                skeletonColor: FINAL_CONFIG.analogDigits.skeletonColor
                             }
                         }"
                     />
