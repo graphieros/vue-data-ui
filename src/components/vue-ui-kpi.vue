@@ -36,9 +36,9 @@ const animateToValue = (targetValue) => {
 
     function animate() {
         if (displayedValue.value < targetValue) {
-            displayedValue.value = Number(Math.min(displayedValue.value + chunk, targetValue).toFixed(FINAL_CONFIG.value.valueRounding));
+            displayedValue.value = Math.min(displayedValue.value + chunk, targetValue);
         } else if (displayedValue.value > targetValue) {
-            displayedValue.value = Number(Math.max(displayedValue.value - chunk, targetValue).toFixed(FINAL_CONFIG.value.valueRounding));
+            displayedValue.value = Math.max(displayedValue.value - chunk, targetValue);
         }
 
         if (displayedValue.value !== targetValue) {
@@ -80,12 +80,12 @@ watch(() => props.dataset, (newValue) => {
             <template v-if="FINAL_CONFIG.analogDigits.show">
                 <div :style="{ height: FINAL_CONFIG.analogDigits.height + 'px'}">
                     <Digits 
-                        :dataset="displayedValue"
+                        :dataset="Number(displayedValue.toFixed(FINAL_CONFIG.valueRounding))"
                         :config="{
                             backgroundColor: FINAL_CONFIG.backgroundColor,
                             digits: {
                                 color: FINAL_CONFIG.analogDigits.color,
-                                skeletonColor: FINAL_CONFIG.analogDigits.skeletonColor
+                                skeletonColor: FINAL_CONFIG.analogDigits.skeleton
                             }
                         }"
                     />
