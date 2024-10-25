@@ -82,8 +82,8 @@
                         v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showBaseline"
                         :stroke="FINAL_CONFIG.chart.grid.stroke" 
                         stroke-width="1" 
-                        :x1="drawingArea.left"
-                        :x2="drawingArea.right"
+                        :x1="drawingArea.left + xPadding"
+                        :x2="drawingArea.right - xPadding"
                         :y1="drawingArea.bottom"
                         :y2="drawingArea.bottom"
                         stroke-linecap="round"
@@ -94,8 +94,8 @@
                             data-cy="xy-grid-line-y"
                             :stroke="FINAL_CONFIG.chart.grid.stroke" 
                             stroke-width="1" 
-                            :x1="drawingArea.left" 
-                            :x2="drawingArea.left" 
+                            :x1="drawingArea.left + xPadding" 
+                            :x2="drawingArea.left + xPadding" 
                             :y1="drawingArea.top" 
                             :y2="drawingArea.bottom" 
                             stroke-linecap="round"
@@ -103,8 +103,8 @@
                         <g v-if="FINAL_CONFIG.chart.grid.showHorizontalLines">
                             <line 
                                 v-for="l in yLabels"
-                                :x1="drawingArea.left"
-                                :x2="drawingArea.right"
+                                :x1="drawingArea.left + xPadding"
+                                :x2="drawingArea.right - xPadding"
                                 :y1="l.y"
                                 :y2="l.y"
                                 :stroke="FINAL_CONFIG.chart.grid.stroke"
@@ -118,8 +118,8 @@
                             <template v-if="grid.id === selectedScale && grid.yLabels.length">
                                 <line 
                                     v-for="l in grid.yLabels"
-                                    :x1="drawingArea.left"
-                                    :x2="drawingArea.right"
+                                    :x1="drawingArea.left + xPadding"
+                                    :x2="drawingArea.right - xPadding"
                                     :y1="l.y"
                                     :y2="l.y"
                                     :stroke="grid.color"
@@ -130,8 +130,8 @@
                             <template v-else-if="grid.yLabels.length">
                                 <line 
                                     v-for="l in grid.yLabels"
-                                    :x1="drawingArea.left"
-                                    :x2="drawingArea.right"
+                                    :x1="drawingArea.left + xPadding"
+                                    :x2="drawingArea.right - xPadding"
                                     :y1="l.y"
                                     :y2="l.y"
                                     :stroke="FINAL_CONFIG.chart.grid.stroke"
@@ -144,10 +144,10 @@
                     <g v-if="FINAL_CONFIG.chart.grid.showVerticalLines" data-cy="xy-grid-vertical-lines">
                         <line
                             :data-cy="`xy-grid-vertical-line-${i}`"
-                            v-for="(_, i) in maxSeries + 1" 
+                            v-for="(_, i) in maxSeries + ( FINAL_CONFIG.chart.grid.position === 'middle' ? 1 : 0)" 
                             :key="`grid_vertical_line_${i}`"
-                            :x1="(drawingArea.width / maxSeries) * i + drawingArea.left"
-                            :x2="(drawingArea.width / maxSeries) * i + drawingArea.left"
+                            :x1="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
+                            :x2="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
                             :y1="drawingArea.top"
                             :y2="drawingArea.bottom"
                             stroke-width="0.5"
@@ -195,6 +195,32 @@
                         </linearGradient>
                     </defs>
                 </template>
+
+                 <!-- HIGHLIGHT AREA -->
+                 <g v-for="oneArea in highlightAreas">
+                    <template v-if="oneArea.show">                    
+                        <rect
+                            data-cy="xy-highlight-area"
+                            :x="drawingArea.left + (drawingArea.width / maxSeries) * (oneArea.from - (slicer.start))"
+                            :y="drawingArea.top"
+                            :height="drawingArea.height < 0 ? 10 : drawingArea.height"
+                            :width="(drawingArea.width / maxSeries) * oneArea.span < 0 ? 0.00001 : (drawingArea.width / maxSeries) * oneArea.span"
+                            :fill="`${oneArea.color}${opacity[oneArea.opacity]}`"
+                        />
+                        <foreignObject v-if="oneArea.caption.text"
+                            :x="(drawingArea.left + (drawingArea.width / maxSeries) * (oneArea.from - (slicer.start))) - (oneArea.caption.width === 'auto' ? 0 : oneArea.caption.width / 2 - (drawingArea.width / maxSeries) * oneArea.span / 2)"
+                            :y="drawingArea.top + oneArea.caption.offsetY"
+                            style="overflow:visible"
+                            height="1"
+                            :width="oneArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * oneArea.span : oneArea.caption.width"
+                            
+                        >
+                            <div :style="`padding:${oneArea.caption.padding}px;text-align:${oneArea.caption.textAlign};font-size:${oneArea.caption.fontSize}px;color:${oneArea.caption.color};font-weight:${oneArea.caption.bold ? 'bold' : 'normal'}`">
+                                {{ oneArea.caption.text }}
+                            </div>
+                        </foreignObject>
+                    </template>
+                </g>
 
                 <!-- BARS -->
                 <template v-if="barSet.length">
@@ -268,13 +294,140 @@
                         data-cy="xy-grid-line-x"
                         :stroke="FINAL_CONFIG.chart.grid.stroke" 
                         stroke-width="1" 
-                        :x1="drawingArea.left" 
-                        :x2="drawingArea.right" 
+                        :x1="drawingArea.left + xPadding" 
+                        :x2="drawingArea.right - xPadding" 
                         :y1="zero" 
                         :y2="zero" 
                         stroke-linecap="round"
                     />
                 </template>
+
+                <!-- LEFT & RIGHT PADDING COVERS -->
+                <g>
+                    <rect
+                        :x="0"
+                        :y="drawingArea.top"
+                        :width="FINAL_CONFIG.chart.padding.left - 1 + xPadding"
+                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
+                        :fill="FINAL_CONFIG.chart.backgroundColor"
+                    />
+                    <rect
+                        :x="drawingArea.right + 1 - xPadding"
+                        :y="drawingArea.top"
+                        :width="FINAL_CONFIG.chart.padding.right - 1 + xPadding"
+                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
+                        :fill="FINAL_CONFIG.chart.backgroundColor"
+                    />
+                </g>
+
+                <!-- FRAME -->
+                <rect 
+                    v-if="FINAL_CONFIG.chart.grid.frame.show"
+                    :style="{ pointerEvents: 'none' }"
+                    :x="drawingArea.left + xPadding"
+                    :y="drawingArea.top"
+                    :width="drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)"
+                    :height="drawingArea.height"
+                    fill="transparent"
+                    :stroke="FINAL_CONFIG.chart.grid.frame.stroke"
+                    :stroke-width="FINAL_CONFIG.chart.grid.frame.strokeWidth"
+                    :stroke-linecap="FINAL_CONFIG.chart.grid.frame.strokeLinecap"
+                    :stroke-linejoin="FINAL_CONFIG.chart.grid.frame.strokeLinejoin"
+                    :stroke-dasharray="FINAL_CONFIG.chart.grid.frame.strokeDasharray"
+                />
+
+                                <!-- Y LABELS -->
+                                <g v-if="FINAL_CONFIG.chart.grid.labels.show">
+                    <template v-if="mutableConfig.useIndividualScale">
+                        <g v-for="el in allScales">
+                            <line 
+                                :x1="el.x + xPadding"
+                                :x2="el.x + xPadding"
+                                :y1="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset - el.individualHeight) : drawingArea.top"
+                                :y2="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset) : drawingArea.bottom"
+                                :stroke="el.color"
+                                :stroke-width="FINAL_CONFIG.chart.grid.stroke"
+                                stroke-linecap="round"
+                                :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
+                            />
+                        </g>
+                        <g v-for="el in allScales" :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
+                            <text
+                                :fill="el.color"
+                                :font-size="fontSizes.dataLabels"
+                                text-anchor="middle"
+                                :transform="`translate(${el.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + 5}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                            >
+                                {{ el.name }} {{ el.scaleLabel ? `- ${el.scaleLabel}` : '' }}
+                            </text>
+                            <line
+                                v-for="(yLabel, j) in el.yLabels"
+                                :x1="el.x - 3 + xPadding"
+                                :x2="el.x + xPadding"
+                                :y1="yLabel.y"
+                                :y2="yLabel.y"
+                                :stroke="el.color"
+                                :stroke-width="1"
+                                stroke-linecap="round"
+                            />
+                            <text 
+                                v-for="(yLabel, j) in el.yLabels"
+                                :x="el.x - 5 + xPadding" 
+                                :y="yLabel.y + xPadding" 
+                                :font-size="fontSizes.dataLabels" 
+                                text-anchor="end"
+                                :fill="el.color"
+                            >
+                                {{
+                                    applyDataLabel(
+                                        FINAL_CONFIG.chart.grid.labels.yAxis.formatter,
+                                        yLabel.value,
+                                        dataLabel({
+                                            p:FINAL_CONFIG.chart.labels.prefix, 
+                                            v: yLabel.value, 
+                                            s: FINAL_CONFIG.chart.labels.suffix, 
+                                            r: 1,
+                                        })
+                                    )
+                                }}
+                            </text>
+                        </g>
+                    </template>
+                    <template v-else>
+                        <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
+                            <line 
+                                v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
+                                :x1="drawingArea.left + xPadding" 
+                                :x2="drawingArea.left - 5 + xPadding" 
+                                :y1="yLabel.y" 
+                                :y2="yLabel.y" 
+                                :stroke="FINAL_CONFIG.chart.grid.stroke" 
+                                stroke-width="1" 
+                                stroke-linecap="round"
+                            />
+                            <text
+                                :data-cy="`xy-label-y-${i}`"
+                                v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
+                                :x="drawingArea.left - 7 + xPadding" 
+                                :y="yLabel.y + fontSizes.dataLabels / 3" 
+                                :font-size="fontSizes.dataLabels" 
+                                text-anchor="end"
+                                :fill="FINAL_CONFIG.chart.grid.labels.color"
+                            >
+                                {{ canShowValue(yLabel.value) ? applyDataLabel(
+                                    FINAL_CONFIG.chart.grid.labels.yAxis.formatter,
+                                    yLabel.value,
+                                    dataLabel({
+                                        p:FINAL_CONFIG.chart.labels.prefix, 
+                                        v: yLabel.value, 
+                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        r: 1,
+                                    })) : '' 
+                                    }}
+                            </text>
+                        </g>
+                    </template>
+                </g>
 
                 <!-- PLOTS -->
                 <g v-for="(serie, i) in plotSet" :key="`serie_plot_${i}`" :class="`serie_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
@@ -630,48 +783,6 @@
                     </g>
                 </g>
 
-                <!-- HIGHLIGHT AREA -->
-                <g v-if="hasHighlightArea">
-                    <rect
-                        data-cy="xy-highlight-area"
-                        :x="drawingArea.left + (drawingArea.width / maxSeries) * (FINAL_CONFIG.chart.highlightArea.from - (slicer.start))"
-                        :y="drawingArea.top"
-                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :width="(drawingArea.width / maxSeries) * highlightAreaSpan < 0 ? 0.00001 : (drawingArea.width / maxSeries) * highlightAreaSpan"
-                        :fill="`${FINAL_CONFIG.chart.highlightArea.color}${opacity[FINAL_CONFIG.chart.highlightArea.opacity]}`"
-                    />
-                    <foreignObject v-if="FINAL_CONFIG.chart.highlightArea.caption.text"
-                        :x="(drawingArea.left + (drawingArea.width / maxSeries) * (FINAL_CONFIG.chart.highlightArea.from - (slicer.start))) - (FINAL_CONFIG.chart.highlightArea.caption.width === 'auto' ? 0 : FINAL_CONFIG.chart.highlightArea.caption.width / 2 - (drawingArea.width / maxSeries) * highlightAreaSpan / 2)"
-                        :y="drawingArea.top + FINAL_CONFIG.chart.highlightArea.caption.offsetY"
-                        style="overflow:visible"
-                        height="1"
-                        :width="FINAL_CONFIG.chart.highlightArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * highlightAreaSpan : FINAL_CONFIG.chart.highlightArea.caption.width"
-                        
-                    >
-                        <div :style="`padding:${FINAL_CONFIG.chart.highlightArea.caption.padding}px;text-align:${FINAL_CONFIG.chart.highlightArea.caption.textAlign};font-size:${FINAL_CONFIG.chart.highlightArea.caption.fontSize}px;color:${FINAL_CONFIG.chart.highlightArea.caption.color};font-weight:${FINAL_CONFIG.chart.highlightArea.caption.bold ? 'bold' : 'normal'}`">
-                            {{ FINAL_CONFIG.chart.highlightArea.caption.text }}
-                        </div>
-                    </foreignObject>
-                </g>
-
-                <!-- LEFT & RIGHT PADDING COVERS -->
-                <g>
-                    <rect
-                        :x="0"
-                        :y="drawingArea.top"
-                        :width="FINAL_CONFIG.chart.padding.left - 1"
-                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :fill="FINAL_CONFIG.chart.backgroundColor"
-                    />
-                    <rect
-                        :x="drawingArea.right + 1"
-                        :y="drawingArea.top"
-                        :width="FINAL_CONFIG.chart.padding.right"
-                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :fill="FINAL_CONFIG.chart.backgroundColor"
-                    />
-                </g>
-
                 <!-- SERIE NAME TAGS : LINES -->
                 <g v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                     <g v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
@@ -746,99 +857,6 @@
                             })"
                         />
                     </g>
-                </g>
-
-                <!-- Y LABELS -->
-                <g v-if="FINAL_CONFIG.chart.grid.labels.show">
-                    <template v-if="mutableConfig.useIndividualScale">
-                        <g v-for="el in allScales">
-                            <line 
-                                :x1="el.x"
-                                :x2="el.x"
-                                :y1="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset - el.individualHeight) : drawingArea.top"
-                                :y2="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset) : drawingArea.bottom"
-                                :stroke="el.color"
-                                :stroke-width="FINAL_CONFIG.chart.grid.stroke"
-                                stroke-linecap="round"
-                                :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
-                            />
-                        </g>
-                        <g v-for="el in allScales" :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
-                            <text
-                                :fill="el.color"
-                                :font-size="fontSizes.dataLabels"
-                                text-anchor="middle"
-                                :transform="`translate(${el.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + 5}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
-                            >
-                                {{ el.name }} {{ el.scaleLabel ? `- ${el.scaleLabel}` : '' }}
-                            </text>
-                            <line
-                                v-for="(yLabel, j) in el.yLabels"
-                                :x1="el.x - 3"
-                                :x2="el.x"
-                                :y1="yLabel.y"
-                                :y2="yLabel.y"
-                                :stroke="el.color"
-                                :stroke-width="1"
-                                stroke-linecap="round"
-                            />
-                            <text 
-                                v-for="(yLabel, j) in el.yLabels"
-                                :x="el.x - 5" 
-                                :y="yLabel.y" 
-                                :font-size="fontSizes.dataLabels" 
-                                text-anchor="end"
-                                :fill="el.color"
-                            >
-                                {{
-                                    applyDataLabel(
-                                        FINAL_CONFIG.chart.grid.labels.yAxis.formatter,
-                                        yLabel.value,
-                                        dataLabel({
-                                            p:FINAL_CONFIG.chart.labels.prefix, 
-                                            v: yLabel.value, 
-                                            s: FINAL_CONFIG.chart.labels.suffix, 
-                                            r: 1,
-                                        })
-                                    )
-                                }}
-                            </text>
-                        </g>
-                    </template>
-                    <template v-else>
-                        <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
-                            <line 
-                                v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
-                                :x1="drawingArea.left" 
-                                :x2="drawingArea.left - 5" 
-                                :y1="yLabel.y" 
-                                :y2="yLabel.y" 
-                                :stroke="FINAL_CONFIG.chart.grid.stroke" 
-                                stroke-width="1" 
-                                stroke-linecap="round"
-                            />
-                            <text
-                                :data-cy="`xy-label-y-${i}`"
-                                v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
-                                :x="drawingArea.left - 7" 
-                                :y="yLabel.y + fontSizes.dataLabels / 3" 
-                                :font-size="fontSizes.dataLabels" 
-                                text-anchor="end"
-                                :fill="FINAL_CONFIG.chart.grid.labels.color"
-                            >
-                                {{ canShowValue(yLabel.value) ? applyDataLabel(
-                                    FINAL_CONFIG.chart.grid.labels.yAxis.formatter,
-                                    yLabel.value,
-                                    dataLabel({
-                                        p:FINAL_CONFIG.chart.labels.prefix, 
-                                        v: yLabel.value, 
-                                        s: FINAL_CONFIG.chart.labels.suffix, 
-                                        r: 1,
-                                    })) : '' 
-                                    }}
-                            </text>
-                        </g>
-                    </template>
                 </g>
 
                 <!-- Y LABELS MOUSE TRAPS -->
@@ -1123,7 +1141,7 @@ import {
     assignStackRatios,
     applyDataLabel,
     calcLinearProgression,
-    calculateNiceScale,
+    calculateNiceScaleWithExactExtremes,
     checkNaN, 
     closestDecimal,
     convertColorToHex, 
@@ -1368,6 +1386,14 @@ export default {
                     defaultConfig: DEFAULT_CONFIG
                 });
 
+                if ('highlightArea' in this.config.chart) {
+                    if (!Array.isArray(this.config.chart.highlightArea)) {
+                        mergedConfig.chart.highlightArea = [this.config.chart.highlightArea] // FIXME: should be sanitized using useNestedPropToo
+                    } else {
+                        mergedConfig.chart.highlightArea = this.config.chart.highlightArea; //
+                    }
+                }
+
                 if (mergedConfig.theme) {
                     return {
                         ...useNestedProp({
@@ -1385,13 +1411,25 @@ export default {
             }
         },
         hasHighlightArea() {
+            if (Array.isArray(this.FINAL_CONFIG.chart.highlightArea)) {
+                return this.FINAL_CONFIG.chart.highlightArea.some(area => area.show)
+            }
             return this.FINAL_CONFIG.chart.highlightArea && this.FINAL_CONFIG.chart.highlightArea.show;
         },
-        highlightAreaSpan() {
-            const { from, to } = this.FINAL_CONFIG.chart.highlightArea;
-            if (from === to) return 1;
-            if (to < from) return 0;
-            return to - from + 1;
+        highlightAreas() {
+            if (Array.isArray(this.FINAL_CONFIG.chart.highlightArea)) {
+                return this.FINAL_CONFIG.chart.highlightArea.map(area => {
+                    return {
+                        ...area,
+                        span: area.from === area.to ? 1 : area.to < area.from ? 0 : area.to - area.from + 1
+                    }
+                })
+            }
+            const area = this.FINAL_CONFIG.chart.highlightArea;
+            return [ {...area, span: area.from === area.to ? 1 : area.to < area.from ? 0 : area.to - area.from + 1} ];
+        },
+        xPadding() {
+            return this.FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : this.drawingArea.width / this.maxSeries / 2
         },
         relativeZero() {
             if(this.niceScale.min >= 0) return 0;
@@ -1492,8 +1530,8 @@ export default {
                 };
                 const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps;
                 
-                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps);
-                const autoScaleSteps = this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
+                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max, scaleSteps);
+                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax, scaleSteps);
 
                 const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
                 const autoScaleZero = 0;
@@ -1614,9 +1652,9 @@ export default {
 
                 const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps
 
-                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps);
+                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max, scaleSteps);
                 
-                const autoScaleSteps = this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
+                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax, scaleSteps);
 
                 const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min));
                 const autoScaleZero = 0;
@@ -1717,8 +1755,8 @@ export default {
                 };
 
                 const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps
-                const individualScale = this.calculateNiceScale(individualExtremes.min, individualExtremes.max, scaleSteps)
-                const autoScaleSteps = this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax, scaleSteps);
+                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max, scaleSteps)
+                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax, scaleSteps);
 
                 const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
                 const autoScaleZero = 0;
@@ -1808,7 +1846,7 @@ export default {
             return min;
         },
         niceScale() {
-            return this.calculateNiceScale(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps)
+            return this.calculateNiceScaleWithExactExtremes(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps)
         },
         maxSeries(){
             return this.slicer.end - this.slicer.start;
@@ -1822,7 +1860,7 @@ export default {
                 plot: this.drawingArea.width / this.maxSeries,
                 line: this.drawingArea.width / this.maxSeries,
             }
-        },
+        },   
         barSlot() {
             const len = this.safeDataset.filter(serie => serie.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length
             return (this.drawingArea.width) / this.maxSeries / len - (this.barPeriodGap * len)
@@ -2067,7 +2105,7 @@ export default {
             this.dataset.forEach((datapoint) => {
                 datapoint.series.forEach((s, j) => {
                     if(!this.isSafeValue(s)) {
-                        console.warn(`SmartXY has detected an unsafe value in your dataset:\n-----> The serie '${datapoint.name}' contains the value '${s}' at index ${j}.\n'${s}' was converted to null to allow the chart to display.`)
+                        console.warn(`VueUiXy has detected an unsafe value in your dataset:\n-----> The serie '${datapoint.name}' contains the value '${s}' at index ${j}.\n'${s}' was converted to null to allow the chart to display.`)
                     }
                 });
             });
@@ -2162,7 +2200,7 @@ export default {
         abbreviate,
         assignStackRatios,
         applyDataLabel,
-        calculateNiceScale,
+        calculateNiceScaleWithExactExtremes,
         checkNaN,
         createSmoothPath,
         isSafeValue,
@@ -2281,7 +2319,6 @@ export default {
         },
         createStar,
         createPolygonPath,
-        /////////////////////////////// CANVAS /////////////////////////////////
         fillArray(len, source) {
             let res = Array(len).fill(0);
             for (let i = 0; i  < source.length && i < len; i += 1) {
