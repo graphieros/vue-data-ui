@@ -2142,10 +2142,10 @@ declare module 'vue-data-ui' {
                 showHorizontalLines?: boolean;
                 showVerticalLines?: boolean;
                 position?: 'middle' | 'start';
-                frame: {
+                frame?: {
                     show?: boolean;
                     stroke?: string;
-                    stokeWidth?: number;
+                    strokeWidth?: number;
                     strokeLinecap?: "round" | "butt" | "square",
                     strokeLinejoin?: "arcs" | "bevel" | "miter" | "miter-clip" | "round",
                     strokeDasharray?: number;
