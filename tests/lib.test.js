@@ -12,6 +12,7 @@ import {
     calcStarPoints,
     calcTrend,
     calculateNiceScale,
+    calculateNiceScaleWithExactExtremes,
     checkArray,
     checkNaN,
     checkObj,
@@ -724,6 +725,43 @@ describe('calculateNiceScale', () => {
                 0.7999999999999999,
                 0.8999999999999999,
                 0.9999999999999999,
+            ],
+        })
+    })
+})
+
+describe('calculateNiceScaleWithExactExtremes', () => {
+    test('returns an object with nice scaling for y axis labels, keeping exact values for extremes', () => {
+        expect(calculateNiceScaleWithExactExtremes(0, 118, 10)).toStrictEqual({
+            max: 118,
+            min: 0,
+            tickSize: 20,
+            ticks: [
+                0,
+                20,
+                40,
+                60,
+                80,
+                118,
+            ],
+        })
+
+        expect(calculateNiceScaleWithExactExtremes(0, 1, 10)).toStrictEqual({
+            max: 1,
+            min: 0,
+            tickSize: 0.1,
+            ticks: [
+                0,
+                0.1,
+                0.2,
+                0.30000000000000004,
+                0.4,
+                0.5,
+                0.6,
+                0.7,
+                0.7999999999999999,
+                0.8999999999999999,
+                1
             ],
         })
     })

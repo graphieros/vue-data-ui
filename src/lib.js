@@ -988,6 +988,31 @@ export function calculateNiceScale(minValue, maxValue, maxTicks, rough = false) 
     };
 }
 
+export function calculateNiceScaleWithExactExtremes(minValue, maxValue, maxTicks, rough = false) {
+    const range = rough ? (maxValue - minValue) : niceNum(maxValue - minValue, false);
+    const tickSpacing = rough ? (range / (maxTicks - 1)) : niceNum(range / (maxTicks - 1), true);
+    const niceMin = Math.floor(minValue / tickSpacing) * tickSpacing;
+    const niceMax = Math.ceil(maxValue / tickSpacing) * tickSpacing;
+    let ticks = [];
+    let tick = niceMin;
+
+    while (tick <= niceMax) {
+        if (tick >= minValue && tick <= maxValue) {
+            ticks.push(tick);
+        }
+        tick += tickSpacing;
+    }
+
+    if (ticks[0] !== minValue) ticks[0] = minValue;
+    if (ticks[ticks.length - 1] !== maxValue) ticks[ticks.length - 1] = maxValue;
+
+    return {
+        min: minValue,
+        max: maxValue,
+        tickSize: tickSpacing,
+        ticks
+    };
+}
 export function interpolateColorHex(minColor, maxColor, minValue, maxValue, value) {
     const hexToRgb = (hex) => ({
         r: parseInt(hex.substring(1, 3), 16),
@@ -1730,6 +1755,7 @@ export function applyDataLabel(func, data, fallbackValue, config) {
 }
 
 const lib = {
+    XMLNS,
     abbreviate,
     adaptColorToBackground,
     addVector,
@@ -1741,8 +1767,11 @@ const lib = {
     calcMedian,
     calcNutArrowPath,
     calcTrend,
+    calculateNiceScale,
+    calculateNiceScaleWithExactExtremes,
     canShowValue,
     checkArray,
+    checkFormatter,
     checkNaN,
     checkObj,
     closestDecimal,
@@ -1752,18 +1781,18 @@ const lib = {
     createCsvContent,
     createPolygonPath,
     createSmoothPath,
-    createStraightPath,
     createSpiralPath,
     createStar,
+    createStraightPath,
     createTSpans,
     createUid,
     createWordCloudDatasetFromPlainText,
-    checkFormatter,
     darkenHexColor,
     dataLabel,
     degreesToRadians,
     downloadCsv,
     error,
+    functionReturnsString,
     generateSpiralCoordinates,
     getMissingDatasetAttributes,
     getPalette,
@@ -1772,7 +1801,6 @@ const lib = {
     isFunction,
     isSafeValue,
     isValidUserValue,
-    functionReturnsString,
     lightenHexColor,
     makeDonut,
     makePath,
@@ -1784,10 +1812,9 @@ const lib = {
     rotateMatrix,
     shiftHue,
     sumByAttribute,
+    sumSeries,
     themePalettes,
     translateSize,
     treeShake,
-    XMLNS,
-    sumSeries
 };
 export default lib;
