@@ -226,8 +226,6 @@
                 <g>
                     <g v-for="(_, i) in maxSeries" :key="`tooltip_trap_${i}`">
                         <rect
-                            :data-cy="`xy-tooltip-trap-${i}`"
-                            data-cy-trap
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
                             :y="drawingArea.top"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
@@ -1423,7 +1421,7 @@ export default {
                 } else {
                     mergedConfig.chart.grid.labels.yAxis.scaleMax = null;
                 }
-                
+
                 // ----------------------------------------------------------------------------
 
                 if (mergedConfig.theme) {
