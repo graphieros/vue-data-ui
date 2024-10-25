@@ -342,7 +342,7 @@ export function useConfig() {
             height: 600,
             width: 1000,
             zoom: ZOOM,
-            padding: PADDING([36, 24, 24, 48]),
+            padding: PADDING([36, 24, 64, 48]),
             highlighter: {
                 color: COLOR_BLACK,
                 opacity: 5,
@@ -350,6 +350,8 @@ export function useConfig() {
                 lineDasharray: 2,
                 lineWidth: 1
             },
+            // Highlight area was initially a single object of type VueUiXyHighlightArea.
+            // It now also works with a type VueUiXyHighlightArea[]
             highlightArea: {
                 show: false,
                 from: 0,
@@ -381,6 +383,15 @@ export function useConfig() {
                 stroke: COLOR_GREY_LIGHT,
                 showVerticalLines: false,
                 showHorizontalLines: false,
+                position: 'middle', // or 'start'
+                frame: {
+                    show: false,
+                    stroke: COLOR_GREY_LIGHT,
+                    strokeWidth: 2,
+                    strokeLinecap: 'round',
+                    strokeLinejoin: 'round',
+                    strokeDasharray: 0
+                },
                 labels: {
                     show: true,
                     color: COLOR_BLACK,
@@ -396,7 +407,7 @@ export function useConfig() {
                         show: true
                     },
                     xAxis: {
-                        showBaseline: false
+                        showBaseline: false,
                     },
                     yAxis: {
                         showBaseline: true,
@@ -415,7 +426,7 @@ export function useConfig() {
                         showOnlyFirstAndLast: false,
                         showOnlyAtModulo: false,
                         modulo: 12,
-                        yOffset: 0,
+                        yOffset: 24,
                         rotation: 0
                     }
                 }
