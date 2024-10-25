@@ -1874,7 +1874,6 @@ export default {
             return Math.max(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => Math.max(...datapoint.series)));
         },
         min() {
-            console.log(this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin === null)
             if (this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin !== null) {
                 return this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin
             }
