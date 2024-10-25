@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const dataset = ref([
         {
             name: "Long name serie",
-            series: [-90, -80, -60, -30, 0, 30, 60, 80, 90, 80, 60, 30, 0, -30, -60, -80, -90],
+            series: [-80, -60, -30, 0, 30, 60, 80, 60, 30, 0, -30, -60, -80],
             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
             type: "line",
             smooth: true,
@@ -143,6 +143,9 @@ const model = ref([
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 40, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.showBaseline', def: true,  type: 'checkbox'},
+    { key: 'chart.grid.labels.yAxis.scaleMin', def: -90, type: 'number', min: -1000, max: 1000 },
+    { key: 'chart.grid.labels.yAxis.scaleMax', def: 90, type: 'number', min: -1000, max: 1000 },
+
     { key: 'chart.grid.labels.xAxis.showBaseline', def: true,  type: 'checkbox'},
     { key: 'chart.grid.labels.zeroLine.show', def: true, type: 'checkbox'},
 
@@ -282,7 +285,7 @@ const config = computed(() => {
                 labels: {
                     ...c.line.labels,
                     formatter: ({value, config}) => {
-                        console.log(config)
+                        // console.log(config)
                         return `f - ${value}`
                     }
                 }
