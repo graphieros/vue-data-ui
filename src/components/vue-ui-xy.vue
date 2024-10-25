@@ -196,8 +196,8 @@
                     </defs>
                 </template>
 
-                 <!-- HIGHLIGHT AREA -->
-                 <g v-for="oneArea in highlightAreas">
+                <!-- HIGHLIGHT AREA RECT FILLS -->
+                <g v-for="oneArea in highlightAreas">
                     <template v-if="oneArea.show">                    
                         <rect
                             data-cy="xy-highlight-area"
@@ -220,6 +220,21 @@
                             </div>
                         </foreignObject>
                     </template>
+                </g>
+
+                <!-- HIGHLIGHTERS -->
+                <g>
+                    <g v-for="(_, i) in maxSeries" :key="`tooltip_trap_${i}`">
+                        <rect
+                            :data-cy="`xy-tooltip-trap-${i}`"
+                            data-cy-trap
+                            :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
+                            :y="drawingArea.top"
+                            :height="drawingArea.height < 0 ? 10 : drawingArea.height"
+                            :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
+                            :fill="selectedSerieIndex === i || selectedRowIndex === i ? `${FINAL_CONFIG.chart.highlighter.color}${opacity[FINAL_CONFIG.chart.highlighter.opacity]}` : 'transparent'"
+                        />
+                    </g>
                 </g>
 
                 <!-- BARS -->
@@ -302,6 +317,20 @@
                     />
                 </template>
 
+                <g v-if="FINAL_CONFIG.chart.highlighter.useLine && ![null, undefined].includes(selectedSerieIndex)">
+                    <line
+                        :x1="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
+                        :x2="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
+                        :y1="drawingArea.top"
+                        :y2="drawingArea.bottom"
+                        :stroke="FINAL_CONFIG.chart.highlighter.color"
+                        :stroke-width="FINAL_CONFIG.chart.highlighter.lineWidth"
+                        :stroke-dasharray="FINAL_CONFIG.chart.highlighter.lineDasharray"
+                        stroke-linecap="round"
+                        style="transition:none !important; animation: none !important; pointer-events: none;"
+                    />
+                </g>
+
                 <!-- LEFT & RIGHT PADDING COVERS -->
                 <g>
                     <rect
@@ -336,8 +365,8 @@
                     :stroke-dasharray="FINAL_CONFIG.chart.grid.frame.strokeDasharray"
                 />
 
-                                <!-- Y LABELS -->
-                                <g v-if="FINAL_CONFIG.chart.grid.labels.show">
+                <!-- Y LABELS -->
+                <g v-if="FINAL_CONFIG.chart.grid.labels.show">
                     <template v-if="mutableConfig.useIndividualScale">
                         <g v-for="el in allScales">
                             <line 
@@ -931,26 +960,12 @@
                             :y="drawingArea.top"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
-                            :fill="selectedSerieIndex === i || selectedRowIndex === i ? `${FINAL_CONFIG.chart.highlighter.color}${opacity[FINAL_CONFIG.chart.highlighter.opacity]}` : 'transparent'"
+                            fill="transparent"
                             @mouseenter="toggleTooltipVisibility(true, i)"
                             @mouseleave="toggleTooltipVisibility(false)"
                             @click="selectX(i)"
                         />
                     </g>
-                </g>
-
-                <g v-if="FINAL_CONFIG.chart.highlighter.useLine && ![null, undefined].includes(selectedSerieIndex)">
-                    <line
-                        :x1="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
-                        :x2="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
-                        :y1="drawingArea.top"
-                        :y2="drawingArea.bottom"
-                        :stroke="FINAL_CONFIG.chart.highlighter.color"
-                        :stroke-width="FINAL_CONFIG.chart.highlighter.lineWidth"
-                        :stroke-dasharray="FINAL_CONFIG.chart.highlighter.lineDasharray"
-                        stroke-linecap="round"
-                        style="transition:none !important; animation: none !important; pointer-events: none;"
-                    />
                 </g>
 
                 <!-- TIME TAG -->
@@ -1156,6 +1171,7 @@ import {
     dataLabel,
     downloadCsv,
     functionReturnsString,
+    hasDeepProperty,
     isFunction,
     isSafeValue, 
     opacity, 
@@ -1386,13 +1402,29 @@ export default {
                     defaultConfig: DEFAULT_CONFIG
                 });
 
-                if ('highlightArea' in this.config.chart) {
+                // ------------------------------ OVERRIDES -----------------------------------
+
+                if (this.config && this.hasDeepProperty(this.config, 'chart.highlightArea')) {
                     if (!Array.isArray(this.config.chart.highlightArea)) {
                         mergedConfig.chart.highlightArea = [this.config.chart.highlightArea] // FIXME: should be sanitized using useNestedPropToo
                     } else {
-                        mergedConfig.chart.highlightArea = this.config.chart.highlightArea; //
+                        mergedConfig.chart.highlightArea = this.config.chart.highlightArea;
                     }
                 }
+                
+                if (this.config && this.hasDeepProperty(this.config, 'chart.grid.labels.yAxis.scaleMin')) {
+                    mergedConfig.chart.grid.labels.yAxis.scaleMin = this.config.chart.grid.labels.yAxis.scaleMin;
+                } else {
+                    mergedConfig.chart.grid.labels.yAxis.scaleMin = null;
+                }
+                
+                if (this.config && this.hasDeepProperty(this.config, 'chart.grid.labels.yAxis.scaleMax')) {
+                    mergedConfig.chart.grid.labels.yAxis.scaleMax = this.config.chart.grid.labels.yAxis.scaleMax;
+                } else {
+                    mergedConfig.chart.grid.labels.yAxis.scaleMax = null;
+                }
+                
+                // ----------------------------------------------------------------------------
 
                 if (mergedConfig.theme) {
                     return {
@@ -1838,9 +1870,16 @@ export default {
             }
         },
         max(){
+            if (this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax) {
+                return this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax
+            }
             return Math.max(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => Math.max(...datapoint.series)));
         },
         min() {
+            console.log(this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin === null)
+            if (this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin !== null) {
+                return this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin
+            }
             const min = Math.min(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => Math.min(...datapoint.series)));
             if(min > 0) return 0;
             return min;
@@ -2198,33 +2237,34 @@ export default {
     },
     methods: {
         abbreviate,
-        assignStackRatios,
+        adaptColorToBackground,
         applyDataLabel,
+        assignStackRatios,
+        calcLinearProgression,
         calculateNiceScaleWithExactExtremes,
         checkNaN,
-        createSmoothPath,
-        isSafeValue,
-        treeShake,
-        shiftHue,
-        pdf,
-        img,
+        closestDecimal,
         convertColorToHex,
         convertConfigColors,
         convertCustomPalette,
-        downloadCsv,
         createCsvContent,
-        adaptColorToBackground,
-        calcLinearProgression,
-        useMouse,
-        closestDecimal,
-        dataLabel,
-        isFunction,
-        functionReturnsString,
-        error,
-        objectIsEmpty,
+        createSmoothPath,
         createTSpans,
-        useNestedProp,
+        dataLabel,
+        downloadCsv,
+        error,
+        functionReturnsString,
+        hasDeepProperty,
+        img,
+        isFunction,
+        isSafeValue,
+        objectIsEmpty,
+        pdf,
+        shiftHue,
         translateSize,
+        treeShake,
+        useMouse,
+        useNestedProp,
         convertSizes() {
             // Adaptative sizes in responsive mode
             this.fontSizes.dataLabels = this.translateSize({
