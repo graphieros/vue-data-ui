@@ -117,7 +117,7 @@ const model = ref([
     { key: 'chart.grid.frame.strokeWidth', def: 4, type: 'number', min: 0, max: 12},
     { key: 'chart.grid.frame.strokeLinecap', def: 'round', type: 'select', options: ['round', 'square', 'butt']},
     { key: 'chart.grid.frame.strokeLinejoin', def: 'round', type: 'select', options: ['round', 'miter']},
-    { key: 'chart.grid.frame.strokeDashoffset', def: 0, type: 'range', min: 0, max: 100},
+    { key: 'chart.grid.frame.strokeDasharray', def: 0, type: 'range', min: 0, max: 100},
 
     { key: 'chart.grid.labels.show', def: true, type: 'checkbox', label: 'showLabels', category: 'grid' },
     { key: 'chart.grid.labels.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'grid' },
