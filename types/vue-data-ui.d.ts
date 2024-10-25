@@ -2088,6 +2088,24 @@ declare module 'vue-data-ui' {
         dataset: VueUiHeatmapDatasetItem[]
     }>;
 
+    export type VueUiXyHighlightArea = {
+        show?: boolean;
+        from?: number;
+        to?: number;
+        color?: string;
+        opacity?: number;
+        caption?: {
+            text?: string;
+            fontSize?: number;
+            color?: string;
+            bold?: boolean;
+            offsetY?: number;
+            width?: "auto" | number;
+            padding?: number;
+            textAlign?: TextAlign;
+        };
+    }
+
     export type VueUiXyConfig = {
         responsive?: boolean;
         theme?: Theme;
@@ -2118,27 +2136,20 @@ declare module 'vue-data-ui' {
                     color?: string;
                 };
             };
-            highlightArea?: {
-                show?: boolean;
-                from?: number;
-                to?: number;
-                color?: string;
-                opacity?: number;
-                caption?: {
-                    text?: string;
-                    fontSize?: number;
-                    color?: string;
-                    bold?: boolean;
-                    offsetY?: number;
-                    width?: "auto" | number;
-                    padding?: number;
-                    textAlign?: TextAlign;
-                };
-            };
+            highlightArea?: VueUiXyHighlightArea | VueUiXyHighlightArea[];
             grid?: {
                 stroke?: string;
                 showHorizontalLines?: boolean;
                 showVerticalLines?: boolean;
+                position?: 'middle' | 'start';
+                frame: {
+                    show?: boolean;
+                    stroke?: string;
+                    stokeWidth?: number;
+                    strokeLinecap?: "round" | "butt" | "square",
+                    strokeLinejoin?: "arcs" | "bevel" | "miter" | "miter-clip" | "round",
+                    strokeDasharray?: number;
+                };
                 labels?: {
                     color?: string;
                     show?: boolean;
