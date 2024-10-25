@@ -2172,6 +2172,8 @@ declare module 'vue-data-ui' {
                         labelWidth?: number;
                         showBaseline?: boolean;
                         formatter?: Formatter;
+                        scaleMin?: number | null;
+                        scaleMax?: number | null;
                     };
                     xAxis?: {
                         showBaseline?: boolean;
