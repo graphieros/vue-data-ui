@@ -1754,6 +1754,16 @@ export function applyDataLabel(func, data, fallbackValue, config) {
     return isValid ? value : fallbackValue;
 }
 
+export function hasDeepProperty(obj, path) {
+    return path.split('.').every(key => {
+        if (obj !== null && typeof obj === 'object' && key in obj) {
+            obj = obj[key];
+            return true;
+        }
+        return false;
+    });
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -1797,6 +1807,7 @@ const lib = {
     getMissingDatasetAttributes,
     getPalette,
     giftWrap,
+    hasDeepProperty,
     interpolateColorHex,
     isFunction,
     isSafeValue,

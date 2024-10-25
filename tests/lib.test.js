@@ -34,6 +34,7 @@ import {
     functionReturnsString,
     generateSpiralCoordinates,
     getMissingDatasetAttributes,
+    hasDeepProperty,
     hslToRgb,
     interpolateColorHex,
     isFunction,
@@ -1846,3 +1847,22 @@ describe('applyDataLabel', () => {
         )).toStrictEqual('p-12-s');
     });
 });
+
+describe('hasDeepProperty', () => {
+    const obj = {
+        attr0: {
+            attr1: {
+                attr2: {
+                    attr3 : 'A'
+                }
+            }
+        }
+    }
+    test('checks if an object as a deep property', () => {
+        expect(hasDeepProperty(obj, 'attr0')).toBe(true)
+        expect(hasDeepProperty(obj, 'attr0.attr1')).toBe(true)
+        expect(hasDeepProperty(obj, 'attr0.attr1.attr2')).toBe(true)
+        expect(hasDeepProperty(obj, 'attr0.attr1.attr2.attr3')).toBe(true)
+        expect(hasDeepProperty(obj, 'attr0.attr1.attr2.attr3.attr4')).toBe(false)
+    })
+})
