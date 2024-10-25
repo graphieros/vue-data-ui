@@ -416,7 +416,9 @@ export function useConfig() {
                         stacked: false,
                         gap: 12,
                         labelWidth: 40,
-                        formatter: null
+                        formatter: null,
+                        scaleMin: null, // Overrides auto scaling
+                        scaleMax: null, // idem
                     },
                     xAxisLabels: {
                         color: COLOR_BLACK,
