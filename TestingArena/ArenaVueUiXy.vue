@@ -11,32 +11,42 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const dataset = ref([
         {
             name: "Long name serie",
-            series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12],
+            series: [-90, -80, -60, -30, 0, 30, 60, 80, 90, 80, 60, 30, 0, -30, -60, -80, -90],
             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
             type: "line",
-            smooth: false,
+            smooth: true,
             useArea: true,
             dataLabels: true,
             scaleSteps: 2,
         },
-        {
-            name: "S1",
-            series: [-20, 20, 8, 16, 12, 13, -16, 55, 12, 3, 7, 12, 6],
-            comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
-            type: "bar",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2,
-        },
-        {
-            name: "S2",
-            series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
-            comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
-            type: "plot",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2
-        },
+        // {
+        //     name: "Long name serie",
+        //     series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12],
+        //     comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+        //     type: "line",
+        //     smooth: false,
+        //     useArea: true,
+        //     dataLabels: true,
+        //     scaleSteps: 2,
+        // },
+        // {
+        //     name: "S1",
+        //     series: [-20, 20, 8, 16, 12, 13, -16, 55, 12, 3, 7, 12, 6],
+        //     comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
+        //     type: "bar",
+        //     smooth: false,
+        //     useArea: true,
+        //     scaleSteps: 2,
+        // },
+        // {
+        //     name: "S2",
+        //     series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
+        //     comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
+        //     type: "plot",
+        //     smooth: false,
+        //     useArea: true,
+        //     scaleSteps: 2
+        // },
         // {
         //     name: "S3",
         //     series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
@@ -76,7 +86,7 @@ const model = ref([
 
     { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
     { key: 'chart.padding.right', def: 24, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
-    { key: 'chart.padding.bottom', def: 48, type: 'number', min: 0, max: 100, label: 'bottom', category: 'padding' },
+    { key: 'chart.padding.bottom', def: 64, type: 'number', min: 0, max: 100, label: 'bottom', category: 'padding' },
     { key: 'chart.padding.left', def: 48, type: 'number', min: 0, max: 100, label: 'left', category: 'padding' },
 
     { key: 'chart.highlighter.color', def: '#1A1A1A', type: 'color', label: 'highlighterColor', category: 'general' },
@@ -101,6 +111,14 @@ const model = ref([
 
     { key: 'chart.grid.stroke', def: '#FF0000', type: 'color', label: 'lineColor', category: 'grid' },
     { key: 'chart.grid.showVerticalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
+
+    { key: 'chart.grid.frame.show', def: true, type: 'checkbox'},
+    { key: 'chart.grid.frame.stroke', def: '#1A1A1A', type: 'color'},
+    { key: 'chart.grid.frame.strokeWidth', def: 4, type: 'number', min: 0, max: 12},
+    { key: 'chart.grid.frame.strokeLinecap', def: 'round', type: 'select', options: ['round', 'square', 'butt']},
+    { key: 'chart.grid.frame.strokeLinejoin', def: 'round', type: 'select', options: ['round', 'miter']},
+    { key: 'chart.grid.frame.strokeDashoffset', def: 0, type: 'range', min: 0, max: 100},
+
     { key: 'chart.grid.labels.show', def: true, type: 'checkbox', label: 'showLabels', category: 'grid' },
     { key: 'chart.grid.labels.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'grid' },
     { key: 'chart.grid.labels.fontSize', def: 16, type: 'number', min: 4, max: 30, label: 'fontSize', category: 'grid' },
@@ -112,14 +130,14 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.values', def: [], type: 'none', label: 'fontSize' },
     { key: 'chart.grid.labels.xAxisLabels.fontSize', def: 14, type: 'number', min: 6, max: 30, label: 'fontSizePeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.showOnlyFirstAndLast', def: false, type: 'checkbox', label: 'showOnlyFirstAndLast', category: 'grid' },
-    { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 8, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
+    { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 24, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
-    { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 14, type: 'number', min: -100, max: 100 },
+    { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 24, type: 'number', min: -100, max: 100 },
 
     { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: true, type: 'checkbox'},
     { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number'},
 
-    { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 20, min: 0, max: 100, type: 'number' },
+    { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 5, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
@@ -289,8 +307,43 @@ const config = computed(() => {
             },
             chart: {
                 ...c.chart,
+                highlightArea: [{
+                        show: true,
+                        from: 2,
+                        to: 2,
+                        color: '#00FF00',
+                        opacity: 20,
+                        caption: {
+                            text: 'AREA 1',
+                            fontSize: 12,
+                            color: '#1A1A1A',
+                            bold: false,
+                            offsetY: 0,
+                            width: 'auto',
+                            padding: 3,
+                            textAlign: 'center'
+                        }
+                    },
+                    {
+                        show: true,
+                        from: 4,
+                        to: 6,
+                        color: '#FF0000',
+                        opacity: 20,
+                        caption: {
+                            text: 'AREA 2',
+                            fontSize: 12,
+                            color: '#1A1A1A',
+                            bold: false,
+                            offsetY: 0,
+                            width: 'auto',
+                            padding: 3,
+                            textAlign: 'center'
+                        }
+                    }],
                 grid: {
                     ...c.chart.grid,
+                    position: 'start',
                     labels: {
                         ...c.chart.grid.labels,
                         yAxis: {
