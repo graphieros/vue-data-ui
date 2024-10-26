@@ -204,11 +204,11 @@ const mutableDataset = computed(() => {
             period: s.period,
             plotValue: absoluteValue + absoluteMin.value,
             toMax: ratioToMax(absoluteValue + absoluteMin.value),
-            x: drawingArea.value.start + (i * ((drawingArea.value.width / (len.value + 1)) > 30 ? 30 : (drawingArea.value.width / (len.value + 1)))),
+            x: drawingArea.value.start + (i * ((drawingArea.value.width / (len.value + 1)) > svg.padding ? svg.padding : (drawingArea.value.width / (len.value + 1)))),
             y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteValue + absoluteMin.value)),
             id: `plot_${uid.value}_${i}`,
             color: isBar.value ? FINAL_CONFIG.value.style.bar.color : FINAL_CONFIG.value.style.area.useGradient ? shiftHue(FINAL_CONFIG.value.style.line.color, 0.05 * ( 1 - (i / len.value))) : FINAL_CONFIG.value.style.line.color,
-            width: (drawingArea.value.width / (len.value + 1)) > 30 ? 30 : (drawingArea.value.width / (len.value + 1))
+            width: (drawingArea.value.width / (len.value + 1)) > svg.padding ? svg.padding : (drawingArea.value.width / (len.value + 1))
         }
     })
 });
@@ -442,10 +442,10 @@ function selectDatapoint(datapoint, index) {
             <rect
                 v-for="(plot, i) in mutableDataset"
                 :data-cy="`sparkline-mouse-trap-${i}`"
-                :x="plot.x - ((drawingArea.width / (len + 1) > 30 ? 30 : drawingArea.width / (len + 1)) / 2)"
+                :x="plot.x - ((drawingArea.width / (len + 1) > svg.padding ? svg.padding : drawingArea.width / (len + 1)) / 2)"
                 :y="drawingArea.top - 6"
                 :height="drawingArea.height + 6"
-                :width="(drawingArea.width / (len + 1) > 30 ? 30: drawingArea.width / (len + 1))"
+                :width="(drawingArea.width / (len + 1) > svg.padding ? svg.padding: drawingArea.width / (len + 1))"
                 fill="transparent"
                 @mouseenter="selectPlot(plot, i)"
                 @mouseleave="unselectPlot"
