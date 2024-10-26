@@ -77,15 +77,16 @@ const dataset = ref([
 ])
 
 const model = ref([
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'type', def: 'line', type: 'select', options: ['line', 'bar']},
-    { key: 'style.chartWidth', def: 290, type: 'number', min: 100, max: 500},
+    { key: 'style.chartWidth', def: 400, type: 'number', min: 100, max: 500},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.animationFrames', def: 360, type: 'number', min: 0, max: 1000},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.line.color', def: '#3366CC', type: 'color'},
     { key: 'style.line.strokeWidth', def: 3, type: 'number', min: 0, max: 20},
-    { key: 'style.line.smooth', def: false, type: 'checkbox'},
+    { key: 'style.line.smooth', def: true, type: 'checkbox'},
     { key: 'style.bar.borderRadius', def: 3, type: 'number', min: 0, max: 12},
     { key: 'style.bar.color', def: '#3366CC', type: 'color'},
     { key: 'style.zeroLine.color', def: '#1A1A1A', type: 'color'},
@@ -160,6 +161,14 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <div style="width: 600px; height: 400px; resize: both; overflow: auto; background: white">
+        <LocalVueUiSparkline :key="`responsive_${step}`" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
+    </div>
+
     <Box comp="VueUiSparkline" :dataset="dataset">
         <template #title>VueUiSparkline</template>
 

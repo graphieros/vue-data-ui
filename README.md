@@ -650,7 +650,7 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiSparkTrend             | -                              |
 | VueUiSparkbar               | -                              |
 | VueUiSparkgauge             | -                              |
-| VueUiSparkline              | -                              |
+| VueUiSparkline              | ✅                             |
 | VueUiStackbar               | ✅                             |
 | VueUiStripPlot              | ✅                             |
 | VueUiTableHeatmap           | -                              |
