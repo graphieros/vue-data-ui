@@ -18,6 +18,8 @@ import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
+import { useResponsive } from "../useResponsive";
+import { throttle } from "../canvas-lib";
 
 const { vue_ui_sparkline: DEFAULT_CONFIG } = useConfig();
 
@@ -49,6 +51,8 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
+const sparklineChart = ref(null);
+const chartTitle = ref(null);
 
 const FINAL_CONFIG = computed(() => {
     const mergedConfig = useNestedProp({
@@ -79,7 +83,9 @@ const safeDatasetCopy = ref(props.dataset.map(d => {
             value: ![undefined].includes(d.value) ? d.value : null
         }
     }
-}))
+}));
+
+const resizeObserver = ref(null);
 
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
@@ -122,11 +128,28 @@ onMounted(() => {
         animate()
     }
 
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: sparklineChart.value,
+                title: FINAL_CONFIG.value.style.title.show && props.showInfo ? chartTitle.value : null
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+            svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth / 500 * width;
+            svg.value.padding = 30 / 500 * width;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(sparklineChart.value.parentNode);
+    };
 })
 
 const svg = ref({
     height: 80,
     width: 500,
+    chartWidth: FINAL_CONFIG.value.style.chartWidth,
+    padding: 30
 });
 
 const emits = defineEmits(['hoverIndex', 'selectDatapoint'])
@@ -140,8 +163,8 @@ const drawingArea = computed(() => {
         left: 0,
         right: svg.value.width,
         bottom: svg.value.height - 3,
-        start: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show && FINAL_CONFIG.value.style.dataLabel.position === 'left' ? svg.value.width - FINAL_CONFIG.value.style.chartWidth : 30,
-        width: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show ? FINAL_CONFIG.value.style.chartWidth : svg.value.width - 30,
+        start: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show && FINAL_CONFIG.value.style.dataLabel.position === 'left' ? svg.value.width - svg.value.chartWidth : svg.value.padding,
+        width: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show ? svg.value.chartWidth : svg.value.width - svg.value.padding,
         height: svg.value.height - topPadding
     }
 });
@@ -267,7 +290,7 @@ function selectDatapoint(datapoint, index) {
 </script>
 
 <template>
-    <div class="vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily}`">
+    <div ref="sparklineChart"  class="vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily}`">
         <!-- SLOT BEFORE -->
         <slot 
             name="before" 
@@ -282,7 +305,7 @@ function selectDatapoint(datapoint, index) {
         />
 
         <!-- TITLE -->
-        <div v-if="FINAL_CONFIG.style.title.show && showInfo" class="vue-ui-sparkline-title" :style="`display:flex;align-items:center;width:100%;color:${FINAL_CONFIG.style.title.color};background:${FINAL_CONFIG.style.backgroundColor};justify-content:${FINAL_CONFIG.style.title.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${FINAL_CONFIG.style.title.fontSize * 2}px;font-size:${FINAL_CONFIG.style.title.fontSize}px;font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.show && showInfo" class="vue-ui-sparkline-title" :style="`display:flex;align-items:center;width:100%;color:${FINAL_CONFIG.style.title.color};background:${FINAL_CONFIG.style.backgroundColor};justify-content:${FINAL_CONFIG.style.title.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${FINAL_CONFIG.style.title.fontSize * 2}px;font-size:${FINAL_CONFIG.style.title.fontSize}px;font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};`">
             <span data-cy="sparkline-period-label" :style="`padding:${FINAL_CONFIG.style.title.textAlign === 'left' ? '0 0 0 12px' : FINAL_CONFIG.style.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`">
                 {{ selectedPlot ? selectedPlot.period : FINAL_CONFIG.style.title.text }}
             </span>
