@@ -1929,6 +1929,7 @@ export function useConfig() {
 
     const vue_ui_sparkline = {
         theme: '',
+        responsive: false,
         type: SHAPE.LINE,
         style: {
             chartWidth: 290,
