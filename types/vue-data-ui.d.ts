@@ -3624,6 +3624,7 @@ declare module 'vue-data-ui' {
     export type VueUiSparklineConfig = {
         theme?: Theme;
         type?: "line" | "bar";
+        responsive?: boolean;
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
