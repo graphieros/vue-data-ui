@@ -205,6 +205,7 @@ export function useConfig() {
         responsive: false,
         customPalette: [],
         useCssAnimation: true,
+        orientation: 'vertical', // or 'horizontal'
         table: {
             ...TABLE,
             columnNames: {
