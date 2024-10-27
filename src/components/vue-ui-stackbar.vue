@@ -238,7 +238,12 @@ function refreshSlicer() {
 }
 
 const barSlot = computed(() => {
-    const bs = drawingArea.value.width / (slicer.value.end - slicer.value.start);
+    let bs;
+    if (FINAL_CONFIG.value.orientation === 'vertical') {
+        bs = drawingArea.value.width / (slicer.value.end - slicer.value.start);
+    } else {
+        bs = drawingArea.value.height / (slicer.value.end - slicer.value.start);
+    }
     return bs <= 0 ? 0 : bs;
 });
 
@@ -285,6 +290,9 @@ const yLabels = computed(() => {
             zero: drawingArea.value.bottom - (drawingArea.value.height * ((Math.abs(scale.min)) / (scale.max + Math.abs(scale.min)))),
             y: drawingArea.value.bottom - (drawingArea.value.height * ((t + Math.abs(scale.min)) / ((scale.max) + Math.abs(scale.min)))),
             x: drawingArea.value.left - 8,
+            horizontal_zero: drawingArea.value.left  + (drawingArea.value.width * ((Math.abs(scale.min)) / (scale.max + Math.abs(scale.min)))),
+            horizontal_x: drawingArea.value.left + (drawingArea.value.width * ((t + Math.abs(scale.min)) / ((scale.max) + Math.abs(scale.min)))),
+            horizontal_y: drawingArea.value.bottom - 8, 
             value: t
         }
     });
@@ -299,7 +307,9 @@ const formattedDataset = computed(() => {
     if (!isDataset.value) return [];
 
     let cumulativeY = Array(maxSeries.value).fill(0);
+    let cumulativeX = Array(maxSeries.value).fill(0);
     let cumulativeNegY = Array(maxSeries.value).fill(0);
+    let cumulativeNegX = Array(maxSeries.value).fill(0);
     
     const premax = Math.max(...datasetSignedTotals.value.positive) || 0;
     const workingMin = Math.min(...datasetSignedTotals.value.negative);
@@ -311,7 +321,9 @@ const formattedDataset = computed(() => {
     const maxTotal = (MAX + (MIN >= 0 ? 0 : Math.abs(MIN))) || 1
 
     const totalHeight = drawingArea.value.height;
+    const totalWidth = drawingArea.value.width;
     const ZERO_POSITION = yLabels.value[0] ? yLabels.value[0].zero : drawingArea.value.bottom;
+    const HORIZONTAL_ZERO_POSITION = yLabels.value[0] ? yLabels.value[0].horizontal_zero : drawingArea.value.left;
 
     return unmutableDataset.value
         .filter(ds => !segregated.value.includes(ds.id))
@@ -322,6 +334,10 @@ const formattedDataset = computed(() => {
             const x = slicedSeries.map((_dp, i) => {
                 return drawingArea.value.left + (barSlot.value * i) + (barSlot.value * FINAL_CONFIG.value.style.chart.bars.gapRatio / 4);
             });
+
+            const horizontal_y = slicedSeries.map((_dp, i) => {
+                return drawingArea.value.top + (barSlot.value * i) + (barSlot.value * FINAL_CONFIG.value.style.chart.bars.gapRatio / 4);
+            })
 
             const y = slicedSeries.map((dp, i) => {
                 const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
@@ -341,6 +357,24 @@ const formattedDataset = computed(() => {
                 return currentY;
             });
 
+            const horizontal_x = slicedSeries.map((dp, i) => {
+                const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
+                    ? (dp || 0) / datasetTotals.value[i]
+                    : (dp || 0) / maxTotal;
+
+                let currentX, hw;
+                if (dp > 0) {
+                    hw = totalWidth * proportion; 
+                    currentX = HORIZONTAL_ZERO_POSITION + cumulativeX[i];
+                    cumulativeX[i] += hw;
+                } else {
+                    hw = totalWidth * proportion;
+                    currentX = HORIZONTAL_ZERO_POSITION - Math.abs(hw) - cumulativeNegX[i]
+                    cumulativeNegX[i] += Math.abs(hw)
+                }
+                return currentX;
+            });
+
             const height = slicedSeries.map((dp, i) => {
                 const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
                     ? (dp || 0) / datasetTotals.value[i]
@@ -350,6 +384,18 @@ const formattedDataset = computed(() => {
                         return totalHeight * proportion
                     } else {
                         return totalHeight * Math.abs(proportion)
+                    }
+            });
+
+            const horizontal_width = slicedSeries.map((dp, i) => {
+                const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
+                    ? (dp || 0) / datasetTotals.value[i]
+                    : (dp || 0) / maxTotal;
+
+                    if (dp > 0) {
+                        return totalWidth * proportion
+                    } else {
+                        return totalWidth * Math.abs(proportion)
                     }
             });
 
@@ -369,6 +415,9 @@ const formattedDataset = computed(() => {
                 x,
                 y,
                 height,
+                horizontal_width,
+                horizontal_y,
+                horizontal_x
             };
         });
 });
@@ -719,7 +768,8 @@ defineExpose({
                 </linearGradient>
             </defs>
 
-            <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines">
+            <!-- HORIZONTAL LINES (vertical mode) -->
+            <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines && FINAL_CONFIG.orientation === 'vertical'">
                 <line
                     v-for="(yLabel, i) in yLabels"
                     :x1="drawingArea.left"
@@ -728,10 +778,26 @@ defineExpose({
                     :y2="yLabel.y"
                     :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
                     :stroke-width="1"
+                    stroke-linecap="round"
                 />
             </template>
 
-            <template v-if="FINAL_CONFIG.style.chart.grid.y.showVerticalLines">
+            <!-- HORIZONTAL LINES (horizontal mode) -->
+            <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines && FINAL_CONFIG.orientation === 'horizontal'">
+                <line
+                    v-for="(_, i) in (slicer.end - slicer.start + 1)"
+                    :x1="drawingArea.left"
+                    :x2="drawingArea.right"
+                    :y1="drawingArea.top + (barSlot * i)"
+                    :y2="drawingArea.top + (barSlot * i)"
+                    :stroke="FINAL_CONFIG.style.chart.grid.y.axisColor"
+                    :stroke-width="1"
+                    stroke-linecap="round"
+                />
+            </template>
+
+            <!-- VERTICAL LINES (vertical mode) -->
+            <template v-if="FINAL_CONFIG.style.chart.grid.y.showVerticalLines && FINAL_CONFIG.orientation === 'vertical'">
                 <line
                     v-for="(_, i) in (slicer.end - slicer.start + 1)"
                     :x1="drawingArea.left + (barSlot * i)"
@@ -740,25 +806,60 @@ defineExpose({
                     :y2="drawingArea.bottom"
                     :stroke="FINAL_CONFIG.style.chart.grid.y.axisColor"
                     :stroke-width="1"
+                    stroke-linecap="round"
                 />
             </template>
 
-            <!-- STACKED BARS -->
-            <g v-for="(dp, i) in formattedDataset">
-                <rect 
-                    v-for="(rect, j) in dp.x"
-                    :x="rect"
-                    :y="dp.y[j] < 0 ? 0 : dp.y[j]"
-                    :height="dp.height[j] < 0 ? 0.0001 : dp.height[j]"
-                    :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
-                    :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
-                    :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
+            <!-- VERTICAL LINES (horizontal mode) -->
+            <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines && FINAL_CONFIG.orientation === 'horizontal'">
+                <line
+                    v-for="(yLabel, i) in yLabels"
+                    :x1="yLabel.horizontal_x"
+                    :x2="yLabel.horizontal_x"
+                    :y1="drawingArea.top"
+                    :y2="drawingArea.bottom"
+                    :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
+                    :stroke-width="1"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                    :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
-                />           
+                />
+            </template>
+
+            <g v-for="(dp, i) in formattedDataset">
+                <!-- STACKED BARS (vertical mode) -->
+                <template v-if="FINAL_CONFIG.orientation === 'vertical'">
+                    <rect 
+                        v-for="(rect, j) in dp.x"
+                        :x="rect"
+                        :y="dp.y[j] < 0 ? 0 : dp.y[j]"
+                        :height="dp.height[j] < 0 ? 0.0001 : dp.height[j]"
+                        :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
+                        :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
+                        :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
+                    />           
+                </template>
+
+                <!-- STACKED BARS (horizontal mode) -->
+                <template v-else>
+                    <rect 
+                        v-for="(rect, j) in dp.horizontal_x"
+                        :x="rect"
+                        :y="dp.horizontal_y[j] < 0 ? 0 : dp.horizontal_y[j]"
+                        :width="dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]"
+                        :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
+                        :height="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
+                        :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
+                    />    
+                </template>
             </g>
 
             <!-- X AXIS -->
@@ -812,7 +913,8 @@ defineExpose({
                 {{ FINAL_CONFIG.style.chart.grid.y.axisName.text }}
             </text>
 
-            <template v-if="mutableConfig.dataLabels.show">
+            <!-- RECT DATA LABELS (vertical mode) -->
+            <template v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.orientation === 'vertical'">
                 <g v-for="(dp, i) in formattedDataset">            
                     <!-- RECT LABELS -->
                     <text 
@@ -830,7 +932,7 @@ defineExpose({
                     </text>
                 </g>
 
-                <!-- RECT TOTAL LABEL -->
+                <!-- RECT TOTAL LABELS -->
                 <g v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
                     <text
                         v-for="(total, i) in totalLabels"
@@ -846,8 +948,42 @@ defineExpose({
                 </g>
             </template>
 
-            <!-- Y LABELS -->
-            <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed">
+            <!-- RECT DATA LABELS (horizontal mode) -->
+            <template v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.orientation === 'horizontal'">
+                <g v-for="(dp, i) in formattedDataset">            
+                    <!-- RECT LABELS -->
+                    <text 
+                        v-for="(rect, j) in dp.horizontal_x"
+                        :x="rect + ((dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2)"
+                        :y="dp.horizontal_y[j] + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2) + (FINAL_CONFIG.style.chart.bars.dataLabels.fontSize /3)"
+                        :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
+                        :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
+                        text-anchor="middle"
+                    >
+                        {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
+                            barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
+                            barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
+                    </text>
+                </g>
+                <!-- RECT TOTAL LABELS -->
+                <g v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
+                    <text
+                        v-for="(total, i) in totalLabels"
+                        :x="drawingArea.right + FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
+                        :y="drawingArea.top + (barSlot * i) + barSlot / 2"
+                        text-anchor="start"
+                        :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
+                    >
+                        {{ barDataLabel(total.value, total, i, total.sign) }}
+                    </text>
+                </g>
+            </template>
+
+            <!-- SCALE LABELS (vertical mode) -->
+            <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'vertical'">
                 <line
                     v-for="(yLabel, i) in yLabels"
                     :x1="drawingArea.left"
@@ -875,8 +1011,37 @@ defineExpose({
                 </text>
             </template>
 
-            <!-- TIME LABELS-->
-            <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show">
+            <!-- SCALE LABELS (horizontal mode) -->
+            <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'horizontal'">
+                <line
+                    v-for="(yLabel, i) in yLabels"
+                    :x1="yLabel.horizontal_x"
+                    :x2="yLabel.horizontal_x"
+                    :y1="drawingArea.bottom"
+                    :y2="drawingArea.bottom + 6"
+                    :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
+                    :stroke-width="1"
+                    stroke-linecap="round"
+                />
+                <text
+                    v-for="(yLabel, i) in yLabels"
+                    :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                    :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
+                    :transform="`translate(${yLabel.horizontal_x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
+                >
+                    {{ dataLabel({
+                        p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
+                        v: yLabel.value,
+                        s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
+                        r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
+                    }) }}
+                </text>
+            </template>
+
+            <!-- TIME LABELS VERTICAL-->
+            <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'vertical'">
                 <text
                     v-for="(timeLabel, i) in timeLabels"
                     :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
@@ -889,14 +1054,44 @@ defineExpose({
                 </text>
             </template>
 
-            <!-- TOOLTIP TRAPS-->
-            <template v-if="mutableConfig.showTooltip">            
+            <!-- TIME LABELS HORIZONTAL -->
+            <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'horizontal'">
+                <text
+                    v-for="(timeLabel, i) in timeLabels"
+                    text-anchor="end"
+                    :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                    :x="drawingArea.left - 8"
+                    :y="drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                >
+                    {{ timeLabel }}
+                </text>
+            </template>
+
+            <!-- TOOLTIP TRAPS (vertical mode) -->
+            <template v-if="mutableConfig.showTooltip && FINAL_CONFIG.orientation === 'vertical'">            
                 <rect
                     v-for="(_, i) in (slicer.end - slicer.start)"
                     :x="drawingArea.left + (i * barSlot)"
                     :y="drawingArea.top"
                     :width="barSlot"
                     :height="drawingArea.height < 0 ? 0 : drawingArea.height"
+                    @click="selectDatapoint(i)"
+                    @mouseenter="useTooltip(i)"
+                    @mouseleave="trapIndex = null; isTooltip = false"
+                    :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color + opacity[FINAL_CONFIG.style.chart.highlighter.opacity] : 'transparent'"
+                />
+            </template>
+
+            <!-- TOOLTIP TRAPS (vertical mode) -->
+            <template v-if="mutableConfig.showTooltip && FINAL_CONFIG.orientation === 'horizontal'">            
+                <rect
+                    v-for="(_, i) in (slicer.end - slicer.start)"
+                    :x="drawingArea.left"
+                    :y="drawingArea.top + (i * barSlot)"
+                    :width="drawingArea.width < 0 ? 0 : drawingArea.width"
+                    :height="barSlot"
                     @click="selectDatapoint(i)"
                     @mouseenter="useTooltip(i)"
                     @mouseleave="trapIndex = null; isTooltip = false"
