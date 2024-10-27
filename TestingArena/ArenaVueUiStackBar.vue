@@ -41,7 +41,7 @@ const dataset = ref([
 ]);
 
 const model = ref([
-    { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA']},
+    { key: 'orientation', def: 'vertical', type:'select', options: ['vertical', 'horizontal']},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'theme', def: '', type: 'select', options: ['', 'zen', 'hack', 'concrete']},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
@@ -169,10 +169,9 @@ const config = computed(() => {
                     ...c.style.chart.bars,
                     dataLabels: {
                         ...c.style.chart.bars.dataLabels,
-                        formatter: ({value, config}) => {
-                            // console.log(config)
-                            return `f | ${value}`
-                        }
+                        // formatter: ({value, config}) => {
+                        //     return `f | ${value}`
+                        // }
                     }
                 },
                 grid: {
