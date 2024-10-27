@@ -5352,6 +5352,7 @@ declare module 'vue-data-ui' {
         responsive?: boolean;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        orientation?: 'vertical' | 'horizontal',
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;
