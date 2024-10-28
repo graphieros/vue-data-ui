@@ -281,7 +281,9 @@ export function useConfig() {
                 },
                 grid: {
                     scale: {
-                        ticks: 10
+                        ticks: 10,
+                        scaleMin: null, // Force min scale (defaults to dataset's min)
+                        scaleMax: null, // Force max scale (defaults to dataset's max)
                     },
                     x: {
                         showAxis: true,
