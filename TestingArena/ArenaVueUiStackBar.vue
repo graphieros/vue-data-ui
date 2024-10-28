@@ -118,6 +118,8 @@ const model = ref([
     { key: 'style.chart.bars.dataLabels.suffix', def: 'S', type: 'text'},
 
     { key: 'style.chart.grid.scale.ticks', def: 10, type: 'select', options: [2, 5, 10, 20]},
+    { key: 'style.chart.grid.scale.scaleMin', def: null, type: 'number', min: -1000, max: 1000},
+    { key: 'style.chart.grid.scale.scaleMax', def: null, type: 'number', min: -1000, max: 1000},
 
     { key: 'style.chart.grid.x.showAxis', def: true, type: 'checkbox'},
     { key: 'style.chart.grid.x.showHorizontalLines', def: true, type: 'checkbox'},
