@@ -5422,6 +5422,8 @@ declare module 'vue-data-ui' {
                 grid?: {
                     scale?: {
                         ticks?: number;
+                        scaleMin?: number | null;
+                        scaleMax?: number | null;
                     };
                     x?: {
                         showAxis?: boolean;
