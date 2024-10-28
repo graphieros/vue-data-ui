@@ -4,7 +4,8 @@ import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
     applyDataLabel,
-    calculateNiceScale, 
+    calculateNiceScale,
+    calculateNiceScaleWithExactExtremes, 
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
@@ -14,6 +15,7 @@ import {
     error, 
     functionReturnsString, 
     getMissingDatasetAttributes, 
+    hasDeepProperty, 
     isFunction, 
     lightenHexColor, 
     objectIsEmpty, 
@@ -112,8 +114,9 @@ const FINAL_CONFIG = computed(() => {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG,
     });
+    let finalConfig = {};
     if (mergedConfig.theme) {
-        return {
+        finalConfig = {
             ...useNestedProp({
                 userConfig: themes.vue_ui_stackbar[mergedConfig.theme] || props.config,
                 defaultConfig: mergedConfig
@@ -121,8 +124,26 @@ const FINAL_CONFIG = computed(() => {
             customPalette: themePalettes[mergedConfig.theme] || palette
         }
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.grid.scale.scaleMin')) {
+        finalConfig.style.chart.grid.scale.scaleMin = props.config.style.chart.grid.scale.scaleMin;
+    } else {
+        finalConfig.style.chart.grid.scale.scaleMin = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.grid.scale.scaleMax')) {
+        finalConfig.style.chart.grid.scale.scaleMax = props.config.style.chart.grid.scale.scaleMax;
+    } else {
+        finalConfig.style.chart.grid.scale.scaleMax = null;
+    }
+
+    // ----------------------------------------------------------------------------
+
+    return finalConfig;
 });
 
 const mutableConfig = ref({
@@ -281,10 +302,11 @@ const datasetSignedTotals = computed(() => {
 });
 
 const yLabels = computed(() => {
-    const MAX = Math.max(...datasetSignedTotals.value.positive);
+    const MAX = (FINAL_CONFIG.value.style.chart.grid.scale.scaleMax !== null && !FINAL_CONFIG.value.style.chart.bars.distributed)  ? FINAL_CONFIG.value.style.chart.grid.scale.scaleMax : Math.max(...datasetSignedTotals.value.positive);
     const workingMin = Math.min(...datasetSignedTotals.value.negative);
-    const MIN = [-Infinity, Infinity, NaN, undefined, null].includes(workingMin) ? 0 : workingMin;
-    const scale = calculateNiceScale((MIN > 0 ? 0 : MIN), MAX < 0 ? 0 : MAX, FINAL_CONFIG.value.style.chart.grid.scale.ticks);
+    const MIN = (FINAL_CONFIG.value.style.chart.grid.scale.scaleMin !== null && !FINAL_CONFIG.value.style.chart.bars.distributed) ? FINAL_CONFIG.value.style.chart.grid.scale.scaleMin : [-Infinity, Infinity, NaN, undefined, null].includes(workingMin) ? 0 : workingMin;
+
+    const scale = (!FINAL_CONFIG.value.style.chart.bars.distributed && (FINAL_CONFIG.value.style.chart.grid.scale.scaleMax !== null || FINAL_CONFIG.value.style.chart.grid.scale.scaleMin !== null)) ? calculateNiceScaleWithExactExtremes((MIN > 0 ? 0 : MIN), MAX < 0 ? 0 : MAX, FINAL_CONFIG.value.style.chart.grid.scale.ticks) : calculateNiceScale((MIN > 0 ? 0 : MIN), MAX < 0 ? 0 : MAX, FINAL_CONFIG.value.style.chart.grid.scale.ticks);
     return scale.ticks.map(t => {
         return {
             zero: drawingArea.value.bottom - (drawingArea.value.height * ((Math.abs(scale.min)) / (scale.max + Math.abs(scale.min)))),
@@ -315,7 +337,7 @@ const formattedDataset = computed(() => {
     const workingMin = Math.min(...datasetSignedTotals.value.negative);
     const premin = [-Infinity, Infinity, NaN, undefined, null].includes(workingMin) ? 0 : workingMin;
 
-    const scale = calculateNiceScale((premin > 0 ? 0 : premin), premax < 0 ? 0 : premax, FINAL_CONFIG.value.style.chart.grid.scale.ticks);
+    const scale = (!FINAL_CONFIG.value.style.chart.bars.distributed && (FINAL_CONFIG.value.style.chart.grid.scale.scaleMax !== null || FINAL_CONFIG.value.style.chart.grid.scale.scaleMin !== null)) ? calculateNiceScaleWithExactExtremes(FINAL_CONFIG.value.style.chart.grid.scale.scaleMin !== null ? FINAL_CONFIG.value.style.chart.grid.scale.scaleMin : (premin > 0 ? 0 : premin), FINAL_CONFIG.value.style.chart.grid.scale.scaleMax !== null ? FINAL_CONFIG.value.style.chart.grid.scale.scaleMax : premax < 0 ? 0 : premax, FINAL_CONFIG.value.style.chart.grid.scale.ticks) : calculateNiceScale(FINAL_CONFIG.value.style.chart.grid.scale.scaleMin !== null ? FINAL_CONFIG.value.style.chart.grid.scale.scaleMin : (premin > 0 ? 0 : premin), FINAL_CONFIG.value.style.chart.grid.scale.scaleMax !== null ? FINAL_CONFIG.value.style.chart.grid.scale.scaleMax : premax < 0 ? 0 : premax, FINAL_CONFIG.value.style.chart.grid.scale.ticks);
     const { min: MIN, max: MAX } = scale;
     
     const maxTotal = (MAX + (MIN >= 0 ? 0 : Math.abs(MIN))) || 1
