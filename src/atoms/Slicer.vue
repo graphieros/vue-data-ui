@@ -77,6 +77,10 @@ const props = defineProps({
     minimapLineColor: {
         type: String,
         default: '#2D353C'
+    },
+    minimapSelectedColorOpacity: {
+        type: Number,
+        default: 0.2
     }
 });
 
@@ -161,7 +165,7 @@ onMounted(() => {
                 chart: minimapWrapper.value,
             })
             svgMinimap.value.width = width;
-            svgMinimap.value.height = height - 33;
+            svgMinimap.value.height = height - 47;
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
@@ -194,43 +198,84 @@ const minimapLine = computed(() => {
         }
     });
     return props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points);
-})
+});
+
+// const startPercent = computed(() => {
+//     const range = props.max - props.min;
+//     return ((startValue.value - props.min) / range) * 100;
+// });
+
+// const endPercent = computed(() => {
+//     const range = props.max - props.min;
+//     return ((endValue.value - props.min) / range) * 100;
+// });
+
+const range = computed(() => props.max - props.min);
+const leftLabelPosition = computed(() => {
+    const leftPercent = ((startValue.value - props.min) / range.value) * 100;
+    return {
+        left: `calc(${leftPercent}%)`, // Adjust positioning as needed
+        color: props.textColor,
+        fontSize: `${props.fontSize}px`,
+        top: '-28px',
+        pointerEvents: 'none',
+    };
+});
+
+const rightLabelPosition = computed(() => {
+    const rightPercent = ((endValue.value - props.min) / range.value) * 100;
+    return {
+        left: `calc(${rightPercent}%)`, // Adjust positioning as needed
+        color: props.textColor,
+        fontSize: `${props.fontSize}px`,
+        top: '28px',
+        direction: 'rtl',
+        pointerEvents: 'none'
+    };
+});
 
 </script>
 
 <template>
     <div data-html2canvas-ignore>
         <div class="vue-data-ui-slicer-labels">
-            <div class="vue-data-ui-slicer-label-left"
-                :style="{ fontSize: `${props.fontSize}px`, color: props.textColor }">
-                {{ labelLeft }}
-            </div>
-            <div v-if="valueStart > 0 || valueEnd < max">
+            <div v-if="valueStart > 0 || valueEnd < max" style="width: 100%; position: relative">
                 <button v-if="!useResetSlot" data-cy-reset tabindex="0" role="button" class="vue-data-ui-refresh-button"
                     @click="reset">
                     <BaseIcon name="refresh" :stroke="textColor" />
                 </button>
                 <slot v-else name="reset-action" :reset="reset" />
             </div>
-            <div class="vue-data-ui-slicer-label-right"
-                :style="{ fontSize: `${props.fontSize}px`, color: props.textColor }">
-                {{ labelRight }}
-            </div>
         </div>
         <div class="double-range-slider" ref="minimapWrapper">
             <div class="slider-track"></div>
             <div class="range-highlight" :style="highlightStyle"></div>
             <input type="range" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
+            <div class="thumb-label thumb-label-left" :style="leftLabelPosition">
+                {{ labelLeft }}
+            </div>
             <input type="range" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
+            <div class="thumb-label thumb-label-right" :style="rightLabelPosition">
+                {{ labelRight }}
+            </div>
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%">
-                    <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width} ${svgMinimap.height}`">
+                    <svg :xmlns="XMLNS" :viewBox="`1 0 ${svgMinimap.width - 1} ${svgMinimap.height}`">
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
                                 <stop offset="0%" :stop-color="`${minimapLineColor}50`"/>
                                 <stop offset="100%" stop-color="transparent"/>
                             </linearGradient>
                         </defs>
+                        <rect
+                            :x="selectedMap.x"
+                            y="0"
+                            :width="selectedMap.width"
+                            :height="svgMinimap.height"
+                            :rx="minimapSelectionRadius"
+                            :fill="`${minimapSelectedColor}`"
+                            :style="{ opacity: minimapSelectedColorOpacity }"
+                        />
                         <path 
                             :d="`M0,${svgMinimap.height} ${minimapLine} L${svgMinimap.width},${svgMinimap.height}Z`" 
                             :stroke="`${minimapLineColor}`" 
@@ -239,14 +284,7 @@ const minimapLine = computed(() => {
                             stroke-linecap="round"
                             stroke-linejoin="round"
                         />
-                        <rect
-                            :x="selectedMap.x"
-                            y="0"
-                            :width="selectedMap.width"
-                            :height="svgMinimap.height"
-                            :rx="minimapSelectionRadius"
-                            :fill="`${minimapSelectedColor}30`"
-                        />
+                        <line :x1="0" :x2="svgMinimap.width" :y1="svgMinimap.height+1" :y2="svgMinimap.height+1" :stroke="background" stroke-width="3"/>
                     </svg>
                 </div>
             </template>
@@ -261,6 +299,7 @@ const minimapLine = computed(() => {
     width: calc(100% - 48px);
     height: 40px;
     margin: 0 auto;
+    padding-bottom: 12px;
 }
 
 .minimap {
@@ -362,6 +401,9 @@ input[type="range"]::-ms-thumb {
 }
 
 .vue-data-ui-refresh-button {
+    position: absolute;
+    right: 0;
+    top: -20px;
     outline: none;
     border: none;
     background: transparent;
@@ -392,14 +434,13 @@ input[type="range"]::-ms-thumb {
 
 .vue-data-ui-slicer-label-left,
 .vue-data-ui-slicer-label-right {
-    width: 100%;
+    position: absolute;
 }
 
-.vue-data-ui-slicer-label-left {
-    text-align: left;
-}
-
-.vue-data-ui-slicer-label-right {
-    text-align: right;
+.thumb-label {
+    position: absolute;
+    transform: translateX(-50%);
+    width: 1px;
+    white-space: nowrap;
 }
 </style>
