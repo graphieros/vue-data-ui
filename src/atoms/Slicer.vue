@@ -248,16 +248,6 @@ const rightLabelPosition = computed(() => {
             </div>
         </div>
         <div class="double-range-slider" ref="minimapWrapper">
-            <div class="slider-track"></div>
-            <div class="range-highlight" :style="highlightStyle"></div>
-            <input type="range" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
-            <div class="thumb-label thumb-label-left" :style="leftLabelPosition">
-                {{ labelLeft }}
-            </div>
-            <input type="range" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
-            <div class="thumb-label thumb-label-right" :style="rightLabelPosition">
-                {{ labelRight }}
-            </div>
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%">
                     <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
@@ -290,6 +280,16 @@ const rightLabelPosition = computed(() => {
                     </svg>
                 </div>
             </template>
+            <div class="slider-track"></div>
+            <div class="range-highlight" :style="highlightStyle"></div>
+            <input type="range" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
+            <div class="thumb-label thumb-label-left" :style="leftLabelPosition">
+                {{ labelLeft }}
+            </div>
+            <input type="range" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
+            <div class="thumb-label thumb-label-right" :style="rightLabelPosition">
+                {{ labelRight }}
+            </div>
         </div>
     </div>
 </template>
@@ -404,7 +404,7 @@ input[type="range"]::-ms-thumb {
 
 .vue-data-ui-refresh-button {
     position: absolute;
-    right: 0;
+    right: 3px;
     top: -20px;
     outline: none;
     border: none;
