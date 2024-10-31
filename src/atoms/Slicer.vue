@@ -302,7 +302,7 @@ const rightLabelPosition = computed(() => {
                             r="3"
                             :fill="minimapLineColor"
                         /> -->
-                        <line :x1="0" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="(svgMinimap.height < 0 ? 0 : svgMinimap.height)" :y2="(svgMinimap.height < 0 ? 0 : svgMinimap.height)" :stroke="borderColor" stroke-width="1"/>
+                        <line :x1="0" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="(svgMinimap.height < 0 ? 0 : svgMinimap.height)" :y2="(svgMinimap.height < 0 ? 0 : svgMinimap.height)" :stroke="borderColor" stroke-width="3"/>
                         <line :x1="0" :x2="0" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="5"/>
                         <line :x1="svgMinimap.width < 0 ? 0 : svgMinimap.width" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="5"/>
                     </svg>
