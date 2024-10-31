@@ -1034,6 +1034,7 @@
             :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
             :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
             :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
+            :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
             :max="maxX"
             :min="0"
             :valueStart="slicer.start"
