@@ -97,12 +97,20 @@ declare module 'vue-data-ui' {
         offsetY?: number;
     }
 
+    export type ZoomMinimap = {
+        show?: boolean;
+        smooth?: boolean;
+        selectedColor?: string;
+        selectionRadius?: number;
+    }
+
     export type ChartZoom = {
         show?: boolean;
         color?: string;
         highlightColor?: string;
         fontSize?: number;
         useResetSlot?: boolean;
+        minimap?: ZoomMinimap;
     }
 
     export type Theme = "" | "zen" | "hack" | "concrete";
