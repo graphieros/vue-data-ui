@@ -4393,6 +4393,7 @@ declare module 'vue-data-ui' {
         zoomHighlightColor?: string;
         zoomFontSize?: number;
         zoomUseResetSlot?: boolean;
+        zoomMinimap?: ZoomMinimap;
         userOptionsButtons?: {
             tooltip?: boolean;
             pdf?: boolean;
