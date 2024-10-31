@@ -200,6 +200,7 @@
                 <g v-for="oneArea in highlightAreas">
                     <template v-if="oneArea.show">                    
                         <rect
+                            :style="{ transition: 'none'}"
                             data-cy="xy-highlight-area"
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * (oneArea.from - (slicer.start))"
                             :y="drawingArea.top"
@@ -309,8 +310,8 @@
                         stroke-width="1" 
                         :x1="drawingArea.left + xPadding" 
                         :x2="drawingArea.right - xPadding" 
-                        :y1="zero" 
-                        :y2="zero" 
+                        :y1="checkNaN(zero)" 
+                        :y2="checkNaN(zero)" 
                         stroke-linecap="round"
                     />
                 </template>
@@ -332,6 +333,7 @@
                 <!-- LEFT & RIGHT PADDING COVERS -->
                 <g>
                     <rect
+                        :style="{ transition: 'none' }"
                         :x="0"
                         :y="drawingArea.top"
                         :width="FINAL_CONFIG.chart.padding.left - 1 + xPadding"
@@ -339,6 +341,7 @@
                         :fill="FINAL_CONFIG.chart.backgroundColor"
                     />
                     <rect
+                        :style="{ transition: 'none' }"
                         :x="drawingArea.right + 1 - xPadding"
                         :y="drawingArea.top"
                         :width="FINAL_CONFIG.chart.padding.right - 1 + xPadding"
@@ -350,11 +353,11 @@
                 <!-- FRAME -->
                 <rect 
                     v-if="FINAL_CONFIG.chart.grid.frame.show"
-                    :style="{ pointerEvents: 'none' }"
-                    :x="drawingArea.left + xPadding"
+                    :style="{ pointerEvents: 'none', transition: 'none' }"
+                    :x="(drawingArea.left + xPadding) < 0 ? 0 : drawingArea.left + xPadding"
                     :y="drawingArea.top"
-                    :width="drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)"
-                    :height="drawingArea.height"
+                    :width="(drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)) < 0 ? 0 : drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)"
+                    :height="drawingArea.height < 0 ? 0 : drawingArea.height"
                     fill="transparent"
                     :stroke="FINAL_CONFIG.chart.grid.frame.stroke"
                     :stroke-width="FINAL_CONFIG.chart.grid.frame.strokeWidth"
@@ -370,8 +373,8 @@
                             <line 
                                 :x1="el.x + xPadding"
                                 :x2="el.x + xPadding"
-                                :y1="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset - el.individualHeight) : drawingArea.top"
-                                :y2="mutableConfig.isStacked ? (drawingArea.bottom - el.yOffset) : drawingArea.bottom"
+                                :y1="mutableConfig.isStacked ? checkNaN((drawingArea.bottom - el.yOffset - el.individualHeight)) : checkNaN(drawingArea.top)"
+                                :y2="mutableConfig.isStacked ? checkNaN((drawingArea.bottom - el.yOffset)) : checkNaN(drawingArea.bottom)"
                                 :stroke="el.color"
                                 :stroke-width="FINAL_CONFIG.chart.grid.stroke"
                                 stroke-linecap="round"
@@ -391,8 +394,8 @@
                                 v-for="(yLabel, j) in el.yLabels"
                                 :x1="el.x - 3 + xPadding"
                                 :x2="el.x + xPadding"
-                                :y1="yLabel.y"
-                                :y2="yLabel.y"
+                                :y1="checkNaN(yLabel.y)"
+                                :y2="checkNaN(yLabel.y)"
                                 :stroke="el.color"
                                 :stroke-width="1"
                                 stroke-linecap="round"
@@ -426,8 +429,8 @@
                                 v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
                                 :x1="drawingArea.left + xPadding" 
                                 :x2="drawingArea.left - 5 + xPadding" 
-                                :y1="yLabel.y" 
-                                :y2="yLabel.y" 
+                                :y1="checkNaN(yLabel.y)" 
+                                :y2="checkNaN(yLabel.y)" 
                                 :stroke="FINAL_CONFIG.chart.grid.stroke" 
                                 stroke-width="1" 
                                 stroke-linecap="round"
@@ -436,7 +439,7 @@
                                 :data-cy="`xy-label-y-${i}`"
                                 v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
                                 :x="drawingArea.left - 7 + xPadding" 
-                                :y="yLabel.y + fontSizes.dataLabels / 3" 
+                                :y="checkNaN(yLabel.y + fontSizes.dataLabels / 3)" 
                                 :font-size="fontSizes.dataLabels" 
                                 text-anchor="end"
                                 :fill="FINAL_CONFIG.chart.grid.labels.color"
@@ -467,7 +470,7 @@
                             v-if="canShowValue(plot.value)"
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="FINAL_CONFIG.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : serie.color"
-                            :plot="{ x: plot.x, y: plot.y }"
+                            :plot="{ x: checkNaN(plot.x), y: checkNaN(plot.y) }"
                             :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (plotRadii.plot || 6) * 1.5 : plotRadii.plot || 6 : plotRadii.plot || 6"
                             :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :strokeWidth="0.5"
@@ -594,7 +597,7 @@
                             v-if="plot && canShowValue(plot.value)"
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="FINAL_CONFIG.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
-                            :plot="{ x: plot.x, y: plot.y }"
+                            :plot="{ x: checkNaN(plot.x), y: checkNaN(plot.y) }"
                             :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (plotRadii.line || 6) * 1.5 : plotRadii.line : plotRadii.line"
                             :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :strokeWidth="0.5"
@@ -1027,6 +1030,10 @@
             :inputColor="FINAL_CONFIG.chart.zoom.color"
             :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
             :borderColor="FINAL_CONFIG.chart.backgroundColor"
+            :minimap="minimap"
+            :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
+            :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
+            :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
             :max="maxX"
             :min="0"
             :valueStart="slicer.start"
@@ -1306,6 +1313,18 @@ export default {
         }
     },
     computed: {
+        minimap() {
+            if(!this.FINAL_CONFIG.chart.zoom.minimap.show) return [];
+            const source = this.datasetWithIds.filter(ds => !this.segregatedSeries.includes(ds.id));
+            const maxIndex = Math.max(...source.map(datapoint => datapoint.series.length));
+
+            const sumAllSeries = [];
+            for (let i = 0; i < maxIndex; i += 1) {
+                sumAllSeries.push(source.map(ds => ds.series[i] || 0).reduce((a, b) => (a || 0) + (b || 0), 0))
+            }
+            const min = Math.min(...sumAllSeries);
+            return sumAllSeries.map(dp => dp + (min < 0 ? Math.abs(min) : 0)) // positivized
+        },
         customPalette() {
             return this.convertCustomPalette(this.FINAL_CONFIG.customPalette);
         },
@@ -1467,6 +1486,15 @@ export default {
         },
         absoluteMax() {
             return this.niceScale.max + this.relativeZero;
+        },
+        datasetWithIds() {
+            if(!this.useSafeValues) return this.dataset;
+            return this.dataset.map((datapoint, i) => {
+                return {
+                    ...datapoint,
+                    id: `uniqueId_${i}`
+                }
+            });
         },
         safeDataset(){
             if(!this.useSafeValues) return this.dataset;
@@ -2202,14 +2230,14 @@ export default {
 
             const resizeObserver = new ResizeObserver((entries) => {
                 for(const entry of entries) {
-                    if (title) {
-                        titleHeight = title.getBoundingClientRect().height;
+                    if (this.$refs.chartTitle) {
+                        titleHeight = this.$refs.chartTitle.getBoundingClientRect().height;
                     }
-                    if (slicer) {
-                        slicerHeight = slicer.getBoundingClientRect().height;
+                    if (this.$refs.chartSlicer.$el) {
+                        slicerHeight = this.$refs.chartSlicer.$el.getBoundingClientRect().height;
                     }
-                    if (legend) {
-                        legendHeight = legend.getBoundingClientRect().height;
+                    if (this.$refs.chartLegend) {
+                        legendHeight = this.$refs.chartLegend.getBoundingClientRect().height;
                     }
                     this.height = entry.contentBoxSize[0].blockSize - titleHeight - legendHeight - slicerHeight - 24;
                     this.width = entry.contentBoxSize[0].inlineSize;
