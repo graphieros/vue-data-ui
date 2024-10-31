@@ -101,6 +101,7 @@ declare module 'vue-data-ui' {
         show?: boolean;
         smooth?: boolean;
         selectedColor?: string;
+        selectedColorOpacity?: number;
         lineColor?: string;
         selectionRadius?: number;
     }
