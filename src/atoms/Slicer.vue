@@ -1,6 +1,9 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import BaseIcon from './BaseIcon.vue';
+import { useResponsive } from '../useResponsive';
+import { throttle } from '../canvas-lib';
+import { XMLNS, createSmoothPath, createStraightPath, createUid } from '../lib';
 
 const props = defineProps({
     background: {
@@ -54,11 +57,29 @@ const props = defineProps({
     valueEnd: {
         type: [Number, String],
         default: 0
+    },
+    minimap: {
+        type: Array,
+        default: []
+    },
+    smoothMinimap: {
+        type: Boolean,
+        default: false
+    },
+    minimapSelectedColor: {
+        type: String,
+        default: '#1f77b4'
+    },
+    minimapSelectionRadius: {
+        type: Number,
+        default: 12
     }
 });
 
 const startValue = ref(props.min);
 const endValue = ref(props.max);
+const hasMinimap = computed(() => !!props.minimap.length);
+const uid = ref(createUid());
 
 const emit = defineEmits(['update:start', 'update:end', 'reset']);
 
@@ -119,6 +140,58 @@ watch(
         }
     }
 );
+
+const minimapWrapper = ref(null);
+
+const svgMinimap = ref({
+    width: 1,
+    height: 1
+})
+
+const resizeObserver = ref(null);
+
+onMounted(() => {
+    if (hasMinimap.value) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: minimapWrapper.value,
+            })
+            svgMinimap.value.width = width;
+            svgMinimap.value.height = height - 33;
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(minimapWrapper.value)
+    }
+})
+
+const unitWidthX = computed(() => {
+    if(!props.minimap.length) return 0
+    return svgMinimap.value.width / props.minimap.length;
+});
+
+const selectedMap = computed(() => {
+    return {
+        x: unitWidthX.value * props.valueStart,
+        width: unitWidthX.value * (props.valueEnd - props.valueStart)
+    }
+})
+
+const minimapLine = computed(() => {
+    if(!props.minimap.length) return [];
+    const max = Math.max(...props.minimap);
+    const min = Math.min(...props.minimap);
+    const diff = max - (min > 0 ? 0 : min);
+    const points = props.minimap.map((dp, i) => {
+        const normalizedVal = dp - min;
+        return {
+            x: svgMinimap.value.width / (props.minimap.length - 1) * (i),
+            y: svgMinimap.value.height - (normalizedVal / diff * (svgMinimap.value.height * 0.9))
+        }
+    });
+    return props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points);
+})
+
 </script>
 
 <template>
@@ -140,11 +213,39 @@ watch(
                 {{ labelRight }}
             </div>
         </div>
-        <div class="double-range-slider">
+        <div class="double-range-slider" ref="minimapWrapper">
             <div class="slider-track"></div>
             <div class="range-highlight" :style="highlightStyle"></div>
             <input type="range" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
             <input type="range" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
+            <template v-if="hasMinimap">
+                <div class="minimap"  style="width: 100%">
+                    <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width} ${svgMinimap.height}`">
+                        <defs>
+                            <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" :stop-color="`${selectColor}50`"/>
+                                <stop offset="100%" stop-color="transparent"/>
+                            </linearGradient>
+                        </defs>
+                        <path 
+                            :d="`M0,${svgMinimap.height} ${minimapLine} ${svgMinimap.width},${svgMinimap.height}Z`" 
+                            :stroke="`${selectColor}50`" 
+                            :fill="`url(#${uid})`"
+                            stroke-width="1" 
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                        <rect
+                            :x="selectedMap.x"
+                            y="0"
+                            :width="selectedMap.width"
+                            :height="svgMinimap.height"
+                            :rx="minimapSelectionRadius"
+                            :fill="`${minimapSelectedColor}30`"
+                        />
+                    </svg>
+                </div>
+            </template>
         </div>
     </div>
 </template>
@@ -156,6 +257,18 @@ watch(
     width: calc(100% - 48px);
     height: 40px;
     margin: 0 auto;
+}
+
+.minimap {
+    pointer-events: none;
+    position: absolute;
+    top: -33px;
+    left: 0;
+    svg{
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
 }
 
 input[type="range"] {
