@@ -188,7 +188,7 @@ const selectedMap = computed(() => {
 const minimapLine = computed(() => {
     if(!props.minimap.length) return [];
     const max = Math.max(...props.minimap);
-    const min = Math.min(...props.minimap);
+    const min = Math.min(...props.minimap) - 10;
     const diff = max - (min > 0 ? 0 : min);
     const points = props.minimap.map((dp, i) => {
         const normalizedVal = dp - min;
