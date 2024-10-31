@@ -1035,6 +1035,7 @@
             :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
             :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
             :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
+            :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
             :max="maxX"
             :min="0"
             :valueStart="slicer.start"
