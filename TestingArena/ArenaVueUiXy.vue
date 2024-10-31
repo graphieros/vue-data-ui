@@ -8,112 +8,112 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
-// const dataset = ref([
-//         {
-//             name: "Long name serie",
-//             series: [-80, -60, -30, 0, 30, 60, 80, 60, 30, 0, -30, -60, -80],
-//             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
-//             type: "line",
-//             smooth: true,
-//             useArea: true,
-//             dataLabels: true,
-//             scaleSteps: 2,
-//         },
-//         {
-//             name: "Long name serie",
-//             series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12],
-//             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
-//             type: "line",
-//             smooth: false,
-//             useArea: true,
-//             dataLabels: true,
-//             scaleSteps: 2,
-//         },
-//         {
-//             name: "S1",
-//             series: [-20, 20, 8, 16, 12, 13, -16, 55, 12, 3, 7, 12, 6],
-//             comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
-//             type: "bar",
-//             smooth: false,
-//             useArea: true,
-//             scaleSteps: 2,
-//         },
-//         {
-//             name: "S2",
-//             series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
-//             comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
-//             type: "plot",
-//             smooth: false,
-//             useArea: true,
-//             scaleSteps: 2
-//         },
-//         {
-//             name: "S3",
-//             series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
-//             type: "line",
-//             smooth: false,
-//             useArea: true,
-//             scaleSteps: 5,
-//             autoScaling: false,
-//             stackRatio: 0.5
-//         },
-//     ])
-
 const dataset = ref([
-    {
-        name: "Series 1",
-        series: [ -55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
-        type: "bar",
-        color: "rgb(95,139,238)",
-        shape: 'circle',
-        scaleSteps: 2,
-    },
-    {
-        name: "Series 2",
-        series: [ 55, 34, 21, 13, 8, 5, 3, 2, 1, 1, 0, -1, -1, -2, -3, -5, -8, -13, -21, -34, -55],
-        type: "line",
-        color: "rgb(66,211,146)",
-        useArea: true,
-        useProgression: true,
-        dataLabels: false,
-        shape: "triangle",
-        scaleSteps: 2,
-        showSerieName: 'end'
-    },
-    {
-        name: "Series 3",
-        series: [ 64, 60, 52, 42, 30, 16, 0, -18, -38, -46, -50, -46, -38, -18, 0, 16, 30, 42, 52, 60, 64],
-        type: "plot",
-        color: "rgb(255,100,0)",
-        shape: "star",
-        scaleSteps: 2,
-        showSerieName: 'end'
-    },
-    {
-        name: "Series 4",
-        series: [ 0, 1, -2, 3, -4, 5, -6, 7, -8, 9, -10, 36, -12, 13, -14, 15, -16, 17, -18, 19, -20],
-        comments: ["", "", "", "", "", "", "", "", "", "", "", "A comment for this specific datapoint"],
-        type: "line",
-        smooth: true,
-        useArea: false,
-        dataLabels: false,
-        color: "rgb(200,200,50)",
-        shape: 'Yellow circles',
-        scaleSteps: 2,
-        showSerieName: 'end'
-    },
-    {
-        name: "Target",
-        series: [ 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
-        type: "line",
-        color: "#404040",
-        dashed: true,
-        useTag: "start",
-        dataLabels: false,
-        shape: 'circle',
-        scaleSteps: 2,
-    },
-]);
+        {
+            name: "Long name serie",
+            series: [-80, -60, -30, 0, 30, 60, 80, 60, 30, 0, -30, -60, -80],
+            comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+            type: "line",
+            smooth: true,
+            useArea: true,
+            dataLabels: true,
+            scaleSteps: 2,
+        },
+        {
+            name: "Long name serie",
+            series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12],
+            comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+            type: "line",
+            smooth: false,
+            useArea: true,
+            dataLabels: true,
+            scaleSteps: 2,
+        },
+        {
+            name: "S1",
+            series: [-20, 20, 8, 16, 12, 13, -16, 55, 12, 3, 7, 12, 6],
+            comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
+            type: "bar",
+            smooth: false,
+            useArea: true,
+            scaleSteps: 2,
+        },
+        {
+            name: "S2",
+            series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
+            comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
+            type: "plot",
+            smooth: false,
+            useArea: true,
+            scaleSteps: 2
+        },
+        {
+            name: "S3",
+            series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
+            type: "line",
+            smooth: false,
+            useArea: true,
+            scaleSteps: 5,
+            autoScaling: false,
+            stackRatio: 0.5
+        },
+    ])
+
+// const dataset = ref([
+//     {
+//         name: "Series 1",
+//         series: [ -55, -34, -21, -13, -8, -5, -3, -2, -1, -1, 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+//         type: "bar",
+//         color: "rgb(95,139,238)",
+//         shape: 'circle',
+//         scaleSteps: 2,
+//     },
+//     {
+//         name: "Series 2",
+//         series: [ 55, 34, 21, 13, 8, 5, 3, 2, 1, 1, 0, -1, -1, -2, -3, -5, -8, -13, -21, -34, -55],
+//         type: "line",
+//         color: "rgb(66,211,146)",
+//         useArea: true,
+//         useProgression: true,
+//         dataLabels: false,
+//         shape: "triangle",
+//         scaleSteps: 2,
+//         showSerieName: 'end'
+//     },
+//     {
+//         name: "Series 3",
+//         series: [ 64, 60, 52, 42, 30, 16, 0, -18, -38, -46, -50, -46, -38, -18, 0, 16, 30, 42, 52, 60, 64],
+//         type: "plot",
+//         color: "rgb(255,100,0)",
+//         shape: "star",
+//         scaleSteps: 2,
+//         showSerieName: 'end'
+//     },
+//     {
+//         name: "Series 4",
+//         series: [ 0, 1, -2, 3, -4, 5, -6, 7, -8, 9, -10, 36, -12, 13, -14, 15, -16, 17, -18, 19, -20],
+//         comments: ["", "", "", "", "", "", "", "", "", "", "", "A comment for this specific datapoint"],
+//         type: "line",
+//         smooth: true,
+//         useArea: false,
+//         dataLabels: false,
+//         color: "rgb(200,200,50)",
+//         shape: 'Yellow circles',
+//         scaleSteps: 2,
+//         showSerieName: 'end'
+//     },
+//     {
+//         name: "Target",
+//         series: [ 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+//         type: "line",
+//         color: "#404040",
+//         dashed: true,
+//         useTag: "start",
+//         dataLabels: false,
+//         shape: 'circle',
+//         scaleSteps: 2,
+//     },
+// ]);
 
 const model = ref([
     { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA']},
@@ -143,6 +143,7 @@ const model = ref([
     { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox'},
     { key: 'chart.zoom.minimap.smooth', def: false, type: 'checkbox'},
     { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color'},
+    { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'chart.zoom.minimap.lineColor', def: '#1A1A1A', type: 'color'},
     { key: 'chart.zoom.minimap.selectionRadius', def: 12, type: 'number', min: 0, max: 24},
 
@@ -642,7 +643,7 @@ function selectX(selectedX) {
                     <label style="font-size: 10px">{{ knob.key }}</label>
                     <div
                         style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :type="knob.type" :min="knob.min ?? 0"
+                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
                             :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
                         <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
                             <option v-for="opt in knob.options">{{ opt }}</option>
