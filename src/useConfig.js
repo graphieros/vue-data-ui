@@ -204,8 +204,9 @@ export function useConfig() {
         show: false,
         smooth: false,
         selectedColor: '#1f77b4',
+        selectedColorOpacity: 0.2,
         lineColor: '#2D353C',
-        selectionRadius: 12
+        selectionRadius: 12,
     }
 
     const vue_ui_stackbar = {
