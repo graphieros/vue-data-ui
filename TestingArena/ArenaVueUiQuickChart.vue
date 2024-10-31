@@ -54,7 +54,7 @@ const datasets = ref({
     longObject: [
         {
             name: 'Serie 1',
-            values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+            values: [12, 7, 4, 11, 13, 16, 19, 22, 15, 28, 16, 12]
         },
         {
             name: 'Serie 2',
@@ -89,7 +89,7 @@ const datasets = ref({
 })
 
 
-const selectedSerie = ref('shortObjectMixed');
+const selectedSerie = ref('longObject');
 
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
@@ -162,13 +162,20 @@ const model = ref([
     { key: 'xyShowGrid', def: true, type: 'checkbox'},
     { key: 'xyShowScale', def: true, type: 'checkbox'},
     { key: 'yAxisLabel', def: 'Lorem ipsum Y axis labellum'},
+    
     { key: 'zoomXy', def: true, type: 'checkbox'},
     { key: 'zoomColor', def: '#CCCCCC', type: 'color'},
     { key: 'zoomHighlightColor', def: '#1A1A1A', type: 'color'},
     { key: 'zoomFontSize', def: 14, type: 'number', min: 8, max: 48},
-    { key: 'zoomUseResetSlot', def: false, type: 'checkbox'}
+    { key: 'zoomUseResetSlot', def: false, type: 'checkbox'},
 
-])
+    { key: 'zoomMinimap.show', def: true, type: 'checkbox'},
+    { key: 'zoomMinimap.smooth', def: true, type: 'checkbox'},
+    { key: 'zoomMinimap.selectedColor', def: '#1F77B4', type: 'color'},
+    { key: 'zoomMinimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 0.5, step: 0.01},
+    { key: 'zoomMinimap.lineColor', def: '#1A1A1A', type: 'color'},
+    { key: 'zoomMinimap.selectionRadius', def: 2, type: 'range', min: 0, max: 24}
+]);
 
 const themeOptions = ref([
     "",

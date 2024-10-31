@@ -200,21 +200,11 @@ const minimapLine = computed(() => {
     return props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points);
 });
 
-// const startPercent = computed(() => {
-//     const range = props.max - props.min;
-//     return ((startValue.value - props.min) / range) * 100;
-// });
-
-// const endPercent = computed(() => {
-//     const range = props.max - props.min;
-//     return ((endValue.value - props.min) / range) * 100;
-// });
-
 const range = computed(() => props.max - props.min);
 const leftLabelPosition = computed(() => {
     const leftPercent = ((startValue.value - props.min) / range.value) * 100;
     return {
-        left: `calc(${leftPercent}%)`, // Adjust positioning as needed
+        left: `calc(${leftPercent}%)`,
         color: props.textColor,
         fontSize: `${props.fontSize}px`,
         top: '-28px',
@@ -225,7 +215,7 @@ const leftLabelPosition = computed(() => {
 const rightLabelPosition = computed(() => {
     const rightPercent = ((endValue.value - props.min) / range.value) * 100;
     return {
-        left: `calc(${rightPercent}%)`, // Adjust positioning as needed
+        left: `calc(${rightPercent}%)`,
         color: props.textColor,
         fontSize: `${props.fontSize}px`,
         top: '28px',
@@ -238,7 +228,7 @@ const rightLabelPosition = computed(() => {
 
 <template>
     <div data-html2canvas-ignore>
-        <div class="vue-data-ui-slicer-labels">
+        <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1">
             <div v-if="valueStart > 0 || valueEnd < max" style="width: 100%; position: relative">
                 <button v-if="!useResetSlot" data-cy-reset tabindex="0" role="button" class="vue-data-ui-refresh-button"
                     @click="reset">
@@ -247,7 +237,7 @@ const rightLabelPosition = computed(() => {
                 <slot v-else name="reset-action" :reset="reset" />
             </div>
         </div>
-        <div class="double-range-slider" ref="minimapWrapper">
+        <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0">
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%">
                     <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
@@ -293,7 +283,6 @@ const rightLabelPosition = computed(() => {
         </div>
     </div>
 </template>
-
 
 <style scoped lang="scss">
 .double-range-slider {
