@@ -260,7 +260,7 @@ const rightLabelPosition = computed(() => {
             </div>
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%">
-                    <svg :xmlns="XMLNS" :viewBox="`1 0 ${svgMinimap.width - 1} ${svgMinimap.height}`">
+                    <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
                                 <stop offset="0%" :stop-color="`${minimapLineColor}50`"/>
@@ -270,8 +270,8 @@ const rightLabelPosition = computed(() => {
                         <rect
                             :x="selectedMap.x"
                             y="0"
-                            :width="selectedMap.width"
-                            :height="svgMinimap.height"
+                            :width="selectedMap.width < 0 ? 0 : selectedMap.width"
+                            :height="svgMinimap.height < 0 ? 0 : svgMinimap.height"
                             :rx="minimapSelectionRadius"
                             :fill="`${minimapSelectedColor}`"
                             :style="{ opacity: minimapSelectedColorOpacity }"
@@ -284,7 +284,9 @@ const rightLabelPosition = computed(() => {
                             stroke-linecap="round"
                             stroke-linejoin="round"
                         />
-                        <line :x1="0" :x2="svgMinimap.width" :y1="svgMinimap.height+1" :y2="svgMinimap.height+1" :stroke="background" stroke-width="3"/>
+                        <line :x1="0" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="(svgMinimap.height < 0 ? 0 : svgMinimap.height) + 1" :y2="(svgMinimap.height < 0 ? 0 : svgMinimap.height) + 1" :stroke="borderColor" stroke-width="3"/>
+                        <line :x1="0" :x2="0" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="3"/>
+                        <line :x1="svgMinimap.width < 0 ? 0 : svgMinimap.width" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="3"/>
                     </svg>
                 </div>
             </template>
