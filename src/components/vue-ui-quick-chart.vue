@@ -418,6 +418,39 @@ function refreshSlicer() {
     slicerStep.value += 1;
 }
 
+const minimap = computed(() => {
+    if(!FINAL_CONFIG.value.zoomMinimap.show || chartType.value === detector.chartType.DONUT) return [];
+
+    let ds = [];
+
+    if (detector.isSimpleArrayOfNumbers(formattedDataset.value.dataset)) {
+        ds = formattedDataset.value.dataset
+    }
+
+    if (detector.isSimpleArrayOfObjects(formattedDataset.value.dataset)) {
+        ds = formattedDataset.value.dataset.map((d, i) => {
+            return {
+                values: d.VALUE || d.DATA || d.SERIE || d.VALUES || d.NUM || 0,
+                id: chartType.value === detector.chartType.LINE ? `line_${i}` : `bar_${i}`
+            }
+        }).filter(s => !segregated.value.includes(s.id))
+    }
+
+    const maxIndex = detector.isSimpleArrayOfNumbers(ds) ? ds.length : Math.max(...ds.map(s => s.values.length));
+    let sumAllSeries = []
+
+    if (detector.isSimpleArrayOfNumbers(ds)) {
+        sumAllSeries = ds
+    } else {
+        for(let i = 0; i < maxIndex; i += 1) {
+            sumAllSeries.push(ds.map(s => s.values[i] || 0).reduce((a, b) => (a || 0) + (b || 0), 0));
+        }
+    }
+    
+    const min = Math.min(...sumAllSeries);
+    return sumAllSeries.map(dp => dp + (min < 0 ? Math.abs(min) : 0)) // positivized
+});
+
 const line = computed(() => {
     if(chartType.value !== detector.chartType.LINE) return null;
 
@@ -1426,6 +1459,12 @@ defineExpose({
                 :min="0"
                 :valueStart="slicer.start"
                 :valueEnd="slicer.end"
+                :smoothMinimap="FINAL_CONFIG.zoomMinimap.smooth"
+                :minimapSelectedColor="FINAL_CONFIG.zoomMinimap.selectedColor"
+                :minimapSelectedColorOpacity="FINAL_CONFIG.zoomMinimap.selectedColorOpacity"
+                :minimapSelectionRadius="FINAL_CONFIG.zoomMinimap.selectionRadius"
+                :minimapLineColor="FINAL_CONFIG.zoomMinimap.lineColor"
+                :minimap="minimap"
                 v-model:start="slicer.start"
                 v-model:end="slicer.end"
                 @reset="refreshSlicer"
