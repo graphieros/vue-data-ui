@@ -2385,7 +2385,8 @@ export function useConfig() {
         zoomColor: COLOR_GREY_MID,
         zoomHighlightColor: COLOR_GREY_DARK,
         zoomFontSize: FONT._14,
-        zoomUseResetSlot: false
+        zoomUseResetSlot: false,
+        zoomMinimap: MINIMAP
     }
 
     const vue_ui_age_pyramid = {
