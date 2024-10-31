@@ -197,28 +197,42 @@ const minimapLine = computed(() => {
             y: svgMinimap.value.height - (normalizedVal / diff * (svgMinimap.value.height * 0.9))
         }
     });
-    return props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points);
+    const fullSet = props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points);
+    const sliced = [...points].slice(props.valueStart, props.valueEnd)
+    const selectionSet = props.smoothMinimap ? createSmoothPath(sliced) : createStraightPath(sliced);
+    return {
+        fullSet,
+        selectionSet,
+        firstPlot: points[props.valueStart],
+        lastPlot: points[props.valueEnd - 1]
+    }
 });
 
-const range = computed(() => props.max - props.min);
-const leftLabelPosition = computed(() => {
-    const leftPercent = ((startValue.value - props.min) / range.value) * 100;
+const range = computed(() => props.max - props.min)
+
+const selectionRect = computed(() => {
     return {
-        left: `calc(${leftPercent}%)`,
+        left: ((startValue.value - props.min) / range.value) * 100,
+        width: ((endValue.value - startValue.value) / range.value) * 100
+    }
+})
+
+const leftLabelPosition = computed(() => {
+    return {
+        left: 0,
         color: props.textColor,
         fontSize: `${props.fontSize}px`,
-        top: '-28px',
+        top: hasMinimap.value ? '28px' : '-28px',
         pointerEvents: 'none',
     };
 });
 
 const rightLabelPosition = computed(() => {
-    const rightPercent = ((endValue.value - props.min) / range.value) * 100;
     return {
-        left: `calc(${rightPercent}%)`,
+        right: 0,
         color: props.textColor,
         fontSize: `${props.fontSize}px`,
-        top: '28px',
+        top: hasMinimap.value ? '28px' : '-28px',
         direction: 'rtl',
         pointerEvents: 'none'
     };
@@ -227,10 +241,17 @@ const rightLabelPosition = computed(() => {
 </script>
 
 <template>
-    <div data-html2canvas-ignore>
+    <div data-html2canvas-ignore style="padding: 0 24px">
         <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1">
             <div v-if="valueStart > 0 || valueEnd < max" style="width: 100%; position: relative">
-                <button v-if="!useResetSlot" data-cy-reset tabindex="0" role="button" class="vue-data-ui-refresh-button"
+                <button 
+                    v-if="!useResetSlot" 
+                    data-cy-reset tabindex="0" 
+                    role="button" 
+                    class="vue-data-ui-refresh-button"
+                    :style="{
+                        top: hasMinimap ? '36px' : '-16px'
+                    }"
                     @click="reset">
                     <BaseIcon name="refresh" :stroke="textColor" />
                 </button>
@@ -247,29 +268,60 @@ const rightLabelPosition = computed(() => {
                                 <stop offset="100%" stop-color="transparent"/>
                             </linearGradient>
                         </defs>
-                        <rect
-                            :x="selectedMap.x"
-                            y="0"
-                            :width="selectedMap.width < 0 ? 0 : selectedMap.width"
-                            :height="svgMinimap.height < 0 ? 0 : svgMinimap.height"
-                            :rx="minimapSelectionRadius"
-                            :fill="`${minimapSelectedColor}`"
-                            :style="{ opacity: minimapSelectedColorOpacity }"
-                        />
                         <path 
-                            :d="`M0,${svgMinimap.height} ${minimapLine} L${svgMinimap.width},${svgMinimap.height}Z`" 
+                            :d="`M0,${svgMinimap.height} ${minimapLine.fullSet} L${svgMinimap.width},${svgMinimap.height}Z`" 
                             :stroke="`${minimapLineColor}`" 
                             :fill="`url(#${uid})`"
                             stroke-width="1" 
                             stroke-linecap="round"
                             stroke-linejoin="round"
+                            style="opacity: 1"
                         />
+                        <!-- This is not quite there yet: there's an annoying offset between input handles and plots -->
+                        <!-- <path 
+                            :d="`M ${minimapLine.selectionSet}`" 
+                            :stroke="`${minimapLineColor}`" 
+                            fill="transparent"
+                            stroke-width="2" 
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                        <circle
+                            :cx="minimapLine.firstPlot.x"
+                            :cy="minimapLine.firstPlot.y"
+                            stroke-width="0.5"
+                            :stroke="borderColor"
+                            r="3"
+                            :fill="minimapLineColor"
+                        />
+                        <circle
+                            :cx="minimapLine.lastPlot.x"
+                            :cy="minimapLine.lastPlot.y"
+                            stroke-width="0.5"
+                            :stroke="borderColor"
+                            r="3"
+                            :fill="minimapLineColor"
+                        /> -->
                         <line :x1="0" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="(svgMinimap.height < 0 ? 0 : svgMinimap.height)" :y2="(svgMinimap.height < 0 ? 0 : svgMinimap.height)" :stroke="borderColor" stroke-width="1"/>
-                        <line :x1="0" :x2="0" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="3"/>
-                        <line :x1="svgMinimap.width < 0 ? 0 : svgMinimap.width" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="3"/>
+                        <line :x1="0" :x2="0" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="5"/>
+                        <line :x1="svgMinimap.width < 0 ? 0 : svgMinimap.width" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="5"/>
                     </svg>
                 </div>
+                <div 
+                    class="sel"
+                    :style="{
+                        position: 'absolute',
+                        top: '-33px',
+                        left: `calc(${selectionRect.left}%)`,
+                        background: minimapSelectedColor,
+                        height: '40px',
+                        width: selectionRect.width + '%',
+                        borderRadius: `${minimapSelectionRadius}px ${minimapSelectionRadius}px 0 0`,
+                        opacity: minimapSelectedColorOpacity
+                    }"    
+                />
             </template>
+
             <div class="slider-track"></div>
             <div class="range-highlight" :style="highlightStyle"></div>
             <input type="range" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
@@ -287,7 +339,7 @@ const rightLabelPosition = computed(() => {
 <style scoped lang="scss">
 .double-range-slider {
     position: relative !important;
-    width: calc(100% - 48px);
+    width: calc(100%);
     height: 40px;
     margin: 0 auto;
     padding-bottom: 12px;
@@ -393,8 +445,8 @@ input[type="range"]::-ms-thumb {
 
 .vue-data-ui-refresh-button {
     position: absolute;
-    right: 3px;
-    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
     outline: none;
     border: none;
     background: transparent;
@@ -411,7 +463,7 @@ input[type="range"]::-ms-thumb {
         outline: 1px solid v-bind(slicerColor);
     }
     &:hover {
-        transform: rotate(-90deg)
+        transform: translateX(-50%) rotate(-90deg)
     }
 }
 
