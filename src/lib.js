@@ -696,7 +696,7 @@ export function calcMedian(arr) {
 export function createStraightPath(points) {
     let arr = [];
     for (let i = 0; i < points.length; i += 1) {
-        arr.push(`${points[i].x},${points[i].y} `)
+        arr.push(`${checkNaN(points[i].x)},${checkNaN(points[i].y)} `)
     }
     return arr.join(' ').trim()
 }
@@ -725,10 +725,10 @@ export function createSmoothPath(points, smoothing = 0.2) {
     function bezierCommand(point, i, a) {
         const cps = controlPoint(a[i - 1], a[i - 2], point);
         const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
-        return `C ${cps.x},${cps.y} ${cpe.x},${cpe.y} ${point.x},${point.y}`;
+        return `C ${checkNaN(cps.x)},${checkNaN(cps.y)} ${checkNaN(cpe.x)},${checkNaN(cpe.y)} ${checkNaN(point.x)},${checkNaN(point.y)}`;
     }
     const d = points.filter(p => !!p).reduce((acc, point, i, a) => i === 0
-        ? `${point.x},${point.y} `
+        ? `${checkNaN(point.x)},${checkNaN(point.y)} `
         : `${acc} ${bezierCommand(point, i, a)} `
         , '');
 
