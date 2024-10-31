@@ -73,6 +73,10 @@ const props = defineProps({
     minimapSelectionRadius: {
         type: Number,
         default: 12
+    },
+    minimapLineColor: {
+        type: String,
+        default: '#2D353C'
     }
 });
 
@@ -223,13 +227,13 @@ const minimapLine = computed(() => {
                     <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width} ${svgMinimap.height}`">
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" :stop-color="`${selectColor}50`"/>
+                                <stop offset="0%" :stop-color="`${minimapLineColor}50`"/>
                                 <stop offset="100%" stop-color="transparent"/>
                             </linearGradient>
                         </defs>
                         <path 
-                            :d="`M0,${svgMinimap.height} ${minimapLine} ${svgMinimap.width},${svgMinimap.height}Z`" 
-                            :stroke="`${selectColor}50`" 
+                            :d="`M0,${svgMinimap.height} ${minimapLine} L${svgMinimap.width},${svgMinimap.height}Z`" 
+                            :stroke="`${minimapLineColor}`" 
                             :fill="`url(#${uid})`"
                             stroke-width="1" 
                             stroke-linecap="round"
