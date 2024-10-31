@@ -204,6 +204,7 @@ export function useConfig() {
         show: false,
         smooth: false,
         selectedColor: '#1f77b4',
+        lineColor: '#2D353C',
         selectionRadius: 12
     }
 
