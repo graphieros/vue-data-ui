@@ -2029,6 +2029,8 @@ declare module 'vue-data-ui' {
                     xAxis?: {
                         show?: boolean;
                         values?: Array<string | number>;
+                        showOnlyAtModulo?: number | null;
+                        rotation?: number;
                         fontSize?: number;
                         color?: string;
                         bold?: boolean;
