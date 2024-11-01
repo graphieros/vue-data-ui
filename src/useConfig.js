@@ -1632,6 +1632,8 @@ export function useConfig() {
                     xAxis: {
                         show: true,
                         values: [],
+                        showOnlyAtModulo: null,
+                        rotation: 0,
                         fontSize: FONT._10,
                         color: COLOR_BLACK,
                         bold: false,
