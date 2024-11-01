@@ -10,6 +10,7 @@ import {
     error,
     functionReturnsString,
     getMissingDatasetAttributes,
+    hasDeepProperty,
     interpolateColorHex,
     isFunction,
     objectIsEmpty,
@@ -70,16 +71,31 @@ const FINAL_CONFIG = computed(() => {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
+
+    let finalConfig = {};
+
     if (mergedConfig.theme) {
-        return {
+        finalConfig = {
             ...useNestedProp({
                 userConfig: themes.vue_ui_heatmap[mergedConfig.theme] || props.config,
                 defaultConfig: mergedConfig
             }),
         }
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'style.layout.dataLabels.xAxis.showOnlyAtModulo')) {
+        finalConfig.style.layout.dataLabels.xAxis.showOnlyAtModulo = props.config.style.layout.dataLabels.xAxis.showOnlyAtModulo;
+    } else {
+        finalConfig.style.layout.dataLabels.xAxis.showOnlyAtModulo = null;
+    }
+
+    // ----------------------------------------------------------------------------
+
+    return finalConfig;
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -474,16 +490,18 @@ defineExpose({
                 </g>
             </g>
             <g v-if="FINAL_CONFIG.style.layout.dataLabels.xAxis.show">
-                <text v-for="(label, i) in dataLabels.xLabels"
-                    :x="drawingArea.left + cellSize.width / 2 + (drawingArea.width / dataLabels.xLabels.length * i) + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetX"
-                    :y="drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetY - 6"
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
-                    :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
-                    :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
-                >
-                    {{ label }}
-                </text>
+                <template v-for="(label, i) in dataLabels.xLabels">
+                    <text
+                        v-if="!FINAL_CONFIG.style.layout.dataLabels.xAxis.showOnlyAtModulo || (FINAL_CONFIG.style.layout.dataLabels.xAxis.showOnlyAtModulo && i % FINAL_CONFIG.style.layout.dataLabels.xAxis.showOnlyAtModulo === 0)"
+                        :text-anchor="FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation === 0 ? 'middle' : FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation < 0 ? 'start' : 'end'"
+                        :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                        :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
+                        :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
+                        :transform="`translate(${drawingArea.left + cellSize.width / 2 + (drawingArea.width / dataLabels.xLabels.length * i) + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetX}, ${drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetY - 6}), rotate(${FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation})`"
+                    >
+                        {{ label }}
+                    </text>
+                </template>
             </g>
 
             <!-- BORDER FOR SELECTED RECT, PAINTED LAST -->
