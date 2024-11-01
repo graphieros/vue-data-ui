@@ -60,6 +60,9 @@ const model = ref([
     { key: 'style.layout.dataLabels.xAxis.bold', def: false, type: 'checkbox'},
     { key: 'style.layout.dataLabels.xAxis.offsetX', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.layout.dataLabels.xAxis.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.layout.dataLabels.xAxis.showOnlyAtModulo', def: null, type: 'number', min: 2, max: 24},
+    { key: 'style.layout.dataLabels.xAxis.rotation', def: -45, type: 'number', min: -90, max: 0},
+
     { key: 'style.layout.dataLabels.yAxis.show', def: true, type: 'checkbox'},
     { key: 'style.layout.dataLabels.yAxis.fontSize', def: 8, type: 'number', min: 8, max: 24},
     { key: 'style.layout.dataLabels.yAxis.color', def: '#1A1A1A', type: 'color'},
