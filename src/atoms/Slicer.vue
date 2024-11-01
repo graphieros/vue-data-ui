@@ -165,7 +165,7 @@ onMounted(() => {
                 chart: minimapWrapper.value,
             })
             svgMinimap.value.width = width;
-            svgMinimap.value.height = height - 59;
+            svgMinimap.value.height = height - 47;
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
@@ -258,10 +258,7 @@ const rightLabelPosition = computed(() => {
                 <slot v-else name="reset-action" :reset="reset" />
             </div>
         </div>
-        <div class="double-range-slider" ref="minimapWrapper" :style="{
-            zIndex: 0,
-            paddingBottom: hasMinimap ? '24px' : '12px'
-        }">
+        <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0">
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%">
                     <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
@@ -345,6 +342,7 @@ const rightLabelPosition = computed(() => {
     width: calc(100%);
     height: 40px;
     margin: 0 auto;
+    padding-bottom: 12px;
 }
 
 .minimap {
