@@ -146,6 +146,7 @@ const model = ref([
     { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'chart.zoom.minimap.lineColor', def: '#1A1A1A', type: 'color'},
     { key: 'chart.zoom.minimap.selectionRadius', def: 2, type: 'number', min: 0, max: 24},
+    { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color'},
 
     { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
     { key: 'chart.padding.right', def: 24, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },

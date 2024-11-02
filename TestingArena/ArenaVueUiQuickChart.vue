@@ -174,7 +174,9 @@ const model = ref([
     { key: 'zoomMinimap.selectedColor', def: '#1F77B4', type: 'color'},
     { key: 'zoomMinimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 0.5, step: 0.01},
     { key: 'zoomMinimap.lineColor', def: '#1A1A1A', type: 'color'},
-    { key: 'zoomMinimap.selectionRadius', def: 2, type: 'range', min: 0, max: 24}
+    { key: 'zoomMinimap.selectionRadius', def: 2, type: 'range', min: 0, max: 24},
+    { key: 'zoomMinimap.indicatorColor', def: '#1A1A1A', type: 'color'},
+    
 ]);
 
 const themeOptions = ref([
