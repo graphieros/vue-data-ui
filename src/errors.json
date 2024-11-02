@@ -2,5 +2,6 @@
     "dataset": "#COMP# dataset prop is either missing, undefined or empty.",
     "datasetAttribute": "#COMP# dataset is missing the '#ATTR#' attribute.",
     "datasetAttributeEmpty": "#COMP# dataset '#ATTR#' attribute cannot be empty.",
-    "datasetSerieAttribute": "#COMP# dataset #KEY# item at index #INDX# is missing the '#ATTR#' attribute."
+    "datasetSerieAttribute": "#COMP# dataset #KEY# item at index #INDX# is missing the '#ATTR#' attribute.",
+    "notBuildable": "#COMP# : Chart could not be built. Dataset is not formatted correctly"
 }
