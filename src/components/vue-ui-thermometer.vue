@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import {
     applyDataLabel,
+    checkNaN,
     convertColorToHex, 
     convertCustomPalette, 
     createUid, 
@@ -162,10 +163,10 @@ const svg = computed(() => {
 });
 
 const temperature = computed(() => {
-    const from = props.dataset.from < 0 ? Math.abs(props.dataset.from) : props.dataset.from;
-    const to = props.dataset.to < 0 ? Math.abs(props.dataset.to) : props.dataset.to;
+    const from = checkNaN(props.dataset.from) < 0 ? Math.abs(checkNaN(props.dataset.from)) : checkNaN(props.dataset.from);
+    const to = checkNaN(props.dataset.to) < 0 ? Math.abs(checkNaN(props.dataset.to)) : checkNaN(props.dataset.to);
     let max = 0;
-    if (props.dataset.to > 0) {
+    if (checkNaN(props.dataset.to) > 0) {
         max = from + to;
     } else {
         if (from > to) {
@@ -174,7 +175,7 @@ const temperature = computed(() => {
             max = to - from;
         }
     }
-    return (1 - (Math.abs(props.dataset.from) + props.dataset.value) / max )* (drawingArea.value.height - usablePadding.value.top - usablePadding.value.bottom)
+    return (1 - (Math.abs(checkNaN(props.dataset.from)) + checkNaN(props.dataset.value)) / max )* (drawingArea.value.height - usablePadding.value.top - usablePadding.value.bottom)
 })
 
 const cssTemp = computed(() => {

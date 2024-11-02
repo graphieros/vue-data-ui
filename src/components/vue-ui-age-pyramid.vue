@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, onMounted } from "vue";
 import {
     applyDataLabel,
+    checkNaN,
     createCsvContent, 
     createUid,
     dataLabel,
@@ -186,7 +187,7 @@ function closestDecimal(number) {
 
 const max = computed(() => {
     return Math.max(...props.dataset.flatMap(ds => {
-        return ds.slice(-2);
+        return ds.slice(-2).map(v => checkNaN(v));
     }));
 });
 
@@ -220,8 +221,8 @@ const drawableDataset = computed(() => {
                 ...ds.left,
                 y,
                 color: FINAL_CONFIG.value.style.layout.bars.left.color,
-                x: drawingArea.value.leftChart.right - (ds.left.proportionToMax * drawingArea.value.leftChart.width),
-                width: ds.left.proportionToMax * drawingArea.value.leftChart.width,
+                x: (drawingArea.value.leftChart.right - (ds.left.proportionToMax * drawingArea.value.leftChart.width)),
+                width: checkNaN(ds.left.proportionToMax * drawingArea.value.leftChart.width),
                 height
             },
             right: {
@@ -229,7 +230,7 @@ const drawableDataset = computed(() => {
                 y,
                 color: FINAL_CONFIG.value.style.layout.bars.right.color,
                 x: drawingArea.value.rightChart.left,
-                width: ds.right.proportionToMax * drawingArea.value.rightChart.width,
+                width: checkNaN(ds.right.proportionToMax * drawingArea.value.rightChart.width),
                 height
             }
         }
@@ -279,29 +280,29 @@ function useTooltip(index, datapoint) {
         html += `<div><b>${selectedSet.segment}</b></div>`;
         html += `<div>${FINAL_CONFIG.value.translations.age}: ${applyDataLabel(
             FINAL_CONFIG.value.style.layout.dataLabels.yAxis.formatter,
-            selectedSet.age,
-            dataLabel({ v: selectedSet.age }),
+            checkNaN(selectedSet.age),
+            dataLabel({ v: checkNaN(selectedSet.age) }),
             { datapoint, seriesIndex: index}
         )}</div>`
         html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}">`;
         html += `<div style="display:flex; flex-direction:row;gap:12px">`;
         html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.show ? `url(#age_pyramid_left_${uid.value})` : FINAL_CONFIG.value.style.layout.bars.left.color}"/></svg><div>${FINAL_CONFIG.value.translations.female}</div><div><b>${applyDataLabel(
             FINAL_CONFIG.value.style.layout.dataLabels.xAxis.formatter,
-            selectedSet.left.value,
-            dataLabel({ v: selectedSet.left.value }),
+            checkNaN(selectedSet.left.value),
+            dataLabel({ v: checkNaN(selectedSet.left.value) }),
             { datapoint, seriesIndex: index }
         )}</b></div></div>`;
         html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${FINAL_CONFIG.value.style.layout.bars.gradient.show ? `url(#age_pyramid_right_${uid.value})` : FINAL_CONFIG.value.style.layout.bars.right.color}"/></svg><div>${FINAL_CONFIG.value.translations.male}</div><div><b>${applyDataLabel(
             FINAL_CONFIG.value.style.layout.dataLabels.xAxis.formatter,
-            selectedSet.right.value,
-            dataLabel({ v: selectedSet.right.value }),
+            checkNaN(selectedSet.right.value),
+            dataLabel({ v: checkNaN(selectedSet.right.value) }),
             { datapoint, seriesIndex: index }
         )}</b></div></div>`;
         html += `</div>`;
         html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}"><div>${FINAL_CONFIG.value.translations.total}</div><div><b>${applyDataLabel(
             FINAL_CONFIG.value.style.layout.dataLabels.xAxis.formatter,
-            selectedSet.right.value + selectedSet.left.value,
-            dataLabel({ v: selectedSet.right.value + selectedSet.left.value }),
+            checkNaN(selectedSet.right.value) + checkNaN(selectedSet.left.value),
+            dataLabel({ v: checkNaN(selectedSet.right.value) + checkNaN(selectedSet.left.value) }),
             { datapoint, seriesIndex: index }
         )}</b></div></div>`
         html += `</div>`;
@@ -490,7 +491,7 @@ defineExpose({
                 <rect
                     :x="segment.left.x"
                     :y="segment.left.y"
-                    :width="segment.left.width <= 0 ? 0.0001 : segment.left.width"
+                    :width="checkNaN(segment.left.width <= 0 ? 0.0001 : segment.left.width)"
                     :height="segment.left.height <= 0 ? 0.0001 : segment.left.height"
                     :fill="FINAL_CONFIG.style.layout.bars.gradient.underlayer"
                     :rx="FINAL_CONFIG.style.layout.bars.borderRadius"

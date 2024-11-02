@@ -2,6 +2,7 @@
 import { computed, ref, nextTick, onMounted, onBeforeUnmount } from "vue";
 import {
   applyDataLabel,
+  checkNaN,
   convertColorToHex,
   convertCustomPalette,
   createCsvContent,
@@ -15,6 +16,7 @@ import {
   objectIsEmpty,
   opacity,
   palette,
+  sanitizeArray,
   shiftHue,
   themePalettes,
   XMLNS
@@ -93,7 +95,13 @@ onMounted(() => {
       type: 'dataset'
     })
   } else {
-    props.dataset.forEach((ds, i) => {      
+    props.dataset.forEach((ds, i) => {
+      if (!ds.values.length) {
+        error({
+          componentName: 'VueUiRings',
+          type: 'dataset',
+        })
+      }      
       getMissingDatasetAttributes({
         datasetObject: ds,
         requiredAttributes: ['name', 'values']
@@ -189,7 +197,7 @@ function proportionToMax(val) {
 
 const datasetCopy = computed(() => {
     return props.dataset.map(({ values, name, color = null }, i) => {
-        const subTotal = (values || []).reduce((a, b) => a + b, 0);
+        const subTotal = sanitizeArray(values).reduce((a, b) => a + b, 0);
         return {
             name,
             color:
@@ -557,7 +565,7 @@ defineExpose({
           :stroke="FINAL_CONFIG.style.chart.layout.rings.stroke"
           :cx="svg.width / 2"
           :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
-          :r="((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9"
+          :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
           :fill="FINAL_CONFIG.style.chart.layout.rings.gradient.underlayerColor"
         />
         <circle
@@ -573,7 +581,7 @@ defineExpose({
           :stroke-width="ring.strokeWidth < 0.5 ? 0.5 : ring.strokeWidth"
           :cx="svg.width / 2"
           :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
-          :r="((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9"
+          :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
           :fill="
             FINAL_CONFIG.style.chart.layout.rings.gradient.show
               ? `url(#gradient_${uid}_${i})`
@@ -586,7 +594,7 @@ defineExpose({
           stroke="none"
           :cx="svg.width / 2"
           :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
-          :r="((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9"
+          :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
           fill="transparent"
           @mouseenter="useTooltip(i, ring)"
           @mouseleave="

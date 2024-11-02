@@ -23,6 +23,7 @@ import {
     objectIsEmpty,
     opacity,
     palette,
+    sanitizeArray,
     themePalettes,
 } from "../lib";
 import { throttle } from "../canvas-lib";
@@ -242,6 +243,7 @@ const dsCopy = computed(() => {
     return props.dataset.map((ds, i) => {
         return {
             ...ds,
+            series: sanitizeArray(ds.series),
             absoluteIndex: i,
             color: convertColorToHex(ds.color || customPalette.value[i] || palette[i] || palette[i % palette.length]),
         }

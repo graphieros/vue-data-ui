@@ -18,7 +18,8 @@ import {
     makeDonut,
     objectIsEmpty, 
     opacity, 
-    palette, 
+    palette,
+    sanitizeArray,
     sumByAttribute,
     themePalettes,
     XMLNS
@@ -184,7 +185,7 @@ const convertedDataset = computed(() => {
     return props.dataset.map((ds, i) => {
         return {
             ...ds,
-            values: ds.values || [],
+            values: sanitizeArray(ds.values),
             color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             length: (ds.values || []).length,
             uid: createUid(),

@@ -15,6 +15,7 @@ import {
     isFunction,
     objectIsEmpty, 
     palette,
+    sanitizeArray,
     themePalettes,
     XMLNS
 } from "../lib";
@@ -147,8 +148,8 @@ const immutableSet = computed(() => {
             return {
                 name: serie.name,
                 color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
-                value: serie.values ? serie.values.reduce((a,b) => a + b, 0) : 0,
-                absoluteValues: serie.values || [0],
+                value: serie.values ? sanitizeArray(serie.values).reduce((a,b) => a + b, 0) : 0,
+                absoluteValues: sanitizeArray(serie.values),
                 id: createUid(),
                 seriesIndex: i
             }

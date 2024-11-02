@@ -3,7 +3,7 @@ import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue';
 import UserOptions from '../atoms/UserOptions.vue';
-import { createUid, createWordCloudDatasetFromPlainText } from '../lib';
+import { checkNaN, createUid, createWordCloudDatasetFromPlainText } from '../lib';
 import { debounce } from '../canvas-lib';
 import {
     downloadCsv,
@@ -51,7 +51,12 @@ const isDataset = computed({
     }
 })
 
-const drawableDataset = ref(typeof props.dataset === 'string' ? createWordCloudDatasetFromPlainText(props.dataset) : props.dataset);
+const drawableDataset = ref(typeof props.dataset === 'string' ? createWordCloudDatasetFromPlainText(props.dataset) : props.dataset.map(dp => {
+    return {
+        ...dp,
+        value: checkNaN(dp.value)
+    }
+}));
 
 const uid = ref(createUid());
 const step = ref(0);

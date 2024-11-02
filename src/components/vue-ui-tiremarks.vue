@@ -6,6 +6,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import { 
 applyDataLabel,
+    checkNaN,
     createUid,
     dataLabel,
     error,
@@ -64,10 +65,10 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-tiremarks'
 });
 
-const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : props.dataset.percentage);
+const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : checkNaN(props.dataset.percentage));
 
 watch(() => props.dataset.percentage, () => {
-    activeValue.value = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : props.dataset.percentage);
+    activeValue.value = FINAL_CONFIG.value.style.chart.animation.use ? 0 : checkNaN(props.dataset.percentage);
     useAnimation()
 })
 
@@ -78,7 +79,6 @@ onMounted(() => {
             type: 'dataset'
         })
     }
-
     useAnimation()
 });
 
@@ -92,7 +92,7 @@ function useAnimation() {
         if (activeValue.value < props.dataset.percentage) {
             requestAnimationFrame(animate);
         } else {
-            activeValue.value = props.dataset.percentage;
+            activeValue.value = checkNaN(props.dataset.percentage);
         }
     }
 

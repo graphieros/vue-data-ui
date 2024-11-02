@@ -3,6 +3,7 @@ import { ref, computed, onMounted, nextTick, onBeforeUnmount } from "vue";
 import { 
     calculateNiceScale, 
     canShowValue, 
+    checkNaN, 
     createCsvContent, 
     createUid, 
     downloadCsv,
@@ -247,9 +248,9 @@ const niceScale = computed(() => {
 function convertToPlot(item, index) {
     return {
         ...item,
-        x: drawingArea.value.left + (index * slot.value) + (slot.value / 2),
-        y: drawingArea.value.top + (1 - (item / niceScale.value.max)) * drawingArea.value.height,
-        value: item
+        x: checkNaN(drawingArea.value.left + (index * slot.value) + (slot.value / 2)),
+        y: checkNaN(drawingArea.value.top + (1 - (item / niceScale.value.max)) * drawingArea.value.height),
+        value: checkNaN(item)
     }
 }
 
@@ -273,14 +274,14 @@ const drawableDataset = computed(() => {
 });
 
 function ratioToMax(value) {
-    return value / niceScale.value.max;
+    return checkNaN(value / niceScale.value.max);
 }
 
 const yLabels = computed(() => {
     return niceScale.value.ticks.map(t => {
         return {
             y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(t)),
-            value: t
+            value: checkNaN(t)
         }
     })
 });

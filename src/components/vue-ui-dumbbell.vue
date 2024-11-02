@@ -12,6 +12,7 @@ import {
     getMissingDatasetAttributes,
     lightenHexColor,
     objectIsEmpty,
+    sanitizeArray,
     XMLNS,
 } from "../lib";
 import { throttle } from "../canvas-lib";
@@ -134,7 +135,7 @@ const mutableConfig = ref({
 });
 
 const immutableDataset = computed(() => {
-    return props.dataset.map((ds, i) => {
+    return sanitizeArray(props.dataset, ['start', 'end']).map((ds, i) => {
         return {
             ...ds,
             id: createUid()

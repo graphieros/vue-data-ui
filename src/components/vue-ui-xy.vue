@@ -2235,7 +2235,7 @@ export default {
                     if (this.$refs.chartTitle) {
                         titleHeight = this.$refs.chartTitle.getBoundingClientRect().height;
                     }
-                    if (this.$refs.chartSlicer.$el) {
+                    if (this.$refs.chartSlicer && this.$refs.chartSlicer.$el) {
                         slicerHeight = this.$refs.chartSlicer.$el.getBoundingClientRect().height;
                     }
                     if (this.$refs.chartLegend) {

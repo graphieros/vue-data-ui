@@ -15,7 +15,7 @@ import {
     makeDonut,
     translateSize,
     offsetFromCenterPoint,
-    XMLNS
+    XMLNS,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
@@ -45,7 +45,7 @@ const props = defineProps({
 });
 
 const isDataset = computed(() => {
-    return !!props.dataset && Object.keys(props.dataset).length;
+    return !!props.dataset && Object.keys(props.dataset).length > 0 && props.dataset.series && props.dataset.series.length;
 });
 
 const uid = ref(createUid());
@@ -90,13 +90,14 @@ const mutableDataset = computed(() => {
             series: [
                 {
                     from: 0,
-                    to: 1
+                    to: 0
                 }
             ]
         }
     }
 
     const arr = [];
+
     (props.dataset.series || []).forEach(serie => {
         arr.push(serie.from || 0);
         arr.push(serie.to || 0);
@@ -320,7 +321,7 @@ const arcs = computed(() => {
         109.9495,
         40 * svg.value.trackSize
     );
-    return donut
+    return donut;
 })
 
 const gradientArcs = computed(() => {

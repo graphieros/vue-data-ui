@@ -292,6 +292,9 @@ function zoom(rect) {
         currentSet.value = immutableDataset.value;
     } else {
         emit('selectDatapoint', rect);
+        if(!findNodeById(rect.parentId)) {
+            return
+        }
         currentSet.value = [findNodeById(rect.parentId)];
     }
     isZoom.value = !isZoom.value;

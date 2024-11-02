@@ -4,6 +4,7 @@ import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import {
     applyDataLabel,
+    checkNaN,
     createUid, 
     dataLabel, 
     error, 
@@ -213,14 +214,14 @@ const trackColor = computed(() => {
         >
             {{ applyDataLabel(
                 FINAL_CONFIG.style.dataLabel.formatter,
-                currentScore,
+                checkNaN(currentScore),
                 dataLabel({ 
                     p: FINAL_CONFIG.style.dataLabel.prefix, 
-                    v: currentScore, 
+                    v: checkNaN(currentScore), 
                     s: FINAL_CONFIG.style.dataLabel.suffix, 
                     r: FINAL_CONFIG.style.dataLabel.rounding 
                 }),
-                { datapoint: currentScore, color: labelColor }
+                { datapoint: checkNaN(currentScore), color: labelColor }
                 )
             }}
         </text>

@@ -753,7 +753,7 @@ defineExpose({
             </defs>
 
             <!-- CUSTOM CELLS SLOTS -->
-            <template v-if="FINAL_CONFIG.useCustomCells">
+            <template v-if="FINAL_CONFIG.useCustomCells && rects.length">
                 <foreignObject 
                     v-for="(position, i) in positions"
                     :x="position.x"

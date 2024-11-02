@@ -16,7 +16,8 @@ import {
     shiftHue,
     themePalettes,
     XMLNS,
-    convertCustomPalette
+    convertCustomPalette,
+checkNaN
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
@@ -162,6 +163,13 @@ const isSortDown = computed(() => {
 const immutableDataset = computed(() => {
 
     props.dataset.forEach((ds, i) => {
+        if (!ds.value && !ds.children) {
+            error({
+                componentName: 'VueUiVerticalBar',
+                type: 'datasetAttributeEmpty',
+                property: `value (index ${i})`
+            })
+        }
         if (ds.children) {
             if (objectIsEmpty(ds.children)){
                 error({
@@ -195,7 +203,7 @@ const immutableDataset = computed(() => {
             id,
             shape: 'square',
             opacity: segregated.value.includes(id) ? 0.5 : 1,
-            value: hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : (Math.abs(serie.value) || 0),
+            value: checkNaN(hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : (Math.abs(serie.value) || 0)),
             sign: serie.value >= 0 ? 1 : -1,
             hasChildren,
             isChild: false,
@@ -207,12 +215,12 @@ const immutableDataset = computed(() => {
                 .map((c, j) => {
                     return {
                         ...c,
-                        value: Math.abs(c.value) || 0,
+                        value: checkNaN(Math.abs(c.value)),
                         sign: c.value >= 0 ? 1 : -1,
                         isChild: true,
                         parentId: id,
                         parentName: serie.name,
-                        parentValue: serie.value || hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : 0,
+                        parentValue: checkNaN(serie.value || hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : 0),
                         id: `vertical_child_${i}_${j}_${uid.value}`,
                         childIndex: j,
                         color: convertColorToHex(c.color) || convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length]
@@ -305,7 +313,7 @@ const total = computed(() => {
 function calcProportionToTotal(val, formatted = false, rounding = 0) {
     if(formatted) {
         return dataLabel({
-            v: Math.abs(val) / total.value * 100,
+            v: checkNaN(Math.abs(val) / total.value * 100),
             s: '%',
             r: rounding
         });
@@ -440,10 +448,10 @@ function makeDataLabel(value, datapoint, seriesIndex, sign) {
     }
     const label = applyDataLabel(
         FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.formatter,
-        sign === -1 ? (value >= 0 ? -value : value) : value,
+        checkNaN(sign === -1 ? (value >= 0 ? -value : value) : value),
         dataLabel({
             p: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.prefix,
-            v: sign === -1 ? (value >= 0 ? -value : value) : value,
+            v: checkNaN(sign === -1 ? (value >= 0 ? -value : value) : value),
             s: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.suffix,
             r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue
         }),
@@ -670,15 +678,15 @@ defineExpose({
                 >
                     <stop offset="0%" :stop-color="bar.color" />
                     <stop offset="100%" :stop-color="`${shiftHue(bar.color, 0.03)}${opacity[100 - FINAL_CONFIG.style.chart.layout.bars.gradientIntensity]}`"/>
-             </linearGradient>
+            </linearGradient>
 
             <g v-for="(serie, i) in bars">
                 <!-- UNDERLAYER -->
                 <rect
                     :data-cy="`vertical-bar-rect-underlayer-${i}`"
-                    :x="hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left"
+                    :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
                     :y="drawableArea.top + ((barGap + barHeight) * i)"
-                    :width="calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)"
+                    :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
                     :height="barHeight <= 0 ? 0.0001 : barHeight"
                     :fill="FINAL_CONFIG.style.chart.layout.bars.underlayerColor"
                     :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
@@ -688,9 +696,9 @@ defineExpose({
             <g v-for="(serie, i) in bars"> 
                 <!-- BARS -->
                 <rect 
-                    :x="hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left"
+                    :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
                     :y="drawableArea.top + ((barGap + barHeight) * i)"
-                    :width="calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)"
+                    :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
                     :height="barHeight <= 0 ? 0.0001 : barHeight"
                     :fill="FINAL_CONFIG.style.chart.layout.bars.useGradient ? `url(#vertical_bar_gradient_${uid}_${i})` : `${serie.color}${opacity[FINAL_CONFIG.style.chart.layout.bars.fillOpacity]}`"
                     :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"

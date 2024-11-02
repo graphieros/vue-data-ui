@@ -3,6 +3,7 @@ import { ref, computed, nextTick, onMounted } from "vue";
 import { 
     adaptColorToBackground, 
     applyDataLabel,
+    checkNaN,
     createCsvContent, 
     createUid, 
     dataLabel,
@@ -536,10 +537,10 @@ defineExpose({
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.layout.cells.value.formatter,
-                        maxValue,
+                        checkNaN(maxValue),
                         dataLabel({
                             p: FINAL_CONFIG.style.layout.dataLabels.prefix,
-                            v: maxValue,
+                            v: checkNaN(maxValue),
                             s: FINAL_CONFIG.style.layout.dataLabels.suffix,
                             r: FINAL_CONFIG.style.legend.roundingValue
                         })) 
@@ -562,10 +563,10 @@ defineExpose({
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.layout.cells.value.formatter,
-                        minValue,
+                        checkNaN(minValue),
                         dataLabel({
                             p: FINAL_CONFIG.style.layout.dataLabels.prefix,
-                            v: minValue,
+                            v: checkNaN(minValue),
                             s: FINAL_CONFIG.style.layout.dataLabels.suffix,
                             r: FINAL_CONFIG.style.legend.roundingValue
                         })) 
@@ -598,7 +599,16 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.legend.fontSize * 2"
                     :fill="FINAL_CONFIG.style.legend.color"
                 >
-                    {{ Number(minValue.toFixed(FINAL_CONFIG.style.legend.roundingValue)).toLocaleString() }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.cells.value.formatter,
+                        checkNaN(minValue),
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.dataLabels.prefix,
+                            v: checkNaN(minValue),
+                            s: FINAL_CONFIG.style.layout.dataLabels.suffix,
+                            r: FINAL_CONFIG.style.legend.roundingValue
+                        })) 
+                    }}
                 </text>
                 <text
                     :x="drawingArea.right"
@@ -607,7 +617,16 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.legend.fontSize * 2"
                     :fill="FINAL_CONFIG.style.legend.color"
                 >
-                    {{ Number(maxValue.toFixed(FINAL_CONFIG.style.legend.roundingValue)).toLocaleString() }}
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.layout.cells.value.formatter,
+                        checkNaN(maxValue),
+                        dataLabel({
+                            p: FINAL_CONFIG.style.layout.dataLabels.prefix,
+                            v: checkNaN(maxValue),
+                            s: FINAL_CONFIG.style.layout.dataLabels.suffix,
+                            r: FINAL_CONFIG.style.legend.roundingValue
+                        })) 
+                    }}
                 </text>
                 <line v-if="hoveredValue !== null" :stroke="adaptColorToBackground(dataTooltipSlot.datapoint.color)" stroke-width="2" :x1="bottomLegendIndicatorX" :x2="bottomLegendIndicatorX" :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height" :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height * 2" />
                 <path v-if="hoveredValue !== null" :fill="FINAL_CONFIG.style.color" stroke="none" :d="`M ${bottomLegendIndicatorX},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height} ${bottomLegendIndicatorX - 12},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height - 20} ${bottomLegendIndicatorX + 12},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height - 20}z`" />

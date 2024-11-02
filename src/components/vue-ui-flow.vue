@@ -5,7 +5,8 @@ import {
     abbreviate,
     adaptColorToBackground, 
     applyDataLabel,
-    convertCustomPalette, 
+    checkNaN,
+    convertCustomPalette,
     createCsvContent, 
     createUid, 
     dataLabel, 
@@ -108,6 +109,17 @@ const unitWidth = computed(() => {
     return FINAL_CONFIG.value.style.chart.links.width;
 });
 
+const sanitizedDataset = computed(() => {
+    if(!props.dataset || !props.dataset.length) return [];
+    return props.dataset.map(dp => {
+        return [
+            dp[0],
+            dp[1],
+            checkNaN(dp[2])
+        ]
+    })
+})
+
 const max = computed(() => {
     const nodes = {};
 
@@ -117,7 +129,7 @@ const max = computed(() => {
         }
     }
 
-    props.dataset.forEach(([source, target, value]) => {
+    sanitizedDataset.value.forEach(([source, target, value]) => {
         addNode(source);
         addNode(target);
 
@@ -214,16 +226,16 @@ function computeSankeyCoordinates(ds) {
                 const sourceCoord = nodeCoordinates[node];
                 const targetCoord = nodeCoordinates[target];
 
-                const sourceLinkY1 = sourceY;
-                const sourceLinkY2 = sourceY + (value / nodes[node].outflow) * sourceCoord.height;
-                const targetLinkY1 = targetY;
-                const targetLinkY2 = targetY + (value / nodes[target].inflow) * targetCoord.height;
+                const sourceLinkY1 = checkNaN(sourceY);
+                const sourceLinkY2 = checkNaN(sourceY + (value / nodes[node].outflow) * sourceCoord.height);
+                const targetLinkY1 = checkNaN(targetY);
+                const targetLinkY2 = checkNaN(targetY + (value / nodes[target].inflow) * targetCoord.height);
 
                 const link = {
                     id: createUid(),
                     source: node,
                     target: target,
-                    path: `M ${sourceCoord.x + nodeWidth.value} ${sourceLinkY1} L ${sourceCoord.x + nodeWidth.value} ${sourceLinkY2} L ${targetCoord.x} ${targetLinkY2} L ${targetCoord.x} ${targetLinkY1} Z`,
+                    path: `M ${checkNaN(sourceCoord.x) + checkNaN(nodeWidth.value)} ${sourceLinkY1} L ${checkNaN(sourceCoord.x) + checkNaN(nodeWidth.value)} ${sourceLinkY2} L ${checkNaN(targetCoord.x)} ${targetLinkY2} L ${checkNaN(targetCoord.x)} ${targetLinkY1} Z`,
                     value: value,
                     sourceColor: nodes[node].color,
                     targetColor: nodes[target].color
@@ -274,7 +286,7 @@ function computeTotalHeight(nodeCoordinates) {
 
 const drawingArea = computed(() => {
     const { top: p_top, right: p_right, left: p_left, bottom: p_bottom } = FINAL_CONFIG.value.style.chart.padding;
-    const width = props.dataset.length * unitWidth.value;
+    const width = sanitizedDataset.value.length * unitWidth.value;
     return {
         height: totalHeight.value + p_top + p_bottom,
         width: p_right + Math.max(...mutableDataset.value.nodes.map(n => n.x)) + nodeWidth.value,
@@ -291,7 +303,7 @@ function findConnectedNodes(startNode) {
     const reverseNodes = {};
     const result = new Set();
 
-    props.dataset.forEach(([source, target, value]) => {
+    sanitizedDataset.value.forEach(([source, target, value]) => {
         if (!nodes[source]) {
             nodes[source] = [];
         }
@@ -534,8 +546,8 @@ defineExpose({
                 v-for="(node, i) in mutableDataset.nodes"
                 class="vue-ui-flow-node"
                 :x="node.x"
-                :y="node.absoluteY"
-                :height="node.height"
+                :y="checkNaN(node.absoluteY)"
+                :height="checkNaN(node.height)"
                 :width="nodeWidth"
                 :fill="node.color"
                 :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
@@ -548,7 +560,7 @@ defineExpose({
             <text 
                 v-for="(node, i) in mutableDataset.nodes"
                 :x="node.x + nodeWidth / 2"
-                :y="node.absoluteY + node.height / 2 - (FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4)"
+                :y="checkNaN(node.absoluteY + node.height / 2 - (FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4))"
                 :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
                 :fill="adaptColorToBackground(node.color)"
                 text-anchor="middle"
@@ -559,7 +571,7 @@ defineExpose({
             <text 
                 v-for="(node, i) in mutableDataset.nodes"
                 :x="node.x + nodeWidth / 2"
-                :y="node.absoluteY + node.height / 2 + (FINAL_CONFIG.style.chart.nodes.labels.fontSize)"
+                :y="checkNaN(node.absoluteY + node.height / 2 + (FINAL_CONFIG.style.chart.nodes.labels.fontSize))"
                 :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
                 :fill="adaptColorToBackground(node.color)"
                 text-anchor="middle"

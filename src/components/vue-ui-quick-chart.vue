@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import themes from "../themes.json";
 import * as detector from "../chartDetector";
 import {
@@ -8,15 +8,18 @@ import {
     calcMarkerOffsetY,
     calcNutArrowPath,
     calculateNiceScale,
+    checkNaN,
     convertColorToHex,
     convertCustomPalette,
     createSmoothPath,
     createUid,
     dataLabel,
+    error,
     functionReturnsString,
     isFunction,
     makeDonut, 
     palette,
+    sanitizeArray,
     themePalettes,
     XMLNS
 } from "../lib";
@@ -27,6 +30,7 @@ import BaseIcon from "../atoms/BaseIcon.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import Slicer from "../atoms/Slicer.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
@@ -82,12 +86,20 @@ const FINAL_CONFIG = computed(() => {
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
-})
+});
 
 const emit = defineEmits(['selectDatapoint', 'selectLegend'])
 
 const fd = computed(() => {
-    const f = detector.detectChart({ dataset: props.dataset, barLineSwitch: FINAL_CONFIG.value.chartIsBarUnderDatasetLength });
+    const f = detector.detectChart({ dataset: sanitizeArray(props.dataset, [
+        'serie',
+        'series',
+        'data',
+        'value',
+        'values',
+        'num'
+    ]), barLineSwitch: FINAL_CONFIG.value.chartIsBarUnderDatasetLength });
+    console.log(f)
     if(!f) {
         console.error('VueUiQuickChart : Dataset is not processable')
     }
@@ -100,10 +112,18 @@ const isProcessable = computed(() => {
     return !!formattedDataset.value
 })
 
-
 const chartType = computed(() => {
     return formattedDataset.value ? formattedDataset.value.type : null
 });
+
+watch(() => chartType.value, (v) => {
+    if (!v) {
+        error({
+            componentName: 'VueUiQuickChart',
+            type: 'dataset'
+        })
+    }
+}, { immediate: true })
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `${chartType.value}_${uid.value}`,
@@ -430,7 +450,7 @@ const minimap = computed(() => {
     if (detector.isSimpleArrayOfObjects(formattedDataset.value.dataset)) {
         ds = formattedDataset.value.dataset.map((d, i) => {
             return {
-                values: d.VALUE || d.DATA || d.SERIE || d.VALUES || d.NUM || 0,
+                values: d.VALUE || d.DATA || d.SERIE || d.SERIES || d.VALUES || d.NUM || 0,
                 id: chartType.value === detector.chartType.LINE ? `line_${i}` : `bar_${i}`
             }
         }).filter(s => !segregated.value.includes(s.id))
@@ -486,7 +506,7 @@ const line = computed(() => {
         ds = formattedDataset.value.dataset.map((d, i) => {
             return {
                 ...d,
-                values: d.VALUE || d.DATA || d.SERIE || d.VALUES || d.NUM || 0,
+                values: d.VALUE || d.DATA || d.SERIE || d.SERIES || d.VALUES || d.NUM || 0,
                 name: d.NAME || d.DESCRIPTION || d.TITLE || d.LABEL || `Serie ${i}`,
                 id: `line_${i}`
             }
@@ -649,7 +669,7 @@ const bar = computed(() => {
         ds = formattedDataset.value.dataset.map((d, i) => {
             return {
                 ...d,
-                values: d.VALUE || d.DATA || d.SERIE || d.VALUES || d.NUM || 0,
+                values: d.VALUE || d.DATA || d.SERIE || d.SERIES || d.VALUES || d.NUM || 0,
                 name: d.NAME || d.DESCRIPTION || d.TITLE || d.LABEL || `Serie ${i}`,
                 id: `bar_${i}`
             }
@@ -866,6 +886,7 @@ defineExpose({
             {{ FINAL_CONFIG.title }}
         </div>
         <svg
+            v-if="chartType"
             :xmlns="XMLNS"
             :viewBox="viewBox" 
             :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.backgroundColor};color:${FINAL_CONFIG.color}`"
@@ -1041,8 +1062,8 @@ defineExpose({
                     <line
                         :x1="line.drawingArea.left"
                         :x2="line.drawingArea.right"
-                        :y1="line.absoluteZero"
-                        :y2="line.absoluteZero"
+                        :y1="isNaN(line.absoluteZero) ? line.drawingArea.bottom : line.absoluteZero"
+                        :y2="isNaN(line.absoluteZero) ? line.drawingArea.bottom : line.absoluteZero"
                         :stroke="FINAL_CONFIG.xyAxisStroke"
                         :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                         stroke-linecap="round"
@@ -1151,7 +1172,7 @@ defineExpose({
                             <template v-for="(plot, j) in ds.coordinates">
                                 <circle
                                     :cx="plot.x"
-                                    :cy="plot.y"
+                                    :cy="checkNaN(plot.y)"
                                     :r="3"
                                     :fill="ds.color"
                                     :stroke="FINAL_CONFIG.backgroundColor"
@@ -1171,16 +1192,16 @@ defineExpose({
                             :font-size="FINAL_CONFIG.dataLabelFontSize"
                             :fill="ds.color"
                             :x="plot.x"
-                            :y="plot.y - FINAL_CONFIG.dataLabelFontSize / 2"
+                            :y="checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2"
                             class="quick-animation"
                             style="transition: all 0.3s ease-in-out"
                         >
                             {{ applyDataLabel(
                                 FINAL_CONFIG.formatter,
-                                plot.value,
+                                checkNaN(plot.value),
                                 dataLabel({
                                     p: FINAL_CONFIG.valuePrefix,
-                                    v: plot.value,
+                                    v: checkNaN(plot.value),
                                     s: FINAL_CONFIG.valueSuffix,
                                     r: FINAL_CONFIG.dataLabelRoundingValue
                                 }),
@@ -1249,8 +1270,8 @@ defineExpose({
                     <line
                         :x1="bar.drawingArea.left"
                         :x2="bar.drawingArea.right"
-                        :y1="bar.absoluteZero"
-                        :y2="bar.absoluteZero"
+                        :y1="isNaN(bar.absoluteZero) ? bar.drawingArea.bottom : bar.absoluteZero"
+                        :y2="isNaN(bar.absoluteZero) ? bar.drawingArea.bottom : bar.absoluteZero"
                         :stroke="FINAL_CONFIG.xyAxisStroke"
                         :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                         stroke-linecap="round"
@@ -1318,8 +1339,8 @@ defineExpose({
                             v-for="(plot, j) in ds.coordinates"
                             :x="plot.x"
                             :width="plot.width <= 0 ? 0.00001 : plot.width"
-                            :height="plot.height <= 0 ? 0.00001 : plot.height"
-                            :y="plot.y"
+                            :height="checkNaN(plot.height <= 0 ? 0.00001 : plot.height)"
+                            :y="checkNaN(plot.y)"
                             :fill="ds.color"
                             :stroke="FINAL_CONFIG.backgroundColor"
                             :stroke-width="FINAL_CONFIG.barStrokeWidth"
@@ -1348,7 +1369,7 @@ defineExpose({
                         <text 
                             v-for="(plot, j) in ds.coordinates"
                             :x="plot.x + plot.width / 2"
-                            :y="plot.y - FINAL_CONFIG.dataLabelFontSize / 2"
+                            :y="checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2"
                             text-anchor="middle"
                             :font-size="FINAL_CONFIG.dataLabelFontSize"
                             :fill="ds.color"
@@ -1356,10 +1377,10 @@ defineExpose({
                         >
                             {{ applyDataLabel(
                                 FINAL_CONFIG.formatter,
-                                plot.value,
+                                checkNaN(plot.value),
                                 dataLabel({
                                     p: FINAL_CONFIG.valuePrefix,
-                                    v: plot.value,
+                                    v: checkNaN(plot.value),
                                     s: FINAL_CONFIG.valueSuffix,
                                     r: FINAL_CONFIG.dataLabelRoundingValue
                                 }),
@@ -1437,6 +1458,25 @@ defineExpose({
                 </g>
             </template>
         </svg>
+
+        <Skeleton 
+            v-if="!chartType"
+            :config="{
+                type: 'line',
+                style: {
+                    backgroundColor: FINAL_CONFIG.backgroundColor,
+                    line: {
+                        axis: {
+                            color: FINAL_CONFIG.xyAxisStroke,
+                        },
+                        path: {
+                            color: FINAL_CONFIG.xyAxisStroke,
+                            strokeWidth: 0.5
+                        }
+                    }
+                }
+            }"
+        />
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>

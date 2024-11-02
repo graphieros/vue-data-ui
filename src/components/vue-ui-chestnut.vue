@@ -124,7 +124,7 @@ const treeTotal = computed(() => {
     if(!isDataset.value) {
         return 0
     }
-    return props.dataset.flatMap(root => root.branches.map(branch => branch.value)).reduce((a,b) => a + b);
+    return props.dataset.flatMap(root => (root.branches || []).map(branch => (branch.value || 0))).reduce((a,b) => a + b, 0);
 })
 
 const mutableDataset = computed(() => {
@@ -176,7 +176,7 @@ const mutableDataset = computed(() => {
     });
 
     return props.dataset.map((root, i) => {
-        const rootTotal = root.branches.map(branch => branch.value).reduce((a, b) => a + b);
+        const rootTotal = (root.branches || []).map(branch => (branch.value || 0)).reduce((a, b) => a + b, 0);
         return {
             ...root,
             color: convertColorToHex(root.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
@@ -184,7 +184,7 @@ const mutableDataset = computed(() => {
             type: "root",
             total: rootTotal,
             rootIndex: i,
-            branches: root.branches.map((branch, j) => {
+            branches: (root.branches || []).map((branch, j) => {
                 return {
                     ...branch,
                     rootName: root.name,
@@ -194,7 +194,7 @@ const mutableDataset = computed(() => {
                     id: branch.id || `branch_${i}_${j}_${uid.value}`,
                     proportionToRoot: branch.value / rootTotal,
                     type: "branch",
-                    breakdown: branch.breakdown.map((nut, k) => {
+                    breakdown: (branch.breakdown || []).map((nut, k) => {
                         return {
                             table: {
                                 rootName: root.name,
@@ -394,7 +394,9 @@ function observeTable() {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
         })
     })
-    observer.observe(tableContainer.value)
+    if (tableContainer.value) {
+        observer.observe(tableContainer.value)
+    }
 }
 
 onMounted(() => {

@@ -17,6 +17,7 @@ import {
     lightenHexColor,
     objectIsEmpty,
     palette,
+    sanitizeArray,
     themePalettes,
     translateSize,
     XMLNS,
@@ -227,7 +228,7 @@ const immutableDataset = computed(() => {
             ...ds,
             id,
             color: ds.color ? convertColorToHex(ds.color) : customPalette.value[i] || palette[i] || palette[i % palette.length],
-            plots: ds.plots.map(p => {
+            plots: sanitizeArray(ds.plots, ['value']).map(p => {
                 return {
                     ...p,
                     parentId: id,

@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import {
     applyDataLabel,
+    checkNaN,
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
@@ -301,7 +302,7 @@ const outerPolygon = computed(() => {
 const innerPolygons = computed(() => {
     const polygons = [];
     for (let i = 0; i < polygonRadius.value; i += (polygonRadius.value / FINAL_CONFIG.value.style.chart.layout.grid.graduations)) {
-         polygons.push(i)
+        polygons.push(i);
     }
     return polygons;
 })
@@ -363,7 +364,7 @@ const legendSet = computed(() => {
     return datasetCopy.value.map((d,i) => {
         return {
             ...d,
-            totalProportion: ratios.map(r => r[i]).reduce((a, b) => a + b, 0) / seriesCopy.value.length,
+            totalProportion: checkNaN(ratios.map(r => r[i]).reduce((a, b) => a + b, 0) / seriesCopy.value.length),
             shape: 'circle',
             opacity: segregated.value.includes(i) ? 0.5 : 1,
             segregate: () => segregate(i),
@@ -725,7 +726,7 @@ defineExpose({
             }"
         />
 
-        <!-- LEGEND AS DIV -->
+        <!-- LEGEND -->
         <div ref="chartLegend">
             <Legend
                 v-if="FINAL_CONFIG.style.chart.legend.show"

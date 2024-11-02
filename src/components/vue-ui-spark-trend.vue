@@ -9,7 +9,8 @@ import {
     error,
     calcTrend,
     objectIsEmpty,
-    XMLNS
+    XMLNS,
+checkNaN
 } from "../lib"
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
@@ -58,9 +59,7 @@ const FINAL_CONFIG = computed(() => {
 });
 
 function sanitize(arr) {
-    return arr.map(v => {
-        return [undefined].includes(v) ? null : v
-    })
+    return arr.map(v => checkNaN(v))
 }
 
 const safeDatasetCopy = ref(props.dataset.map(v => {
@@ -77,7 +76,7 @@ const raf = ref(null)
 onMounted(() => {
     if(objectIsEmpty(props.dataset)) {
         error({
-            componentName: 'VueUiTrendPill',
+            componentName: 'VueUiSparkTrend',
             type: 'dataset'
         })
     }
@@ -132,8 +131,8 @@ const drawingArea = computed(() => {
 const extremes = computed(() => {
     const ds = sanitize(props.dataset);
     return {
-        max: Math.max(...ds),
-        min: Math.min(...ds)
+        max: Math.max(...ds.map(v => checkNaN(v))),
+        min: Math.min(...ds.map(v => checkNaN(v)))
     }
 });
 
@@ -156,12 +155,12 @@ const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((v, i) => {
         const absoluteValue = isNaN(v) || [undefined, null, "NaN", NaN, Infinity, -Infinity].includes(v) ? 0 : v || 0; // Pantalon et bretelles...
         return {
-            value: v,
-            absoluteValue,
-            plotValue: absoluteValue + absoluteMin.value,
+            value: checkNaN(v),
+            absoluteValue: checkNaN(absoluteValue),
+            plotValue: checkNaN(absoluteValue + absoluteMin.value),
             toMax: ratioToMax(absoluteValue + absoluteMin.value),
-            x: drawingArea.value.left + (i * ((drawingArea.value.width / (len.value - 1)))) - FINAL_CONFIG.value.style.padding.right,
-            y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteValue + absoluteMin.value))
+            x: drawingArea.value.left + checkNaN(i * ((drawingArea.value.width / (len.value - 1)))) - FINAL_CONFIG.value.style.padding.right,
+            y: drawingArea.value.bottom - checkNaN(drawingArea.value.height * ratioToMax(absoluteValue + absoluteMin.value))
         }
     })
 });

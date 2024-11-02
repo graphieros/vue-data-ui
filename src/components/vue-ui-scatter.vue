@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import {
     applyDataLabel,
+    checkNaN,
     convertCustomPalette,
     createCsvContent, 
     createSmoothPath,
@@ -831,10 +832,10 @@ defineExpose({
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
-                        selectedPlot.v.y,
+                        checkNaN(selectedPlot.v.y),
                         dataLabel({
                             p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                            v: selectedPlot.v.y,
+                            v: checkNaN(selectedPlot.v.y),
                             s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
                             r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
                         }),
@@ -851,10 +852,10 @@ defineExpose({
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
-                        selectedPlot.v.x,
+                        checkNaN(selectedPlot.v.x),
                         dataLabel({
                             p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                            v: selectedPlot.v.x,
+                            v: checkNaN(selectedPlot.v.x),
                             s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
                             r: FINAL_CONFIG.style.layout.plots.selectors.labels.rounding
                         }),
@@ -904,10 +905,10 @@ defineExpose({
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.layout.plots.selectors.labels.x.formatter,
-                        extremes.xMin,
+                        checkNaN(extremes.xMin),
                         dataLabel({
                             p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                            v: extremes.xMin,
+                            v: checkNaN(extremes.xMin),
                             s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
                             r: FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding
                         })) 
@@ -923,10 +924,10 @@ defineExpose({
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.layout.plots.selectors.labels.x.formatter,
-                        extremes.xMax,
+                        checkNaN(extremes.xMax),
                         dataLabel({
                             p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                            v: extremes.xMax,
+                            v: checkNaN(extremes.xMax),
                             s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
                             r: FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding
                         })) 
@@ -956,10 +957,10 @@ defineExpose({
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
-                        extremes.yMin,
+                        checkNaN(extremes.yMin),
                         dataLabel({
                             p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                            v: extremes.yMin,
+                            v: checkNaN(extremes.yMin),
                             s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
                             r: FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding
                         })) 
@@ -975,10 +976,10 @@ defineExpose({
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
-                        extremes.yMax,
+                        checkNaN(extremes.yMax),
                         dataLabel({
                             p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                            v: extremes.yMax,
+                            v: checkNaN(extremes.yMax),
                             s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
                             r: FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding
                         })) 
@@ -1030,7 +1031,10 @@ defineExpose({
                         :font-size="FINAL_CONFIG.style.layout.correlation.label.fontSize"
                         :font-weight="FINAL_CONFIG.style.layout.correlation.label.bold ? 'bold' : 'normal'"
                     >
-                        {{ Number(ds.correlation.coefficient.toFixed(FINAL_CONFIG.style.layout.correlation.label.roundingValue)).toLocaleString() }}
+                        {{ dataLabel({
+                            v: checkNaN(ds.correlation.coefficient),
+                            r: FINAL_CONFIG.style.layout.correlation.label.roundingValue
+                        }) }}
                     </text>
                 </g>
             </g>

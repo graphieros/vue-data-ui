@@ -17,6 +17,7 @@ import {
     makeDonut, 
     objectIsEmpty,
     palette,
+    sanitizeArray,
     themePalettes,
     XMLNS, 
 } from '../lib';
@@ -201,7 +202,7 @@ const immutableDataset = computed(() => {
     return props.dataset.map((ds, i) => {
         return {
             ...ds,
-            total: ds.series.filter(s => !segregated.value.includes(s.id)).map(s => (s.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
+            total: ds.series.filter(s => !segregated.value.includes(s.id)).map(s => (sanitizeArray(s.values)).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
             datasetIndex: i,
             id: `${uid.value}_${i}`,
             series: ds.series.map((serie, j) => {
@@ -213,7 +214,7 @@ const immutableDataset = computed(() => {
                     seriesIndex: j,
                     datasetIndex: i,
                     color: convertColorToHex(serie.color) || customPalette.value[j] || palette[j] || palette[j % palette.length],
-                    value: (serie.values || []).reduce((a, b) => a + b, 0),
+                    value: sanitizeArray(serie.values).reduce((a, b) => a + b, 0),
                     absoluteValues: serie.values || []
                 }
             })
@@ -545,7 +546,7 @@ function getBlurFilter(arc, index) {
 
 const legendSets = computed(() => {
     return immutableDataset.value.map((ds, i) => {
-        return ds.series.map((s, j) => {
+        return (ds.series).map((s, j) => {
             return {
                 name: s.name,
                 color: s.color,
@@ -968,7 +969,7 @@ defineExpose({
                 @clickMarker="({ legend }) => segregateDonut(legend)"
             >
                 <template #legendTitle="{ titleSet }">
-                    <div class="vue-ui-nested-donuts-legend-title" v-if="titleSet[0].arcOf">
+                    <div class="vue-ui-nested-donuts-legend-title" v-if="titleSet[0] && titleSet[0].arcOf">
                         {{ titleSet[0].arcOf }}
                     </div>
                 </template>
