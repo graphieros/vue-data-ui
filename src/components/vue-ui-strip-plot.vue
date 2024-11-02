@@ -3,6 +3,7 @@ import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import {
     applyDataLabel,
     calculateNiceScale,
+    checkNaN,
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
@@ -17,7 +18,6 @@ import {
     lightenHexColor,
     objectIsEmpty,
     palette,
-    sanitizeArray,
     themePalettes,
     translateSize,
     XMLNS,
@@ -228,9 +228,10 @@ const immutableDataset = computed(() => {
             ...ds,
             id,
             color: ds.color ? convertColorToHex(ds.color) : customPalette.value[i] || palette[i] || palette[i % palette.length],
-            plots: sanitizeArray(ds.plots, ['value']).map(p => {
+            plots: ds.plots.map(p => {
                 return {
                     ...p,
+                    value: checkNaN(p.value),
                     parentId: id,
                     color: ds.color ? convertColorToHex(ds.color) : customPalette.value[i] || palette[i] || palette[i % palette.length],
                     id: createUid(),

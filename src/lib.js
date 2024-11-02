@@ -1782,7 +1782,36 @@ export function sanitizeArray(arr, keys = []) {
 
             let sanitizedObject = { ...data };
             keys.forEach(key => {
-                if (sanitizedObject.hasOwnProperty(key) && Array.isArray(sanitizedObject[key])) {
+                if (sanitizedObject.hasOwnProperty(key) && ![
+                    'NAME', 
+                    'name', 
+                    'TITLE', 
+                    'title', 
+                    'DESCRIPTION', 
+                    'description', 
+                    'LABEL', 
+                    'label', 
+                    'TIME', 
+                    'time',
+                    'PERIOD',
+                    'period',
+                    'MONTH',
+                    'month',
+                    'YEAR',
+                    'year',
+                    'MONTHS',
+                    'months',
+                    'YEARS',
+                    'years',
+                    'DAY',
+                    'day',
+                    'DAYS',
+                    'days',
+                    'HOUR',
+                    'hour',
+                    'HOURS',
+                    'hours'
+                ].includes(key) && Array.isArray(sanitizedObject[key])) {
                     sanitizedObject[key] = sanitize(sanitizedObject[key]);
                 }
             });

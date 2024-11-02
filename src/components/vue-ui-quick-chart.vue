@@ -97,7 +97,7 @@ const fd = computed(() => {
         'data',
         'value',
         'values',
-        'num'
+        'num',
     ]), barLineSwitch: FINAL_CONFIG.value.chartIsBarUnderDatasetLength });
     console.log(f)
     if(!f) {
