@@ -46,6 +46,7 @@ import {
     niceNum,
     objectIsEmpty,
     rotateMatrix,
+    sanitizeArray,
     shiftHue,
     sumByAttribute,
     translateSize,
@@ -690,6 +691,9 @@ describe('makePath', () => {
     })
     test('creates svg points for a polygon', () => {
         expect(makePath(plots, false, true)).toBe('1,2 2,3 3,4 4,5 5,6')
+    })
+    test('returns an empty path when plots are empty', () => {
+        expect(makePath([], false)).toBe('M0,0')
     })
 })
 
@@ -1865,4 +1869,24 @@ describe('hasDeepProperty', () => {
         expect(hasDeepProperty(obj, 'attr0.attr1.attr2.attr3')).toBe(true)
         expect(hasDeepProperty(obj, 'attr0.attr1.attr2.attr3.attr4')).toBe(false)
     })
-})
+});
+
+describe('sanitizeArray', () => {
+    const source0 = [1, 2, 3, NaN, undefined, Infinity, -Infinity];
+    test('sanitizes an array of numbers', () => {
+        expect(sanitizeArray(source0)).toStrictEqual([1, 2, 3, 0, 0, 0, 0])
+    });
+    
+    const source1 = [{
+        values: [1, NaN, undefined, Infinity, -Infinity],
+        value: [2, NaN, undefined, Infinity, -Infinity]
+    }];
+    test('sanitizes an array of objects where some attributes are arrays of numbers', () => {
+        expect(sanitizeArray(source1, ['values, value'])).toStrictEqual([
+            {
+                value: [2, 0, 0, 0, 0],
+                values: [1, 0, 0, 0, 0]
+            }
+        ]);
+    });
+});

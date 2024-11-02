@@ -42,20 +42,20 @@ export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult =
             degrees,
             piMult,
             true
-        )
+        );
 
         ratios.push({
             arcSlice: `${path} L ${inner.startX} ${inner.startY} ${inner.path} L ${startX} ${startY}`,
-            cx,
-            cy,
+            cx: checkNaN(cx),
+            cy: checkNaN(cy),
             ...series[i],
-            proportion,
-            ratio: ratio,
-            path,
-            startX,
-            startY,
-            endX,
-            endY,
+            proportion: checkNaN(proportion),
+            ratio: checkNaN(ratio),
+            path: path.replaceAll('NaN', '0'),
+            startX: checkNaN(startX),
+            startY: checkNaN(startY),
+            endX: checkNaN(endX),
+            endY: checkNaN(endY),
             center: createArc(
                 [cx, cy],
                 [rx * arcAmpl, ry * arcAmpl],
@@ -105,18 +105,18 @@ export function createArc([cx, cy], [rx, ry], [position, ratio], phi, degrees = 
     const fA = ratio > Math.PI ? 1 : 0;
     const fS = ratio > 0 ? reverse ? 0 : 1 : reverse ? 1 : 0;
     return {
-        startX: reverse ? eX : sX,
-        startY: reverse ? eY : sY,
-        endX: reverse ? sX : eX,
-        endY: reverse ? sY : eY,
-        path: `M${reverse ? eX : sX} ${reverse ? eY : sY} A ${[
-            rx,
-            ry,
-            (phi / (piMult * Math.PI)) * degrees,
-            fA,
-            fS,
-            reverse ? sX : eX,
-            reverse ? sY : eY,
+        startX: reverse ? checkNaN(eX) : checkNaN(sX),
+        startY: reverse ? checkNaN(eY) : checkNaN(sY),
+        endX: reverse ? checkNaN(sX) : checkNaN(eX),
+        endY: reverse ? checkNaN(sY) : checkNaN(eY),
+        path: `M${reverse ? checkNaN(eX) : checkNaN(sX)} ${reverse ? checkNaN(eY) : checkNaN(sY)} A ${[
+            checkNaN(rx),
+            checkNaN(ry),
+            checkNaN((phi / (piMult * Math.PI)) * degrees),
+            checkNaN(fA),
+            checkNaN(fS),
+            reverse ? checkNaN(sX) : checkNaN(eX),
+            reverse ? checkNaN(sY) : checkNaN(eY),
         ].join(" ")}`,
     };
 }
@@ -859,9 +859,11 @@ export function sumByAttribute(arr, attr) {
 }
 
 export function makePath(plots, closed = true, bare = false) {
+    if (!plots.length) return "M0,0";
     let path = "";
     plots.forEach(plot => {
-        path += `${plot.x},${plot.y} `
+        if (!plot) return '';
+        path += `${plot.x},${plot.y} `;
     })
     if (bare) {
         return path.trim();
@@ -1726,7 +1728,7 @@ export function sumSeries(source) {
 export function checkFormatter(func, { value, config }) {
     let isValid = false;
     let formattedValue = value;
-    
+
     if (typeof func === 'function') {
         try {
             // Ensure that the function is called with an object containing `value` and `config`
@@ -1762,6 +1764,37 @@ export function hasDeepProperty(obj, path) {
         }
         return false;
     });
+}
+
+export function sanitizeArray(arr, keys = []) {
+
+    function sanitizeValue(value) {
+        if([NaN, undefined, Infinity, -Infinity, null].includes(value)) {
+            console.warn(`A non processable value was detected : ${value}`)
+        }
+        return (typeof value === 'number' && isFinite(value)) ? value : 0;
+    }
+
+    function sanitize(data) {
+        if (Array.isArray(data)) { 
+            return data.map(item => sanitize(item));
+        } else if (typeof data === 'object' && data !== null) {
+
+            let sanitizedObject = { ...data };
+            keys.forEach(key => {
+                if (sanitizedObject.hasOwnProperty(key) && Array.isArray(sanitizedObject[key])) {
+                    sanitizedObject[key] = sanitize(sanitizedObject[key]);
+                }
+            });
+            return Object.fromEntries(
+                Object.entries(sanitizedObject).map(([k, v]) => [k, sanitize(v)])
+            );
+        } else {
+            return sanitizeValue(data);
+        }
+    }
+
+    return sanitize(arr);
 }
 
 const lib = {
@@ -1821,6 +1854,7 @@ const lib = {
     opacity,
     palette,
     rotateMatrix,
+    sanitizeArray,
     shiftHue,
     sumByAttribute,
     sumSeries,
