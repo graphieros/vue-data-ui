@@ -207,6 +207,7 @@ export function useConfig() {
         selectedColorOpacity: 0.2,
         lineColor: '#2D353C',
         selectionRadius: 2,
+        indicatorColor: '#2D353C'
     }
 
     const vue_ui_stackbar = {
