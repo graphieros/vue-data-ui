@@ -104,6 +104,7 @@ declare module 'vue-data-ui' {
         selectedColorOpacity?: number;
         lineColor?: string;
         selectionRadius?: number;
+        indicatorColor?: string;
     }
 
     export type ChartZoom = {
