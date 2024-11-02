@@ -291,6 +291,12 @@ function segregateDonut(arc, ds) {
     }
 }
 
+const commonSelectedIndex = ref(null);
+
+function setCommonSelectedIndex(index) {
+    commonSelectedIndex.value = index;
+}
+
 const donut = computed(() => {
     if(chartType.value !== detector.chartType.DONUT) return null;
     const ds = formattedDataset.value.dataset.map((ds, i) => {
@@ -373,6 +379,7 @@ const donut = computed(() => {
     function killTooltip() {
         isTooltip.value = false;
         selectedDatapoint.value = null;
+        commonSelectedIndex.value = null;
     }
 
     const drawingArea = {
@@ -561,6 +568,7 @@ const line = computed(() => {
 
     function useTooltip(index) {
         selectedDatapoint.value = index;
+        commonSelectedIndex.value = index;
         const mappedSeries = ds.map(d => {
             return {
                 ...d,
@@ -743,6 +751,7 @@ const bar = computed(() => {
 
     function useTooltip(index) {
         selectedDatapoint.value = index;
+        commonSelectedIndex.value = index;
 
         const mappedSeries = ds.map(d => {
             return {
@@ -802,6 +811,7 @@ const bar = computed(() => {
     function killTooltip() {
         isTooltip.value = false;
         selectedDatapoint.value = null;
+        commonSelectedIndex.value = null;
     }
 
     return {
@@ -1217,7 +1227,7 @@ defineExpose({
                         :y="line.drawingArea.top"
                         :height="line.drawingArea.height <= 0 ? 0.00001 : line.drawingArea.height"
                         :width="line.slotSize <= 0 ? 0.00001 : line.slotSize"
-                        :fill="selectedDatapoint === i ? FINAL_CONFIG.xyHighlighterColor : 'transparent'"
+                        :fill="[selectedDatapoint, commonSelectedIndex].includes(i) ? FINAL_CONFIG.xyHighlighterColor : 'transparent'"
                         :style="`opacity:${FINAL_CONFIG.xyHighlighterOpacity}`"
                         @mouseenter="line.useTooltip(i)"
                         @mouseleave="line.killTooltip()"
@@ -1396,7 +1406,7 @@ defineExpose({
                         :y="bar.drawingArea.top"
                         :height="bar.drawingArea.height <= 0 ? 0.00001 : bar.drawingArea.height"
                         :width="bar.slotSize <= 0 ? 0.00001 : bar.slotSize"
-                        :fill="selectedDatapoint === i ? FINAL_CONFIG.xyHighlighterColor : 'transparent'"
+                        :fill="[selectedDatapoint, commonSelectedIndex].includes(i) ? FINAL_CONFIG.xyHighlighterColor : 'transparent'"
                         :style="`opacity:${FINAL_CONFIG.xyHighlighterOpacity}`"
                         @mouseenter="bar.useTooltip(i)"
                         @mouseleave="bar.killTooltip()"
@@ -1504,9 +1514,12 @@ defineExpose({
                 :minimapSelectionRadius="FINAL_CONFIG.zoomMinimap.selectionRadius"
                 :minimapLineColor="FINAL_CONFIG.zoomMinimap.lineColor"
                 :minimap="minimap"
+                :minimapIndicatorColor="FINAL_CONFIG.zoomMinimap.indicatorColor"
+                :minimapSelectedIndex="commonSelectedIndex"
                 v-model:start="slicer.start"
                 v-model:end="slicer.end"
                 @reset="refreshSlicer"
+                @trapMouse="setCommonSelectedIndex"
             >
                 <template #reset-action="{ reset }">
                     <slot name="reset-action" v-bind="{ reset }"/>

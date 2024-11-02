@@ -231,7 +231,7 @@
                             :y="drawingArea.top"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
-                            :fill="selectedSerieIndex === i || selectedRowIndex === i ? `${FINAL_CONFIG.chart.highlighter.color}${opacity[FINAL_CONFIG.chart.highlighter.opacity]}` : 'transparent'"
+                            :fill="[selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(i) ? `${FINAL_CONFIG.chart.highlighter.color}${opacity[FINAL_CONFIG.chart.highlighter.opacity]}` : 'transparent'"
                         />
                     </g>
                 </g>
@@ -316,10 +316,10 @@
                     />
                 </template>
 
-                <g v-if="FINAL_CONFIG.chart.highlighter.useLine && ![null, undefined].includes(selectedSerieIndex)">
+                <g v-if="FINAL_CONFIG.chart.highlighter.useLine && (![null, undefined].includes(selectedSerieIndex) || selectedMinimapIndex !== null)">
                     <line
-                        :x1="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
-                        :x2="drawingArea.left + (drawingArea.width / maxSeries) * selectedSerieIndex + (drawingArea.width / maxSeries / 2)"
+                        :x1="drawingArea.left + (drawingArea.width / maxSeries) * (selectedSerieIndex || selectedMinimapIndex) + (drawingArea.width / maxSeries / 2)"
+                        :x2="drawingArea.left + (drawingArea.width / maxSeries) * (selectedSerieIndex || selectedMinimapIndex) + (drawingArea.width / maxSeries / 2)"
                         :y1="drawingArea.top"
                         :y2="drawingArea.bottom"
                         :stroke="FINAL_CONFIG.chart.highlighter.color"
@@ -471,7 +471,7 @@
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="FINAL_CONFIG.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : serie.color"
                             :plot="{ x: checkNaN(plot.x), y: checkNaN(plot.y) }"
-                            :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (plotRadii.plot || 6) * 1.5 : plotRadii.plot || 6 : plotRadii.plot || 6"
+                            :radius="((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)) ? (plotRadii.plot || 6) * 1.5 : plotRadii.plot || 6"
                             :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
@@ -598,7 +598,7 @@
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="FINAL_CONFIG.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : serie.color"
                             :plot="{ x: checkNaN(plot.x), y: checkNaN(plot.y) }"
-                            :radius="selectedSerieIndex !== null ? selectedSerieIndex === j ? (plotRadii.line || 6) * 1.5 : plotRadii.line : plotRadii.line"
+                            :radius="((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)) ? (plotRadii.line || 6) * 1.5 : plotRadii.line || 6"
                             :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :strokeWidth="0.5"
                         />
@@ -1036,6 +1036,8 @@
             :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
             :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
             :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
+            :minimapSelectedIndex="selectedSerieIndex"
+            :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
             :max="maxX"
             :min="0"
             :valueStart="slicer.start"
@@ -1043,6 +1045,7 @@
             v-model:start="slicer.start"
             v-model:end="slicer.end"
             @reset="refreshSlicer"
+            @trapMouse="selectMinimapIndex"
         >
             <template #reset-action="{ reset }">
                 <slot name="reset-action" v-bind="{ reset }"/>
@@ -1311,7 +1314,8 @@ export default {
             plotRadii: {
                 plot: 3,
                 line: 3
-            }
+            },
+            selectedMinimapIndex: null
         }
     },
     computed: {
@@ -2292,6 +2296,9 @@ export default {
         treeShake,
         useMouse,
         useNestedProp,
+        selectMinimapIndex(minimapIndex) {
+            this.selectedMinimapIndex = minimapIndex;
+        },
         convertSizes() {
             // Adaptative sizes in responsive mode
             this.fontSizes.dataLabels = this.translateSize({
