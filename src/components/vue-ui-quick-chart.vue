@@ -99,7 +99,6 @@ const fd = computed(() => {
         'values',
         'num',
     ]), barLineSwitch: FINAL_CONFIG.value.chartIsBarUnderDatasetLength });
-    console.log(f)
     if(!f) {
         console.error('VueUiQuickChart : Dataset is not processable')
     }
