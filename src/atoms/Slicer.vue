@@ -81,6 +81,14 @@ const props = defineProps({
     minimapSelectedColorOpacity: {
         type: Number,
         default: 0.2
+    },
+    minimapSelectedIndex: {
+        type: Number,
+        default: null
+    },
+    minimapIndicatorColor: {
+        type: String,
+        default: '#2D353C'
     }
 });
 
@@ -89,7 +97,7 @@ const endValue = ref(props.max);
 const hasMinimap = computed(() => !!props.minimap.length);
 const uid = ref(createUid());
 
-const emit = defineEmits(['update:start', 'update:end', 'reset']);
+const emit = defineEmits(['update:start', 'update:end', 'reset', 'trapMouse']);
 
 const highlightStyle = computed(() => {
     const range = props.max - props.min;
@@ -106,6 +114,14 @@ const slicerColor = computed(() => props.inputColor);
 const backgroundColor = computed(() => props.background);
 const selectColorOpaque = computed(() => `${props.selectColor}33`);
 const borderColor = computed(() => props.borderColor);
+
+const availableTraps = computed(() => {
+    let arr = [];
+    for (let i = 0; i < props.minimap.length; i += 1) {
+        arr.push(i)
+    }
+    return arr;
+})
 
 function reset() {
     emit('reset');
@@ -175,15 +191,8 @@ onMounted(() => {
 
 const unitWidthX = computed(() => {
     if(!props.minimap.length) return 0
-    return svgMinimap.value.width / props.minimap.length;
+    return svgMinimap.value.width / props.minimap.length
 });
-
-const selectedMap = computed(() => {
-    return {
-        x: unitWidthX.value * props.valueStart,
-        width: unitWidthX.value * (props.valueEnd - props.valueStart)
-    }
-})
 
 const minimapLine = computed(() => {
     if(!props.minimap.length) return [];
@@ -193,7 +202,7 @@ const minimapLine = computed(() => {
     const points = props.minimap.map((dp, i) => {
         const normalizedVal = dp - min;
         return {
-            x: svgMinimap.value.width / (props.minimap.length - 1) * (i),
+            x: svgMinimap.value.width / (props.minimap.length) * (i) + (unitWidthX.value / 2),
             y: svgMinimap.value.height - (normalizedVal / diff * (svgMinimap.value.height * 0.9))
         }
     });
@@ -208,12 +217,10 @@ const minimapLine = computed(() => {
     }
 });
 
-const range = computed(() => props.max - props.min)
-
-const selectionRect = computed(() => {
+const selectionRectCoordinates = computed(() => {
     return {
-        left: ((startValue.value - props.min) / range.value) * 100,
-        width: ((endValue.value - startValue.value) / range.value) * 100
+        x: unitWidthX.value * startValue.value + (unitWidthX.value / 2),
+        width: svgMinimap.value.width * ((endValue.value - startValue.value) / props.max) - unitWidthX.value
     }
 })
 
@@ -238,11 +245,25 @@ const rightLabelPosition = computed(() => {
     };
 });
 
+
+const selectedTrap = ref(props.minimapSelectedIndex)
+
+watch(() => props.minimapSelectedIndex, (v) => {
+    selectedTrap.value = v + props.valueStart
+}, { immediate: true })
+
+function trapMouse(trap) {
+    selectedTrap.value = trap;
+    if (trap >= props.valueStart && trap < props.valueEnd) {
+        emit('trapMouse', trap - props.valueStart)
+    }
+}
+
 </script>
 
 <template>
     <div data-html2canvas-ignore style="padding: 0 24px">
-        <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1">
+        <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1; pointer-events: none;">
             <div v-if="valueStart > 0 || valueEnd < max" style="width: 100%; position: relative">
                 <button 
                     v-if="!useResetSlot" 
@@ -250,7 +271,8 @@ const rightLabelPosition = computed(() => {
                     role="button" 
                     class="vue-data-ui-refresh-button"
                     :style="{
-                        top: hasMinimap ? '36px' : '-16px'
+                        top: hasMinimap ? '36px' : '-16px',
+                        pointerEvents: 'all !important'
                     }"
                     @click="reset">
                     <BaseIcon name="refresh" :stroke="textColor" />
@@ -258,6 +280,7 @@ const rightLabelPosition = computed(() => {
                 <slot v-else name="reset-action" :reset="reset" />
             </div>
         </div>
+
         <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0">
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%">
@@ -268,17 +291,48 @@ const rightLabelPosition = computed(() => {
                                 <stop offset="100%" stop-color="transparent"/>
                             </linearGradient>
                         </defs>
+                        
                         <path 
-                            :d="`M0,${svgMinimap.height} ${minimapLine.fullSet} L${svgMinimap.width},${svgMinimap.height}Z`" 
+                            :d="`M${minimapLine.fullSet}`" 
                             :stroke="`${minimapLineColor}`" 
-                            :fill="`url(#${uid})`"
+                            fill="none"
                             stroke-width="1" 
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             style="opacity: 1"
                         />
+                        
+                        <!-- SELECTION RECT -->
+                        <rect
+                            :x="selectionRectCoordinates.x"
+                            :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
+                            :height="svgMinimap.height"
+                            :y="0"
+                            :fill="borderColor"
+                            :rx="minimapSelectionRadius"
+                            stroke="none"
+                        />
+
+                        <path 
+                            :d="`M${unitWidthX / 2},${svgMinimap.height} ${minimapLine.fullSet} L${svgMinimap.width - (unitWidthX / 2)},${svgMinimap.height}Z`" 
+                            :fill="`url(#${uid})`"
+                            stroke="none"
+                            style="opacity: 1"
+                        />
+
+                        <rect
+                            :x="selectionRectCoordinates.x"
+                            :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
+                            :height="svgMinimap.height"
+                            :y="0"
+                            :fill="minimapSelectedColor"
+                            :style="{
+                                opacity: minimapSelectedColorOpacity
+                            }"
+                        />
+
                         <!-- This is not quite there yet: there's an annoying offset between input handles and plots -->
-                        <!-- <path 
+                        <path 
                             :d="`M ${minimapLine.selectionSet}`" 
                             :stroke="`${minimapLineColor}`" 
                             fill="transparent"
@@ -301,34 +355,47 @@ const rightLabelPosition = computed(() => {
                             :stroke="borderColor"
                             r="3"
                             :fill="minimapLineColor"
-                        /> -->
-                        <line :x1="0" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="(svgMinimap.height < 0 ? 0 : svgMinimap.height)" :y2="(svgMinimap.height < 0 ? 0 : svgMinimap.height)" :stroke="borderColor" stroke-width="3"/>
-                        <line :x1="0" :x2="0" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="5"/>
-                        <line :x1="svgMinimap.width < 0 ? 0 : svgMinimap.width" :x2="svgMinimap.width < 0 ? 0 : svgMinimap.width" :y1="0" :y2="svgMinimap.height < 0 ? 0 : svgMinimap.height" :stroke="borderColor" stroke-width="5"/>
+                        />
+
+                        <!-- SELECTION INDICATOR -->
+                        <template v-if="selectedTrap !== null">
+                            <g v-for="(trap, i) in availableTraps">
+                                <line
+                                    :x1="unitWidthX * i + (unitWidthX / 2)"
+                                    :x2="unitWidthX * i + (unitWidthX / 2)"
+                                    :y1="0"
+                                    :y2="svgMinimap.height"
+                                    :stroke="minimapIndicatorColor"
+                                    stroke-linecap="round"
+                                    stroke-dasharray="2"
+                                    stroke-width="1"
+                                    v-if="selectedTrap === trap && trap >= valueStart && trap < valueEnd"
+                                />
+                            </g>
+                        </template>
+
+                        <!-- TOOLTIP TRAPS -->
+                        <rect 
+                            v-for="(trap, i) in availableTraps"
+                            :x="unitWidthX * i"
+                            :y="0"
+                            :height="svgMinimap.height"
+                            :width="unitWidthX"
+                            fill="transparent"
+                            style="pointer-events: all !important;"
+                            @mouseenter="trapMouse(trap)"
+                            @mouseleave="selectedTrap = null; emit('trapMouse', null)"
+                        />
                     </svg>
                 </div>
-                <div 
-                    class="sel"
-                    :style="{
-                        position: 'absolute',
-                        top: '-33px',
-                        left: `calc(${selectionRect.left}%)`,
-                        background: minimapSelectedColor,
-                        height: '40px',
-                        width: selectionRect.width + '%',
-                        borderRadius: `${minimapSelectionRadius}px ${minimapSelectionRadius}px 0 0`,
-                        opacity: minimapSelectedColorOpacity
-                    }"    
-                />
             </template>
-
             <div class="slider-track"></div>
             <div class="range-highlight" :style="highlightStyle"></div>
-            <input type="range" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
+            <input type="range" class="range-left" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
             <div class="thumb-label thumb-label-left" :style="leftLabelPosition">
                 {{ labelLeft }}
             </div>
-            <input type="range" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
+            <input type="range" class="range-right" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
             <div class="thumb-label thumb-label-right" :style="rightLabelPosition">
                 {{ labelRight }}
             </div>
@@ -359,8 +426,9 @@ const rightLabelPosition = computed(() => {
 
 input[type="range"] {
     position: absolute;
-    left: 0;
-    width: 100%;
+    left: -10px;
+    width: calc(100% + 17px);
+    right: 3px;
     appearance: none;
     background: transparent;
     pointer-events: none;
@@ -471,7 +539,7 @@ input[type="range"]::-ms-thumb {
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 0 24px;
+    // padding: 0 24px;
     height: 40px;
 }
 
