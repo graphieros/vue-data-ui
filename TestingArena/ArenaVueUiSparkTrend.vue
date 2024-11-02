@@ -7,7 +7,7 @@ import convertArrayToObject from "./convertModel";
 
 const datasets = ref({
     neutral: [10.33, 10.33, 10.33, 10.33, 10.33, 10.33, 10.33, 10.33],
-    positive: [0, 1, 2, 3, 5, 8, 13,  21, 34, 55, 89, 144, 233.33],
+    positive: [0, 1, 2, 3, 5, 0, 13,  21, 34, 55, 89, 144, 233.33],
     negative: [100, 95, 80, 60, 40, 20, 10, 9, 8, 7, 6, 5, 3, 1.33]
 })
 

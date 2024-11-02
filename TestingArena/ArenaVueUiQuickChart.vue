@@ -80,7 +80,7 @@ const datasets = ref({
         }
     ],
     donut: [
-        { name: 'Serie 1', value: 24},
+        { name: 'Serie 1', value: 12},
         { name: 'Serie 2', value: 12},
         { name: 'Serie 3', value: 6},
         { name: 'Serie 4', value: 3},

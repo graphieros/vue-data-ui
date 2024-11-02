@@ -202,7 +202,7 @@ const config = computed(() => {
                     ...c.style.tooltip,
                     customFormat: ({ datapoint }) => {
                         let html = '';
-                        console.log(datapoint);
+                        // console.log(datapoint);
                         return "test"
                     }
                 }
@@ -224,13 +224,13 @@ const config = computed(() => {
                                 ...c.style.layout.plots.selectors.labels,
                                 x: {
                                     formatter: ({value, config}) => {
-                                        console.log(config)
+                                        // console.log(config)
                                         return `X | ${value}`
                                     }
                                 },
                                 y: {
                                     formatter: ({value, config}) => {
-                                        console.log(config)
+                                        // console.log(config)
                                         return `Y | ${value}`
                                     }
                                 }

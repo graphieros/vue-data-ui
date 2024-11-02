@@ -184,7 +184,29 @@ function selectLegend(legend) {
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                 WATERMARK
             </div>
-        </template>     
+        </template>
+        <template #cell="{ cell, isSelected }">
+                    <div :style="`opacity:${isSelected ? 1 : 0.3}`">
+                        <VueUiIcon
+                            v-if="cell.name === 'Lorem Ipsum'"
+                            name="lambda"
+                            size="40"
+                            :stroke="cell.color"
+                        />
+                        <VueUiIcon
+                            v-if="cell.name === 'Dolor Amet'"
+                            name="func"
+                            size="40"
+                            :stroke="cell.color"
+                        />
+                        <VueUiIcon
+                            v-if="cell.name === 'Dignissimos Ducimus'"
+                            name="mu"
+                            size="40"
+                            :stroke="cell.color"
+                        />
+                    </div>
+                </template>     
     </LocalVueUiWaffle>
     </div>
 

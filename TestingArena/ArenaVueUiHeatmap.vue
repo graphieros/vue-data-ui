@@ -130,7 +130,6 @@ const config = computed(() => {
                     ...c.style.tooltip,
                     customFormat: ({ datapoint }) => {
                         let html = '';
-                        console.log(datapoint);
                         return "test"
                     }
                 }
@@ -150,7 +149,6 @@ const config = computed(() => {
                         value: {
                             ...c.style.layout.cells.value,
                             formatter: ({value, config}) => {
-                                console.log(config)
                                 return `f - ${value}`
                             }
                         }

@@ -65,22 +65,22 @@ const dataset = ref([
         name: 'Serie 3',
         shape: 'hexagon',
         series: [
-        {
-            name: "Hexagon 1",
-            x: -39,
-            y: 39
-        },
-        {
-            name: "Hexagon 2",
-            x: -2,
-            y: 45
-        },
-        {
-            name: "Hexagon 3",
-            x: -15,
-            y: 30
-        },
-    ]
+            {
+                name: "Hexagon 1",
+                x: -39,
+                y: 39
+            },
+            {
+                name: "Hexagon 2",
+                x: -2,
+                y: 45
+            },
+            {
+                name: "Hexagon 3",
+                x: -15,
+                y: 30
+            },
+        ]
     }
 ]);
 
