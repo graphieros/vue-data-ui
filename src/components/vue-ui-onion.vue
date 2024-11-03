@@ -280,7 +280,7 @@ const mutableDataset = computed(() => {
 });
 
 function peelOnion(radius, percentage) {
-    const circumference = radius * (1.5 + (percentage / 100 > 1 / 3 ? 0 : 1 - percentage / 100)) * Math.PI;
+    const circumference = radius * (1.5 + 1 - percentage / 100) * Math.PI;
     const bg = radius * 1.5 * Math.PI;
     return {
         bgDashArray: `${bg} ${bg}`,
