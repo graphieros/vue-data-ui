@@ -97,7 +97,7 @@ const position = computed(() => {
     padding:12px;
     z-index:3 !important;
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(10px);
 }
 .vue-data-ui-custom-tooltip {
     position: fixed;
