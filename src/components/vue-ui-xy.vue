@@ -1594,7 +1594,7 @@ export default {
                 };
                 const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps;
 
-                const corrector = 0.0000001;
+                const corrector = 1.0000001;
 
                 const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
                 
@@ -1719,7 +1719,7 @@ export default {
 
                 const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps
 
-                const corrector = 0.0000001;
+                const corrector = 1.0000001;
 
                 const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
                 
@@ -1825,7 +1825,7 @@ export default {
 
                 const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps;
 
-                const corrector = 0.0000001;
+                const corrector = 1.0000001;
 
                 const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
                 
