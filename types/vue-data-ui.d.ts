@@ -6,8 +6,8 @@ declare module 'vue-data-ui' {
     }
 
     export const VueDataUi: DefineComponent<{
-        dataset?: VueUi3dBarDataset | VueUiAgePyramidDataset | VueUiAnnotatorDataset | Array<Array<string | number>> | VueUiChestnutDatasetRoot[] | VueUiDashboardElement[] | number | string | VueUiDonutEvolutionDatasetItem[] | VueUiDonutDatasetItem[] | VueUiGaugeDataset | VueUiHeatmapDatasetItem[] | VueUiMoleculeDatasetNode[] | VueUiMoodRadarDataset | VueUiNestedDonutsDatasetItem[] | VueUiOnionDatasetItem[] | VueUiQuadrantDatasetItem[] | VueUiRadarDataset | VueUiRatingDataset | VueUiRelationCircleDatasetItem[] | VueUiRingsDatasetItem[] | VueUiScatterDatasetItem[] | VueUiSparkbarDatasetItem[] | VueUiSparkgaugeDataset | VueUiSparkHistogramDatasetItem[] | VueUiSparklineDatasetItem[] | VueUiSparkStackBarDatasetItem[] | VueUiTableSparklineDatasetItem[] | VueUiTableDataset | VueUiThermometerDataset | VueUiTiremarksDataset | VueUiVerticalBarDatasetItem[] | VueUiWaffleDatasetItem[] | VueUiWheelDataset | VueUiXyDatasetItem[] | VueUiTreemapDatasetItem[] | VueUiQuickChartDataset | number[] | VueUiStripPlotDataset[] | VueUiWordCloudDatasetItem[] | VueUiXyCanvasDatasetItem[] | VueUiFlowDatasetItem[] | VueUiParallelCoordinatePlotDatasetItem[] | VueUiCarouselTableDataset | VueUiGizmoDataset | VueUiStackbarDatasetItem[],
-        config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackBarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig | VueUiGizmoConfig | VueUiStackbarConfig;
+        dataset?: VueUi3dBarDataset | VueUiAgePyramidDataset | VueUiAnnotatorDataset | Array<Array<string | number>> | VueUiChestnutDatasetRoot[] | VueUiDashboardElement[] | number | string | VueUiDonutEvolutionDatasetItem[] | VueUiDonutDatasetItem[] | VueUiGaugeDataset | VueUiHeatmapDatasetItem[] | VueUiMoleculeDatasetNode[] | VueUiMoodRadarDataset | VueUiNestedDonutsDatasetItem[] | VueUiOnionDatasetItem[] | VueUiQuadrantDatasetItem[] | VueUiRadarDataset | VueUiRatingDataset | VueUiRelationCircleDatasetItem[] | VueUiRingsDatasetItem[] | VueUiScatterDatasetItem[] | VueUiSparkbarDatasetItem[] | VueUiSparkgaugeDataset | VueUiSparkHistogramDatasetItem[] | VueUiSparklineDatasetItem[] | VueUiSparkStackbarDatasetItem[] | VueUiTableSparklineDatasetItem[] | VueUiTableDataset | VueUiThermometerDataset | VueUiTiremarksDataset | VueUiVerticalBarDatasetItem[] | VueUiWaffleDatasetItem[] | VueUiWheelDataset | VueUiXyDatasetItem[] | VueUiTreemapDatasetItem[] | VueUiQuickChartDataset | number[] | VueUiStripPlotDataset[] | VueUiWordCloudDatasetItem[] | VueUiXyCanvasDatasetItem[] | VueUiFlowDatasetItem[] | VueUiParallelCoordinatePlotDatasetItem[] | VueUiCarouselTableDataset | VueUiGizmoDataset | VueUiStackbarDatasetItem[],
+        config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackbarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig | VueUiGizmoConfig | VueUiStackbarConfig;
     }>
 
     export type ChartTitle = {
@@ -1181,7 +1181,7 @@ declare module 'vue-data-ui' {
         dataset: VueUiSparkHistogramDatasetItem[]
     }>;
 
-    export type VueUiSparkStackBarConfig = {
+    export type VueUiSparkStackbarConfig = {
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -1240,7 +1240,7 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export type VueUiSparkStackBarDatasetItem = {
+    export type VueUiSparkStackbarDatasetItem = {
         name: string;
         color?: string;
         proportion?: number;
@@ -1251,8 +1251,8 @@ declare module 'vue-data-ui' {
     }
 
     export const VueUiSparkStackbar: DefineComponent<{
-        config?: VueUiSparkStackBarConfig,
-        dataset: VueUiSparkStackBarDatasetItem[]
+        config?:    ,
+        dataset: VueUiSparkStackbarDatasetItem[]
     }>;
 
     export type VueUiThermometerConfig = {
@@ -5492,7 +5492,7 @@ declare module 'vue-data-ui' {
         dataset: VueUiStackbarDatasetItem[]
     }>
 
-    export type VueDataUiConfig = VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutConfig | VueUiDonutEvolutionConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkHistogramConfig | VueUiSparkStackBarConfig | VueUiSparkbarConfig | VueUiSparklineConfig | VueUiTableConfig | VueUiTableSparklineConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiNestedDonutsConfig | VueUiGalaxyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiTableHeatmapConfig | VueUiAccordionConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig | VueUiGizmoConfig | VueUiStackbarConfig;
+    export type VueDataUiConfig = VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutConfig | VueUiDonutEvolutionConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkHistogramConfig | VueUiSparkStackbarConfig | VueUiSparkbarConfig | VueUiSparklineConfig | VueUiTableConfig | VueUiTableSparklineConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiNestedDonutsConfig | VueUiGalaxyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiTableHeatmapConfig | VueUiAccordionConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig | VueUiGizmoConfig | VueUiStackbarConfig;
 
     export type VueDataUiConfigKey = "vue_ui_3d_bar" | "vue_ui_age_pyramid" | "vue_ui_annotator" | "vue_ui_candlestick" | "vue_ui_chestnut" | "vue_ui_dashboard" | "vue_ui_digits" | "vue_ui_donut" | "vue_ui_donut_evolution" | "vue_ui_gauge" | "vue_ui_heatmap" | "vue_ui_mini_loader" | "vue_ui_molecule" | "vue_ui_mood_radar" | "vue_ui_onion" | "vue_ui_quadrant" | "vue_ui_radar" | "vue_ui_rating" | "vue_ui_relation_circle" | "vue_ui_rings" | "vue_ui_scatter" | "vue_ui_screenshot" | "vue_ui_skeleton" | "vue_ui_smiley" | "vue_ui_sparkhistogram" | "vue_ui_sparkstackbar" | "vue_ui_sparkbar" | "vue_ui_sparkline" | "vue_ui_table" | "vue_ui_table_sparkline" | "vue_ui_thermometer" | "vue_ui_tiremarks" | "vue_ui_vertical_bar" | "vue_ui_waffle" | "vue_ui_wheel" | "vue_ui_xy" | "vue_ui_nested_donuts" | "vue_ui_galaxy" | "vue_ui_kpi" | "vue_ui_treemap" | "vue_ui_table_heatmap" | "vue_ui_accordion" | "vue_ui_quick_chart" | "vue_ui_cursor" | "vue_ui_spark_trend" | "vue_ui_strip_plot" | "vue_ui_dumbbell" | "vue_ui_word_cloud" | "vue_ui_xy_canvas" | "vue_ui_flow" | "vue_ui_parallel_coordinate_plot" | "vue_ui_timer" | "vue_ui_carousel_table" | "vue_ui_gizmo" | "vue_ui_stackbar";
 
