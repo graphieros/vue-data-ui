@@ -11,22 +11,22 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 const dataset = ref([
     {
         name: "Serie 1",
-        percentage: 21,
+        percentage: 50,
         value: 1200,
     },
     {
         name: "Serie 2",
-        percentage: 34,
+        percentage: 50,
         value: 1000,
     },
     {
         name: "Serie 3",
-        percentage: 55,
+        percentage: 50,
         value: 500
     },
     {
         name: "Serie 4",
-        percentage: 79,
+        percentage: 50,
         value: 1280
     }
 ])
