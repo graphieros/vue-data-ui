@@ -176,7 +176,7 @@ const model = ref([
     { key: 'chart.grid.stroke', def: '#FF0000', type: 'color', label: 'lineColor', category: 'grid' },
     { key: 'chart.grid.showVerticalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
 
-    { key: 'chart.grid.frame.show', def: true, type: 'checkbox'},
+    { key: 'chart.grid.frame.show', def: false, type: 'checkbox'},
     { key: 'chart.grid.frame.stroke', def: '#1A1A1A', type: 'color'},
     { key: 'chart.grid.frame.strokeWidth', def: 4, type: 'number', min: 0, max: 12},
     { key: 'chart.grid.frame.strokeLinecap', def: 'round', type: 'select', options: ['round', 'square', 'butt']},
@@ -202,8 +202,8 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number'},
 
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 5, min: 0, max: 100, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
-    { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
+    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
+    { key: 'chart.grid.labels.yAxis.stacked', def: true, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 40, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.showBaseline', def: true,  type: 'checkbox'},

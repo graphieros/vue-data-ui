@@ -257,7 +257,7 @@
                             />
 
                             <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
-                                <foreignObject style="overflow: visible" height="12" :width="(calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) / 2) + FINAL_CONFIG.chart.comments.width" :x="calcRectX(plot) - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX" :y="plot.y + FINAL_CONFIG.chart.comments.offsetY + 6">
+                                <foreignObject style="overflow: visible" height="12" :width="(calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) / 2) + FINAL_CONFIG.chart.comments.width" :x="calcRectX(plot) - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX" :y="checkNaN(plot.y) + FINAL_CONFIG.chart.comments.offsetY + 6">
                                     <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
                                 </foreignObject>
                             </template>
@@ -403,7 +403,7 @@
                             <text 
                                 v-for="(yLabel, j) in el.yLabels"
                                 :x="el.x - 5 + xPadding" 
-                                :y="yLabel.y + xPadding" 
+                                :y="checkNaN(yLabel.y) + fontSizes.dataLabels / 3" 
                                 :font-size="fontSizes.dataLabels" 
                                 text-anchor="end"
                                 :fill="el.color"
@@ -659,7 +659,7 @@
                                 :data-cy="`xy-bar-label-x-${i}-${j}`"
                                 v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || serie.dataLabels === true) && FINAL_CONFIG.bar.labels.show"
                                 :x="mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : calcRectX(plot) + calcRectWidth() / 2 - barPeriodGap / 2"
-                                :y="plot.y + (plot.value > 0 ? FINAL_CONFIG.bar.labels.offsetY : - FINAL_CONFIG.bar.labels.offsetY * 3)"
+                                :y="checkNaN(plot.y) + (plot.value > 0 ? FINAL_CONFIG.bar.labels.offsetY : - FINAL_CONFIG.bar.labels.offsetY * 3)"
                                 text-anchor="middle"
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.bar.labels.color"
@@ -1625,13 +1625,13 @@ export default {
 
 
                     return {
-                        yOffset,
-                        individualHeight,
-                        x,
+                        yOffset: this.checkNaN(yOffset),
+                        individualHeight: this.checkNaN(individualHeight),
+                        x: this.checkNaN(x),
                         y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
                         value: datapoint.absoluteValues[j],
-                        zeroPosition,
-                        individualMax,
+                        zeroPosition: this.checkNaN(zeroPosition),
+                        individualMax: this.checkNaN(individualMax),
                         comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
                     }
                 });
@@ -1649,13 +1649,13 @@ export default {
                         ? this.drawingArea.left + (this.drawingArea.width / this.maxSeries * j) 
                         : (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length);
                     return {
-                        yOffset,
-                        individualHeight,
-                        x,
-                        y: this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0),
+                        yOffset: this.checkNaN(yOffset),
+                        individualHeight: this.checkNaN(individualHeight),
+                        x: this.checkNaN(x),
+                        y: this.checkNaN(this.drawingArea.bottom - this.checkNaN(yOffset) - ((this.checkNaN(individualHeight) * autoScaleRatiosToNiceScale[j]) || 0)),
                         value: datapoint.absoluteValues[j],
-                        zeroPosition,
-                        individualMax,
+                        zeroPosition: this.checkNaN(zeroPosition),
+                        individualMax: this.checkNaN(individualMax),
                         comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
                     }
                 });
@@ -1740,8 +1740,8 @@ export default {
                         : this.ratioToMax(plot)
 
                     return {
-                        x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
-                        y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
+                        x: this.checkNaN((this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j)),
+                        y: this.checkNaN(this.drawingArea.bottom - yOffset - (individualHeight * yRatio)),
                         value: datapoint.absoluteValues[j],
                         comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
                     }
@@ -1758,8 +1758,8 @@ export default {
                 const autoScalePlots = datapoint.series.map((plot, j) => {
                     if(![undefined, null].includes(datapoint.absoluteValues[j])) {
                         return {
-                            x: (this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j),
-                            y: this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0),
+                            x: this.checkNaN((this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j)),
+                            y: this.checkNaN(this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
                             value: datapoint.absoluteValues[j],
                             comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
                         }
@@ -1838,8 +1838,8 @@ export default {
                 const plots = datapoint.series.map((plot, j) => {
                     const yRatio = this.mutableConfig.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
                     return {
-                        x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
-                        y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
+                        x: this.checkNaN((this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j)),
+                        y: this.checkNaN(this.drawingArea.bottom - yOffset - (individualHeight * yRatio)),
                         value: datapoint.absoluteValues[j],
                         comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
                     }
@@ -1855,8 +1855,8 @@ export default {
 
                 const autoScalePlots = datapoint.series.map((plot, j) => {
                     return {
-                        x: (this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j),
-                        y: this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0),
+                        x: this.checkNaN((this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j)),
+                        y: this.checkNaN(this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
                         value: datapoint.absoluteValues[j],
                         comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
                     }
@@ -2409,16 +2409,16 @@ export default {
         },
         calcRectHeight(plot) {
             if(plot.value >= 0) {
-                return this.zero - plot.y <= 0 ? 0.00001 : this.zero - plot.y;
+                return this.checkNaN(this.zero - plot.y <= 0 ? 0.00001 : this.zero - plot.y);
             } else {
-                return plot.y - this.zero <= 0 ? 0.00001 : plot.y - this.zero;
+                return this.checkNaN(plot.y - this.zero <= 0 ? 0.00001 : plot.y - this.zero);
             }
         },
         calcIndividualHeight(plot) {
             if(plot.value >= 0) {
-                return plot.zeroPosition - plot.y <= 0 ? 0.00001 : plot.zeroPosition - plot.y
+                return this.checkNaN(plot.zeroPosition - plot.y <= 0 ? 0.00001 : plot.zeroPosition - plot.y)
             } else {
-                return plot.y - plot.zeroPosition <= 0 ? 0.00001 : plot.zeroPosition - plot.y
+                return this.checkNaN(plot.y - plot.zeroPosition <= 0 ? 0.00001 : plot.zeroPosition - plot.y)
             }
         },
         calcRectWidth() {
@@ -2439,10 +2439,10 @@ export default {
         },
         calcIndividualRectY(plot) {
             if(plot.value >= 0) return plot.y;
-            return plot.zeroPosition;
+            return [null, undefined, NaN, Infinity, -Infinity].includes(plot.zeroPosition) ? 0 : plot.zeroPosition;
         },  
         canShowValue(value) {
-            return ![null, undefined, NaN].includes(value);
+            return ![null, undefined, NaN, Infinity, -Infinity].includes(value);
         },
         findClosestValue(val, arr) {
             let closest = arr[0];
