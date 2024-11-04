@@ -105,8 +105,8 @@
                                 v-for="l in yLabels"
                                 :x1="drawingArea.left + xPadding"
                                 :x2="drawingArea.right - xPadding"
-                                :y1="l.y"
-                                :y2="l.y"
+                                :y1="checkNaN(l.y)"
+                                :y2="checkNaN(l.y)"
                                 :stroke="FINAL_CONFIG.chart.grid.stroke"
                                 :stroke-width="0.5"
                                 stroke-linecap="round"
@@ -120,8 +120,8 @@
                                     v-for="l in grid.yLabels"
                                     :x1="drawingArea.left + xPadding"
                                     :x2="drawingArea.right - xPadding"
-                                    :y1="l.y"
-                                    :y2="l.y"
+                                    :y1="checkNaN(l.y)"
+                                    :y2="checkNaN(l.y)"
                                     :stroke="grid.color"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
@@ -132,8 +132,8 @@
                                     v-for="l in grid.yLabels"
                                     :x1="drawingArea.left + xPadding"
                                     :x2="drawingArea.right - xPadding"
-                                    :y1="l.y"
-                                    :y2="l.y"
+                                    :y1="checkNaN(l.y)"
+                                    :y2="checkNaN(l.y)"
                                     :stroke="FINAL_CONFIG.chart.grid.stroke"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
@@ -1593,9 +1593,12 @@ export default {
                     min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues.filter(v => ![undefined,null].includes(v))) > 0 ? 0 : Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)))
                 };
                 const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps;
+
+                const corrector = 0.0000001;
+
+                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
                 
-                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max, scaleSteps);
-                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax, scaleSteps);
+                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
 
                 const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
                 const autoScaleZero = 0;
@@ -1716,9 +1719,11 @@ export default {
 
                 const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps
 
-                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max, scaleSteps);
+                const corrector = 0.0000001;
+
+                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
                 
-                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax, scaleSteps);
+                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
 
                 const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min));
                 const autoScaleZero = 0;
@@ -1818,9 +1823,13 @@ export default {
                     min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
                 };
 
-                const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps
-                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max, scaleSteps)
-                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax, scaleSteps);
+                const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps;
+
+                const corrector = 0.0000001;
+
+                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
+                
+                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
 
                 const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
                 const autoScaleZero = 0;
@@ -2457,7 +2466,7 @@ export default {
             return closest;
         },
         ratioToMax(value) {
-            return value / this.absoluteMax;
+            return value / (this.canShowValue(this.absoluteMax) ? this.absoluteMax : 1);
         },
         selectX(index) {
             this.$emit('selectX', 
