@@ -1251,7 +1251,7 @@ declare module 'vue-data-ui' {
     }
 
     export const VueUiSparkStackbar: DefineComponent<{
-        config?:    ,
+        config?: VueUiSparkStackbarConfig,
         dataset: VueUiSparkStackbarDatasetItem[]
     }>;
 
