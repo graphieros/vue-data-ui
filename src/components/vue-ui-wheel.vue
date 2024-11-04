@@ -5,6 +5,7 @@ import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import { 
     applyDataLabel,
+    checkNaN,
     createUid,
     dataLabel,
     error,
@@ -94,10 +95,13 @@ function calcTickStart(angle, distance = 1) {
 
 const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
 
-watch(() => props.dataset.percentage, () => {
-    activeValue.value = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
-    useAnimation()
-});
+watch(() => props.dataset, (v) => {
+    if (FINAL_CONFIG.value.style.chart.animation.use) {
+        useAnimation(v.percentage);
+    } else {
+        activeValue.value = v.percentage || 0
+    }
+}, { deep: true });
 
 const resizeObserver = ref(null);
 
@@ -108,7 +112,7 @@ onMounted(() => {
             type: 'dataset'
         })
     }
-    useAnimation();
+    useAnimation(props.dataset.percentage || 0);
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
@@ -130,24 +134,22 @@ onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
-function useAnimation() {
-    let acceleration = 0;
+function useAnimation(targetValue) {
     let speed = FINAL_CONFIG.value.style.chart.animation.speed;
-    let incr = (0.005) * FINAL_CONFIG.value.style.chart.animation.acceleration;
+    const chunk = Math.abs(targetValue - activeValue.value) / (speed * 120);
+
     function animate() {
-        activeValue.value += speed + acceleration;
-        acceleration += incr;
-        if(activeValue.value < (props.dataset.percentage || 0)) {
+        if(activeValue.value < targetValue) {
+            activeValue.value = Math.min(activeValue.value + chunk, targetValue);
+        } else if (activeValue.value > targetValue) {
+            activeValue.value = Math.max(activeValue.value - chunk, targetValue)
+        }
+        
+        if (activeValue.value !== targetValue) {
             requestAnimationFrame(animate)
-        } else {
-            activeValue.value = (props.dataset.percentage || 0)
         }
     }
-
-    if(FINAL_CONFIG.value.style.chart.animation.use) {
-        activeValue.value = 0;
-        animate()
-    }
+    animate()
 }
 
 const ticks = computed(() => {
@@ -267,9 +269,9 @@ defineExpose({
             >
                 {{ applyDataLabel(
                     FINAL_CONFIG.style.chart.layout.percentage.formatter,
-                    activeValue,
+                    checkNaN(activeValue),
                     dataLabel({
-                        v: activeValue,
+                        v: checkNaN(activeValue),
                         s: '%',
                         r: FINAL_CONFIG.style.chart.layout.percentage.rounding
                     }))
