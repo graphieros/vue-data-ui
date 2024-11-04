@@ -67,10 +67,13 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 
 const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : checkNaN(props.dataset.percentage));
 
-watch(() => props.dataset.percentage, () => {
-    activeValue.value = FINAL_CONFIG.value.style.chart.animation.use ? 0 : checkNaN(props.dataset.percentage);
-    useAnimation()
-})
+watch(() => props.dataset, (v) => {
+    if (FINAL_CONFIG.value.style.chart.animation.use) {
+        useAnimation(v.percentage);
+    } else {
+        activeValue.value = v.percentage || 0
+    }
+}, { deep: true });
 
 onMounted(() => {
     if (objectIsEmpty(props.dataset)) {
@@ -79,27 +82,25 @@ onMounted(() => {
             type: 'dataset'
         })
     }
-    useAnimation()
+    useAnimation(props.dataset.percentage || 0)
 });
 
-function useAnimation() {
-    let acceleration = 0;
+function useAnimation(targetValue) {
     let speed = FINAL_CONFIG.value.style.chart.animation.speed;
-    let incr = (0.005) * FINAL_CONFIG.value.style.chart.animation.acceleration;
+    const chunk = Math.abs(targetValue - activeValue.value) / (speed * 120);
+
     function animate() {
-        activeValue.value += speed + acceleration;
-        acceleration += incr;
-        if (activeValue.value < props.dataset.percentage) {
-            requestAnimationFrame(animate);
-        } else {
-            activeValue.value = checkNaN(props.dataset.percentage);
+        if(activeValue.value < targetValue) {
+            activeValue.value = Math.min(activeValue.value + chunk, targetValue);
+        } else if (activeValue.value > targetValue) {
+            activeValue.value = Math.max(activeValue.value - chunk, targetValue)
+        }
+        
+        if (activeValue.value !== targetValue) {
+            requestAnimationFrame(animate)
         }
     }
-
-    if(FINAL_CONFIG.value.style.chart.animation.use) {
-        activeValue.value = 0;
-        animate();
-    }
+    animate()
 }
 
 const isVertical = computed(() => {
