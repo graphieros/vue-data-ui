@@ -280,16 +280,23 @@ const mutableDataset = computed(() => {
 });
 
 function peelOnion(radius, percentage) {
-    const circumference = radius * (1.5 + (percentage / 100 > 1 / 3 ? 0 : 1 - percentage / 100)) * Math.PI;
-    const bg = radius * 1.5 * Math.PI;
+    const fullCircumference = 2 * Math.PI * radius;
+    const trackCircumference = fullCircumference * 0.75;
+    const dashArray = `${trackCircumference} ${fullCircumference}`;
+    const dashOffset = trackCircumference * (1 - percentage / 100);
+
     return {
-        bgDashArray: `${bg} ${bg}`,
-        bgDashOffset: bg - percentage / 100 * bg,
-        dashArray: `${circumference} ${circumference}`,
-        dashOffset: circumference - percentage / 100 * circumference,
+        bgDashArray: `${trackCircumference} ${fullCircumference}`,
+        bgDashOffset: 0,
+        dashArray,
+        dashOffset,
         fullOffset: 0,
-        active: `M${drawableArea.value.centerX},${drawableArea.value.centerY} A ${radius},${radius} 0 0 0 ${drawableArea.value.right},${drawableArea.value.top}`,
-    }
+        active: `
+            M ${drawableArea.value.centerX},${drawableArea.value.centerY - radius} 
+            A ${radius},${radius} 0 1 1 
+            ${drawableArea.value.centerX + radius * Math.cos(Math.PI * 3 / 4)},${drawableArea.value.centerY + radius * Math.sin(Math.PI * 3 / 4)}
+        `.trim(),
+    };
 }
 
 const emit = defineEmits(['selectLegend']);
