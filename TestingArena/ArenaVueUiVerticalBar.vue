@@ -203,7 +203,7 @@ const config = computed(() => {
                                     ...c.style.chart.layout.bars.dataLabels.value,
                                     formatter: ({value, config}) => {
                                         // console.log(config)
-                                        return `f - ${value}`
+                                        return `f | ${value}`
                                     }
                                 }
                             }
