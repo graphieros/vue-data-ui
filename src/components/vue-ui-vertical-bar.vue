@@ -196,45 +196,49 @@ const immutableDataset = computed(() => {
     return props.dataset
         .map((serie, i) => {
             const id = `vertical_parent_${i}_${uid.value}`;
-        const hasChildren = !!serie.children && serie.children.length > 0;
+            const hasChildren = serie.children && serie.children.length > 0;
 
-        return {
-            ...serie,
-            id,
-            shape: 'square',
-            opacity: segregated.value.includes(id) ? 0.5 : 1,
-            value: checkNaN(hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : (Math.abs(serie.value) || 0)),
-            sign: serie.value >= 0 ? 1 : -1,
-            hasChildren,
-            isChild: false,
-            segregate: () => segregate(id),
-            isSegregated: segregated.value.includes(id),
-            color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
-            children: !serie.children || !serie.children.length ? [] : serie.children
-                .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
-                .map((c, j) => {
-                    return {
-                        ...c,
-                        value: checkNaN(Math.abs(c.value)),
-                        sign: c.value >= 0 ? 1 : -1,
-                        isChild: true,
-                        parentId: id,
-                        parentName: serie.name,
-                        parentValue: checkNaN(serie.value || hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : 0),
-                        id: `vertical_child_${i}_${j}_${uid.value}`,
-                        childIndex: j,
-                        color: convertColorToHex(c.color) || convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length]
-                    }
-                })
-                .map((c,j) => {
-                    return {
-                        ...c,
-                        isFirstChild: j === 0,
-                        isLastChild: j === serie.children.length - 1,
-                    }
-                })
-        }
-    }).toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
+            const parentValue = checkNaN(serie.value ? serie.value : hasChildren ? serie.children.map(c => c.value || 0).reduce((a, b) => a + b, 0) : 0);
+            const parentSign = parentValue >= 0 ? 1 : -1;
+            return {
+                ...serie,
+                id,
+                shape: 'square',
+                opacity: segregated.value.includes(id) ? 0.5 : 1,
+                value: Math.abs(parentValue),
+                sign: parentSign,
+                hasChildren,
+                isChild: false,
+                segregate: () => segregate(id),
+                isSegregated: segregated.value.includes(id),
+                color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
+                children: !serie.children || !serie.children.length ? [] : serie.children
+                    .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
+                    .map((c, j) => {
+                        return {
+                            ...c,
+                            value: checkNaN(Math.abs(c.value)),
+                            sign: c.value >= 0 ? 1 : -1,
+                            isChild: true,
+                            parentId: id,
+                            parentName: serie.name,
+                            parentValue,
+                            parentSign,
+                            id: `vertical_child_${i}_${j}_${uid.value}`,
+                            childIndex: j,
+                            color: convertColorToHex(c.color) || convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length]
+                        }
+                    })
+                    .map((c,j) => {
+                        return {
+                            ...c,
+                            isFirstChild: j === 0,
+                            isLastChild: j === serie.children.length - 1,
+                        }
+                    })
+            }
+        })
+        .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
 });
 
 const legendConfig = computed(() => {
@@ -777,7 +781,7 @@ defineExpose({
                     :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
                     text-anchor="start"
                 >
-                    {{ makeDataLabel(getParentData(serie, i).value), getParentData(serie, i), i, getParentData(serie, i).sign }}
+                    {{ makeDataLabel(getParentData(serie, i).value), getParentData(serie, i), i, serie.parentSign || serie.sign }}
                 </text>
 
                 <!-- TOOLTIP TRAPS -->
