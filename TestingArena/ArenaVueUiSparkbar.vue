@@ -13,10 +13,9 @@ const dataset = ref([
         suffix: "%",
         prefix: 'P',
         target: 1000,
-        formatter: ({value, config}) => {
-            // console.log(config)
-            return `f1 - ${value}`
-        }
+        // formatter: ({value, config}) => {
+        //     return `f1 - ${value}`
+        // }
     },
     {
         name: "popularity",
@@ -25,9 +24,9 @@ const dataset = ref([
         suffix: "%",
         prefix: 'P',
         target: 2.3,
-        formatter: ({value}) => {
-            return `f2 - ${value}`
-        }
+        // formatter: ({value}) => {
+        //     return `f2 - ${value}`
+        // }
     },
     {
         name: "maintenance",
@@ -48,6 +47,31 @@ function addDatapoint() {
             return `f - ${value}`
         }
     })
+}
+
+const alternateDataset = ref([
+{
+        name: "alternate",
+        value: 50,
+        rounding: 2,
+        suffix: "ALT",
+        prefix: ''
+    },
+])
+
+const alternateConfig = ref({
+    style: {
+        backgroundColor: '#CCCCCC',
+            title: {
+                text: 'Alternate',
+                backgroundColor: '#FF0000'
+            }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
 }
 
 const model = ref([
@@ -111,6 +135,9 @@ const showTitleSlot = ref(false);
 </script>
 
 <template>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="addDatapoint">ADD DATAPOINT</button>
+
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -122,12 +149,11 @@ const showTitleSlot = ref(false);
         <label for="toggle-title-slot">Toggle title slot</label>
     </div>
 
-    <button @click="addDatapoint">ADD DATAPOINT</button>
     <Box comp="VueUiSparkbar" :dataset="dataset"> 
         <template #title>VueUiSparkbar</template>
         
         <template #local>
-            <LocalVueUiSparkbar :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiSparkbar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
                 <template #title="{ title }" v-if="showTitleSlot">
                     <div style="width:100%;">
                         {{ title.title }}
@@ -144,7 +170,7 @@ const showTitleSlot = ref(false);
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiSparkbar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiSparkbar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`">
                 <template #title="{ title }" v-if="showTitleSlot">
                     <div style="width:100%;">
                         {{ title.title }}
@@ -161,7 +187,7 @@ const showTitleSlot = ref(false);
         </template>
         
         <template #build>
-            <VueUiSparkbar :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiSparkbar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
                 <template #title="{ title }" v-if="showTitleSlot">
                     <div style="width:100%;">
                         {{ title.title }}
@@ -178,7 +204,7 @@ const showTitleSlot = ref(false);
         </template>
         
         <template #VDUI-build>
-            <VueDataUi component="VueUiSparkbar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiSparkbar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`">
                 <template #title="{ title }" v-if="showTitleSlot">
                     <div style="width:100%;">
                         {{ title.title }}

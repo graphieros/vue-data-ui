@@ -189,6 +189,91 @@ const dataset = ref([
     },
 ]);
 
+const alternateDataset = ref([
+{
+        name: "Root1",
+        branches: [
+            {
+                name: "branch 1.1",
+                value: 200,
+                breakdown: [
+                    {
+                        name: "break 1.1.1",
+                        value: 50,
+                    },
+                    {
+                        name: "break 1.1.2",
+                        value: 25,
+                    },
+                    {
+                        name: "break 1.1.3",
+                        value: 25,
+                    },
+                ]
+            },
+            {
+                name: "branch 1.2",
+                value: 100,
+                breakdown: [
+                    {
+                        name: "break 1.2.1",
+                        value: 10,
+                    },
+                    {
+                        name: "break 1.2.2",
+                        value: 20,
+                    },
+                    {
+                        name: "break 1.2.3",
+                        value: 70,
+                    },
+                ]
+            },
+            {
+                name: "branch 1.3",
+                value: 175,
+                breakdown: [
+                    {
+                        name: "break 1.3.1",
+                        value: 90,
+                    },
+                    {
+                        name: "break 1.3.2",
+                        value: 10,
+                    },
+                    {
+                        name: "break 1.3.3",
+                        value: 75,
+                    },
+                ]
+            },
+
+        ]
+    },
+])
+
+const alternateConfig = ref({
+    style: {
+        chart: {
+            backgroundColor: '#FF0000',
+            layout: {
+                title: {
+                    text: 'Alternate'
+                }
+            }
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value[0].branches[0].value = 500;
+}
+
 const model = ref([
     { key: 'responsive', def: true, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -400,6 +485,8 @@ function selectNut(nut) {
 
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
 
     <div style="margin: 12px 0; color: white">
         Theme:
@@ -425,7 +512,7 @@ function selectNut(nut) {
     <template #title>VueUiChestnut</template>
 
     <template #local>
-        <LocalVueUiChestnut :dataset="dataset" :config="config" :key="`local_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="local">
+        <LocalVueUiChestnut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="local">
             <template #optionPdf>
                 PRINT PDF
             </template>
@@ -443,7 +530,7 @@ function selectNut(nut) {
     </template>
     
     <template #VDUI-local>
-        <LocalVueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiLocal">
+        <LocalVueDataUi component="VueUiChestnut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiLocal">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -458,7 +545,7 @@ function selectNut(nut) {
     </template>
     
     <template #build>
-        <VueUiChestnut :dataset="dataset" :config="config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="build">
+        <VueUiChestnut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="build">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -473,7 +560,7 @@ function selectNut(nut) {
     </template>
     
     <template #VDUI-build>
-        <VueDataUi component="VueUiChestnut" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiBuild">
+        <VueDataUi component="VueUiChestnut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiBuild">
             <template #svg="{ svg }">
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

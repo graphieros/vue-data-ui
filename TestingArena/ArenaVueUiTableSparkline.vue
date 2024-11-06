@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiTableSparkline from '../src/components/vue-ui-table-sparkline.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -27,6 +27,15 @@ const dataset = ref([
         values: [12, 14, 18, 25, 32, 64, 77, 64, 32, 25, 18, 14, 12],
     },
 ])
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value[0] = {
+            name: "Serie 1",
+            values: [10, 0, 10, 0, 10, 0, 10, 0],
+        }
+    }, 3000)
+})
 
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'},

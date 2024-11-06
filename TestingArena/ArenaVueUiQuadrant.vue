@@ -84,6 +84,64 @@ const dataset = ref([
     }
 ]);
 
+const alternateConfig = ref({
+    table: {
+        th: {
+            backgroundColor: '#00FF00'
+        }
+    },
+    style: {
+        chart: {
+            backgroundColor: '#FF0000',
+            title: {
+                text: 'Alternate'
+            }
+        }
+    }
+})
+
+const alternateDataset = ref([
+    {
+        name: 'Serie 1',
+        shape: 'square',
+        series: [
+            {
+                name: "Star 1",
+                x: 50,
+                y: 50
+            },
+            {
+                name: "Star 2",
+                x: -10,
+                y: -10
+            },
+            {
+                name: "Star 3",
+                x: -15,
+                y: 20
+            },
+            {
+                name: "Star 4",
+                x: 15,
+                y: -20
+            },
+        ]
+    },
+]);
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value[0].series.push({
+        name: 'Added',
+        x: 0,
+        y: 0
+    })
+}
+
 const model = ref([
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
@@ -267,6 +325,8 @@ function selectSide(side) {
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
     <button @click="toggleLabels">TOGGLE LABELS</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -295,14 +355,14 @@ function selectSide(side) {
         <template #title>VueUiQuadrant</template>
 
         <template #local>
-            <LocalVueUiQuadrant :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="local">
+            <LocalVueUiQuadrant :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
                 <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
@@ -324,11 +384,11 @@ function selectSide(side) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiQuadrant" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="vduiLocal">
-                <template #svg="{ svg }">
+            <LocalVueDataUi component="VueUiQuadrant" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="vduiLocal">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
                 <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
@@ -345,11 +405,11 @@ function selectSide(side) {
         </template>
 
         <template #build>
-            <VueUiQuadrant :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="build">
-                <template #svg="{ svg }">
+            <VueUiQuadrant :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="build">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
                 <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
@@ -366,11 +426,11 @@ function selectSide(side) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiQuadrant" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="vduiBuild">
-                <template #svg="{ svg }">
+            <VueDataUi component="VueUiQuadrant" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" @selectPlot="selectPlot" @selectSide="selectSide" ref="vduiBuild">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
                 <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">

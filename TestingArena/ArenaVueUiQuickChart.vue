@@ -88,8 +88,23 @@ const datasets = ref({
     ]
 })
 
+const alternateDataset = ref([8, 12, 13, 25, 31, 42])
 
-const selectedSerie = ref('longObject');
+const alternateConfig = ref({
+    backgroundColor: '#CCCCCC',
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    datasets.value.shortArray.push(Math.random() * 50)
+}
+
+
+const selectedSerie = ref('shortArray');
 
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
@@ -228,6 +243,9 @@ function selectDatapoint(datapoint) {
     <option v-for="key in Object.keys(datasets)">{{ key }}</option>
 </select>
 
+<button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+<button @click="alterDataset">ALTER DATASET (shortArray only)</button>
+
 <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
         <LocalVueUiQuickChart :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
@@ -245,7 +263,7 @@ function selectDatapoint(datapoint) {
     <template #title>VueUiQuickChart</template>
 
     <template #local>
-        <LocalVueUiQuickChart :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+        <LocalVueUiQuickChart :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
             <template #optionPdf>
                 PRINT PDF
             </template>
@@ -268,7 +286,7 @@ function selectDatapoint(datapoint) {
     </template>
 
     <template #VDUI-local>
-        <LocalVueDataUi component="VueUiQuickChart" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+        <LocalVueDataUi component="VueUiQuickChart" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
             <template #legend="{ legend }">
                 #LEGEND
                 <div style="font-size: 8px">
@@ -288,7 +306,7 @@ function selectDatapoint(datapoint) {
     </template>
 
     <template #build>
-        <VueUiQuickChart :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+        <VueUiQuickChart :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
             <template #legend="{ legend }">
                 #LEGEND
                 <div style="font-size: 8px">
@@ -308,7 +326,7 @@ function selectDatapoint(datapoint) {
     </template>
 
     <template #VDUI-build>
-        <VueDataUi component="VueUiQuickChart" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+        <VueDataUi component="VueUiQuickChart" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
             <template #legend="{ legend }">
                 #LEGEND
                 <div style="font-size: 8px">

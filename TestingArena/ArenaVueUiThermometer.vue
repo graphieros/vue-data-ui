@@ -12,6 +12,33 @@ const dataset = ref({
     steps: 20,
 })
 
+const alternateDataset = ref({
+    value: 1,
+    from: -10,
+    to: 10,
+    steps: 10,
+})
+
+const alternateConfig = ref({
+    style: {
+        chart: {
+            backgroundColor: '#CCCCCC',
+            title: {
+                text: 'Alternate'
+            }
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.value = Math.random() * 100
+}
+
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -95,11 +122,15 @@ const step = ref(0);
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <Box comp="VueUiThermometer" :dataset="dataset">
         <template #title>VueUiThermometer</template>
 
         <template #local>
-            <LocalVueUiThermometer :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiThermometer :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -116,7 +147,7 @@ const step = ref(0);
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiThermometer" :dataset="dataset" :config="config" :key="`vdui_local_${step}`">
+            <LocalVueDataUi component="VueUiThermometer" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`vdui_local_${step}`">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -125,7 +156,7 @@ const step = ref(0);
         </template>
 
         <template #build>
-            <VueUiThermometer :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiThermometer :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -134,7 +165,7 @@ const step = ref(0);
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiThermometer" :dataset="dataset" :config="config" :key="`vdui_build_${step}`">
+            <VueDataUi component="VueUiThermometer" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`vdui_build_${step}`">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

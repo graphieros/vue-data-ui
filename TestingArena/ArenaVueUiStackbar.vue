@@ -40,6 +40,15 @@ const dataset = ref([
     },
 ]);
 
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value.push({
+            name: 'ALT',
+            series: [100, 100, 100, 100, 100, 100, 100, 100, 100]
+        })
+    }, 3000)
+})
+
 const model = ref([
     { key: 'orientation', def: 'vertical', type:'select', options: ['vertical', 'horizontal']},
     { key: 'responsive', def: false, type: 'checkbox'},

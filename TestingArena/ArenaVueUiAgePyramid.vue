@@ -14,6 +14,35 @@ const dataset = ref([
     ['2022', 0, 330929, 345538] 
 ]);
 
+const alternateDataset = ref([
+    ['2017', 5, 10, 9],
+    ['2018', 4, 11, 10],
+    ['2019', 3, 12, 11],
+])
+
+const alternateConfig = ref({
+    style: {
+        backgroundColor: '#CCCCCC',
+            title: {
+                text: 'Alternate'
+            }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push([
+        'ALT',
+        1,
+        Math.round(Math.random() * 300000) + 100000,
+        Math.round(Math.random() * 300000) + 100000
+    ])
+}
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -118,7 +147,7 @@ const config = computed(() => {
                 tooltip: {
                     ...c.style.tooltip,
                     customFormat: ({ datapoint }) => {
-                        console.log({datapoint})
+                        // console.log({datapoint})
                         return 'test'
                     }
                 }
@@ -136,7 +165,7 @@ const config = computed(() => {
                         xAxis: {
                             ...c.style.layout.dataLabels.xAxis,
                             formatter: ({value, config}) => {
-                                console.log(config)
+                                // console.log(config)
                                 return `X | ${value}`
                             }
                         },
@@ -178,6 +207,8 @@ function toggleTable() {
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
 
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
         <LocalVueUiAgePyramid :key="`responsive_${step}`" :dataset="dataset" :config="{
@@ -196,7 +227,7 @@ function toggleTable() {
         <template #title>VueUiAgePyramid</template>
 
         <template #local>
-            <LocalVueUiAgePyramid :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+            <LocalVueUiAgePyramid :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -220,7 +251,7 @@ function toggleTable() {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiAgePyramid" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="build">
+            <LocalVueDataUi component="VueUiAgePyramid" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -241,7 +272,7 @@ function toggleTable() {
         </template>
 
         <template #build>
-            <VueUiAgePyramid :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiAgePyramid :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -262,7 +293,7 @@ function toggleTable() {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiAgePyramid" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiAgePyramid" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

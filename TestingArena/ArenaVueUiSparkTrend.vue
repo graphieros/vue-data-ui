@@ -11,6 +11,28 @@ const datasets = ref({
     negative: [100, 95, 80, 60, 40, 20, 10, 9, 8, 7, 6, 5, 3, 1.33]
 })
 
+const alternateDataset = ref({
+    neutral: [1, 0, 1, 0, 1, 0],
+    positive: [0, 1, 0, 1, 0, 1],
+    negative: [1, 0, 1, 0, 1, 0],
+})
+
+const alternateConfig = ref({
+    style: {
+        backgroundColor: '#CCCCCC',
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    datasets.value.neutral.push(Math.random() * 10)
+}
+
+
 const model = ref([
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
@@ -87,38 +109,42 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <Box comp="VueUiSparkTrend" :dataset="datasets.positive">
         <template #title>VueUiSparkTrend</template>
 
         <template #local>
             <div style="width: 100%">
-                <LocalVueUiSparkTrend :dataset="datasets.negative" :config="config" :key="`local0_${step}`"/>
-                <LocalVueUiSparkTrend :dataset="datasets.neutral" :config="config" :key="`local1_${step}`"/>
-                <LocalVueUiSparkTrend :dataset="datasets.positive" :config="config" :key="`local2_${step}`"/>
+                <LocalVueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.negative : datasets.negative" :config="isPropsToggled ? alternateConfig : config" :key="`local0_${step}`"/>
+                <LocalVueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.neutral : datasets.neutral" :config="isPropsToggled ? alternateConfig : config" :key="`local1_${step}`"/>
+                <LocalVueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.positive : datasets.positive" :config="isPropsToggled ? alternateConfig : config" :key="`local2_${step}`"/>
             </div>
         </template>
 
         <template #VDUI-local>
             <div style="width: 100%">
-                <LocalVueDataUi component="VueUiSparkTrend" :dataset="datasets.negative" :config="config" :key="`VDUI-lodal0_${step}`"/>
-                <LocalVueDataUi component="VueUiSparkTrend" :dataset="datasets.neutral" :config="config" :key="`VDUI-lodal1_${step}`"/>
-                <LocalVueDataUi component="VueUiSparkTrend" :dataset="datasets.positive" :config="config" :key="`VDUI-lodal2_${step}`"/>
+                <LocalVueDataUi component="VueUiSparkTrend" :dataset="isPropsToggled ? alternateDataset.negative : datasets.negative" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal0_${step}`"/>
+                <LocalVueDataUi component="VueUiSparkTrend" :dataset="isPropsToggled ? alternateDataset.neutral : datasets.neutral" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal1_${step}`"/>
+                <LocalVueDataUi component="VueUiSparkTrend" :dataset="isPropsToggled ? alternateDataset.positive : datasets.positive" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal2_${step}`"/>
             </div>
         </template>
 
         <template #build>
             <div style="width: 100%">
-                <VueUiSparkTrend :dataset="datasets.negative" :config="config" :key="`build0_${step}`"/>
-                <VueUiSparkTrend :dataset="datasets.neutral" :config="config" :key="`build1_${step}`"/>
-                <VueUiSparkTrend :dataset="datasets.positive" :config="config" :key="`build2_${step}`"/>
+                <VueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.negative : datasets.negative" :config="isPropsToggled ? alternateConfig : config" :key="`build0_${step}`"/>
+                <VueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.neutral : datasets.neutral" :config="isPropsToggled ? alternateConfig : config" :key="`build1_${step}`"/>
+                <VueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.positive : datasets.positive" :config="isPropsToggled ? alternateConfig : config" :key="`build2_${step}`"/>
             </div>
         </template>
 
         <template #VDUI-build>
             <div style="width: 100%">
-                <VueDataUi component="VueUiSparkTrend" :dataset="datasets.negative" :config="config" :key="`VDUI-build0_${step}`"/>
-                <VueDataUi component="VueUiSparkTrend" :dataset="datasets.neutral" :config="config" :key="`VDUI-build1_${step}`"/>
-                <VueDataUi component="VueUiSparkTrend" :dataset="datasets.positive" :config="config" :key="`VDUI-build2_${step}`"/>
+                <VueDataUi component="VueUiSparkTrend" :dataset="isPropsToggled ? alternateDataset.negative : datasets.negative" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build0_${step}`"/>
+                <VueDataUi component="VueUiSparkTrend" :dataset="isPropsToggled ? alternateDataset.neutral : datasets.neutral" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build1_${step}`"/>
+                <VueDataUi component="VueUiSparkTrend" :dataset="isPropsToggled ? alternateDataset.positive : datasets.positive" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build2_${step}`"/>
             </div>
         </template>
 

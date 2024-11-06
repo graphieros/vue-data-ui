@@ -39,6 +39,67 @@ const dataset = ref({
     ]
 })
 
+const alternateDataset = ref({
+    categories: [
+        { name: 'Category 1'},
+        { name: 'Category 2'},
+        { name: 'Category 3'},
+    ],
+    series: [
+        {
+            name: 'Serie 1',
+            values: [20, 20, 20],
+            target: 100,
+            formatter: ({value}) => {
+                return `f1 - ${value}`
+            }
+        },
+        {
+            name: 'Serie 2',
+            values: [30, 30, 30],
+            target: 100,
+            formatter: ({value}) => {
+                return `f2 - ${value}`
+            }
+        },
+        {
+            name: 'Serie 3',
+            values: [40, 40, 40],
+            target: 100
+        }
+    ]
+})
+
+const alternateConfig = ref({
+    table: {
+        th: {
+            backgroundColor: '#00FF00'
+        }
+    },
+    style: {
+        chart: {
+            backgroundColor: '#FF0000',
+            title: {
+                text: 'Alternate'
+            }
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.series.push({
+        name: 'Serie 4',
+            values: [10, 10, 10],
+            target: 100
+    })
+}
+
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox' },
@@ -158,6 +219,8 @@ function selectLegend(legend) {
 
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -182,11 +245,11 @@ function selectLegend(legend) {
     </LocalVueUiRadar>
     </div>
 
-    <Box comp="VueUiRadar" :dataset="dataset">
+    <Box comp="VueUiRadar" :dataset="isPropsToggled ? alternateDataset : dataset">
         <template #title>VueUiRadar</template>
 
         <template #local>
-            <LocalVueUiRadar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+            <LocalVueUiRadar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -210,7 +273,7 @@ function selectLegend(legend) {
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
+            <LocalVueDataUi component="VueUiRadar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -231,7 +294,7 @@ function selectLegend(legend) {
         </template>
         
         <template #build>
-            <VueUiRadar :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
+            <VueUiRadar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -252,7 +315,7 @@ function selectLegend(legend) {
         </template>
         
         <template #VDUI-build>
-            <VueDataUi component="VueUiRadar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
+            <VueDataUi component="VueUiRadar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39240" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

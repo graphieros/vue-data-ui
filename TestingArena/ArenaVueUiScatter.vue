@@ -48,6 +48,54 @@ const dataset = computed(() => {
     ]
 });
 
+const alternateDataset = ref([
+    {
+            name: 'Alt',
+            values: [
+                {
+                    x: 0,
+                    y: 0,
+                    name: 'alt1'
+                },
+                {
+                    x: 1,
+                    y: 1,
+                    name: 'alt1'
+                }
+            ],
+            shape: 'pentagon'
+    }
+])
+
+const alternateConfig = ref({
+    table: {
+        th: {
+            backgroundColor: '#00FF00'
+        }
+    },
+    style: {
+        backgroundColor: '#CCCCCC',
+        title: {
+            text: 'Alternate'
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+const trigger = ref(0);
+
+function alterDataset() {
+    alternateDataset.value[0].values.push({
+        x: trigger.value % 5 === 0 ? Math.random()*10 : Math.random() * -10,
+        y: trigger.value % 5 === 0 ? Math.random()*10 : Math.random() * -10
+    })
+    trigger.value += 1;
+}
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -260,6 +308,9 @@ function selectLegend(legend) {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
         <LocalVueUiScatter :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
@@ -277,7 +328,7 @@ function selectLegend(legend) {
         <template #title>VueUiScatter</template>
         
         <template #local>
-            <LocalVueUiScatter :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+            <LocalVueUiScatter :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -306,7 +357,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiScatter" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
+            <LocalVueDataUi component="VueUiScatter" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -327,7 +378,7 @@ function selectLegend(legend) {
         </template>
 
         <template #build>
-            <VueUiScatter :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
+            <VueUiScatter :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -348,7 +399,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiScatter" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" ref="vduiBuild">
+            <VueDataUi component="VueUiScatter" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUi3dBar from '../src/components/vue-ui-3d-bar.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -54,6 +54,29 @@ const datasets = ref({
             }
         ]
     }
+})
+
+onMounted(() => {
+    setTimeout(() => {
+        datasets.value.stacked.series.push({
+            name: 'ALT',
+            value: 500,
+            breakdown: [
+                    {
+                        name: 'ALT 1',
+                        value: 200
+                    },
+                    {
+                        name: 'ALT 2',
+                        value: 200
+                    },
+                    {
+                        name: 'ALT 3',
+                        value: 100
+                    }
+                ]
+        })
+    }, 3000)
 })
 
 const model = ref([
