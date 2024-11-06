@@ -13,6 +13,28 @@ onMounted(() => {
     }, 3000)
 })
 
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+const alternateDataset = ref({ percentage: 50 });
+
+const alternateConfig = ref({
+    style: {
+        chart: {
+            backgroundColor: '#FF0000',
+            title: {
+                text: 'Alternate'
+            }
+        }
+    }
+})
+
+function alterDataset() {
+    dataset.value.percentage = Math.round(Math.random() * 100);
+}
+
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -94,11 +116,15 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <Box comp="VueUiTiremarks" :dataset="dataset">
         <template #title>VueUiTiremarks</template>
 
         <template #local>
-            <LocalVueUiTiremarks :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiTiremarks :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -111,17 +137,17 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiTiremarks" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiTiremarks" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`">
             </LocalVueDataUi>
         </template>
 
         <template #build>
-            <VueUiTiremarks :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiTiremarks :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
             </VueUiTiremarks>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiTiremarks" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiTiremarks" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`">
             </VueDataUi>
         </template>
         

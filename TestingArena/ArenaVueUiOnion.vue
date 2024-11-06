@@ -38,6 +38,27 @@ function mutate() {
     dataset.value[3].percentage = Math.random() * 100
 }
 
+const alternateConfig = ref({
+    table: {
+        th: {
+            backgroundColor: '#00FF00'
+        }
+    },
+    style: {
+        chart: {
+            backgroundColor: '#FF0000',
+            title: {
+                text: 'Alternate'
+            }
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -183,6 +204,8 @@ const step = ref(0)
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
     <button @click="mutate">MUTATE</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -211,7 +234,7 @@ const step = ref(0)
         <template #title>VueUiOnion</template>
 
         <template #local>
-            <LocalVueUiOnion :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+            <LocalVueUiOnion :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -235,7 +258,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
+            <LocalVueDataUi component="VueUiOnion" :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -256,7 +279,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiOnion :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
+            <VueUiOnion :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -277,7 +300,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiOnion" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
+            <VueDataUi component="VueUiOnion" :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

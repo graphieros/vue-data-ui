@@ -66,8 +66,19 @@ const donutChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const resizeObserver = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
 onMounted(() => {
+    prepareChart();
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiDonut',
@@ -104,11 +115,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(donutChart.value.parentNode);
     }
-});
-
-onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
-});
+}
 
 const uid = ref(createUid());
 
@@ -118,7 +125,7 @@ const tooltipContent = ref("");
 const selectedSerie = ref(null);
 const step = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -134,7 +141,24 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
+}
+
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
 });
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `donut__${uid.value}`,
@@ -583,6 +607,7 @@ defineExpose({
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
             <!-- TITLE AS DIV -->
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'donut-div-title',
@@ -932,6 +957,7 @@ defineExpose({
         <div ref="chartLegend">        
             <Legend
                 v-if="FINAL_CONFIG.style.chart.legend.show"
+                :key="`legend_${legendStep}`"
                 :legendSet="legendSet"
                 :config="legendConfig"
                 @clickMarker="({i}) => segregate(i)"
@@ -1013,6 +1039,7 @@ defineExpose({
         }">
             <template #content>            
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head" 
                     :body="dataTable.body"

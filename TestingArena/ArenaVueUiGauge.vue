@@ -19,11 +19,40 @@ const dataset = computed(() => {
     return source.value
 })
 
+const alternateDataset = ref({
+    base: 100,
+    value: 12,
+    series: [
+        { from: -100, to: 0 },
+        { from: 0, to: 100 }
+    ]
+})
+
+const alternateConfig = ref({
+    style: {
+        chart: {
+            backgroundColor: '#FF0000',
+            title: {
+                text: 'Alternate'
+            }
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    source.value.value = Math.round(Math.random() * 100)
+}
+
+
 onMounted(() => {
     setTimeout(() => {
         source.value.value = 50
-        step.value += 1
-    }, 3000)
+    }, 2000)
 })
 
 const model = ref([
@@ -121,8 +150,11 @@ const step = ref(0);
         </select>
     </div>
 
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiGauge :key="`responsive_${step}`" :dataset="dataset" :config="{
+        <LocalVueUiGauge :key="`responsive_${step}`" :dataset="isPropsToggled ? alternateDataset : dataset" :config="{
             ...config,
             responsive: true
         }">
@@ -135,11 +167,11 @@ const step = ref(0);
     </div>
 
     
-    <Box comp="VueUiGauge" :dataset="dataset">
+    <Box comp="VueUiGauge" :dataset="isPropsToggled ? alternateDataset : dataset">
         <template #title>VueUiGauge</template>
 
         <template #local :key="`local_${step}`">
-            <LocalVueUiGauge :dataset="dataset" :config="config">
+            <LocalVueUiGauge :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -155,7 +187,7 @@ const step = ref(0);
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiGauge" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiGauge" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -168,7 +200,7 @@ const step = ref(0);
         </template>
         
         <template #build>
-            <VueUiGauge :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiGauge :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -181,7 +213,7 @@ const step = ref(0);
         </template>
         
         <template #VDUI-build>
-            <VueDataUi component="VueUiGauge" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiGauge" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

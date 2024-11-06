@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useConfig } from "../useConfig";
 import { createUid, error, applyDataLabel, dataLabel } from "../lib";
 import { useNestedProp } from "../useNestedProp";
@@ -22,6 +22,10 @@ const props = defineProps({
 const uid = ref(createUid());
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if (!props.dataset && props.dataset !== 0) {
         error({
             componentName: 'VueUiGizmo',
@@ -31,14 +35,28 @@ onMounted(() => {
     if (props.dataset < 0) {
         console.warn('VueUiGizmo: dataset cannot be negative.')
     }
+}
+
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
 });
 
-const FINAL_CONFIG = computed(() => {
+function prepareConfig() {
     return useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     })
-})
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+}, { deep: true });
 
 const svg = computed(() => {
     const options = {

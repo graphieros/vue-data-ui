@@ -31,6 +31,38 @@ const dataset = ref([
     }
 ])
 
+const alternateDataset = ref([
+    { name: 'Alt 1', values: [20]},
+    { name: 'Alt 2', values: [10]},
+    { name: 'Alt 3', values: [5]},
+])
+
+const alternateConfig = ref({
+    style: {
+        chart: {
+            backgroundColor: '#CCCCCC',
+            title: {
+                text: 'Alternate'
+            },
+            legend: {
+                backgroundColor: '#FF0000'
+            }
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push({
+        name: 'Added',
+        values: [Math.round(Math.random() * 300)]
+    })
+}
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -172,6 +204,10 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <div style="margin: 12px 0">
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
@@ -194,7 +230,7 @@ const step = ref(0)
         <template #title>VueUiRings</template>
 
         <template #local>
-            <LocalVueUiRings :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+            <LocalVueUiRings :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -218,7 +254,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiRings" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
+            <LocalVueDataUi component="VueUiRings" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`vdui_local_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -239,7 +275,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiRings :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
+            <VueUiRings :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -260,7 +296,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiRings" :dataset="dataset" :config="config" :key="`vdui_build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
+            <VueDataUi component="VueUiRings" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`vdui_build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

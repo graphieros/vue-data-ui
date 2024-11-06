@@ -25,6 +25,39 @@ const dataset = ref([
     ["2024-15-01", 30, 120, 10, 105, 2881],
 ]);
 
+const alternateDataset = ref([
+    ["2024-11-01", 125, 130, 45, 92, 1972],
+    ["2024-12-01", 92, 120, 35, 75, 3599],
+    ["2024-13-01", 75, 80, 26, 45, 5881],
+    ["2024-14-01", 45, 60, 20, 30, 2881],
+    ["2024-15-01", 30, 120, 10, 105, 2881],
+])
+
+const alternateConfig = ref({
+    table: {
+        th: {
+            backgroundColor: '#00FF00'
+        }
+    },
+    style: {
+        backgroundColor: '#FF0000',
+        title: {
+            text: 'Alternate'
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push(
+        ['ALT', Math.random()*80, Math.random() * 100 + 80, Math.random() * 40, Math.random()* 40 + 20, Math.random() * 3000]
+    )
+}
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -167,6 +200,9 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -195,7 +231,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
         <template #title>VueUiCandlestick</template>
 
         <template #local>
-            <LocalVueUiCandlestick :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+            <LocalVueUiCandlestick :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -222,7 +258,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiCandlestick" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
+            <LocalVueDataUi component="VueUiCandlestick" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -246,7 +282,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
         </template>
 
         <template #build>
-            <VueUiCandlestick :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
+            <VueUiCandlestick :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -270,7 +306,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiCandlestick" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" ref="vduiBuild">
+            <VueDataUi component="VueUiCandlestick" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

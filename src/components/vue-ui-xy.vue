@@ -4,6 +4,7 @@
         <!-- TITLE AS OUTSIDE DIV -->
         <div ref="chartTitle" class="vue-ui-xy-title" v-if="FINAL_CONFIG.chart.title.show" :style="`font-family:${FINAL_CONFIG.chart.fontFamily}`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'xy-div-title',
@@ -1132,6 +1133,7 @@
                     <TableSparkline v-if="showSparklineTable" :key="`sparkline_${segregateStep}`" :dataset="tableSparklineDataset" :config="tableSparklineConfig"/>
                     <DataTable 
                         v-else
+                        :key="`table_${tableStep}`"
                         :colNames="dataTable.colNames"
                         :head="dataTable.head"
                         :body="dataTable.body"
@@ -1299,6 +1301,8 @@ export default {
             segregatedSeries: [],
             uniqueId: createUid(),
             step: 0,
+            tableStep: 0,
+            titleStep: 0,
             slicer,
             __to__: null,
             maxX,
@@ -1316,6 +1320,29 @@ export default {
                 line: 3
             },
             selectedMinimapIndex: null
+        }
+    },
+    watch: {
+        dataset: {
+            handler(_newDs, _oldDs) {
+                this.maxX = Math.max(...this.dataset.map(datapoint => datapoint.series.length));
+                this.slicer = {
+                    start: 0,
+                    end: this.maxX
+                }
+                this.slicerStep += 1;
+                this.segregateStep += 1;
+            },
+            deep: true
+        },
+        config: {
+            handler(_newCfg, _oldCfg) {
+                this.FINAL_CONFIG = this.prepareConfig();
+                this.prepareChart();
+                this.titleStep += 1;
+                this.tableStep += 1;
+            },
+            deep: true
         }
     },
     computed: {
@@ -1413,56 +1440,10 @@ export default {
         },
         FINAL_CONFIG: {
             get: function() {
-
-                const DEFAULT_CONFIG = useConfig().vue_ui_xy;
-
-                if(!Object.keys(this.config || {}).length) {
-                    return DEFAULT_CONFIG
-                }
-
-                const mergedConfig = this.useNestedProp({
-                    userConfig: this.config,
-                    defaultConfig: DEFAULT_CONFIG
-                });
-
-                // ------------------------------ OVERRIDES -----------------------------------
-
-                if (this.config && this.hasDeepProperty(this.config, 'chart.highlightArea')) {
-                    if (!Array.isArray(this.config.chart.highlightArea)) {
-                        mergedConfig.chart.highlightArea = [this.config.chart.highlightArea] // FIXME: should be sanitized using useNestedPropToo
-                    } else {
-                        mergedConfig.chart.highlightArea = this.config.chart.highlightArea;
-                    }
-                }
-                
-                if (this.config && this.hasDeepProperty(this.config, 'chart.grid.labels.yAxis.scaleMin')) {
-                    mergedConfig.chart.grid.labels.yAxis.scaleMin = this.config.chart.grid.labels.yAxis.scaleMin;
-                } else {
-                    mergedConfig.chart.grid.labels.yAxis.scaleMin = null;
-                }
-                
-                if (this.config && this.hasDeepProperty(this.config, 'chart.grid.labels.yAxis.scaleMax')) {
-                    mergedConfig.chart.grid.labels.yAxis.scaleMax = this.config.chart.grid.labels.yAxis.scaleMax;
-                } else {
-                    mergedConfig.chart.grid.labels.yAxis.scaleMax = null;
-                }
-
-                // ----------------------------------------------------------------------------
-
-                if (mergedConfig.theme) {
-                    return {
-                        ...useNestedProp({
-                            userConfig: this.themes.vue_ui_xy[mergedConfig.theme] || this.config,
-                            defaultConfig: mergedConfig
-                        }),
-                        customPalette: this.themePalettes[mergedConfig.theme] || this.palette
-                    }
-                } else {
-                    return mergedConfig
-                }
+                return this.prepareConfig();
             },
-            set: function (val) {
-                return val;
+            set: function (newCfg) {
+                return newCfg;
             }
         },
         hasHighlightArea() {
@@ -2162,33 +2143,8 @@ export default {
         }
     },
     mounted() {
-        if(this.objectIsEmpty(this.dataset)) {
-            this.error({
-                componentName: 'VueUiXy',
-                type: 'dataset'
-            })
-        } else {
-            this.dataset.forEach((ds, i) => {
-                if([null, undefined].includes(ds.name)) {
-                    this.error({
-                        componentName: 'VueUiXy',
-                        type: 'datasetSerieAttribute',
-                        property: 'name (string)',
-                        index: i
-                    })
-                }
-            })
-        }
-
-        if(this.FINAL_CONFIG.showWarnings) {
-            this.dataset.forEach((datapoint) => {
-                datapoint.series.forEach((s, j) => {
-                    if(!this.isSafeValue(s)) {
-                        console.warn(`VueUiXy has detected an unsafe value in your dataset:\n-----> The serie '${datapoint.name}' contains the value '${s}' at index ${j}.\n'${s}' was converted to null to allow the chart to display.`)
-                    }
-                });
-            });
-        }
+        // FIXME: all contents must be placed in a func and also called when ds or cfg are updated
+        this.prepareChart();
 
         document.addEventListener("mousemove", (e) => {
             this.clientPosition = {
@@ -2196,84 +2152,6 @@ export default {
                 y: e.clientY
             }
         });
-
-        this.mutableConfig = {
-            dataLabels: {
-                show: true,
-            },
-            showTooltip: this.FINAL_CONFIG.chart.tooltip.show === true,
-            showTable: this.FINAL_CONFIG.showTable === true,
-            isStacked: this.FINAL_CONFIG.chart.grid.labels.yAxis.stacked,
-            useIndividualScale: this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale
-        }
-
-
-        if (this.FINAL_CONFIG.responsive) {
-            const chart = this.$refs.chart;
-            // Parent container (must have fixed height or max-height. Setting 100% will result in infinite height growth which looks aweful on top of being useless)
-            const parent = chart.parentNode;
-            const { height, width } = parent.getBoundingClientRect();
-
-            // Title height to substract
-            let title = null;
-            let titleHeight = 0;
-            if (this.FINAL_CONFIG.chart.title.show) {
-                title = this.$refs.chartTitle;
-                titleHeight = title.getBoundingClientRect().height;
-            }
-
-            // Slicer height to substract
-            let slicer = null;
-            let slicerHeight = 0;
-            if (this.FINAL_CONFIG.chart.zoom.show && this.maxX > 6 && this.isDataset) {
-                slicer = this.$refs.chartSlicer.$el;
-                slicerHeight = slicer.getBoundingClientRect().height;
-            }
-
-            // Legend height to substract
-            let legend = null;
-            let legendHeight = 0
-            if (this.FINAL_CONFIG.chart.legend.show) {
-                legend = this.$refs.chartLegend;
-                legendHeight = legend.getBoundingClientRect().height;
-            }
-
-            this.height = height - titleHeight - legendHeight - slicerHeight;
-            this.width = width;
-            this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
-            this.convertSizes();
-
-            const resizeObserver = new ResizeObserver((entries) => {
-                for(const entry of entries) {
-                    if (this.$refs.chartTitle) {
-                        titleHeight = this.$refs.chartTitle.getBoundingClientRect().height;
-                    }
-                    if (this.$refs.chartSlicer && this.$refs.chartSlicer.$el) {
-                        slicerHeight = this.$refs.chartSlicer.$el.getBoundingClientRect().height;
-                    }
-                    if (this.$refs.chartLegend) {
-                        legendHeight = this.$refs.chartLegend.getBoundingClientRect().height;
-                    }
-                    this.height = entry.contentBoxSize[0].blockSize - titleHeight - legendHeight - slicerHeight - 24;
-                    this.width = entry.contentBoxSize[0].inlineSize;
-                    this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
-                    this.convertSizes();
-                }
-            })
-
-            resizeObserver.observe(parent);
-
-        } else {
-            this.height = this.FINAL_CONFIG.chart.height;
-            this.width = this.FINAL_CONFIG.chart.width;
-            this.viewBox = `0 0 ${this.width} ${this.height}`;
-            this.fontSizes.dataLabels = this.FINAL_CONFIG.chart.grid.labels.fontSize;
-            this.fontSizes.yAxis = this.FINAL_CONFIG.chart.grid.labels.axis.fontSize;
-            this.fontSizes.xAxis =  this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize;
-            this.fontSizes.plotLabels = this.FINAL_CONFIG.chart.labels.fontSize;
-            this.plotRadii.plot = this.FINAL_CONFIG.plot.radius;
-            this.plotRadii.line = this.FINAL_CONFIG.line.radius;
-        }
     },
     methods: {
         abbreviate,
@@ -2305,6 +2183,160 @@ export default {
         treeShake,
         useMouse,
         useNestedProp,
+        prepareConfig() {
+            const DEFAULT_CONFIG = useConfig().vue_ui_xy;
+
+                if(!Object.keys(this.config || {}).length) {
+                    return DEFAULT_CONFIG
+                }
+
+                const mergedConfig = this.useNestedProp({
+                    userConfig: this.config,
+                    defaultConfig: DEFAULT_CONFIG
+                });
+
+                // ------------------------------ OVERRIDES -----------------------------------
+
+                if (this.config && this.hasDeepProperty(this.config, 'chart.highlightArea')) {
+                    if (!Array.isArray(this.config.chart.highlightArea)) {
+                        mergedConfig.chart.highlightArea = [this.config.chart.highlightArea] // FIXME: should be sanitized using useNestedPropToo
+                    } else {
+                        mergedConfig.chart.highlightArea = this.config.chart.highlightArea;
+                    }
+                }
+                
+                if (this.config && this.hasDeepProperty(this.config, 'chart.grid.labels.yAxis.scaleMin')) {
+                    mergedConfig.chart.grid.labels.yAxis.scaleMin = this.config.chart.grid.labels.yAxis.scaleMin;
+                } else {
+                    mergedConfig.chart.grid.labels.yAxis.scaleMin = null;
+                }
+                
+                if (this.config && this.hasDeepProperty(this.config, 'chart.grid.labels.yAxis.scaleMax')) {
+                    mergedConfig.chart.grid.labels.yAxis.scaleMax = this.config.chart.grid.labels.yAxis.scaleMax;
+                } else {
+                    mergedConfig.chart.grid.labels.yAxis.scaleMax = null;
+                }
+
+                // ----------------------------------------------------------------------------
+
+                if (mergedConfig.theme) {
+                    return {
+                        ...useNestedProp({
+                            userConfig: this.themes.vue_ui_xy[mergedConfig.theme] || this.config,
+                            defaultConfig: mergedConfig
+                        }),
+                        customPalette: this.themePalettes[mergedConfig.theme] || this.palette
+                    }
+                } else {
+                    return mergedConfig
+                }
+        },
+        prepareChart() {
+            if(this.objectIsEmpty(this.dataset)) {
+                this.error({
+                    componentName: 'VueUiXy',
+                    type: 'dataset'
+                })
+            } else {
+                this.dataset.forEach((ds, i) => {
+                    if([null, undefined].includes(ds.name)) {
+                        this.error({
+                            componentName: 'VueUiXy',
+                            type: 'datasetSerieAttribute',
+                            property: 'name (string)',
+                            index: i
+                        })
+                    }
+                })
+            }
+
+            if(this.FINAL_CONFIG.showWarnings) {
+                this.dataset.forEach((datapoint) => {
+                    datapoint.series.forEach((s, j) => {
+                        if(!this.isSafeValue(s)) {
+                            console.warn(`VueUiXy has detected an unsafe value in your dataset:\n-----> The serie '${datapoint.name}' contains the value '${s}' at index ${j}.\n'${s}' was converted to null to allow the chart to display.`)
+                        }
+                    });
+                });
+            }
+
+            this.mutableConfig = {
+                dataLabels: {
+                    show: true,
+                },
+                showTooltip: this.FINAL_CONFIG.chart.tooltip.show === true,
+                showTable: this.FINAL_CONFIG.showTable === true,
+                isStacked: this.FINAL_CONFIG.chart.grid.labels.yAxis.stacked,
+                useIndividualScale: this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale
+            }
+
+            if (this.FINAL_CONFIG.responsive) {
+                const chart = this.$refs.chart;
+                // Parent container (must have fixed height or max-height. Setting 100% will result in infinite height growth which looks aweful on top of being useless)
+                const parent = chart.parentNode;
+                const { height, width } = parent.getBoundingClientRect();
+
+                // Title height to substract
+                let title = null;
+                let titleHeight = 0;
+                if (this.FINAL_CONFIG.chart.title.show) {
+                    title = this.$refs.chartTitle;
+                    titleHeight = title.getBoundingClientRect().height;
+                }
+
+                // Slicer height to substract
+                let slicer = null;
+                let slicerHeight = 0;
+                if (this.FINAL_CONFIG.chart.zoom.show && this.maxX > 6 && this.isDataset) {
+                    slicer = this.$refs.chartSlicer.$el;
+                    slicerHeight = slicer.getBoundingClientRect().height;
+                }
+
+                // Legend height to substract
+                let legend = null;
+                let legendHeight = 0
+                if (this.FINAL_CONFIG.chart.legend.show) {
+                    legend = this.$refs.chartLegend;
+                    legendHeight = legend.getBoundingClientRect().height;
+                }
+
+                this.height = height - titleHeight - legendHeight - slicerHeight;
+                this.width = width;
+                this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
+                this.convertSizes();
+
+                const resizeObserver = new ResizeObserver((entries) => {
+                    for(const entry of entries) {
+                        if (this.$refs.chartTitle) {
+                            titleHeight = this.$refs.chartTitle.getBoundingClientRect().height;
+                        }
+                        if (this.$refs.chartSlicer && this.$refs.chartSlicer.$el) {
+                            slicerHeight = this.$refs.chartSlicer.$el.getBoundingClientRect().height;
+                        }
+                        if (this.$refs.chartLegend) {
+                            legendHeight = this.$refs.chartLegend.getBoundingClientRect().height;
+                        }
+                        this.height = entry.contentBoxSize[0].blockSize - titleHeight - legendHeight - slicerHeight - 24;
+                        this.width = entry.contentBoxSize[0].inlineSize;
+                        this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
+                        this.convertSizes();
+                    }
+                })
+
+                resizeObserver.observe(parent);
+
+            } else {
+                this.height = this.FINAL_CONFIG.chart.height;
+                this.width = this.FINAL_CONFIG.chart.width;
+                this.viewBox = `0 0 ${this.width} ${this.height}`;
+                this.fontSizes.dataLabels = this.FINAL_CONFIG.chart.grid.labels.fontSize;
+                this.fontSizes.yAxis = this.FINAL_CONFIG.chart.grid.labels.axis.fontSize;
+                this.fontSizes.xAxis =  this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize;
+                this.fontSizes.plotLabels = this.FINAL_CONFIG.chart.labels.fontSize;
+                this.plotRadii.plot = this.FINAL_CONFIG.plot.radius;
+                this.plotRadii.line = this.FINAL_CONFIG.line.radius;
+            }
+        },
         selectMinimapIndex(minimapIndex) {
             this.selectedMinimapIndex = minimapIndex;
         },

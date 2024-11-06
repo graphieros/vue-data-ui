@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiTableHeatmap from '../src/components/vue-ui-table-heatmap.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -37,6 +37,12 @@ const dataset = ref([
         shape: 'star'
     },
 ]);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value[0].values.push(100)
+    }, 3000)
+})
 
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'},

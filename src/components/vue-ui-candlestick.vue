@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch } from "vue";
 import { 
     calculateNiceScale, 
     canShowValue, 
@@ -57,13 +57,24 @@ const isTooltip = ref(false);
 const tooltipContent = ref("");
 const hoveredIndex = ref(undefined);
 const step = ref(0);
-const slicerStep = ref(0);
 const candlestickChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const chartSlicer = ref(null);
+const slicerStep = ref(0);
+const tableStep = ref(0);
+const titleStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -78,7 +89,21 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    slicerStep.value += 1;
+    titleStep.value += 1;
+    tableStep.value += 1;
+}, { deep: true });
+
+watch(() => props.dataset, (newDs) => {
+    slicer.value.start = 0;
+    slicer.value.end = newDs.length
+    slicerStep.value += 1;
+}, { deep: true });
 
 const svg = ref({
     height: FINAL_CONFIG.value.style.height,
@@ -90,6 +115,10 @@ const svg = ref({
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiCandlestick',
@@ -126,7 +155,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(candlestickChart.value.parentNode);
     }
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -438,6 +467,7 @@ defineExpose({
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'candlestick-div-title',
@@ -773,6 +803,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head"
                     :body="dataTable.body"

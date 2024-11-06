@@ -42,8 +42,18 @@ const isDataset = computed(() => {
 const uid = ref(createUid());
 const tiremarksChart = ref(null)
 const step = ref(0);
+const titleStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -58,7 +68,13 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
@@ -76,13 +92,7 @@ watch(() => props.dataset, (v) => {
 }, { deep: true });
 
 onMounted(() => {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiTiremarks',
-            type: 'dataset'
-        })
-    }
-    useAnimation(props.dataset.percentage || 0)
+    prepareChart();
 });
 
 function useAnimation(targetValue) {
@@ -97,10 +107,20 @@ function useAnimation(targetValue) {
         }
         
         if (activeValue.value !== targetValue) {
-            requestAnimationFrame(animate)
+            requestAnimationFrame(animate);
         }
     }
-    animate()
+    animate();
+}
+
+function prepareChart() {
+    if (objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiTiremarks',
+            type: 'dataset'
+        })
+    }
+    useAnimation(props.dataset.percentage || 0);
 }
 
 const isVertical = computed(() => {
@@ -263,6 +283,7 @@ defineExpose({
 
         <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'wheel-title',

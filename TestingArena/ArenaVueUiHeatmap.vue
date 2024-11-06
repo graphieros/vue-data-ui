@@ -8,7 +8,7 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = computed(() => {
+function makeDs() {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     const arr = [];
     const dsLen = 26;
@@ -24,7 +24,54 @@ const dataset = computed(() => {
         })
     }
     return arr
+}
+
+const dataset = ref(makeDs())
+
+const alternateDataset = computed(() => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    const arr = [];
+    const dsLen = 12;
+    const serieLen = days.length;
+    for (let i = 0; i < serieLen; i += 1) {
+        const values = [];
+        for (let j = 0; j < dsLen; j += 1) {
+        values.push((i + j * 2))
+        }
+        arr.push({
+            name: `${days[i]}`,
+            values
+        })
+    }
+    return arr
 });
+
+const alternateConfig = ref({
+    table: {
+        th: {
+            backgroundColor: '#00FF00'
+        }
+    },
+    style: {
+        backgroundColor: '#FF0000',
+        title: {
+            text: 'Alternate'
+        }
+        
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push({
+        name: 'Alt',
+        values: [1, 2, 3]
+    })
+}
 
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -168,10 +215,14 @@ const config = computed(() => {
 
 const step = ref(0)
 
+
 </script>
 
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -186,7 +237,7 @@ const step = ref(0)
         <template #title>VueUiHeatmap</template>
         
         <template #local>
-            <LocalVueUiHeatmap :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+            <LocalVueUiHeatmap :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -215,7 +266,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiHeatmap" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
+            <LocalVueDataUi component="VueUiHeatmap" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -236,7 +287,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiHeatmap :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
+            <VueUiHeatmap :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -257,7 +308,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiHeatmap" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" ref="vduiBuild">
+            <VueDataUi component="VueUiHeatmap" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

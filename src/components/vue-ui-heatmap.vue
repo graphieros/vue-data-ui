@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, watch } from "vue";
 import { 
     adaptColorToBackground, 
     applyDataLabel,
@@ -66,8 +66,18 @@ const selectedClone = ref(null);
 const step = ref(0);
 const tableContainer = ref(null);
 const isResponsive = ref(false);
+const titleStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -97,7 +107,17 @@ const FINAL_CONFIG = computed(() => {
     // ----------------------------------------------------------------------------
 
     return finalConfig;
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+}, { deep: true });
+
+watch(() => props.dataset, () => {
+    prepareChart()
+}, { deep: true })
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `heatmap__${uid.value}`,
@@ -122,7 +142,11 @@ function observeTable() {
     observer.observe(tableContainer.value)
 }
 
-onMounted(observeTable)
+onMounted(prepareChart)
+
+function prepareChart() {
+    observeTable()
+}
 
 const maxX = computed(() => {
     return Math.max(...props.dataset.flatMap(el => (el.values || []).length));
@@ -190,14 +214,12 @@ const dataLabels = computed(() => {
     }
 });
 
-
 const mutableDataset = computed(() => {
-
     props.dataset.forEach((ds, i) => {
         getMissingDatasetAttributes({
             datasetObject: ds,
             requiredAttributes: ['values']
-        }) .forEach(attr => {
+        }) .forEach(_ => {
             error({
                 componentName: 'VueUiHeatmap',
                 type: 'datasetSerieAttribute',
@@ -357,6 +379,7 @@ defineExpose({
     <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`">
         <div v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'heatmap-div-title',

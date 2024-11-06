@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { 
 convertCustomPalette,
     createUid, 
@@ -45,8 +45,18 @@ const uid = ref(createUid());
 const step = ref(0);
 const relationCircleChart = ref(null);
 const chartTitle = ref(null);
+const titleStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -62,7 +72,13 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `relation_circle_${uid.value}`,
@@ -117,6 +133,12 @@ const radiusOffset = computed(() => {
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+    const chart = document.getElementById(`relation_circle_${uid.value}`);
+    chart.addEventListener("click", clickOutside);
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiRelationCircle',
@@ -157,13 +179,12 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(relationCircleChart.value.parentNode);
     } else {
+        circles.value = [];
+        relations.value = [];
         createPlots();
         createRelations();
     }
-
-    const chart = document.getElementById(`relation_circle_${uid.value}`);
-    chart.addEventListener("click", clickOutside);
-});
+}
 
 onBeforeUnmount(() => {
     const chart = document.getElementById(`relation_circle_${uid.value}`);
@@ -325,6 +346,7 @@ defineExpose({
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'relation-div-title',

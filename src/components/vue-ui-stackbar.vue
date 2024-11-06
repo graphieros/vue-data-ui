@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
@@ -81,35 +81,24 @@ const slicerStep = ref(0);
 const isFullscreen = ref(false);
 const trapIndex = ref(null);
 const isLoaded = ref(false);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
 onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiStackbar',
-            type: 'dataset'
-        });
-    } else {
-        props.dataset.forEach((datasetObject, index) => {
-            getMissingDatasetAttributes({
-                datasetObject,
-                requiredAttributes: ['name', 'series']
-            }).forEach(attr => {
-                isDataset.value = false;
-                error({
-                    componentName: 'VueUiStackbar',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index
-                })
-            })
-        })
-    }
-    setTimeout(() => {
-        isLoaded.value = true;
-    }, 10)
+    prepareChart();
 })
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG,
@@ -144,7 +133,19 @@ const FINAL_CONFIG = computed(() => {
     // ----------------------------------------------------------------------------
 
     return finalConfig;
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    refreshSlicer();
+}, { deep: true })
 
 const mutableConfig = ref({
     dataLabels: {
@@ -177,6 +178,35 @@ const customPalette = computed(() => {
 const resizeObserver = ref(null);
 const to = ref(null)
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiStackbar',
+            type: 'dataset'
+        });
+    } else {
+        props.dataset.forEach((datasetObject, index) => {
+            getMissingDatasetAttributes({
+                datasetObject,
+                requiredAttributes: ['name', 'series']
+            }).forEach(attr => {
+                isDataset.value = false;
+                error({
+                    componentName: 'VueUiStackbar',
+                    type: 'datasetSerieAttribute',
+                    property: attr,
+                    index
+                })
+            })
+        })
+    }
+    setTimeout(() => {
+        isLoaded.value = true;
+    }, 10)
+
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             isLoaded.value = false; // unset rect transitions as it looks janky during resizing process
@@ -197,7 +227,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(stackbarChart.value.parentNode);
     }
-});
+}
 
 const drawingArea = computed(() => {
     const { height: H, width: W } = defaultSizes.value;

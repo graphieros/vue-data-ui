@@ -64,6 +64,9 @@ const step = ref(0);
 const nestedDonutsChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -71,7 +74,16 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -87,11 +99,23 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true });
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiNestedDonuts',
@@ -113,7 +137,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(nestedDonutsChart.value.parentNode);
     }
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -221,8 +245,6 @@ const immutableDataset = computed(() => {
         }
     });
 });
-
-const baseDonutSize = ref(FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth);
 
 const donutSize = computed(() => {
     return Math.min(svg.value.height, svg.value.width) * (FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth / 512);
@@ -694,6 +716,7 @@ defineExpose({
         
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text">        
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'donut-div-title',
@@ -963,7 +986,8 @@ defineExpose({
         <!-- LEGENDS -->
         <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show" :class="{ 'vue-ui-nested-donuts-legend' : legendSets.length > 1 }">
             <Legend 
-                v-for="legendSet in legendSets"
+                v-for="(legendSet, i) in legendSets"
+                :key="`legend_${i}_${legendStep}`"
                 :legendSet="legendSet"
                 :config="legendConfig"
                 @clickMarker="({ legend }) => segregateDonut(legend)"
@@ -1017,6 +1041,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head" 
                     :body="dataTable.body"

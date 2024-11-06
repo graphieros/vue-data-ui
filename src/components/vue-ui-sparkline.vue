@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import {
     applyDataLabel,
     calcLinearProgression,
@@ -54,7 +54,16 @@ const uid = ref(createUid());
 const sparklineChart = ref(null);
 const chartTitle = ref(null);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -69,25 +78,66 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
 
-const safeDatasetCopy = ref(props.dataset.map(d => {
-    if (FINAL_CONFIG.value.style.animation.show) {
-        return {
-            ...d,
-            value: null
-        }
-    } else {
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth;
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    safeDatasetCopy.value = props.dataset.map(d => {
         return {
             ...d,
             value: ![undefined].includes(d.value) ? d.value : null
         }
-    }
-}));
+    })
+}, { deep: true })
+
+const safeDatasetCopy = ref(prepareDsCopy());
+
+function prepareDsCopy() {
+    return props.dataset.map(d => {
+        if (FINAL_CONFIG.value.style.animation.show) {
+            return {
+                ...d,
+                value: null
+            }
+        } else {
+            return {
+                ...d,
+                value: ![undefined].includes(d.value) ? d.value : null
+            }
+        }
+    })
+}
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+    if (FINAL_CONFIG.value.style.animation.show && props.dataset.length > 1) {
+        safeDatasetCopy.value = [];
+        const chunks = FINAL_CONFIG.value.style.animation.animationFrames / props.dataset.length;
+        let start = 0;
+
+        function animate() {
+            if (start < props.dataset.length) {
+                safeDatasetCopy.value.push(props.dataset[start])
+                setTimeout(() => {
+                    requestAnimationFrame(animate)
+                }, chunks)
+            } else {
+                safeDatasetCopy.value = props.dataset
+            }
+            start += 1;
+        }
+        animate()
+    }
+})
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkline',
@@ -109,25 +159,6 @@ onMounted(() => {
         });
     }
 
-    if (FINAL_CONFIG.value.style.animation.show && props.dataset.length > 1) {
-        safeDatasetCopy.value = [];
-        const chunks = FINAL_CONFIG.value.style.animation.animationFrames / props.dataset.length;
-        let start = 0;
-
-        function animate() {
-            if (start < props.dataset.length) {
-                safeDatasetCopy.value.push(props.dataset[start])
-                setTimeout(() => {
-                    requestAnimationFrame(animate)
-                }, chunks)
-            } else {
-                safeDatasetCopy.value = props.dataset
-            }
-            start += 1;
-        }
-        animate()
-    }
-
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
@@ -143,7 +174,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(sparklineChart.value.parentNode);
     };
-})
+}
 
 const svg = ref({
     height: 80,

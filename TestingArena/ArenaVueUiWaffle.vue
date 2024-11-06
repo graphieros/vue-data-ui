@@ -23,6 +23,40 @@ const dataset = ref([
     }
 ]);
 
+const alternateDataset = ref([
+    { name: 'Alt 1', values: [20]},
+    { name: 'Alt 2', values: [20]},
+    { name: 'Alt 3', values: [20]},
+])
+
+const alternateConfig = ref({
+    table: {
+        th: {
+            backgroundColor: '#00FF00'
+        }
+    },
+    style: {
+        chart: {
+            backgroundColor: '#FF0000',
+            title: {
+                text: 'Alternate'
+            }
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push({
+        name: 'Added',
+        values: [Math.round(Math.random() * 30)]
+    })
+}
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -32,7 +66,7 @@ const model = ref([
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
-    { key: 'useCustomCells', def: true, type: 'checkbox'},
+    { key: 'useCustomCells', def: false, type: 'checkbox'},
     { key: 'useAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -164,6 +198,8 @@ function selectLegend(legend) {
 
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -185,7 +221,7 @@ function selectLegend(legend) {
                 WATERMARK
             </div>
         </template>
-        <template #cell="{ cell, isSelected }">
+        <!-- <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
                             v-if="cell.name === 'Lorem Ipsum'"
@@ -206,19 +242,19 @@ function selectLegend(legend) {
                             :stroke="cell.color"
                         />
                     </div>
-                </template>     
+                </template>      -->
     </LocalVueUiWaffle>
     </div>
 
-    <Box comp="VueUiWaffle" :dataset="dataset">
+    <Box comp="VueUiWaffle" :dataset="isPropsToggled ? alternateDataset : dataset">
         <template #title>VueUiWaffle</template>
 
         <template #local>
-            <LocalVueUiWaffle :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+            <LocalVueUiWaffle :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
-                <template #cell="{ cell, isSelected }">
+                <!-- <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
                             v-if="cell.name === 'Lorem Ipsum'"
@@ -239,7 +275,7 @@ function selectLegend(legend) {
                             :stroke="cell.color"
                         />
                     </div>
-                </template>
+                </template> -->
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -260,8 +296,8 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
-                <template #cell="{ cell, isSelected }">
+            <LocalVueDataUi component="VueUiWaffle" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
+                <!-- <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
                             v-if="cell.name === 'Lorem Ipsum'"
@@ -282,7 +318,7 @@ function selectLegend(legend) {
                             :stroke="cell.color"
                         />
                     </div>
-                </template>
+                </template> -->
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -303,8 +339,8 @@ function selectLegend(legend) {
         </template>
 
         <template #build>
-            <VueUiWaffle :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
-                <template #cell="{ cell, isSelected }">
+            <VueUiWaffle :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
+                <!-- <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
                             v-if="cell.name === 'Lorem Ipsum'"
@@ -325,7 +361,7 @@ function selectLegend(legend) {
                             :stroke="cell.color"
                         />
                     </div>
-                </template>
+                </template> -->
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -346,8 +382,8 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiWaffle" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
-                <template #cell="{ cell, isSelected }">
+            <VueDataUi component="VueUiWaffle" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
+                <!-- <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
                             v-if="cell.name === 'Lorem Ipsum'"
@@ -368,7 +404,7 @@ function selectLegend(legend) {
                             :stroke="cell.color"
                         />
                     </div>
-                </template>
+                </template> -->
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

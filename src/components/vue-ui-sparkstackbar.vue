@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import {
     applyDataLabel,
     convertColorToHex, 
@@ -43,7 +43,16 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -59,7 +68,21 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    safeDatasetCopy.value = props.dataset.map((d, i ) => {
+    return {
+        ...d,
+        color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length]
+    }
+})
+}, { deep: true })
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
@@ -76,26 +99,7 @@ const safeDatasetCopy = ref(props.dataset.map((d, i ) => {
 const isLoading = ref(true);
 
 onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiSparkStackbar',
-            type: 'dataset'
-        })
-    } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['name', 'value']
-            }).forEach(attr => {
-                error({
-                    componentName: 'VueUiSparkStackbar',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i
-                });
-            });
-        });
-    }
+    prepareChart()
 
     if (FINAL_CONFIG.value.style.animation.show) {
         const chunks = FINAL_CONFIG.value.style.animation.animationFrames;
@@ -130,6 +134,29 @@ onMounted(() => {
         animate()
     }
 });
+
+function prepareChart() {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiSparkStackbar',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['name', 'value']
+            }).forEach(attr => {
+                error({
+                    componentName: 'VueUiSparkStackbar',
+                    type: 'datasetSerieAttribute',
+                    property: attr,
+                    index: i
+                });
+            });
+        });
+    }
+}
 
 const svg = ref({
     width: 500,

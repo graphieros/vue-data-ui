@@ -30,6 +30,10 @@ const isFullscreen = ref(false);
 const isDataset = ref(!!props.dataset);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiCarouselTable',
@@ -53,14 +57,32 @@ onMounted(() => {
             isDataset.value = false;
         }
     }
+}
+
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
 });
 
-const FINAL_CONFIG = computed(() => {
+function prepareConfig() {
     return useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    setTrElements();
+}, { deep: true })
 
 const { isPrinting, isImaging, generatePdf: makePdf, generateImage } = usePrinter({
     elementId: `carousel-table_${uid.value}`,

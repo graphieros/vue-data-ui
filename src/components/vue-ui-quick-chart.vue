@@ -66,7 +66,16 @@ const segregated = ref([]);
 const step = ref(0);
 const slicerStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -82,7 +91,21 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    defaultSizes.value.width = FINAL_CONFIG.value.width;
+    defaultSizes.value.height = FINAL_CONFIG.value.height;
+    prepareChart();
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    formattedDataset.value = fd.value;
+    slicer.value.start = 0;
+    slicer.value.end = formattedDataset.value.maxSeriesLength;
+    slicerStep.value += 1;
+}, { deep: true })
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
@@ -141,6 +164,10 @@ const mutableConfig = ref({
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+})
+
+function prepareChart() {
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
@@ -156,7 +183,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(quickChart.value.parentNode);
     }
-})
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();

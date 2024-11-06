@@ -89,6 +89,9 @@ const isFullscreen = ref(false);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const chartSlicer = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -96,7 +99,16 @@ const isDataset = computed(() => {
 
 const emit = defineEmits(['selectLegend']);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -112,7 +124,15 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true });
 
 const aspectRatio = ref(FINAL_CONFIG.value.style.chart.aspectRatio);
 
@@ -138,8 +158,10 @@ const customPalette = computed(() => {
 });
 
 const maxSeries = computed(() => {
+    if(!dsCopy.value) return 0
     return Math.max(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).map(ds => ds.series.length))
 });
+
 
 const drawingArea = computed(() => {
     const width = w.value - (w.value * (FINAL_CONFIG.value.style.chart.paddingProportions.left + FINAL_CONFIG.value.style.chart.paddingProportions.right))
@@ -249,6 +271,12 @@ const dsCopy = computed(() => {
         }
     });
 });
+
+watch(maxSeries, (v) => {
+    if(v) {
+        refreshSlicer()
+    }
+})
 
 const formattedDataset = computed(() => {
     return assignStackRatios(dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)))
@@ -1071,6 +1099,10 @@ const responsiveObserver = ref(null);
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiXyCanvas',
@@ -1108,7 +1140,7 @@ onMounted(() => {
     });
 
     resizeObserver.value.observe(container.value);
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -1260,7 +1292,9 @@ defineExpose({
     <div :style="`width:100%; position: relative;${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`">    
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text"
             :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
-            <Title :config="{
+            <Title 
+            :key="`title_${titleStep}`"
+            :config="{
             title: {
                 cy: 'xy-canvas-title',
                 ...FINAL_CONFIG.style.chart.title
@@ -1409,7 +1443,7 @@ defineExpose({
         </div>
     
         <div ref="chartLegend">
-            <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig"
+            <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig" :key="`legend_${legendStep}`"
                 @clickMarker="({ i }) => segregate(i)">
                 <template #item="{ legend, index }">
                     <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
@@ -1439,6 +1473,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable 
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head"
                     :body="dataTable.body"

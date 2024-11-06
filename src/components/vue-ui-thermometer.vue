@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import {
     applyDataLabel,
     checkNaN,
@@ -45,6 +45,10 @@ const isDataset = computed(() => {
 });
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiThermometer',
@@ -62,13 +66,23 @@ onMounted(() => {
             });
         });
     }
-});
+}
 
 const uid = ref(createUid());
 const thermoChart = ref(null);
 const step = ref(0);
+const titleStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -84,7 +98,13 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `thermometer__${uid.value}`,
@@ -241,6 +261,7 @@ defineExpose({
         <!-- TITLE AS DIV -->
         <div v-if="FINAL_CONFIG.style.title.text" :style="`width:100%`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'thermometer-div-title',

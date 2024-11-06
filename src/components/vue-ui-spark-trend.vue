@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import {
     applyDataLabel,
     createSmoothPath,
@@ -41,7 +41,16 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -56,7 +65,18 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    safeDatasetCopy.value = props.dataset.map(v => {
+        return ![undefined, Infinity, -Infinity, null, NaN].includes(v) ? v : null
+    })
+}, { deep: true })
 
 function sanitize(arr) {
     return arr.map(v => checkNaN(v))
@@ -66,20 +86,15 @@ const safeDatasetCopy = ref(props.dataset.map(v => {
     if(FINAL_CONFIG.value.style.animation.show) {
         return null
     } else {
-        return ![undefined].includes(v) ? v : null
+        return ![undefined, Infinity, -Infinity, null, NaN].includes(v) ? v : null
     }
-}))
+}));
 
 const isAnimating = ref(false);
 
 const raf = ref(null)
 onMounted(() => {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiSparkTrend',
-            type: 'dataset'
-        })
-    }
+    prepareChart();
 
     let fps = FINAL_CONFIG.value.style.animation.animationFrames;
     let interval = 1000 / fps;
@@ -111,6 +126,15 @@ onMounted(() => {
         animate()
     }
 });
+
+function prepareChart() {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiSparkTrend',
+            type: 'dataset'
+        })
+    }
+}
 
 const svg = ref({
     height: 80,

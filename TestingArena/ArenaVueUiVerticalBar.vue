@@ -55,6 +55,51 @@ const dataset = ref([
     }
 ]);
 
+const alternateDataset = ref([
+    {
+        name: "Serie 1",
+        value: 100.987987,
+        children: [
+            {
+                name: "serie 1 child 1",
+                value: 80
+            },
+            {
+                name: "serie 1 child 2",
+                value: 20
+            },
+        ]
+    },
+])
+
+const alternateConfig = ref({
+    table: {
+        th: {
+            backgroundColor: '#00FF00'
+        }
+    },
+    style: {
+        chart: {
+            backgroundColor: '#FF0000',
+            title: {
+                text: 'Alternate'
+            }
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push({
+        name: 'Added',
+        value: 100
+    })
+}
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -228,6 +273,8 @@ function selectLegend(legend) {
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
     <button @click="toggleSort">TOGGLE SORT</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -256,7 +303,7 @@ function selectLegend(legend) {
         <template #title>VueUiVerticalBar</template>
 
         <template #local>
-            <LocalVueUiVerticalBar :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+            <LocalVueUiVerticalBar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #optionSort>
                     SORT
                 </template>
@@ -285,7 +332,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiVerticalBar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
+            <LocalVueDataUi component="VueUiVerticalBar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -311,7 +358,7 @@ function selectLegend(legend) {
         </template>
 
         <template #build>
-            <VueUiVerticalBar :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
+            <VueUiVerticalBar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -337,7 +384,7 @@ function selectLegend(legend) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiVerticalBar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
+            <VueDataUi component="VueUiVerticalBar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

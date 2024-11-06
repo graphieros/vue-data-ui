@@ -76,6 +76,50 @@ const dataset = ref([
     },
 ])
 
+const alternateDataset = ref([
+    {
+        period: "period 13",
+        value: 12
+    },
+    {
+        period: "period 14",
+        value: -13
+    },
+    {
+        period: "period 15",
+        value: 14
+    },
+    {
+        period: "period 16",
+        value: -15
+    },
+    {
+        period: "period 17",
+        value: 16
+    },
+])
+
+const alternateConfig = ref({
+    style: {
+        backgroundColor: '#CCCCCC',
+        title: {
+            text: 'Alternate'
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push({
+        period: 'Added',
+        value: Math.round(Math.random() * 20)
+    })
+}
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'type', def: 'line', type: 'select', options: ['line', 'bar']},
@@ -162,6 +206,9 @@ const step = ref(0)
         </select>
     </div>
 
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <div style="width: 600px; height: 400px; resize: both; overflow: auto; background: white">
         <LocalVueUiSparkline :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
@@ -173,7 +220,7 @@ const step = ref(0)
         <template #title>VueUiSparkline</template>
 
         <template #local>
-            <LocalVueUiSparkline :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiSparkline :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
                 <template #before="{ selected, latest, sum, average, median, trend }">
                     <div style="color: white;height: 180px;font-size:11px">
                         #BEFORE
@@ -191,7 +238,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiSparkline" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiSparkline" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`">
                 <template #before="{ selected, latest, sum, average, median, trend }">
                     <div style="color: white;height: 180px;font-size:11px">
                         #BEFORE
@@ -209,7 +256,7 @@ const step = ref(0)
         </template>
 
         <template #build>
-            <VueUiSparkline :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiSparkline :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
                 <template #before="{ selected, latest, sum, average, median, trend }">
                     <div style="color: white;height: 180px;font-size:11px">
                         #BEFORE
@@ -227,7 +274,7 @@ const step = ref(0)
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiSparkline" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiSparkline" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`">
                 <template #before="{ selected, latest, sum, average, median, trend }">
                     <div style="color: white;height: 180px;font-size:11px">
                         #BEFORE

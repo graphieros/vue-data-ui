@@ -35,6 +35,35 @@ const dataset = ref([
     },
 ]);
 
+const alternateDataset = ref([
+    { name: 'Alt 1', values: [20]},
+    { name: 'Alt 2', values: [20]},
+    { name: 'Alt 3', values: [20]},
+])
+
+const alternateConfig = ref({
+    style: {
+        chart: {
+            backgroundColor: '#CCCCCC',
+            title: {
+                text: 'Alternate'
+            }
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push({
+        name: 'Added',
+        values: [Math.round(Math.random() * 30)]
+    })
+}
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
@@ -280,6 +309,8 @@ function toggleLabels() {
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
     <button @click="toggleLabels">TOGGLE LABELS</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -315,7 +346,7 @@ function toggleLabels() {
         <template #title>VueUiDonut</template>
 
         <template #local>
-            <LocalVueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localDonut">
+            <LocalVueUiDonut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localDonut">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -364,7 +395,7 @@ function toggleLabels() {
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localVdui">
+            <LocalVueDataUi component="VueUiDonut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localVdui">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -413,7 +444,7 @@ function toggleLabels() {
         </template>
         
         <template #build>
-            <VueUiDonut :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <VueUiDonut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -462,7 +493,7 @@ function toggleLabels() {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiDonut" :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <VueDataUi component="VueUiDonut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
                 <template #optionPdf>
                     PRINT PDF
                 </template>

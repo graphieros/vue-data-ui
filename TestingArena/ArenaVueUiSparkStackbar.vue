@@ -22,6 +22,38 @@ const dataset = ref(
     ]
 );
 
+const alternateDataset = ref([
+        {
+            name: "ALT 1",
+            value: 50,
+        },
+        {
+            name: "ALT 2",
+            value: 50,
+        },
+])
+
+const alternateConfig = ref({
+    style: {
+        backgroundColor: '#CCCCCC',
+        title: {
+            text: 'Alternate'
+        }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push({
+        name: 'Added',
+        value: Math.round(Math.random() * 30)
+    })
+}
+
 const model = ref([
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
@@ -101,26 +133,30 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <Box comp="VueUiSparkStackbar" :dataset="dataset">
         <template #title>VueUiSparkStackbar</template>
 
         <template #local>
-            <LocalVueUiSparkStackbar :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiSparkStackbar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
             </LocalVueUiSparkStackbar>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiSparkStackbar" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiSparkStackbar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`">
             </LocalVueDataUi>
         </template>
 
         <template #build>
-            <VueUiSparkStackbar :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiSparkStackbar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
             </VueUiSparkStackbar>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiSparkStackbar" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`">
+            <VueDataUi component="VueUiSparkStackbar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`">
             </VueDataUi>
         </template>
 

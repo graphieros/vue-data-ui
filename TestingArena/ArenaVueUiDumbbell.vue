@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiDumbbell from '../src/components/vue-ui-dumbbell.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -16,6 +16,16 @@ const dataset =  ref([
     { name: 'Norway', start: 5400, end: 6050 },
     { name: 'Ireland', start: 3000, end: 2000 }
 ])
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value.push({
+            name: 'ALT',
+            start: 3000,
+            end: 3500
+        })
+    }, 3000)
+})
 
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},

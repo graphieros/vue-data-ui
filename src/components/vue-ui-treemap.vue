@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch } from 'vue';
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -71,8 +71,20 @@ const segregated = ref([]);
 const treemapChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -88,7 +100,14 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `treemap_${uid.value}`,
@@ -141,6 +160,10 @@ const immutableDataset = ref(props.dataset);
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiTreemap',
@@ -164,7 +187,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(treemapChart.value.parentNode);
     }
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -506,6 +529,7 @@ defineExpose({
         <!-- TITLE -->
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:6px`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'treemap-div-title',
@@ -667,6 +691,7 @@ defineExpose({
         <div ref="chartLegend">
             <Legend
                 v-if="FINAL_CONFIG.style.chart.legend.show"
+                :key="`legend_${legendStep}`"
                 :legendSet="legendSet"
                 :config="legendConfig"
                 :id="`treemap_legend_${uid}`"
@@ -739,6 +764,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head" 
                     :body="dataTable.body"

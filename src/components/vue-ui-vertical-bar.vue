@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import {
     applyDataLabel,
     convertColorToHex,
@@ -64,10 +64,21 @@ const step = ref(0);
 const verticalBarChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
+const titleStep = ref(0);
+const legendStep = ref(0)
 
 const emit = defineEmits(['selectLegend']);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -83,7 +94,18 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    legendStep.value += 1;
+    barHeight.value = FINAL_CONFIG.value.style.chart.layout.bars.height;
+    barGap.value = FINAL_CONFIG.value.style.chart.layout.bars.gap;
+}, { deep: true });
+
+watch(() => props.dataset, recalculateHeight, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-vertical-bar_${uid.value}`,
@@ -103,6 +125,10 @@ const breakpoint = computed(() => {
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiVerticalBar',
@@ -134,7 +160,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(verticalBarChart.value.parentNode);
     }
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -577,6 +603,7 @@ defineExpose({
     
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'vertical-bar-div-title',
@@ -648,6 +675,7 @@ defineExpose({
         <!-- LEGEND AS DIV : TOP -->
         <div ref="chartLegend"  v-if="FINAL_CONFIG.style.chart.legend.show && FINAL_CONFIG.style.chart.legend.position === 'top'">
             <Legend
+                :key="`legend_top_${legendStep}`"
                 :legendSet="immutableDataset"
                 :config="legendConfig"
                 @clickMarker="({ legend }) => segregate(legend.id)"
@@ -823,6 +851,7 @@ defineExpose({
         <!-- LEGEND AS DIV : BOTTOM -->
         <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show && FINAL_CONFIG.style.chart.legend.position === 'bottom'">
             <Legend
+                :key="`legend_bottom_${legendStep}`"
                 :legendSet="immutableDataset"
                 :config="legendConfig"
                 @clickMarker="({ legend }) => segregate(legend.id)"

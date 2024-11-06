@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
 import { 
     abbreviate,
     adaptColorToBackground,
@@ -65,8 +65,20 @@ const step = ref(0);
 const waffleChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -83,11 +95,19 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true });
 
 const resizeObserver = ref(null);
 
-onMounted(() => {
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiWaffle',
@@ -125,6 +145,10 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(waffleChart.value.parentNode);
     }
+}
+
+onMounted(() => {
+    prepareChart();
 });
 
 onBeforeUnmount(() => {
@@ -195,7 +219,7 @@ function calculateProportions(numbers) {
     return intParts;
 }
 
-const datasetCopyReference = computed(() => {
+function prepareDataset() {
     return props.dataset.map((s, i) => {
         return {
             ...s,
@@ -204,9 +228,17 @@ const datasetCopyReference = computed(() => {
             absoluteIndex: i
         }
     });
+}
+
+const datasetCopyReference = computed(() => {
+    return prepareDataset();
 });
 
 const datasetCopy = ref(datasetCopyReference.value)
+
+watch(() => props.dataset, (_) => {
+    datasetCopy.value = prepareDataset();
+}, { deep: true })
 
 const proportions = computed(() => {
     const numbers = datasetCopy.value
@@ -673,6 +705,7 @@ defineExpose({
         <!-- TITLE AS DIV -->
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'waffle-title',
@@ -886,6 +919,7 @@ defineExpose({
         <div ref="chartLegend">        
             <Legend
                 v-if="FINAL_CONFIG.style.chart.legend.show"
+                :key="`legend_${legendStep}`"
                 :legendSet="legendSet"
                 :config="legendConfig"
                 @clickMarker="({legend}) => segregate(legend.uid)"
@@ -942,7 +976,8 @@ defineExpose({
         </Tooltip>
 
         <!-- DATA TABLE -->
-        <Accordion hideDetails v-if="isDataset" :config="{
+        <Accordion hideDetails v-if="isDataset"  
+        :config="{
             open: mutableConfig.showTable,
             maxHeight: 10000,
             body: {
@@ -956,6 +991,7 @@ defineExpose({
         }">
             <template #content>            
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head" 
                     :body="dataTable.body"

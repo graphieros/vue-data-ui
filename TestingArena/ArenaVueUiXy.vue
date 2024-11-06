@@ -59,6 +59,36 @@ const dataset = ref([
         },
     ])
 
+    const alternateDataset = ref([
+    {
+            name: "Alternate datapoint",
+            series: [12, 19, 16, 15, 9, 17, 44, 13, 40],
+            comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+            type: "line",
+            smooth: false,
+            useArea: false,
+            dataLabels: true,
+        },
+    ])
+
+    function alterDataset() {
+        dataset.value[0].series = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+    }
+
+    const alternateConfig = ref({
+        chart: {
+            title: {
+                text: 'Alternate version'
+            }
+        }
+    })
+
+    const isPropsToggled = ref(false);
+
+    function toggleProps() {
+        isPropsToggled.value = !isPropsToggled.value
+    }
+
 // const dataset = ref([
 //     {
 //         name: "Series 1",
@@ -479,6 +509,8 @@ function selectX(selectedX) {
     <button @click="toggleTable">TOGGLE TABLE</button>
     <button @click="toggleLabels">TOGGLE LABELS</button>
     <button @click="toggleStack">TOGGLE STACK</button>
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -491,7 +523,7 @@ function selectX(selectedX) {
     </div>
 
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiXy component="VueUiXy" :dataset="dataset" :config="{
+        <LocalVueUiXy component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="{
             ...config,
             responsive: true,
         }">
@@ -508,11 +540,11 @@ function selectX(selectedX) {
         </template>  
     </LocalVueUiXy>
     </div>
-    <Box comp="VueUiXy" :dataset="dataset">
+    <Box comp="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset">
         <template #title>VueUiXy</template>
 
         <template #local>
-            <LocalVueUiXy :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend"
+            <LocalVueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend"
                 @selectX="selectX" ref="local">
                 <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
@@ -548,7 +580,7 @@ function selectX(selectedX) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiXy" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`"
+            <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset: dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
@@ -578,7 +610,7 @@ function selectX(selectedX) {
         </template>
 
         <template #build>
-            <VueUiXy :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend"
+            <VueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend"
                 @selectX="selectX" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
@@ -608,7 +640,7 @@ function selectX(selectedX) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiXy" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`"
+            <VueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />

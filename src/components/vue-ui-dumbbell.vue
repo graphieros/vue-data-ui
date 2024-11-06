@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
 import {
     applyDataLabel,
     calculateNiceScale,
@@ -61,8 +61,19 @@ const step = ref(0);
 const dumbbellChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -77,11 +88,29 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+    baseRowHeight.value = FINAL_CONFIG.value.style.chart.rowHeight;
+    baseWidth.value = FINAL_CONFIG.value.style.chart.width;
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    prepareDataset();
+}, { deep: true })
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiDumbbell',
@@ -119,7 +148,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(dumbbellChart.value.parentNode);
     }
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -203,6 +232,10 @@ const grandTotalEnd = computed(() => {
 });
 
 onMounted(() => {
+    prepareDataset();
+})
+
+function prepareDataset() {
     mutableDataset.value = getMutableDataset();
 
     let totalEnd = mutableDataset.value.map(ds => ds.start).reduce((a, b) => a + b, 0);
@@ -239,7 +272,7 @@ onMounted(() => {
     } else {
         mutableDataset.value = getMutableDataset()
     }
-})
+}
 
 const legendSet = computed(() => {
     return [
@@ -380,6 +413,7 @@ defineExpose({
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'donut-div-title',
@@ -670,6 +704,7 @@ defineExpose({
         <div ref="chartLegend">
             <Legend
                 v-if="FINAL_CONFIG.style.chart.legend.show && isDataset"
+                :key="`legend_${legendStep}`"
                 :legendSet="legendSet"
                 :config="legendConfig"
             >
@@ -699,6 +734,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head" 
                     :body="dataTable.body"

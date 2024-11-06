@@ -93,6 +93,60 @@ const dataset = ref([
     },
 ])
 
+const alternateDataset = ref([
+{
+        value: 2.3,
+        valueLabel: "80%",
+        timeLabel: "15:00",
+        intensity: 0.8,
+
+    },
+    {
+        value: 2.1,
+        valueLabel: "70%",
+        timeLabel: "16:00",
+        intensity: 0.7,
+
+    },
+    {
+        value: 0.9,
+        valueLabel: "60%",
+        timeLabel: "17:00",
+        intensity: 0.6,
+
+    },
+    {
+        value: 0.7,
+        valueLabel: "50%",
+        timeLabel: "18:00",
+        intensity: 0.5,
+    },
+])
+
+const alternateConfig = ref({
+    style: {
+        backgroundColor: '#CCCCCC',
+            title: {
+                text: 'Alternate'
+            }
+    }
+})
+
+const isPropsToggled = ref(false);
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value;
+}
+
+function alterDataset() {
+    dataset.value.push({
+        value: Math.random(),
+        valueLabel: `${Math.round(Math.random() * 100)}%`,
+        timeLabel: "ALT",
+        intensity: Math.random(),
+    },)
+}
+
+
 const model = ref([
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
@@ -187,26 +241,30 @@ function selectDatapoint(datapoint) {
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
+    <button @click="alterDataset">ALTER DATASET</button>
+
     <Box comp="VueUiSparkHistogram" :dataset="dataset">
         <template #title>VueUiSparkHistogram</template>
 
         <template #local>
-            <LocalVueUiSparkHistogram :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint">
+            <LocalVueUiSparkHistogram :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectDatapoint="selectDatapoint">
             </LocalVueUiSparkHistogram>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiSparkHistogram" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" @selectDatapoint="selectDatapoint">
+            <LocalVueDataUi component="VueUiSparkHistogram" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectDatapoint="selectDatapoint">
             </LocalVueDataUi>
         </template>
 
         <template #build>
-            <VueUiSparkHistogram :dataset="dataset" :config="config" :key="`build_${step}`" @selectDatapoint="selectDatapoint">
+            <VueUiSparkHistogram :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectDatapoint="selectDatapoint">
             </VueUiSparkHistogram>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiSparkHistogram" :dataset="dataset" :config="config" :key="`VDUI-build_${step}`" @selectDatapoint="selectDatapoint">
+            <VueDataUi component="VueUiSparkHistogram" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectDatapoint="selectDatapoint">
             </VueDataUi>
         </template>
 
