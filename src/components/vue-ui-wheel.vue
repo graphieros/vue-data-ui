@@ -46,8 +46,18 @@ const details = ref(null);
 const step = ref(0);
 const wheelChart = ref(null);
 const chartTitle = ref(null);
+const titleStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -62,7 +72,13 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
@@ -106,6 +122,10 @@ watch(() => props.dataset, (v) => {
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiWheel',
@@ -128,7 +148,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(wheelChart.value.parentNode);
     }
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -192,6 +212,7 @@ defineExpose({
     >
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'wheel-title',

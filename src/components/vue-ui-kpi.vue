@@ -20,12 +20,26 @@ const props = defineProps({
     }
 });
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     return useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+}, { deep: true });
 
 const formattedValue = ref(typeof props.dataset === 'number' ? props.dataset : props.dataset);
 const displayedValue = ref(FINAL_CONFIG.value.useAnimation ? FINAL_CONFIG.value.animationValueStart : formattedValue.value);
@@ -50,13 +64,17 @@ const animateToValue = (targetValue) => {
 };
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if (FINAL_CONFIG.value.useAnimation) {
         displayedValue.value = FINAL_CONFIG.value.animationValueStart;
         animateToValue(props.dataset);
     } else {
         displayedValue.value = props.dataset;
     }
-});
+}
 
 watch(() => props.dataset, (newValue) => {
     if (FINAL_CONFIG.value.useAnimation) {

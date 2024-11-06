@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, watch } from "vue";
 import {
     applyDataLabel,
     calcMarkerOffsetX, 
@@ -71,6 +71,10 @@ function refreshSlicer() {
 }
 
 onMounted(() => {
+    prepareChart();
+})
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiDonutEvolution',
@@ -93,7 +97,7 @@ onMounted(() => {
             })
         }
     }
-})
+}
 
 const uid = ref(createUid());
 const segregated = ref([]);
@@ -104,10 +108,22 @@ const fixedDatapoint = ref(null);
 const donutEvolutionChart = ref(null);
 const step = ref(0);
 const slicerStep = ref(0);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
 const emit = defineEmits(['selectLegend'])
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -123,7 +139,19 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    refreshSlicer();
+}, { deep: true })
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
@@ -486,6 +514,7 @@ defineExpose({
         <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`" @mouseleave="leave">
             <!-- TITLE AS DIV -->
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'donut-evolution-div-title',
@@ -844,7 +873,7 @@ defineExpose({
                     :fill="`url(#focus_${uid})`"
                 />
                 <circle
-                :cx="padding.left + (svg.width / 2)"
+                    :cx="padding.left + (svg.width / 2)"
                     :cy="padding.top + (svg.height / 2)"
                     :r="svg.height / 7.7"
                     :fill="FINAL_CONFIG.style.chart.backgroundColor"
@@ -858,7 +887,7 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
                     class="vue-ui-donut-evolution-focus"
                 >
-                    {{ labellizeValue(fixedDatapoint.subtotal, fixedDatapoint, i) }}
+                    {{ labellizeValue(fixedDatapoint.subtotal, fixedDatapoint, null) }}
                 </text>
                 <text 
                     v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[fixedDatapoint.index]"
@@ -922,6 +951,7 @@ defineExpose({
 
         <Legend
             v-if="FINAL_CONFIG.style.chart.legend.show"
+            :key="`legend_${legendStep}`"
             :legendSet="legendSet"
             :config="legendConfig"
             @clickMarker="({legend}) => segregate(legend.uid)"
@@ -971,6 +1001,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="table.colNames"
                     :head="table.head" 
                     :body="table.body" 

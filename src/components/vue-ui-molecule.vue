@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, watch } from "vue";
 import { 
     convertCustomPalette,
     createCsvContent, 
@@ -70,8 +70,19 @@ const isZoom = ref(false);
 const zoomReference = ref(null);
 const selectedNode = ref(null);
 const step = ref(0);
+const titleStep = ref(0);
+const tableStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -87,7 +98,14 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `cluster_${uid.value}`,
@@ -500,6 +518,7 @@ defineExpose({
 
         <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'molecule-div-title',
@@ -664,6 +683,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head" 
                     :body="dataTable.body"

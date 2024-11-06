@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick, onMounted, watch } from "vue";
 import {
     applyDataLabel,
     checkNaN,
@@ -57,8 +57,19 @@ const selectedIndex = ref(null);
 const step = ref(0);
 const agePyramid = ref(null);
 const chartTitle = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -73,11 +84,22 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+}, { deep: true });
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiAgePyramid',
@@ -98,7 +120,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(agePyramid.value.parentNode);
     }
-});
+}
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-age-pyramid_${uid.value}`,
@@ -396,6 +418,7 @@ defineExpose({
     
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'pyramid-div-title',
@@ -732,6 +755,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head"
                     :body="dataTable.body"

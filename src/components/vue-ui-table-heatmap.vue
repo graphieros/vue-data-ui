@@ -1,6 +1,6 @@
 <script setup>
 // TODO: custom class prefix
-import { computed, ref, onMounted, nextTick } from "vue";
+import { computed, ref, onMounted, nextTick, watch } from "vue";
 import {
     adaptColorToBackground,
     calcMedian,
@@ -41,7 +41,16 @@ const tableContainer = ref(null);
 const isFullscreen = ref(false);
 const step = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -56,7 +65,12 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `table_heatmap_${uid.value}`,
@@ -72,6 +86,10 @@ const isDataset = computed(() => {
 });
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiTableHeatmap',
@@ -89,8 +107,7 @@ onMounted(() => {
     if(tableContainer.value) {
         observer.observe(tableContainer.value)
     }  
-});
-
+}
 
 const immutableDataset = computed(() => {
     return props.dataset.map(ds => {

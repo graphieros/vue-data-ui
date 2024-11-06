@@ -62,8 +62,19 @@ const uid = ref(createUid());
 const step = ref(0);
 const wordCloudChart = ref(null);
 const chartTitle = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -79,7 +90,15 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    slicer.value = FINAL_CONFIG.value.style.chart.width;
+}, { deep: true });
 
 const chartSlicer = ref(null);
 const slicer = ref(FINAL_CONFIG.value.style.chart.width);
@@ -119,6 +138,10 @@ function refreshSlicer() {
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiWordCloud',
@@ -144,7 +167,7 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(wordCloudChart.value.parentNode);
     }
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -338,7 +361,9 @@ defineExpose({
         :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`">
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
-            <Title :config="{
+            <Title
+            :key="`title_${titleStep}`" 
+            :config="{
                 title: {
                     ...FINAL_CONFIG.style.chart.title
                 },
@@ -449,7 +474,11 @@ defineExpose({
         }
     }">
             <template #content>
-                <DataTable :colNames="dataTable.colNames" :head="dataTable.head" :body="dataTable.body"
+                <DataTable 
+                    :key="`table_${tableStep}`"
+                    :colNames="dataTable.colNames" 
+                    :head="dataTable.head" 
+                    :body="dataTable.body"
                     :config="dataTable.config"
                     :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false">

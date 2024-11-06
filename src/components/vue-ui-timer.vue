@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import { XMLNS, createUid, translateSize } from "../lib";
 import { throttle } from "../canvas-lib";
@@ -27,8 +27,13 @@ const chartTitle = ref(null);
 const chartLegend = ref(null);
 const resizeObserver = ref(null);
 const uid = ref(createUid());
+const titleStep = ref(0);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
@@ -67,18 +72,33 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(timerChart.value.parentNode);
     }
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     return useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+}, { deep: true });
 
 const placeholder = computed(() => {
     if (FINAL_CONFIG.value.stopwatch.showHours && FINAL_CONFIG.value.stopwatch.showHundredth) {
@@ -225,6 +245,7 @@ defineExpose({
             }" 
         >
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'title',

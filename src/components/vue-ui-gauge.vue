@@ -54,8 +54,24 @@ const step = ref(0);
 const gaugeChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
+const titleStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+}, { deep: true });
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -71,7 +87,7 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-gauge_${uid.value}`,
@@ -139,8 +155,7 @@ const min = ref(0);
 const activeRating = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : props.dataset.value);
 
 watch(() => props.dataset.value, () => {
-    activeRating.value = FINAL_CONFIG.value.style.chart.animation.use ? 0 : props.dataset.value
-    useAnimation()
+    useAnimation(props.dataset.value);
 })
 
 const pointer = computed(() => {
@@ -184,7 +199,7 @@ const ratingColor = computed(() => {
 
 const resizeObserver = ref(null);
 
-onMounted(() => {
+function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiGauge',
@@ -226,7 +241,7 @@ onMounted(() => {
 
         }
     }
-    useAnimation();
+    useAnimation(props.dataset.value || 0);
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
@@ -263,13 +278,17 @@ onMounted(() => {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(gaugeChart.value.parentNode);
     }
+}
+
+onMounted(() => {
+    prepareChart();
 });
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
-function useAnimation() {
+function useAnimation(targetValue) {
     const arr = [];
     (mutableDataset.value.series || []).forEach(serie => {
         arr.push(serie.from || 0);
@@ -277,23 +296,22 @@ function useAnimation() {
     });
     max.value = Math.max(...arr);
     min.value = Math.min(...arr);
-    const strLen = String(max.value).length;
-    let acceleration = 0;
-    let speed = (strLen > 2 ? 0.01 : 0.001) * FINAL_CONFIG.value.style.chart.animation.speed;
-    let incr = (strLen > 2 ? 0.05 : 0.005) * FINAL_CONFIG.value.style.chart.animation.acceleration;
+
+    let speed = FINAL_CONFIG.value.style.chart.animation.speed;
+    const chunk = Math.abs(targetValue - activeRating.value) / (speed * 60);
+
     function animate() {
-        activeRating.value += speed + acceleration;
-        acceleration += incr;
-        if (activeRating.value < props.dataset.value) {
-            requestAnimationFrame(animate);
-        } else {
-            activeRating.value = props.dataset.value;
+        if(activeRating.value < targetValue) {
+            activeRating.value = Math.min(activeRating.value + chunk, targetValue);
+        } else if (activeRating.value > targetValue) {
+            activeRating.value = Math.max(activeRating.value - chunk, targetValue)
+        }
+        
+        if (activeRating.value !== targetValue) {
+            requestAnimationFrame(animate)
         }
     }
-    if (FINAL_CONFIG.value.style.chart.animation.use) {
-        activeRating.value = min.value;
-        animate();
-    }
+    animate()
 }
 
 const arcSizeSource = computed(() => {
@@ -364,6 +382,7 @@ defineExpose({
     
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:12px`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'gauge-div-title',

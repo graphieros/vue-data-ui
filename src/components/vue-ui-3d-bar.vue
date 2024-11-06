@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 import {
     applyDataLabel,
     calcMarkerOffsetX,
@@ -58,8 +58,19 @@ const uid = ref(createUid());
 const details = ref(null);
 const bar3dChart = ref(null);
 const selectionIsFixed = ref(false);
+const titleStep = ref(0);
+const tableStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -75,7 +86,14 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `3d_bar_${uid.value}`,
@@ -150,6 +168,28 @@ const box = computed(() => {
 const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : props.dataset.percentage);
 
 onMounted(() => {
+    prepareChart();
+
+    let acceleration = 0;
+    let speed = FINAL_CONFIG.value.style.chart.animation.speed;
+    let incr = (0.005) * FINAL_CONFIG.value.style.chart.animation.acceleration;
+    function animate() {
+        activeValue.value += speed + acceleration;
+        acceleration += incr;
+        if(activeValue.value < props.dataset.percentage) {
+            requestAnimationFrame(animate)
+        } else {
+            activeValue.value = props.dataset.percentage
+        }
+    }
+
+    if(FINAL_CONFIG.value.style.chart.animation.use) {
+        activeValue.value = 0;
+        animate()
+    }
+})
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUi3dBar',
@@ -198,25 +238,7 @@ onMounted(() => {
             })
         }
     }
-
-    let acceleration = 0;
-    let speed = FINAL_CONFIG.value.style.chart.animation.speed;
-    let incr = (0.005) * FINAL_CONFIG.value.style.chart.animation.acceleration;
-    function animate() {
-        activeValue.value += speed + acceleration;
-        acceleration += incr;
-        if(activeValue.value < props.dataset.percentage) {
-            requestAnimationFrame(animate)
-        } else {
-            activeValue.value = props.dataset.percentage
-        }
-    }
-
-    if(FINAL_CONFIG.value.style.chart.animation.use) {
-        activeValue.value = 0;
-        animate()
-    }
-})
+}
 
 function createFill(startProportion, proportion, breakdown, color) {
     const height = svg.value.height - svg.value.bottom - svg.value.top - (svg.value.perspective * 2);
@@ -497,6 +519,7 @@ defineExpose({
         <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`">
             <!-- TITLE AS DIV -->
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: '3dBar-div-title',
@@ -929,6 +952,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head" 
                     :body="dataTable.body"

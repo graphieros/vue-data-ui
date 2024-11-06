@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import {
@@ -44,7 +44,16 @@ const uid = ref(createUid());
 const step = ref(0);
 const sparkStep = ref(0)
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -60,7 +69,18 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    sparkStep.value += 1;
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    mutableDataset.value = datasetWithOrders.value;
+    sparkStep.value += 1;
+}, { deep: true })
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `table_${uid.value}`,
@@ -78,6 +98,10 @@ const breakpoint = computed(() => {
 });
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiTableSparkline',
@@ -93,7 +117,7 @@ onMounted(() => {
     if (tableContainer.value) {
         observer.observe(tableContainer.value);
     }
-});
+}
 
 const computedDataset = computed(() => {
     props.dataset.forEach((ds, i) => {

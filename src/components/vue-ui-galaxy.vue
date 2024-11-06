@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 import {
     applyDataLabel,
     convertColorToHex,
@@ -53,6 +53,10 @@ const isDataset = computed(() => {
 });
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiGalaxy',
@@ -73,7 +77,7 @@ onMounted(() => {
             })
         })
     }
-});
+}
 
 const uid = ref(createUid());
 const galaxyChart = ref(null);
@@ -82,8 +86,20 @@ const isTooltip = ref(false);
 const tooltipContent = ref("");
 const selectedSerie = ref(null);
 const step = ref(0);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -99,7 +115,15 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `galaxy_${uid.value}`,
@@ -401,6 +425,7 @@ defineExpose({
     <div ref="galaxyChart" :class="`vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`galaxy_${uid}`">
         <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">            
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'galaxy-div-title',
@@ -544,6 +569,7 @@ defineExpose({
 
         <Legend
             v-if="FINAL_CONFIG.style.chart.legend.show"
+            :key="`legend_${legendStep}`"
             :legendSet="legendSet"
             :config="legendConfig"
             @clickMarker="({legend}) => segregate(legend)"
@@ -556,7 +582,7 @@ defineExpose({
                         dataLabel({
                             p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
                             v: legend.value, 
-                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
+                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
                             r: FINAL_CONFIG.style.chart.legend.roundingValue
                         }),
                         { datapoint: legend, seriesIndex: index }
@@ -617,6 +643,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head" 
                     :body="dataTable.body"

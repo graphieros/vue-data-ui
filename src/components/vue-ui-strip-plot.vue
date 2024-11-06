@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
 import {
     applyDataLabel,
     calculateNiceScale,
@@ -71,8 +71,19 @@ const tooltipContent = ref("");
 const stripPlotChart = ref(null);
 const chartTitle = ref(null);
 const animationStarted = ref(false);
+const titleStep = ref(0);
+const tableStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -88,11 +99,22 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+}, { deep: true });
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiStripPlot',
@@ -160,7 +182,7 @@ onMounted(() => {
     setTimeout(() => {
         animationActive.value = false;
     }, maxSeries.value * 50)
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -452,8 +474,8 @@ defineExpose({
     <div ref="stripPlotChart" :class="`vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" :id="`strip-plot_${uid}`">
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
-            <!-- TITLE AS DIV -->
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'donut-div-title',
@@ -768,6 +790,7 @@ defineExpose({
         }">
             <template #content>
                 <DataTable
+                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head" 
                     :body="dataTable.body"

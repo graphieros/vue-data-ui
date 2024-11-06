@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { computed, ref, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
 import {
   applyDataLabel,
   checkNaN,
@@ -67,8 +67,20 @@ const step = ref(0);
 const ringsChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
   const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -84,11 +96,23 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true });
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
+  prepareChart();
+});
+
+function prepareChart() {
   if(objectIsEmpty(props.dataset)) {
     error({
       componentName: 'VueUiRings',
@@ -133,7 +157,7 @@ onMounted(() => {
   setTimeout(() => {
     isLoaded.value = true;
   }, 600)
-});
+}
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -463,8 +487,8 @@ defineExpose({
       v-if="FINAL_CONFIG.style.chart.title.text"
       :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
     >
-      <!-- TITLE AS DIV -->
       <Title
+        :key="`title_${titleStep}`"
         :config="{
           title: {
             cy: 'rings-div-title',
@@ -627,6 +651,7 @@ defineExpose({
     <div ref="chartLegend">
       <Legend
         v-if="FINAL_CONFIG.style.chart.legend.show"
+        :key="`legend_${legendStep}`"
         :legendSet="legendSet"
         :config="legendConfig"
         @clickMarker="({legend}) => segregate(legend.uid)"
@@ -706,6 +731,7 @@ defineExpose({
     }">
         <template #content>
           <DataTable
+            :key="`table_${tableStep}`"
             :colNames="dataTable.colNames"
             :head="dataTable.head" 
             :body="dataTable.body"

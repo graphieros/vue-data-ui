@@ -38,6 +38,10 @@ const isDataset = computed(() => {
 });
 
 onMounted(() => {
+    prepareChart();
+})
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: "VueUiSparkgauge",
@@ -55,11 +59,20 @@ onMounted(() => {
             });
         });
     }
-})
+}
 
 const uid = ref(createUid());
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
@@ -74,7 +87,12 @@ const FINAL_CONFIG = computed(() => {
     } else {
         return mergedConfig;
     }
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+}, { deep: true });
 
 const svg = computed(() => {
     return {
@@ -95,20 +113,19 @@ const bounds = computed(() => {
     }
 })
 
-const currentScore = ref(FINAL_CONFIG.value.style.animation.show ? bounds.value.min : props.dataset.value);
+const activeRating = ref(FINAL_CONFIG.value.style.animation.show ? bounds.value.min : props.dataset.value);
 
 watch(() => props.dataset.value, () => {
-    currentScore.value = ref(FINAL_CONFIG.value.style.animation.show ? bounds.value.min : props.dataset.value)
-    useAnimation()
+    useAnimation(props.dataset.value || 0)
 })
 
 const controlScore = computed(() => {
-    if (currentScore.value > bounds.value.max) {
+    if (activeRating.value > bounds.value.max) {
         return bounds.value.max;
-    } else if (currentScore.value < bounds.value.min) {
+    } else if (activeRating.value < bounds.value.min) {
         return bounds.value.min;
     } else {
-        return currentScore.value;
+        return activeRating.value;
     }
 })
 
@@ -117,31 +134,31 @@ const animationTick = computed(() => {
 })
 
 onMounted(() => {
-    useAnimation()
+    useAnimation(props.dataset.value || 0);
 })
 
-function useAnimation() {
+function useAnimation(targetValue) {
     function animate() {
-        currentScore.value += animationTick.value;
-        if(currentScore.value < props.dataset.value) {
-            requestAnimationFrame(animate)
-        } else {
-            currentScore.value = props.dataset.value
+        if(activeRating.value < targetValue) {
+            activeRating.value = Math.min(activeRating.value + animationTick.value, targetValue);
+        } else if (activeRating.value > targetValue) {
+            activeRating.value = Math.max(activeRating.value - animationTick.value, targetValue)
+        }
+        
+        if (activeRating.value !== targetValue) {
+            requestAnimationFrame(animate);
         }
     }
-    if(FINAL_CONFIG.value.style.animation.show) {
-        currentScore.value = bounds.value.min;
-        animate();
-    }
+    animate();
 }
 
 const nameLabel = computed(() => {
     return props.dataset.title ?? ''
-})
+});
 
 const valueRatio = computed(() => {
 
-    if(currentScore.value >= 0) {
+    if(activeRating.value >= 0) {
         return (controlScore.value - bounds.value.min) / bounds.value.diff
     } else {
         return (Math.abs(bounds.value.min) - Math.abs(controlScore.value)) / bounds.value.diff
@@ -149,7 +166,7 @@ const valueRatio = computed(() => {
 })
 
 const currentColor = computed(() => {
-    return interpolateColorHex(FINAL_CONFIG.value.style.colors.min, FINAL_CONFIG.value.style.colors.max, bounds.value.min, bounds.value.max, currentScore.value)
+    return interpolateColorHex(FINAL_CONFIG.value.style.colors.min, FINAL_CONFIG.value.style.colors.max, bounds.value.min, bounds.value.max, activeRating.value)
 })
 
 const labelColor = computed(() => {
@@ -214,14 +231,14 @@ const trackColor = computed(() => {
         >
             {{ applyDataLabel(
                 FINAL_CONFIG.style.dataLabel.formatter,
-                checkNaN(currentScore),
+                checkNaN(activeRating),
                 dataLabel({ 
                     p: FINAL_CONFIG.style.dataLabel.prefix, 
-                    v: checkNaN(currentScore), 
+                    v: checkNaN(activeRating), 
                     s: FINAL_CONFIG.style.dataLabel.suffix, 
                     r: FINAL_CONFIG.style.dataLabel.rounding 
                 }),
-                { datapoint: checkNaN(currentScore), color: labelColor }
+                { datapoint: checkNaN(activeRating), color: labelColor }
                 )
             }}
         </text>
