@@ -277,7 +277,13 @@ onMounted(() => {
         captionHeight.value = caption.value ? caption.value.getBoundingClientRect().height : 0;
         tableRowHeight.value = tableRow.value ? tableRow.value.getBoundingClientRect().height : 0;
         scrollIndex.value = 0;
-        setTrElements();
+        nextTick(() => {
+            pauseAnimation();
+            lastTimestamp.value = 0;
+            init.value = 0;
+            setTrElements();
+            resumeAnimation();
+        });
     })
     if(tableContainer.value) {
         observer.observe(tableContainer.value);
