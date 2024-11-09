@@ -125,7 +125,7 @@ function alterDataset() {
 const alternateConfig = ref({
     style: {
         chart: {
-            backgroundColor: '#FF0000',
+            backgroundColor: '#FF000020',
             title: {
                 text: 'Alternate'
             }
@@ -142,7 +142,7 @@ const model = ref([
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.height', def: 500, type: 'number', min: 100, max: 1000},
     { key: 'style.chart.width', def: 800, type: 'number', min: 100, max: 1500},
@@ -188,7 +188,7 @@ const model = ref([
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.tooltip.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'style.chart.tooltip.roundingValue', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 20, type: 'range', min: 0, max: 100},
     { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
     { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 

@@ -21,6 +21,7 @@ const dataset = ref([
     {
         name: "Serie 1",
         series: [10, 20, 30],
+        color: "rgba(255,0,0,0.5)"
     },
     {
         name: "Serie 2",
@@ -54,7 +55,7 @@ const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'theme', def: '', type: 'select', options: ['', 'zen', 'hack', 'concrete']},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF00', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.height', def: 500, type: 'number', min: 200, max: 1000},
     { key: 'style.chart.width', def: 800, type: 'number', min: 200, max: 1000},
@@ -91,7 +92,7 @@ const model = ref([
     { key: 'style.chart.tooltip.borderRadius', def: 4, type: 'number', min: 0, max: 24},
     { key: 'style.chart.tooltip.borderColor', def: '#E1E5E8', type: 'color'},
     { key: 'style.chart.tooltip.borderWidth', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 20, type: 'range', min: 0, max: 100},
     { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
     { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 64},
     { key: 'style.chart.tooltip.showValue', def: true, type: 'checkbox'},

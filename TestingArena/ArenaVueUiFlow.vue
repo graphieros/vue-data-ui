@@ -32,7 +32,7 @@ const model = ref([
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.padding.left', def: 24, type: 'number', min: 0, max: 100 },
@@ -68,7 +68,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[1])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

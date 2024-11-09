@@ -111,7 +111,7 @@ const model = ref([
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.bars.sort', def: 'desc', type: 'select', options: ['asc', 'desc']},
     { key: 'style.chart.layout.bars.useStroke', def: false, type: 'checkbox'},
@@ -208,7 +208,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -316,12 +316,12 @@ function selectLegend(legend) {
                         {{ datapoint.name }} : {{ percentage }}
                     </div>
                 </template>
-                <template #legend="{ legend }">
+                <!-- <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
-                </template>
+                </template> -->
                 <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #BEFORE {{ series.name }}
                 </template>
@@ -342,12 +342,12 @@ function selectLegend(legend) {
                         {{ datapoint.name }} : {{ percentage }}
                     </div>
                 </template>
-                <template #legend="{ legend }">
+                <!-- <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
-                </template>
+                </template> -->
                 <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #BEFORE {{ series.name }}
                 </template>
@@ -368,12 +368,12 @@ function selectLegend(legend) {
                         {{ datapoint.name }} : {{ percentage }}
                     </div>
                 </template>
-                <template #legend="{ legend }">
+                <!-- <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
-                </template>
+                </template> -->
                 <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #BEFORE {{ series.name }}
                 </template>
@@ -394,12 +394,12 @@ function selectLegend(legend) {
                         {{ datapoint.name }} : {{ percentage }}
                     </div>
                 </template>
-                <template #legend="{ legend }">
+                <!-- <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
-                </template>
+                </template> -->
                 <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #BEFORE {{ series.name }}
                 </template>

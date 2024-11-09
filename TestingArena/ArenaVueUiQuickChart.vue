@@ -107,6 +107,7 @@ function alterDataset() {
 const selectedSerie = ref('shortArray');
 
 const model = ref([
+    { key: 'backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptionsButtons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptionsButtons.img', def: true, type: 'checkbox'},
@@ -202,7 +203,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

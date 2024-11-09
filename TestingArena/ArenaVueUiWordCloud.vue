@@ -24,7 +24,7 @@ const model = ref([
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'animationDelayMs', def: 20, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.height', def: 300, type: 'number', min: 200, max: 1000},
     { key: 'style.chart.width', def: 512, type: 'number', min: 200, max: 1000},

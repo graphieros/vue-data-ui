@@ -61,7 +61,7 @@ const model = ref([
     { key: 'style.animation.animationFrames', def: 60, type: 'number', min: 0, max: 300},
     { key: 'style.bar.gradient.show', def: true, type: 'checkbox'},
     { key: 'style.bar.gradient.intensity', def: 40, type: 'range', min: 0, max: 100},
-    { key: 'style.bar.gradient.underlayerColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.bar.gradient.underlayerColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.legend.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
     { key: 'style.legend.show', def: true, type: 'checkbox'},
     { key: 'style.legend.fontSize', def: 12, type: 'number', min: 8, max: 48},
@@ -98,7 +98,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[2])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

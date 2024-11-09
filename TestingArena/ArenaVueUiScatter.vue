@@ -106,7 +106,7 @@ const model = ref([
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.height', def: 316, type: 'number', min: 100, max: 1000},
     { key: 'style.layout.width', def: 512, type: 'number', min: 100, max: 1000},
@@ -191,7 +191,7 @@ const model = ref([
     { key: 'style.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
     { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'},
     { key: 'style.legend.show', def: true, type: 'checkbox' },
-    { key: 'style.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.legend.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.legend.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.legend.fontSize', def: 14, type: 'number', min: 6, max: 42 },
     { key: 'style.legend.bold', def: false, type: 'checkbox'},
@@ -236,7 +236,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[1])
+const currentTheme = ref(themeOptions.value[4])
 
 
 const config = computed(() => {

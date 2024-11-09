@@ -121,7 +121,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[1])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     return {
