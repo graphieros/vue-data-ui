@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 const dataset = ref([
     {
         name: 'Lorem Ipsum',
-        values: [100.27]
+        values: [100.27],
     },
     {
         name: 'Dolor Amet',
@@ -32,12 +32,12 @@ const alternateDataset = ref([
 const alternateConfig = ref({
     table: {
         th: {
-            backgroundColor: '#00FF00'
+            backgroundColor: '#00FF0020'
         }
     },
     style: {
         chart: {
-            backgroundColor: '#FF0000',
+            backgroundColor: '#FF000020',
             title: {
                 text: 'Alternate'
             }
@@ -69,7 +69,7 @@ const model = ref([
     { key: 'useCustomCells', def: false, type: 'checkbox'},
     { key: 'useAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.labels.dataLabels.prefix', def: '$', type: 'text'},
     { key: 'style.chart.layout.labels.dataLabels.suffix', def: '€', type: 'text'},
@@ -110,7 +110,7 @@ const model = ref([
     { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.roundingValue', def: 0, type: 'range', min: 0, max: 12},
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'range', min: 0, max: 12},
-    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100 },
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 20, type: 'range', min: 0, max: 100 },
     { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
     { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 

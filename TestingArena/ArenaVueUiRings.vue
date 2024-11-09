@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 const dataset = ref([
     {
         name: "Serie 1",
-        values: [100]
+        values: [100],
     },
     {
         name: "Serie 2",
@@ -19,7 +19,7 @@ const dataset = ref([
     },
     {
         name: "Serie 3",
-        values: [300, 1]
+        values: [300, 1],
     },
     {
         name: "Serie 4",
@@ -74,7 +74,7 @@ const model = ref([
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.labels.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.layout.labels.dataLabels.suffix', def: '2', type: 'text'},
@@ -137,7 +137,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[2])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

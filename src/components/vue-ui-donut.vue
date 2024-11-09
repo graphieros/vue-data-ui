@@ -17,8 +17,8 @@ adaptColorToBackground,
     isFunction, 
     makeDonut,
     objectIsEmpty, 
-    opacity, 
     palette,
+    setOpacity,
     themePalettes,
     XMLNS
 } from '../lib';
@@ -678,9 +678,9 @@ defineExpose({
             <!-- DEFS -->
             <defs>
                 <radialGradient :id="`gradient_${uid}`" v-if="FINAL_CONFIG.style.chart.useGradient">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
-                    <stop offset="77%" :stop-color="'#FFFFFF' + opacity[FINAL_CONFIG.style.chart.gradientIntensity]" />
-                    <stop offset="100%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
+                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                    <stop offset="77%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.gradientIntensity)" />
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
                 </radialGradient>
             </defs>
 
@@ -729,7 +729,7 @@ defineExpose({
                     class="vue-ui-donut-arc-path"
                     :data-cy="`donut-arc-${i}`"
                     :d="arc.arcSlice" 
-                    :fill="`${arc.color}CC`"
+                    :fill="setOpacity(arc.color, 80)"
                     :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                     :filter="getBlurFilter(i)"

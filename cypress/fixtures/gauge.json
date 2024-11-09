@@ -24,8 +24,8 @@
         "style": {
             "fontFamily": "inherit",
             "chart": {
-                "backgroundColor": "#FFFFFF",
-                "color": "#2D353C",
+                "backgroundColor": "#FFFFFFff",
+                "color": "#2D353Cff",
                 "animation": {
                     "use": true,
                     "speed": 1,
@@ -39,10 +39,10 @@
                     },
                     "markers": {
                         "size": 1,
-                        "color": "#2D353C",
+                        "color": "#2D353Cff",
                         "strokeWidth": 1,
-                        "stroke": "#2D353C",
-                        "backgroundColor": "#FFFFFF",
+                        "stroke": "#2D353Cff",
+                        "backgroundColor": "#FFFFFFff",
                         "bold": true,
                         "fontSizeRatio": 1,
                         "offsetY": 0,
@@ -50,15 +50,15 @@
                     },
                     "pointer": {
                         "size": 1,
-                        "stroke": "#2D353C",
+                        "stroke": "#2D353Cff",
                         "strokeWidth": 12,
                         "useRatingColor": true,
                         "color": "#CCCCCC",
                         "circle": {
                             "radius": 10,
-                            "stroke": "#2D353C",
+                            "stroke": "#2D353Cff",
                             "strokeWidth": 2,
-                            "color": "#FFFFFF"
+                            "color": "#FFFFFFff"
                         }
                     }
                 },
@@ -69,11 +69,11 @@
                     "roundingValue": 1,
                     "showPlusSymbol": true,
                     "useRatingColor": true,
-                    "color": "#2D353C"
+                    "color": "#2D353Cff"
                 },
                 "title": {
                     "text": "Title",
-                    "color": "#2D353C",
+                    "color": "#2D353Cff",
                     "fontSize": 20,
                     "bold": true,
                     "subtitle": {

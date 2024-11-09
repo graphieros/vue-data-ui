@@ -18,6 +18,7 @@ import {
     objectIsEmpty,
     palette,
     sanitizeArray,
+    setOpacity,
     themePalettes,
     XMLNS, 
 } from '../lib';
@@ -820,7 +821,7 @@ defineExpose({
                     <path
                         class="vue-ui-donut-arc-path"
                         :d="arc.arcSlice" 
-                        :fill="`${arc.color}CC`"
+                        :fill="setOpacity(arc.color, 80)"
                         :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                         :filter="getBlurFilter(arc, j)"

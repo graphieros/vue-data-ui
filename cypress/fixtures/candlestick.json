@@ -142,13 +142,13 @@
                 },
                 "grid": {
                     "show": true,
-                    "stroke": "#e1e5e8",
+                    "stroke": "#e1e5e8ff",
                     "strokeWidth": 0.5,
                     "xAxis": {
                         "dataLabels": {
                             "show": true,
                             "fontSize": 4,
-                            "color": "#2D353C",
+                            "color": "#2D353Cff",
                             "offsetY": 0,
                             "bold": false
                         }
@@ -157,7 +157,7 @@
                         "dataLabels": {
                             "show": true,
                             "fontSize": 12,
-                            "color": "#2D353C",
+                            "color": "#2D353Cff",
                             "roundingValue": 0,
                             "offsetX": 0,
                             "bold": false,
@@ -168,37 +168,37 @@
                     }
                 },
                 "wick": {
-                    "stroke": "#2D353C",
+                    "stroke": "#2D353Cff",
                     "strokeWidth": 0.5,
                     "extremity": {
                         "shape": "line",
                         "size": "auto",
-                        "color": "#2D353C"
+                        "color": "#2D353Cff"
                     }
                 },
                 "candle": {
                     "borderRadius": 1,
-                    "stroke": "#2D353C",
+                    "stroke": "#2D353Cff",
                     "strokeWidth": 0.5,
                     "colors": {
-                        "bearish": "#dc3912",
-                        "bullish": "#109618"
+                        "bearish": "#dc3912ff",
+                        "bullish": "#109618ff"
                     },
                     "gradient": {
                         "show": true,
                         "intensity": 40,
-                        "underlayer": "#FFFFFF"
+                        "underlayer": "#FFFFFFff"
                     },
                     "widthRatio": 0.5
                 }
             },
             "zoom": {
                 "show": true,
-                "color": "#CCCCCC"
+                "color": "#CCCCCCff"
             },
             "title": {
                 "text": "Title",
-                "color": "#2D353C",
+                "color": "#2D353Cff",
                 "fontSize": 20,
                 "bold": true,
                 "subtitle": {
@@ -210,8 +210,8 @@
             },
             "tooltip": {
                 "show": true,
-                "backgroundColor": "#FFFFFF",
-                "color": "#2D353C",
+                "backgroundColor": "#FFFFFFff",
+                "color": "#2D353Cff",
                 "fontSize": 14,
                 "roundingValue": 0,
                 "prefix": "",

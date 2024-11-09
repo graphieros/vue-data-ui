@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useNestedProp } from "../useNestedProp";
-import { createUid, opacity, XMLNS } from "../lib";
+import { createUid, setOpacity, XMLNS } from "../lib";
 import { useConfig } from "../useConfig";
 
 const { vue_ui_cursor: DEFAULT_CONFIG } = useConfig();
@@ -96,7 +96,7 @@ const waveScale = computed(() => {
             :cx="50" 
             :cy="50" 
             :r="FINAL_CONFIG.centerCircleRadius" 
-            :fill="FINAL_CONFIG.centerCircleColor + opacity[FINAL_CONFIG.centerCircleOpacity * 100]" 
+            :fill="setOpacity(FINAL_CONFIG.centerCircleColor, FINAL_CONFIG.centerCircleOpacity * 100)" 
             :stroke="FINAL_CONFIG.centerCircleStroke"
             :stroke-width="FINAL_CONFIG.centerCircleStrokeWidth"
             :stroke-dasharray="FINAL_CONFIG.centerCircleDasharray"

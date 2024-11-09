@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useMouse } from "../useMouse";
-import { opacity } from "../lib";
+import { opacity, setOpacity } from "../lib";
 
 const props = defineProps({
     backgroundColor: {
@@ -73,6 +73,10 @@ const position = computed(() => {
     });
 })
 
+const convertedBackground = computed(() => {
+    return setOpacity(props.backgroundColor, props.backgroundOpacity);
+})
+
 </script>
 
 <template>
@@ -81,7 +85,7 @@ const position = computed(() => {
         data-cy="tooltip"
         :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
         v-if="show"
-        :style="`pointer-events:none;top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${backgroundColor}${opacity[backgroundOpacity]};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};`"
+        :style="`pointer-events:none;top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${convertedBackground};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};`"
     >
         <slot name="tooltip-before"/>
         <slot/>

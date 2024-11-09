@@ -323,43 +323,50 @@ export const themePalettes = {
 
 export const opacity = ["00", "03", "05", "08", "0A", "0D", "0F", "12", "14", "17", "1A", "1C", "1F", "21", "24", "26", "29", "2B", "2E", "30", "33", "36", "38", "3B", "3D", "40", "42", "45", "47", "4A", "4D", "4F", "52", "54", "57", "59", "5C", "5E", "61", "63", "66", "69", "6B", "6E", "70", "73", "75", "78", "7A", "7D", "80", "82", "85", "87", "8A", "8C", "8F", "91", "94", "96", "99", "9C", "9E", "A1", "A3", "A6", "A8", "AB", "AD", "B0", "B3", "B5", "B8", "BA", "BD", "BF", "C2", "C4", "C7", "C9", "CC", "CF", "D1", "D4", "D6", "D9", "DB", "DE", "E0", "E3", "E6", "E8", "EB", "ED", "F0", "F2", "F5", "F7", "FA", "FC", "FF"];
 
+
 export function convertColorToHex(color) {
-    const hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
-    const rgbRegex = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/i;
-    const hslRegex = /^hsla?\((\d+),\s*([\d.]+)%,\s*([\d.]+)%(?:,\s*[\d.]+)?\)$/i;
+    const hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
+    const rgbRegex = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/i;
+    const hslRegex = /^hsla?\((\d+),\s*([\d.]+)%,\s*([\d.]+)%(?:,\s*([\d.]+))?\)$/i;
 
     if ([undefined, null, NaN].includes(color)) {
         return null;
     }
-    color = convertNameColorToHex(color)
+
+    color = convertNameColorToHex(color);
 
     if (color === 'transparent') {
         return "#FFFFFF00";
     }
 
     let match;
+    let alpha = 1;
 
     if ((match = color.match(hexRegex))) {
-        const [, r, g, b] = match;
-        return `#${r}${g}${b}`;
+        const [, r, g, b, a] = match;
+        alpha = a ? parseInt(a, 16) / 255 : 1;
+        return `#${r}${g}${b}${decimalToHex(Math.round(alpha * 255))}`;
     } else if ((match = color.match(rgbRegex))) {
-        const [, r, g, b] = match;
-        return `#${decimalToHex(r)}${decimalToHex(g)}${decimalToHex(b)}`;
+        const [, r, g, b, a] = match;
+        alpha = a ? parseFloat(a) : 1;
+        return `#${decimalToHex(r)}${decimalToHex(g)}${decimalToHex(b)}${decimalToHex(Math.round(alpha * 255))}`;
     } else if ((match = color.match(hslRegex))) {
-        const [, h, s, l] = match;
-        const rgb = hslToRgb(Number(h), Number(s), Number(l));
-        return `#${decimalToHex(rgb[0])}${decimalToHex(rgb[1])}${decimalToHex(rgb[2])}`;
+        const [, h, s, l, a] = match;
+        alpha = a ? parseFloat(a) : 1;
+        const rgb = hslToRgba(Number(h), Number(s), Number(l));
+        return `#${decimalToHex(rgb[0])}${decimalToHex(rgb[1])}${decimalToHex(rgb[2])}${decimalToHex(Math.round(alpha * 255))}`;
     }
 
     return null;
 }
+
 
 export function decimalToHex(decimal) {
     const hex = Number(decimal).toString(16);
     return hex.length === 1 ? "0" + hex : hex;
 }
 
-export function hslToRgb(h, s, l) {
+export function hslToRgba(h, s, l, alpha = 1) {
     h /= 360;
     s /= 100;
     l /= 100;
@@ -367,7 +374,7 @@ export function hslToRgb(h, s, l) {
     let r, g, b;
 
     if (s === 0) {
-        r = g = b = l;
+        r = g = b = l; // Achromatic (gray)
     } else {
         const hueToRgb = (p, q, t) => {
             if (t < 0) t += 1;
@@ -389,10 +396,14 @@ export function hslToRgb(h, s, l) {
         Math.round(r * 255),
         Math.round(g * 255),
         Math.round(b * 255),
+        alpha,
     ];
 }
 
 export function shiftHue(hexColor, shiftAmount) {
+
+    const nakedHex = hexColor.length === 9 ? hexColor.substring(0, 7) : hexColor;
+    const alphaChannel = hexColor.length === 9 ? hexColor.substring(7, 9) : null;
 
     const hexToRgb = (hex) => ({
         r: parseInt(hex.substring(1, 3), 16),
@@ -452,7 +463,7 @@ export function shiftHue(hexColor, shiftAmount) {
         };
     };
 
-    const rgbColor = hexToRgb(hexColor || "#000000");
+    const rgbColor = hexToRgb(nakedHex || "#000000");
     const hslColor = rgbToHsl(rgbColor);
     hslColor.h += shiftAmount;
     hslColor.h = (hslColor.h + 1) % 1;
@@ -460,8 +471,10 @@ export function shiftHue(hexColor, shiftAmount) {
     const shiftedRgbColor = hslToRgb(hslColor);
     const shiftedHexColor = `#${(shiftedRgbColor.r << 16 | shiftedRgbColor.g << 8 | shiftedRgbColor.b).toString(16).padStart(6, '0')}`;
 
-    return shiftedHexColor;
+
+    return shiftedHexColor + (alphaChannel || '');
 }
+
 
 export function calcPolygonPoints({
     centerX,
@@ -597,22 +610,43 @@ export function degreesToRadians(degrees) {
 export function adaptColorToBackground(bgColor) {
     if (bgColor) {
         let color = bgColor;
+        let alpha = 1;
+
+        if (color.startsWith('rgba')) {
+            const rgba = color.match(/rgba?\((\d+), (\d+), (\d+), ([\d.]+)\)/);
+            if (rgba) {
+                const [, r, g, b, a] = rgba;
+                alpha = parseFloat(a);
+                color = `#${parseInt(r).toString(16).padStart(2, '0')}${parseInt(g).toString(16).padStart(2, '0')}${parseInt(b).toString(16).padStart(2, '0')}`;
+            }
+        }
+
         if (color.charAt(0) !== "#") {
             color = this.rgbToHex(bgColor);
         }
+
         color = color.substring(1, 7);
         let r = parseInt(color.substring(0, 2), 16);
         let g = parseInt(color.substring(2, 4), 16);
         let b = parseInt(color.substring(4, 6), 16);
+
         let uiColors = [r / 255, g / 255, b / 255];
+
         let c = uiColors.map((col) => {
             if (col <= 0.03928) {
                 return col / 12.92;
             }
             return Math.pow((col + 0.055) / 1.055, 2.4);
         });
+
         let L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-        return L > 0.3 ? "#000000" : "#FFFFFF";
+
+        if (alpha < 1) {
+            const blendedLuminance = alpha * L + (1 - alpha) * 1;
+            return blendedLuminance > 0.3 ? "#000000" : "#FFFFFF";
+        } else {
+            return L > 0.3 ? "#000000" : "#FFFFFF";
+        }
     }
     return "#000000";
 }
@@ -621,7 +655,7 @@ export function convertConfigColors(config) {
     for (const key in config) {
         if (typeof config[key] === 'object' && !Array.isArray(config[key]) && config[key] !== null) {
             convertConfigColors(config[key]);
-        } else if (key === 'color' || key === 'backgroundColor' || key === 'stroke') {
+        } else if (['color', 'backgroundColor', 'stroke'].includes(key)) {
             if (config[key] === '') {
                 config[key] = '#000000';
             } else if (config[key] === 'transparent') {
@@ -813,28 +847,53 @@ export function findArcMidpoint(pathElement) {
     return { x, y };
 }
 
-export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false, arcSize = 0, flatLen = 12) {
-    const { x, y } = findArcMidpoint(arc.path)
+export function getCloserPoint(centerX, centerY, x, y, arcSize) {
+    if (x === centerX && y === centerY) {
+        return { x: centerX, y: centerY };
+    }
+    const scaleFactor = getScaleFactorUsingArcSize(centerX, centerY, x, y, arcSize);
+    let deltaX = x - centerX;
+    let deltaY = y - centerY;
+    deltaX *= scaleFactor;
+    deltaY *= scaleFactor;
+    const newX = centerX + deltaX;
+    const newY = centerY + deltaY;
+    return { x: newX, y: newY };
+}
 
-    const { x: endX, y: endY } = offsetFromCenterPoint({
-        initX: x,
-        initY: y,
-        offset: arcSize,
-        centerX: center ? center.x : 0,
-        centerY: center ? center.y : 0
-    })
+export function getScaleFactorUsingArcSize(centerX, centerY, x, y, arcSize) {
+    const euclidianDistance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+    if (arcSize >= euclidianDistance) {
+        console.warn('arcSize must be less than the distance from the point to the center')
+    }
+    const scaleFactor = 1 - arcSize / euclidianDistance;
+    return scaleFactor;
+}
+
+export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false, arcSize = 0, flatLen = 12) {
+    const { x } = findArcMidpoint(arc.path)
 
     const start = `${calcMarkerOffsetX(arc).x},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4} `;
-    const end = ` ${center ? center.x : endX},${center ? center.y : endY}`;
-    let mid = "";
+
+    let mid = "", midX, midY;
     if (x > arc.cx) {
-        mid = `${calcMarkerOffsetX(arc).x - flatLen},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
+        midX = calcMarkerOffsetX(arc).x - flatLen;
+        midY = calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4;
+        mid = `${midX},${midY}`;
     } else if (x < arc.cx) {
-        mid = `${calcMarkerOffsetX(arc).x + flatLen},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
+        midX = calcMarkerOffsetX(arc).x + flatLen;
+        midY = calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4;
+        mid = `${midX},${midY}`;
     } else {
-        mid = `${calcMarkerOffsetX(arc).x + flatLen},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4}`;
+        midX = calcMarkerOffsetX(arc).x + flatLen;
+        midY = calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4;
+        mid = `${midX},${midY}`;
     }
-    return `M${hideStart ? '' : start}${mid}${end}${toCenter ? `,${toCenter.x} ${toCenter.y}` : ''}`;
+
+    const endpoint = getCloserPoint(center.x, center.y, midX, midY, arcSize)
+    const end = ` ${endpoint.x},${endpoint.y}`;
+
+    return `M${hideStart ? '' : start}${mid}${end}`;
 }
 
 export function closestDecimal(num) {
@@ -893,12 +952,13 @@ export function createCsvContent(rows) {
 }
 
 export function lightenHexColor(hexColor, percentLighter) {
-    if (!/^#([0-9A-F]{3}){1,2}$/i.test(hexColor)) {
+    if (!/^#([0-9A-F]{3}){1,2}([0-9A-F]{2})?$/i.test(hexColor)) {
         console.warn('lightenHexColor : Invalid hex color format');
-        return "#000000"
+        return "#000000";
     }
 
     let color = hexColor.replace('#', '');
+
     if (color.length === 3) {
         color = color.split('').map(c => c + c).join('');
     }
@@ -913,16 +973,21 @@ export function lightenHexColor(hexColor, percentLighter) {
 
     const lighterHex = `#${Math.round(newR).toString(16).padStart(2, '0')}${Math.round(newG).toString(16).padStart(2, '0')}${Math.round(newB).toString(16).padStart(2, '0')}`;
 
+    if (color.length === 8) {
+        const alpha = color.substring(6, 8);
+        return lighterHex + alpha;
+    }
     return lighterHex;
 }
 
 export function darkenHexColor(hexColor, percentDarker) {
-    if (!/^#([0-9A-F]{3}){1,2}$/i.test(hexColor)) {
+    if (!/^#([0-9A-F]{3}){1,2}([0-9A-F]{2})?$/i.test(hexColor)) {
         console.warn('darkenHexColor: Invalid hex color format');
         return "#000000";
     }
 
     let color = hexColor.replace('#', '');
+
     if (color.length === 3) {
         color = color.split('').map(c => c + c).join('');
     }
@@ -937,9 +1002,13 @@ export function darkenHexColor(hexColor, percentDarker) {
 
     const darkerHex = `#${Math.round(newR).toString(16).padStart(2, '0')}${Math.round(newG).toString(16).padStart(2, '0')}${Math.round(newB).toString(16).padStart(2, '0')}`;
 
+    if (color.length === 8) {
+        const alpha = color.substring(6, 8);
+        return darkerHex + alpha;
+    }
+
     return darkerHex;
 }
-
 
 export function niceNum(range, round) {
     const exponent = Math.floor(Math.log10(range));
@@ -1015,87 +1084,48 @@ export function calculateNiceScaleWithExactExtremes(minValue, maxValue, maxTicks
         ticks
     };
 }
+
 export function interpolateColorHex(minColor, maxColor, minValue, maxValue, value) {
-    const hexToRgb = (hex) => ({
-        r: parseInt(hex.substring(1, 3), 16),
-        g: parseInt(hex.substring(3, 5), 16),
-        b: parseInt(hex.substring(5, 7), 16),
-    });
+    const hexToRgba = (hex) => {
+        let r = parseInt(hex.substring(1, 3), 16);
+        let g = parseInt(hex.substring(3, 5), 16);
+        let b = parseInt(hex.substring(5, 7), 16);
+        let a = 1; // Default alpha value
 
-    const rgbToHex = ({ r, g, b }) => {
-        return `#${decimalToHex(r)}${decimalToHex(g)}${decimalToHex(b)}`;
-    };
-
-    const rgbToHsl = ({ r, g, b }) => {
-        r /= 255;
-        g /= 255;
-        b /= 255;
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        let h, s, l = (max + min) / 2;
-
-        if (max === min) {
-            h = s = 0;
-        } else {
-            const d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
-            }
-            h /= 6;
-        }
-        return { h, s, l };
-    };
-
-    const hslToRgb = ({ h, s, l }) => {
-        let r, g, b;
-
-        if (s === 0) {
-            r = g = b = l;
-        } else {
-            const hue2rgb = (p, q, t) => {
-                if (t < 0) t += 1;
-                if (t > 1) t -= 1;
-                if (t < 1 / 6) return p + (q - p) * 6 * t;
-                if (t < 1 / 2) return q;
-                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                return p;
-            };
-
-            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            const p = 2 * l - q;
-            r = hue2rgb(p, q, h + 1 / 3);
-            g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1 / 3);
+        if (hex.length === 9) {
+            a = parseInt(hex.substring(7, 9), 16) / 255; // Extract alpha value if present
         }
 
-        return {
-            r: Math.round(r * 255),
-            g: Math.round(g * 255),
-            b: Math.round(b * 255),
-        };
+        return { r, g, b, a };
     };
 
-    const minRgbColor = hexToRgb(minColor);
-    const maxRgbColor = hexToRgb(maxColor);
+    const rgbToHex = ({ r, g, b, a }) => {
+        const decimalToHex = (x) => x.toString(16).padStart(2, '0');
+        const hex = `#${decimalToHex(r)}${decimalToHex(g)}${decimalToHex(b)}`;
+        if (a !== 1) {
+            const alphaHex = Math.round(a * 255).toString(16).padStart(2, '0');
+            return hex + alphaHex;
+        }
+        return hex;
+    };
+
+    const minColorRgb = hexToRgba(minColor);
+    const maxColorRgb = hexToRgba(maxColor);
 
     value = Math.min(Math.max(value, minValue), maxValue);
-
     const normalizedValue = (value - minValue) / (maxValue - minValue);
 
-    const interpolatedRgbColor = {
-        r: Math.round(minRgbColor.r + (maxRgbColor.r - minRgbColor.r) * normalizedValue),
-        g: Math.round(minRgbColor.g + (maxRgbColor.g - minRgbColor.g) * normalizedValue),
-        b: Math.round(minRgbColor.b + (maxRgbColor.b - minRgbColor.b) * normalizedValue),
+    // Interpolate RGB components
+    const interpolatedRgb = {
+        r: Math.round(minColorRgb.r + (maxColorRgb.r - minColorRgb.r) * normalizedValue),
+        g: Math.round(minColorRgb.g + (maxColorRgb.g - minColorRgb.g) * normalizedValue),
+        b: Math.round(minColorRgb.b + (maxColorRgb.b - minColorRgb.b) * normalizedValue),
     };
 
-    const interpolatedHslColor = rgbToHsl(interpolatedRgbColor);
-    const finalRgbColor = hslToRgb(interpolatedHslColor);
-    const finalHexColor = rgbToHex(finalRgbColor);
+    // Interpolate alpha channel if present
+    const interpolatedAlpha = minColorRgb.a + (maxColorRgb.a - minColorRgb.a) * normalizedValue;
 
-    return finalHexColor;
+    return rgbToHex({ ...interpolatedRgb, a: interpolatedAlpha });
 }
 
 /**
@@ -1769,29 +1799,29 @@ export function hasDeepProperty(obj, path) {
 export function sanitizeArray(arr, keys = []) {
 
     function sanitizeValue(value) {
-        if([NaN, undefined, Infinity, -Infinity, null].includes(value)) {
+        if ([NaN, undefined, Infinity, -Infinity, null].includes(value)) {
             console.warn(`A non processable value was detected : ${value}`)
         }
         return (typeof value === 'number' && isFinite(value)) ? value : 0;
     }
 
     function sanitize(data) {
-        if (Array.isArray(data)) { 
+        if (Array.isArray(data)) {
             return data.map(item => sanitize(item));
         } else if (typeof data === 'object' && data !== null) {
 
             let sanitizedObject = { ...data };
             keys.forEach(key => {
                 if (sanitizedObject.hasOwnProperty(key) && ![
-                    'NAME', 
-                    'name', 
-                    'TITLE', 
-                    'title', 
-                    'DESCRIPTION', 
-                    'description', 
-                    'LABEL', 
-                    'label', 
-                    'TIME', 
+                    'NAME',
+                    'name',
+                    'TITLE',
+                    'title',
+                    'DESCRIPTION',
+                    'description',
+                    'LABEL',
+                    'label',
+                    'TIME',
                     'time',
                     'PERIOD',
                     'period',
@@ -1824,6 +1854,13 @@ export function sanitizeArray(arr, keys = []) {
     }
 
     return sanitize(arr);
+}
+
+export function setOpacity(hex, opac = 100) {
+    if (hex.length === 9) {
+        return hex.substring(0, 7) + opacity[opac]
+    }
+    return hex + opacity[opac]
 }
 
 const lib = {
@@ -1866,8 +1903,10 @@ const lib = {
     error,
     functionReturnsString,
     generateSpiralCoordinates,
+    getCloserPoint,
     getMissingDatasetAttributes,
     getPalette,
+    getScaleFactorUsingArcSize,
     giftWrap,
     hasDeepProperty,
     interpolateColorHex,
@@ -1884,6 +1923,7 @@ const lib = {
     palette,
     rotateMatrix,
     sanitizeArray,
+    setOpacity,
     shiftHue,
     sumByAttribute,
     sumSeries,

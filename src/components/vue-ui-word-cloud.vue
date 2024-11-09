@@ -6,12 +6,12 @@ import UserOptions from '../atoms/UserOptions.vue';
 import { checkNaN, createUid, createWordCloudDatasetFromPlainText } from '../lib';
 import { debounce } from '../canvas-lib';
 import {
+    createCsvContent,
+    dataLabel,
     downloadCsv,
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
-    dataLabel,
-    createCsvContent,
     palette,
     themePalettes,
     XMLNS

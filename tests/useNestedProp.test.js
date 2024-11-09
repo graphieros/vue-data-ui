@@ -28,14 +28,14 @@ describe('useNestedProp', () => {
 
         expect(useNestedProp({ defaultConfig, userConfig })).toStrictEqual({
             attr1: {
-                color: "#000000",
+                color: "#000000ff",
                 value: 1,
                 someDefaultObject: {
                     defaultAttr: "default"
                 },
             },
             attr2: {
-                color: "#FF0000"
+                color: "#FF0000ff"
             }
         })
     })

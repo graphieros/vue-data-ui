@@ -9,8 +9,8 @@ import {
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
-    opacity,
     palette,
+    setOpacity,
     shiftHue,
     themePalettes,
     XMLNS
@@ -227,7 +227,7 @@ function selectDatapoint(datapoint, index) {
         :style="{
             width: '100%',
             fontFamily: FINAL_CONFIG.style.fontFamily,
-            background: FINAL_CONFIG.style.backgroundColor + opacity[props.backgroundOpacity]
+            background: setOpacity(FINAL_CONFIG.style.backgroundColor, props.backgroundOpacity)
         }"
     >
         <!-- CUSTOM TITLE -->
@@ -358,11 +358,11 @@ function selectDatapoint(datapoint, index) {
                             y2="0%"
                             :id="`sparkbar_gradient_${i}_${uid}`"
                         >
-                            <stop offset="0%" :stop-color="`${shiftHue(bar.color, 0.03)}${opacity[100 - FINAL_CONFIG.style.bar.gradient.intensity]}`"/>
+                            <stop offset="0%" :stop-color="setOpacity(shiftHue(bar.color, 0.03), 100 - FINAL_CONFIG.style.bar.gradient.intensity)"/>
                             <stop offset="100%" :stop-color="bar.color"/>
                         </linearGradient>
                     </defs>
-                    <rect :height="svg.height" :width="svg.width" :x="0" :y="0" :fill="`${FINAL_CONFIG.style.gutter.backgroundColor}${opacity[FINAL_CONFIG.style.gutter.opacity]}`" :rx="svg.height / 2" />
+                    <rect :height="svg.height" :width="svg.width" :x="0" :y="0" :fill="setOpacity(FINAL_CONFIG.style.gutter.backgroundColor, FINAL_CONFIG.style.gutter.opacity)" :rx="svg.height / 2" />
                     <rect :height="svg.height" :width="svg.width * ratioTo(bar)" :x="0" :y="0" :fill="FINAL_CONFIG.style.bar.gradient.underlayerColor" :rx="svg.height / 2" />
                     <rect :height="svg.height" :width="svg.width * ratioTo(bar)" :x="0" :y="0" :fill="FINAL_CONFIG.style.bar.gradient.show ? `url(#sparkbar_gradient_${i}_${uid})` : bar.color" :rx="svg.height / 2" />
                 </svg>

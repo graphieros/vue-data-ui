@@ -25,8 +25,8 @@
     "config": {
         "useCssAnimation": true,
         "style": {
-            "backgroundColor": "#FFFFFF",
-            "color":"#2D353C",
+            "backgroundColor": "#FFFFFFff",
+            "color":"#2D353Cff",
             "fontFamily":"inherit",
             "layout": {
                 "height": 316,
@@ -39,12 +39,12 @@
                 },
                 "axis":  {
                     "show": true,
-                    "stroke":"#e1e5e8",
+                    "stroke":"#e1e5e8ff",
                     "strokeWidth":1
                 },
                 "plots": {
                     "radius": 2,
-                    "stroke": "#FFFFFF",
+                    "stroke": "#FFFFFFff",
                     "strokeWidth": 0.3,
                     "opacity": 0.6,
                     "significance": {
@@ -64,7 +64,7 @@
                     "label": {
                         "show": true,
                         "fontSize": 12,
-                        "color":"#2D353C",
+                        "color":"#2D353Cff",
                         "bold": true,
                         "roundingValue": 2,
                         "useSerieColor": true
@@ -75,7 +75,7 @@
                         "name": "xAxis",
                         "show": true,
                         "fontSize": 8,
-                        "color":"#2D353C",
+                        "color":"#2D353Cff",
                         "bold":false,
                         "offsetX": 0,
                         "offsetY": 0,
@@ -85,7 +85,7 @@
                         "name":"yAxis",
                         "show": true,
                         "fontSize": 8,
-                        "color":"#2D353C",
+                        "color":"#2D353Cff",
                         "bold":false,
                         "offsetY": 0,
                         "offsetX": 0,
@@ -95,7 +95,7 @@
             },
             "title": {
                 "text": "Title",
-                "color": "#2D353C",
+                "color": "#2D353Cff",
                 "fontSize": 20,
                 "bold": true,
                 "subtitle": {
@@ -107,16 +107,16 @@
             },
             "legend": {
                 "show": true,
-                "backgroundColor":"#FFFFFF",
-                "color": "#2D353C",
+                "backgroundColor":"#FFFFFFff",
+                "color": "#2D353Cff",
                 "fontSize" : 12,
                 "bold": true,
                 "roundingValue": 0
             },
             "tooltip": {
                 "show": true,
-                "backgroundColor": "#FFFFFF",
-                "color": "#2D353C",
+                "backgroundColor": "#FFFFFFff",
+                "color": "#2D353Cff",
                 "fontSize": 14,
                 "roundingValue": 0
             }
@@ -128,13 +128,13 @@
             "show": false,
             "th": {
                 "backgroundColor": "#FAFAFA",
-                "color": "#2D353C",
-                "outline": "1px solid #e1e5e8"
+                "color": "#2D353Cff",
+                "outline": "1px solid #e1e5e8ff"
             },
             "td": {
-                "backgroundColor": "#FFFFFF",
-                "color": "#2D353C",
-                "outline": "1px solid #e1e5e8",
+                "backgroundColor": "#FFFFFFff",
+                "color": "#2D353Cff",
+                "outline": "1px solid #e1e5e8ff",
                 "roundingValue": 2,
                 "roundingAverage": 1
             },

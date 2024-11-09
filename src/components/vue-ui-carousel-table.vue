@@ -2,7 +2,14 @@
 import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from "vue";
 import { useConfig } from "../useConfig";
 import { useNestedProp } from "../useNestedProp";
-import { createCsvContent, createUid, downloadCsv, error, objectIsEmpty, opacity } from "../lib";
+import { 
+    createCsvContent, 
+    createUid, 
+    downloadCsv, 
+    error, 
+    objectIsEmpty,
+    setOpacity
+} from "../lib";
 import { usePrinter } from "../usePrinter";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
@@ -435,7 +442,7 @@ defineExpose({
                             :style="{ 
                                 ...FINAL_CONFIG.tbody.tr.td.style,
                                 border: `${FINAL_CONFIG.tbody.tr.td.border.size}px solid ${FINAL_CONFIG.tbody.tr.td.border.color}`,
-                                backgroundColor: FINAL_CONFIG.tbody.tr.td.style.backgroundColor + opacity[(i % 2 === 0 && FINAL_CONFIG.tbody.tr.td.alternateColor) ? FINAL_CONFIG.tbody.tr.td.alternateOpacity * 100 : 100],
+                                backgroundColor: setOpacity(FINAL_CONFIG.tbody.tr.td.style.backgroundColor, (i % 2 === 0 && FINAL_CONFIG.tbody.tr.td.alternateColor) ? FINAL_CONFIG.tbody.tr.td.alternateOpacity * 100 : 100),
                                 paddingTop: FINAL_CONFIG.tbody.tr.td.padding.top + 'px',
                                 paddingRight: FINAL_CONFIG.tbody.tr.td.padding.right + 'px',
                                 paddingBottom: FINAL_CONFIG.tbody.tr.td.padding.bottom + 'px',

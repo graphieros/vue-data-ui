@@ -37,7 +37,7 @@
             "chart": {
                 "useGradient": true,
                 "gradientIntensity": 40,
-                "backgroundColor": "#FFFFFF",
+                "backgroundColor": "#FFFFFFff",
                 "color": "#2D353C",
                 "layout": {
                     "labels": {
@@ -97,7 +97,7 @@
                     }
                 },
                 "legend": {
-                    "backgroundColor": "#FFFFFF",
+                    "backgroundColor": "#FFFFFFff",
                     "color": "#2D353C",
                     "show": true,
                     "fontSize": 16,
@@ -120,7 +120,7 @@
                 "tooltip": {
                     "show": true,
                     "color": "#2D353C",
-                    "backgroundColor": "#FFFFFF",
+                    "backgroundColor": "#FFFFFFff",
                     "fontSize": 14,
                     "showValue": true,
                     "showPercentage": true,
@@ -144,7 +144,7 @@
                 "outline": "1px solid #e1e5e8"
             },
             "td": {
-                "backgroundColor": "#FFFFFF",
+                "backgroundColor": "#FFFFFFff",
                 "color": "#2D353C",
                 "outline": "1px solid #e1e5e8",
                 "roundingValue": 0,

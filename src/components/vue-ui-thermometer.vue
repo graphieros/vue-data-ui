@@ -10,8 +10,8 @@ import {
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
-    opacity, 
     palette,
+    setOpacity,
     themePalettes,
     XMLNS
 } from "../lib.js";
@@ -325,7 +325,7 @@ defineExpose({
                     x1="0%" y1="0%" x2="100%" y2="0%"
                 >
                     <stop offset="0%" :stop-color="graduation.color"/>
-                    <stop offset="50%" :stop-color="`${graduation.color}${opacity[100 - FINAL_CONFIG.style.chart.graduations.gradient.intensity]}`"/>
+                    <stop offset="50%" :stop-color="setOpacity(graduation.color, 100 - FINAL_CONFIG.style.chart.graduations.gradient.intensity)"/>
                     <stop offset="100%" :stop-color="graduation.color"/>
                 </linearGradient>
             </defs>

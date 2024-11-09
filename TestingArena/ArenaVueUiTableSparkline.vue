@@ -75,13 +75,13 @@ const model = ref([
     { key: 'title.subtitle.color', def: '#1A1A1A', type: 'color'},
     { key: 'title.subtitle.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'title.subtitle.bold', def: false, type: 'checkbox'},
-    { key: 'thead.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'thead.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'thead.color', def: '#1A1A1A', type: 'color'},
     { key: 'thead.fontSize', def: 14, type: 'number', min: 8, max: 24},
     { key: 'thead.outline', def: 'none', type: 'text'},
     { key: 'thead.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
     { key: 'thead.bold', def: false, type: 'checkbox'},
-    { key: 'tbody.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'tbody.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'tbody.color', def: '#1A1A1A', type: 'color'},
     { key: 'tbody.fontSize', def: 14, type: 'number', min: 8, max: 24},
     { key: 'tbody.outline', def: 'none', type: 'text'},
@@ -97,7 +97,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[2])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     return {

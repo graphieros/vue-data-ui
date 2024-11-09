@@ -16,8 +16,8 @@ import {
     getMissingDatasetAttributes,
     makeDonut,
     objectIsEmpty, 
-    opacity, 
-    palette, 
+    palette,
+    setOpacity,
     shiftHue,
     themePalettes,
     XMLNS
@@ -590,7 +590,7 @@ defineExpose({
                     v-for="(d, i) in mutableDataset"
                     :id="`root_gradient_${uid}_${d.rootIndex}`"
                 >
-                    <stop offset="0%" :stop-color="`${shiftHue(d.color, 0.05)}${opacity[100 - FINAL_CONFIG.style.chart.layout.roots.gradientIntensity]}`"/>
+                    <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.roots.gradientIntensity)"/>
                     <stop offset="100%" :stop-color="d.color" />
                 </radialGradient>
                 <linearGradient
@@ -599,33 +599,33 @@ defineExpose({
                     :id="`branch_gradient_${uid}_${d.rootIndex}`"
                 >
                     <stop offset="0%" :stop-color="d.color" />
-                    <stop offset="100%" :stop-color="`${shiftHue(d.color, 0.02)}${opacity[100 - FINAL_CONFIG.style.chart.layout.branches.gradientIntensity]}`"/>
+                    <stop offset="100%" :stop-color="setOpacity(shiftHue(d.color, 0.02), 100 - FINAL_CONFIG.style.chart.layout.branches.gradientIntensity)"/>
                 </linearGradient>
                 <!-- picked nut core gradient -->
                 <radialGradient
                     cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
                     :id="`nutpick_${uid}`"
                 >
-                    <stop offset="0%" :stop-color="`#FFFFFF${opacity[0]}`"/>
-                    <stop offset="80%" :stop-color="`#FFFFFF${opacity[FINAL_CONFIG.style.chart.layout.nuts.selected.gradientIntensity]}`"/>
-                    <stop offset="100%" :stop-color="`#FFFFFF${opacity[0]}`"/>
+                    <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 0)"/>
+                    <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.nuts.selected.gradientIntensity)"/>
+                    <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 0)"/>
                 </radialGradient>
                 <radialGradient
                     cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
                     :id="`nut_${uid}`"
                 >
-                    <stop offset="0%" :stop-color="`#FFFFFF${opacity[0]}`"/>
-                    <stop offset="80%" :stop-color="`#FFFFFF${opacity[FINAL_CONFIG.style.chart.layout.nuts.gradientIntensity]}`"/>
-                    <stop offset="100%" :stop-color="`#FFFFFF${opacity[0]}`"/>
+                    <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 0)"/>
+                    <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.nuts.gradientIntensity)"/>
+                    <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 0)"/>
                 </radialGradient>
                 <!-- picked nut underlayer -->
                 <radialGradient
                     cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
                     :id="`nut_underlayer_${uid}`"
                 >
-                    <stop offset="0%" :stop-color="`${FINAL_CONFIG.style.chart.backgroundColor}${opacity[100]}`"/>
-                    <stop offset="80%" :stop-color="`${FINAL_CONFIG.style.chart.backgroundColor}${opacity[60]}`"/>
-                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.backgroundColor}${opacity[0]}`"/>
+                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 100)"/>
+                    <stop offset="80%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 60)"/>
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"/>
                 </radialGradient>
             </defs>
 
@@ -675,7 +675,7 @@ defineExpose({
                     ${branch.x1 - 80},${branch.y1 + i} 
                     ${getRoot(branch).x + getRoot(branch).r / 2}, ${getRoot(branch).y}
                 `"
-                    :stroke="`${branch.color}${opacity[FINAL_CONFIG.style.chart.layout.links.opacity]}`"
+                    :stroke="setOpacity(branch.color, FINAL_CONFIG.style.chart.layout.links.opacity)"
                     fill="none"
                     stroke-width="2"
                     shape-rendering="cirspEdges"
@@ -826,16 +826,7 @@ defineExpose({
                     fill="none"
                     :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
                 />
-                <!-- core -->
-                <circle
-                    v-for="branch in branches"
-                    :cx="branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
-                    :cy="branch.y1 + svg.branchSize / 2"
-                    :r="6"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                    @click="pickNut(branch)"
-                    style="cursor: pointer"
-                />
+
                 <!-- tooltip trap -->
                 <circle
                     :data-cy="`chestnut-trap-${b}`"
@@ -938,19 +929,6 @@ defineExpose({
                         </div>
                     </div>
                 </foreignObject>
-                <!-- LABEL CONNECTOR -->
-                <g v-for="arc in openNut">
-                    <path
-                        v-if="isArcBigEnough(arc)"
-                        :d="calcNutArrowPath(arc)"
-                        :stroke="arc.color"
-                        stroke-width="1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        fill="none"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                    />
-                </g>
                 <circle
                     :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="selectedNut.y1 + svg.branchSize / 2"
@@ -959,6 +937,30 @@ defineExpose({
                     @click="leaveNut"
                     :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                 />
+                <!-- LABEL CONNECTOR -->
+                <g v-for="arc in openNut">
+                    <path
+                        v-if="isArcBigEnough(arc)"
+                        :d="calcNutArrowPath(
+                            arc,
+                            {
+                                x: selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX,
+                                y: selectedNut.y1 + svg.branchSize / 2
+                            },
+                            16,
+                            16,
+                            false,
+                            false,
+                            64
+                        )"
+                        :stroke="arc.color"
+                        stroke-width="1"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        fill="none"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    />
+                </g>
                 <circle
                     :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="selectedNut.y1 + svg.branchSize / 2"

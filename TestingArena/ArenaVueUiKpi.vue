@@ -19,7 +19,7 @@ const config = ref({
     title: 'Lorem ipsum dolor sit amet',
     analogDigits: {
         show: true
-    }
+    },
 })
 
     

@@ -33,7 +33,7 @@ const model = ref([
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.arcs.strokeWidth', def: 24, type: 'number', min: 2, max: 48},
     { key: 'style.chart.layout.arcs.borderWidth', def: 12, type: 'number', min: 1, max: 24},
@@ -43,7 +43,7 @@ const model = ref([
     { key: 'style.chart.layout.arcs.hoverEffect.multiplicator', def: 1.1, type: 'number', min: 1, max: 2, step: 0.05},
     { key: 'style.chart.layout.arcs.gradient.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.arcs.gradient.intensity', def: 30, type: 'range', min: 0, max: 100},
-    { key: 'style.chart.layout.arcs.gradient.color', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.layout.arcs.gradient.color', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.layout.labels.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.layout.labels.dataLabels.suffix', def: 'S', type: 'text'},
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -96,7 +96,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)

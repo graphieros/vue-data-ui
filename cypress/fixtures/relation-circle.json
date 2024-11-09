@@ -197,7 +197,7 @@
     ],
     "config": {
         "style": {
-            "backgroundColor": "#FFFFFF",
+            "backgroundColor": "#FFFFFFff",
             "fontFamily": "inherit",
             "size": 400,
             "limit": 50,
@@ -206,7 +206,7 @@
                 "speedMs": 300
             },
             "labels": {
-                "color": "#2D353C",
+                "color": "#2D353Cff",
                 "fontSize": 10
             },
             "links": {
@@ -215,17 +215,17 @@
             },
             "circle": {
                 "radiusProportion": 0.2,
-                "stroke": "#CCCCCC",
+                "stroke": "#CCCCCCff",
                 "strokeWidth": 1,
                 "offsetY": 0
             },
             "plot": {
                 "radius": 2,
-                "color": "#2D353C"
+                "color": "#2D353Cff"
             },
             "title": {
                 "text": "Title",
-                "color": "#2D353C",
+                "color": "#2D353Cff",
                 "fontSize": 20,
                 "bold": true,
                 "subtitle": {

@@ -16,8 +16,8 @@ import {
     isFunction,
     makePath,
     objectIsEmpty, 
-    opacity, 
-    palette, 
+    palette,
+    setOpacity,
     shiftHue,
     themePalettes,
     XMLNS
@@ -636,8 +636,8 @@ defineExpose({
                     v-for="(d, i) in datasetCopy"
                     :id="`radar_gradient_${uid}_${i}`"
                 >
-                    <stop offset="0%" :stop-color="`${shiftHue(d.color, 0.05)}${opacity[FINAL_CONFIG.style.chart.layout.dataPolygon.opacity]}`"/>
-                    <stop offset="100%" :stop-color="d.color + opacity[FINAL_CONFIG.style.chart.layout.dataPolygon.opacity]" />
+                    <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)"/>
+                    <stop offset="100%" :stop-color="setOpacity(d.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
                 </radialGradient>
             </defs>
 
@@ -706,7 +706,7 @@ defineExpose({
                         :stroke="d.color"
                         :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth"
                         v-if="FINAL_CONFIG.useCssAnimation || (!FINAL_CONFIG.useCssAnimation && !segregated.includes(i))"
-                        :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.transparent ? 'transparent' : FINAL_CONFIG.style.chart.layout.dataPolygon.useGradient ? `url(#radar_gradient_${uid}_${i})` : d.color + opacity[FINAL_CONFIG.style.chart.layout.dataPolygon.opacity]"
+                        :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.transparent ? 'transparent' : FINAL_CONFIG.style.chart.layout.dataPolygon.useGradient ? `url(#radar_gradient_${uid}_${i})` : setOpacity(d.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)"
                         :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
                     />
                 </g>

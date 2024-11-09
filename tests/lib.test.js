@@ -1,4 +1,4 @@
-import { expect, test, describe, vi, afterAll, beforeEach } from "vitest";
+import { expect, test, describe, vi, afterAll, beforeEach, afterEach } from "vitest";
 import {
     abbreviate,
     adaptColorToBackground,
@@ -28,18 +28,22 @@ import {
     createTSpans,
     createWordCloudDatasetFromPlainText,
     checkFormatter,
+    darkenHexColor,
     dataLabel,
     degreesToRadians,
     error,
     functionReturnsString,
     generateSpiralCoordinates,
+    getCloserPoint,
     getMissingDatasetAttributes,
+    getScaleFactorUsingArcSize,
     hasDeepProperty,
-    hslToRgb,
+    hslToRgba,
     interpolateColorHex,
     isFunction,
     isSafeValue,
     isValidUserValue,
+    lightenHexColor,
     makeDonut,
     makePath,
     matrixTimes,
@@ -47,6 +51,7 @@ import {
     objectIsEmpty,
     rotateMatrix,
     sanitizeArray,
+    setOpacity,
     shiftHue,
     sumByAttribute,
     translateSize,
@@ -304,29 +309,40 @@ describe('adaptColorToBackground', () => {
 
 describe('convertColorToHex', () => {
     test('returns HEX color format from RGB', () => {
-        expect(convertColorToHex("rgb(255,0,0)")).toBe("#ff0000");
-        expect(convertColorToHex("rgb(0,255,0)")).toBe("#00ff00");
-        expect(convertColorToHex('rgb(0,0,255)')).toBe("#0000ff");
-        expect(convertColorToHex("rgb(0,0,0)")).toBe("#000000");
-        expect(convertColorToHex("rgb(255,255,255)")).toBe("#ffffff");
+        expect(convertColorToHex("rgb(255,0,0)")).toBe("#ff0000ff");
+        expect(convertColorToHex("rgb(0,255,0)")).toBe("#00ff00ff");
+        expect(convertColorToHex('rgb(0,0,255)')).toBe("#0000ffff");
+        expect(convertColorToHex("rgb(0,0,0)")).toBe("#000000ff");
+        expect(convertColorToHex("rgb(255,255,255)")).toBe("#ffffffff");
     });
 
     test('returns HEX color format from HSL', () => {
-        expect(convertColorToHex("hsl(0,100%,50%)")).toBe("#ff0000");
-        expect(convertColorToHex("hsl(120,100%,50%)")).toBe("#00ff00");
-        expect(convertColorToHex("hsl(240,100%,50%)")).toBe("#0000ff");
-        expect(convertColorToHex("hsl(0,0%,0%)")).toBe("#000000");
-        expect(convertColorToHex("hsl(0,0%,100%)")).toBe("#ffffff");
+        expect(convertColorToHex("hsl(0,100%,50%)")).toBe("#ff0000ff");
+        expect(convertColorToHex("hsl(120,100%,50%)")).toBe("#00ff00ff");
+        expect(convertColorToHex("hsl(240,100%,50%)")).toBe("#0000ffff");
+        expect(convertColorToHex("hsl(0,0%,0%)")).toBe("#000000ff");
+        expect(convertColorToHex("hsl(0,0%,100%)")).toBe("#ffffffff");
     });
 
-    test('returns HEX color from an HSL passed through hslToRgb', () => {
-        const rgb = hslToRgb(50, 50, 50);
-        expect(convertColorToHex(`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`)).toBe('#bfaa40')
-    })
+    test('returns HEX color from an HSL passed through hslToRgba', () => {
+        const rgb = hslToRgba(50, 50, 50);
+        expect(convertColorToHex(`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`)).toBe('#bfaa40ff')
+    });
+
     test('returns HEX color from a name color', () => {
-        expect(convertColorToHex('red')).toBe('#FF0000')
-        expect(convertColorToHex('RED')).toBe('#FF0000')
-        expect(convertColorToHex('Red')).toBe('#FF0000')
+        expect(convertColorToHex('red')).toBe('#FF0000ff')
+        expect(convertColorToHex('RED')).toBe('#FF0000ff')
+        expect(convertColorToHex('Red')).toBe('#FF0000ff')
+    });
+
+    test('should convert rgba to hex with alpha channel', () => {
+        const result = convertColorToHex('rgba(255,0,0,0.5)');
+        expect(result).toBe('#ff000080')
+    });
+
+    test('should convert hsla to hex with alpha channel', () => {
+        const result = convertColorToHex('hsla(0, 100%, 50%, 0.5)')
+        expect(result).toBe('#ff000080')
     })
 })
 
@@ -342,12 +358,19 @@ describe('shiftHue', () => {
         expect(shiftHue('#63dd67', 0.1)).toBe('#63ddb0')
         expect(shiftHue('#63ddb0', 0.1)).toBe('#63c1dd')
         expect(shiftHue('#63c1dd', 0.1)).toBe('#6378dd')
+    });
+
+    test('should return a shifted hex color with same alpha channel', () => {
+        expect(shiftHue('#6376DD50', 0.1)).toBe('#9963dd50')
     })
 })
 
-describe('hslToRgb', () => {
-    test('converts hsl to RGB', () => {
-        expect(hslToRgb(50, 50, 50)).toStrictEqual([191, 170, 64])
+describe('hslToRgba', () => {
+    test('converts hsl to RGBA', () => {
+        expect(hslToRgba(50, 50, 50)).toStrictEqual([191, 170, 64, 1])
+    })
+    test('converts hsla to RGBA', () => {
+        expect(hslToRgba(50, 50, 50, 0.5)).toStrictEqual([191, 170, 64, 0.5])
     })
 })
 
@@ -798,6 +821,10 @@ describe('interpolateColorHex', () => {
         expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 80)).toBe('#cc0033')
         expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 90)).toBe('#e6001a')
         expect(interpolateColorHex("#0000FF", "#FF0000", 0, 100, 100)).toBe('#ff0000')
+
+        expect(interpolateColorHex("#0000FF80", "#FF000080", 0, 100, 0)).toBe('#0000ff80');
+        expect(interpolateColorHex("#0000FF80", "#FF000080", 0, 100, 50)).toBe('#80008080');
+        expect(interpolateColorHex("#0000FF80", "#FF000080", 0, 100, 100)).toBe('#ff000080');
     })
 })
 
@@ -1129,10 +1156,10 @@ describe('convertCustomPalette', () => {
         expect(convertCustomPalette([])).toStrictEqual([])
     })
     test('returns converted named colors', () => {
-        expect(convertCustomPalette(['red', 'green', 'blue'])).toStrictEqual(['#FF0000', '#008000', '#0000FF'])
+        expect(convertCustomPalette(['red', 'green', 'blue'])).toStrictEqual(['#FF0000ff', '#008000ff', '#0000FFff'])
     })
     test('returns converted rgb colors', () => {
-        expect(convertCustomPalette(['rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)'])).toStrictEqual(["#ff0000", "#00ff00", "#0000ff"])
+        expect(convertCustomPalette(['rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)'])).toStrictEqual(["#ff0000ff", "#00ff00ff", "#0000ffff"])
     })
 })
 
@@ -1157,7 +1184,7 @@ describe('createWordCloudDatasetFromPlainText', () => {
                 value: 1
             },
             {
-                name:  'a',
+                name: 'a',
                 value: 1
             }
         ]
@@ -1353,7 +1380,7 @@ describe('createWordCloudDatasetFromPlainText', () => {
                 value: 1
             },
             {
-                name:  "ื",
+                name: "ื",
                 value: 1
             },
             {
@@ -1649,7 +1676,7 @@ describe('getPathLengthFromCoordinates', () => {
     test('returns a path length from coordinates', () => {
         expect(getPathLengthFromCoordinates(straightLine)).toBe(10);
     });
-    
+
     const hypothenuse = 'M 0 0 10 10';
     test('returns hypothenuse length', () => {
         expect(getPathLengthFromCoordinates(hypothenuse)).toBe(14.142135623730951);
@@ -1697,14 +1724,14 @@ describe('sumSeries', () => {
 
     test('return an array if sums', () => {
         expect(sumSeries(items)).toStrictEqual([6, 6, 2]);
-        expect(sumSeries([{series: []}])).toStrictEqual([]);
+        expect(sumSeries([{ series: [] }])).toStrictEqual([]);
     })
 })
 
 describe('checkFormatter', () => {
     const params = { value: 12, config: { key: 'configValue' } };
     const expected = `expected${params.value}`;
-    
+
     const testFunc = ({ value }) => {
         return `expected${value}`;
     };
@@ -1777,7 +1804,7 @@ describe('checkFormatter', () => {
 describe('applyDataLabel', () => {
     const params = { value: 12, config: { key: 'configValue' } };
     const expected = `expected${params.value}`;
-    
+
     const testFunc = ({ value }) => {
         return `expected${value}`;
     };
@@ -1857,7 +1884,7 @@ describe('hasDeepProperty', () => {
         attr0: {
             attr1: {
                 attr2: {
-                    attr3 : 'A'
+                    attr3: 'A'
                 }
             }
         }
@@ -1876,7 +1903,7 @@ describe('sanitizeArray', () => {
     test('sanitizes an array of numbers', () => {
         expect(sanitizeArray(source0)).toStrictEqual([1, 2, 3, 0, 0, 0, 0])
     });
-    
+
     const source1 = [{
         values: [1, NaN, undefined, Infinity, -Infinity],
         value: [2, NaN, undefined, Infinity, -Infinity]
@@ -1888,5 +1915,152 @@ describe('sanitizeArray', () => {
                 values: [1, 0, 0, 0, 0]
             }
         ]);
+    });
+});
+
+describe('lightenHexColor', () => {
+    test('should lighten a hex color without transparency', () => {
+        const result = lightenHexColor('#ff5733', 0.2);
+        console.log({ result })
+        expect(result).toBe('#ff795c');
+    });
+
+    test('should lighten a hex color with transparency', () => {
+        const result = lightenHexColor('#ff573380', 0.2);
+        expect(result).toBe('#ff795c80');
+    });
+
+    test('should return a default color for invalid hex format', () => {
+        const result = lightenHexColor('invalid', 0.2);
+        expect(result).toBe('#000000');
+    });
+
+    test('should lighten a short hex color without transparency', () => {
+        const result = lightenHexColor('#f53', 0.3);
+        expect(result).toBe('#ff8870');
+    });
+
+    test('should lighten a short hex color with transparency', () => {
+        const result = lightenHexColor('#f53880', 0.3);
+        expect(result).toBe('#f874a6');
+    });
+});
+
+describe('darkenHexColor', () => {
+    test('should lighten a hex color without transparency', () => {
+        const result = darkenHexColor('#ff5733', 0.2);
+        console.log({ result })
+        expect(result).toBe('#cc4629');
+    });
+
+    test('should lighten a hex color with transparency', () => {
+        const result = darkenHexColor('#ff573380', 0.2);
+        expect(result).toBe('#cc462980');
+    });
+
+    test('should return a default color for invalid hex format', () => {
+        const result = darkenHexColor('invalid', 0.2);
+        expect(result).toBe('#000000');
+    });
+
+    test('should lighten a short hex color without transparency', () => {
+        const result = darkenHexColor('#f53', 0.3);
+        expect(result).toBe('#b33c24');
+    });
+
+    test('should lighten a short hex color with transparency', () => {
+        const result = darkenHexColor('#f53880', 0.3);
+        expect(result).toBe('#ac275a');
+    });
+});
+
+describe('setOpacity', () => {
+    test('should set an opacity to a simple hex color', () => {
+        const result1 = setOpacity('#00FF00');
+        expect(result1).toBe('#00FF00FF')
+        const result2 = setOpacity('#00FF00', 50);
+        expect(result2).toBe('#00FF0080')
+    });
+    test('should override the opacity of a hex color with alpha channel', () => {
+        const result = setOpacity('#00FF0080', 100);
+        expect(result).toBe('#00FF00FF')
+    })
+});
+
+describe('getCloserPoint', () => {
+    test('should move the point closer to the center given a valid arcSize', () => {
+        const result = getCloserPoint(100, 100, 150, 120, 10);
+        expect(result.x).toBeCloseTo(140.7, 1);
+        expect(result.y).toBeCloseTo(116.3, 1);
+    });
+
+    test('should return the same point if the point is at the center', () => {
+        const result = getCloserPoint(100, 100, 100, 100, 10);
+        expect(result.x).toBe(100);
+        expect(result.y).toBe(100);
+    });
+
+    test('should barely move the point if arcSize is very small', () => {
+        const result = getCloserPoint(100, 100, 150, 120, 0.1);
+        expect(result.x).toBeCloseTo(149.9, 1);
+        expect(result.y).toBeCloseTo(120, 1);
+    });
+
+    test('should move the point significantly if arcSize is large', () => {
+        const result = getCloserPoint(100, 100, 150, 120, 40);
+        expect(result.x).toBeCloseTo(112.9, 1);
+        expect(result.y).toBeCloseTo(105.1, 1);
+    });
+
+    test('should not move the point if arcSize is zero', () => {
+        const result = getCloserPoint(100, 100, 150, 120, 0);
+        expect(result.x).toBe(150);
+        expect(result.y).toBe(120);
+    });
+});
+
+describe('getScaleFactorUsingArcSize', () => {
+    beforeEach(() => {
+        vi.spyOn(console, 'warn').mockImplementation(() => { });
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    test('should calculate the correct scale factor for a valid arcSize', () => {
+        const scaleFactor = getScaleFactorUsingArcSize(100, 100, 150, 120, 10);
+        expect(scaleFactor).toBeCloseTo(0.814, 3);
+    });
+
+    test('should return a scale factor close to 1 for a very small arcSize', () => {
+        const scaleFactor = getScaleFactorUsingArcSize(100, 100, 150, 120, 0.1);
+        expect(scaleFactor).toBeCloseTo(0.998, 3);
+    });
+
+    test('should return a scale factor of 1 when arcSize is 0', () => {
+        const scaleFactor = getScaleFactorUsingArcSize(100, 100, 150, 120, 0);
+        expect(scaleFactor).toBe(1);
+    });
+
+    test('should trigger a warning and return a scale factor of 0 when arcSize equals the distance', () => {
+        const scaleFactor = getScaleFactorUsingArcSize(100, 100, 110, 100, 10);
+        expect(console.warn).toHaveBeenCalledWith(
+            'arcSize must be less than the distance from the point to the center'
+        );
+        expect(scaleFactor).toBe(0);
+    });
+
+    test('should trigger a warning and return a negative scale factor when arcSize is greater than the distance', () => {
+        const scaleFactor = getScaleFactorUsingArcSize(100, 100, 110, 100, 20);
+        expect(console.warn).toHaveBeenCalledWith(
+            'arcSize must be less than the distance from the point to the center'
+        );
+        expect(scaleFactor).toBeLessThan(0);
+    });
+
+    test('should correctly calculate the scale factor for a diagonal point', () => {
+        const scaleFactor = getScaleFactorUsingArcSize(0, 0, 3, 4, 1);
+        expect(scaleFactor).toBeCloseTo(0.8, 1);
     });
 });

@@ -38,7 +38,7 @@ const model = ref([
     { key: 'useAnimation', def: true, type: 'checkbox'},
     { key: 'animationSpeed', def: 2, type: 'number', min: 1, max: 10},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.width', def: 600, type: 'number', min: 300, max: 1000},
     { key: 'style.chart.rowHeight', def: 40, type: 'number', min: 40, max: 100},
@@ -132,7 +132,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[1])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

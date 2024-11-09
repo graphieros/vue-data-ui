@@ -9,8 +9,8 @@ import {
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
-    opacity, 
     palette, 
+    setOpacity,
     shiftHue,
     themePalettes,
     XMLNS 
@@ -238,7 +238,7 @@ function selectDatapoint(datapoint, index) {
         <defs>
             <linearGradient v-for="(rect, i) in drawableDataset" :key="`stack_gradient_${i}`" gradientTransform="rotate(90)" :id="`stack_gradient_${i}_${uid}`">
                 <stop offset="0%" :stop-color="rect.color"/>
-                <stop offset="50%" :stop-color="`${shiftHue(rect.color, 0.05)}${opacity[100 - FINAL_CONFIG.style.bar.gradient.intensity]}`"/>
+                <stop offset="50%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.bar.gradient.intensity)"/>
                 <stop offset="100%" :stop-color="rect.color"/>
             </linearGradient>
             <clipPath id="stackPill" clipPathUnits="objectBoundingBox">

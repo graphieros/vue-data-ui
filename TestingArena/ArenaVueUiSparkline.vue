@@ -126,7 +126,7 @@ const model = ref([
     { key: 'style.chartWidth', def: 400, type: 'number', min: 100, max: 500},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.animationFrames', def: 360, type: 'number', min: 0, max: 1000},
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.line.color', def: '#3366CC', type: 'color'},
     { key: 'style.line.strokeWidth', def: 3, type: 'number', min: 0, max: 20},
@@ -174,7 +174,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
