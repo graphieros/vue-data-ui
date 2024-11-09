@@ -13,8 +13,8 @@
         "style": {
             "fontFamily":"inherit",
             "chart": {
-                "backgroundColor":"#FFFFFF",
-                "color":"#2D353C",
+                "backgroundColor":"#FFFFFFff",
+                "color":"#2D353Cff",
                 "height": 360,
                 "thermometer": {
                     "width": 48
@@ -29,7 +29,7 @@
                     "show": true,
                     "sides": "both",
                     "height": 2,
-                    "stroke":"#e1e5e8",
+                    "stroke":"#e1e5e8ff",
                     "strokeWidth": 1,
                     "showIntermediate": true,
                     "gradient": {
@@ -45,12 +45,12 @@
                     "fontSize": 20,
                     "rounding": 1,
                     "bold": true,
-                    "color": "#2D353C"
+                    "color": "#2D353Cff"
                 }
             },
             "title": {
                 "text": "Title",
-                "color": "#2D353C",
+                "color": "#2D353Cff",
                 "fontSize": 20,
                 "bold": true,
                 "subtitle": {
