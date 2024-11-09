@@ -2,15 +2,15 @@
 import { ref, computed, onMounted, watch } from "vue";
 import {
     applyDataLabel,
+    calcTrend,
+    checkNaN,
     createSmoothPath,
     createUid,
-    opacity,
     dataLabel,
     error,
-    calcTrend,
     objectIsEmpty,
+    setOpacity,
     XMLNS,
-checkNaN
 } from "../lib"
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
@@ -266,7 +266,7 @@ const straightLine = computed(() => {
                     x1="0%" y1="0%" x2="0%" y2="100%"
                     :id="`pill_gradient_${uid}`"
                 >
-                    <stop offset="0%" :stop-color="(FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke) + opacity[FINAL_CONFIG.style.area.opacity]"/>
+                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke, FINAL_CONFIG.style.area.opacity)"/>
                     <stop offset="100%" :stop-color="FINAL_CONFIG.style.backgroundColor" />
                 </linearGradient>
             </defs>
@@ -276,13 +276,13 @@ const straightLine = computed(() => {
                 <path
                     v-if="FINAL_CONFIG.style.line.smooth"
                     :d="`M ${mutableDataset[0].x},${drawingArea.bottom} ${createSmoothPath(mutableDataset)} L ${mutableDataset.at(-1).x},${drawingArea.bottom} Z`"
-                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#pill_gradient_${uid})` : `${FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke}${opacity[FINAL_CONFIG.style.area.opacity]}`"
+                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#pill_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke, FINAL_CONFIG.style.area.opacity)"
                     stroke="none"
                 />
                 <path
                     v-else
                     :d="`M${area}Z`" 
-                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#pill_gradient_${uid})` : `${FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke}${opacity[FINAL_CONFIG.style.area.opacity]}`"
+                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#pill_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke, FINAL_CONFIG.style.area.opacity)"
                     stroke="none"
                 />
             </g>

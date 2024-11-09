@@ -162,12 +162,12 @@
                     <defs :data-cy="`xy-def-bar-${i}`">
                         <linearGradient :id="`rectGradient_pos_${i}_${uniqueId}`" x2="0%" y2="100%">
                             <stop offset="0%" :stop-color="serie.color"/>
-                            <stop offset="62%" :stop-color="`${shiftHue(serie.color, 0.02)}DE`"/>
-                            <stop offset="100%" :stop-color="`${shiftHue(serie.color, 0.05)}66`"/>
+                            <stop offset="62%" :stop-color="`${shiftHue(serie.color, 0.02)}`"/>
+                            <stop offset="100%" :stop-color="`${shiftHue(serie.color, 0.05)}`"/>
                         </linearGradient>
                         <linearGradient :id="`rectGradient_neg_${i}_${uniqueId}`" x2="0%" y2="100%">
-                            <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.05)}66`"/>
-                            <stop offset="38%" :stop-color="`${shiftHue(serie.color, 0.02)}DE`"/>
+                            <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.05)}`"/>
+                            <stop offset="38%" :stop-color="`${shiftHue(serie.color, 0.02)}`"/>
                             <stop offset="100%" :stop-color="serie.color"/>
                         </linearGradient>
                     </defs>
@@ -191,8 +191,8 @@
                             <stop offset="100%" :stop-color="serie.color" />
                         </radialGradient>
                         <linearGradient :id="`areaGradient_${i}_${uniqueId}`" x1="0%" x2="100%" y1="0%" y2="0%">
-                            <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.03)}${opacity[FINAL_CONFIG.line.area.opacity]}`"/>
-                            <stop offset="100%" :stop-color="`${serie.color}${opacity[FINAL_CONFIG.line.area.opacity]}`"/>
+                            <stop offset="0%" :stop-color="`${setOpacity(shiftHue(serie.color, 0.03), FINAL_CONFIG.line.area.opacity)}`"/>
+                            <stop offset="100%" :stop-color="`${setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)}`"/>
                         </linearGradient>
                     </defs>
                 </template>
@@ -207,7 +207,7 @@
                             :y="drawingArea.top"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :width="(drawingArea.width / maxSeries) * oneArea.span < 0 ? 0.00001 : (drawingArea.width / maxSeries) * oneArea.span"
-                            :fill="`${oneArea.color}${opacity[oneArea.opacity]}`"
+                            :fill="setOpacity(oneArea.color, oneArea.opacity)"
                         />
                         <foreignObject v-if="oneArea.caption.text"
                             :x="(drawingArea.left + (drawingArea.width / maxSeries) * (oneArea.from - (slicer.start))) - (oneArea.caption.width === 'auto' ? 0 : oneArea.caption.width / 2 - (drawingArea.width / maxSeries) * oneArea.span / 2)"
@@ -232,7 +232,7 @@
                             :y="drawingArea.top"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
-                            :fill="[selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(i) ? `${FINAL_CONFIG.chart.highlighter.color}${opacity[FINAL_CONFIG.chart.highlighter.opacity]}` : 'transparent'"
+                            :fill="[selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(i) ? setOpacity(FINAL_CONFIG.chart.highlighter.color, FINAL_CONFIG.chart.highlighter.opacity) : 'transparent'"
                         />
                     </g>
                 </g>
@@ -559,9 +559,9 @@
                     <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea && serie.plots.length > 1">
                         <path 
                             v-if="serie.smooth" 
-                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[FINAL_CONFIG.line.area.opacity]}`"
+                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"
                         />
-                        <path v-else :d="`M${serie.area}Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : `${serie.color}${opacity[FINAL_CONFIG.line.area.opacity]}`"/>
+                        <path v-else :d="`M${serie.area}Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"/>
                     </g>
 
                     <path 
@@ -734,7 +734,7 @@
                                 width="150"
                                 style="overflow: visible"
                             >
-                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
+                                <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
                                 </div>
                             </foreignObject>
@@ -747,7 +747,7 @@
                                 width="150"
                                 style="overflow: visible"
                             >
-                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
+                                <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
                                 </div>
                             </foreignObject>
@@ -793,7 +793,7 @@
                                 width="150"
                                 style="overflow: visible"
                             >
-                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
+                                <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
                                 </div>
                             </foreignObject>
@@ -806,7 +806,7 @@
                                 width="150"
                                 style="overflow: visible"
                             >
-                                <div :style="`padding: 3px; background:${serie.color}${opacity[80]};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
+                                <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
                                 </div>
                             </foreignObject>
@@ -898,7 +898,7 @@
                         :y="drawingArea.top"
                         :width="FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :fill="selectedScale === trap.id ? `${trap.color}20` : 'transparent'"
+                        :fill="selectedScale === trap.id ? setOpacity(trap.color, 20) : 'transparent'"
                         @mouseenter="selectedScale = trap.id"
                         @mouseleave="selectedScale = null"
                     />
@@ -1187,7 +1187,8 @@ import {
     isFunction,
     isSafeValue, 
     opacity, 
-    palette, 
+    palette,
+    setOpacity,
     shiftHue, 
     treeShake,
     error,
@@ -2178,6 +2179,7 @@ export default {
         isSafeValue,
         objectIsEmpty,
         pdf,
+        setOpacity,
         shiftHue,
         translateSize,
         treeShake,

@@ -19,7 +19,6 @@ import {
     isFunction, 
     lightenHexColor, 
     objectIsEmpty, 
-    opacity, 
     palette, 
     sumSeries, 
     themePalettes, 
@@ -1132,7 +1131,8 @@ defineExpose({
                     @click="selectDatapoint(i)"
                     @mouseenter="useTooltip(i)"
                     @mouseleave="trapIndex = null; isTooltip = false"
-                    :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color + opacity[FINAL_CONFIG.style.chart.highlighter.opacity] : 'transparent'"
+                    :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
+                    :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
                 />
             </template>
 
@@ -1147,7 +1147,8 @@ defineExpose({
                     @click="selectDatapoint(i)"
                     @mouseenter="useTooltip(i)"
                     @mouseleave="trapIndex = null; isTooltip = false"
-                    :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color + opacity[FINAL_CONFIG.style.chart.highlighter.opacity] : 'transparent'"
+                    :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
+                    :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
                 />
             </template>
 

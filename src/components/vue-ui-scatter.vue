@@ -15,8 +15,8 @@ import {
     giftWrap,
     isFunction,
     objectIsEmpty,
-    opacity, 
     palette,
+    setOpacity,
     themePalettes,
     XMLNS,
 } from '../lib';
@@ -697,7 +697,7 @@ defineExpose({
                     <polygon 
                         v-if="ds.plots.length > 2"
                         :points="giftWrap({series: ds.plots})"
-                        :fill="`${ds.color}${opacity[FINAL_CONFIG.style.layout.plots.giftWrap.fillOpacity * 100]}`"
+                        :fill="setOpacity(ds.color, FINAL_CONFIG.style.layout.plots.giftWrap.fillOpacity * 100)"
                         :stroke-width="FINAL_CONFIG.style.layout.plots.giftWrap.strokeWidth"
                         :stroke-dasharray="FINAL_CONFIG.style.layout.plots.giftWrap.strokeDasharray"
                         :stroke="ds.color"
@@ -716,7 +716,7 @@ defineExpose({
                         :cx="plot.x"
                         :cy="plot.y"
                         :r="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
-                        :fill="`${ds.color}${opacity[FINAL_CONFIG.style.layout.plots.opacity * 100]}`"
+                        :fill="setOpacity(ds.color, FINAL_CONFIG.style.layout.plots.opacity * 100)"
                         :stroke="FINAL_CONFIG.style.layout.plots.stroke"
                         :stroke-width="FINAL_CONFIG.style.layout.plots.strokeWidth"
                         @mouseover="useTooltip(plot, i)"
@@ -731,7 +731,7 @@ defineExpose({
                         :plot="{x: plot.x, y: plot.y }"
                         :radius="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
                         :shape="ds.shape"
-                        :color="`${ds.color}${opacity[FINAL_CONFIG.style.layout.plots.opacity * 100]}`"
+                        :color="setOpacity(ds.color, FINAL_CONFIG.style.layout.plots.opacity * 100)"
                         :stroke="FINAL_CONFIG.style.layout.plots.stroke"
                         :strokeWidth="FINAL_CONFIG.style.layout.plots.strokeWidth"
                         @mouseover="useTooltip(plot, i)"

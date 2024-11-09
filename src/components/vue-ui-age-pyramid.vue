@@ -11,7 +11,7 @@ import {
     functionReturnsString,
     isFunction,
     objectIsEmpty,
-    opacity, 
+    setOpacity,
     shiftHue,
     XMLNS
 } from '../lib';
@@ -492,7 +492,7 @@ defineExpose({
                     />
                     <stop 
                         offset="100%" 
-                        :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.bars.left.color, FINAL_CONFIG.style.layout.bars.gradient.shiftHue)}${opacity[100 - FINAL_CONFIG.style.layout.bars.gradient.intensity]}`"
+                        :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.layout.bars.left.color, FINAL_CONFIG.style.layout.bars.gradient.shiftHue), 100 - FINAL_CONFIG.style.layout.bars.gradient.intensity)"
                     />
                 </linearGradient>
                 <linearGradient 
@@ -501,7 +501,7 @@ defineExpose({
                 >
                     <stop 
                         offset="0%" 
-                        :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.bars.right.color, FINAL_CONFIG.style.layout.bars.gradient.shiftHue)}${opacity[100 - FINAL_CONFIG.style.layout.bars.gradient.intensity]}`"
+                        :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.layout.bars.right.color, FINAL_CONFIG.style.layout.bars.gradient.shiftHue), 100 - FINAL_CONFIG.style.layout.bars.gradient.intensity)"
                     />
                     <stop 
                         offset="100%" 
@@ -688,7 +688,7 @@ defineExpose({
                     :y="drawingArea.top + (drawingArea.height / len) * i - FINAL_CONFIG.style.layout.bars.gap / 2"
                     :width="drawingArea.width <= 0 ? 0.0001 : drawingArea.width"
                     :height="drawingArea.height / len <= 0 ? 0.0001 : drawingArea.height / len"
-                    :fill="selectedIndex !== null && selectedIndex === i ? `${FINAL_CONFIG.style.highlighter.color}${opacity[FINAL_CONFIG.style.highlighter.opacity]}` : 'transparent'"
+                    :fill="selectedIndex !== null && selectedIndex === i ? setOpacity(FINAL_CONFIG.style.highlighter.color, FINAL_CONFIG.style.highlighter.opacity) : 'transparent'"
                     @mouseover="useTooltip(i, datapoint)"
                     @mouseleave="selectedIndex = null; isTooltip = false"
                 />

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { 
-convertCustomPalette,
+    convertCustomPalette,
     createUid, 
     error, 
     getMissingDatasetAttributes,

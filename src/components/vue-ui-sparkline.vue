@@ -10,7 +10,7 @@ import {
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
-    opacity,
+    setOpacity,
     shiftHue,
     XMLNS
 } from "../lib";
@@ -350,15 +350,15 @@ function selectDatapoint(datapoint, index) {
                     x1="0%" y1="0%" x2="100%" y2="0%"
                     :id="`sparkline_gradient_${uid}`"
                 >
-                    <stop offset="0%" :stop-color="`${shiftHue(FINAL_CONFIG.style.area.color, 0.05)}${opacity[FINAL_CONFIG.style.area.opacity]}`"/>
-                    <stop offset="100%" :stop-color="FINAL_CONFIG.style.area.color + opacity[FINAL_CONFIG.style.area.opacity]" />
+                    <stop offset="0%" :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.area.color, 0.05), FINAL_CONFIG.style.area.opacity)"/>
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.area.color, FINAL_CONFIG.style.area.opacity)" />
                 </linearGradient>
                 <linearGradient x2="0%" y2="100%" :id="`sparkline_bar_gradient_pos_${uid}`">
                     <stop offset="0%" :stop-color="FINAL_CONFIG.style.bar.color"/>
-                    <stop offset="100%" :stop-color="`${shiftHue(FINAL_CONFIG.style.bar.color, 0.05)}`"/>
+                    <stop offset="100%" :stop-color="shiftHue(FINAL_CONFIG.style.bar.color, 0.05)"/>
                 </linearGradient>
                 <linearGradient x2="0%" y2="100%" :id="`sparkline_bar_gradient_neg_${uid}`">
-                    <stop offset="0%" :stop-color="`${shiftHue(FINAL_CONFIG.style.bar.color, 0.05)}`"/>
+                    <stop offset="0%" :stop-color="shiftHue(FINAL_CONFIG.style.bar.color, 0.05)"/>
                     <stop offset="100%" :stop-color="FINAL_CONFIG.style.bar.color"/>
                 </linearGradient>
             </defs>
@@ -369,13 +369,13 @@ function selectDatapoint(datapoint, index) {
                     data-cy="sparkline-smooth-area"
                     v-if="FINAL_CONFIG.style.line.smooth"
                     :d="`M ${mutableDataset[0].x},${drawingArea.bottom} ${createSmoothPath(mutableDataset)} L ${mutableDataset.at(-1).x},${drawingArea.bottom} Z`"
-                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : `${FINAL_CONFIG.style.area.color}${opacity[FINAL_CONFIG.style.area.opacity]}`"
+                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.area.color, FINAL_CONFIG.style.area.opacity)"
                 />
                 <path
                     data-cy="sparkline-angle-area"
                     v-else
                     :d="`M${area}Z`" 
-                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : `${FINAL_CONFIG.style.area.color}${opacity[FINAL_CONFIG.style.area.opacity]}`"
+                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.area.color, FINAL_CONFIG.style.area.opacity)"
                 />
             </g>
 

@@ -15,8 +15,8 @@ import {
     getMissingDatasetAttributes,
     isFunction,
     objectIsEmpty,
-    opacity,
     palette,
+    setOpacity,
     shiftHue,
     themePalettes,
     XMLNS
@@ -772,7 +772,7 @@ defineExpose({
             <!-- DEFS -->
             <defs>
                 <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" v-for="(rect,i) in rects" :id="`gradient_${uid}_${i}`">
-                    <stop offset="0%" :stop-color="`${shiftHue(rect.color, 0.05)}${opacity[100 - FINAL_CONFIG.style.chart.layout.rect.gradientIntensity]}`"/>
+                    <stop offset="0%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.rect.gradientIntensity)"/>
                     <stop offset="100%" :stop-color="rect.color" />
                 </radialGradient>
             </defs>

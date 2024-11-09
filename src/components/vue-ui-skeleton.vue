@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed } from "vue";
 import { 
-    opacity, 
     createPolygonPath, 
     createStar,
+    setOpacity,
     XMLNS
 } from "../lib.js";
 import { useNestedProp } from "../useNestedProp";
@@ -518,19 +518,19 @@ const ticks = computed(() => {
                     :cx="200"
                     :cy="200"
                     :r="180"
-                    :fill="`${FINAL_CONFIG.style.rings.color}${opacity[40]}`"
+                    :fill="setOpacity(FINAL_CONFIG.style.rings.color, 40)"
                 />
                 <circle
                     :cx="200"
                     :cy="250"
                     :r="130"
-                    :fill="`${FINAL_CONFIG.style.rings.color}${opacity[60]}`"
+                    :fill="setOpacity(FINAL_CONFIG.style.rings.color, 60)"
                 />
                 <circle
                     :cx="200"
                     :cy="290"
                     :r="90"
-                    :fill="`${FINAL_CONFIG.style.rings.color}${opacity[100]}`"
+                    :fill="setOpacity(FINAL_CONFIG.style.rings.color, 100)"
                 />
             </svg>
         </template>
@@ -544,7 +544,7 @@ const ticks = computed(() => {
                 :x2="tick.x2"
                 :y1="tick.y1"
                 :y2="tick.y2"
-                :stroke="i < 66 ? tick.color : `${tick.color}${opacity[50]}`"
+                :stroke="i < 66 ? tick.color : setOpacity(tick.color, 50)"
                 :stroke-width="5"
                 stroke-linecap="round"
             />
@@ -553,11 +553,11 @@ const ticks = computed(() => {
                 :cy="200"
                 :r="130"
                 :stroke-width="3"
-                :stroke="`${FINAL_CONFIG.style.wheel.color}${opacity[50]}`"
+                :stroke="setOpacity(FINAL_CONFIG.style.wheel.color, 50)"
                 fill="none"
             />
             <rect 
-                :fill="`${FINAL_CONFIG.style.wheel.color}${opacity[50]}`"
+                :fill="setOpacity(FINAL_CONFIG.style.wheel.color, 50)"
                 :rx="12"
                 :x="160"
                 :y="170"
@@ -666,7 +666,7 @@ const ticks = computed(() => {
                             :width="10"
                             :stroke="FINAL_CONFIG.style.backgroundColor"
                             :stroke-width="1"
-                            :fill="`${FINAL_CONFIG.style.heatmap.color}${opacity[Math.round(Math.random()*100)]}`"
+                            :fill="setOpacity(FINAL_CONFIG.style.heatmap.color, Math.round(Math.random()*100))"
                         />
                     </g>
                 </g>
@@ -686,7 +686,7 @@ const ticks = computed(() => {
                             ${bar.x - 80},${bar.y + i} 
                             ${item.root.x + item.root.r / 2}, ${item.root.y}
                         `"
-                            :stroke="`${FINAL_CONFIG.style.chestnut.color}${opacity[bar.opacity * 0.2]}`"
+                            :stroke="setOpacity(FINAL_CONFIG.style.chestnut.color, bar.opacity * 0.2)"
                             fill="none"
                             stroke-width="2"
                             shape-rendering="cirspEdges"
@@ -694,11 +694,11 @@ const ticks = computed(() => {
                     </g>
                 </g>
                 <circle v-for="item in chestnut" :cx="item.root.x" :cy="item.root.y" :r="item.root.r" :fill="`${FINAL_CONFIG.style.backgroundColor}`" :stroke="FINAL_CONFIG.backgroundColor" :stroke-width="3"/>
-                <circle v-for="item in chestnut" :cx="item.root.x" :cy="item.root.y" :r="item.root.r" :fill="`${FINAL_CONFIG.style.chestnut.color}${opacity[item.root.opacity]}`" :stroke="FINAL_CONFIG.style.backgroundColor" :stroke-width="3"/>
+                <circle v-for="item in chestnut" :cx="item.root.x" :cy="item.root.y" :r="item.root.r" :fill="setOpacity(FINAL_CONFIG.style.chestnut.color, item.root.opacity)" :stroke="FINAL_CONFIG.style.backgroundColor" :stroke-width="3"/>
                 <g v-for="item in chestnut">
-                    <rect v-for="bar in item.bars" rx="2" :x="bar.x" :y="bar.y" :width="bar.width" :height="22" :fill="`${FINAL_CONFIG.style.chestnut.color}${opacity[bar.opacity]}`"/>
-                    <circle v-for="bar in item.bars" :cx="bar.x + bar.width + 32" :cy="bar.y + 11" :r="11" :fill="`${FINAL_CONFIG.style.chestnut.color}${opacity[bar.opacity]}`"/>
-                    <circle v-for="bar in item.bars" :cx="bar.x + bar.width + 32" :cy="bar.y + 11" :r="5" :fill="`${FINAL_CONFIG.style.backgroundColor}`"/>
+                    <rect v-for="bar in item.bars" rx="2" :x="bar.x" :y="bar.y" :width="bar.width" :height="22" :fill="setOpacity(FINAL_CONFIG.style.chestnut.color, bar.opacity)"/>
+                    <circle v-for="bar in item.bars" :cx="bar.x + bar.width + 32" :cy="bar.y + 11" :r="11" :fill="setOpacity(FINAL_CONFIG.style.chestnut.color, bar.opacity)"/>
+                    <circle v-for="bar in item.bars" :cx="bar.x + bar.width + 32" :cy="bar.y + 11" :r="5" :fill="FINAL_CONFIG.style.backgroundColor"/>
                 </g>
                 <line :x1="200" :x2="200" :y1="10" :y2="300" :stroke="FINAL_CONFIG.style.backgroundColor" :stroke-width="3"/>
             </svg>
@@ -761,8 +761,8 @@ const ticks = computed(() => {
         <template v-if="type === 'donut'">
             <svg :xmlns="XMLNS" data-cy="skeleton-donut" width="100%" viewBox="0 0 400 400" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
                 <path d=" M 300 200 A 100 100 0 0 1 113 250" fill="none" :stroke-width="FINAL_CONFIG.style.donut.strokeWidth" :stroke="FINAL_CONFIG.style.donut.color" />
-                <path d=" M 113 250 A 100 100 0 0 1 250 113" fill="none" :stroke-width="FINAL_CONFIG.style.donut.strokeWidth" :stroke="`${FINAL_CONFIG.style.donut.color}${opacity[60]}`" />
-                <path d=" M 250 113 A 100 100 0 0 1 300 200" fill="none" :stroke-width="FINAL_CONFIG.style.donut.strokeWidth" :stroke="`${FINAL_CONFIG.style.donut.color}${opacity[30]}`" />
+                <path d=" M 113 250 A 100 100 0 0 1 250 113" fill="none" :stroke-width="FINAL_CONFIG.style.donut.strokeWidth" :stroke="setOpacity(FINAL_CONFIG.style.donut.color, 60)" />
+                <path d=" M 250 113 A 100 100 0 0 1 300 200" fill="none" :stroke-width="FINAL_CONFIG.style.donut.strokeWidth" :stroke="setOpacity(FINAL_CONFIG.style.donut.color, 30)" />
             </svg>
         </template>
         
@@ -770,8 +770,8 @@ const ticks = computed(() => {
         <template v-if="type === 'onion'">
             <svg :xmlns="XMLNS" data-cy="skeleton-onion" width="100%" viewBox="0 0 400 400" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
                 <path d=" M 200 60 A 140 140 0 1 1 60 200"   :stroke="FINAL_CONFIG.style.onion.color" stroke-linecap="round" stroke-width="20" fill="none" />
-                <path d=" M 200 100 A 100 100 0 1 1 100 200" :stroke="`${FINAL_CONFIG.style.onion.color}${opacity[60]}`" stroke-linecap="round" stroke-width="20" fill="none" />
-                <path d=" M 200 140 A 60 60 0 1 1 140 200" fill="none" :stroke="`${FINAL_CONFIG.style.onion.color}${opacity[40]}`" stroke-linecap="round" stroke-width="20" />
+                <path d=" M 200 100 A 100 100 0 1 1 100 200" :stroke="setOpacity(FINAL_CONFIG.style.onion.color, 60)" stroke-linecap="round" stroke-width="20" fill="none" />
+                <path d=" M 200 140 A 60 60 0 1 1 140 200" fill="none" :stroke="setOpacity(FINAL_CONFIG.style.onion.color, 40)" stroke-linecap="round" stroke-width="20" />
             </svg>
         </template>
 
@@ -806,16 +806,16 @@ const ticks = computed(() => {
             <svg :xmlns="XMLNS" data-cy="skeleton-radar" viewBox="0 0 100 100" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
                 <path :d="radar" fill="none" :stroke="FINAL_CONFIG.style.radar.grid.color" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
 
-                <path :d="radarInside1" fill="none" :stroke="`${FINAL_CONFIG.style.radar.grid.color}${opacity[70]}`" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path :d="radarInside2" fill="none" :stroke="`${FINAL_CONFIG.style.radar.grid.color}${opacity[70]}`" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path :d="radarInside3" fill="none" :stroke="`${FINAL_CONFIG.style.radar.grid.color}${opacity[70]}`" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path :d="radarInside1" fill="none" :stroke="setOpacity(FINAL_CONFIG.style.radar.grid.color, 70)" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path :d="radarInside2" fill="none" :stroke="setOpacity(FINAL_CONFIG.style.radar.grid.color, 70)" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path :d="radarInside3" fill="none" :stroke="setOpacity(FINAL_CONFIG.style.radar.grid.color, 70)" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2.5" stroke-linecap="round" stroke-linejoin="round"/>
 
-                <path d="M 9,50 91,50" :stroke="`${FINAL_CONFIG.style.radar.grid.color}${opacity[50]}`" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" />
-                <path d="M 29.5,14.5 70.5 85.5" :stroke="`${FINAL_CONFIG.style.radar.grid.color}${opacity[50]}`" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" />
-                <path d="M 29.5,85.5 70.5 14.5" :stroke="`${FINAL_CONFIG.style.radar.grid.color}${opacity[50]}`" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" />
+                <path d="M 9,50 91,50" :stroke="setOpacity(FINAL_CONFIG.style.radar.grid.color, 50)" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" />
+                <path d="M 29.5,14.5 70.5 85.5" :stroke="setOpacity(FINAL_CONFIG.style.radar.grid.color, 50)" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" />
+                <path d="M 29.5,85.5 70.5 14.5" :stroke="setOpacity(FINAL_CONFIG.style.radar.grid.color, 50)" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" />
 
-                <path d="M 34,23 68.5,18, 70,50 61.5,70 35,75.5 10,50  Z" stroke="none" stroke-linejoin="round" :fill="`${FINAL_CONFIG.style.radar.shapes.color}${opacity[30]}`" />
-                <path d="M 43.5,40 64.5,25, 84,50 55.5,60 29.5,85.5 25,50  Z" stroke="none" stroke-linejoin="round" :fill="`${FINAL_CONFIG.style.radar.shapes.color}${opacity[50]}`" />
+                <path d="M 34,23 68.5,18, 70,50 61.5,70 35,75.5 10,50  Z" stroke="none" stroke-linejoin="round" :fill="setOpacity(FINAL_CONFIG.style.radar.shapes.color, 30)" />
+                <path d="M 43.5,40 64.5,25, 84,50 55.5,60 29.5,85.5 25,50  Z" stroke="none" stroke-linejoin="round" :fill="setOpacity(FINAL_CONFIG.style.radar.shapes.color, 50)" />
             </svg>
         </template>
 
@@ -829,7 +829,7 @@ const ticks = computed(() => {
                             :y="3 + (i * 9.5)"
                             :height="9"
                             :width="9"
-                            :fill="`${FINAL_CONFIG.style.waffle.color}${opacity[20]}`"
+                            :fill="setOpacity(FINAL_CONFIG.style.waffle.color, 20)"
                             rx="1"
                         />
                     </g>
@@ -842,7 +842,7 @@ const ticks = computed(() => {
                             :y="3 + (i * 9.5)"
                             :height="9"
                             :width="9"
-                            :fill="`${FINAL_CONFIG.style.waffle.color}${opacity[30]}`"
+                            :fill="setOpacity(FINAL_CONFIG.style.waffle.color, 30)"
                             rx="1"
                         />
                     </g>
@@ -855,7 +855,7 @@ const ticks = computed(() => {
                             :y="3 + (i * 9.5)"
                             :height="9"
                             :width="9"
-                            :fill="`${FINAL_CONFIG.style.waffle.color}${opacity[50]}`"
+                            :fill="setOpacity(FINAL_CONFIG.style.waffle.color, 50)"
                             rx="1"
                         />
                     </g>
@@ -866,8 +866,8 @@ const ticks = computed(() => {
         <!-- TYPE TABLE -->
         <template v-if="type === 'table'">
             <svg :xmlns="XMLNS" data-cy="skeleton-table" width="100%" viewBox="0 0 100 70" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
-                <rect :fill="`${FINAL_CONFIG.style.table.th.color}${opacity[50]}`" :x="3.5" :y="5" height="10" width="93"/>
-                <rect :fill="`${FINAL_CONFIG.style.table.th.color}${opacity[50]}`" :x="3.5" :y="15" height="50" width="23.25"/>
+                <rect :fill="setOpacity(FINAL_CONFIG.style.table.th.color, 50)" :x="3.5" :y="5" height="10" width="93"/>
+                <rect :fill="setOpacity(FINAL_CONFIG.style.table.th.color, 50)" :x="3.5" :y="15" height="50" width="23.25"/>
                 <line v-for="(_,i) in 7" x1="3.7" x2="96.3" :y1="5 + (i * 10)" :y2="5 + (i * 10)" :stroke="FINAL_CONFIG.style.table.td.color" :stroke-width="FINAL_CONFIG.style.table.td.strokeWidth" stroke-linecap="round" />
                 <line v-for="(_,i) in 5" :x1="3.5 + (i * 23.25)" :x2="3.5 + (i * 23.25)" y1="5" y2="65" :stroke="FINAL_CONFIG.style.table.td.color" :stroke-width="FINAL_CONFIG.style.table.td.strokeWidth" stroke-linecap="round" />
             </svg>

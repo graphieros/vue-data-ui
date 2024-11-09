@@ -2,22 +2,22 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import {
     applyDataLabel,
+    checkNaN,
     convertColorToHex,
+    convertCustomPalette,
     createCsvContent,
     createUid,
-    downloadCsv,
     dataLabel,
+    downloadCsv,
     error,
     functionReturnsString,
     isFunction,
     objectIsEmpty,
-    opacity,
     palette,
+    setOpacity,
     shiftHue,
     themePalettes,
     XMLNS,
-    convertCustomPalette,
-checkNaN
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
@@ -709,7 +709,7 @@ defineExpose({
                     :id="`vertical_bar_gradient_${uid}_${i}`"
                 >
                     <stop offset="0%" :stop-color="bar.color" />
-                    <stop offset="100%" :stop-color="`${shiftHue(bar.color, 0.03)}${opacity[100 - FINAL_CONFIG.style.chart.layout.bars.gradientIntensity]}`"/>
+                    <stop offset="100%" :stop-color="setOpacity(shiftHue(bar.color, 0.03), 100 - FINAL_CONFIG.style.chart.layout.bars.gradientIntensity)"/>
             </linearGradient>
 
             <g v-for="(serie, i) in bars">
@@ -732,7 +732,7 @@ defineExpose({
                     :y="drawableArea.top + ((barGap + barHeight) * i)"
                     :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
                     :height="barHeight <= 0 ? 0.0001 : barHeight"
-                    :fill="FINAL_CONFIG.style.chart.layout.bars.useGradient ? `url(#vertical_bar_gradient_${uid}_${i})` : `${serie.color}${opacity[FINAL_CONFIG.style.chart.layout.bars.fillOpacity]}`"
+                    :fill="FINAL_CONFIG.style.chart.layout.bars.useGradient ? `url(#vertical_bar_gradient_${uid}_${i})` : setOpacity(serie.color, FINAL_CONFIG.style.chart.layout.bars.fillOpacity)"
                     :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
                     :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke ? serie.color : 'none'"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth : 0"
@@ -820,7 +820,7 @@ defineExpose({
                     :y="drawableArea.top + ((barGap + barHeight) * i) - (barGap/2)"
                     :width="svg.width <= 0 ? 0.0001 : svg.width"
                     :height="barHeight + barGap <= 0 ? 0.0001 : barHeight + barGap"
-                    :fill="selectedBarId === serie.id ? `${FINAL_CONFIG.style.chart.layout.highlighter.color}${opacity[FINAL_CONFIG.style.chart.layout.highlighter.opacity]}` : 'transparent'"
+                    :fill="selectedBarId === serie.id ? setOpacity(FINAL_CONFIG.style.chart.layout.highlighter.color, FINAL_CONFIG.style.chart.layout.highlighter.opacity) : 'transparent'"
                     @mouseenter="useTooltip(serie, i)"
                     @mouseleave="hoveredBar = null; isTooltip = false; selectedBarId = null"
                 />

@@ -21,9 +21,9 @@ import {
     isFunction,
     lightenHexColor,
     objectIsEmpty,
-    opacity,
     palette,
     sanitizeArray,
+    setOpacity,
     themePalettes,
 } from "../lib";
 import { throttle } from "../canvas-lib";
@@ -408,6 +408,7 @@ function resizeCanvas() {
 }
 
 function setupChart() {
+    ctx.value.clearRect(0, 0, 10000, 10000)
     ctx.value.fillStyle = FINAL_CONFIG.value.style.chart.backgroundColor;
     ctx.value.fillRect(0, 0, drawingArea.value.canvasWidth, drawingArea.value.canvasHeight);
 
@@ -443,7 +444,7 @@ function setupChart() {
                                 { x: drawingArea.value.left, y: absoluteExtremes.value.yLabels[i + 1].y },
                             ],
                             {
-                                fillColor: i % 2 === 0 ? 'transparent' : FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.color + opacity[FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.opacity],
+                                fillColor: i % 2 === 0 ? 'transparent' : setOpacity(FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.color, FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.opacity),
                                 strokeColor: 'transparent'
                             }
                         );
@@ -576,7 +577,7 @@ function setupChart() {
                                     { x: drawingArea.value.left, y: ds.localYLabels[k + 1].y }
                                 ],
                                 {
-                                    fillColor: k % 2 === 0 ? 'transparent' : FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.color + opacity[FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.opacity],
+                                    fillColor: k % 2 === 0 ? 'transparent' : setOpacity(FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.color, FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.opacity),
                                     strokeColor: 'transparent'
                                 }
                             );
@@ -772,7 +773,7 @@ function drawTimeLabels() {
                 {
                     align: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation === 0 ? 'center' : FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation > 0 ? 'left' : 'right',
                     font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.timeLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                    color: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color + opacity[tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100],
+                    color: setOpacity(FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color, tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100),
                     rotation: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation,
                 }
             );
@@ -901,7 +902,7 @@ function drawLineOrArea(ds) {
                 ctx.value,
                 [{ x: ds.coordinatesLine[0].x, y: ds.localZero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: ds.localZero }],
                 {
-                    fillColor: ds.color + opacity[FINAL_CONFIG.value.style.chart.area.opacity],
+                    fillColor: setOpacity(ds.color, FINAL_CONFIG.value.style.chart.area.opacity),
                     strokeColor: 'transparent',
                 }
             );
@@ -910,7 +911,7 @@ function drawLineOrArea(ds) {
                 ctx.value,
                 [{ x: ds.coordinatesLine[0].x, y: absoluteExtremes.value.zero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: absoluteExtremes.value.zero }],
                 {
-                    fillColor: ds.color + opacity[FINAL_CONFIG.value.style.chart.area.opacity],
+                    fillColor: setOpacity(ds.color, FINAL_CONFIG.value.style.chart.area.opacity),
                     strokeColor: 'transparent',
                 }
             );
@@ -967,6 +968,7 @@ function draw() {
         clonedCanvas.value = cloneCanvas(canvas.value);
     } else {
         if (clonedCanvas.value) {
+            ctx.value.clearRect(0, 0, 10000, 10000)
             ctx.value.drawImage(clonedCanvas.value, 0, 0)
         }
 
@@ -1010,6 +1012,7 @@ const debounceCanvasResize = debounce(() => {
 }, maxSeries.value > 200 ? 10 : 1, !tooltipHasChanged.value);
 
 function handleMousemove(e) {
+    
     const { left } = canvas.value.getBoundingClientRect()
     const mouseX = e.clientX - left;
 

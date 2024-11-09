@@ -14,9 +14,9 @@ import {
   getMissingDatasetAttributes,
   isFunction,
   objectIsEmpty,
-  opacity,
   palette,
   sanitizeArray,
+  setOpacity,
   shiftHue,
   themePalettes,
   XMLNS
@@ -570,9 +570,7 @@ defineExpose({
       >
         <stop
           offset="0%"
-          :stop-color="`${shiftHue(d.color, 0.05)}${
-            opacity[100 - FINAL_CONFIG.style.chart.layout.rings.gradient.intensity]
-          }`"
+          :stop-color="setOpacity(shiftHue(d.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.rings.gradient.intensity)"
         />
         <stop offset="100%" :stop-color="d.color" />
       </radialGradient>

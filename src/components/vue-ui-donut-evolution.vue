@@ -17,9 +17,9 @@ import {
     getMissingDatasetAttributes,
     makeDonut,
     objectIsEmpty, 
-    opacity, 
     palette,
     sanitizeArray,
+    setOpacity,
     sumByAttribute,
     themePalettes,
     XMLNS
@@ -572,14 +572,14 @@ defineExpose({
 
             <defs>
                 <linearGradient :id="`hover_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" :stop-color="`${FINAL_CONFIG.style.chart.backgroundColor}${opacity[FINAL_CONFIG.style.chart.layout.highlighter.opacity]}`"/>
-                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.layout.highlighter.color}${opacity[FINAL_CONFIG.style.chart.layout.highlighter.opacity]}`"/>
+                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, FINAL_CONFIG.style.chart.layout.highlighter.opacity)"/>
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.layout.highlighter.color, FINAL_CONFIG.style.chart.layout.highlighter.opacity)"/>
                 </linearGradient>
 
                 <radialGradient :id="`focus_${uid}`">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
-                    <stop offset="77%" :stop-color="'#FFFFFF' + opacity[30]" />
-                    <stop offset="100%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
+                    <stop offset="0%" :stop-color="setOpacity(convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor), 0)" />
+                    <stop offset="77%" :stop-color="setOpacity('#FFFFFF', 30)" />
+                    <stop offset="100%" :stop-color="setOpacity(convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor), 0)" />
                 </radialGradient>
             </defs>
             
@@ -830,7 +830,7 @@ defineExpose({
                 <g v-for="arc in fixedDatapoint.donutFocus">
                     <path
                         data-cy-zoom-donut
-                        :d="calcNutArrowPath(arc, {x: svg.centerX, y: svg.centerY}, 12, 12, false, false, 1)"
+                        :d="calcNutArrowPath(arc, {x: svg.centerX, y: svg.centerY}, 12, 12, false, false, 15)"
                         :stroke="arc.color"
                         stroke-width="1"
                         stroke-linecap="round"

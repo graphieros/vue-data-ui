@@ -18,6 +18,7 @@ import {
     makeDonut,
     objectIsEmpty, 
     palette,
+    setOpacity,
     themePalettes,
     XMLNS
 } from '../lib';
@@ -577,36 +578,36 @@ defineExpose({
             <!-- DEFS -->
             <defs>
                 <radialGradient :id="`gradient_top${uid}`">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
-                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}`" />
+                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                    <stop offset="100%" :stop-color="FINAL_CONFIG.style.chart.bar.color" />
                 </radialGradient>
                 <radialGradient :id="`gradient_left${uid}`">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
-                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}33`" />
+                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.bar.color, 20)" />
                 </radialGradient>
                 <radialGradient :id="`gradient_right${uid}`">
-                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
-                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}33`" />
+                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.bar.color, 20)" />
                 </radialGradient>
                 <linearGradient :id="`gradient_tube_body${uid}`" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}`"/>
-                    <stop offset="75%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`"/>
-                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}66`"/>
+                    <stop offset="75%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"/>
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.bar.color, 40)"/>
                 </linearGradient>
             </defs>
 
             <defs v-if="hasStack">
                 <radialGradient v-for="bar in stack" :id="`grad_top_${bar.id}`">
-                    <stop offset="0%" :stop-color="`${lightenHexColor(bar.color, 0.5)}DD`" />
-                    <stop offset="100%" :stop-color="`${bar.color}`" />
+                    <stop offset="0%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.5), 80)" />
+                    <stop offset="100%" :stop-color="bar.color" />
                 </radialGradient>
                 <linearGradient v-for="bar in stack" :id="`grad_left_${bar.id}`">
-                    <stop offset="0%" :stop-color="`${bar.color}DD`" />
-                    <stop offset="100%" :stop-color="`${darkenHexColor(bar.color, 0.5)}FF`" />
+                    <stop offset="0%" :stop-color="setOpacity(bar.color, 80)" />
+                    <stop offset="100%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.5), 100)" />
                 </linearGradient>
                 <linearGradient v-for="bar in stack" :id="`grad_right_${bar.id}`">
-                    <stop offset="2%" :stop-color="`${lightenHexColor(bar.color, 0.5)}FF`" />
-                    <stop offset="100%" :stop-color="`${bar.color}DD`" />
+                    <stop offset="2%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.5), 100)" />
+                    <stop offset="100%" :stop-color="setOpacity(bar.color, 80)" />
                 </linearGradient>
                 <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" :id="`vertical_line_${uid}`">
                     <stop offset="0%" stop-color="#FFFFFF"/>
@@ -694,7 +695,7 @@ defineExpose({
                             <g v-for="(arc, j) in bar.fill.donut">                            
                                 <path
                                     v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6"
-                                    :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 0.5)"
+                                    :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 10)"
                                     :stroke="arc.color"
                                     class="vue-ui-donut-arc-path"
                                     stroke-width="0.5"
@@ -717,9 +718,9 @@ defineExpose({
                             <!-- DONUT HOLLOW -->
                             <defs>
                                 <radialGradient :id="`hollow_gradient_${uid}`">
-                                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
-                                    <stop offset="77%" :stop-color="'#FFFFFF' + '20'" />
-                                    <stop offset="100%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
+                                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                                    <stop offset="77%" stop-color="#FFFFFF20" />
+                                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
                                 </radialGradient>
                             </defs>
                             <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="28" :fill="`url(#hollow_gradient_${uid})`"/>
@@ -792,16 +793,16 @@ defineExpose({
                     <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack" @click="emits('selectDatapoint', bar)">
                         <defs>
                             <radialGradient :id="`gradient_tube_top_${bar.id}`" fx="10%" cy="55%">
-                                <stop offset="0%" :stop-color="`${lightenHexColor(bar.color, 0.5)}DD`" />
+                                <stop offset="0%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.5), 80)" />
 
-                                <stop offset="100%" :stop-color="`${darkenHexColor(bar.color, 0.1)}DD`" />
+                                <stop offset="100%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.1), 80)" />
                             </radialGradient>
                             <linearGradient :id="`gradient_tube_body_${bar.id}`" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" :stop-color="`${bar.color}`"/>
-                                <stop offset="10%" :stop-color="`${darkenHexColor(bar.color, 0.7)}FF`"/>
-                                <stop offset="25%" :stop-color="`${darkenHexColor(bar.color, 0.5)}FF`"/>
-                                <stop offset="75%" :stop-color="`${bar.color}DD`"/>
-                                <stop offset="100%" :stop-color="`${lightenHexColor(bar.color, 0.7)}FF`"/>
+                                <stop offset="10%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.7), 100)"/>
+                                <stop offset="25%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.5), 100)"/>
+                                <stop offset="75%" :stop-color="setOpacity(bar.color, 80)"/>
+                                <stop offset="100%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.7), 100)"/>
                             </linearGradient>
                         </defs>
                         <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie" :d="bar.fill.tubeBody" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body_${bar.id})`"/>
@@ -835,7 +836,7 @@ defineExpose({
                             <g v-for="(arc, j) in bar.fill.donut">                            
                                 <path
                                     v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6"
-                                    :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 0.5)"
+                                    :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 10)"
                                     :stroke="arc.color"
                                     class="vue-ui-donut-arc-path"
                                     stroke-width="0.5"
@@ -844,7 +845,7 @@ defineExpose({
                                     fill="none"
                                 />
                             </g>
-   
+
                             <path 
                                 v-for="(arc, j) in bar.fill.donut"
                                 class="vue-ui-donut-arc-path"
@@ -858,9 +859,9 @@ defineExpose({
                             <!-- DONUT HOLLOW -->
                             <defs>
                                 <radialGradient :id="`hollow_gradient_${uid}`">
-                                    <stop offset="0%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
-                                    <stop offset="77%" :stop-color="'#FFFFFF' + '20'" />
-                                    <stop offset="100%" :stop-color="`${convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor)}00`" />
+                                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                                    <stop offset="77%" stop-color="#FFFFFF20" />
+                                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"/>
                                 </radialGradient>
                             </defs>
                             <circle class="vue-ui-donut-arc-path" v-for="(arc, j) in bar.fill.donut" :cx="arc.cx" :cy="arc.cy" :r="28" :fill="`url(#hollow_gradient_${uid})`"/>

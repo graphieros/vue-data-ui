@@ -9,10 +9,10 @@ import {
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
-    opacity, 
     palette, 
     themePalettes,
     makeDonut,
+    setOpacity,
     translateSize,
     offsetFromCenterPoint,
     XMLNS,
@@ -437,9 +437,9 @@ defineExpose({
 
             <defs>
                 <radialGradient :id="`gradient_${uid}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                    <stop offset="0%" :stop-color="`#FFFFFF${opacity[1]}`" />
-                    <stop offset="80%" :stop-color="`#FFFFFF${opacity[FINAL_CONFIG.style.chart.layout.track.gradientIntensity]}`" />
-                    <stop offset="100%" :stop-color="`#FFFFFF${opacity[1]}`" />
+                    <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 1)" />
+                    <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.track.gradientIntensity)" />
+                    <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 1)" />
                 </radialGradient>
             </defs>
 
@@ -472,16 +472,7 @@ defineExpose({
                     stroke-linecap="round"
                     :filter="`url(#blur_${uid})`"
                 />
-                <!-- HIDER -->
-                <rect
-                    :x="0"
-                    :y="arcSizeSource.base"
-                    :width="svg.width <= 0 ? 0.0001 : svg.width"
-                    :height="svg.height * 0.3 <= 0 ? 0.0001 : svg.height * 0.3"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                />
             </template>
-
 
             <!-- STEP MARKERS -->
             <text

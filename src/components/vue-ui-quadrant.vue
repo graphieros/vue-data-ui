@@ -14,8 +14,8 @@ import {
     giftWrap,
     isFunction,
     objectIsEmpty,
-    opacity, 
-    palette, 
+    palette,
+    setOpacity,
     shiftHue,
     themePalettes,
     XMLNS,
@@ -388,7 +388,7 @@ const graduations = computed(() => {
             y: stepY + (svg.value.usableHeight * (i / grads / 2)),
             height: svg.value.usableHeight * (1 - (i / (grads))),
             width: svg.value.usableWidth * (1 - (i / grads)),
-            opacity: opacity[Math.round((i+1) / grads * 20)]
+            opacity: Math.round((i+1) / grads * 20)
         })
     }
 
@@ -1015,8 +1015,8 @@ defineExpose({
                     v-for="(d, i) in drawableDataset"
                     :id="`quadrant_gradient_${uid}_${i}`"
                 >
-                    <stop offset="0%" :stop-color="`${shiftHue(d.color, 0.05)}${opacity[FINAL_CONFIG.style.chart.layout.areas.opacity]}`"/>
-                    <stop offset="100%" :stop-color="d.color + opacity[FINAL_CONFIG.style.chart.layout.areas.opacity]" />
+                    <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), FINAL_CONFIG.style.chart.layout.areas.opacity)"/>
+                    <stop offset="100%" :stop-color="setOpacity(d.color, FINAL_CONFIG.style.chart.layout.areas.opacity)" />
                 </radialGradient>
             </defs>
 
@@ -1024,7 +1024,7 @@ defineExpose({
             <!-- GRADUATIONS-->
             <g v-if="FINAL_CONFIG.style.chart.layout.grid.graduations.show">
                 <rect v-for="graduation in graduations"
-                    :fill="FINAL_CONFIG.style.chart.layout.grid.graduations.fill ? `${FINAL_CONFIG.style.chart.layout.grid.graduations.color}${graduation.opacity}` : 'none'"
+                    :fill="FINAL_CONFIG.style.chart.layout.grid.graduations.fill ? setOpacity(FINAL_CONFIG.style.chart.layout.grid.graduations.color, graduation.opacity) : 'none'"
                     :x="graduation.x"
                     :y="graduation.y"
                     :height="graduation.height <= 0 ? 0.001 : graduation.height"
@@ -1222,7 +1222,7 @@ defineExpose({
                     <polygon
                         v-if="category.series.length > 2"
                         data-cy-quadrant-area
-                        :fill="FINAL_CONFIG.style.chart.layout.areas.useGradient ? `url(#quadrant_gradient_${uid}_${i})` : `${category.color}${opacity[FINAL_CONFIG.style.chart.layout.areas.opacity]}`"
+                        :fill="FINAL_CONFIG.style.chart.layout.areas.useGradient ? `url(#quadrant_gradient_${uid}_${i})` : setOpacity(category.color, FINAL_CONFIG.style.chart.layout.areas.opacity)"
                         :points="giftWrap(category)"
                     />
                 </g>

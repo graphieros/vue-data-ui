@@ -7,7 +7,7 @@ import {
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
-    opacity, 
+    setOpacity,
     shiftHue,
     XMLNS 
 } from "../lib";
@@ -140,7 +140,7 @@ const computedDataset = computed(() => {
         const x = drawingArea.value.left + (gap / 2  + (i * unitWidth));
         const trapX = drawingArea.value.left + (i * unitWidth);
         const intensity = typeof dp.intensity === 'undefined' ? 100 : Math.round(dp.intensity * 100);
-        const color = dp.color ? dp.color : dp.value >= 0 ? `${FINAL_CONFIG.value.style.bars.colors.positive}${opacity[intensity]}` : `${FINAL_CONFIG.value.style.bars.colors.negative}${opacity[intensity]}`;
+        const color = dp.color ? dp.color : dp.value >= 0 ? setOpacity(FINAL_CONFIG.value.style.bars.colors.positive, intensity) : setOpacity(FINAL_CONFIG.value.style.bars.colors.negative, intensity);
         const stroke = dp.color ? dp.color : dp.value >= 0 ? FINAL_CONFIG.value.style.bars.colors.positive : FINAL_CONFIG.value.style.bars.colors.negative;
         const gradient = dp.color ? `url(#gradient_datapoint_${i}_${uid.value})` :  dp.value >=  0 ? `url(#gradient_positive_${i}_${uid.value})` : `url(#gradient_negative_${i}_${uid.value})`;
         const textAnchor = x + width / 2;
@@ -207,18 +207,18 @@ const animation = computed(() => {
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkhistogram-svg" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" style="overflow: visible">
             <defs>
                 <radialGradient v-for="(posGrad, i) in computedDataset" :id="`gradient_positive_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
-                    <stop offset="0%" :stop-color="`${shiftHue(FINAL_CONFIG.style.bars.colors.positive, 0.05)}${opacity[posGrad.intensity]}`"/>
-                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.bars.colors.positive}${opacity[posGrad.intensity]}`"/>
+                    <stop offset="0%" :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.bars.colors.positive, 0.05), posGrad.intensity)"/>
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.bars.colors.positive, posGrad.intensity)"/>
                 </radialGradient>
 
                 <radialGradient v-for="(negGrad, i) in computedDataset" :id="`gradient_negative_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
-                    <stop offset="0%" :stop-color="`${shiftHue(FINAL_CONFIG.style.bars.colors.negative, 0.05)}${opacity[negGrad.intensity]}`"/>
-                    <stop offset="100%" :stop-color="`${FINAL_CONFIG.style.bars.colors.negative}${opacity[negGrad.intensity]}`"/>
+                    <stop offset="0%" :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.bars.colors.negative, 0.05), negGrad.intensity)"/>
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.bars.colors.negative, negGrad.intensity)"/>
                 </radialGradient>
 
                 <radialGradient v-for="(dp, i) in computedDataset" :id="`gradient_datapoint_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
-                    <stop offset="0%" :stop-color="`${shiftHue(dp.color, 0.05)}${opacity[dp.intensity]}`"/>
-                    <stop offset="100%" :stop-color="`${dp.color}${opacity[dp.intensity]}`"/>
+                    <stop offset="0%" :stop-color="setOpacity(shiftHue(dp.color, 0.05), dp.intensity)"/>
+                    <stop offset="100%" :stop-color="setOpacity(dp.color, dp.intensity)"/>
                 </radialGradient>
             </defs>
             
@@ -256,7 +256,19 @@ const animation = computed(() => {
                 :font-weight="FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'"
                 :fill="FINAL_CONFIG.style.labels.value.color"
             >
-                {{ FINAL_CONFIG.style.labels.value.prefix }}{{ isNaN(val.value) ? '' : Number(val.value.toFixed(FINAL_CONFIG.style.labels.value.rounding)).toLocaleString() }}{{ FINAL_CONFIG.style.labels.value.suffix }}
+                {{ 
+                    applyDataLabel(
+                        FINAL_CONFIG.style.labels.value.formatter,
+                        val.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.labels.value.prefix,
+                            v: val.value,
+                            s: FINAL_CONFIG.style.labels.value.suffix,
+                            r: FINAL_CONFIG.style.labels.value.rounding
+                        }),
+                        { datapoint: computedDataset[selectedIndex], seriesIndex: selectedIndex }
+                        ) 
+                }}
             </text>
 
             <g v-for="(label, i) in computedDataset">

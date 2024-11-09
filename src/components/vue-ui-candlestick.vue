@@ -11,7 +11,7 @@ import {
     functionReturnsString,
     isFunction,
     objectIsEmpty,
-    opacity, 
+    setOpacity,
     shiftHue,
     translateSize,
     XMLNS
@@ -703,7 +703,7 @@ defineExpose({
                     :y="drawingArea.top"
                     :height="drawingArea.height <= 0 ? 0.0001 : drawingArea.height"
                     :width="slot <= 0 ? 0.0001 : slot"
-                    :fill="hoveredIndex === i ? `${FINAL_CONFIG.style.layout.selector.color}${opacity[FINAL_CONFIG.style.layout.selector.opacity]}` : 'transparent'"
+                    :fill="hoveredIndex === i ? setOpacity(FINAL_CONFIG.style.layout.selector.color, FINAL_CONFIG.style.layout.selector.opacity) : 'transparent'"
                     @mouseover="useTooltip(i,rect)"
                     @mouseleave="hoveredIndex = undefined; isTooltip = false"
                 />
