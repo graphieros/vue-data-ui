@@ -185,7 +185,7 @@ const svg = ref({
 const donutThickness = computed(() => {
     const baseRatio = FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth / 512;
     const resultSize = svg.value.width * baseRatio
-    return resultSize > minSize.value / 2 ? FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth : resultSize;
+    return resultSize > minSize.value ?  minSize.value : resultSize;
 });
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
@@ -678,9 +678,10 @@ defineExpose({
             <!-- DEFS -->
             <defs>
                 <radialGradient :id="`gradient_${uid}`" v-if="FINAL_CONFIG.style.chart.useGradient">
-                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" stop-opacity="0" />
+                    <stop offset="60%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" stop-opacity="0" />
                     <stop offset="77%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.gradientIntensity)" />
-                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" stop-opacity="0" />
                 </radialGradient>
             </defs>
 
@@ -774,13 +775,6 @@ defineExpose({
                     @click="selectDatapoint(arc, i)"
                 />
             </template>
-
-            <circle
-                v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.show"
-                :cx="svg.width / 2" 
-                :cy="svg.height / 2" 
-                :r="/* This might require adjustments */(minSize - donutThickness) <= 0 ? 10: minSize - donutThickness"
-                :fill="FINAL_CONFIG.style.chart.backgroundColor"/>
 
             <!-- HOLLOW LABELS -->
             <text 
