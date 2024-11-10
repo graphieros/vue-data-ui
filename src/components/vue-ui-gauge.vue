@@ -349,11 +349,11 @@ const gradientArcs = computed(() => {
         arcSizeSource.value.base,
         arcSizeSource.value.gradients,
         arcSizeSource.value.gradients,
-        1,
+        0.95,
         1,
         1,
         180,
-        109.9495,
+        110.02,
         2 * svg.value.trackSize
     );
     return donut
