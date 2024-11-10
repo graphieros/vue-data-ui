@@ -679,8 +679,8 @@ defineExpose({
             <defs>
                 <radialGradient :id="`gradient_${uid}`" v-if="FINAL_CONFIG.style.chart.useGradient">
                     <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" stop-opacity="0" />
-                    <stop offset="60%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" stop-opacity="0" />
-                    <stop offset="77%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.gradientIntensity)" />
+                    <stop :offset="`${ (1 - (donutThickness / minSize)) * 100}%`" :stop-color="setOpacity('#FFFFFF', 0)" stop-opacity="0" />
+                    <stop :offset="`${ (1 - (donutThickness / minSize / 2)) * 100}%`" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.gradientIntensity)" />
                     <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" stop-opacity="0" />
                 </radialGradient>
             </defs>
