@@ -414,11 +414,12 @@
                                         FINAL_CONFIG.chart.grid.labels.yAxis.formatter,
                                         yLabel.value,
                                         dataLabel({
-                                            p:FINAL_CONFIG.chart.labels.prefix, 
+                                            p: yLabel.prefix, 
                                             v: yLabel.value, 
-                                            s: FINAL_CONFIG.chart.labels.suffix, 
+                                            s: yLabel.suffix, 
                                             r: 1,
-                                        })
+                                        }),
+                                        { datapoint: yLabel.datapoint, seriesIndex: j }
                                     )
                                 }}
                             </text>
@@ -449,9 +450,9 @@
                                     FINAL_CONFIG.chart.grid.labels.yAxis.formatter,
                                     yLabel.value,
                                     dataLabel({
-                                        p:FINAL_CONFIG.chart.labels.prefix, 
+                                        p: yLabel.prefix, 
                                         v: yLabel.value, 
-                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        s: yLabel.suffix, 
                                         r: 1,
                                     })) : '' 
                                     }}
@@ -669,9 +670,9 @@
                                     FINAL_CONFIG.bar.labels.formatter,
                                     plot.value,
                                     dataLabel({
-                                        p:FINAL_CONFIG.chart.labels.prefix, 
+                                        p: serie.prefix || FINAL_CONFIG.chart.labels.prefix, 
                                         v: plot.value, 
-                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        s: serie.suffix || FINAL_CONFIG.chart.labels.suffix, 
                                         r: FINAL_CONFIG.bar.labels.rounding,
                                     }),
                                     { 
@@ -713,9 +714,9 @@
                                     FINAL_CONFIG.plot.labels.formatter,
                                     plot.value,
                                     dataLabel({
-                                        p:FINAL_CONFIG.chart.labels.prefix,
+                                        p: serie.prefix || FINAL_CONFIG.chart.labels.prefix,
                                         v: plot.value, 
-                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        s: serie.suffix || FINAL_CONFIG.chart.labels.suffix, 
                                         r: FINAL_CONFIG.plot.labels.rounding,
                                     }),
                                     { 
@@ -772,9 +773,9 @@
                                     FINAL_CONFIG.line.labels.formatter,
                                     plot.value,
                                     dataLabel({
-                                        p:FINAL_CONFIG.chart.labels.prefix, 
+                                        p: serie.prefix || FINAL_CONFIG.chart.labels.prefix, 
                                         v: plot.value, 
-                                        s: FINAL_CONFIG.chart.labels.suffix, 
+                                        s: serie.suffix || FINAL_CONFIG.chart.labels.suffix, 
                                         r: FINAL_CONFIG.line.labels.rounding,
                                     }),
                                     { 
@@ -1648,7 +1649,10 @@ export default {
                 const scaleYLabels = individualScale.ticks.map(t => {
                     return {
                         y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
-                        value: t
+                        value: t,
+                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
+                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
+                        datapoint
                     }
                 })
 
@@ -1656,7 +1660,10 @@ export default {
                     const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
                     return {
                         y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
-                        value: t
+                        value: t,
+                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
+                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
+                        datapoint
                     }
                 });
 
@@ -1758,7 +1765,10 @@ export default {
                 const scaleYLabels = individualScale.ticks.map(t => {
                     return {
                         y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
-                        value: t
+                        value: t,
+                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
+                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
+                        datapoint
                     }
                 })
 
@@ -1766,7 +1776,10 @@ export default {
                     const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
                     return {
                         y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
-                        value: t
+                        value: t,
+                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
+                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
+                        datapoint
                     }
                 });
 
@@ -1856,7 +1869,10 @@ export default {
                 const scaleYLabels = individualScale.ticks.map(t => {
                     return {
                         y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
-                        value: t
+                        value: t,
+                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
+                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
+                        datapoint,
                     }
                 })
 
@@ -1864,7 +1880,10 @@ export default {
                     const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
                     return {
                         y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
-                        value: t
+                        value: t,
+                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
+                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
+                        datapoint
                     }
                 });
 
@@ -2135,7 +2154,9 @@ export default {
             return this.niceScale.ticks.map(t => {
                 return {
                     y: t >= 0 ? this.zero - (this.drawingArea.height * this.ratioToMax(t)) : this.zero + (this.drawingArea.height * this.ratioToMax(Math.abs(t))),
-                    value: t
+                    value: t,
+                    prefix: this.FINAL_CONFIG.chart.labels.prefix,
+                    suffix: this.FINAL_CONFIG.chart.labels.suffix,
                 }
             })
         },

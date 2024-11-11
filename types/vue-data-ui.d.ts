@@ -2327,6 +2327,8 @@ declare module 'vue-data-ui' {
         comments?: string[];
         shape?: Shape;
         smooth?: boolean;
+        prefix?: string;
+        suffix?: string;
     };
 
     export type VueUiXyDatasetBarItem = {
