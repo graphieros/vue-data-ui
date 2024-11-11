@@ -678,7 +678,7 @@ defineExpose({
                         <g v-for="arc in datapoint.donutHover">
                             <path
                                 :data-cy="`donut_hover_${i}`"
-                                :d="calcNutArrowPath(arc, {x: arc.center.endX, y: arc.center.endY}, 12, 12, { x: datapoint.x, y: datapoint.y}, true)"
+                                :d="calcNutArrowPath(arc, {x: arc.center.endX, y: arc.center.endY}, 12, 12, { x: datapoint.x, y: datapoint.y}, true, 20)"
                                 :stroke="arc.color"
                                 stroke-width="1"
                                 stroke-linecap="round"
