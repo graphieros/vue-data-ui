@@ -1975,7 +1975,12 @@ export default {
             return { head, body};
         },
         dataTable() {
-            const head = [''].concat(this.relativeDataset.map(ds => ds.name)).concat(` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`)
+            const showSum = this.FINAL_CONFIG.table.showSum;
+            let head = [''].concat(this.relativeDataset.map(ds => ds.name))
+
+            if(showSum) {
+                head = head.concat(` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`)
+            }
 
             let body = [];
             for(let i = 0; i < this.maxSeries; i += 1) {
@@ -1983,7 +1988,25 @@ export default {
                     return ds.absoluteValues[i] ?? 0
                 }).reduce((a, b) => a + b, 0)
 
-                body.push([this.timeLabels[i] ?? '-'].concat(this.relativeDataset.map(ds => (ds.absoluteValues[i] ?? 0).toFixed(this.FINAL_CONFIG.table.rounding))).concat((sum ?? 0).toFixed(this.FINAL_CONFIG.table.rounding)))
+                body.push([
+                    this.timeLabels[i] ?? '-']
+                    .concat(this.relativeDataset
+                        .map(ds => {
+                            return this.applyDataLabel(
+                                ds.type === 'line' ? this.FINAL_CONFIG.line.labels.formatter :
+                                ds.type === 'bar' ? this.FINAL_CONFIG.bar.labels.formatter :
+                                this.FINAL_CONFIG.plot.labels.formatter,
+                                ds.absoluteValues[i] ?? 0,
+                                this.dataLabel({
+                                    p: ds.prefix || this.FINAL_CONFIG.chart.labels.prefix,
+                                    v: ds.absoluteValues[i] ?? 0,
+                                    s: ds.suffix || this.FINAL_CONFIG.chart.labels.suffix,
+                                    r: this.FINAL_CONFIG.table.rounding
+                                })
+                            )}
+                        ))
+                    .concat(showSum ? (sum ?? 0).toFixed(this.FINAL_CONFIG.table.rounding) : [])
+                )
             }
 
             const config = {
@@ -2022,7 +2045,9 @@ export default {
                     color: datapoint.color,
                     type: datapoint.type,
                     value: datapoint.absoluteValues.find((_s,i) => i === this.selectedSerieIndex),
-                    comments: datapoint.comments || []
+                    comments: datapoint.comments || [],
+                    prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
+                    suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
                 }
             });
         },  
@@ -2123,9 +2148,9 @@ export default {
                                     this.FINAL_CONFIG.plot.labels.formatter,
                                     s.value,
                                     this.dataLabel({
-                                        p: this.FINAL_CONFIG.chart.labels.prefix, 
+                                        p: s.prefix, 
                                         v: s.value, 
-                                        s: this.FINAL_CONFIG.chart.labels.suffix, 
+                                        s: s.suffix, 
                                         r: this.FINAL_CONFIG.chart.tooltip.roundingValue,
                                     }),
                                     { datapoint: s }
