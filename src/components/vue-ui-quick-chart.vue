@@ -324,6 +324,10 @@ function setCommonSelectedIndex(index) {
     commonSelectedIndex.value = index;
 }
 
+const optimalDonutThickness = computed(() => {
+    return FINAL_CONFIG.value.donutThicknessRatio < 0.15 ? 0.15 : FINAL_CONFIG.value.donutThicknessRatio > 0.4 ? 0.4 :  FINAL_CONFIG.value.donutThicknessRatio;
+})
+
 const donut = computed(() => {
     if(chartType.value !== detector.chartType.DONUT) return null;
     const ds = formattedDataset.value.dataset.map((ds, i) => {
@@ -453,7 +457,7 @@ const donut = computed(() => {
             1,
             360,
             105.25,
-            (defaultSizes.value.height) * FINAL_CONFIG.value.donutThicknessRatio
+            (defaultSizes.value.height) * optimalDonutThickness.value
         )
     }
 });
@@ -943,7 +947,7 @@ defineExpose({
                     <template v-for="(arc, i) in donut.chart">
                         <path
                             v-if="donut.isArcBigEnough(arc)"
-                            :d="calcNutArrowPath(arc, {x: (FINAL_CONFIG.width || defaultSizes.width) / 2, y: (FINAL_CONFIG.height || defaultSizes.height) /2}, 16, 16, false, false, FINAL_CONFIG.donutLabelMarkerStrokeWidth)"
+                            :d="calcNutArrowPath(arc, {x: defaultSizes.width / 2, y: defaultSizes.height / 2}, 16, 16, false, false, (defaultSizes.height * optimalDonutThickness))"
                             :stroke="arc.color"
                             :stroke-width="FINAL_CONFIG.donutLabelMarkerStrokeWidth"
                             stroke-linecap="round"
@@ -953,6 +957,7 @@ defineExpose({
                         />                    
                     </template>
                 </g>
+                
                 <circle
                     class="donut-hollow"
                     :cx="(FINAL_CONFIG.width || defaultSizes.width) / 2"
