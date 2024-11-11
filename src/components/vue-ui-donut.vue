@@ -185,7 +185,8 @@ const svg = ref({
 const donutThickness = computed(() => {
     const baseRatio = FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth / 512;
     const resultSize = svg.value.width * baseRatio
-    return resultSize > minSize.value ?  minSize.value : resultSize;
+    const adjusted = resultSize > minSize.value ?  minSize.value : resultSize;
+    return adjusted < 24 ? 24 : adjusted;
 });
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
