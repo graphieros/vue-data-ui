@@ -545,6 +545,7 @@ export function useConfig() {
             responsiveBreakpoint: 400,
             rounding: 0,
             sparkline: true,
+            showSum: true,
             columnNames: {
                 period: 'Period',
                 total: 'Total'
