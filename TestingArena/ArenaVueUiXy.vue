@@ -18,6 +18,7 @@ const dataset = ref([
             useArea: true,
             dataLabels: true,
             scaleSteps: 2,
+            suffix: '$'
         },
         {
             name: "Long name serie",
@@ -28,6 +29,7 @@ const dataset = ref([
             useArea: true,
             dataLabels: true,
             scaleSteps: 2,
+            prefix: '£'
         },
         {
             name: "S1",
@@ -161,7 +163,7 @@ const model = ref([
     { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
-    { key: 'chart.backgroundColor', def: '#FFFFFF00', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
     { key: 'chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
     { key: 'chart.height', def: 600, type: 'range', min: 300, max: 1000, label: 'height', category: 'general' },
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
@@ -325,6 +327,7 @@ const model = ref([
     { key: 'table.td.backgroundColor', def: '#FAFAFA', type: 'color', label: 'backgroundColorRow', category: 'table' },
     { key: 'table.td.color', def: '#1A1A1A', type: 'color', label: 'textColorRow', category: 'table' },
     { key: 'table.td.outline', def: '', type: 'text', label: 'outlineRow', category: 'table' },
+    { key: 'table.showSum', def: false, type: 'checkbox'},
 
     { key: 'chart.comments.show', def: true, type: 'checkbox'},
     { key: 'chart.comments.showInTooltip', def: true, type: 'checkbox'},
@@ -379,28 +382,27 @@ const config = computed(() => {
                 ...c.line,
                 labels: {
                     ...c.line.labels,
-                    formatter: ({value, config}) => {
-                        // console.log(config)
-                        return `f - ${value}`
-                    }
+                    // formatter: ({value, config}) => {
+                    //     return `f - ${value}`
+                    // }
                 }
             },
             plot: {
                 ...c.plot,
                 labels: {
                     ...c.plot.labels,
-                    formatter: ({value, config}) => {
-                        return `f - ${value}`
-                    }
+                    // formatter: ({value, config}) => {
+                    //     return `f - ${value}`
+                    // }
                 }
             },
             bar: {
                 ...c.bar,
                 labels: {
                     ...c.bar.labels,
-                    formatter: ({value, config}) => {
-                        return `f - ${value}`
-                    }
+                    // formatter: ({value, config}) => {
+                    //     return `f - ${value}`
+                    // }
                 }
             },
             chart: {
@@ -446,9 +448,9 @@ const config = computed(() => {
                         ...c.chart.grid.labels,
                         yAxis: {
                             ...c.chart.grid.labels.yAxis,
-                            formatter: ({value}) => {
-                                return `f - ${value}`
-                            }
+                            // formatter: ({value}) => {
+                            //     return `f - ${value}`
+                            // }
                         },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
