@@ -382,6 +382,16 @@ function segregateDonut(item) {
     }
 }
 
+const donutThickness = computed(() => {
+    return donutSize.value / immutableDataset.value.length * FINAL_CONFIG.value.style.chart.layout.donut.spacingRatio
+})
+
+const radii = computed(() => {
+    return mutableDataset.value.map((ds, i) => {
+        return donutSize.value  - (i * donutSize.value / immutableDataset.value.length);
+    })
+})
+
 const donuts = computed(() => {
     return mutableDataset.value.map((ds, i) => {
         const sizeRatio = i * donutSize.value / immutableDataset.value.length;
@@ -399,7 +409,7 @@ const donuts = computed(() => {
                 1,
                 360,
                 105.25,
-                donutSize.value / immutableDataset.value.length * FINAL_CONFIG.value.style.chart.layout.donut.spacingRatio
+                donutThickness.value
             )
         }
     })
@@ -786,9 +796,10 @@ defineExpose({
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 0.001 : svg.width} ${svg.height < 0 ? 0.001 : svg.height}`" :style="`max-width:100%; overflow: visible; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
             <!-- GRADIENTS -->
             <defs>
-                <radialGradient v-for="(_, i) in gradientSets" :id="`radial_${uid}_${i}`" cx="50%" cy="50%" r="50%" :fr="30 - (1 * (i+1)) + '%'">
+                <radialGradient v-for="(_, i) in gradientSets" :id="`radial_${uid}_${i}`">
                     <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
-                    <stop :offset="70 - (20 * i) + '%'" stop-color="#FFFFFF" :stop-opacity="FINAL_CONFIG.style.chart.gradientIntensity / 100"/>
+                    <stop :offset="`${ (1 - (donutThickness / (radii[i]))) * 100}%`" :stop-color="setOpacity('#FFFFFF', 0)" stop-opacity="0" />
+                    <stop :offset="`${ (1 - (donutThickness / (radii[i]) / 2)) * 100}%`" stop-color="#FFFFFF" :stop-opacity="FINAL_CONFIG.style.chart.gradientIntensity / 100"/>
                     <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
                 </radialGradient>
             </defs>
@@ -804,16 +815,6 @@ defineExpose({
                     <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5" :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
                 </filter>
             </defs>
-            
-            <!-- UNDERLAYER CIRCLES -->
-            <circle
-                v-for="c in donuts"
-                :cx="svg.width / 2"
-                :cy="svg.height / 2"
-                :r="c.radius < 0 ? 0.00001 : c.radius "
-                :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                :filter="FINAL_CONFIG.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
-            />
 
             <!-- NESTED DONUTS -->
             <g v-for="(item, i) in donuts">
