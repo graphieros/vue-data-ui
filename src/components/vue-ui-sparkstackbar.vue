@@ -224,7 +224,7 @@ function selectDatapoint(datapoint, index) {
 <template>
     <div :style="`width:100%; background:${FINAL_CONFIG.style.backgroundColor}`">
         <!-- TITLE -->
-        <div data-cy="sparkstackbar-title-wrapper" v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:${FINAL_CONFIG.style.backgroundColor};margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
+        <div data-cy="sparkstackbar-title-wrapper" v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
             <div data-cy="sparkstackbar-title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
                 {{ FINAL_CONFIG.style.title.text }}
             </div>
@@ -292,7 +292,7 @@ function selectDatapoint(datapoint, index) {
         <div 
             v-if="FINAL_CONFIG.style.legend.show" 
             data-cy="sparkstackbar-legend" 
-            :style="`background:${FINAL_CONFIG.style.backgroundColor};margin:0 auto;margin:${FINAL_CONFIG.style.legend.margin};justify-content:${FINAL_CONFIG.style.legend.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" 
+            :style="`background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.legend.margin};justify-content:${FINAL_CONFIG.style.legend.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" 
             class="vue-ui-sparkstackbar-legend"
         >
             <div 

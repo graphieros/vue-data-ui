@@ -485,7 +485,7 @@ defineExpose({
     <div
       ref="chartTitle"
       v-if="FINAL_CONFIG.style.chart.title.text"
-      :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+      :style="`width:100%;background:transparent`"
     >
       <Title
         :key="`title_${titleStep}`"
@@ -556,7 +556,7 @@ defineExpose({
       :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
       data-cy="rings-svg"
       :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-      :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`"
+      :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
     >
       <!-- DEFS ? -->
       <radialGradient

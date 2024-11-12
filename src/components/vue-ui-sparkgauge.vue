@@ -192,7 +192,7 @@ const trackColor = computed(() => {
     <div v-if="FINAL_CONFIG.style.title.show && nameLabel && FINAL_CONFIG.style.title.position === 'top'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold': 'normal'};color:${FINAL_CONFIG.style.title.color}`">
         {{ nameLabel }}
     </div>
-    <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:${FINAL_CONFIG.style.background}; width:100%;`">
+    <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:transparent; width:100%;`">
         <defs>
             <linearGradient :id="`gradient_${ uid}`" x1="-10%" y1="100%" x2="110%" y2="100%">
                 <stop offset="0%" :stop-color="FINAL_CONFIG.style.colors.min"/>

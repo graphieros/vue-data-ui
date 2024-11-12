@@ -551,7 +551,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`" >
+        <svg :xmlns="XMLNS" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" >
 
             <!-- TITLE AS G -->
             <g v-if="!selectedNut">

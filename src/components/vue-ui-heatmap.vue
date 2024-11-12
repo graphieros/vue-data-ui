@@ -377,7 +377,7 @@ defineExpose({
 
 <template>
     <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`">
-        <div v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
+        <div v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:transparent`">
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
@@ -441,7 +441,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.heightWithLegend}`" :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.backgroundColor};color:${FINAL_CONFIG.style.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.heightWithLegend}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.color}`" >
 
             <g v-for="(serie, i) in mutableDataset">
                 <g v-for="(cell, j) in serie.temperatures">

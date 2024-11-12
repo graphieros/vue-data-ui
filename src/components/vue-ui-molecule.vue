@@ -516,7 +516,7 @@ defineExpose({
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`cluster_${uid}`">
 
-        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
+        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;`">
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
@@ -584,7 +584,7 @@ defineExpose({
 
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="cluster-svg" :viewBox="dynamicViewBox"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :style="`overflow: hidden; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`" @click.stop="unzoom($event)">
+            :style="`overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`" @click.stop="unzoom($event)">
 
             <defs>
                 <radialGradient v-for="color in Object.keys(gradientIds)" :id="`gradient_${color}`" cx="50%" cy="30%" r="50%" fx="50%" fy="50%">

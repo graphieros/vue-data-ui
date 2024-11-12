@@ -245,7 +245,7 @@ const straightLine = computed(() => {
 </script>
 
 <template>
-    <div class="vue-ui-spark-trend" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};backgroundColor:${FINAL_CONFIG.style.backgroundColor}`">
+    <div class="vue-ui-spark-trend" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor}`">
         <Skeleton
             v-if="!isDataset"
             :config="{
@@ -258,8 +258,7 @@ const straightLine = computed(() => {
                 }
             }"
         />
-        <svg v-else :xmlns="XMLNS" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`">
-
+        <svg v-else :xmlns="XMLNS" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`">
             <!-- DEFS -->
             <defs>
                 <linearGradient

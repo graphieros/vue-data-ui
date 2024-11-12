@@ -309,7 +309,7 @@ defineExpose({
         :id="`${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''
             };background:${FINAL_CONFIG.style.chart.backgroundColor}`">
         <div v-if="FINAL_CONFIG.style.chart.title.text"
-            :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`">
+            :style="`width:100%;background:transparent`">
             <Title :config="{
                 title: {
                     cy: 'mood-radar-title',
@@ -363,7 +363,7 @@ defineExpose({
 
         <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"
         :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :style="`overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
+            :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
             <!-- DEFS -->
             <defs>
                 <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" :id="`mood_radar_gradient_${uid}`">

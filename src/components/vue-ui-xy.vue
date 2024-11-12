@@ -75,7 +75,7 @@
             </template>
         </UserOptions>
         
-        <svg xmlns="http://www.w3.org/2000/svg" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`">
+        <svg xmlns="http://www.w3.org/2000/svg" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background: transparent; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`">
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
@@ -197,30 +197,40 @@
                     </defs>
                 </template>
 
-                <!-- HIGHLIGHT AREA RECT FILLS -->
+                <!-- HIGHLIGHT AREAS -->
                 <g v-for="oneArea in highlightAreas">
-                    <template v-if="oneArea.show">                    
-                        <rect
-                            :style="{ transition: 'none'}"
-                            data-cy="xy-highlight-area"
-                            :x="drawingArea.left + (drawingArea.width / maxSeries) * (oneArea.from - (slicer.start))"
-                            :y="drawingArea.top"
-                            :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                            :width="(drawingArea.width / maxSeries) * oneArea.span < 0 ? 0.00001 : (drawingArea.width / maxSeries) * oneArea.span"
-                            :fill="setOpacity(oneArea.color, oneArea.opacity)"
-                        />
-                        <foreignObject v-if="oneArea.caption.text"
-                            :x="(drawingArea.left + (drawingArea.width / maxSeries) * (oneArea.from - (slicer.start))) - (oneArea.caption.width === 'auto' ? 0 : oneArea.caption.width / 2 - (drawingArea.width / maxSeries) * oneArea.span / 2)"
-                            :y="drawingArea.top + oneArea.caption.offsetY"
-                            style="overflow:visible"
-                            height="1"
-                            :width="oneArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * oneArea.span : oneArea.caption.width"
-                            
-                        >
-                            <div :style="`padding:${oneArea.caption.padding}px;text-align:${oneArea.caption.textAlign};font-size:${oneArea.caption.fontSize}px;color:${oneArea.caption.color};font-weight:${oneArea.caption.bold ? 'bold' : 'normal'}`">
-                                {{ oneArea.caption.text }}
-                            </div>
-                        </foreignObject>
+                    <template v-if="oneArea.show">
+                        <g v-for="(_, i) in oneArea.span">
+                            <!-- HIGHLIGHT AREA FILLED RECT UNITS -->
+                            <rect
+                                :style="{ 
+                                    transition: 'none',
+                                    opacity: (oneArea.from + i >= slicer.start && (oneArea.from + i <= slicer.end -1)) ? 1 : 0
+                                }"
+                                :x="drawingArea.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start)"
+                                :y="drawingArea.top"
+                                :height="drawingArea.height < 0 ? 10 : drawingArea.height"
+                                :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
+                                :fill="setOpacity(oneArea.color, oneArea.opacity)"
+                            />
+
+                            <!-- HIGHLIGHT AREA CAPTION -->
+                            <foreignObject v-if="oneArea.caption.text && i === 0"
+                                :x="drawingArea.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start) - (oneArea.caption.width === 'auto' ? 0 : oneArea.caption.width / 2 - (drawingArea.width / maxSeries) * oneArea.span / 2)"
+                                :y="drawingArea.top + oneArea.caption.offsetY"
+                                :style="{
+                                    overflow: 'visible',
+                                    opacity: (oneArea.to >= slicer.start && oneArea.from < slicer.end) ? 1 : 0
+                                }"
+                                height="1"
+                                :width="oneArea.caption.width === 'auto' ? (drawingArea.width / maxSeries) * oneArea.span : oneArea.caption.width"
+                                
+                            >
+                                <div :style="`padding:${oneArea.caption.padding}px;text-align:${oneArea.caption.textAlign};font-size:${oneArea.caption.fontSize}px;color:${oneArea.caption.color};font-weight:${oneArea.caption.bold ? 'bold' : 'normal'}`">
+                                    {{ oneArea.caption.text }}
+                                </div>
+                            </foreignObject>
+                        </g>
                     </template>
                 </g>
 
@@ -328,26 +338,6 @@
                         :stroke-dasharray="FINAL_CONFIG.chart.highlighter.lineDasharray"
                         stroke-linecap="round"
                         style="transition:none !important; animation: none !important; pointer-events: none;"
-                    />
-                </g>
-
-                <!-- LEFT & RIGHT PADDING COVERS -->
-                <g>
-                    <rect
-                        :style="{ transition: 'none' }"
-                        :x="0"
-                        :y="drawingArea.top"
-                        :width="FINAL_CONFIG.chart.padding.left - 1 + xPadding"
-                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :fill="FINAL_CONFIG.chart.backgroundColor"
-                    />
-                    <rect
-                        :style="{ transition: 'none' }"
-                        :x="drawingArea.right + 1 - xPadding"
-                        :y="drawingArea.top"
-                        :width="FINAL_CONFIG.chart.padding.right - 1 + xPadding"
-                        :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :fill="FINAL_CONFIG.chart.backgroundColor"
                     />
                 </g>
 
@@ -2231,6 +2221,17 @@ export default {
         treeShake,
         useMouse,
         useNestedProp,
+        getHighlightAreaPosition(area) {
+            const x = this.drawingArea.left + (this.drawingArea.width / this.maxSeries) * (area.from - this.slicer.start);
+
+            const width = (this.drawingArea.width / (this.slicer.end - this.slicer.start)) * area.span < 0 ? 0.00001 : (this.drawingArea.width / (this.slicer.end - this.slicer.start)) * area.span
+
+
+            return {
+                x: x < this.drawingArea.left ? this.drawingArea.left : x,
+                width: width
+            }
+        },
         prepareConfig() {
             const DEFAULT_CONFIG = useConfig().vue_ui_xy;
 

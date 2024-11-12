@@ -344,7 +344,7 @@ defineExpose({
 <template>
     <div ref="relationCircleChart" class="vue-ui-relation-circle" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};text-align:center;${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" :id="`relation_circle_${uid}`"> 
 
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor}`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:transparent`">
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
@@ -398,7 +398,7 @@ defineExpose({
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             class="relation-circle"
             width="100%"
-            :style="`user-select:none; background:${FINAL_CONFIG.style.backgroundColor}`"
+            :style="`user-select:none; background:transparent`"
         >
             <circle
                 data-cy="relation-circle" 

@@ -478,7 +478,7 @@ defineExpose({
         :id="`flow_${uid}`"
     >
 
-        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
+        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
@@ -537,7 +537,7 @@ defineExpose({
         <svg
             :xmlns="XMLNS"
             :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :style="`max-width:100%; overflow: visible; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <defs>
                 <linearGradient 

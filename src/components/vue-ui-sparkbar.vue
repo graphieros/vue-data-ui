@@ -40,7 +40,7 @@ const props = defineProps({
      */
     backgroundOpacity: {
         type: Number,
-        default: 100
+        default: null
     }
 });
 
@@ -227,7 +227,7 @@ function selectDatapoint(datapoint, index) {
         :style="{
             width: '100%',
             fontFamily: FINAL_CONFIG.style.fontFamily,
-            background: setOpacity(FINAL_CONFIG.style.backgroundColor, props.backgroundOpacity)
+            background: props.backgroundOpacity !== null ? setOpacity(FINAL_CONFIG.style.backgroundColor, props.backgroundOpacity) : FINAL_CONFIG.style.backgroundColor
         }"
     >
         <!-- CUSTOM TITLE -->

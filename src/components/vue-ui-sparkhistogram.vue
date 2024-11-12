@@ -179,7 +179,7 @@ const animation = computed(() => {
 <template>
     <div :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily}`" @mouseleave="selectedIndex = null">
         <!-- TITLE -->
-        <div v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:${FINAL_CONFIG.style.backgroundColor};margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
+        <div v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
             <div :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
                 {{ FINAL_CONFIG.style.title.text }} 
                 <span v-if="selectedIndex !== null">- 

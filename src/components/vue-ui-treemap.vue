@@ -594,7 +594,7 @@ defineExpose({
         <svg :xmlns="XMLNS" v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
             data-cy="treemap-svg" :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
-            :style="`max-width:100%; overflow: hidden; background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`">
+            :style="`max-width:100%; overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
 
             <g v-for="(rect, i) in squarified">            
                 <defs v-if="FINAL_CONFIG.style.chart.layout.rects.gradient.show">

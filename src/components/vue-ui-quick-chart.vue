@@ -922,14 +922,14 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <div ref="quickChartTitle" class="vue-ui-quick-chart-title" v-if="FINAL_CONFIG.title" :style="`background:${FINAL_CONFIG.backgroundColor};color:${FINAL_CONFIG.color};font-size:${FINAL_CONFIG.titleFontSize}px;font-weight:${FINAL_CONFIG.titleBold ? 'bold': 'normal'};text-align:${FINAL_CONFIG.titleTextAlign}`">
+        <div ref="quickChartTitle" class="vue-ui-quick-chart-title" v-if="FINAL_CONFIG.title" :style="`background:transparent;color:${FINAL_CONFIG.color};font-size:${FINAL_CONFIG.titleFontSize}px;font-weight:${FINAL_CONFIG.titleBold ? 'bold': 'normal'};text-align:${FINAL_CONFIG.titleTextAlign}`">
             {{ FINAL_CONFIG.title }}
         </div>
         <svg
             v-if="chartType"
             :xmlns="XMLNS"
             :viewBox="viewBox" 
-            :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.backgroundColor};color:${FINAL_CONFIG.color}`"
+            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.color}`"
         >
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
@@ -1563,7 +1563,7 @@ defineExpose({
             v-if="FINAL_CONFIG.showLegend"
             ref="quickChartLegend"
             class="vue-ui-quick-chart-legend" 
-            :style="`background:${FINAL_CONFIG.backgroundColor};color:${FINAL_CONFIG.color}`"
+            :style="`background:transparent;color:${FINAL_CONFIG.color}`"
         >
             <template v-if="chartType === detector.chartType.DONUT">
                 <div 

@@ -360,7 +360,7 @@ defineExpose({
     <div class="vue-ui-word-cloud" ref="wordCloudChart" :id="`wordCloud_${uid}`"
         :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`">
 
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">
             <Title
             :key="`title_${titleStep}`" 
             :config="{
@@ -415,7 +415,7 @@ defineExpose({
 
         <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" v-if="isDataset"
             :xmlns="XMLNS" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-            :style="`overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
+            :style="`overflow:visible;background:transparent;`">
             <g
                 :transform="`translate(${(svg.width <= 0 ? 10 : svg.width) / 2}, ${(svg.height <= 0 ? 10 : svg.height) / 2})`">
                 <g v-for="(word, index) in positionedWords">
@@ -440,7 +440,7 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-html2canvas-ignore>
+        <div ref="chartSlicer" :style="`width:100%;background:transparent`" data-html2canvas-ignore>
             <MonoSlicer
                 v-if="FINAL_CONFIG.style.chart.zoom.show"
                 v-model:value="slicer"

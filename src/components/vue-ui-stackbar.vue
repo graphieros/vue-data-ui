@@ -738,7 +738,7 @@ defineExpose({
     >
         <slot name="userConfig"/>
 
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:24px`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">
             <Title
                 :config="{
                     title: {
@@ -808,7 +808,7 @@ defineExpose({
             v-if="isDataset"
             :xmlns="XMLNS"
             :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`"
-            :style="`max-width:100%;overflow:visible;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color}`"
+            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <!-- GRADIENT DEFS -->
             <defs v-if="FINAL_CONFIG.style.chart.bars.gradient.show">
