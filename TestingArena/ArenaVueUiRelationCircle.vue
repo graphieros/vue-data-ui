@@ -87,7 +87,7 @@ const model = ref([
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.size', def: 400, type: 'number', min: 100, max: 1000},
     { key: 'style.limit', def: 50, type: 'range', min: 2, max: 100},

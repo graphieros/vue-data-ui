@@ -157,7 +157,7 @@ const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: "text"},
     { key: 'style.chart.height', def: 512, type: 'number', min: 100, max: 1000},
     { key: 'style.chart.width', def: 512, type: 'number', min: 100, max: 1000},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.labels.quadrantLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.quadrantLabels.tl.text', def: 'Top left label', type: 'text'},
@@ -249,7 +249,7 @@ const themeOptions = ref([
     "default"
 ])
 
-const currentTheme = ref(themeOptions.value[3])
+const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

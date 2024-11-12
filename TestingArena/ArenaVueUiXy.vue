@@ -163,7 +163,7 @@ const model = ref([
     { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
-    { key: 'chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'chart.backgroundColor', def: '#FFFFFF30', type: 'color', label: 'backgroundColor', category: 'general' },
     { key: 'chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
     { key: 'chart.height', def: 600, type: 'range', min: 300, max: 1000, label: 'height', category: 'general' },
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
@@ -182,7 +182,7 @@ const model = ref([
     { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color'},
 
     { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
-    { key: 'chart.padding.right', def: 24, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
+    { key: 'chart.padding.right', def: 120, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
     { key: 'chart.padding.bottom', def: 64, type: 'number', min: 0, max: 100, label: 'bottom', category: 'padding' },
     { key: 'chart.padding.left', def: 48, type: 'number', min: 0, max: 100, label: 'left', category: 'padding' },
 
@@ -443,7 +443,7 @@ const config = computed(() => {
                     }],
                 grid: {
                     ...c.chart.grid,
-                    position: 'start',
+                    // position: 'start',
                     labels: {
                         ...c.chart.grid.labels,
                         yAxis: {

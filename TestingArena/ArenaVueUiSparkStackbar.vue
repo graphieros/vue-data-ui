@@ -55,7 +55,7 @@ function alterDataset() {
 }
 
 const model = ref([
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.animationFrames', def: 60, type: 'number', min: 0, max: 300},

@@ -148,7 +148,7 @@ function alterDataset() {
 
 
 const model = ref([
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.speedMs', def: 500, type: 'range', min: 100, max: 1000},

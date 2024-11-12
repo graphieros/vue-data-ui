@@ -107,7 +107,7 @@ function alterDataset() {
 const selectedSerie = ref('shortArray');
 
 const model = ref([
-    { key: 'backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptionsButtons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptionsButtons.img', def: true, type: 'checkbox'},

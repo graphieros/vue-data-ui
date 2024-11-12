@@ -20,7 +20,7 @@ onMounted(() => {
 
 const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.background', def: '#FFFFFF', type: 'color'},
+    { key: 'style.background', def: '#FFFFFF20', type: 'color'},
     { key: 'style.height', def: 84, type: 'number', min: 10, max: 200},
     { key: 'style.basePosition', def: 72, type: 'number', min: 0, max: 100},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
