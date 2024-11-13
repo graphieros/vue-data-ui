@@ -50,6 +50,7 @@ declare module 'vue-data-ui' {
 
     export type ChartUserOptions = {
         show?: boolean;
+        position?: 'left' | 'right';
         buttons?: {
             tooltip?: boolean;
             pdf?: boolean;
@@ -968,6 +969,7 @@ declare module 'vue-data-ui' {
                             rounded?: boolean;
                             inactiveColor?: string;
                             activeColor?: string;
+                            sizeRatio?: number;
                             gradient?: {
                                 show?: boolean;
                                 shiftHueIntensity?: number;
@@ -4400,6 +4402,7 @@ declare module 'vue-data-ui' {
         zoomFontSize?: number;
         zoomUseResetSlot?: boolean;
         zoomMinimap?: ZoomMinimap;
+        userOptionsPosition?: 'right' | 'left';
         userOptionsButtons?: {
             tooltip?: boolean;
             pdf?: boolean;
