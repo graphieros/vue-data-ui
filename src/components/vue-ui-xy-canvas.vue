@@ -1331,6 +1331,7 @@ defineExpose({
             :isStacked="mutableConfig.stacked"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="xy"
+            :position="FINAL_CONFIG.userOptions.position"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

@@ -417,6 +417,7 @@ defineExpose({
             :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="gaugeChart"
+            :position="FINAL_CONFIG.userOptions.position"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"

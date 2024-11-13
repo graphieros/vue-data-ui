@@ -52,13 +52,17 @@ const isDataset = computed(() => {
 });
 
 onMounted(() => {
+    prepareChart()
+})
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)){
         error({
             componentName: 'VueUiMolecule',
             type: 'dataset'
         })
     }
-})
+}
 
 const uid = ref(createUid());
 const details = ref(null);
@@ -551,6 +555,7 @@ defineExpose({
             :isTooltip="mutableConfig.showTooltip"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="moleculeChart"
+            :position="FINAL_CONFIG.userOptions.position"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

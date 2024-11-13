@@ -550,6 +550,7 @@ defineExpose({
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="bar3dChart"
+            :position="FINAL_CONFIG.userOptions.position"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

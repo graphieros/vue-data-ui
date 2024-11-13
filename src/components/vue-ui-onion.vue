@@ -512,6 +512,7 @@ defineExpose({
             :isTooltip="mutableConfig.showTooltip"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="onionChart"
+            :position="FINAL_CONFIG.userOptions.position"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

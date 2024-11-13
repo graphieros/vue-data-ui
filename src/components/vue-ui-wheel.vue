@@ -178,7 +178,7 @@ const ticks = computed(() => {
     for(let i = 0; i < tickAmount; i += 1) {
         const color = activeValue.value > i ? FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor : FINAL_CONFIG.value.style.chart.layout.wheel.ticks.inactiveColor;
         const { x: x1, y: y1 } = calcTickStart((svg.value.size / tickAmount) * i);
-        const { x: x2, y: y2 } = calcTickStart((svg.value.size / tickAmount) * i, 0.9);
+        const { x: x2, y: y2 } = calcTickStart((svg.value.size / tickAmount) * i, FINAL_CONFIG.value.style.chart.layout.wheel.ticks.sizeRatio);
         tickArray.push({
             x1,
             y1,
@@ -240,6 +240,7 @@ defineExpose({
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :hasXls="false"
             :isFullscreen="isFullscreen"
+            :position="FINAL_CONFIG.userOptions.position"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="wheelChart"
             @toggleFullscreen="toggleFullscreen"

@@ -641,6 +641,7 @@ defineExpose({
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="donutChart"
+            :position="FINAL_CONFIG.userOptions.position"
             :isTooltip="mutableConfig.showTooltip"
             :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
             @toggleFullscreen="toggleFullscreen"

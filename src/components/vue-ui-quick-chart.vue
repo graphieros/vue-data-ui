@@ -903,6 +903,7 @@ defineExpose({
             :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptionsButtonTitles }"
             :chartElement="quickChart"
+            :position="FINAL_CONFIG.userOptionsPosition"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"

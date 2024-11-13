@@ -38,6 +38,7 @@
             :isStacked="mutableConfig.isStacked"
             :isFullscreen="isFullscreen"
             :chartElement="$refs.chart"
+            :position="FINAL_CONFIG.chart.userOptions.position"
             :isTooltip="mutableConfig.showTooltip"
             :titles="{ ...FINAL_CONFIG.chart.userOptions.buttonTitles }"
             @toggleFullscreen="toggleFullscreen"

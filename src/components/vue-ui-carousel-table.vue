@@ -486,9 +486,9 @@ defineExpose({
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
             :chartElement="chartContainer"
+            :position="FINAL_CONFIG.userOptions.position"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :zIndex="3"
-            noOffset
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
