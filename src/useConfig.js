@@ -147,6 +147,7 @@ export function useConfig() {
 
         return {
             show: true,
+            position: 'right',
             buttons: {
                 tooltip,
                 pdf,
@@ -1156,6 +1157,7 @@ export function useConfig() {
                             rounded: true,
                             inactiveColor: COLOR_GREY_LIGHT,
                             activeColor: COLOR_BLUE,
+                            sizeRatio: 0.9,
                             gradient: {
                                 show: true,
                                 shiftHueIntensity: 100
@@ -2335,6 +2337,7 @@ export function useConfig() {
         showLegend: true,
         showTooltip: true,
         showUserOptions: true,
+        userOptionsPosition: 'right',
         userOptionsButtons: {
             tooltip: true,
             pdf: true,
