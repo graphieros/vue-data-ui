@@ -73,6 +73,8 @@ const model = ref([
     { key: 'userOptions.buttons.labels', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
+    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'useBlurOnHover', def: true, type: 'checkbox', label: "useBlurOnHover", category: 'general' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text', label: "fontFamily", category: 'general' },

@@ -43,6 +43,8 @@ const model = ref([
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
+    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    
     { key: 'responsiveBreakpoint', def: 500, type: 'number', min: 300, max: 800},
     { key: 'showAverage', def: true, type: 'checkbox'},
     { key: 'showMedian', def: true, type: 'checkbox'},

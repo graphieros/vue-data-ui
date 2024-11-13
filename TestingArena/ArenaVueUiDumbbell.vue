@@ -35,6 +35,8 @@ const model = ref([
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
+    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    
     { key: 'useAnimation', def: true, type: 'checkbox'},
     { key: 'animationSpeed', def: 2, type: 'number', min: 1, max: 10},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},

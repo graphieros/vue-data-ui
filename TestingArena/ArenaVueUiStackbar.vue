@@ -51,6 +51,8 @@ onMounted(() => {
 })
 
 const model = ref([
+    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+
     { key: 'orientation', def: 'vertical', type:'select', options: ['vertical', 'horizontal']},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'theme', def: '', type: 'select', options: ['', 'zen', 'hack', 'concrete']},

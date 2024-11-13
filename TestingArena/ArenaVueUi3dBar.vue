@@ -87,6 +87,8 @@ const model = ref([
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
+    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.shape', def: 'bar', type: 'select', options: ['bar', 'tube']},
     { key: 'style.chart.animation.use', def: true, type: 'checkbox'},

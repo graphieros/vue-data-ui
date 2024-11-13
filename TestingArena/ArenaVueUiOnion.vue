@@ -67,6 +67,8 @@ const model = ref([
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
+    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    
     { key: 'useCssAnimation', def: true, type: 'checkbox' },
     { key: 'useStartAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},

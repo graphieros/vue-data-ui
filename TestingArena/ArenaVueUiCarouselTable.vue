@@ -76,6 +76,7 @@ const model = ref([
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.animation', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
+    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
 
     { key: 'userOptions.buttonTitles.pdf', def: 'DOWNLOAD PDF', type: 'text'},
     { key: 'userOptions.buttonTitles.csv', def: 'DOWNLOAD CSV', type: 'text'},

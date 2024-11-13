@@ -50,6 +50,8 @@ const model = ref([
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
+    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},

@@ -31,6 +31,8 @@ const model = ref([
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
+    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
