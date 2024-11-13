@@ -104,7 +104,11 @@ const props = defineProps({
     },
     noOffset: {
         type: Boolean,
-        default: false
+        default: true
+    },
+    position: {
+        type: String,
+        default: 'right'
     }
 });
 
@@ -231,11 +235,16 @@ const isInfo = ref({
 </script>
 
 <template>
-    <div v-click-outside="closeIfOpen" data-html2canvas-ignore class="vue-ui-user-options" :style="`z-index: ${zIndex}; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; right:${isFullscreen ? '12px': '0'}; padding: 4px; background:transparent;`">
-        <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0; right: ${noOffset ? 0 : 4}px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:${backgroundColor}`" @click.stop="toggle" @keypress.enter="toggle">
-            <BaseIcon  :name="isOpen ? 'close' : 'menu'" stroke="#CCCCCC" :stroke-width="2" />
+    <div 
+        v-click-outside="closeIfOpen" 
+        data-html2canvas-ignore 
+        class="vue-ui-user-options" 
+        :style="`z-index: ${zIndex}; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; ${position === 'right' ? `right:${isFullscreen ? '12px': '0'}` : `left:${isFullscreen ? '12px' : '0'}`}; padding: 4px; background:transparent;`">
+
+        <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0;${position === 'right' ? `right: ${noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:transparent`" @click.stop="toggle" @keypress.enter="toggle">
+            <BaseIcon  :name="isOpen ? 'close' : 'menu'" :stroke="color" :stroke-width="2" />
         </div>
-        <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}; right:${noOffset ? 0 : 4}px`">
+        <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}; ${position === 'right' ? `right: ${noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}`">
 
             <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
                 <template v-if="$slots.optionTooltip">
@@ -245,7 +254,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-else name="tooltipDisabled" :stroke="color" style="pointer-events: none"/>
                 </template>
-                <div v-if="isDesktop && titles.tooltip && !$slots.optionTooltip" :class="{'button-info' : true, 'button-info-visible': isInfo.tooltip }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.tooltip && !$slots.optionTooltip" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-left-visible': position === 'left' && isInfo.tooltip, 'button-info-right-visible': position === 'right' && isInfo.tooltip }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.tooltip }}
                 </div>
             </button>
@@ -258,7 +267,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isPrinting" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="pdf" :stroke="color" style="pointer-events: none;" />
                 </template>
-                <div v-if="isDesktop && titles.pdf && !$slots.optionPdf" :class="{'button-info' : true, 'button-info-visible': isInfo.pdf }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.pdf && !$slots.optionPdf" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.pdf, 'button-info-left-visible': position === 'left' && isInfo.pdf }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.pdf }}
                 </div>
             </button>
@@ -270,7 +279,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon name="excel" :stroke="color" style="pointer-events: none"/>
                 </template>
-                <div v-if="isDesktop && titles.csv && !$slots.optionCsv" :class="{'button-info' : true, 'button-info-visible': isInfo.csv }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.csv && !$slots.optionCsv" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.csv, 'button-info-left-visible': position === 'left' && isInfo.csv }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.csv }}
                 </div>
             </button>
@@ -283,7 +292,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isImaging" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="image" :stroke="color" style="pointer-events: none;" />
                 </template>
-                <div v-if="isDesktop && titles.img && !$slots.optionImg" :class="{'button-info' : true, 'button-info-visible': isInfo.img }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.img && !$slots.optionImg" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.img, 'button-info-left-visible': position === 'left' && isInfo.img }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.img }}
                 </div>
             </button>
@@ -295,7 +304,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" style="pointer-events: none;" />
                 </template>
-                <div v-if="isDesktop && titles.table && !$slots.optionTable" :class="{'button-info' : true, 'button-info-visible': isInfo.table }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.table && !$slots.optionTable" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.table, 'button-info-left-visible': position === 'left' && isInfo.table }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.table }}
                 </div>
             </button>
@@ -307,7 +316,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon :name="isLabel ? 'labelClose' : 'labelOpen'" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div v-if="isDesktop && titles.labels && !$slots.optionLabels" :class="{'button-info' : true, 'button-info-visible': isInfo.labels }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.labels && !$slots.optionLabels" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.labels, 'button-info-left-visible': position === 'left' && isInfo.labels }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.labels }}
                 </div>
             </button>
@@ -319,7 +328,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon name="sort" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div v-if="isDesktop && titles.sort && !$slots.optionSort" :class="{'button-info' : true, 'button-info-visible': isInfo.sort }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.sort && !$slots.optionSort" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.sort, 'button-info-left-visible': position === 'left' && isInfo.sort }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.sort }}
                 </div>
             </button>
@@ -332,7 +341,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isItStacked" name="unstack" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-else name="stack" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div v-if="isDesktop && titles.stack && !$slots.optionStack" :class="{'button-info' : true, 'button-info-visible': isInfo.stack }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.stack && !$slots.optionStack" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.stack, 'button-info-left-visible': position === 'left' && isInfo.stack }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.stack }}
                 </div>
             </button>
@@ -345,7 +354,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isFullscreen" name="exitFullscreen" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-if="!isFullscreen" name="fullscreen" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div v-if="isDesktop && titles.fullscreen && !$slots.optionFullscreen" :class="{'button-info' : true, 'button-info-visible': isInfo.fullscreen }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.fullscreen && !$slots.optionFullscreen" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.fullscreen, 'button-info-left-visible': position === 'left' && isInfo.fullscreen }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.fullscreen }}
                 </div>
             </button>
@@ -358,7 +367,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isAnimated" name="play" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-if="!isAnimated" name="pause" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div v-if="isDesktop && titles.fullscreen && !$slots.optionAnimation" :class="{'button-info' : true, 'button-info-visible': isInfo.animation }" :style="{ background: backgroundColor, color: color }">
+                <div dir="auto" v-if="isDesktop && titles.fullscreen && !$slots.optionAnimation" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.animation, 'button-info-left-visible': position === 'left' && isInfo.animation }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.animation }}
                 </div>
             </button>
@@ -434,21 +443,46 @@ const isInfo = ref({
 .vue-ui-user-options-button:focus-visible {
     outline: 1px solid #CCCCCC;
 }
-.button-info {
+
+.button-info-right,
+.button-info-left {
     position: absolute;
-    right: 100%;
     top: 50%;
-    transform: translateY(-50%);
     padding: 4px 12px;
     pointer-events: none;
     opacity: 0;
-    border-radius: 4px 0 0 4px;
-}
-.button-info-visible {
-    animation: showInfo 0.2s ease-in forwards;
+    transform: translateY(-50%);
 }
 
-@keyframes showInfo {
+.button-info-right {
+    right: 100%;
+    border-radius: 4px 0 0 4px;
+}
+.button-info-right-visible {
+    animation: showInfoRight 0.2s ease-in forwards;
+}
+
+.button-info-left {
+    left: 100%;
+    border-radius: 0px 4px 4px 0;
+}
+
+.button-info-left-visible {
+    animation: showInfoLeft 0.2s ease-in forwards;
+}
+
+@keyframes showInfoRight {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) scale(0.9, 1);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) scale(1, 1);
+    }
+}
+
+@keyframes showInfoLeft {
     from {
         opacity: 0;
         transform: translateY(-50%) scale(0.9, 1);
