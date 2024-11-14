@@ -519,6 +519,11 @@ export function useConfig() {
             radius: 3,
             useGradient: true,
             strokeWidth: 3,
+            dot: {
+                useSerieColor: true,
+                fill: '#FFFFFF',
+                strokeWidth: 0.5
+            },
             labels: {
                 show: false,
                 offsetY: -6,
@@ -534,6 +539,11 @@ export function useConfig() {
         plot: {
             radius: 3,
             useGradient: true,
+            dot: {
+                useSerieColor: true,
+                fill: '#FFFFFF',
+                strokeWidth: 0.5
+            },
             labels: {
                 show: false,
                 offsetY: -6,
