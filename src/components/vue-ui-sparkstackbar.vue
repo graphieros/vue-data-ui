@@ -180,7 +180,7 @@ const absoluteDataset = computed(() => {
             ...d,
             value: dValue,
             proportion: dProportion,
-            width: dWidth || svg.value.width / safeDatasetCopy.value.length,
+            width: dWidth,
             proportionLabel: dataLabel({
                 v: dProportion * 100,
                 s: '%',
@@ -258,7 +258,7 @@ function selectDatapoint(datapoint, index) {
                 />
             </clipPath>
         </defs>
-            <g clip-path="url(#stackPill)">
+            <g clip-path="url(#stackPill)" v-if="total > 0">
                 <rect 
                     :x="0" 
                     :y="0" 
@@ -280,6 +280,16 @@ function selectDatapoint(datapoint, index) {
                     :class="{'animated': !isLoading}"
                 />
             </g>
+            <rect v-else
+                :x="2"
+                :y="1"
+                :width="svg.width - 4"
+                :height="svg.height - 2"
+                stroke="#CCCCCC"
+                stroke-width="2"
+                fill="transparent"
+                :rx="(svg.height - 4) / 2"
+            />
         </svg>
 
         <Skeleton
