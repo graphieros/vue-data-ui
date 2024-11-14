@@ -180,7 +180,7 @@ const absoluteDataset = computed(() => {
             ...d,
             value: dValue,
             proportion: dProportion,
-            width: dWidth,
+            width: dWidth || svg.value.width / safeDatasetCopy.value.length,
             proportionLabel: dataLabel({
                 v: dProportion * 100,
                 s: '%',
