@@ -331,15 +331,6 @@ function trapMouse(trap) {
                             }"
                         />
 
-                        <!-- This is not quite there yet: there's an annoying offset between input handles and plots -->
-                        <path 
-                            :d="`M ${minimapLine.selectionSet}`" 
-                            :stroke="`${minimapLineColor}`" 
-                            fill="transparent"
-                            stroke-width="2" 
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
                         <circle
                             :cx="minimapLine.firstPlot.x"
                             :cy="minimapLine.firstPlot.y"
@@ -348,6 +339,7 @@ function trapMouse(trap) {
                             r="3"
                             :fill="minimapLineColor"
                         />
+                        
                         <circle
                             :cx="minimapLine.lastPlot.x"
                             :cy="minimapLine.lastPlot.y"
