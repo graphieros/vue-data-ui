@@ -2272,6 +2272,11 @@ declare module 'vue-data-ui' {
             radius?: number;
             useGradient?: boolean;
             strokeWidth?: number;
+            dot?: {
+                useSerieColor?: boolean;
+                fill?: string;
+                strokeWidth?: number;
+            };
             labels?: {
                 show?: boolean;
                 offsetY?: number;
@@ -2287,6 +2292,11 @@ declare module 'vue-data-ui' {
         plot?: {
             radius?: number;
             useGradient?: boolean;
+            dot?: {
+                useSerieColor?: boolean;
+                fill?: string;
+                strokeWidth?: number;
+            };
             labels?: {
                 show?: boolean;
                 offsetY?: number;
