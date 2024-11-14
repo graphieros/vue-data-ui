@@ -735,38 +735,48 @@ export function createStraightPath(points) {
     return arr.join(' ').trim()
 }
 
-export function createSmoothPath(points, smoothing = 0.2) {
-    function line(pointA, pointB) {
-        const lengthX = pointB.x - pointA.x;
-        const lengthY = pointB.y - pointA.y;
-        return {
-            length: Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2)),
-            angle: Math.atan2(lengthY, lengthX)
-        };
-    }
-    function controlPoint(current, previous, next, reverse) {
-        const p = previous || current;
-        const n = next || current;
-        const o = line(p, n);
+// Monotone cubic interpolation
+export function createSmoothPath(points) {
+    if (points.length < 2) return '0,0';
 
-        const angle = o.angle + (reverse ? Math.PI : 0);
-        const length = o.length * smoothing;
+    const n = points.length - 1;
+    const path = [`${checkNaN(points[0].x)},${checkNaN(points[0].y)}`];
+    const dx = [], dy = [], slopes = [], tangents = [];
 
-        const x = current.x + Math.cos(angle) * length;
-        const y = current.y + Math.sin(angle) * length;
-        return { x, y };
+    for (let i = 0; i < n; i += 1) {
+        dx[i] = points[i + 1].x - points[i].x;
+        dy[i] = points[i + 1].y - points[i].y;
+        slopes[i] = dy[i] / dx[i];
     }
-    function bezierCommand(point, i, a) {
-        const cps = controlPoint(a[i - 1], a[i - 2], point);
-        const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
-        return `C ${checkNaN(cps.x)},${checkNaN(cps.y)} ${checkNaN(cpe.x)},${checkNaN(cpe.y)} ${checkNaN(point.x)},${checkNaN(point.y)}`;
-    }
-    const d = points.filter(p => !!p).reduce((acc, point, i, a) => i === 0
-        ? `${checkNaN(point.x)},${checkNaN(point.y)} `
-        : `${acc} ${bezierCommand(point, i, a)} `
-        , '');
+    tangents[0] = slopes[0];
+    tangents[n] = slopes[n - 1];
 
-    return d;
+    for (let i = 1; i < n; i += 1) {
+        if (slopes[i - 1] * slopes[i] <= 0) {
+            tangents[i] = 0;
+        } else {
+            const commonSlope = (slopes[i - 1] + slopes[i]) / 2;
+            tangents[i] = commonSlope;
+        }
+    }
+
+    for (let i = 0; i < n; i += 1) {
+        const x1 = points[i].x;
+        const y1 = points[i].y;
+        const x2 = points[i + 1].x;
+        const y2 = points[i + 1].y;
+
+        const m1 = tangents[i];
+        const m2 = tangents[i + 1];
+
+        const controlX1 = x1 + (x2 - x1) / 3;
+        const controlY1 = y1 + m1 * (x2 - x1) / 3;
+        const controlX2 = x2 - (x2 - x1) / 3;
+        const controlY2 = y2 - m2 * (x2 - x1) / 3;
+
+        path.push(`C ${checkNaN(controlX1)},${checkNaN(controlY1)} ${checkNaN(controlX2)},${checkNaN(controlY2)} ${checkNaN(x2)},${checkNaN(y2)}`);
+    }
+    return path.join(' ');
 }
 
 export function createUid() {
