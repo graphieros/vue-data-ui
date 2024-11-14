@@ -1152,8 +1152,6 @@
 </template>
 
 <script>
-import pdf from '../pdf';
-import img from "../img";
 import { 
     abbreviate,
     adaptColorToBackground,
@@ -2218,11 +2216,9 @@ export default {
         error,
         functionReturnsString,
         hasDeepProperty,
-        img,
         isFunction,
         isSafeValue,
         objectIsEmpty,
-        pdf,
         setOpacity,
         shiftHue,
         translateSize,
@@ -2615,17 +2611,24 @@ export default {
         showSpinnerPdf() {
             this.isPrinting = true;
         },
-        generatePdf(){
+        async generatePdf() {
             this.showSpinnerPdf();
             clearTimeout(this.__to__);
-            this.__to__ = setTimeout(() => {
-                this.pdf({
+            this.isPrinting = true; // Set isPrinting to true before starting
+
+            this.__to__ = setTimeout(async () => {
+            try {
+                const { default: pdf } = await import('../pdf.js');
+                await pdf({
                     domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
-                    fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy'
-                }).finally(() => {
-                    this.isPrinting = false;
+                    fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy',
                 });
-            }, 100)
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
+                } finally {
+                    this.isPrinting = false;
+                }
+            }, 100);
         },
         generateCsv() {
             const title = [[this.FINAL_CONFIG.chart.title.text], [this.FINAL_CONFIG.chart.title.subtitle.text], [""]];
@@ -2638,19 +2641,25 @@ export default {
         showSpinnerImage() {
             this.isImaging = true;
         },
-        generateImage() {
+        async generateImage() {
             this.showSpinnerImage();
             clearTimeout(this.__to__);
-            this.__to__ = setTimeout(() => {
-                this.img({
+            this.isImaging = true;
+            this.__to__ = setTimeout(async () => {
+            try {
+                    const { default: img } = await import('../img.js');
+                    await img({
                     domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
                     fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy',
-                    format: 'png'
-                }).finally(() => {
+                    format: 'png',
+                    });
+                } catch (error) {
+                    console.error('Error generating image:', error);
+                } finally {
                     this.isImaging = false;
-                });
-            }, 100)
-        }
+                }
+            }, 100);
+        },
     }
 }
 </script>
