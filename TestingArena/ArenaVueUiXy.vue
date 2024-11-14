@@ -8,10 +8,22 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
+// const dataset = ref([
+//     {
+//         name: "Curved",
+//         series: [60, 100, null, 0, 0, 100, 0, 0, 0, 100, 60, 100, 60, 60, 12],
+//         type: "line",
+//         smooth: true,
+//         useArea: true,
+//         dataLabels: true,
+//     },
+// ])
+
+
 const dataset = ref([
         {
             name: "Long name serie",
-            series: [-80, -60, -30, 0, 30, 60, 80, 60, 30, 0, -30, -60, -80],
+            series: [-80, -60, -30, 0, null, 60, 80, 60, 30, 0, -30, -60, -80],
             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
             type: "line",
             smooth: true,
@@ -22,7 +34,7 @@ const dataset = ref([
         },
         {
             name: "Long name serie",
-            series: [10, 20, 12, 13, 10, -20, 30, 20, 12, 16, 32, 64, 12],
+            series: [10, 20, 12, 13, 10, -20, null, 20, 12, 16, 32, 64, 12],
             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
             type: "line",
             smooth: false,
@@ -33,7 +45,7 @@ const dataset = ref([
         },
         {
             name: "S1",
-            series: [-20, 20, 8, 16, 12, 13, -16, 55, 12, 3, 7, 12, 6],
+            series: [-20, 20, 8, 16, null, 13, -16, 55, 12, 3, 7, 12, 6],
             comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
             type: "bar",
             smooth: false,
@@ -175,7 +187,7 @@ const model = ref([
     { key: 'chart.zoom.useResetSlot', def: false, type: 'checkbox'},
 
     { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox'},
-    { key: 'chart.zoom.minimap.smooth', def: false, type: 'checkbox'},
+    { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox'},
     { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color'},
     { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'chart.zoom.minimap.lineColor', def: '#1A1A1A', type: 'color'},
@@ -183,7 +195,7 @@ const model = ref([
     { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color'},
 
     { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
-    { key: 'chart.padding.right', def: 120, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
+    { key: 'chart.padding.right', def: 36, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
     { key: 'chart.padding.bottom', def: 64, type: 'number', min: 0, max: 100, label: 'bottom', category: 'padding' },
     { key: 'chart.padding.left', def: 48, type: 'number', min: 0, max: 100, label: 'left', category: 'padding' },
 
@@ -236,8 +248,8 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number'},
 
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 5, min: 0, max: 100, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
-    { key: 'chart.grid.labels.yAxis.stacked', def: true, type: 'checkbox' },
+    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
+    { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 40, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.showBaseline', def: true,  type: 'checkbox'},
@@ -299,7 +311,7 @@ const model = ref([
     { key: 'bar.border.strokeWidth', def: 1, type: 'number', min: 0, max: 12, step: 0.5},
 
     { key: 'line.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'line' },
-    { key: 'line.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'line' },
+    { key: 'line.useGradient', def: false, type: 'checkbox', label: 'useGradient', category: 'line' },
     { key: 'line.strokeWidth', def: 2, type: 'number', min: 1, max: 20, label: 'thickness', category: 'line' },
     { key: 'line.labels.show', def: true, type: 'checkbox', label: 'showDataLabels', category: 'line' },
     { key: 'line.labels.offsetY', def: -8, type: 'number', min: -100, max: 100, label: 'offsetYDataLabels', category: 'line' },
@@ -308,6 +320,10 @@ const model = ref([
     { key: 'line.area.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'line' },
     { key: 'line.area.opacity', def: 20, type: 'range', min: 0, max: 100, label: 'opacity', category: 'line' },
 
+    { key: 'line.dot.useSerieColor', def: false, type: 'checkbox'},
+    { key: 'line.dot.fill', def: '#FFFFFF', type: 'color'},
+    { key: 'line.dot.strokeWidth', def: 2, type: 'number', min: 0, max:12, step: 0.1},
+
     { key: 'plot.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'plot' },
     { key: 'plot.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'plot' },
     { key: 'plot.strokeWidth', def: 2, type: 'number', min: 1, max: 20, label: 'thickness', category: 'plot' },
@@ -315,6 +331,10 @@ const model = ref([
     { key: 'plot.labels.offsetY', def: -8, type: 'number', min: -100, max: 100, label: 'offsetYDataLabels', category: 'plot' },
     { key: 'plot.labels.rounding', def: 0, type: 'number', min: 0, max: 6, label: 'rounding', category: 'plot' },
     { key: 'plot.labels.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'plot' },
+
+    { key: 'plot.dot.useSerieColor', def: false, type: 'checkbox'},
+    { key: 'plot.dot.fill', def: '#FFFFFF', type: 'color'},
+    { key: 'plot.dot.strokeWidth', def: 0.5, type: 'number', min: 0, max:12, step: 0.1},
 
     { key: 'showTable', def: false, type: 'checkbox', label: 'show', category: 'table' },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 350, max: 800, label: 'responsiveBreakpoint', category: 'table' },
@@ -544,7 +564,7 @@ function selectX(selectedX) {
         </template>  
     </LocalVueUiXy>
     </div>
-    <Box comp="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset">
+    <Box  :dataset="isPropsToggled ? alternateDataset : dataset">
         <template #title>VueUiXy</template>
 
         <template #local>
