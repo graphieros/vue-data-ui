@@ -4775,6 +4775,18 @@ declare module 'vue-data-ui' {
         value: number;
     }
 
+    export type VueUiWordCloudDatapoint = {
+        color: string;
+        fontSize: number;
+        height: number;
+        id: string;
+        name: string;
+        value: number;
+        width: number;
+        x: number;
+        y: number;
+    }
+
     export type VueUiWordCloudConfig = {
         responsive?: boolean;
         theme?: string;
@@ -4800,6 +4812,10 @@ declare module 'vue-data-ui' {
                     usePalette?: boolean;
                 };
                 title?: ChartTitle;
+                tooltip?: ChartTooltip & {
+                    roundingValue?: number;
+                    customFormat?: null | ((params: VueUiTooltipParams<VueUiWordCloudDatapoint, VueUiDonutConfig>) => string);
+                };
             }
         },
         table?: {

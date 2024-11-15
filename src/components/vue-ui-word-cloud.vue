@@ -3,7 +3,7 @@ import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue';
 import UserOptions from '../atoms/UserOptions.vue';
-import { checkNaN, createUid, createWordCloudDatasetFromPlainText } from '../lib';
+import { checkNaN, createUid, createWordCloudDatasetFromPlainText, isFunction } from '../lib';
 import { debounce } from '../canvas-lib';
 import {
     createCsvContent,
@@ -25,6 +25,7 @@ import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
 import { useConfig } from '../useConfig';
 import PackageVersion from '../atoms/PackageVersion.vue';
+import Tooltip from '../atoms/Tooltip.vue';
 
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 
@@ -65,6 +66,7 @@ const wordCloudChart = ref(null);
 const chartTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
+const isTooltip = ref(false);
 
 const FINAL_CONFIG = computed({
     get: () => {
@@ -181,6 +183,7 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
 });
 
 function measureTextSize(text, fontSize, fontFamily = "Arial") {
@@ -347,13 +350,55 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generatePdf,
     generateImage,
-    toggleTable
+    toggleTable,
+    toggleTooltip
 });
+
+const selectedWord = ref(null);
+const useCustomFormat = ref(false);
+const tooltipContent = ref('');
+const dataTooltipSlot = ref(null);
+
+function useTooltip(word) {
+    if (!mutableConfig.value.showTooltip) return;
+    selectedWord.value = word.id;
+    dataTooltipSlot.value = { datapoint: word, config: FINAL_CONFIG.value };
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    useCustomFormat.value = false;
+
+    if (isFunction(customFormat)) {
+        try {
+            const customFormatString = customFormat({
+                datapoint: word,
+                config: FINAL_CONFIG.value
+            });
+            if (typeof customFormatString === 'string') {
+                tooltipContent.value = customFormatString;
+                useCustomFormat.value = true;
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied.');
+            useCustomFormat.value = false;
+        }
+    }
+
+    if (!useCustomFormat.value) {
+        let html = `<svg viewBox="0 0 10 10" height="${FINAL_CONFIG.value.style.chart.tooltip.fontSize}"><circle cx="5" cy="5" r="5" fill="${word.color}"/></svg><span>${word.name}:</span><b>${(word.value || 0).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingValue)}</b>`;
+
+        tooltipContent.value = `<div dir="auto" style="display:flex; gap:4px; align-items:center; jsutify-content:center;">${html}</div>`;
+    }
+
+    isTooltip.value = true;
+}
 
 </script>
 
@@ -392,11 +437,14 @@ defineExpose({
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="wordCloudChart" 
             :position="FINAL_CONFIG.userOptions.position"
+            :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show && FINAL_CONFIG.userOptions.buttons.tooltip"
+            :isTooltip="mutableConfig.showTooltip"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv" 
             @generateImage="generateImage"
-            @toggleTable="toggleTable" 
+            @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
         >
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -429,10 +477,12 @@ defineExpose({
                         :font-weight="FINAL_CONFIG.style.chart.words.bold ? 'bold' : 'normal'" :key="index"
                         :x="word.x" :y="word.y" :font-size="word.fontSize"
                         :transform="`translate(${word.width / 2}, ${word.height / 2})`"
-                        :style="`animation-delay:${index * FINAL_CONFIG.animationDelayMs}ms !important`"
-                        :class="{'animated': FINAL_CONFIG.useCssAnimation}"
+                        :class="{'animated': FINAL_CONFIG.useCssAnimation, 'word-selected': selectedWord && selectedWord === word.id && mutableConfig.showTooltip, 'word-not-selected': selectedWord && selectedWord !== word.id && mutableConfig.showTooltip }"
                         text-anchor="middle"
                         dominant-baseline="middle"
+                        @mouseover="useTooltip(word)"
+                        @mouseleave="selectedWord = null; isTooltip = false"
+                        :style="`animation-delay:${index * FINAL_CONFIG.animationDelayMs}ms !important;`"
                     >
                         {{ word.name }}
                     </text>
@@ -444,6 +494,29 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
+
+        <Tooltip
+            :show="mutableConfig.showTooltip && isTooltip"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.style.chart.tooltip.position"
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :parent="wordCloudChart"
+            :content="tooltipContent"
+            :isCustom="useCustomFormat"
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+        </Tooltip>
 
         <div ref="chartSlicer" :style="`width:100%;background:transparent`" data-html2canvas-ignore>
             <MonoSlicer
@@ -513,7 +586,7 @@ defineExpose({
 text.animated {
     opacity:0;
     user-select: none;
-    animation: word-opacity 0.3s ease-in forwards;
+    animation: word-opacity 0.2s ease-in forwards;
     transform-origin: center;
 }
 
@@ -525,4 +598,13 @@ text.animated {
         opacity: 1;
     }
 }
+
+.animated.word-selected {
+    opacity: 1;
+}
+.word-not-selected {
+    opacity: 0.5 !important;
+}
+
+
 </style>
