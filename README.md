@@ -235,7 +235,7 @@ It is recommended to set the show legend config attribute to false, to hide the 
 
 ## Tooltip #tooltip-before & #tooltip-after slots
 
-Since v.2.0.57, it is possible to further customize tooltip contents with #tooltip-before and #tooltip-after slots.
+Customize tooltip contents with #tooltip-before and #tooltip-after slots.
 It is that easy to include an image, another chart or any other content into your tooltips. It's an alternative to the config option tooltip.customFormat, in case richer tooltip content is needed.
 
 Both slots expose the following object:
@@ -270,6 +270,7 @@ The following charts bear these slots:
 - VueUiVerticalBar
 - VueUiXy \*
 - VueUiwaffle
+- VueUiWordCloud
 - VueUiXyCanvas
 
 \* VueUiXy slots specifically expose the following additional attributes:
@@ -432,7 +433,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiVerticalBar`            | `VueUiVerticalBarDatasetItem[]`            | `VueUiWheelConfig`                  | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleSort`, `toggleTooltip`                                 | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
 | `VueUiWaffle`                 | `VueUiWaffleDatasetItem[]`                 | `VueUiWaffleConfig`                 | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                               | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
 | `VueUiWheel`                  | `VueUiWheelDataset`                        | `VueUiWheelConfig`                  | `generatePdf`, `generateImage`                                                                                                                          | `#svg`, `#watermark`                                                                                  | ❌             | ✅     |
-| `VueUiWordCloud`              | `VueUiWordCloudDatasetItem[] / string`     | `VueUiWordCloudConfig`              | `getData`, `generatePdf`, `generateImage`, `generateCsv`                                                                                                | `#svg`, `#reset-action`, `#watermark`                                                                 | ❌             | ✅     |
+| `VueUiWordCloud`              | `VueUiWordCloudDatasetItem[] / string`     | `VueUiWordCloudConfig`              | `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTooltip`                                                                               | `#svg`, `#reset-action`, `#watermark`, `#tooltip-before`, `#tooltip-after`                            | ✅             | ✅     |
 | `VueUiXyCanvas`               | `VueUiXyCanvasDatasetItem[]`               | `VueUiXyCanvasConfig`               | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip`                | `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`                         | ✅             | ✅     |
 | `VueUiXy`                     | `VueUiXyDatasetItem[]`                     | `VueUiXyConfig`                     | `@selectLegend`, `@selectX`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip`    | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#plot-comment`,`#watermark` | ✅             | ✅     |
 
