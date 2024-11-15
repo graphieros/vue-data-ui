@@ -3446,6 +3446,7 @@ export function useConfig() {
         useCssAnimation: true,
         animationDelayMs: 20,
         userOptions: USER_OPTIONS({
+            tooltip: true,
             pdf: true,
             csv: true,
             img: true,
@@ -3457,7 +3458,7 @@ export function useConfig() {
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
-                height: 300,
+                height: 512,
                 width: 512,
                 zoom: {
                     show: false,
@@ -3475,6 +3476,10 @@ export function useConfig() {
                     usePalette: true
                 },
                 title: TITLE,
+                tooltip: {
+                    ...TOOLTIP,
+                    roundingValue: 0,
+                },
             }
         },
         table: {
