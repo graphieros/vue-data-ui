@@ -34,6 +34,7 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
 import { useConfig } from '../useConfig';
+import PackageVersion from '../atoms/PackageVersion.vue';
 
 const { vue_ui_treemap: DEFAULT_CONFIG } = useConfig()
 
@@ -595,9 +596,11 @@ defineExpose({
         <svg :xmlns="XMLNS" v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
             data-cy="treemap-svg" :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
-            :style="`max-width:100%; overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+            :style="`max-width:100%; overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+        >
+            <PackageVersion />
 
-            <g v-for="(rect, i) in squarified">            
+            <g v-for="(rect, _i) in squarified">            
                 <defs v-if="FINAL_CONFIG.style.chart.layout.rects.gradient.show">
                     <radialGradient :id="`tgrad_${rect.id}`" gradientTransform="translate(-1, -1.000001) scale(2, 2)">
                         <stop offset="18%" :stop-color="rect.color"/>

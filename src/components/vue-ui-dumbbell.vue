@@ -27,6 +27,7 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_dumbbell: DEFAULT_CONFIG } = useConfig();
 
@@ -469,6 +470,8 @@ defineExpose({
         </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.absoluteWidth <= 0 ? 10 : drawingArea.absoluteWidth} ${drawingArea.absoluteHeight <= 0 ? 10 : drawingArea.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+            <PackageVersion />
+            
             <!-- VERTICAL GRID -->
             <g v-if="FINAL_CONFIG.style.chart.grid.verticalGrid.show">
 

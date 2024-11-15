@@ -25,6 +25,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_flow: DEFAULT_CONFIG } = useConfig();
 
@@ -540,6 +541,8 @@ defineExpose({
             :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
+            <PackageVersion />
+            
             <defs>
                 <linearGradient 
                     v-for="(grad, i) in mutableDataset.links"

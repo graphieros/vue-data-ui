@@ -29,6 +29,7 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_molecule: DEFAULT_CONFIG } = useConfig();
 
@@ -590,6 +591,7 @@ defineExpose({
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="cluster-svg" :viewBox="dynamicViewBox"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`" @click.stop="unzoom($event)">
+            <PackageVersion />
 
             <defs>
                 <radialGradient v-for="color in Object.keys(gradientIds)" :id="`gradient_${color}`" cx="50%" cy="30%" r="50%" fx="50%" fy="50%">

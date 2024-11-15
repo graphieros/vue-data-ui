@@ -35,6 +35,7 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_donut_evolution: DEFAULT_CONFIG } = useConfig();
 
@@ -570,6 +571,7 @@ defineExpose({
         </UserOptions>
         
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-evolution-svg" :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+            <PackageVersion />
 
             <defs>
                 <linearGradient :id="`hover_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">

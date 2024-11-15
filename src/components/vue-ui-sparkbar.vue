@@ -19,6 +19,7 @@ import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_sparkbar: DEFAULT_CONFIG } = useConfig();
 
@@ -350,6 +351,8 @@ function selectDatapoint(datapoint, index) {
 
                 <!-- BAR -->
                 <svg :xmlns="XMLNS" :data-cy="`sparkbar-svg-${i}`" :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
+                    <PackageVersion />
+                    
                     <defs>
                         <linearGradient
                             x1="0%"

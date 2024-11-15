@@ -17,6 +17,7 @@ applyDataLabel,
 import Skeleton from "./vue-ui-skeleton.vue";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_tiremarks: DEFAULT_CONFIG } = useConfig()
 
@@ -330,6 +331,8 @@ defineExpose({
         </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+            <PackageVersion />
+            
             <g v-if="FINAL_CONFIG.style.chart.layout.curved">
                 <path
                     v-for="(tick, i) in ticks"

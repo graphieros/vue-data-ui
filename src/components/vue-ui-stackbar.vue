@@ -37,6 +37,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue"
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig()
 
@@ -811,6 +812,8 @@ defineExpose({
             :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
+            <PackageVersion />
+            
             <!-- GRADIENT DEFS -->
             <defs v-if="FINAL_CONFIG.style.chart.bars.gradient.show">
                 <linearGradient v-for="(ds, i) in formattedDataset" :id="`gradient_${ds.id}`" x1="0%" y1="0%" x2="0%" y2="100%">

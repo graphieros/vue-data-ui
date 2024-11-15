@@ -35,6 +35,7 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_nested_donuts: DEFAULT_CONFIG } = useConfig();
 
@@ -795,6 +796,8 @@ defineExpose({
         </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 0.001 : svg.width} ${svg.height < 0 ? 0.001 : svg.height}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+            <PackageVersion />
+            
             <!-- GRADIENTS -->
             <defs>
                 <radialGradient v-for="(_, i) in gradientSets" :id="`radial_${uid}_${i}`">

@@ -35,6 +35,7 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig()
 
@@ -932,6 +933,8 @@ defineExpose({
             :viewBox="viewBox" 
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.color}`"
         >
+            <PackageVersion />
+            
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />

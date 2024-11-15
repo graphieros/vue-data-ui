@@ -77,6 +77,7 @@
         </UserOptions>
         
         <svg xmlns="http://www.w3.org/2000/svg" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background: transparent; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`">
+            <PackageVersion />
             <g v-if="maxSeries > 0"> 
                 <!-- GRID -->
                 <g class="vue-ui-xy-grid">
@@ -1200,6 +1201,7 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useConfig } from '../useConfig';
 import { useMouse } from '../useMouse';
 import { useNestedProp } from '../useNestedProp';
+import PackageVersion from '../atoms/PackageVersion.vue';
 
 const sliderId = createUid();
 
@@ -1229,7 +1231,8 @@ export default {
     TableSparkline,
     Skeleton,
     Slicer,
-    Accordion
+    Accordion,
+    PackageVersion
 },
     data(){
         this.dataset.forEach((ds, i) => {

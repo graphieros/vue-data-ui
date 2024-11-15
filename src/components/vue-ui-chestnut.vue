@@ -30,6 +30,7 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_chestnut: DEFAULT_CONFIG } = useConfig()
 
@@ -553,6 +554,7 @@ defineExpose({
         </UserOptions>
 
         <svg :xmlns="XMLNS" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"  :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" >
+            <PackageVersion />
 
             <!-- TITLE AS G -->
             <g v-if="!selectedNut">

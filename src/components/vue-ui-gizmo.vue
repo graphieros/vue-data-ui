@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useConfig } from "../useConfig";
 import { createUid, error, applyDataLabel, dataLabel } from "../lib";
 import { useNestedProp } from "../useNestedProp";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_gizmo: DEFAULT_CONFIG } = useConfig();
     
@@ -89,6 +90,8 @@ const gaugeBody = computed(() => {
             fontFamily: FINAL_CONFIG.fontFamily
         }"
     >
+        <PackageVersion />
+        
         <defs v-if="FINAL_CONFIG.useGradient">
             <linearGradient :id="`gizmo_gradient_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
                 <stop offset="0%" :stop-color="FINAL_CONFIG.gradientColor" />

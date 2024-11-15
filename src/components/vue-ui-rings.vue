@@ -34,6 +34,7 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_rings: DEFAULT_CONFIG } = useConfig();
 
@@ -559,22 +560,26 @@ defineExpose({
       :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
       :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
     >
-      <!-- DEFS ? -->
-      <radialGradient
-        cx="50%"
-        cy="30%"
-        r="50%"
-        fx="50%"
-        fy="50%"
-        v-for="(d, i) in convertedDataset"
-        :id="`gradient_${uid}_${i}`"
-      >
-        <stop
-          offset="0%"
-          :stop-color="setOpacity(shiftHue(d.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.rings.gradient.intensity)"
-        />
-        <stop offset="100%" :stop-color="d.color" />
-      </radialGradient>
+      <PackageVersion />
+
+      <!-- DEFS  -->
+      <defs>
+        <radialGradient
+          cx="50%"
+          cy="30%"
+          r="50%"
+          fx="50%"
+          fy="50%"
+          v-for="(d, i) in convertedDataset"
+          :id="`gradient_${uid}_${i}`"
+        >
+          <stop
+            offset="0%"
+            :stop-color="setOpacity(shiftHue(d.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.rings.gradient.intensity)"
+          />
+          <stop offset="100%" :stop-color="d.color" />
+        </radialGradient>
+      </defs>
 
       <!-- RINGS -->
       <g v-for="(ring, i) in convertedDataset">

@@ -16,6 +16,7 @@ import { useNestedProp } from "../useNestedProp";
 import Shape from "../atoms/Shape.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_sparkhistogram: DEFAULT_CONFIG } = useConfig()
 
@@ -205,6 +206,8 @@ const animation = computed(() => {
         </div>
 
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkhistogram-svg" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" style="overflow: visible">
+            <PackageVersion />
+            
             <defs>
                 <radialGradient v-for="(posGrad, i) in computedDataset" :id="`gradient_positive_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
                     <stop offset="0%" :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.bars.colors.positive, 0.05), posGrad.intensity)"/>

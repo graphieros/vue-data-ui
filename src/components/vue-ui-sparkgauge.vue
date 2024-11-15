@@ -15,6 +15,7 @@ import {
 } from "../lib";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig()
 
@@ -193,6 +194,8 @@ const trackColor = computed(() => {
         {{ nameLabel }}
     </div>
     <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:transparent; width:100%;`">
+        <PackageVersion />
+        
         <defs>
             <linearGradient :id="`gradient_${ uid}`" x1="-10%" y1="100%" x2="110%" y2="100%">
                 <stop offset="0%" :stop-color="FINAL_CONFIG.style.colors.min"/>

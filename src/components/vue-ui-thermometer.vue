@@ -22,6 +22,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_thermometer: DEFAULT_CONFIG } = useConfig()
 
@@ -309,6 +310,8 @@ defineExpose({
         </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" width="100%" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" :style="`background:transparent`">
+            <PackageVersion />
+            
             <defs>
                 <clipPath id="vueUiPill" clipPathUnits="objectBoundingBox">
                     <rect 

@@ -19,6 +19,7 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_relation_circle: DEFAULT_CONFIG } = useConfig()
 
@@ -401,6 +402,8 @@ defineExpose({
             width="100%"
             :style="`user-select:none; background:transparent`"
         >
+            <PackageVersion />
+            
             <circle
                 data-cy="relation-circle" 
                 :cx="(svg.width <= 0 ? 0.0001 : svg.width) / 2" 

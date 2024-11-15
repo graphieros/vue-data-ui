@@ -34,6 +34,7 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_quadrant: DEFAULT_CONFIG } = useConfig()
 
@@ -1008,7 +1009,8 @@ defineExpose({
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`" :style="`max-width:100%;overflow:${isZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  :id="`svg_${uid}`">
-            
+            <PackageVersion />
+
             <!-- DEFS -->
             <defs>
                 <radialGradient

@@ -8,6 +8,7 @@ import { Timer } from "../timer";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import Title from "../atoms/Title.vue";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_timer: DEFAULT_CONFIG } = useConfig();
 
@@ -268,6 +269,8 @@ defineExpose({
                 background: FINAL_CONFIG.style.backgroundColor
             }"
         >
+            <PackageVersion />
+            
             <!-- DEFS -->
             <defs v-if="FINAL_CONFIG.stopwatch.tracker.gradient.show">
                 <radialGradient :id="`tracker_gradient_${uid}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">

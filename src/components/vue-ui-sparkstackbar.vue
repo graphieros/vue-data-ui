@@ -19,6 +19,7 @@ import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_sparkstackbar: DEFAULT_CONFIG } = useConfig()
 
@@ -240,24 +241,26 @@ function selectDatapoint(datapoint, index) {
         </div>
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" width="100%" :viewBox="`0 0 ${svg.width} ${svg.height}`">
-        <defs>
-            <linearGradient v-for="(rect, i) in drawableDataset" :key="`stack_gradient_${i}`" gradientTransform="rotate(90)" :id="`stack_gradient_${i}_${uid}`">
-                <stop offset="0%" :stop-color="rect.color"/>
-                <stop offset="50%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.bar.gradient.intensity)"/>
-                <stop offset="100%" :stop-color="rect.color"/>
-            </linearGradient>
-            <clipPath id="stackPill" clipPathUnits="objectBoundingBox">
-                <rect
-                    x="0.005"
-                    y="-2"
-                    width="0.99"
-                    height="5"
-                    rx="3"
-                    ry="3"
-                    :fill="FINAL_CONFIG.style.backgroundColor"
-                />
-            </clipPath>
-        </defs>
+            <PackageVersion />
+            
+            <defs>
+                <linearGradient v-for="(rect, i) in drawableDataset" :key="`stack_gradient_${i}`" gradientTransform="rotate(90)" :id="`stack_gradient_${i}_${uid}`">
+                    <stop offset="0%" :stop-color="rect.color"/>
+                    <stop offset="50%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.bar.gradient.intensity)"/>
+                    <stop offset="100%" :stop-color="rect.color"/>
+                </linearGradient>
+                <clipPath id="stackPill" clipPathUnits="objectBoundingBox">
+                    <rect
+                        x="0.005"
+                        y="-2"
+                        width="0.99"
+                        height="5"
+                        rx="3"
+                        ry="3"
+                        :fill="FINAL_CONFIG.style.backgroundColor"
+                    />
+                </clipPath>
+            </defs>
             <g clip-path="url(#stackPill)" v-if="total > 0">
                 <rect 
                     :x="0" 

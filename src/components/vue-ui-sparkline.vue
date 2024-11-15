@@ -20,6 +20,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
 import { useResponsive } from "../useResponsive";
 import { throttle } from "../canvas-lib";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_sparkline: DEFAULT_CONFIG } = useConfig();
 
@@ -344,6 +345,8 @@ function selectDatapoint(datapoint, index) {
 
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`">
+            <PackageVersion />
+            
             <!-- DEFS -->
             <defs>
                 <linearGradient

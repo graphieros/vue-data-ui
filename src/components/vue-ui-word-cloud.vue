@@ -24,6 +24,7 @@ import { useNestedProp } from '../useNestedProp';
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
 import { useConfig } from '../useConfig';
+import PackageVersion from '../atoms/PackageVersion.vue';
 
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 
@@ -416,7 +417,10 @@ defineExpose({
 
         <svg :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" v-if="isDataset"
             :xmlns="XMLNS" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-            :style="`overflow:visible;background:transparent;`">
+            :style="`overflow:visible;background:transparent;`"
+        >
+            <PackageVersion />
+            
             <g
                 :transform="`translate(${(svg.width <= 0 ? 10 : svg.width) / 2}, ${(svg.height <= 0 ? 10 : svg.height) / 2})`">
                 <g v-for="(word, index) in positionedWords">

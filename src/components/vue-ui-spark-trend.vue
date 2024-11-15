@@ -17,6 +17,7 @@ import { useNestedProp } from "../useNestedProp";
 import BaseIcon from "../atoms/BaseIcon.vue";
 import Skeleton from './vue-ui-skeleton.vue';
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_spark_trend: DEFAULT_CONFIG } = useConfig();
 
@@ -259,6 +260,8 @@ const straightLine = computed(() => {
             }"
         />
         <svg v-else :xmlns="XMLNS" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`">
+            <PackageVersion />
+            
             <!-- DEFS -->
             <defs>
                 <linearGradient

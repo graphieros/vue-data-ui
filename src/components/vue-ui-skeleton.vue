@@ -8,6 +8,7 @@ import {
 } from "../lib.js";
 import { useNestedProp } from "../useNestedProp";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_skeleton: DEFAULT_CONFIG } = useConfig();
 
@@ -292,6 +293,7 @@ const ticks = computed(() => {
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${FINAL_CONFIG.style.backgroundColor};color:${FINAL_CONFIG.style.color};display:flex;align-items:center;justify-content:center;`">
         <template v-if="type === 'flow'">
             <svg :xmlns="XMLNS" width="100%" viewBox="0 0 80 60" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path 
                     d="M 5 5 L 5 55 M 75 5 L 75 55 M 28 5 L 28 55 M 52 5 L 52 55 M 5 8 L 28 12 L 52 9 L 75 8 L 75 12 L 52 12 L 28 21 L 5 29 Z M 5 34 L 28 35 L 52 24 L 75 21 L 75 27 L 52 30 L 28 44 L 52 39 L 75 41 L 75 47 L 52 45 L 28 52 L 5 52 Z"
                     :stroke="FINAL_CONFIG.style.flow.color" :stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" :fill="FINAL_CONFIG.style.flow.color"
@@ -301,6 +303,7 @@ const ticks = computed(() => {
 
         <template v-if="type === 'parallelCoordinatePlot'">
             <svg :xmlns="XMLNS" width="100%" viewBox="0 0 80 60" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path 
                     d="M 5 5 L 5 55 M 75 5 L 75 55 M 28 5 L 28 55 M 52 5 L 52 55 M 5 10 A 1 1 0 0 0 5 12 A 1 1 0 0 0 5 10 M 28 15 A 1 1 0 0 0 28 17 A 1 1 0 0 0 28 15 M 52 8 A 1 1 0 0 0 52 10 A 1 1 0 0 0 52 8 M 75 11 A 1 1 0 0 0 75 13 A 1 1 0 0 0 75 11 M 6 11 L 27 16 M 29 16 L 51 9 M 53 9 L 74 12 M 5 50 A 1 1 0 0 0 5 48 A 1 1 0 0 0 5 50 M 28 39 A 1 1 0 0 0 28 41 A 1 1 0 0 0 28 39 M 52 45 A 1 1 0 0 0 52 47 A 1 1 0 0 0 52 45 M 75 45 A 1 1 0 0 0 75 47 A 1 1 0 0 0 75 45 M 6 49 L 27 40 M 29 40 L 51 46 M 53 46 L 74 46 M 5 25 A 1 1 0 0 0 5 27 A 1 1 0 0 0 5 25 M 28 31 A 1 1 0 0 0 28 33 A 1 1 0 0 0 28 31 M 52 23 A 1 1 0 0 0 52 25 A 1 1 0 0 0 52 23 M 75 21 A 1 1 0 0 0 75 23 A 1 1 0 0 0 75 21 M 6 26 L 27 32 M 29 32 L 51 24 M 53 24 L 74 22"
                     :stroke="FINAL_CONFIG.style.parallelCoordinatePlot.color" :stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" :fill="FINAL_CONFIG.style.parallelCoordinatePlot.color"
@@ -311,6 +314,7 @@ const ticks = computed(() => {
         <!-- DUMBBELL -->
         <template v-if="type === 'dumbbell'">
             <svg :xmlns="XMLNS" data-cy="skeleton-line" width="100%" viewBox="0 0 100 55" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <line x1="3" x2="3" y1="3" y2="67" :stroke="FINAL_CONFIG.style.dumbbell.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="
                     M 30,11
@@ -368,6 +372,7 @@ const ticks = computed(() => {
         <!-- STRIP PLOT -->
         <template v-if="type === 'stripPlot'">
             <svg :xmlns="XMLNS" data-cy="skeleton-line" width="100%" viewBox="0 0 100 100" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <line x1="3" x2="3" y1="3" y2="97" :stroke="FINAL_CONFIG.style.stripPlot.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <line x1="3" x2="97" y1="97" y2="97" :stroke="FINAL_CONFIG.style.stripPlot.color" :stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <circle cx="12" cy="8" r="4"  :stroke="FINAL_CONFIG.style.backgroundColor" :stroke-width="0.3" :fill="FINAL_CONFIG.style.stripPlot.color" style="opacity:0.5"/>
@@ -403,6 +408,7 @@ const ticks = computed(() => {
         <!-- TREEMAP -->
         <template v-if="type === 'treemap'">
             <svg :xmlns="XMLNS" data-cy="skeleton-treemap" width="100%" viewBox="0 0 30 21" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path fill="none" :stroke="FINAL_CONFIG.style.treemap.color" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round" d="M 1 1 L 29 1 L 29 20 L 1 20 Z M 10 1 L 10 20 M 1 13 L 10 13 M 22 11 L 22 20 M 10 11 L 22 11 M 22 11 L 29 11 M 7 13 L 7 20 M 17 11 L 17 20 M 22 15 L 29 15 M 26 15 L 26 20 M 20 1 L 20 11" />
             </svg>
         </template>
@@ -410,6 +416,7 @@ const ticks = computed(() => {
         <!-- GALAXY -->
         <template v-if="type === 'galaxy'">
             <svg :xmlns="XMLNS" data-cy="skeleton-relation-circle" width="100%" viewBox="0.5 0 20 20" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path fill="none" :stroke="FINAL_CONFIG.style.galaxy.color" stroke-width="2" stroke-linecap="round" d="M 7 11 A 1 1 0 0 0 11 11 M 14 11 A 1 1 0 0 0 7 11 M 3 11 A 1 1 0 0 0 14 11 M 18 11 A 1 1 0 0 0 3 11 M 16.4 16 C 17 15 18 13 18 11" />
             </svg>
         </template>
@@ -417,6 +424,7 @@ const ticks = computed(() => {
         <!-- 3D BAR -->
         <template v-if="type === 'bar3d'">
             <svg :xmlns="XMLNS" data-cy="skeleton-relation-circle" width="100%" viewBox="2 0 16 20" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path fill="none" :stroke="FINAL_CONFIG.style.bar3d.color" stroke-width="0.2" d="M10 1 6 3 6 17 10 19 14 17 14 3 10 1M6 3 10 5 14 3M10 5 10 19" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
         </template>
@@ -424,6 +432,7 @@ const ticks = computed(() => {
         <!-- SPARK HISTOGRAM-->
         <template v-if="type === 'sparkHistogram'">
             <svg :xmlns="XMLNS" data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 100 20" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <rect x="3" y="8" height="4" width="6" rx="1.5" :fill="FINAL_CONFIG.style.sparkHistogram.color"/>
                 <rect x="11" y="6" height="8" width="6" rx="2" :fill="FINAL_CONFIG.style.sparkHistogram.color"/>
                 <rect x="19" y="7" height="6" width="6" rx="2" :fill="FINAL_CONFIG.style.sparkHistogram.color"/>
@@ -442,6 +451,7 @@ const ticks = computed(() => {
         <!-- SPARKBAR -->
         <template v-if="type === 'sparkbar'">
             <svg :xmlns="XMLNS" data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 500 200" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <line x1="12" x2="488" y1="50" y2="50" stroke-width="16" stroke-linecap="round" :stroke="FINAL_CONFIG.style.sparkbar.color" opacity="0.5"/> 
                 <line x1="12" x2="400" y1="50" y2="50" stroke-width="16" stroke-linecap="round" :stroke="FINAL_CONFIG.style.sparkbar.color" opacity="1"/>
 
@@ -456,6 +466,7 @@ const ticks = computed(() => {
         <!-- SPARK STACKBAR -->
         <template v-if="type === 'sparkStackbar'">
             <svg :xmlns="XMLNS" data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 500 64" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <line x1="12" x2="488" y1="32" y2="32" stroke-width="16" stroke-linecap="round" :stroke="FINAL_CONFIG.style.sparkStackbar.color" opacity="0.5"/> 
                 <line x1="12" x2="380" y1="32" y2="32" stroke-width="16" stroke-linecap="round" :stroke="FINAL_CONFIG.style.sparkStackbar.color" opacity="0.6"/> 
                 <line x1="12" x2="200" y1="32" y2="32" stroke-width="16" stroke-linecap="round" :stroke="FINAL_CONFIG.style.sparkStackbar.color" opacity="0.8"/> 
@@ -466,6 +477,7 @@ const ticks = computed(() => {
         <!-- THERMOMETER -->
         <template v-if="type === 'thermometer'">
             <svg data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 20 20" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path fill="none" :stroke="FINAL_CONFIG.style.thermometer.color" stroke-width="0.2" stroke-linecap="round" d="M 13 4 A 1 1 0 0 0 7 4 L 7 16 A 1 1 0 0 0 13 16 L 13 4 M 7 15 L 8 15 M 7 12 L 8 12 M 7 9 L 8 9 M 7 6 L 8 6 M 12 15 L 13 15 M 12 12 L 13 12 M 12 9 L 13 9 M 12 6 L 13 6 " /><path :stroke="FINAL_CONFIG.style.thermometer.color" stroke-width="1" style="opacity: 0.6" d="M 10 17 L 10 12 " stroke-linecap="round" /><path stroke-linecap="round" :stroke="FINAL_CONFIG.style.thermometer.color" stroke-width="1" opacity="M 10 17 L 10 9" /><path stroke-linecap="round" :stroke="FINAL_CONFIG.style.thermometer.color" stroke-width="1" opacity="0.3" d="M 10 17 L 10 6" /><path stroke-linecap="round" :stroke="FINAL_CONFIG.style.thermometer.color" stroke-width="1" style="opacity: 0.1" d="M 10 17 L 10 3" />
             </svg>
         </template>
@@ -473,6 +485,7 @@ const ticks = computed(() => {
         <!-- RELATION CIRCLE -->
         <template v-if="type === 'relationCircle'">
             <svg :xmlns="XMLNS" data-cy="skeleton-relation-circle" width="100%" viewBox="0 0 20 20" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path fill="none" :stroke="FINAL_CONFIG.style.relationCircle.color" stroke-width="0.2" stroke-linecap="round" d="M1 10A1 1 0 0019 10 1 1 0 001 10M1 10C7 11 9 13 10 19M10 19C10 11 8 7 6 2M10 19C10 11 12 7 14 2M10 19C11 13 12 11 19 10" />
             </svg>
         </template>
@@ -480,6 +493,7 @@ const ticks = computed(() => {
         <!-- MOLECULE -->
         <template v-if="type === 'molecule'">
             <svg :xmlns="XMLNS" data-cy="skeleton-molecule" width="100%" viewBox="0 0 100 100" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <circle cx="50" cy="50" r="6" stroke-width="2" fill="none" :stroke="FINAL_CONFIG.style.molecule.color" />
                 <circle cx="20" cy="50" r="3" stroke-width="1.6" fill="none" :stroke="FINAL_CONFIG.style.molecule.color" />
                 <circle cx="80" cy="50" r="3" stroke-width="1.6" fill="none" :stroke="FINAL_CONFIG.style.molecule.color" />
@@ -495,6 +509,7 @@ const ticks = computed(() => {
         <!-- TIREMARKS -->
         <template v-if="type === 'tiremarks'">
             <svg :xmlns="XMLNS" data-cy="skeleton-tiremarks" width="100%" viewBox="0 0 312 56" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <g v-for="n in 100">
                     <line :x1="10 + (n * 2.9)" :y1="6" :x2="10 + (n * 2.9)" :y2="50" :stroke="FINAL_CONFIG.style.tiremarks.color" :style="n > 80 ? 'opacity: 0.5' : ''" stroke-linecap="round"/>
                 </g>
@@ -504,6 +519,7 @@ const ticks = computed(() => {
         <!-- TYPE PYRAMID -->
         <template v-if="type === 'pyramid'">
             <svg :xmlns="XMLNS" data-cy="skeleton-pyramid" width="100%" viewBox="0 0 105 80" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <g v-for="(rect, i) in pyramid">
                     <rect :x="50 - rect[0]" :y="i * (80 / pyramid.length)" :width="rect[0]" :height="(80 / pyramid.length) * 0.95" :fill="FINAL_CONFIG.style.pyramid.color"/>
                     <rect :x="55" :y="i * (80 / pyramid.length)" :width="rect[1]" :height="(80 / pyramid.length) * 0.95" :fill="FINAL_CONFIG.style.pyramid.color"/>
@@ -514,6 +530,7 @@ const ticks = computed(() => {
         <!-- TYPE RINGS -->
         <template v-if="type === 'rings'">
             <svg :xmlns="XMLNS" data-cy="skeleton-rings" width="100%" viewBox="0 0 400 400" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <circle
                     :cx="200"
                     :cy="200"
@@ -538,6 +555,7 @@ const ticks = computed(() => {
         <!-- TYPE WHEEL -->
         <template v-if="type === 'wheel'">
             <svg :xmlns="XMLNS" data-cy="skeleton-wheel" width="100%" viewBox="0 0 400 400" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <line 
                 v-for="(tick, i) in ticks"
                 :x1="tick.x1"
@@ -571,6 +589,7 @@ const ticks = computed(() => {
         <!-- TYPE SPARKLINE -->
         <template v-if="type === 'sparkline'">
             <svg :xmlns="XMLNS" data-cy="skeleton-sparkline" width="100%" viewBox="0 0 150 32" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <g>
                     <rect x="2" y="2" height="6" width="24" :fill="FINAL_CONFIG.style.sparkline.color" rx="3"/>
                     <rect x="2" y="12" height="16" width="16" :fill="FINAL_CONFIG.style.sparkline.color" rx="3"/>
@@ -594,6 +613,7 @@ const ticks = computed(() => {
         <!-- TYPE CANDLESTICK -->
         <template v-if="type === 'candlesticks'">
             <svg :xmlns="XMLNS" data-cy="skeleton-candlesticks" width="100%" viewBox="0 0 512 316" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <g v-if="FINAL_CONFIG.style.candlesticks.axis.show">
                     <line
                         :x1="2"
@@ -657,6 +677,7 @@ const ticks = computed(() => {
         <!-- TYPE HEATMAP -->
         <template v-if="type === 'heatmap'">
             <svg :xmlns="XMLNS" data-cy="skeleton-heatmap" width="100%" :viewBox="`0 0 ${10 * FINAL_CONFIG.style.heatmap.cellsX} ${10 * FINAL_CONFIG.style.heatmap.cellsY}`" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <g v-for="(_, i) in FINAL_CONFIG.style.heatmap.cellsY">
                     <g v-for="(__, j) in FINAL_CONFIG.style.heatmap.cellsX">
                         <rect
@@ -676,6 +697,7 @@ const ticks = computed(() => {
         <!-- TYPE CHESTNUT -->
         <template v-if="type === 'chestnut'">
             <svg :xmlns="XMLNS" data-cy="skeleton-chestnut" width="100%" viewBox="0 0 512 316" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <g v-for="item in chestnut">
                     <g v-for="bar in item.bars">
                         <path 
@@ -707,6 +729,7 @@ const ticks = computed(() => {
         <!-- TYPE DONUT EVOLUTION -->
         <template v-if="type === 'donutEvolution'">
             <svg :xmlns="XMLNS" data-cy="skeleton-donut-evolution" width="100%" viewBox="0 0 108 70" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path v-if="FINAL_CONFIG.style.line.axis.show" d="M3 3 3 67 105 67" :stroke="FINAL_CONFIG.style.donutEvolution.axis.color" :stroke-width="FINAL_CONFIG.style.donutEvolution.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
                 <path fill="none" d="M10 55A1 1 0 0020 55 1 1 0 0010 55M12 55A1 1 0 0018 55 1 1 0 0012 55M10 55 12 55M15 52 15 50M27 45A1 1 0 0037 45 1 1 0 0027 45M29 45A1 1 0 0035 45 1 1 0 0029 45M32 48 32 50M35 45 37 45M44 50A1 1 0 0054 50 1 1 0 0044 50M46 50A1 1 0 0052 50 1 1 0 0046 50M49 45 49 47M49 53 49 55M61 35A1 1 0 0071 35 1 1 0 0061 35M63 35A1 1 0 0069 35 1 1 0 0063 35M66 30 66 32M61 35 63 35M78 41A1 1 0 0088 41 1 1 0 0078 41M80 41A1 1 0 0086 41 1 1 0 0080 41M78 41 80 41M86 41 88 41M95 14A1 1 0 00105 14 1 1 0 0095 14M97 14A1 1 0 00103 14 1 1 0 0097 14M95 14 97 14M100 17 100 19" :stroke="FINAL_CONFIG.style.donutEvolution.donuts.color" :stroke-width="FINAL_CONFIG.style.donutEvolution.donuts.strokeWidth"/>
@@ -726,7 +749,7 @@ const ticks = computed(() => {
         <!-- TYPE LINE -->
         <template v-if="type === 'line'">
             <svg :xmlns="XMLNS" data-cy="skeleton-line" width="100%" viewBox="0 0 100 70" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
-
+                <PackageVersion />
                 <g v-if="FINAL_CONFIG.style.line.axis.show">
                     <line x1="3" x2="3" y1="3" y2="67" :stroke="FINAL_CONFIG.style.line.axis.color" :stroke-width="FINAL_CONFIG.style.line.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
                     <line x1="3" x2="97" y1="67" y2="67" :stroke="FINAL_CONFIG.style.line.axis.color" :stroke-width="FINAL_CONFIG.style.line.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
@@ -742,6 +765,7 @@ const ticks = computed(() => {
         <!-- TYPE BAR -->
         <template v-if="type === 'bar'">
             <svg :xmlns="XMLNS" data-cy="skeleton-bar" width="100%" viewBox="0 0 100 70" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <g v-if="FINAL_CONFIG.style.bar.axis.show">
                     <line x1="3" x2="3" y1="3" y2="67" :stroke="FINAL_CONFIG.style.bar.axis.color" :stroke-width="FINAL_CONFIG.style.bar.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
                     <line x1="3" x2="97" y1="67" y2="67" :stroke="FINAL_CONFIG.style.bar.axis.color" :stroke-width="FINAL_CONFIG.style.bar.axis.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
@@ -760,6 +784,7 @@ const ticks = computed(() => {
         <!-- TYPE DONUT -->
         <template v-if="type === 'donut'">
             <svg :xmlns="XMLNS" data-cy="skeleton-donut" width="100%" viewBox="0 0 400 400" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path d=" M 300 200 A 100 100 0 0 1 113 250" fill="none" :stroke-width="FINAL_CONFIG.style.donut.strokeWidth" :stroke="FINAL_CONFIG.style.donut.color" />
                 <path d=" M 113 250 A 100 100 0 0 1 250 113" fill="none" :stroke-width="FINAL_CONFIG.style.donut.strokeWidth" :stroke="setOpacity(FINAL_CONFIG.style.donut.color, 60)" />
                 <path d=" M 250 113 A 100 100 0 0 1 300 200" fill="none" :stroke-width="FINAL_CONFIG.style.donut.strokeWidth" :stroke="setOpacity(FINAL_CONFIG.style.donut.color, 30)" />
@@ -769,6 +794,7 @@ const ticks = computed(() => {
         <!-- TYPE ONION -->
         <template v-if="type === 'onion'">
             <svg :xmlns="XMLNS" data-cy="skeleton-onion" width="100%" viewBox="0 0 400 400" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path d=" M 200 60 A 140 140 0 1 1 60 200"   :stroke="FINAL_CONFIG.style.onion.color" stroke-linecap="round" stroke-width="20" fill="none" />
                 <path d=" M 200 100 A 100 100 0 1 1 100 200" :stroke="setOpacity(FINAL_CONFIG.style.onion.color, 60)" stroke-linecap="round" stroke-width="20" fill="none" />
                 <path d=" M 200 140 A 60 60 0 1 1 140 200" fill="none" :stroke="setOpacity(FINAL_CONFIG.style.onion.color, 40)" stroke-linecap="round" stroke-width="20" />
@@ -778,6 +804,7 @@ const ticks = computed(() => {
         <!-- TYPE GAUGE -->
         <template v-if="type === 'gauge'">
             <svg data-cy="skeleton-gauge" width="100%" viewBox="0 0 400 400" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path d=" M 82 255 A 120 120 0 1 1 318 255" fill="none" :stroke="FINAL_CONFIG.style.gauge.color" stroke-linecap="round" stroke-width="20" />
                 <circle cx="200" cy="256" r="12" :fill="FINAL_CONFIG.style.gauge.color"/>
                 <line x1="200" y1="256" x2="250" y2="160" stroke-width="8" :stroke="FINAL_CONFIG.style.gauge.color" stroke-linecap="round"/>
@@ -787,6 +814,7 @@ const ticks = computed(() => {
         <!-- TYPE QUADRANT -->
         <template v-if="type === 'quadrant'">
             <svg :xmlns="XMLNS" data-cy="skeleton-quadrant" viewBox="0 0 100 100" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <line x1="50" x2="50" y1="3" y2="97" :stroke="FINAL_CONFIG.style.quadrant.grid.color" :stroke-width="FINAL_CONFIG.style.quadrant.grid.strokeWidth"/>
                 <line x1="3" x2="97" y1="50" y2="50" :stroke="FINAL_CONFIG.style.quadrant.grid.color" :stroke-width="FINAL_CONFIG.style.quadrant.grid.strokeWidth"/>
                 <circle :fill="FINAL_CONFIG.style.quadrant.plots.color" :r="FINAL_CONFIG.style.quadrant.plots.radius" cx="20" cy="20"/>
@@ -804,6 +832,7 @@ const ticks = computed(() => {
         <!-- TYPE RADAR -->
         <template v-if="type === 'radar'">
             <svg :xmlns="XMLNS" data-cy="skeleton-radar" viewBox="0 0 100 100" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <path :d="radar" fill="none" :stroke="FINAL_CONFIG.style.radar.grid.color" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
 
                 <path :d="radarInside1" fill="none" :stroke="setOpacity(FINAL_CONFIG.style.radar.grid.color, 70)" :stroke-width="FINAL_CONFIG.style.radar.grid.strokeWidth / 2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -822,6 +851,7 @@ const ticks = computed(() => {
         <!-- TYPE WAFFLE -->
         <template v-if="type === 'waffle'">
             <svg :xmlns="XMLNS" data-cy="skeleton-waffle" viewBox="0 0 100 100" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <g v-for="(_,i) in 10">
                     <g v-for="(__,j) in 10">
                         <rect
@@ -866,6 +896,7 @@ const ticks = computed(() => {
         <!-- TYPE TABLE -->
         <template v-if="type === 'table'">
             <svg :xmlns="XMLNS" data-cy="skeleton-table" width="100%" viewBox="0 0 100 70" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <rect :fill="setOpacity(FINAL_CONFIG.style.table.th.color, 50)" :x="3.5" :y="5" height="10" width="93"/>
                 <rect :fill="setOpacity(FINAL_CONFIG.style.table.th.color, 50)" :x="3.5" :y="15" height="50" width="23.25"/>
                 <line v-for="(_,i) in 7" x1="3.7" x2="96.3" :y1="5 + (i * 10)" :y2="5 + (i * 10)" :stroke="FINAL_CONFIG.style.table.td.color" :stroke-width="FINAL_CONFIG.style.table.td.strokeWidth" stroke-linecap="round" />
@@ -878,6 +909,7 @@ const ticks = computed(() => {
             <div data-cy="skeleton-smiley" v-if="FINAL_CONFIG.style.rating.useSmiley" :style="`display:flex;flex-direction:row;align-items:center;justify-content:center;width:${FINAL_CONFIG.style.rating.maxWidth}px`">
                 <!-- 0 -->
                 <svg :xmlns="XMLNS" v-if="FINAL_CONFIG.style.rating.filled" :style="`width:${FINAL_CONFIG.style.rating.maxWidth / 5}px;aspect-ratio: 1 / 1`" viewBox="0 0 24 24" stroke-width="1.5" :stroke="FINAL_CONFIG.style.rating.color" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <PackageVersion />
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 9.86a4.5 4.5 0 0 0 -3.214 1.35a1 1 0 1 0 1.428 1.4a2.5 2.5 0 0 1 3.572 0a1 1 0 0 0 1.428 -1.4a4.5 4.5 0 0 0 -3.214 -1.35zm-2.99 -4.2l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" stroke-width="0" :fill="FINAL_CONFIG.style.rating.color" />
                 </svg>
                 
@@ -923,6 +955,7 @@ const ticks = computed(() => {
             </div>
 
             <svg :xmlns="XMLNS" data-cy="skeleton-rating" v-else width="100%" viewBox="0 0 100 30" :style="`background:${FINAL_CONFIG.style.backgroundColor};max-width:${FINAL_CONFIG.style.rating.maxWidth}px`">
+                <PackageVersion />
                 <polygon 
                     v-for="(_,i) in 5"
                     :points="createStar({
@@ -941,6 +974,7 @@ const ticks = computed(() => {
         <!-- TYPE VERTICAL BAR -->
         <template v-if="type === 'verticalBar'">
             <svg :xmlns="XMLNS" data-cy="skeleton-verticalBar" width="100%" viewBox="0 0 100 100" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
                 <g v-if="FINAL_CONFIG.style.verticalBar.axis.show">
                     <line :x1="3" :x2="3" :y1="3" :y2="97" :stroke="FINAL_CONFIG.style.verticalBar.axis.color" :stroke-width="FINAL_CONFIG.style.verticalBar.axis.strokeWidth"/>
                 </g>

@@ -25,6 +25,7 @@ import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_mood_radar:  DEFAULT_CONFIG } = useConfig();
 
@@ -365,6 +366,8 @@ defineExpose({
         <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`"
         :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+            <PackageVersion />
+            
             <!-- DEFS -->
             <defs>
                 <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" :id="`mood_radar_gradient_${uid}`">
