@@ -467,7 +467,7 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
             );
 
             if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-                html += `<b>${percentageLabel}%</b></div>`;
+                html += `<b>${percentageLabel}</b></div>`;
             } else {
                 html += `<span>(${percentageLabel})</span></div>`;
             }
