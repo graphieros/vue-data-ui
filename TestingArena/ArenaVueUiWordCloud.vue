@@ -17,6 +17,7 @@ const dataset = ref(createWordCloudDatasetFromPlainText(plainTextDataset.value))
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.tooltip', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
@@ -28,7 +29,7 @@ const model = ref([
     { key: 'animationDelayMs', def: 20, type: 'number', min: 0, max: 100},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.height', def: 300, type: 'number', min: 200, max: 1000},
+    { key: 'style.chart.height', def: 512, type: 'number', min: 200, max: 1000},
     { key: 'style.chart.width', def: 512, type: 'number', min: 200, max: 1000},
     { key: 'style.chart.words.maxFontSize', def: 100, type: 'number', min: 10, max: 300},
     { key: 'style.chart.words.minFontSize', def: 10, type: 'number', min: 10, max: 300},
@@ -61,7 +62,15 @@ const model = ref([
     { key: 'style.chart.zoom.show', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.zoom.highlightColor', def: '#4A4A4A', type: 'color'},
-    { key: 'style.chart.zoom.useResetSlot', def: false,  type: 'checkbox'}
+    { key: 'style.chart.zoom.useResetSlot', def: false,  type: 'checkbox'},
+
+    { key: 'style.chart.tooltip.show', def: true, type: 'checkbox', label: 'show', category: 'tooltip' },
+    { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'tooltip' },
+    { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'tooltip' },
+    { key: 'style.chart.tooltip.fontSize', def: 14, type: 'number', min: 6, max: 24, label: 'fontSize', category: 'tooltip' },
+    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
+    { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 ]);
 
 const themeOptions = ref([
