@@ -104,11 +104,11 @@ watch(() => props.config, (_newCfg) => {
 }, { deep: true });
 
 const chartSlicer = ref(null);
-const slicer = ref(FINAL_CONFIG.value.style.chart.width);
+const slicer = ref(0);
 
 const svg = ref({
-    width: slicer.value,
-    height: FINAL_CONFIG.value.style.chart.height / FINAL_CONFIG.value.style.chart.height * slicer.value,
+    width: FINAL_CONFIG.value.style.chart.width,
+    height: FINAL_CONFIG.value.style.chart.height,
     maxFontSize: FINAL_CONFIG.value.style.chart.words.maxFontSize,
     minFontSize: FINAL_CONFIG.value.style.chart.words.minFontSize
 });
@@ -129,19 +129,18 @@ watch(() => slicer.value, () => {
 });
 
 const debounceUpdateCloud = debounce(() => {
-    svg.value.width = Number(slicer.value)
-    svg.value.height = FINAL_CONFIG.value.style.chart.height / FINAL_CONFIG.value.style.chart.height * Number(slicer.value)
     generateWordCloud()
 }, 10);
 
 function refreshSlicer() {
-    slicer.value = FINAL_CONFIG.value.style.chart.width;
+    slicer.value = wordMin.value;
 }
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
     prepareChart();
+    refreshSlicer();
 });
 
 function prepareChart() {
@@ -246,12 +245,19 @@ const positionedWords = ref([]);
 
 watch(() => props.dataset, generateWordCloud, { immediate: true });
 
+const wordMin = computed(() => {
+    return Math.min(...drawableDataset.value.map(w => w.value))
+})
+const wordMax = computed(() => {
+    return Math.max(...drawableDataset.value.map(w => w.value))
+})
+
 function generateWordCloud() {
-    const values = drawableDataset.value.map(d => d.value);
+    const values = [...drawableDataset.value].filter(w => w.value >= slicer.value).map(d => d.value);
     const maxValue = Math.max(...values);
     const minValue = Math.min(...values);
 
-    const scaledWords = drawableDataset.value.map((word, i) => {
+    const scaledWords = [...drawableDataset.value].filter(w => w.value >= slicer.value).map((word, i) => {
         const fontSize = ((word.value - minValue) / (maxValue - minValue)) * (svg.value.maxFontSize - svg.value.minFontSize) + svg.value.minFontSize;
         const size = measureTextSize(word.name, fontSize);
         return {
@@ -522,8 +528,8 @@ function useTooltip(word) {
             <MonoSlicer
                 v-if="FINAL_CONFIG.style.chart.zoom.show"
                 v-model:value="slicer"
-                :min="100"
-                :max="FINAL_CONFIG.style.chart.width * 3"
+                :min="wordMin"
+                :max="wordMax"
                 :textColor="FINAL_CONFIG.style.chart.color"
                 :inputColor="FINAL_CONFIG.style.chart.zoom.color"
                 :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
