@@ -100,7 +100,7 @@ watch(() => props.config, (_newCfg) => {
     prepareChart();
     titleStep.value += 1;
     tableStep.value += 1;
-    slicer.value = FINAL_CONFIG.value.style.chart.width;
+    refreshSlicer();
 }, { deep: true });
 
 const chartSlicer = ref(null);
