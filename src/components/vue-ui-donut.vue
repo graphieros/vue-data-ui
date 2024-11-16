@@ -804,22 +804,34 @@ defineExpose({
             </template>
 
             <template v-if="total && FINAL_CONFIG.type === 'polar'">
-                <path 
-                    v-for="(arc, i) in currentDonut"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    :d="polarAreas[i].path"
-                    fill="#FFFFFF"
-                />
-                <path 
-                    v-for="(arc, i) in currentDonut"
-                    class="vue-ui-donut-arc-path"
-                    :data-cy="`donut-arc-${i}`"
-                    :d="polarAreas[i].path"
-                    :fill="FINAL_CONFIG.style.chart.useGradient ? `url(#polar_gradient_${i}_${uid})` : arc.color"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
-                    :filter="getBlurFilter(i)"
-                />
+                <g v-if="currentDonut.length > 1">
+                    <path 
+                        v-for="(arc, i) in currentDonut"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :d="polarAreas[i].path"
+                        fill="#FFFFFF"
+                    />
+                    <path 
+                        v-for="(arc, i) in currentDonut"
+                        class="vue-ui-donut-arc-path"
+                        :data-cy="`donut-arc-${i}`"
+                        :d="polarAreas[i].path"
+                        :fill="FINAL_CONFIG.style.chart.useGradient ? `url(#polar_gradient_${i}_${uid})` : arc.color"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                        :filter="getBlurFilter(i)"
+                    />
+                </g>
+                <g v-else>
+                    <circle 
+                        :cx="svg.width / 2" 
+                        :cy="svg.height / 2" 
+                        :r="minSize"
+                        :fill="FINAL_CONFIG.style.chart.useGradient ? `url(#polar_gradient_${0}_${uid})` : currentDonut[0].color"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                    />
+                </g>
             </template>
 
             <template v-else>
@@ -844,21 +856,40 @@ defineExpose({
 
             <!-- TOOLTIP TRAPS -->
             <template v-if="total">
-                <path 
-                    v-for="(arc, i) in currentDonut"
-                    :data-cy="`donut-trap-${i}`"
-                    data-cy-donut-trap
-                    :d="FINAL_CONFIG.type === 'classic' ? arc.arcSlice : polarAreas[i].path" 
-                    :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
-                    @mouseenter="useTooltip({
-                        datapoint: arc,
-                        relativeIndex: i,
-                        seriesIndex: arc.seriesIndex,
-                        show: true
-                    })"
-                    @mouseleave="isTooltip = false; selectedSerie = null"
-                    @click="selectDatapoint(arc, i)"
-                />
+                <g v-if="currentDonut.length > 1 || FINAL_CONFIG.type === 'classic'">
+                    <path 
+                        v-for="(arc, i) in currentDonut"
+                        :data-cy="`donut-trap-${i}`"
+                        data-cy-donut-trap
+                        :d="FINAL_CONFIG.type === 'classic' ? arc.arcSlice : polarAreas[i].path" 
+                        :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
+                        @mouseenter="useTooltip({
+                            datapoint: arc,
+                            relativeIndex: i,
+                            seriesIndex: arc.seriesIndex,
+                            show: true
+                        })"
+                        @mouseleave="isTooltip = false; selectedSerie = null"
+                        @click="selectDatapoint(arc, i)"
+                    />
+                </g>
+                <g v-else>
+                    <circle
+                        :cx="svg.width / 2"
+                        :cy="svg.height / 2"
+                        :r="minSize"
+                        :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
+                        data-cy-donut-trap
+                        @mouseenter="useTooltip({
+                            datapoint: currentDonut[0],
+                            relativeIndex: 0,
+                            seriesIndex: currentDonut[0].seriesIndex,
+                            show: true
+                        })"
+                        @mouseleave="isTooltip = false; selectedSerie = null"
+                        @click="selectDatapoint(currentDonut[0], i)"
+                    />
+                </g>
             </template>
 
             <!-- HOLLOW LABELS (Classic donut only )-->
