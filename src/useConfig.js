@@ -568,6 +568,7 @@ export function useConfig() {
     }
 
     const vue_ui_donut = {
+        type: 'classic',
         responsive: false,
         theme: '',
         customPalette: [],
