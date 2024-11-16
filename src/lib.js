@@ -1873,6 +1873,45 @@ export function setOpacity(hex, opac = 100) {
     return hex + opacity[opac]
 }
 
+export function createPolarAreas({ series, center, maxRadius }) {
+    const totalSegments = series.length;
+    const anglePerSegment = 360 / totalSegments;
+
+    const paths = series.map((item, index) => {
+        const proportion = item;
+        const radius = proportion * maxRadius;
+
+        const startAngle = index * anglePerSegment;
+        const endAngle = startAngle + anglePerSegment;
+        const middleAngle = startAngle + anglePerSegment / 2;
+
+        const startAngleRad = degreesToRadians(startAngle) - degreesToRadians(90);
+        const endAngleRad = degreesToRadians(endAngle) - degreesToRadians(90);
+        const middleAngleRad = degreesToRadians(middleAngle) - degreesToRadians(90);
+
+        const startX = center.x + radius * Math.cos(startAngleRad);
+        const startY = center.y + radius * Math.sin(startAngleRad);
+        const endX = center.x + radius * Math.cos(endAngleRad);
+        const endY = center.y + radius * Math.sin(endAngleRad);
+        const middleX = center.x + radius * Math.cos(middleAngleRad);
+        const middleY = center.y + radius * Math.sin(middleAngleRad);
+
+        const path = `
+            M ${center.x} ${center.y} 
+            L ${startX} ${startY} 
+            A ${radius} ${radius} 0 0 1 ${endX} ${endY} 
+            Z
+        `;
+
+        return {
+            path: path.trim(),
+            middlePoint: { x: middleX, y: middleY }
+        };
+    });
+    
+    return paths;
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -1898,6 +1937,7 @@ const lib = {
     convertConfigColors,
     convertCustomPalette,
     createCsvContent,
+    createPolarAreas,
     createPolygonPath,
     createSmoothPath,
     createSpiralPath,

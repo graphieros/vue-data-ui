@@ -21,6 +21,7 @@ import {
     convertCustomPalette,
     convertNameColorToHex,
     createArc,
+    createPolarAreas,
     createPolygonPath,
     createSmoothPath,
     createSpiralPath,
@@ -1921,7 +1922,6 @@ describe('sanitizeArray', () => {
 describe('lightenHexColor', () => {
     test('should lighten a hex color without transparency', () => {
         const result = lightenHexColor('#ff5733', 0.2);
-        console.log({ result })
         expect(result).toBe('#ff795c');
     });
 
@@ -1949,7 +1949,6 @@ describe('lightenHexColor', () => {
 describe('darkenHexColor', () => {
     test('should lighten a hex color without transparency', () => {
         const result = darkenHexColor('#ff5733', 0.2);
-        console.log({ result })
         expect(result).toBe('#cc4629');
     });
 
@@ -2062,5 +2061,100 @@ describe('getScaleFactorUsingArcSize', () => {
     test('should correctly calculate the scale factor for a diagonal point', () => {
         const scaleFactor = getScaleFactorUsingArcSize(0, 0, 3, 4, 1);
         expect(scaleFactor).toBeCloseTo(0.8, 1);
+    });
+});
+
+function degreesToRadians(degrees) {
+    return (degrees * Math.PI) / 180;
+}
+
+describe('createPolarAreas', () => {
+    test('should return an array of paths and middlePoints', () => {
+        const series = [0.5, 1.0];
+        const center = { x: 100, y: 100 };
+        const maxRadius = 50;
+
+        const result = createPolarAreas({ series, center, maxRadius });
+
+        expect(result).toBeInstanceOf(Array);
+        expect(result).toHaveLength(series.length);
+
+        result.forEach(item => {
+            expect(item).toHaveProperty('path');
+            expect(item).toHaveProperty('middlePoint');
+            expect(item.middlePoint).toHaveProperty('x');
+            expect(item.middlePoint).toHaveProperty('y');
+        });
+    });
+
+    test('should calculate correct paths and middlePoints for simple data', () => {
+        const series = [0.5, 1.0];
+        const center = { x: 100, y: 100 };
+        const maxRadius = 50;
+
+        const result = createPolarAreas({ series, center, maxRadius });
+
+        const firstPath = result[0].path;
+        const firstMiddlePoint = result[0].middlePoint;
+        const firstExpectedRadius = series[0] * maxRadius;
+
+        expect(firstPath).toContain(`M ${center.x} ${center.y}`);
+        expect(firstMiddlePoint.x).toBeCloseTo(center.x + firstExpectedRadius * Math.cos(degreesToRadians(360)));
+        expect(firstMiddlePoint.y).toBeCloseTo(center.y + firstExpectedRadius * Math.sin(degreesToRadians(360)));
+
+        const secondPath = result[1].path;
+        const secondMiddlePoint = result[1].middlePoint;
+        const secondExpectedRadius = series[1] * maxRadius;
+
+        expect(secondPath).toContain(`M ${center.x} ${center.y}`);
+        expect(secondMiddlePoint.x).toBeCloseTo(center.x + secondExpectedRadius * Math.cos(degreesToRadians(180)));
+        expect(secondMiddlePoint.y).toBeCloseTo(center.y + secondExpectedRadius * Math.sin(degreesToRadians(180)));
+    });
+
+    test('should handle an empty series array', () => {
+        const series = [];
+        const center = { x: 100, y: 100 };
+        const maxRadius = 50;
+
+        const result = createPolarAreas({ series, center, maxRadius });
+
+        expect(result).toBeInstanceOf(Array);
+        expect(result).toHaveLength(0);
+    });
+
+    test('should handle a series with a single segment', () => {
+        const series = [1.0];
+        const center = { x: 100, y: 100 };
+        const maxRadius = 50;
+
+        const result = createPolarAreas({ series, center, maxRadius });
+
+        expect(result).toHaveLength(1);
+        const segment = result[0];
+
+        expect(segment.path).toContain(`M ${center.x} ${center.y}`);
+        expect(segment.middlePoint.x).toBeCloseTo(center.x + maxRadius * Math.cos(degreesToRadians(90)));
+        expect(segment.middlePoint.y).toBeCloseTo(center.y + maxRadius * Math.sin(degreesToRadians(90)));
+    });
+
+    test('should calculate angles correctly for multiple segments', () => {
+        const series = [0.5, 0.25, 0.75];
+        const center = { x: 100, y: 100 };
+        const maxRadius = 50;
+        const anglePerSegment = 360 / series.length;
+
+        const result = createPolarAreas({ series, center, maxRadius });
+
+        result.forEach((segment, index) => {
+            const startAngle = index * anglePerSegment - 90;
+            const expectedMiddleAngle = degreesToRadians(startAngle + anglePerSegment / 2);
+
+            const expectedRadius = series[index] * maxRadius;
+            const expectedX = center.x + expectedRadius * Math.cos(expectedMiddleAngle);
+            const expectedY = center.y + expectedRadius * Math.sin(expectedMiddleAngle);
+
+            expect(segment.middlePoint.x).toBeCloseTo(expectedX);
+            expect(segment.middlePoint.y).toBeCloseTo(expectedY);
+        });
     });
 });
