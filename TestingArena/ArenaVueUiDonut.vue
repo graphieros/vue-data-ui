@@ -22,11 +22,11 @@ const dataset = ref([
     },
     {
         name: 'Serie 4',
-        values: [25]
+        values: [12.5]
     },
     {
         name: 'Serie 5',
-        values: [25]
+        values: [6.125]
     },
     {
         name: 'Serie 6',
@@ -65,6 +65,7 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'type', def: 'classic', type: 'select', options: ['classic', 'polar']},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
@@ -80,7 +81,7 @@ const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text', label: "fontFamily", category: 'general' },
     { key: 'style.chart.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'general' },
     { key: 'style.chart.gradientIntensity', def: 40, min: 0, max: 100, type: 'range', label: 'gradientIntensity', category: 'general' },
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
     { key: 'style.chart.layout.labels.dataLabels.show', def: true, type: 'checkbox', label: 'show', category: 'labels' },
     { key: 'style.chart.layout.labels.dataLabels.hideUnderValue', def: 3, type: 'number', min: 0, max: 100, label: 'hideUnderValue', category: 'labels' },
@@ -209,9 +210,9 @@ const config = computed(() => {
                     ...c.style.chart,
                     tooltip: {
                         ...c.style.chart.tooltip,
-                        customFormat: (data) => {
-                            return "CUSTOM TOOLTIP " + data
-                        }
+                        // customFormat: (data) => {
+                        //     return "CUSTOM TOOLTIP " + data
+                        // }
                     }
                 }
             },
@@ -233,38 +234,38 @@ const config = computed(() => {
                                     ...c.style.chart.layout.labels.hollow.total,
                                     value: {
                                         ...c.style.chart.layout.labels.hollow.total.value,
-                                        formatter: ({value}) => {
-                                            return `f  - ${value}`
-                                        }
+                                        // formatter: ({value}) => {
+                                        //     return `f  - ${value}`
+                                        // }
                                     }
                                 },
                                 average: {
                                     ...c.style.chart.layout.labels.hollow.average,
                                     value: {
                                         ...c.style.chart.layout.labels.hollow.average.value,
-                                        formatter: ({value}) => {
-                                            return `f  - ${value}`
-                                        }
+                                        // formatter: ({value}) => {
+                                        //     return `f  - ${value}`
+                                        // }
                                     }
                                 },
                             },
                             value: {
                                 ...c.style.chart.layout.labels.value,
-                                formatter: ({value, config}) => {
+                                // formatter: ({value, config}) => {
 
-                                    return `f  - ${value}`
-                                }
+                                //     return `f  - ${value}`
+                                // }
                             },
                             percentage: {
-                                formatter: ({value}) => {
-                                    return `f - ${value}`
-                                }
+                                // formatter: ({value}) => {
+                                //     return `f - ${value}`
+                                // }
                             },
                             dataLabels: {
                                 ...c.style.chart.layout.labels.dataLabels,
-                                formatter: ({value}) => {
-                                    return `f - ${value}`
-                                }
+                                // formatter: ({value}) => {
+                                //     return `f - ${value}`
+                                // }
                             }
                         }
                     },
