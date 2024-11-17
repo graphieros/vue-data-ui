@@ -961,14 +961,6 @@ defineExpose({
                         />                    
                     </template>
                 </g>
-                
-                <circle
-                    class="donut-hollow"
-                    :cx="(FINAL_CONFIG.width || defaultSizes.width) / 2"
-                    :cy="(FINAL_CONFIG.height || defaultSizes.height) /2"
-                    :r="(FINAL_CONFIG.height || defaultSizes.height) * FINAL_CONFIG.donutRadiusRatio"
-                    :fill="FINAL_CONFIG.backgroundColor"
-                />
 
                 <circle
                     :cx="donut.cx"
@@ -1003,6 +995,8 @@ defineExpose({
                             :cx="calcMarkerOffsetX(arc).x"
                             :cy="calcMarkerOffsetY(arc) - 3.7"
                             :fill="arc.color"
+                            :stroke="FINAL_CONFIG.backgroundColor"
+                            :stroke-width="1"
                             :r="3"
                             :filter="getBlurFilter(arc.id)"
                         />
