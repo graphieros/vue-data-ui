@@ -748,6 +748,7 @@ export function createSmoothPath(points) {
         dy[i] = points[i + 1].y - points[i].y;
         slopes[i] = dy[i] / dx[i];
     }
+
     tangents[0] = slopes[0];
     tangents[n] = slopes[n - 1];
 
@@ -756,7 +757,7 @@ export function createSmoothPath(points) {
             tangents[i] = 0;
         } else {
             const commonSlope = (slopes[i - 1] + slopes[i]) / 2;
-            tangents[i] = commonSlope;
+            tangents[i] = Math.min(Math.abs(commonSlope), Math.abs(slopes[i - 1]), Math.abs(slopes[i])) * Math.sign(commonSlope);
         }
     }
 
@@ -776,6 +777,7 @@ export function createSmoothPath(points) {
 
         path.push(`C ${checkNaN(controlX1)},${checkNaN(controlY1)} ${checkNaN(controlX2)},${checkNaN(controlY2)} ${checkNaN(x2)},${checkNaN(y2)}`);
     }
+
     return path.join(' ');
 }
 
