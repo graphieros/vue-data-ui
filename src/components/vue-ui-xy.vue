@@ -271,7 +271,7 @@
 
                             <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
                                 <foreignObject style="overflow: visible" height="12" :width="(calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) / 2) + FINAL_CONFIG.chart.comments.width" :x="calcRectX(plot) - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX" :y="checkNaN(plot.y) + FINAL_CONFIG.chart.comments.offsetY + 6">
-                                    <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
+                                    <slot name="plot-comment" :plot="{...plot, color: serie.color, seriesIndex: i, datapointIndex: j }"/>
                                 </foreignObject>
                             </template>
                         </g>
@@ -473,7 +473,7 @@
                         <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
                             <foreignObject style="overflow: visible" height="12" :width="FINAL_CONFIG.chart.comments.width" :x="plot.x - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX" :y="plot.y + FINAL_CONFIG.chart.comments.offsetY + 6">
                                 <div style="width: 100%;">
-                                    <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
+                                    <slot name="plot-comment" :plot="{...plot, color: serie.color, seriesIndex: i, datapointIndex: j }"/>
                                 </div>
                             </foreignObject>
                         </template>
@@ -600,7 +600,7 @@
                         <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
                             <foreignObject style="overflow: visible" height="12" :width="FINAL_CONFIG.chart.comments.width" :x="plot.x - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX" :y="plot.y + FINAL_CONFIG.chart.comments.offsetY + 6">
                                 <div style="width: 100%;">
-                                    <slot name="plot-comment" :plot="{...plot, color: serie.color}"/>
+                                    <slot name="plot-comment" :plot="{...plot, color: serie.color, seriesIndex: i, datapointIndex: j }"/>
                                 </div>
                             </foreignObject>
                         </template>
