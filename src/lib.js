@@ -779,6 +779,40 @@ export function createSmoothPath(points) {
     return path.join(' ');
 }
 
+export function createSmoothPathVertical(points, smoothing = 0.2) {
+    function line(pointA, pointB) {
+        const lengthX = pointB.x - pointA.x;
+        const lengthY = pointB.y - pointA.y;
+        return {
+            length: Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2)),
+            angle: Math.atan2(lengthY, lengthX)
+        };
+    }
+    function controlPoint(current, previous, next, reverse) {
+        const p = previous || current;
+        const n = next || current;
+        const o = line(p, n);
+
+        const angle = o.angle + (reverse ? Math.PI : 0);
+        const length = o.length * smoothing;
+
+        const x = current.x + Math.cos(angle) * length;
+        const y = current.y + Math.sin(angle) * length;
+        return { x, y };
+    }
+    function bezierCommand(point, i, a) {
+        const cps = controlPoint(a[i - 1], a[i - 2], point);
+        const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
+        return `C ${checkNaN(cps.x)},${checkNaN(cps.y)} ${checkNaN(cpe.x)},${checkNaN(cpe.y)} ${checkNaN(point.x)},${checkNaN(point.y)}`;
+    }
+    const d = points.filter(p => !!p).reduce((acc, point, i, a) => i === 0
+        ? `${checkNaN(point.x)},${checkNaN(point.y)} `
+        : `${acc} ${bezierCommand(point, i, a)} `
+        , '');
+
+    return d;
+}
+
 
 export function createUid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
@@ -1941,6 +1975,7 @@ const lib = {
     createPolarAreas,
     createPolygonPath,
     createSmoothPath,
+    createSmoothPathVertical,
     createSpiralPath,
     createStar,
     createStraightPath,
