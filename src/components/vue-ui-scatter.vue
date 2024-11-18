@@ -6,6 +6,7 @@ import {
     convertCustomPalette,
     createCsvContent, 
     createSmoothPath,
+    createSmoothPathVertical,
     createUid,
     dataLabel,
     downloadCsv,
@@ -405,7 +406,7 @@ const marginalLines = computed(() => {
                     y: top - coords.x[i] / coords.maxX * FINAL_CONFIG.value.style.layout.marginalBars.size
                 }
             })),
-            dY: createSmoothPath(coords.avgY.map((el, i) => {
+            dY: createSmoothPathVertical(coords.avgY.map((el, i) => {
                 return {
                     y: el,
                     x: right + (FINAL_CONFIG.value.style.layout.marginalBars.size * coords.y[i] / coords.maxY)
