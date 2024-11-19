@@ -21,7 +21,7 @@ function datasetObjectDonut(size) {
     const arr = []
     for (let i = 0; i < size; i += 1) {
         arr.push({
-            name: `Serie ${i}`,
+            name: `Serie name ${i}`,
             value: (i + 1) * 10
         })
     }
@@ -32,7 +32,7 @@ function datasetObjectXy(size, length) {
     const arr = []
     for (let i = 0; i < size; i += 1) {
         arr.push({
-            name: `Serie ${i}`,
+            name: `Serie name ${i}`,
             values: datasetNumbers(length)
         })
     }
@@ -257,7 +257,7 @@ describe('maxLengthOfArrayTypesInArrayOfObjects', () => {
 describe('getFirstEntryMatch', () => {
     test('returns the first entry in an object that matches a condition', () => {
         const dataset1 = datasetObjectXy(3, 3);
-        expect(getFirstEntryMatch(dataset1[0], (v) => typeof v === 'string')).toBe('Serie 0')
+        expect(getFirstEntryMatch(dataset1[0], (v) => typeof v === 'string')).toBe('Serie name 0')
         expect(getFirstEntryMatch(dataset1[0], (v) => isSimpleArrayOfNumbers(v))).toStrictEqual([0, 1, 2])
     })
 })

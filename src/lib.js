@@ -1847,6 +1847,7 @@ export function sanitizeArray(arr, keys = []) {
         if ([NaN, undefined, Infinity, -Infinity, null].includes(value)) {
             console.warn(`A non processable value was detected : ${value}`)
         }
+        if (typeof value === 'string' && isNaN(Number(value))) return value;
         return (typeof value === 'number' && isFinite(value)) ? value : 0;
     }
 

@@ -66,6 +66,7 @@ export function detectChart({dataset, barLineSwitch = 6}) {
             }
             dataset = dataset.map(d => uppercaseKeys(d))
             usableDataset = usableDataset.map(d => uppercaseKeys(d))
+
         }
     }
     
