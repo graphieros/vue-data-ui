@@ -1495,6 +1495,7 @@ export function convertNameColorToHex(colorName) {
         WHITESMOKE: "#F5F5F5",
         YELLOW: "#FFFF00",
         YELLOWGREEN: "#9ACD32",
+        REBECCAPURPLE: "#663399"
     };
     return colorMap[colorName.toUpperCase()] || colorName;
 }
