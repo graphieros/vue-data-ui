@@ -353,10 +353,10 @@ defineExpose({
                 containerType: 'inline-size',
                 position: 'relative',
                 overflow: 'auto',
-                fontFamily: FINAL_CONFIG.fontFamily,
+                fontFamily: FINAL_CONFIG.fontFamily
             }"
             :class="{ 'vue-ui-responsive' : isResponsive, 'is-playing': !isPaused }"
-            @mouseenter="pauseOnHover()"
+            @mouseover="pauseOnHover()"
             @mouseleave="resumeAnimation()"
             @touchstart="pauseOnTouch()"
             @touchend="resumeAfterDelay()"
@@ -398,7 +398,7 @@ defineExpose({
                         :style="{ 
                             ...FINAL_CONFIG.thead.tr.style,
                             border: FINAL_CONFIG.thead.tr.border.size ? `${FINAL_CONFIG.thead.tr.border.size}px solid ${FINAL_CONFIG.thead.tr.border.color}` : 'none',
-                            boxShadow: isResponsive ? 'none' : FINAL_CONFIG.thead.tr.style.boxShadow
+                            boxShadow: isResponsive ? 'none' : FINAL_CONFIG.thead.tr.style.boxShadow,
                         }" 
                         :height="`${FINAL_CONFIG.thead.tr.height}px`"
                     >
@@ -424,7 +424,7 @@ defineExpose({
                 <tbody 
                     v-if="dataset.body && dataset.head" ref="tbody"
                     :style="{
-                        clipPath: 'inset(0,0,0,0)'
+                        clipPath: 'inset(0,0,0,0)',
                     }"
                 >
                     <tr 
@@ -489,6 +489,7 @@ defineExpose({
             :position="FINAL_CONFIG.userOptions.position"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :zIndex="3"
+            :offsetX="12"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
@@ -557,8 +558,7 @@ thead th, tbody td {
 }
 
 .is-playing {
-    -ms-overflow-style: none;  /* IE and Edge */
+    -ms-overflow-style: none;  /* Edge */
     scrollbar-width: none;  /* Firefox */
 }
-
 </style>
