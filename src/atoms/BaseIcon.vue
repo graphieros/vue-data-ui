@@ -22,6 +22,14 @@ const props = defineProps({
     }
 });
 
+const viewBox = computed(() => {
+    // Exceptions
+    if (props.name === 'numbers') {
+        return '0 0 20 21'
+    }
+    return '0 0 20 20';
+});
+
 const icons = computed(() => {
     return {
         annotator: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" d="M3 17 4 12C5 12 7 13 8 15L3 17M4 12 11 2C12 2 14 3 15 5L8 15M3 19C5 19 5 19 8 19 11 19 11 18 13 18 15 18 15 19 19 19M12 1C13 1 15 2 16 4" />`,
@@ -80,8 +88,8 @@ const icons = computed(() => {
         sort: `<path stroke-width="${props.strokeWidth}" fill="none" stroke="${props.stroke}" stroke-linecap="round" d="M1 15 5 18 9 15M5 5 5 18M15 15 15 2M11 5 15 2 19 5" />`,
         sortReverse: `<path stroke-width="${props.strokeWidth}" fill="none" stroke="${props.stroke}" stroke-linecap="round" d="M 1 8 L 5 5 L 9 8 M 5 5 L 5 18 M 15 15 L 15 2 M 11 12 L 15 15 L 19 12" />`,
         spin: `<path stroke-width="${props.strokeWidth}" fill="none" stroke="${props.stroke}" stroke-linecap="round" d="M1 10A1 1 0 0019 10 1 1 0 004 10 1 1 0 0016 10 1 1 0 007 10 1 1 0 0013 10 1 1 0 0010 10M1 10Q1 5 5 2" />`,
-        star: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M3 19 10 15 17 19 14 12 19 8 13 8 10 2 7 8 1 8 6 12 3 19" />`,
-        starFill: `<path fill="${props.stroke}" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M3 19 10 15 17 19 14 12 19 8 13 8 10 2 7 8 1 8 6 12 3 19" />`,
+        star: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1.333 8.2262 L 7.3093 7.3308 L 9.9598 1.9001 L 12.6581 7.3072 L 18.6421 8.1497 L 14.3335 12.3869 L 15.3813 18.3383 L 10.0201 15.55 L 4.6837 18.3856 L 5.6789 12.4251 L 1.334 8.225" />`,
+        starFill: `<path fill="${props.stroke}" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1.333 8.2262 L 7.3093 7.3308 L 9.9598 1.9001 L 12.6581 7.3072 L 18.6421 8.1497 L 14.3335 12.3869 L 15.3813 18.3383 L 10.0201 15.55 L 4.6837 18.3856 L 5.6789 12.4251 L 1.334 8.225" />`,
         tableClose: `<path stroke-width="${props.strokeWidth}" stroke-linecap="round" fill="none" stroke="${props.stroke}" d="M4 1 4 1C2 1 1 2 1 4L1 16C1 18 2 19 4 19L7 19M4 1 16 1C18 1 19 2 19 4L19 14M18 19 14 16 10 19"/><line stroke-width="${props.strokeWidth}" stroke="${props.stroke}" x1="8" y1="1" x2="8" y2="19" stroke-linecap="round" /><line stroke-width="${props.strokeWidth}" stroke="${props.stroke}" x1="1" y1="8" x2="19" y2="8" />`,
         tableOpen: `<path stroke-width="${props.strokeWidth}" fill="none" stroke-linecap="round" stroke="${props.stroke}" d="M4 1 4 1C2 1 1 2 1 4L1 16C1 18 2 19 4 19L7 19M4 1 16 1C18 1 19 2 19 4L19 14M18 16 14 19 10 16"/><line stroke-width="${props.strokeWidth}" stroke="${props.stroke}" x1="8" y1="1" x2="8" y2="19" stroke-linecap="round" /><line stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke="${props.stroke}" x1="1" y1="8" x2="19" y2="8" />`,
         chartCluster: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" d="M7 10A1 1 0 0013 10 1 1 0 007 10M10 7 10 4A1 1 0 0010 1 1 1 0 0010 4M7 10 4 10A1 1 0 001 10 1 1 0 004 10M10 13 10 16A1 1 0 0010 19 1 1 0 0010 16M13 10 16 10A1 1 0 0019 10 1 1 0 0016 10" />`,
@@ -159,14 +167,15 @@ const icons = computed(() => {
         lap: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 3 10 A 1 1 0 0 0 17 10 A 1 1 0 0 0 3 10 M 8 2 L 12 2 M 5 3 L 6 4 M 15 3 L 14 4 M 10 7 L 10 10 L 13 13"/>`,
         carouselTable: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 16 2 L 16 18 M 14 4 L 16 2 L 18 4 M 14 16 L 16 18 L 18 16 M 3 2 L 11 2 C 12 2 12 3 12 3 L 12 17 C 12 18 11 18 11 18 L 3 18 C 2 18 2 17 2 17 L 2 3 C 2 3 2 2 3 2 M 2 6 L 12 6 M 2 9 L 12 9 M 2 12 L 12 12 M 2 15 L 12 15 M 7 2 L 7 18 M 4 4 L 5 4 M 9 4 L 10 4"/>`,
         battery: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 2 6 L 2 14 C 2 16 3 16 4 16 L 15 16 C 16 16 17 16 17 14 L 17 13 C 17 13 18 13 18 12 L 18 8 C 18 7 17 7 17 7 L 17 6 C 17 4 16 4 15 4 L 4 4 C 3 4 2 4 2 6"/><path fill="${props.stroke}" style="opacity:0.6" stroke="none" d="M 4 7 L 4 13 C 4 14 5 14 5 14 L 11 14 L 11 6 L 5 6 C 5 6 4 6 4 7"/>`,
-        chartStackbar: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 8 18 L 12 18 L 12 8 C 12 7 11 7 11 7 L 9 7 C 9 7 8 7 8 8 L 8 18 M 2 18 L 6 18 L 6 12 C 6 11 5 11 5 11 L 3 11 C 3 11 2 11 2 12 L 2 18 M 14 18 L 18 18 L 18 3 C 18 2 17 2 17 2 L 15 2 C 15 2 14 2 14 3 L 14 18 M 2 14 L 6 14 M 8 11 L 12 11 M 14 7 L 18 7 M 14 12"/><path stroke="none" style="opacity:0.3" fill="${props.stroke}" d="M 2 14 L 6 14 L 6 18 L 2 18 L 2 14" /><path stroke="none" style="opacity:0.3" fill="${props.stroke}" d="M 8 11 L 12 11 L 12 18 L 8 18 L 8 11" /><path stroke="none" style="opacity:0.3" fill="${props.stroke}" d="M 14 7 L 18 7 L 18 18 L 14 18 L 14 7" />`
+        chartStackbar: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 8 18 L 12 18 L 12 8 C 12 7 11 7 11 7 L 9 7 C 9 7 8 7 8 8 L 8 18 M 2 18 L 6 18 L 6 12 C 6 11 5 11 5 11 L 3 11 C 3 11 2 11 2 12 L 2 18 M 14 18 L 18 18 L 18 3 C 18 2 17 2 17 2 L 15 2 C 15 2 14 2 14 3 L 14 18 M 2 14 L 6 14 M 8 11 L 12 11 M 14 7 L 18 7 M 14 12"/><path stroke="none" style="opacity:0.3" fill="${props.stroke}" d="M 2 14 L 6 14 L 6 18 L 2 18 L 2 14" /><path stroke="none" style="opacity:0.3" fill="${props.stroke}" d="M 8 11 L 12 11 L 12 18 L 8 18 L 8 11" /><path stroke="none" style="opacity:0.3" fill="${props.stroke}" d="M 14 7 L 18 7 L 18 18 L 14 18 L 14 7" />`,
+        starFace: `<path stroke="${props.stroke}" stroke-width="${props.strokeWidth} stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 1.333 8.2262 L 7.3093 7.3308 L 9.9598 1.9001 L 12.6581 7.3072 L 18.6421 8.1497 L 14.3335 12.3869 L 15.3813 18.3383 L 10.0201 15.55 L 4.6837 18.3856 L 5.6789 12.4251 L 1.334 8.225 M 6.989 9.999 C 7.62 8.9 8.638 9.246 8.964 10.019 M 10.999 10.019 C 11.671 8.941 12.607 9.287 13.015 10.04 M 7.499 12.022 C 8.732 14.95 12.101 13.871 12.497 11.999" />`
     }
 });
 
 </script>
 
 <template>
-    <svg :xmlns="XMLNS" :class="{ 'spin ': isSpin }" viewBox="0 0 20 20" :height="size" :width="size" v-html="icons[name]" style="background:transparent" />
+    <svg :xmlns="XMLNS" :class="{ 'spin ': isSpin }" :viewBox="viewBox" :height="size" :width="size" v-html="icons[name]" style="background:transparent" />
 </template>
 
 <style scoped>
