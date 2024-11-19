@@ -109,6 +109,10 @@ const props = defineProps({
     position: {
         type: String,
         default: 'right'
+    },
+    offsetX: {
+        type: Number,
+        default: 0
     }
 });
 
@@ -241,10 +245,10 @@ const isInfo = ref({
         class="vue-ui-user-options" 
         :style="`z-index: ${zIndex}; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; ${position === 'right' ? `right:${isFullscreen ? '12px': '0'}` : `left:${isFullscreen ? '12px' : '0'}`}; padding: 4px; background:transparent;`">
 
-        <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0;${position === 'right' ? `right: ${noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:transparent`" @click.stop="toggle" @keypress.enter="toggle">
+        <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0;${position === 'right' ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:transparent`" @click.stop="toggle" @keypress.enter="toggle">
             <BaseIcon  :name="isOpen ? 'close' : 'menu'" :stroke="color" :stroke-width="2" />
         </div>
-        <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}; ${position === 'right' ? `right: ${noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}`">
+        <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}; ${position === 'right' ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}`">
 
             <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
                 <template v-if="$slots.optionTooltip">
