@@ -741,6 +741,9 @@ defineExpose({
                 <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
                     <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5" :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
                 </filter>
+                <filter :id="`drop_shadow_${uid}`" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%" height="200%" >
+                    <feDropShadow dx="0" dy="0" stdDeviation="3" flood-opacity="1" :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
+                </filter>
             </defs>
 
             <template v-if="FINAL_CONFIG.type === 'classic'">
@@ -811,6 +814,17 @@ defineExpose({
                         :d="polarAreas[i].path"
                         fill="#FFFFFF"
                     />
+                    <g v-if="FINAL_CONFIG.style.chart.layout.donut.useShadow">
+                        <path 
+                            v-for="(_arc, i) in currentDonut"
+                            class="vue-ui-donut-arc-path"
+                            :d="polarAreas[i].path"
+                            :fill="'transparent'"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                            :filter="`url(#drop_shadow_${uid})`"
+                        />
+                    </g>
                     <path 
                         v-for="(arc, i) in currentDonut"
                         class="vue-ui-donut-arc-path"
