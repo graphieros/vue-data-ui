@@ -4054,7 +4054,9 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 borderColor: COLOR_GREY_LIGHT,
                 borderRadius: 4,
-                boxShadow: '0 6px 12px -6px rgba(0,0,0,0.2)'
+                boxShadow: '0 6px 12px -6px rgba(0,0,0,0.2)',
+                roundingValue: 0,
+                formatter: null
             }
         }
     }
