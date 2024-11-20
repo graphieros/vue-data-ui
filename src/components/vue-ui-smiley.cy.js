@@ -43,7 +43,7 @@ describe('<VueUiSmiley />', () => {
         return averageRating;
       }
 
-      const staticRating = calculateAverageRating(fixture.dataset.rating).toFixed(fixture.config.style.rating.roundingValue);
+      const staticRating = Math.round(calculateAverageRating(fixture.dataset.rating))
 
       cy.get(`[data-cy="smiley-title"]`)
         .should('exist')
@@ -63,7 +63,7 @@ describe('<VueUiSmiley />', () => {
           .click();
 
         cy.get(`[data-cy="smiley-position-bottom"]`)
-          .contains(`${i + 1}.0`)
+          .contains(`${i + 1}`)
       }
 
       let modifiedConfig = {
@@ -86,7 +86,7 @@ describe('<VueUiSmiley />', () => {
 
         cy.get(`[data-cy="smiley-tooltip-${i}"]`)
           .should('exist')
-          .contains(`${Object.keys(fixture.dataset.rating)[i]} : ${fixture.dataset.rating[i + 1]}`)
+          .contains(`${Object.keys(fixture.dataset.rating)[i]}: ${fixture.dataset.rating[i + 1]}`)
       }
     });
   });

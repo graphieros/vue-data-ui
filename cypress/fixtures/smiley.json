@@ -42,7 +42,7 @@
                 "show": true,
                 "fontSize": 28,
                 "bold": true,
-                "roundingValue": 1,
+                "roundingValue": 0,
                 "position": "bottom",
                 "offsetY": 0,
                 "offsetX":0

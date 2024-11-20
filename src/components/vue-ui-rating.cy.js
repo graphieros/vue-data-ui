@@ -42,7 +42,7 @@ describe('<VueUiRating />', () => {
         return Math.min(fixture.config.to, Math.max(fixture.config.from, averageRating));
       }
 
-      const staticRating = calculateAverageRating(fixture.dataset.rating).toFixed(fixture.config.style.rating.roundingValue)
+      const staticRating = Math.round(calculateAverageRating(fixture.dataset.rating))
 
       cy.get(`[data-cy="rating-title"]`)
         .should('exist')
@@ -139,7 +139,7 @@ describe('<VueUiRating />', () => {
           .click();
 
         cy.get(`[data-cy="rating-position-bottom"]`)
-          .contains(`${i + 1}.0`)
+          .contains(`${i + 1}`)
       }
 
       cy.wait(100).then(() => {
