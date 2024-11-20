@@ -73,6 +73,12 @@ const config = computed(() => {
         ...c,
         style: {
             ...c.style,
+            rating: {
+                ...c.style.rating,
+                // formatter: ({ value }) => {
+                //     return `${value}!`
+                // }
+            },
             tooltip: {
                 ...c.style.tooltip,
                 // formatter: ({ value }) => {

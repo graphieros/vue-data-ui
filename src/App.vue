@@ -48,6 +48,7 @@ import ArenaVueUiGizmo from "../TestingArena/ArenaVueUiGizmo.vue";
 import ArenaVueUiKpi from "../TestingArena/ArenaVueUiKpi.vue";
 import ArenaVueUiStackbar from "../TestingArena/ArenaVueUiStackbar.vue";
 import ArenaVueUiRating from "../TestingArena/ArenaVueUiRating.vue";
+import ArenaVueUiSmiley from "../TestingArena/ArenaVueUiSmiley.vue";
 
 const showOldArena = ref(false);
 
@@ -99,13 +100,14 @@ const components = ref([
   /*___________________*/"VueUiKpi", // 44
   /*______________*/"VueUiStackbar", // 45
   /*________________*/"VueUiRating", // 46
+  /*________________*/"VueUiSmiley", // 47
 
   // screenshot
   // dashboard
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[46]);
+const selectedComponent = ref(components.value[47]);
 
 </script>
 
@@ -260,4 +262,7 @@ const selectedComponent = ref(components.value[46]);
 
   <!-- 46 -->
   <ArenaVueUiRating v-if="selectedComponent === 'VueUiRating'" />
+
+  <!-- 47 -->
+  <ArenaVueUiSmiley v-if="selectedComponent === 'VueUiSmiley'" />
 </template>
