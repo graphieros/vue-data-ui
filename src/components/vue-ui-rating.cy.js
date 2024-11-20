@@ -184,7 +184,7 @@ describe('<VueUiRating />', () => {
 
           cy.get(`[data-cy="rating-tooltip-${i}"]`)
             .should('exist')
-            .contains(`${Object.keys(fixture.dataset.rating)[i]} : ${fixture.dataset.rating[`${i + 1}`]}`)
+            .contains(`${Object.keys(fixture.dataset.rating)[i]}:${fixture.dataset.rating[`${i + 1}`]}`)
         }
       });
     });
