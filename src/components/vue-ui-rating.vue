@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { 
     createStar, 
     createUid,
@@ -10,6 +10,8 @@ import {
 } from "../lib.js";
 import { useNestedProp } from "../useNestedProp";
 import { useConfig } from "../useConfig";
+import { applyDataLabel } from "../lib.js";
+import { dataLabel } from "../lib.js";
 
 const { vue_ui_rating: DEFAULT_CONFIG } = useConfig();
 
@@ -35,12 +37,26 @@ const units = ref([]);
 
 const emit = defineEmits(['rate']);
 
-const FINAL_CONFIG = computed(() => {
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg
+    }
+});
+
+function prepareConfig() {
     return useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
-});
+}
+
+watch(() => props.config, (_newCfg) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+}, { deep: true });
 
 const propRating = computed(() => {
     if(typeof props.dataset.rating === 'object' && !Array.isArray(props.dataset.rating)) {
@@ -55,8 +71,8 @@ const hasBreakdown = computed(() => {
 })
 
 const currentRating = ref(propRating.value);
-const isImage = ref(FINAL_CONFIG.value.type === "image");
-const isReadonly = ref(FINAL_CONFIG.value.readonly);
+const isImage = computed(() => FINAL_CONFIG.value.type === "image");
+const isReadonly = computed(() => FINAL_CONFIG.value.readonly)
 
 function calculateAverageRating(source) {
     let totalSum = 0;
@@ -79,17 +95,21 @@ function calculateAverageRating(source) {
 }
 
 onMounted(() => {
+    prepareChart();
+});
+
+function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiRating',
             type: 'dataset'
         })
     }
-
+    units.value = [];
     for (let i = FINAL_CONFIG.value.from; i <= FINAL_CONFIG.value.to; i += 1) {
         units.value.push(i);
     }
-});
+}
 
 
 function getInactiveFill(value, isImage = false) {
@@ -306,7 +326,17 @@ defineExpose({
                     <template v-if="FINAL_CONFIG.style.tooltip.show && hasBreakdown && isReadonly">
                         <div class="vue-ui-rating-tooltip" :style="`border:1px solid ${FINAL_CONFIG.style.tooltip.borderColor};position:absolute;top:${-48 + FINAL_CONFIG.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${FINAL_CONFIG.style.tooltip.backgroundColor};display:${hoveredValue === value ? 'block' : 'none'};padding:2px 12px;border-radius:${FINAL_CONFIG.style.tooltip.borderRadius}px;box-shadow:${FINAL_CONFIG.style.tooltip.boxShadow}`">
                             <div :data-cy="`rating-tooltip-${i}`" :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${FINAL_CONFIG.style.tooltip.color}`">
-                                <span :style="`font-size:${FINAL_CONFIG.style.tooltip.fontSize}px`">{{ value }}</span> : <span :style="`font-weight:${FINAL_CONFIG.style.tooltip.bold ? 'bold' : 'normal'};font-size:${FINAL_CONFIG.style.tooltip.fontSize}px`">{{ props.dataset.rating[value] }}</span>
+                                <span :style="`font-size:${FINAL_CONFIG.style.tooltip.fontSize}px`">{{ value }}:</span><span :style="`font-weight:${FINAL_CONFIG.style.tooltip.bold ? 'bold' : 'normal'};font-size:${FINAL_CONFIG.style.tooltip.fontSize}px`">
+                                    {{ applyDataLabel(
+                                        FINAL_CONFIG.style.tooltip.formatter,
+                                        props.dataset.rating[value],
+                                        dataLabel({
+                                            v: props.dataset.rating[value],
+                                            r: FINAL_CONFIG.style.tooltip.roundingValue
+                                        }),
+                                        FINAL_CONFIG
+                                    ) }}
+                                </span>
                                 <div :style="`font-family:Arial !important;position:absolute;top:calc(100% - 4px);left:50%;transform:translateX(-50%);color:${FINAL_CONFIG.style.tooltip.borderColor}`">
                                     ▼
                                 </div>
@@ -315,7 +345,6 @@ defineExpose({
                     </template>
                 </div>
             </template>
-
 
             <!-- RATING POSITION RIGHT -->
             <div data-cy="rating-position-right" v-if="FINAL_CONFIG.style.rating.show && FINAL_CONFIG.style.rating.position === 'right'" :style="`width:fit-content;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};padding-left:${FINAL_CONFIG.style.rating.offsetX}px`">
@@ -328,8 +357,6 @@ defineExpose({
         <div data-cy="rating-position-bottom" v-if="FINAL_CONFIG.style.rating.show && FINAL_CONFIG.style.rating.position === 'bottom'" :style="`width:100%;text-align:center;margin-top:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};margin-left:${FINAL_CONFIG.style.rating.offsetX}px`">
             {{ isNaN(currentRating) ? '' : currentRating.toFixed(FINAL_CONFIG.style.rating.roundingValue) }}
         </div>
-
-        <!-- TOOLTIP -->
     </div>
 </template>
 
