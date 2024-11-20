@@ -3983,6 +3983,7 @@ export function useConfig() {
                 position: POSITION.BOTTOM,
                 offsetX: 0,
                 offsetY: 0,
+                formatter: null
             },
             tooltip: {
                 show: true,
@@ -3993,7 +3994,9 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 borderColor: COLOR_GREY_LIGHT,
                 borderRadius: 4,
-                boxShadow: '0 6px 12px -6px rgba(0,0,0,0.2)'
+                boxShadow: '0 6px 12px -6px rgba(0,0,0,0.2)',
+                roundingValue: 0,
+                formatter: null
             }
         }
     }
@@ -4043,7 +4046,8 @@ export function useConfig() {
                 roundingValue: 1,
                 position: POSITION.BOTTOM,
                 offsetY: 0,
-                offsetX: 0
+                offsetX: 0,
+                formatter: null
             },
             tooltip: {
                 show: true,
