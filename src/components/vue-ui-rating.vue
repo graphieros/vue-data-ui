@@ -168,7 +168,16 @@ defineExpose({
 
         <!-- RATING POSITION TOP -->
         <div data-cy="rating-position-top" v-if="FINAL_CONFIG.style.rating.show && FINAL_CONFIG.style.rating.position === 'top'" :style="`width:100%;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};margin-left:${FINAL_CONFIG.style.rating.offsetX}px`">
-            {{ isNaN(currentRating) ? '' : currentRating.toFixed(FINAL_CONFIG.style.rating.roundingValue) }}
+            {{ applyDataLabel(
+                    FINAL_CONFIG.style.rating.formatter,
+                    currentRating,
+                    dataLabel({
+                        v: currentRating,
+                        r: FINAL_CONFIG.style.rating.roundingValue
+                    }),
+                    FINAL_CONFIG
+                ) 
+            }}
         </div>
 
         <!-- RATING SECTION -->
@@ -179,7 +188,16 @@ defineExpose({
 
             <!-- RATING POSITION LEFT -->
             <div data-cy="rating-position-left" v-if="FINAL_CONFIG.style.rating.show && FINAL_CONFIG.style.rating.position === 'left'" :style="`width:fit-content;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};padding-right:${FINAL_CONFIG.style.rating.offsetX}px`">
-            {{ isNaN(currentRating) ? '' : currentRating.toFixed(FINAL_CONFIG.style.rating.roundingValue) }}
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.rating.formatter,
+                    currentRating,
+                    dataLabel({
+                        v: currentRating,
+                        r: FINAL_CONFIG.style.rating.roundingValue
+                    }),
+                    FINAL_CONFIG
+                ) 
+                }}
             </div>
 
             <!-- STARS | IMAGES -->
@@ -347,15 +365,33 @@ defineExpose({
             </template>
 
             <!-- RATING POSITION RIGHT -->
-            <div data-cy="rating-position-right" v-if="FINAL_CONFIG.style.rating.show && FINAL_CONFIG.style.rating.position === 'right'" :style="`width:fit-content;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};padding-left:${FINAL_CONFIG.style.rating.offsetX}px`">
-            {{ isNaN(currentRating) ? '' : currentRating.toFixed(FINAL_CONFIG.style.rating.roundingValue) }}
-        </div>
+            <div data-cy="rating-position-right" v-if="FINAL_CONFIG.style.rating.show && FINAL_CONFIG.style.rating.position === 'right'" :style="`width:fit-content;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};padding-left:${FINAL_CONFIG.style.rating.offsetX}px`"
+            >
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.rating.formatter,
+                    currentRating,
+                    dataLabel({
+                        v: currentRating,
+                        r: FINAL_CONFIG.style.rating.roundingValue
+                    }),
+                    FINAL_CONFIG
+                ) }}
+            </div>
         
         </div>
 
         <!-- RATING POSITION BOTTOM -->
         <div data-cy="rating-position-bottom" v-if="FINAL_CONFIG.style.rating.show && FINAL_CONFIG.style.rating.position === 'bottom'" :style="`width:100%;text-align:center;margin-top:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};margin-left:${FINAL_CONFIG.style.rating.offsetX}px`">
-            {{ isNaN(currentRating) ? '' : currentRating.toFixed(FINAL_CONFIG.style.rating.roundingValue) }}
+            {{ applyDataLabel(
+                    FINAL_CONFIG.style.rating.formatter,
+                    currentRating,
+                    dataLabel({
+                        v: currentRating,
+                        r: FINAL_CONFIG.style.rating.roundingValue
+                    }),
+                    FINAL_CONFIG
+                ) 
+            }}
         </div>
     </div>
 </template>
