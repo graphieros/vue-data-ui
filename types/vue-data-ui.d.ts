@@ -3977,6 +3977,8 @@ declare module 'vue-data-ui' {
             tooltip?: ChartTooltip & {
                 offsetY?: number;
                 bold?: boolean;
+                roundingValue?: number;
+                formatter?: Formatter;
             };
         };
     };
