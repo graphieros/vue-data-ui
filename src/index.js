@@ -62,6 +62,7 @@ export const VueUiXyCanvas = defineAsyncComponent(() => import("./components/vue
 export const VueUiCarouselTable = defineAsyncComponent(() => import('./components/vue-ui-carousel-table.vue'))
 export const VueUiGizmo = defineAsyncComponent(() => import('./components/vue-ui-gizmo.vue'))
 export const VueUiStackbar = defineAsyncComponent(() => import('./components/vue-ui-stackbar.vue'))
+export const VueUiBullet = defineAsyncComponent(() => import('./components/vue-ui-bullet.vue'))
 export {
     createWordCloudDatasetFromPlainText,
     getPalette,

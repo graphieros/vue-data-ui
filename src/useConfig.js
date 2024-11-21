@@ -4676,6 +4676,84 @@ export function useConfig() {
         formatter: null
     }
 
+    const vue_ui_bullet = {
+        theme: '',
+        userOptions: USER_OPTIONS({
+            tooltip: false,
+            pdf: true,
+            csv: false,
+            img: true,
+            table: false,
+            labels: false,
+            fullscreen: true,
+            stack: false
+        }),
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                height: 96,
+                width: 600,
+                padding: PADDING([24, 24, 24, 12]),
+                animation: {
+                    show: true,
+                    animationFrames: 60,
+                },
+                segments: {
+                    baseColor: '#9A9A9A', // default if dataset.segments colors are not provided
+                    dataLabels: {
+                        show: true,
+                        color: COLOR_BLACK,
+                        fontSize: FONT._10,
+                        formatter: null,
+                        bold: false,
+                        prefix: '',
+                        suffix: '', 
+                        rounding: 0,
+                        offsetY: 0,
+                    },
+                    ticks: {
+                        show: true,
+                        divisions: 10,
+                        stroke: '#8A8A8A',
+                    }
+                },
+                target: {
+                    onTop: true,
+                    color: '#1A1A1A',
+                    rounded: true,
+                    heightRatio: 0.8,
+                    stroke: '#FFFFFF',
+                    strokeWidth: 1,
+                    width: 6,
+                },
+                valueBar: {
+                    color: '#3A3A3A',
+                    heightRatio: 0.33,
+                    stroke: '#FFFFFF',
+                    strokeWidth: 1,
+                    label: {
+                        show: true,
+                        color: COLOR_BLACK,
+                        fontSize: FONT._14,
+                        bold: true,
+                        offsetY: 0
+                    }
+                },
+                title: {
+                    ...TITLE,
+                    textAlign: POSITION.LEFT,
+                    paddingLeft: 12
+                },
+                legend: {
+                    ...LEGEND,
+                    roundingValue: 0
+                },
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -4721,6 +4799,7 @@ export function useConfig() {
         vue_ui_carousel_table,
         vue_ui_gizmo,
         vue_ui_stackbar,
+        vue_ui_bullet,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,

@@ -1,4 +1,118 @@
 {
+    "vue_ui_bullet": {
+        "default": {},
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "segments": {
+                        "baseColor": "#00AA00",
+                        "dataLabels": {
+                            "color": "#66CC66"
+                        },
+                        "ticks": {
+                            "stroke":"#00AA00"
+                        }
+                    },
+                    "target": {
+                        "color": "#023602"
+                    },
+                    "valueBar": {
+                        "color": "#1b291b",
+                        "stroke": "#1A1A1A",
+                        "label": {
+                            "color": "#66CC66"
+                        }
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "segments": {
+                        "baseColor": "#8F837A",
+                        "dataLabels": {
+                            "color": "#8A9892"
+                        },
+                        "ticks": {
+                            "stroke":"#8F837A"
+                        }
+                    },
+                    "target": {
+                        "color": "#40403a"
+                    },
+                    "valueBar": {
+                        "color": "#8F837A",
+                        "stroke": "#fbfafa",
+                        "label": {
+                            "color": "#8A9892"
+                        }
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#f6f6fb",
+                    "color": "#50606C",
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#50606C"
+                    },
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "segments": {
+                        "baseColor": "#718890",
+                        "dataLabels": {
+                            "color": "#50606C"
+                        },
+                        "ticks": {
+                            "stroke":"#50606C"
+                        }
+                    },
+                    "target": {
+                        "color": "#50606C"
+                    },
+                    "valueBar": {
+                        "color": "#50606C",
+                        "stroke": "#fbfafa",
+                        "label": {
+                            "color": "#50606C"
+                        }
+                    }
+                }
+            }
+        }
+    },
     "vue_ui_stackbar": {
         "default": {},
         "hack": {

@@ -1949,6 +1949,23 @@ export function createPolarAreas({ series, center, maxRadius }) {
     return paths;
 }
 
+export function createShadesOfGrey(startColor, steps) {
+    if (!/^#([0-9A-F]{2})\1\1$/i.test(startColor)) {
+        throw new Error("Invalid starting color. HEX must be used.");
+    }
+    const hexToDec = (hex) => parseInt(hex, 16);
+    const decToHex = (dec) => dec.toString(16).padStart(2, "0");
+    const baseValue = hexToDec(startColor.slice(1, 3));
+    const increment = Math.floor(255 / (steps - 1));
+    const shades = [];
+    for (let i = 0; i < steps; i++) {
+        let shadeValue = Math.min(255, Math.max(0, baseValue + increment * (i - Math.floor(steps / 2))));
+        let hexShade = `#${decToHex(shadeValue).repeat(3)}`;
+        shades.push(hexShade);
+    }
+    return shades;
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -1976,6 +1993,7 @@ const lib = {
     createCsvContent,
     createPolarAreas,
     createPolygonPath,
+    createShadesOfGrey,
     createSmoothPath,
     createSmoothPathVertical,
     createSpiralPath,

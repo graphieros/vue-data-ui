@@ -7,6 +7,10 @@ const props = defineProps({
         default() {
             return {}
         }
+    },
+    lineHeight: {
+      type: [String, Boolean],
+      default: false
     }
 });
 
@@ -42,7 +46,7 @@ const CONFIG = useNestedProp({
       CONFIG.title.color
     };font-size:${CONFIG.title.fontSize}px;font-weight:${
       CONFIG.title.bold ? 'bold' : ''
-    };padding-left:${CONFIG.title.paddingLeft}px;padding-right:${CONFIG.title.paddingRight}px;`"
+    };padding-left:${CONFIG.title.paddingLeft}px;padding-right:${CONFIG.title.paddingRight}px;${lineHeight ? `line-height:${lineHeight}`: ''}`"
   >
     {{ CONFIG.title.text }}
   </div>
@@ -53,7 +57,7 @@ const CONFIG = useNestedProp({
       CONFIG.subtitle.color
     };font-size:${CONFIG.subtitle.fontSize}px;font-weight:${
       CONFIG.subtitle.bold ? 'bold' : ''
-    };padding-left:${CONFIG.title.paddingLeft}px;padding-right:${CONFIG.title.paddingRight}px;`"
+    };padding-left:${CONFIG.title.paddingLeft}px;padding-right:${CONFIG.title.paddingRight}px;${lineHeight ? `line-height:${lineHeight}`: ''}`"
   >
     {{ CONFIG.subtitle.text }}
   </div>
@@ -64,7 +68,7 @@ const CONFIG = useNestedProp({
       CONFIG.subtitle.color
     };font-size:${CONFIG.subtitle.fontSize}px;font-weight:${
       CONFIG.subtitle.bold ? 'bold' : ''
-    };padding-left:${CONFIG.title.paddingLeft}px;padding-right:${CONFIG.title.paddingRight}px;`"
+    };padding-left:${CONFIG.title.paddingLeft}px;padding-right:${CONFIG.title.paddingRight}px;${lineHeight ? `line-height:${lineHeight}`: ''}`"
   >
     <slot/>
   </div>

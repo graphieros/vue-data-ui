@@ -17,6 +17,10 @@ const props = defineProps({
     id: {
         type: String,
         default: ''
+    },
+    clickable: {
+        type: Boolean,
+        default: true
     }
 })
 
@@ -36,7 +40,7 @@ function handleClick(legend, i) {
         :style="`background:${config.backgroundColor};font-size:${config.fontSize}px;color:${config.color};padding-bottom:${config.paddingBottom}px;padding-top:${config.paddingTop || 12}px;font-weight:${config.fontWeight}`"
     >
         <slot name="legendTitle" :titleSet="legendSet"></slot>
-        <div v-for="(legend, i) in legendSet" class="vue-data-ui-legend-item">
+        <div v-for="(legend, i) in legendSet" :class="{ 'vue-data-ui-legend-item': true, 'active': clickable }">
             <svg @click="handleClick(legend, i)" v-if="legend.shape" :height="config.fontSize" :width="config.fontSize" viewBox="0 0 20 20" :style="`overflow: visible;opacity:${legend.opacity}`">
                 <Shape
                     :shape="legend.shape"
@@ -68,8 +72,10 @@ function handleClick(legend, i) {
     display: flex;
     align-items:center;
     gap: 6px;
-    cursor: pointer;
     height: fit-content;
     text-align: left;
+}
+.active {
+    cursor: pointer;
 }
 </style>
