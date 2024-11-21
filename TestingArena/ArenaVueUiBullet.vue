@@ -9,24 +9,24 @@ import { useArena } from "../src/useArena";
 const { local, build, vduiLocal, vduiBuild } = useArena()
 
 const dataset = ref({
-    value: 85,
-    target: 80,
+    value: -20,
+    target: -10,
     segments: [
         {
             name: 'Low',
-            from: 0,
-            to: 50,
+            from: -100,
+            to: -30,
             // color: '#4A4A4A'
         },
         {
             name: 'Medium',
-            from: 50,
-            to: 70,
+            from: -30,
+            to: 0,
             // color: '#6A6A6A'
         },
         {
             name: 'High',
-            from: 70,
+            from: 0,
             to: 100,
             // color: '#8A8A8A'
         }

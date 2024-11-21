@@ -226,17 +226,19 @@ const segments = computed(() => {
         return [];
     };
     const scale = calculateNiceScale(minMax.value.min, minMax.value.max, FINAL_CONFIG.value.style.chart.segments.ticks.divisions);
+    const absMin = scale.min >= 0 ? 0 : Math.abs(scale.min);
+
     const target = {
-        x: svg.value.left + (props.dataset.target / scale.max * svg.value.chartWidth) - FINAL_CONFIG.value.style.chart.target.width / 2
+        x: svg.value.left + (((props.dataset.target + absMin) / (scale.max + absMin)) * svg.value.chartWidth) - FINAL_CONFIG.value.style.chart.target.width / 2
     }
     const value = {
-        width: activeValue.value / scale.max * svg.value.chartWidth
+        width: ((activeValue.value + absMin) / (scale.max + absMin)) * svg.value.chartWidth
     }
     const ticks = scale.ticks.map(t => {
         return {
             value: t,
             y: svg.value.bottom + FINAL_CONFIG.value.style.chart.segments.dataLabels.fontSize + 3 + FINAL_CONFIG.value.style.chart.segments.dataLabels.offsetY,
-            x: svg.value.left + (t / scale.max * svg.value.chartWidth)
+            x: svg.value.left + (((t + absMin) / (scale.max + absMin)) * svg.value.chartWidth)
         }
     })
     return {
@@ -248,10 +250,10 @@ const segments = computed(() => {
             return {
                 ...segment,
                 color: segment.color ? convertColorToHex(segment.color) : segmentColors.value[i],
-                x: svg.value.left + (svg.value.chartWidth * (segment.from / scale.max)),
-                y: svg.value.top, // no padding
+                x: svg.value.left + (svg.value.chartWidth * ((segment.from + absMin) / (scale.max + absMin))),
+                y: svg.value.top,
                 height: svg.value.chartHeight,
-                width: svg.value.chartWidth * ((segment.to - segment.from) / scale.max),
+                width: svg.value.chartWidth * (Math.abs(segment.to - segment.from) / (scale.max + absMin)),
             }
         })
     }
