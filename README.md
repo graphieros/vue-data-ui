@@ -9,7 +9,7 @@
 # vue-data-ui
 
 [![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
-[![Static Badge](https://img.shields.io/badge/components-57-blue)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-58-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -65,6 +65,7 @@ Available components
 - [VueUiSparkStackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-sparkstackbar)
 - [VueUiSparkTrend](https://vue-data-ui.graphieros.com/docs#vue-ui-spark-trend)
 - [VueUiGizmo](https://vue-data-ui.graphieros.com/docs#vue-ui-gizmo)
+- [VueUiBullet](https://vue-data-ui.graphieros.com/docs#vue-ui-bullet)
 
 ## 3d
 
@@ -392,15 +393,16 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Mini charts
 
-| Name                  | dataset type                       | config type                 | emits / exposed methods | slots                   | custom tooltip | themes |
-| --------------------- | ---------------------------------- | --------------------------- | ----------------------- | ----------------------- | -------------- | ------ |
-| `VueUiSparkline`      | `VueUiSparklineDatasetItem[]`      | `VueUiSparklineConfig`      | `@selectDatapoint`      | `#svg`, `#before`       | ❌             | ✅     |
-| `VueUiSparkbar`       | `VueUiSparkbarDatasetItem[]`       | `VueUiSparkbarConfig`       | `@selectDatapoint`      | `#data-label`, `#title` | ❌             | ✅     |
-| `VueUiSparkStackbar`  | `VueUiSparkStackbarDatasetItem[]`  | `VueUiSparkStackbarConfig`  | `@selectDatapoint`      | ❌                      | ❌             | ✅     |
-| `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`      | ❌                      | ❌             | ✅     |
-| `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                      | ❌                      | ❌             | ✅     |
-| `VueUiSparkTrend`     | `number[]`                         | `VueUiSparkTrendConfig`     | ❌                      | ❌                      | ❌             | ✅     |
-| `VueUiGizmo`          | `VueUiGizmoDataset`                | `VueUiGizmoConfig`          | ❌                      | ❌                      | ❌             | ❌     |
+| Name                  | dataset type                       | config type                 | emits / exposed methods                 | slots                           | custom tooltip | themes |
+| --------------------- | ---------------------------------- | --------------------------- | --------------------------------------- | ------------------------------- | -------------- | ------ |
+| `VueUiSparkline`      | `VueUiSparklineDatasetItem[]`      | `VueUiSparklineConfig`      | `@selectDatapoint`                      | `#svg`, `#before`               | ❌             | ✅     |
+| `VueUiSparkbar`       | `VueUiSparkbarDatasetItem[]`       | `VueUiSparkbarConfig`       | `@selectDatapoint`                      | `#data-label`, `#title`         | ❌             | ✅     |
+| `VueUiSparkStackbar`  | `VueUiSparkStackbarDatasetItem[]`  | `VueUiSparkStackbarConfig`  | `@selectDatapoint`                      | ❌                              | ❌             | ✅     |
+| `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`                      | ❌                              | ❌             | ✅     |
+| `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                                      | ❌                              | ❌             | ✅     |
+| `VueUiSparkTrend`     | `number[]`                         | `VueUiSparkTrendConfig`     | ❌                                      | ❌                              | ❌             | ✅     |
+| `VueUiGizmo`          | `VueUiGizmoDataset`                | `VueUiGizmoConfig`          | ❌                                      | ❌                              | ❌             | ❌     |
+| `VueUiBullet`         | `VueUiBulletDataset`               | `VueUiBulletConfig`         | `generatePdf`, `generateImg`, `getData` | `#svg`, `#legend`, `#watermark` | ❌             | ✅     |
 
 ### Charts
 
