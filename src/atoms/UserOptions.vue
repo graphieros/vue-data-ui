@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from "./BaseIcon.vue";
 
@@ -113,10 +113,18 @@ const props = defineProps({
     offsetX: {
         type: Number,
         default: 0
+    },
+    hasAnnotator: {
+        type: Boolean,
+        default: false,
+    },
+    isAnnotation: {
+        type: Boolean,
+        default: false,
     }
 });
 
-const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack', 'toggleTooltip', 'toggleAnimation']);
+const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack', 'toggleTooltip', 'toggleAnimation', 'toggleAnnotator']);
 
 function generatePdf() {
     emit('generatePdf');
@@ -172,6 +180,19 @@ function toggleAnimation() {
     emit('toggleAnimation');
 }
 
+const isAnnotator = computed({
+    get:() => {
+        return props.isAnnotation;
+    },
+    set: (bool) => {
+        return bool
+    }
+})
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+    emit('toggleAnnotator')
+}
+
 function toggleSort() {
     emit('toggleSort')
 }
@@ -206,11 +227,11 @@ function toggleFullscreen(state) {
 }
 
 function fullscreenchanged(_event) {
-  if (document.fullscreenElement) {
-    isFullscreen.value = true;
-  } else {
-    isFullscreen.value = false;
-  }
+    if (document.fullscreenElement) {
+        isFullscreen.value = true;
+    } else {
+        isFullscreen.value = false;
+    }
 }
 
 onMounted(() => {
@@ -234,6 +255,7 @@ const isInfo = ref({
     stack: false,
     fullscreen: false,
     animation: false,
+    annotator: false,
 })
 
 </script>
@@ -373,6 +395,19 @@ const isInfo = ref({
                 </template>
                 <div dir="auto" v-if="isDesktop && titles.fullscreen && !$slots.optionAnimation" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.animation, 'button-info-left-visible': position === 'left' && isInfo.animation }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.animation }}
+                </div>
+            </button>
+
+            <button tabindex="0" v-if="hasAnnotator" data-cy="user-options-anim" class="vue-ui-user-options-button" @mouseenter="isInfo.annotator = true" @mouseout="isInfo.annotator = false" @click="toggleAnnotator">
+                <template v-if="$slots.optionAnnotator">
+                    <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }"/>
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isAnnotator" name="annotatorDisabled" :stroke="color" style="pointer-events: none;"/>
+                    <BaseIcon v-if="!isAnnotator" name="annotator" :stroke="color" style="pointer-events: none;"/>
+                </template>
+                <div dir="auto" v-if="isDesktop && titles.annotator && !$slots.optionAnnotator" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.annotator, 'button-info-left-visible': position === 'left' && isInfo.annotator }" :style="{ background: backgroundColor, color: color }">
+                    {{ titles.annotator }}
                 </div>
             </button>
 
