@@ -536,50 +536,50 @@ What happens when the button is clicked is taken care of by the component, excep
 
 User options actions available per chart:
 
-| Chart name                  | User options actions slot names                                                                          |
-| --------------------------- | -------------------------------------------------------------------------------------------------------- |
-| VueUi3dBar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
-| VueUiAgePyramid             | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiCandlestick            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiCarouselTable          | optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen                                       |
-| VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
-| VueUiDonut                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
-| VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
-| VueUiFlow                   | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
-| VueUiGalaxy                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiGauge                  | optionPdf, optionImg, optionFullscreen                                                                   |
-| VueUiHeatmap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiMolecule               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiMoodRadar              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
-| VueUiNestedDonuts           | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiOnion                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiParallelCoordinatePlot | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiQuadrant               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiQuickChart             | optionTooltip, optionPdf, optionImg, optionFullscreen                                                    |
-| VueUiRadar                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiRelationCircle         | optionPdf, optionImg, optionFullscreen                                                                   |
-| VueUiRings                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiScatter                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiSparkHistogram         | (no user options menu)                                                                                   |
-| VueUiSparkStackbar          | (no user options menu)                                                                                   |
-| VueUiSparkTrend             | (no user options menu)                                                                                   |
-| VueUiSparkbar               | (no user options menu)                                                                                   |
-| VueUiSparkgauge             | (no user options menu)                                                                                   |
-| VueUiSparkline              | (no user options menu)                                                                                   |
-| VueUiStackbar               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiStripPlot              | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen              |
-| VueUiTableHeatmap           | optionPdf, optionImg, optionCsv, optionFullscreen                                                        |
-| VueUiTableSparkline         | optionPdf, optionImg, optionCsv, optionFullscreen                                                        |
-| VueUiThermometer            | optionPdf, optionImg, optionFullscreen                                                                   |
-| VueUiTiremarks              | optionPdf, optionImg, optionFullscreen                                                                   |
-| VueUiTreemap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiVerticalBar            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen                |
-| VueUiWaffle                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                            |
-| VueUiWheel                  | optionPdf, optionImg, optionFullscreen                                                                   |
-| VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen                                           |
-| VueUiXy                     | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack |
-| VueUiXyCanvas               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack |
+| Chart name                  | User options actions slot names                                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| VueUi3dBar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiAgePyramid             | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiCandlestick            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiCarouselTable          | optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen                                                        |
+| VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiDonut                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
+| VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiFlow                   | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiGalaxy                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiGauge                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
+| VueUiHeatmap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiMolecule               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
+| VueUiMoodRadar              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiNestedDonuts           | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
+| VueUiOnion                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiParallelCoordinatePlot | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
+| VueUiQuadrant               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
+| VueUiQuickChart             | optionTooltip, optionPdf, optionImg, optionFullscreen, optionAnnotator                                                    |
+| VueUiRadar                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiRelationCircle         | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
+| VueUiRings                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiScatter                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiSparkHistogram         | (no user options menu)                                                                                                    |
+| VueUiSparkStackbar          | (no user options menu)                                                                                                    |
+| VueUiSparkTrend             | (no user options menu)                                                                                                    |
+| VueUiSparkbar               | (no user options menu)                                                                                                    |
+| VueUiSparkgauge             | (no user options menu)                                                                                                    |
+| VueUiSparkline              | (no user options menu)                                                                                                    |
+| VueUiStackbar               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
+| VueUiStripPlot              | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
+| VueUiTableHeatmap           | optionPdf, optionImg, optionCsv, optionFullscreen                                                                         |
+| VueUiTableSparkline         | optionPdf, optionImg, optionCsv, optionFullscreen                                                                         |
+| VueUiThermometer            | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
+| VueUiTiremarks              | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
+| VueUiTreemap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiVerticalBar            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen, optionAnnotator                |
+| VueUiWaffle                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiWheel                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
+| VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiXy                     | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
+| VueUiXyCanvas               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
 
 # Custom palette
 
