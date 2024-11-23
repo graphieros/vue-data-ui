@@ -52,31 +52,33 @@ declare module 'vue-data-ui' {
         show?: boolean;
         position?: 'left' | 'right';
         buttons?: {
-            tooltip?: boolean;
-            pdf?: boolean;
-            csv?: boolean;
-            img?: boolean;
-            table?: boolean;
-            labels?: boolean;
-            fullscreen?: boolean;
-            stack?: boolean;
-            sort?: boolean;
             animation?:boolean;
-        },
+            annotator?: boolean;
+            csv?: boolean;
+            fullscreen?: boolean;
+            img?: boolean;
+            labels?: boolean;
+            pdf?: boolean;
+            sort?: boolean;
+            stack?: boolean;
+            table?: boolean;
+            tooltip?: boolean;
+        };
         buttonTitles?: {
-            open?: string;
-            close?: string;
-            tooltip?: string;
-            pdf?: string;
-            csv?: string;
-            img?: string;
-            table?: string;
-            labels?: string;
-            fullscreen?: string;
-            stack?: string;
-            sort?: string;
             animation?: boolean;
-        }
+            annotator?: boolean;
+            close?: string;
+            csv?: string;
+            fullscreen?: string;
+            img?: string;
+            labels?: string;
+            open?: string;
+            pdf?: string;
+            sort?: string;
+            stack?: string;
+            table?: string;
+            tooltip?: string;
+        };
     }
 
     export type ChartTableCell = {
@@ -791,7 +793,7 @@ declare module 'vue-data-ui' {
         config?: VueUiMoodRadarConfig
     }>;
 
-    export type VueUiIconName = "annotator" | "chart3dBar" | "chartAgePyramid" | "chartBar" | "chartCandlestick" | "chartChestnut" | "chartDonut" | "chartDonutEvolution" | "chartGauge" | "chartHeatmap" | "chartLine" | "chartMoodRadar" | "chartOnion" | "chartQuadrant" | "chartRadar" | "chartRelationCircle" | "chartRings" | "chartScatter" | "chartSparkHistogram" | "chartSparkStackbar" | "chartTable" | "chartThermometer" | "chartTiremarks" | "chartVerticalBar" | "chartWaffle" | "chartWheel" | "close" | "dashboard" | "digit0" | "digit1" | "digit2" | "digit3" | "digit4" | "digit5" | "digit6" | "digit7" | "digit8" | "digit9" | "excel" | "image" | "labelClose" | "labelOpen" | "menu" | "moodFlat" | "moodHappy" | "moodNeutral" | "moodSad" | "pdf" | "screenshot" | "skeleton" | "smiley" | "sort" | "spin" | "star" | "tableClose" | "tableOpen" | "chartNestedDonuts" | "chartSparkbar" | "refresh" | "circleQuestion" | "circleExclamation" | "circleCheck" | "circleCancel" | "moodLaughing" | "moodWink" | "moodEmbarrassed" | "moodSurprised" | "exitFullscreen" | "fullscreen" | "arrowRight" | "arrowTop" | "arrowBottom" | "arrowLeft" | "chartCluster" | "chartSparkline" | "legend" | "csv" | "chartGalaxy" | "kpi" | "kpiBox" | "tooltip" | "vueDataUi" | "ratio" | "func" | "settings" | "trendUp" | "trendDown" | "clipBoard" | "zoomPlus" | "zoomMinus" | "clipboardLine" | "clipboardDonut" | "clipboardBar" | "clipboardVariable" | "triangle" | "triangleFill" | "square" | "squareFill" | "diamond" | "diamondFill" | "pentagon" | "pentagonFill" | "hexagon" | "hexagonFill" | "circle" | "circleFill" | "starFill" | "numbers" | "sigma" | "mu" | "lambda" | "people" | "copy" | "accordion" | "cursor" | "trend" | "chartStripPlot" | "chartDumbbell" | "copyLeft" | "chartWordCloud" | "stack" | "unstack" | "chartFlow" | "chartParallelCoordinatePlot" | "tooltipDisabled" | "pause" | "play" | "stop" | "restart" | "lap" | "carouselTable" | "battery" | "chartStackbar" | "starFace" | "chartBullet";
+    export type VueUiIconName = "annotator" | "chart3dBar" | "chartAgePyramid" | "chartBar" | "chartCandlestick" | "chartChestnut" | "chartDonut" | "chartDonutEvolution" | "chartGauge" | "chartHeatmap" | "chartLine" | "chartMoodRadar" | "chartOnion" | "chartQuadrant" | "chartRadar" | "chartRelationCircle" | "chartRings" | "chartScatter" | "chartSparkHistogram" | "chartSparkStackbar" | "chartTable" | "chartThermometer" | "chartTiremarks" | "chartVerticalBar" | "chartWaffle" | "chartWheel" | "close" | "dashboard" | "digit0" | "digit1" | "digit2" | "digit3" | "digit4" | "digit5" | "digit6" | "digit7" | "digit8" | "digit9" | "excel" | "image" | "labelClose" | "labelOpen" | "menu" | "moodFlat" | "moodHappy" | "moodNeutral" | "moodSad" | "pdf" | "screenshot" | "skeleton" | "smiley" | "sort" | "spin" | "star" | "tableClose" | "tableOpen" | "chartNestedDonuts" | "chartSparkbar" | "refresh" | "circleQuestion" | "circleExclamation" | "circleCheck" | "circleCancel" | "moodLaughing" | "moodWink" | "moodEmbarrassed" | "moodSurprised" | "exitFullscreen" | "fullscreen" | "arrowRight" | "arrowTop" | "arrowBottom" | "arrowLeft" | "chartCluster" | "chartSparkline" | "legend" | "csv" | "chartGalaxy" | "kpi" | "kpiBox" | "tooltip" | "vueDataUi" | "ratio" | "func" | "settings" | "trendUp" | "trendDown" | "clipBoard" | "zoomPlus" | "zoomMinus" | "clipboardLine" | "clipboardDonut" | "clipboardBar" | "clipboardVariable" | "triangle" | "triangleFill" | "square" | "squareFill" | "diamond" | "diamondFill" | "pentagon" | "pentagonFill" | "hexagon" | "hexagonFill" | "circle" | "circleFill" | "starFill" | "numbers" | "sigma" | "mu" | "lambda" | "people" | "copy" | "accordion" | "cursor" | "trend" | "chartStripPlot" | "chartDumbbell" | "copyLeft" | "chartWordCloud" | "stack" | "unstack" | "chartFlow" | "chartParallelCoordinatePlot" | "tooltipDisabled" | "pause" | "play" | "stop" | "restart" | "lap" | "carouselTable" | "battery" | "chartStackbar" | "starFace" | "chartBullet" | "trash" | "annotatorDisabled" | "palette";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName,
