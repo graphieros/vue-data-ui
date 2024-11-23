@@ -522,12 +522,12 @@ function selectNut(nut) {
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
             </template>
-            <template #legend="{ legend }">
+            <!-- <template #legend="{ legend }">
                 #LEGEND
                 <div style="font-size: 8px">
                     {{ legend }}
                 </div>
-            </template>
+            </template> -->
         </LocalVueUiChestnut>
     </template>
     
@@ -537,12 +537,12 @@ function selectNut(nut) {
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
             </template>
-            <template #legend="{ legend }">
+            <!-- <template #legend="{ legend }">
                 #LEGEND
                 <div style="font-size: 8px">
                     {{ legend }}
                 </div>
-            </template>
+            </template> -->
         </LocalVueDataUi>
     </template>
     
@@ -552,12 +552,12 @@ function selectNut(nut) {
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
             </template>
-            <template #legend="{ legend }">
+            <!-- <template #legend="{ legend }">
                 #LEGEND
                 <div style="font-size: 8px">
                     {{ legend }}
                 </div>
-            </template>
+            </template> -->
         </VueUiChestnut>
     </template>
     
@@ -567,12 +567,12 @@ function selectNut(nut) {
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                 <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
             </template>
-            <template #legend="{ legend }">
+            <!-- <template #legend="{ legend }">
                 #LEGEND
                 <div style="font-size: 8px">
                     {{ legend }}
                 </div>
-            </template>
+            </template> -->
         </VueDataUi>
     </template>
 

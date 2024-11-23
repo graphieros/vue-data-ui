@@ -74,6 +74,7 @@ const model = ref([
     { key: 'userOptions.buttons.labels', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
+    { key: 'userOptions.buttons.annotator', def: true, type: 'checkbox' },
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
 
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
@@ -186,6 +187,7 @@ const model = ref([
     { key: 'userOptions.buttonTitles.fullscreen', def: 'TOGGLE FULLSCREEN', type: 'text'},
     { key: 'userOptions.buttonTitles.open', def: 'OPEN OPTIONS', type: 'text'},
     { key: 'userOptions.buttonTitles.close', def: 'CLOSE OPTIONS', type: 'text'},
+    { key: 'userOptions.buttonTitles.annotator', def: 'TOGGLE ANNOTATOR', type: 'text'},
 ])
 
 const testCustomTooltip = ref(false);
