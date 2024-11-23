@@ -908,9 +908,6 @@ export function getCloserPoint(centerX, centerY, x, y, arcSize) {
 
 export function getScaleFactorUsingArcSize(centerX, centerY, x, y, arcSize) {
     const euclidianDistance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-    if (arcSize >= euclidianDistance) {
-        console.warn('arcSize must be less than the distance from the point to the center')
-    }
     const scaleFactor = 1 - arcSize / euclidianDistance;
     return scaleFactor;
 }

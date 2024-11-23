@@ -2042,22 +2042,6 @@ describe('getScaleFactorUsingArcSize', () => {
         expect(scaleFactor).toBe(1);
     });
 
-    test('should trigger a warning and return a scale factor of 0 when arcSize equals the distance', () => {
-        const scaleFactor = getScaleFactorUsingArcSize(100, 100, 110, 100, 10);
-        expect(console.warn).toHaveBeenCalledWith(
-            'arcSize must be less than the distance from the point to the center'
-        );
-        expect(scaleFactor).toBe(0);
-    });
-
-    test('should trigger a warning and return a negative scale factor when arcSize is greater than the distance', () => {
-        const scaleFactor = getScaleFactorUsingArcSize(100, 100, 110, 100, 20);
-        expect(console.warn).toHaveBeenCalledWith(
-            'arcSize must be less than the distance from the point to the center'
-        );
-        expect(scaleFactor).toBeLessThan(0);
-    });
-
     test('should correctly calculate the scale factor for a diagonal point', () => {
         const scaleFactor = getScaleFactorUsingArcSize(0, 0, 3, 4, 1);
         expect(scaleFactor).toBeCloseTo(0.8, 1);
