@@ -28,6 +28,7 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
+import PenAndPaper from "../atoms/PenAndPaper.vue";
 
 const { vue_ui_heatmap: DEFAULT_CONFIG } = useConfig()
 
@@ -366,18 +367,33 @@ function toggleTooltip() {
     mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
 defineExpose({
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
-    toggleTooltip
+    toggleTooltip,
+    toggleAnnotator,
 });
 
 </script>
 
 <template>
     <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`">
+        <PenAndPaper
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            :parent="heatmapChart"
+            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
+            :color="FINAL_CONFIG.style.color"
+            :active="isAnnotator"
+            @close="toggleAnnotator"
+        />
+
         <div v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:transparent`">
             <Title
                 :key="`title_${titleStep}`"
@@ -415,12 +431,15 @@ defineExpose({
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="heatmapChart"
             :position="FINAL_CONFIG.userOptions.position"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
+            @toggleAnnotator="toggleAnnotator"
         >
             <template #optionTooltip v-if="$slots.optionTooltip">
                 <slot name="optionTooltip"/>
@@ -439,6 +458,9 @@ defineExpose({
             </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
         </UserOptions>
 

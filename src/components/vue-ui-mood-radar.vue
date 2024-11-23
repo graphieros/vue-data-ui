@@ -26,6 +26,7 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
+import PenAndPaper from "../atoms/PenAndPaper.vue";
 
 const { vue_ui_mood_radar:  DEFAULT_CONFIG } = useConfig();
 
@@ -295,12 +296,18 @@ function toggleFullscreen(state) {
     isFullscreen.value = state;
 }
 
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
-    toggleTable
+    toggleTable,
+    toggleAnnotator
 });
 
 </script>
@@ -309,6 +316,16 @@ defineExpose({
     <div :class="`vue-ui-mood-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="moodRadarChart"
         :id="`${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''
             };background:${FINAL_CONFIG.style.chart.backgroundColor}`">
+        
+        <PenAndPaper
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            :parent="moodRadarChart"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator"
+            @close="toggleAnnotator"
+        />
+
         <div v-if="FINAL_CONFIG.style.chart.title.text"
             :style="`width:100%;background:transparent`">
             <Title :config="{
@@ -340,11 +357,14 @@ defineExpose({
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="moodRadarChart"
             :position="FINAL_CONFIG.userOptions.position"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
+            @toggleAnnotator="toggleAnnotator"
         >
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -360,6 +380,9 @@ defineExpose({
             </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
         </UserOptions>
 

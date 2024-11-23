@@ -26,6 +26,7 @@ import { useResponsive } from '../useResponsive';
 import { useConfig } from '../useConfig';
 import PackageVersion from '../atoms/PackageVersion.vue';
 import Tooltip from '../atoms/Tooltip.vue';
+import PenAndPaper from '../atoms/PenAndPaper.vue';
 
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 
@@ -360,13 +361,19 @@ function toggleTooltip() {
     mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generatePdf,
     generateImage,
     toggleTable,
-    toggleTooltip
+    toggleTooltip,
+    toggleAnnotator
 });
 
 const selectedWord = ref(null);
@@ -411,6 +418,14 @@ function useTooltip(word) {
 <template>
     <div class="vue-ui-word-cloud" ref="wordCloudChart" :id="`wordCloud_${uid}`"
         :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`">
+        <PenAndPaper
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            :parent="wordCloudChart"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator"
+            @close="toggleAnnotator"
+        />
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">
             <Title
@@ -445,12 +460,15 @@ function useTooltip(word) {
             :position="FINAL_CONFIG.userOptions.position"
             :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show && FINAL_CONFIG.userOptions.buttons.tooltip"
             :isTooltip="mutableConfig.showTooltip"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv" 
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
+            @toggleAnnotator="toggleAnnotator"
         >
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -466,6 +484,9 @@ function useTooltip(word) {
             </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
         </UserOptions>
 

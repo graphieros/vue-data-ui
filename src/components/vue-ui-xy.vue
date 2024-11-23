@@ -1,6 +1,14 @@
 
 <template>
     <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;${!FINAL_CONFIG.chart.title.text ? 'padding-top:36px' : ''};font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`">
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.chart.userOptions.buttons.annotator"
+            :parent="$refs.chart"
+            :backgroundColor="FINAL_CONFIG.chart.backgroundColor"
+            :color="FINAL_CONFIG.chart.color"
+            :active="isAnnotator"
+            @close="toggleAnnotator"
+        />
         <!-- TITLE AS OUTSIDE DIV -->
         <div ref="chartTitle" class="vue-ui-xy-title" v-if="FINAL_CONFIG.chart.title.show" :style="`font-family:${FINAL_CONFIG.chart.fontFamily}`">
             <Title
@@ -41,6 +49,8 @@
             :position="FINAL_CONFIG.chart.userOptions.position"
             :isTooltip="mutableConfig.showTooltip"
             :titles="{ ...FINAL_CONFIG.chart.userOptions.buttonTitles }"
+            :hasAnnotator="FINAL_CONFIG.chart.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -49,6 +59,7 @@
             @toggleLabels="toggleLabels"
             @toggleStack="toggleStack"
             @toggleTooltip="toggleTooltip"
+            @toggleAnnotator="toggleAnnotator"
         >
             <template #optionTooltip v-if="$slots.optionTooltip">
                 <slot name="optionTooltip"/>
@@ -73,6 +84,9 @@
             </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
         </UserOptions>
         
@@ -1202,6 +1216,7 @@ import { useConfig } from '../useConfig';
 import { useMouse } from '../useMouse';
 import { useNestedProp } from '../useNestedProp';
 import PackageVersion from '../atoms/PackageVersion.vue';
+import PenAndPaper from '../atoms/PenAndPaper.vue';
 
 const sliderId = createUid();
 
@@ -1232,7 +1247,8 @@ export default {
     Skeleton,
     Slicer,
     Accordion,
-    PackageVersion
+    PackageVersion,
+    PenAndPaper
 },
     data(){
         this.dataset.forEach((ds, i) => {
@@ -1277,6 +1293,7 @@ export default {
                 bar: "bar",
                 plot: "plot"
             },
+            isAnnotator: false,
             isFullscreen: false,
             isPrinting: false,
             isImaging: false,
@@ -2228,6 +2245,9 @@ export default {
         treeShake,
         useMouse,
         useNestedProp,
+        toggleAnnotator() {
+            this.isAnnotator = !this.isAnnotator;
+        },  
         getHighlightAreaPosition(area) {
             const x = this.drawingArea.left + (this.drawingArea.width / this.maxSeries) * (area.from - this.slicer.start);
 

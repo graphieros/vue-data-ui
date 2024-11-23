@@ -154,7 +154,8 @@ const emit = defineEmits([
     'pause',
     'reset',
     'restart',
-    'lap'
+    'lap',
+    'toggleAnnotator'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -193,6 +194,7 @@ const lap = ref(() => null);
 const toggleAnimation = ref(() => null);
 const pauseAnimation = ref(() => null);
 const resumeAnimation = ref(() => null);
+const toggleAnnotator = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -272,6 +274,9 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.resumeAnimation) {
             resumeAnimation.value = newRef.resumeAnimation;
         }
+        if (newRef.toggleAnnotator) {
+            toggleAnnotator.value = newRef.toggleAnnotator;
+        }
     }
 })
 
@@ -300,7 +305,8 @@ const getEventHandlers = () => {
         'lap',
         'toggleAnimation',
         'pauseAnimation',
-        'resumeAnimation'
+        'resumeAnimation',
+        'toggleAnnotator'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -345,7 +351,8 @@ defineExpose({
     lap,
     pauseAnimation,
     resumeAnimation,
-    toggleAnimation
+    toggleAnimation,
+    toggleAnnotator
 });
 </script>
 

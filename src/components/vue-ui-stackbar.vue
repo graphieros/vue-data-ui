@@ -38,6 +38,7 @@ import Accordion from "./vue-ui-accordion.vue";
 import DataTable from "../atoms/DataTable.vue";
 import Skeleton from "./vue-ui-skeleton.vue"
 import PackageVersion from "../atoms/PackageVersion.vue";
+import PenAndPaper from "../atoms/PenAndPaper.vue";
 
 const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig()
 
@@ -718,6 +719,11 @@ const legendConfig = computed(() => {
     }
 });
 
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -725,7 +731,8 @@ defineExpose({
     generateImage,
     toggleTable,
     toggleLabels,
-    toggleTooltip
+    toggleTooltip,
+    toggleAnnotator
 })
 
 </script>
@@ -737,6 +744,14 @@ defineExpose({
         :class="{'vue-ui-stackbar': true, 'vue-data-ui-wrapper-fullscreen' : isFullscreen }" 
         :style="`background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color};font-family:${FINAL_CONFIG.style.fontFamily}; position: relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
     >
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            :parent="stackbarChart"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator"
+            @close="toggleAnnotator"
+        />
         <slot name="userConfig"/>
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">
@@ -775,6 +790,8 @@ defineExpose({
             :position="FINAL_CONFIG.userOptions.position"
             :isTooltip="mutableConfig.showTooltip"
             :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -782,6 +799,7 @@ defineExpose({
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip"
+            @toggleAnnotator="toggleAnnotator"
         >
             <template #optionTooltip v-if="$slots.optionTooltip">
                 <slot name="optionTooltip"/>
@@ -803,6 +821,9 @@ defineExpose({
             </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
         </UserOptions>
 

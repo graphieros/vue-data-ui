@@ -37,6 +37,7 @@ import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
+import PenAndPaper from "../atoms/PenAndPaper.vue";
 
 const { vue_ui_radar: DEFAULT_CONFIG } = useConfig()
 
@@ -545,13 +546,19 @@ function toggleTooltip() {
     mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
-    toggleTooltip
+    toggleTooltip,
+    toggleAnnotator
 });
 
 </script>
@@ -563,6 +570,15 @@ defineExpose({
         :id="`vue-ui-radar_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`"
     >
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            :parent="radarChart"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator"
+            @close="toggleAnnotator"
+        />
+
         <!-- TITLE AS DIV -->
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
             <Title
@@ -601,12 +617,15 @@ defineExpose({
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="radarChart"
             :position="FINAL_CONFIG.userOptions.position"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
+            @toggleAnnotator="toggleAnnotator"
         >
             <template #optionTooltip v-if="$slots.optionTooltip">
                 <slot name="optionTooltip"/>
@@ -625,6 +644,9 @@ defineExpose({
             </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
         </UserOptions>
 

@@ -35,6 +35,7 @@ import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
+import PenAndPaper from "../atoms/PenAndPaper.vue";
 
 const { vue_ui_rings: DEFAULT_CONFIG } = useConfig();
 
@@ -461,13 +462,19 @@ function toggleTooltip() {
   mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
 defineExpose({
     getData,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
-    toggleTooltip
+    toggleTooltip,
+    toggleAnnotator
 });
 
 </script>
@@ -483,6 +490,14 @@ defineExpose({
       isTooltip = false;
     "
   >
+    <PenAndPaper
+      v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+      :parent="ringsChart"
+      :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+      :color="FINAL_CONFIG.style.chart.color"
+      :active="isAnnotator"
+      @close="toggleAnnotator"
+    />
     <div
       ref="chartTitle"
       v-if="FINAL_CONFIG.style.chart.title.text"
@@ -524,12 +539,15 @@ defineExpose({
         :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
         :chartElement="ringsChart"
         :position="FINAL_CONFIG.userOptions.position"
+        :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+        :isAnnotation="isAnnotator"
         @toggleFullscreen="toggleFullscreen"
         @generatePdf="generatePdf"
         @generateCsv="generateCsv"
         @generateImage="generateImage"
         @toggleTable="toggleTable"
         @toggleTooltip="toggleTooltip"
+        @toggleAnnotator="toggleAnnotator"
       >
         <template #optionTooltip v-if="$slots.optionTooltip">
             <slot name="optionTooltip"/>
@@ -548,6 +566,9 @@ defineExpose({
           </template>
           <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
               <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+          </template>
+          <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+              <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
           </template>
       </UserOptions>
 
