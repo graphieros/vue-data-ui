@@ -1091,6 +1091,9 @@
             <slot name="legend" v-bind:legend="absoluteDataset"/>
         </div>
 
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
 
         <!-- TOOLTIP -->
         <Tooltip
@@ -2376,7 +2379,13 @@ export default {
                     legendHeight = legend.getBoundingClientRect().height;
                 }
 
-                this.height = height - titleHeight - legendHeight - slicerHeight;
+                // Source height to substract
+                let sourceHeight = 0;
+                if (this.$refs.source) {
+                    sourceHeight = this.$refs.source.getBoundingClientRect().height;
+                }
+
+                this.height = height - titleHeight - legendHeight - slicerHeight - sourceHeight;
                 this.width = width;
                 this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
                 this.convertSizes();
@@ -2392,7 +2401,10 @@ export default {
                         if (this.$refs.chartLegend) {
                             legendHeight = this.$refs.chartLegend.getBoundingClientRect().height;
                         }
-                        this.height = entry.contentBoxSize[0].blockSize - titleHeight - legendHeight - slicerHeight - 24;
+                        if (this.$refs.source) {
+                            sourceHeight = this.$refs.source.getBoundingClientRect().height;
+                        }
+                        this.height = entry.contentBoxSize[0].blockSize - titleHeight - legendHeight - slicerHeight - sourceHeight - 24;
                         this.width = entry.contentBoxSize[0].inlineSize;
                         this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
                         this.convertSizes();

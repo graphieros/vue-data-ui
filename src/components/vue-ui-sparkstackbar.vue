@@ -357,6 +357,10 @@ function selectDatapoint(datapoint, index) {
                 </div>
             </div>
         </div>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
     </div>
 </template>
 

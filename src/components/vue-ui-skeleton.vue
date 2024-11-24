@@ -310,6 +310,43 @@ const ticks = computed(() => {
                 />
             </svg>
         </template>
+
+        <template v-if="type === 'bullet'">
+            <svg :xmlns="XMLNS" width="100%" viewBox="0 0 600 96" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <rect
+                    :fill="FINAL_CONFIG.style.bullet.color"
+                    :x="24"
+                    :y="12"
+                    :width="300"
+                    :height="72"
+                    style="opacity: 0.8"
+                />
+                <rect
+                    :fill="FINAL_CONFIG.style.bullet.color"
+                    :x="324"
+                    :y="12"
+                    :width="150"
+                    :height="72"
+                    style="opacity: 0.6"
+                />
+                <rect
+                    :fill="FINAL_CONFIG.style.bullet.color"
+                    :x="474"
+                    :y="12"
+                    :width="102"
+                    :height="72"
+                    style="opacity: 0.3"
+                />
+                <rect
+                    :fill="FINAL_CONFIG.style.bullet.color"
+                    :x="24"
+                    :y="36"
+                    :width="490"
+                    :height="24"
+                    style="opacity: 1"
+                />
+            </svg>
+        </template>
         
         <!-- DUMBBELL -->
         <template v-if="type === 'dumbbell'">

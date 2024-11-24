@@ -675,6 +675,10 @@ defineExpose({
             }"
         />
 
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
+
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"

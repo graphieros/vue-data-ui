@@ -72,6 +72,7 @@ const isTooltip = ref(false);
 const tooltipContent = ref("");
 const stripPlotChart = ref(null);
 const chartTitle = ref(null);
+const source = ref(null);
 const animationStarted = ref(false);
 const titleStep = ref(0);
 const tableStep = ref(0);
@@ -160,6 +161,7 @@ function prepareChart() {
             const { width, height } = useResponsive({
                 chart: stripPlotChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                source: source.value
             });
             absoluteHeight.value = height;
 
@@ -776,6 +778,10 @@ defineExpose({
                 }
             }"
         />
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
 
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"

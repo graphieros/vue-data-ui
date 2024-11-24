@@ -47,6 +47,7 @@ const uid = ref(createUid());
 const step = ref(0);
 const relationCircleChart = ref(null);
 const chartTitle = ref(null);
+const source = ref(null);
 const titleStep = ref(0);
 
 const FINAL_CONFIG = computed({
@@ -167,6 +168,7 @@ function prepareChart() {
             const { width, height } = useResponsive({
                 chart: relationCircleChart.value,
                 title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
+                source: source.value
             });
             size.value = Math.min(width, height);
             svg.value.width = width;
@@ -497,6 +499,10 @@ defineExpose({
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
         </div>
 
         <Skeleton

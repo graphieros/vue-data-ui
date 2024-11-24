@@ -512,6 +512,10 @@ defineExpose({
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
             </template>
         </UserOptions>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
     </div>
 </template>
 

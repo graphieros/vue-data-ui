@@ -56,6 +56,7 @@ const step = ref(0);
 const gaugeChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
+const source = ref(null);
 const titleStep = ref(0);
 
 const FINAL_CONFIG = computed({
@@ -250,7 +251,8 @@ function prepareChart() {
             const { width, height } = useResponsive({
                 chart: gaugeChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-                legend: chartLegend.value
+                legend: chartLegend.value,
+                source: source.value
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -648,6 +650,9 @@ defineExpose({
 
         <div ref="chartLegend">
             <slot name="legend" v-bind:legend="mutableDataset"></slot>
+        </div>
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
         </div>
     </div>
 </template>

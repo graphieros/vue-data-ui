@@ -69,6 +69,7 @@ const step = ref(0);
 const pcpChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
+const source = ref(null);
 const titleStep = ref(0);
 const legendStep = ref(0);
 const tableStep = ref(0);
@@ -150,6 +151,7 @@ function prepareChart() {
                 chart: pcpChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                source: source.value
             });
             chartDimensions.value.width = width;
             chartDimensions.value.height = height;
@@ -816,6 +818,10 @@ defineExpose({
             </Legend>
     
             <slot v-else name="legend" v-bind:legend="immutableDataset"/>
+        </div>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
         </div>
 
         <Tooltip

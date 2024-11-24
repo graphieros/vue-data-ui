@@ -359,6 +359,10 @@ const straightLine = computed(() => {
                 }}
             </text>
         </svg>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
     </div>
 </template>
 

@@ -65,6 +65,7 @@ const uid = ref(createUid());
 const step = ref(0);
 const wordCloudChart = ref(null);
 const chartTitle = ref(null);
+const source = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const isTooltip = ref(false);
@@ -118,7 +119,8 @@ const handleResize = throttle(() => {
     const { width, height } = useResponsive({
         chart: wordCloudChart.value,
         title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-        slicer: FINAL_CONFIG.value.style.chart.zoom.show && chartSlicer.value
+        slicer: FINAL_CONFIG.value.style.chart.zoom.show && chartSlicer.value,
+        source: source.value
     });
     svg.value.width = width;
     svg.value.height = height;
@@ -564,6 +566,10 @@ function useTooltip(word) {
                     <slot name="reset-action" v-bind="{ reset }"/>
                 </template>
             </MonoSlicer>
+        </div>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
         </div>
 
         <Accordion hideDetails v-if="isDataset" :config="{

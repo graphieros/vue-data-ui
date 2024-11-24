@@ -264,6 +264,10 @@ const trackColor = computed(() => {
     <div v-if="FINAL_CONFIG.style.title.show && nameLabel && FINAL_CONFIG.style.title.position === 'bottom'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold': 'normal'};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold': 'normal'};color:${FINAL_CONFIG.style.title.color}`">
         {{ nameLabel }}
     </div>
+
+    <div v-if="$slots.source" ref="source" dir="auto">
+        <slot name="source" />
+    </div>
 </div>
 </template>
 

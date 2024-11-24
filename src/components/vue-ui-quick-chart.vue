@@ -64,6 +64,7 @@ const isTooltip = ref(false);
 const dataTooltipSlot = ref(null);
 const tooltipContent = ref('');
 const selectedDatapoint = ref(null)
+const source = ref(null);
 const segregated = ref([]);
 const step = ref(0);
 const slicerStep = ref(0);
@@ -176,7 +177,8 @@ function prepareChart() {
                 chart: quickChart.value,
                 title: FINAL_CONFIG.value.title ? quickChartTitle.value : null,
                 legend: FINAL_CONFIG.value.showLegend ? quickChartLegend.value : null,
-                slicer: [detector.chartType.BAR, detector.chartType.LINE].includes(chartType.value) && FINAL_CONFIG.value.zoomXy && formattedDataset.value.maxSeriesLength > 1 ? quickChartSlicer.value : null
+                slicer: [detector.chartType.BAR, detector.chartType.LINE].includes(chartType.value) && FINAL_CONFIG.value.zoomXy && formattedDataset.value.maxSeriesLength > 1 ? quickChartSlicer.value : null,
+                source: source.value
             });
             defaultSizes.value.width = width;
             defaultSizes.value.height = height;
@@ -1668,6 +1670,10 @@ defineExpose({
                     </template>
                 </div>
             </template>
+        </div>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
         </div>
 
         <Tooltip

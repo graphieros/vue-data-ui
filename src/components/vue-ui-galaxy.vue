@@ -629,6 +629,10 @@ defineExpose({
         
         <slot name="legend" v-bind:legend="legendSet" />
 
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
+
         <!-- TOOLTIP -->
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"

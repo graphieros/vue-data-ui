@@ -59,6 +59,7 @@ const selectedIndex = ref(null);
 const step = ref(0);
 const agePyramid = ref(null);
 const chartTitle = ref(null);
+const source = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 
@@ -114,6 +115,7 @@ function prepareChart() {
             const { width, height } = useResponsive({
                 chart: agePyramid.value,
                 title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
+                source: source.value
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -740,6 +742,10 @@ defineExpose({
         />
 
         <slot name="legend" v-bind:legend="drawableDataset"></slot>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
 
         <!-- TOOLTIP -->
         <Tooltip

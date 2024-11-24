@@ -78,6 +78,7 @@ const step = ref(0);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const chartSlicer = ref(null);
+const source = ref(null);
 const slicerStep = ref(0);
 const isFullscreen = ref(false);
 const trapIndex = ref(null);
@@ -215,7 +216,8 @@ function prepareChart() {
                 chart: stackbarChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
-                slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxSeries.value > 1 ? chartSlicer.value : null
+                slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxSeries.value > 1 ? chartSlicer.value : null,
+                source: source.value
             });
             defaultSizes.value.width = width;
             defaultSizes.value.height = height;
@@ -1263,6 +1265,9 @@ defineExpose({
             <slot v-else name="legend" v-bind:legend="legendSet" />
         </div>
 
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
 
         <Accordion v-if="slicer.end - slicer.start < 200" hideDetails :config="{
             open: mutableConfig.showTable,

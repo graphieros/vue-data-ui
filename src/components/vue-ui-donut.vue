@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
 import { 
-adaptColorToBackground,
     applyDataLabel,
     calcMarkerOffsetX, 
     calcMarkerOffsetY, 
@@ -71,6 +70,7 @@ const donutChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const resizeObserver = ref(null);
+const source = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
@@ -112,6 +112,7 @@ function prepareChart() {
                 chart: donutChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                source: source.value
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -1215,6 +1216,9 @@ defineExpose({
             <slot name="legend" v-bind:legend="legendSet" />
         </div>
 
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
 
         <!-- TOOLTIP -->
         <Tooltip

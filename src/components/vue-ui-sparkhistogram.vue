@@ -318,8 +318,11 @@ const animation = computed(() => {
                     @click="() => selectDatapoint(rect, i)"
                 />
             </g>
-
         </svg>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
 
         <Skeleton
             v-if="!isDataset"

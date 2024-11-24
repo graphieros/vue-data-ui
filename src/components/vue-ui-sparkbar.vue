@@ -372,6 +372,10 @@ function selectDatapoint(datapoint, index) {
             </div>
         </template>
 
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
+
         <Skeleton
             v-if="!isDataset"
             :config="{

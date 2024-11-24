@@ -54,6 +54,7 @@ const isDataset = computed(() => {
 const uid = ref(createUid());
 const sparklineChart = ref(null);
 const chartTitle = ref(null);
+const source = ref(null);
 
 const FINAL_CONFIG = computed({
     get: () => {
@@ -164,7 +165,8 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: sparklineChart.value,
-                title: FINAL_CONFIG.value.style.title.show && props.showInfo ? chartTitle.value : null
+                title: FINAL_CONFIG.value.style.title.show && props.showInfo ? chartTitle.value : null,
+                source: source.value
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -487,6 +489,10 @@ function selectDatapoint(datapoint, index) {
             />
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
         
         <Skeleton
             v-if="!isDataset"

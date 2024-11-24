@@ -959,6 +959,10 @@ defineExpose({
                 }
             }"
         />
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
         
         <!-- DATA TABLE -->
         <Accordion hideDetails v-if="isDataset && hasStack" :config="{

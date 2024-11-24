@@ -1229,6 +1229,11 @@ defineExpose({
             }"
         />
         <slot name="legend" v-bind:legend="mutableDataset"></slot>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
+
         <!-- DATA TABLE -->
         <Accordion hideDetails v-if="isDataset" :config="{
             open: mutableConfig.showTable,
