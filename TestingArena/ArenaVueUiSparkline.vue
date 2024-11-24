@@ -213,7 +213,13 @@ const step = ref(0)
         <LocalVueUiSparkline :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
             responsive: true
-        }"/>
+        }">
+            <template #source>
+                <div style="width:100%;font-size:10px;text-align:left">
+                    SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
+                </div>
+            </template> 
+        </LocalVueUiSparkline>
     </div>
 
     <Box comp="VueUiSparkline" :dataset="dataset">

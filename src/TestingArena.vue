@@ -2191,10 +2191,11 @@ const skeletonOptions = ref([
   'wheel',
   'donutEvolution',
   'treemap',
-  'stripPlot'
+  'stripPlot',
+  'bullet'
 ]);
 
-const skeletonChoice = ref('donutEvolution')
+const skeletonChoice = ref('bullet')
 
 const tiremarksDataset = ref({
   percentage: 75

@@ -194,12 +194,12 @@ const step = ref(0)
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template>
-                <template #legend="{ legend }">
+                <!-- <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
-                </template>
+                </template> -->
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
                 </template>
@@ -207,7 +207,12 @@ const step = ref(0)
                     <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                         WATERMARK
                     </div>
-                </template> 
+                </template>
+                <template #source>
+                    <div style="width:100%;font-size:10px;text-align:left">
+                        SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
+                    </div>
+                </template>
             </LocalVueUiDonutEvolution>
         </template>
 

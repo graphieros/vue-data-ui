@@ -211,10 +211,14 @@ const step = ref(0);
 <template>
 
 <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-    <LocalVueUiStackbar :dataset="dataset" :config="{
-        ...config,
+    <LocalVueUiStackbar :dataset="dataset" :config="{...config,
         responsive: true,
     }" :key="`local_resp_${step}`"> 
+            <template #source>
+                <div style="width:100%;font-size:10px;text-align:left">
+                    SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
+                </div>
+            </template>
     </LocalVueUiStackbar>
 </div>
 

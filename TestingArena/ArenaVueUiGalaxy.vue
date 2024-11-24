@@ -196,6 +196,11 @@ function selectDatapoint(datapoint) {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+                <template #source>
+                    <div style="width:100%;font-size:10px;text-align:left">
+                        SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
+                    </div>
+                </template>
             </LocalVueUiGalaxy>
         </template>
 
