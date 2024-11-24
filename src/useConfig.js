@@ -4205,6 +4205,9 @@ export function useConfig() {
             color: COLOR_BLACK,
             maxHeight: 500,
             animated: true,
+            bullet: {
+                color: COLOR_GREY_LIGHT
+            },
             flow: {
                 color: COLOR_GREY_LIGHT
             },
