@@ -540,6 +540,7 @@ User options actions available per chart:
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | VueUi3dBar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiAgePyramid             | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiBullet                 | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
 | VueUiCandlestick            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiCarouselTable          | optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen                                                        |
 | VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
@@ -627,7 +628,8 @@ However the folowing charts can be made fully responsive, making them better to 
 | --------------------------- | ------------------------------ |
 | VueUi3dBar                  | -                              |
 | VueUiAgePyramid             | ✅                             |
-| VueUiCandlestick            | ✅                             |
+| VueUiAgePyramid             | ✅                             |
+| VueUiBullet                 | -                              |
 | VueUiCarouselTable          | -                              |
 | VueUiChestnut               | -                              |
 | VueUiDonut                  | ✅                             |
