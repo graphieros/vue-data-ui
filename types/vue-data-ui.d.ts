@@ -4107,11 +4107,14 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution" | "tiremarks" | "molecule" | "relationCircle" | "thermometer" | "sparkbar" | "sparkStackbar" | "sparkHistogram" | "bar3d" | "galaxy" | "treemap" | "stripPlot" | "dumbbell" | "parallelCoordinatePlot" | "flow";
+        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution" | "tiremarks" | "molecule" | "relationCircle" | "thermometer" | "sparkbar" | "sparkStackbar" | "sparkHistogram" | "bar3d" | "galaxy" | "treemap" | "stripPlot" | "dumbbell" | "parallelCoordinatePlot" | "flow" | "bullet";
         style?: {
             backgroundColor?: string;
             color?: string;
             animated?: boolean;
+            bullet?: {
+                color?: string;
+            },
             flow?: {
                 color?: string;
             },
