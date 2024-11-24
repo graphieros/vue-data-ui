@@ -68,6 +68,7 @@ const waffleChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const source = ref(null);
+const noTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
@@ -138,7 +139,8 @@ function prepareChart() {
                 chart: waffleChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
-                source: source.value
+                source: source.value,
+                noTitle: noTitle.value
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -163,6 +165,10 @@ onBeforeUnmount(() => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-waffle_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-waffle'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
 });
 
 const customPalette = computed(() => {
@@ -710,7 +716,7 @@ defineExpose({
         :class="`vue-ui-waffle ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
         ref="waffleChart" 
         :id="`vue-ui-waffle_${uid}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
     >
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
@@ -720,6 +726,14 @@ defineExpose({
             :active="isAnnotator"
             @close="toggleAnnotator"
         />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
+        />
+
         <!-- TITLE AS DIV -->
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
             <Title

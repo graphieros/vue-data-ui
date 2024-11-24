@@ -73,6 +73,7 @@ const tooltipContent = ref("");
 const stripPlotChart = ref(null);
 const chartTitle = ref(null);
 const source = ref(null);
+const noTitle = ref(null);
 const animationStarted = ref(false);
 const titleStep = ref(0);
 const tableStep = ref(0);
@@ -161,7 +162,8 @@ function prepareChart() {
             const { width, height } = useResponsive({
                 chart: stripPlotChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-                source: source.value
+                source: source.value,
+                noTitle: noTitle.value
             });
             absoluteHeight.value = height;
 
@@ -196,6 +198,10 @@ onBeforeUnmount(() => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `strip-plot_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-strip-plot'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
 });
 
 const customPalette = computed(() => {
@@ -481,7 +487,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="stripPlotChart" :class="`vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" :id="`strip-plot_${uid}`">
+    <div ref="stripPlotChart" :class="`vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" :id="`strip-plot_${uid}`">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :parent="stripPlotChart"
@@ -489,6 +495,13 @@ defineExpose({
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
             @close="toggleAnnotator"
+        />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">

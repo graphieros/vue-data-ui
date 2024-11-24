@@ -60,6 +60,7 @@ const step = ref(0);
 const agePyramid = ref(null);
 const chartTitle = ref(null);
 const source = ref(null);
+const noTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 
@@ -115,7 +116,8 @@ function prepareChart() {
             const { width, height } = useResponsive({
                 chart: agePyramid.value,
                 title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
-                source: source.value
+                source: source.value,
+                noTitle: noTitle.value
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -129,6 +131,10 @@ function prepareChart() {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-age-pyramid_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-age-pyramid'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.title.text;
 });
 
 const mutableConfig = ref({
@@ -424,7 +430,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-age-pyramid ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`">
+    <div :class="`vue-ui-age-pyramid ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="agePyramid" :id="`vue-ui-age-pyramid_${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :parent="agePyramid"
@@ -432,6 +438,13 @@ defineExpose({
             :color="FINAL_CONFIG.style.color"
             :active="isAnnotator"
             @close="toggleAnnotator"
+        />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:transparent`">

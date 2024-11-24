@@ -113,6 +113,10 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-thermometer'
 });
 
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.title.text;
+});
+
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
@@ -273,6 +277,13 @@ defineExpose({
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
             @close="toggleAnnotator"
+        />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <!-- TITLE AS DIV -->

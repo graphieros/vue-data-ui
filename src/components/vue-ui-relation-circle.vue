@@ -48,6 +48,7 @@ const step = ref(0);
 const relationCircleChart = ref(null);
 const chartTitle = ref(null);
 const source = ref(null);
+const noTitle = ref(null);
 const titleStep = ref(0);
 
 const FINAL_CONFIG = computed({
@@ -86,6 +87,10 @@ watch(() => props.config, (_newCfg) => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `relation_circle_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-relation-circle'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.title.text;
 });
 
 const customPalette = computed(() => {
@@ -168,7 +173,8 @@ function prepareChart() {
             const { width, height } = useResponsive({
                 chart: relationCircleChart.value,
                 title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
-                source: source.value
+                source: source.value,
+                noTitle: noTitle.value
             });
             size.value = Math.min(width, height);
             svg.value.width = width;
@@ -360,6 +366,13 @@ defineExpose({
             :color="FINAL_CONFIG.style.color"
             :active="isAnnotator"
             @close="toggleAnnotator"
+        />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:transparent`">

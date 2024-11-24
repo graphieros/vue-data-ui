@@ -329,6 +329,10 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-bullet'
 });
 
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
+});
+
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
@@ -368,6 +372,14 @@ defineExpose({
             :active="isAnnotator"
             @close="toggleAnnotator"
         />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
+        />
+
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;`">
             <Title
                 lineHeight="1.3rem"

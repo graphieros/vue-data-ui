@@ -65,6 +65,7 @@ const dataTooltipSlot = ref(null);
 const tooltipContent = ref('');
 const selectedDatapoint = ref(null)
 const source = ref(null);
+const noTitle = ref(null);
 const segregated = ref([]);
 const step = ref(0);
 const slicerStep = ref(0);
@@ -155,6 +156,10 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     fileName: FINAL_CONFIG.value.title || chartType.value
 });
 
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.showUserOptions && !FINAL_CONFIG.value.title;
+});
+
 const defaultSizes = ref({
     width: FINAL_CONFIG.value.width,
     height: FINAL_CONFIG.value.height
@@ -178,7 +183,8 @@ function prepareChart() {
                 title: FINAL_CONFIG.value.title ? quickChartTitle.value : null,
                 legend: FINAL_CONFIG.value.showLegend ? quickChartLegend.value : null,
                 slicer: [detector.chartType.BAR, detector.chartType.LINE].includes(chartType.value) && FINAL_CONFIG.value.zoomXy && formattedDataset.value.maxSeriesLength > 1 ? quickChartSlicer.value : null,
-                source: source.value
+                source: source.value,
+                noTitle: noTitle.value
             });
             defaultSizes.value.width = width;
             defaultSizes.value.height = height;
@@ -901,6 +907,13 @@ defineExpose({
             :color="FINAL_CONFIG.color"
             :active="isAnnotator"
             @close="toggleAnnotator"
+        />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <UserOptions

@@ -67,6 +67,7 @@ const hoveredCell = ref(undefined);
 const selectedClone = ref(null);
 const step = ref(0);
 const tableContainer = ref(null);
+const noTitle = ref(null);
 const isResponsive = ref(false);
 const titleStep = ref(0);
 
@@ -124,6 +125,10 @@ watch(() => props.dataset, () => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `heatmap__${uid.value}`,
     fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-heatmap'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.title.text;
 });
 
 const mutableConfig = ref({
@@ -384,7 +389,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`">
+    <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :parent="heatmapChart"
@@ -392,6 +397,13 @@ defineExpose({
             :color="FINAL_CONFIG.style.color"
             :active="isAnnotator"
             @close="toggleAnnotator"
+        />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <div v-if="FINAL_CONFIG.style.title.text" :style="`width:100%;background:transparent`">

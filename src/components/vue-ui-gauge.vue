@@ -57,6 +57,7 @@ const gaugeChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const source = ref(null);
+const noTitle = ref(null);
 const titleStep = ref(0);
 
 const FINAL_CONFIG = computed({
@@ -95,6 +96,10 @@ function prepareConfig() {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-gauge_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-gauge'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
 });
 
 const customPalette = computed(() => {
@@ -252,7 +257,8 @@ function prepareChart() {
                 chart: gaugeChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: chartLegend.value,
-                source: source.value
+                source: source.value,
+                noTitle: noTitle.value
             });
             svg.value.width = width;
             svg.value.height = height;
@@ -396,6 +402,13 @@ defineExpose({
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
             @close="toggleAnnotator"
+        />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">

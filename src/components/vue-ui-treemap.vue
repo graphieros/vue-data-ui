@@ -74,6 +74,7 @@ const treemapChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const source = ref(null);
+const noTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
@@ -115,6 +116,10 @@ watch(() => props.config, (_newCfg) => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `treemap_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-treemap'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
 });
 
 const customPalette = computed(() => {
@@ -182,7 +187,8 @@ function prepareChart() {
                 chart: treemapChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
-                source: source.value
+                source: source.value,
+                noTitle: noTitle.value
             });
             chartDimensions.value.width = width;
             chartDimensions.value.height = height;
@@ -489,9 +495,9 @@ const dataTable = computed(() => {
     }
 
     const colNames = [
-       FINAL_CONFIG.value.table.columnNames.series,
-       FINAL_CONFIG.value.table.columnNames.value,
-    ]
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+    ];
 
     return {
         colNames,
@@ -533,7 +539,7 @@ defineExpose({
 <template>
     <div ref="treemapChart"
         :class="`vue-ui-treemap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`treemap_${uid}`">
 
         <PenAndPaper
@@ -543,6 +549,13 @@ defineExpose({
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
             @close="toggleAnnotator"
+        />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
         />
         
         <!-- TITLE -->

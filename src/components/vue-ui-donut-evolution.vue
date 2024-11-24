@@ -108,6 +108,7 @@ const hoveredDatapoint = ref(null);
 const isFixed = ref(false);
 const fixedDatapoint = ref(null);
 const donutEvolutionChart = ref(null);
+const noTitle = ref(null);
 const step = ref(0);
 const slicerStep = ref(0);
 const titleStep = ref(0);
@@ -158,6 +159,10 @@ watch(() => props.dataset, (_) => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-donut-evolution'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
 });
 
 const customPalette = computed(() => {
@@ -518,7 +523,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="donutEvolutionChart" :class="`vue-ui-donut-evolution ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="uid">
+    <div ref="donutEvolutionChart" :class="`vue-ui-donut-evolution ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="uid">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :parent="donutEvolutionChart"
@@ -527,6 +532,14 @@ defineExpose({
             :active="isAnnotator"
             @close="toggleAnnotator"
         />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
+        />
+
         <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`" @mouseleave="leave">
             <!-- TITLE AS DIV -->
             <Title

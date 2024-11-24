@@ -42,7 +42,8 @@ const isDataset = computed(() => {
 })
 
 const uid = ref(createUid());
-const tiremarksChart = ref(null)
+const tiremarksChart = ref(null);
+const noTitle = ref(null);
 const step = ref(0);
 const titleStep = ref(0);
 
@@ -81,6 +82,10 @@ watch(() => props.config, (_newCfg) => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-tiremarks'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
 });
 
 const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : checkNaN(props.dataset.percentage));
@@ -287,7 +292,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tiremarksChart" :class="`vue-ui-tiremarks ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${(!FINAL_CONFIG.style.chart.title.text) ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="uid">
+    <div ref="tiremarksChart" :class="`vue-ui-tiremarks ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="uid">
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :parent="tiremarksChart"
@@ -295,6 +300,13 @@ defineExpose({
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
             @close="toggleAnnotator"
+        />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
