@@ -124,7 +124,7 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
-    <Box comp="VueUiMoodRadar" :dataset="dataset">
+    <Box>
         <template #title>VueUiMoodRadar</template>
 
         <template #local>

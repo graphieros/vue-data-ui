@@ -570,7 +570,7 @@ function selectX(selectedX) {
         </template>
     </LocalVueUiXy>
     </div>
-    <Box  :dataset="isPropsToggled ? alternateDataset : dataset">
+    <Box :dataset="isPropsToggled ? alternateDataset : dataset" comp="VueUiXy">
         <template #title>VueUiXy</template>
 
         <template #local>
