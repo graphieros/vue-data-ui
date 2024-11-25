@@ -202,7 +202,7 @@ function stopDrawing() {
     if (isDrawing.value) {
         stack.value.push({
             strokeWidth: strokeWidth.value,
-            path: currentPath.value,
+            path: optimizeSvgPath(smoothPath(currentPath.value)),
             color: currentColor.value
         });
         redoStack.value = [];
