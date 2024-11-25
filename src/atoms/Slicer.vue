@@ -326,6 +326,7 @@ function trapMouse(trap) {
                             :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
                             :height="svgMinimap.height"
                             :y="0"
+                            :rx="minimapSelectionRadius"
                             :fill="borderColor"
                         />
 
@@ -335,6 +336,7 @@ function trapMouse(trap) {
                             :height="svgMinimap.height"
                             :y="0"
                             :fill="minimapSelectedColor"
+                            :rx="minimapSelectionRadius"
                             :style="{
                                 opacity: minimapSelectedColorOpacity
                             }"
