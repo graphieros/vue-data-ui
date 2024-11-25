@@ -91,9 +91,97 @@ function draw(event) {
     currentPath.value += ` ${x} ${y}`;
 }
 
+function smoothPath(path) {
+    const segments = path.trim().split(/\s+/);
+    if (segments.length < 4) return path;
+    const smoothedPath = [segments[0], segments[1], segments[2]]; // Keep M x y incipit
+    for (let i = 3; i < segments.length - 2; i += 2) {
+        const x1 = parseFloat(segments[i - 2]);
+        const y1 = parseFloat(segments[i - 1]);
+        const x2 = parseFloat(segments[i]);
+        const y2 = parseFloat(segments[i + 1]);
+        if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+            continue
+        }
+        const controlX = (x1 + x2) / 2;
+        const controlY = (y1 + y2) / 2;
+        smoothedPath.push(`Q ${x1} ${y1} ${controlX} ${controlY}`);
+    }
+    const lastX = segments[segments.length - 2];
+    const lastY = segments[segments.length - 1];
+    smoothedPath.push(`L ${lastX} ${lastY}`);
+    return smoothedPath.join(" ");
+}
+
+function optimizeSvgPath(path) {
+    const commands = path.trim().split(/\s+/);
+    let optimizedPath = '';
+    let currentCommand = '';
+    let currentX = null, currentY = null;
+    for (let i = 0; i < commands.length; i += 1) {
+        const command = commands[i];
+        if (isNaN(command)) {
+            currentCommand = command;
+            if (currentCommand === 'M' || currentCommand === 'L') {
+                currentX = parseFloat(commands[++i]);
+                currentY = parseFloat(commands[++i]);
+                optimizedPath += `${currentCommand}${currentX} ${currentY}`;
+            } else if (currentCommand === 'Q') {
+                const cx = parseFloat(commands[++i]);
+                const cy = parseFloat(commands[++i]);
+                const x = parseFloat(commands[++i]);
+                const y = parseFloat(commands[++i]);
+
+                if (cx === currentX && cy === currentY) {
+                    // Last point shorthand
+                    optimizedPath += `t${x - currentX} ${y - currentY}`;
+                } else {
+                    optimizedPath += `q${cx - currentX} ${cy - currentY} ${x - currentX} ${y - currentY}`;
+                }
+                currentX = x;
+                currentY = y;
+            }
+        } else {
+            const x = parseFloat(command);
+            const y = parseFloat(commands[++i]);
+            if (currentCommand === 'L') {
+                const dx = x - currentX;
+                const dy = y - currentY;
+
+                if (dx === 0) {
+                    // Vertical line
+                    optimizedPath += `v${dy}`;
+                } else if (dy === 0) {
+                    // Horizontal line
+                    optimizedPath += `h${dx}`;
+                } else {
+                    // Diagonal line
+                    optimizedPath += `l${dx} ${dy}`;
+                }
+                currentX = x;
+                currentY = y;
+            } else if (currentCommand === 'Q') {
+                const cx = x;
+                const cy = y;
+                const nx = parseFloat(commands[++i]);
+                const ny = parseFloat(commands[++i]);
+
+                if (cx === currentX && cy === currentY) {
+                    optimizedPath += `t${nx - currentX} ${ny - currentY}`;
+                } else {
+                    optimizedPath += `q${cx - currentX} ${cy - currentY} ${nx - currentX} ${ny - currentY}`;
+                }
+                currentX = nx;
+                currentY = ny;
+            }
+        }
+    }
+    return optimizedPath;
+}
+
 function stopDrawing() {
     if (isDrawing.value) {
-        stack.value.push(currentPath.value);
+        stack.value.push(optimizeSvgPath(smoothPath(currentPath.value)));
         redoStack.value = [];
         currentPath.value = "";
     }
@@ -276,6 +364,7 @@ function reset() {
 }
 .vue-ui-pen-and-paper-path {
     stroke-linecap: round;
+    stroke-linejoin: round;
 }
 .vue-ui-pen-and-paper-path-drawing {
     stroke-width: 2;
