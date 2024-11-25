@@ -31,6 +31,7 @@ const redoStack = ref([]);
 const viewBox = ref("0 0 0 0");
 
 const currentColor = ref(props.color)
+const strokeWidth = ref(1);
 
 const buttonBorderColor = computed(() => {
     return lightenHexColor(props.color, 0.6);
@@ -86,31 +87,49 @@ function startDrawing(event) {
 
 function draw(event) {
     if (!isDrawing.value || !svgElement.value) return;
-
     const { x, y } = getRelativePosition(event);
     currentPath.value += ` ${x} ${y}`;
 }
 
 function smoothPath(path) {
     const segments = path.trim().split(/\s+/);
-    if (segments.length < 4) return path;
-    const smoothedPath = [segments[0], segments[1], segments[2]]; // Keep M x y incipit
-    for (let i = 3; i < segments.length - 2; i += 2) {
-        const x1 = parseFloat(segments[i - 2]);
-        const y1 = parseFloat(segments[i - 1]);
-        const x2 = parseFloat(segments[i]);
-        const y2 = parseFloat(segments[i + 1]);
-        if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
-            continue
-        }
+    if (segments.length < 4) {
+        return path;
+    }
+    const coordinates = segments.slice(1).map(Number);
+    if (coordinates.length % 2 !== 0) {
+        return path;
+    }
+    const smoothedCoordinates = reduceNoise(coordinates);
+    const smoothedPath = [`M ${smoothedCoordinates[0]} ${smoothedCoordinates[1]}`]; // Keep M x y incipit
+    for (let i = 2; i < smoothedCoordinates.length - 2; i += 2) {
+        const x1 = smoothedCoordinates[i - 2];
+        const y1 = smoothedCoordinates[i - 1];
+        const x2 = smoothedCoordinates[i];
+        const y2 = smoothedCoordinates[i + 1];
         const controlX = (x1 + x2) / 2;
         const controlY = (y1 + y2) / 2;
         smoothedPath.push(`Q ${x1} ${y1} ${controlX} ${controlY}`);
     }
-    const lastX = segments[segments.length - 2];
-    const lastY = segments[segments.length - 1];
+    const lastX = smoothedCoordinates[smoothedCoordinates.length - 2];
+    const lastY = smoothedCoordinates[smoothedCoordinates.length - 1];
     smoothedPath.push(`L ${lastX} ${lastY}`);
     return smoothedPath.join(" ");
+}
+
+function reduceNoise(coordinates, smoothingFactor = 1) {
+    const smoothed = [...coordinates];
+    for (let i = 2; i < coordinates.length - 2; i += 2) {
+        const x = coordinates[i];
+        const y = coordinates[i + 1];
+        const prevX = coordinates[i - 2];
+        const prevY = coordinates[i - 1];
+        const nextX = coordinates[i + 2];
+        const nextY = coordinates[i + 3];
+        smoothed[i] = x + smoothingFactor * ((prevX + nextX) / 2 - x);
+        smoothed[i + 1] = y + smoothingFactor * ((prevY + nextY) / 2 - y);
+    }
+    return smoothed;
 }
 
 function optimizeSvgPath(path) {
@@ -181,7 +200,11 @@ function optimizeSvgPath(path) {
 
 function stopDrawing() {
     if (isDrawing.value) {
-        stack.value.push(optimizeSvgPath(smoothPath(currentPath.value)));
+        stack.value.push({
+            strokeWidth: strokeWidth.value,
+            path: currentPath.value,
+            color: currentColor.value
+        });
         redoStack.value = [];
         currentPath.value = "";
     }
@@ -228,6 +251,9 @@ function reset() {
     stack.value = [];
     redoStack.value = [];
 }
+
+const range = ref(null);
+
 </script>
 
 <template>
@@ -299,6 +325,18 @@ function reset() {
         >
             <BaseIcon name="trash" :stroke="color"/>
         </button>
+        <input 
+            ref="range" 
+            type="range" 
+            class="vertical-range" 
+            :min="0.5" 
+            :max="12" 
+            :step="0.1" 
+            v-model="strokeWidth"
+            :style="{
+                accentColor: color
+            }"
+        />
     </div>
     <svg
         ref="svgElement"
@@ -316,8 +354,11 @@ function reset() {
         @touchmove.prevent="draw"
         @touchend="stopDrawing"
     >
-        <path class="vue-ui-pen-and-paper-path" v-for="path in stack" :key="path" :d="path" :stroke="currentColor" fill="none" />
-        <path class="vue-ui-pen-and-paper-path vue-ui-pen-and-paper-path-drawing" v-if="isDrawing" :d="currentPath" :stroke="currentColor" fill="none" />
+        <template v-for="path in stack" :key="path">
+            <circle v-if="path.path.replace('M', '').split(' ').length === 2" :cx="path.path.replace('M', '').split(' ')[0]" :cy="path.path.replace('M', '').split(' ')[1]" :r="path.strokeWidth / 2" :fill="path.color"/>
+            <path v-else class="vue-ui-pen-and-paper-path"  :d="path.path" :stroke="path.color" :stroke-width="path.strokeWidth" fill="none" />
+        </template>
+        <path class="vue-ui-pen-and-paper-path vue-ui-pen-and-paper-path-drawing" v-if="isDrawing" :d="currentPath" :stroke="currentColor" :stroke-width="strokeWidth * 1.1" fill="none" />
     </svg>
 </template>
 
@@ -366,7 +407,13 @@ function reset() {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-.vue-ui-pen-and-paper-path-drawing {
-    stroke-width: 2;
+
+input[type="range"].vertical-range {
+    writing-mode: vertical-lr;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) rotate(180deg);
+    left: 36px;
 }
+
 </style>
