@@ -8,6 +8,7 @@ import {
     dataLabel,
     error,
     getMissingDatasetAttributes,
+    isFunction,
     objectIsEmpty,
     palette, 
     setOpacity,
@@ -20,6 +21,7 @@ import { useNestedProp } from "../useNestedProp";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const { vue_ui_sparkstackbar: DEFAULT_CONFIG } = useConfig()
 
@@ -42,7 +44,10 @@ const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 });
 
+const sparkstackbarChart = ref(null);
 const uid = ref(createUid());
+const isTooltip = ref(false);
+const tooltipContent = ref('');
 
 const FINAL_CONFIG = computed({
     get: () => {
@@ -225,10 +230,62 @@ function selectDatapoint(datapoint, index) {
     emits('selectDatapoint', { datapoint, index })
 }
 
+const dataTooltipSlot = ref(null);
+const useCustomFormat = ref(false);
+
+function useTooltip({ datapoint, seriesIndex }) {
+    dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: absoluteDataset.value };
+    isTooltip.value = true;
+    const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
+
+    if (isFunction(customFormat)) {
+        try {
+            const customFormatString = customFormat({
+                seriesIndex,
+                datapoint,
+                series: absoluteDataset.value,
+                config: FINAL_CONFIG.value
+            });
+            if (typeof customFormatString === 'string') {
+                tooltipContent.value = customFormatString
+                useCustomFormat.value = true;
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied.');
+            useCustomFormat.value = false;
+        }
+    }
+
+    if (!useCustomFormat.value) {
+        let html = '';
+        html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
+
+        html += `<b>${datapoint.proportionLabel}</b>`;
+
+        html += `<span>(${ applyDataLabel(
+            FINAL_CONFIG.value.style.legend.value.formatter, 
+            datapoint.value,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.legend.value.prefix,
+                v: datapoint.value, 
+                s: FINAL_CONFIG.value.style.legend.value.suffix, 
+                r: FINAL_CONFIG.value.style.legend.value.rounding
+            }),
+            {
+                datapoint,
+                seriesIndex,
+            }
+        )})</span>`;
+
+        tooltipContent.value = `<div>${html}</div>`;
+    }
+}
+
 </script>
 
 <template>
-    <div :style="`width:100%; background:${FINAL_CONFIG.style.backgroundColor}`">
+    <div ref="sparkstackbarChart" :style="`width:100%; background:${FINAL_CONFIG.style.backgroundColor}`">
         <!-- TITLE -->
         <div data-cy="sparkstackbar-title-wrapper" v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
             <div data-cy="sparkstackbar-title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
@@ -272,7 +329,6 @@ function selectDatapoint(datapoint, index) {
                 />
                 <rect 
                     v-for="(rect, i) in drawableDataset" :key="`stack_${i}`"
-                    @click="() => selectDatapoint(rect, i)"
                     :x="rect.start"
                     :y="0"
                     :width="rect.width"
@@ -281,6 +337,20 @@ function selectDatapoint(datapoint, index) {
                     :stroke="FINAL_CONFIG.style.backgroundColor"
                     stroke-linecap="round"
                     :class="{'animated': !isLoading}"
+                />
+                <!-- TOOLTIP TRAPS -->
+                <rect 
+                    v-for="(rect, i) in drawableDataset" :key="`stack_${i}`"
+                    @click="() => selectDatapoint(rect, i)"
+                    :x="rect.start"
+                    :y="0"
+                    :width="rect.width"
+                    :height="svg.height"
+                    fill="transparent"
+                    stroke="none"
+                    :class="{'animated': !isLoading}"
+                    @mouseenter="() => useTooltip({ datapoint: rect, seriesIndex: i })"
+                    @mouseleave="isTooltip = false"
                 />
             </g>
             <rect v-else
@@ -357,6 +427,30 @@ function selectDatapoint(datapoint, index) {
                 </div>
             </div>
         </div>
+
+        <Tooltip
+            :show="isTooltip && FINAL_CONFIG.style.tooltip.show"
+            :parent="sparkstackbarChart"
+            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
+            :color="FINAL_CONFIG.style.color"
+            :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
+            :borderRadius="FINAL_CONFIG.style.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.tooltip.borderWidth"
+            :backgroundOpacity="FINAL_CONFIG.style.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.style.tooltip.position"
+            :content="tooltipContent"
+            :isCustom="useCustomFormat"
+            :offsetY="-124 + FINAL_CONFIG.style.tooltip.offsetY"
+            :blockShiftY="true"
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+        </Tooltip>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
