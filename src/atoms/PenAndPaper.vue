@@ -358,7 +358,7 @@ const range = ref(null);
             <circle v-if="path.path.replace('M', '').split(' ').length === 2" :cx="path.path.replace('M', '').split(' ')[0]" :cy="path.path.replace('M', '').split(' ')[1]" :r="path.strokeWidth / 2" :fill="path.color"/>
             <path v-else class="vue-ui-pen-and-paper-path"  :d="path.path" :stroke="path.color" :stroke-width="path.strokeWidth" fill="none" />
         </template>
-        <path class="vue-ui-pen-and-paper-path vue-ui-pen-and-paper-path-drawing" v-if="isDrawing" :d="currentPath" :stroke="currentColor" :stroke-width="strokeWidth * 1.1" fill="none" />
+        <path class="vue-ui-pen-and-paper-path vue-ui-pen-and-paper-path-drawing" v-if="isDrawing" :d="smoothPath(currentPath)" :stroke="currentColor" :stroke-width="strokeWidth * 1.1" fill="none" />
     </svg>
 </template>
 
