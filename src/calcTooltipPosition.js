@@ -1,6 +1,6 @@
 import { ref } from "vue";
 
-export function calcTooltipPosition({ tooltip, chart, clientPosition, positionPreference = 'center', defaultOffsetY = 24}) {
+export function calcTooltipPosition({ tooltip, chart, clientPosition, positionPreference = 'center', defaultOffsetY = 24, blockShiftY = false}) {
     const offsetX = ref(0);
     const offsetY = ref(defaultOffsetY);
     if (tooltip && chart) {
@@ -33,7 +33,7 @@ export function calcTooltipPosition({ tooltip, chart, clientPosition, positionPr
             }
         }
 
-        if (clientPosition.y + height > bottom) {
+        if (clientPosition.y + height > bottom && !blockShiftY) {
             offsetY.value = -height - defaultOffsetY;
         }
     }

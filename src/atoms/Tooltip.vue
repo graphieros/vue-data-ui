@@ -56,6 +56,10 @@ const props = defineProps({
     offsetY: {
         type: Number,
         default: 24
+    },
+    blockShiftY: {
+        type: Boolean,
+        default: false,
     }
 });
 
@@ -69,7 +73,8 @@ const position = computed(() => {
         chart: props.parent,
         clientPosition: clientPosition.value,
         positionPreference: props.position,
-        defaultOffsetY: props.offsetY
+        defaultOffsetY: props.offsetY,
+        blockShiftY: props.blockShiftY
     });
 })
 
