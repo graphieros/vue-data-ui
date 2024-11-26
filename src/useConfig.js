@@ -2152,6 +2152,9 @@ export function useConfig() {
                 ...TITLE,
                 textAlign: POSITION.LEFT,
                 margin: '0 0 6px 0'
+            },
+            tooltip: {
+                ...TOOLTIP
             }
         }
     }
