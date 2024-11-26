@@ -1241,6 +1241,9 @@ declare module 'vue-data-ui' {
                     bold?: boolean;
                 };
             };
+            tooltip?: ChartTooltip & {
+                customFormat?: null | ((params: VueUiTooltipParams<VueUiSparkStackbarDatasetItem, VueUiSparkStackbarDatasetItem[], VueUiSparkStackbarConfig>) => string);
+            }
         };
     };
 
