@@ -87,7 +87,15 @@ const model = ref([
     { key: 'style.title.subtitle.color', def: '#A1A1A1', type: 'color'},
     { key: 'style.title.subtitle.text', def: 'Lorem ipsum dolor sic amet'},
     { key: 'style.title.subtitle.fontSize', def: 12, type: 'number', min:8, max: 24},
-    { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'}
+    { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'},
+
+    { key: 'style.tooltip.show', def: true, type: 'checkbox', label: 'show', category: 'tooltip' },
+    { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'tooltip' },
+    { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'tooltip' },
+    { key: 'style.tooltip.fontSize', def: 14, type: 'number', min: 6, max: 24, label: 'fontSize', category: 'tooltip' },
+    { key: 'style.tooltip.backgroundOpacity', def: 60, type: 'range', min: 0, max: 100},
+    { key: 'style.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
+    { key: 'style.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 ])
 
 const themeOptions = ref([
@@ -115,6 +123,12 @@ const config = computed(() => {
                         return `f - ${value}`
                     }
                 }
+            },
+            tooltip: {
+                ...c.style.tooltip,
+                // customFormat: ({ datapoint }) => {
+                //     return datapoint.name
+                // }
             }
         },
         theme: currentTheme.value,
