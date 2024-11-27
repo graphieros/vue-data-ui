@@ -232,10 +232,16 @@ function selectDatapoint(datapoint, index) {
 
 const dataTooltipSlot = ref(null);
 const useCustomFormat = ref(false);
+const selectedIndex = ref(null);
 
 function useTooltip({ datapoint, seriesIndex }) {
+    if (!FINAL_CONFIG.value.style.tooltip.show) {
+        return
+    }
+
     dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: absoluteDataset.value };
     isTooltip.value = true;
+    selectedIndex.value = seriesIndex;
     const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
 
     if (isFunction(customFormat)) {
@@ -320,12 +326,16 @@ function useTooltip({ datapoint, seriesIndex }) {
             </defs>
             <g clip-path="url(#stackPill)" v-if="total > 0">
                 <rect 
-                    :x="0" 
-                    :y="0" 
-                    :height="svg.height" 
-                    :width="drawableDataset.map(ds => ds.width).reduce((a, b) => a + b, 0)" 
+                    v-for="(rect, i) in drawableDataset" :key="`stack_underlayer_${i}`"
+                    :x="rect.start"
+                    :y="0"
+                    :width="rect.width"
+                    :height="svg.height"
                     :fill="FINAL_CONFIG.style.bar.gradient.underlayerColor"
                     :class="{'animated': !isLoading}"
+                    :style="{
+                        opacity: (selectedIndex !== null && FINAL_CONFIG.style.tooltip.show) ? selectedIndex === i ? 1 : 0.5 : 1
+                    }"
                 />
                 <rect 
                     v-for="(rect, i) in drawableDataset" :key="`stack_${i}`"
@@ -337,10 +347,13 @@ function useTooltip({ datapoint, seriesIndex }) {
                     :stroke="FINAL_CONFIG.style.backgroundColor"
                     stroke-linecap="round"
                     :class="{'animated': !isLoading}"
+                    :style="{
+                        opacity: (selectedIndex !== null && FINAL_CONFIG.style.tooltip.show) ? selectedIndex === i ? 1 : 0.5 : 1
+                    }"
                 />
                 <!-- TOOLTIP TRAPS -->
                 <rect 
-                    v-for="(rect, i) in drawableDataset" :key="`stack_${i}`"
+                    v-for="(rect, i) in drawableDataset" :key="`stack_trap_${i}`"
                     @click="() => selectDatapoint(rect, i)"
                     :x="rect.start"
                     :y="0"
@@ -350,7 +363,7 @@ function useTooltip({ datapoint, seriesIndex }) {
                     stroke="none"
                     :class="{'animated': !isLoading}"
                     @mouseenter="() => useTooltip({ datapoint: rect, seriesIndex: i })"
-                    @mouseleave="isTooltip = false"
+                    @mouseleave="isTooltip = false; selectedIndex = null"
                 />
             </g>
             <rect v-else
