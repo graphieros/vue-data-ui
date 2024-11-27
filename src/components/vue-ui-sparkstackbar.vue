@@ -444,8 +444,8 @@ function useTooltip({ datapoint, seriesIndex }) {
         <Tooltip
             :show="isTooltip && FINAL_CONFIG.style.tooltip.show"
             :parent="sparkstackbarChart"
-            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
-            :color="FINAL_CONFIG.style.color"
+            :backgroundColor="FINAL_CONFIG.style.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.tooltip.color"
             :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
             :borderRadius="FINAL_CONFIG.style.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.tooltip.borderColor"
