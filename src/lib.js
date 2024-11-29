@@ -1942,7 +1942,7 @@ export function createPolarAreas({ series, center, maxRadius }) {
             middlePoint: { x: middleX, y: middleY }
         };
     });
-    
+
     return paths;
 }
 
@@ -1962,6 +1962,137 @@ export function createShadesOfGrey(startColor, steps) {
     }
     return shades;
 }
+
+/**
+ * LTTB algorithm for a ds with coordinates
+ * @param {Array<Object>} data
+ * @param {number} threshold
+ * @returns {Array<Object>}
+ */
+export function largestTriangleThreeBuckets({ data, threshold }) {
+    if (threshold >= data.length || threshold < 3) {
+        return data;
+    }
+    const sampled = [];
+    const bucketSize = (data.length - 2) / (threshold - 2);
+    let a = 0;
+    // First point as is
+    sampled.push(data[a]);
+    for (let i = 0; i < threshold - 2; i += 1) {
+        const bucketStart = Math.floor((i + 1) * bucketSize) + 1;
+        const bucketEnd = Math.min(Math.floor((i + 2) * bucketSize) + 1, data.length);
+        const bucket = data.slice(bucketStart, bucketEnd);
+        let averageX = 0;
+        let averageY = 0;
+        for (const point of bucket) {
+            averageX += point.x;
+            averageY += point.y;
+        }
+        averageX /= bucket.length;
+        averageY /= bucket.length;
+        let maxArea = -1;
+        let nextA = a;
+        for (let j = bucketStart; j < bucketEnd; j += 1) {
+            const area = Math.abs(
+                (data[a].x - averageX) * (data[j].y - data[a].y) -
+                (data[a].x - data[j].x) * (averageY - data[a].y)
+            );
+            if (area > maxArea) {
+                maxArea = area;
+                nextA = j;
+            }
+        }
+        sampled.push(data[nextA]);
+        a = nextA;
+    }
+    // Last point as is
+    sampled.push(data[data.length - 1]);
+    return sampled;
+}
+
+/**
+ * LTTB algorithm for an array of numbers.
+ * @param {Array<number>} data
+ * @param {number} threshold
+ * @returns {Array<number>}
+ */
+export function largestTriangleThreeBucketsArray({ data, threshold }) {
+    if (threshold >= data.length || threshold < 3) {
+        return data;
+    }
+    const sampled = [];
+    const bucketSize = (data.length - 2) / (threshold - 2);
+    let a = 0;
+    // First point as is
+    sampled.push(data[a]);
+    for (let i = 0; i < threshold - 2; i += 1) {
+        const bucketStart = Math.floor((i + 1) * bucketSize) + 1;
+        const bucketEnd = Math.min(Math.floor((i + 2) * bucketSize) + 1, data.length);
+        const bucket = data.slice(bucketStart, bucketEnd);
+        const average = bucket.reduce((a, b) => a + b, 0) / bucket.length;
+        let maxArea = -1;
+        let nextA = a;
+
+        for (let j = bucketStart; j < bucketEnd; j += 1) {
+            const area = Math.abs((data[a] - average) * (j - a));
+            if (area > maxArea) {
+                maxArea = area;
+                nextA = j;
+            }
+        }
+        sampled.push(data[nextA]);
+        a = nextA;
+    }
+    // Last point as is
+    sampled.push(data[data.length - 1]);
+    return sampled;
+}
+
+/**
+ * LTTB algorithm for an array of objects containing 'name' and 'value'.
+ * @param {Array<{ name: string, value: number }>} data
+ * @param {number} threshold 
+ * @returns {Array<{ name: string, value: number }>}
+ */
+export function largestTriangleThreeBucketsArrayObjects({ data, threshold, key='value' }) {
+    if (threshold >= data.length || threshold < 3) {
+        return data;
+    }
+
+    const sampled = [];
+    const bucketSize = (data.length - 2) / (threshold - 2);
+    let a = 0;
+
+    // First point as is
+    sampled.push(data[a]);
+
+    for (let i = 0; i < threshold - 2; i += 1) {
+        const bucketStart = Math.floor((i + 1) * bucketSize) + 1;
+        const bucketEnd = Math.min(Math.floor((i + 2) * bucketSize) + 1, data.length);
+        const bucket = data.slice(bucketStart, bucketEnd);
+
+        const average = bucket.reduce((sum, point) => sum + point[key], 0) / bucket.length;
+
+        let maxArea = -1;
+        let nextA = a;
+
+        for (let j = bucketStart; j < bucketEnd; j += 1) {
+            const area = Math.abs((data[a][key] - average) * (j - a));
+            if (area > maxArea) {
+                maxArea = area;
+                nextA = j;
+            }
+        }
+
+        sampled.push(data[nextA]);
+        a = nextA;
+    }
+
+    sampled.push(data[data.length - 1]);
+
+    return sampled;
+}
+
 
 const lib = {
     XMLNS,
@@ -2016,6 +2147,8 @@ const lib = {
     isFunction,
     isSafeValue,
     isValidUserValue,
+    largestTriangleThreeBucketsArray,
+    largestTriangleThreeBucketsArrayObjects,
     lightenHexColor,
     makeDonut,
     makePath,
