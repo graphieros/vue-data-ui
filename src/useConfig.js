@@ -68,6 +68,10 @@ export function useConfig() {
         DESC: 'desc'
     }
 
+    const LTTB = {
+        threshold: 500,
+    }
+
     const TITLE = {
         text: "",
         color: COLOR_BLACK,
@@ -354,6 +358,7 @@ export function useConfig() {
         responsive: false,
         customPalette: [],
         useCssAnimation: true,
+        downsample: LTTB,
         chart: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
@@ -964,6 +969,7 @@ export function useConfig() {
         customPalette: [],
         useCssAnimation: true,
         zoomAnimationFrames: 20,
+        downsample: LTTB,
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -1723,6 +1729,7 @@ export function useConfig() {
         theme: '',
         customPalette: [],
         useCssAnimation: true,
+        downsample: LTTB,
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
@@ -1983,6 +1990,7 @@ export function useConfig() {
         theme: '',
         responsive: false,
         type: SHAPE.LINE,
+        downsample: LTTB,
         style: {
             chartWidth: 290,
             animation: {
@@ -2281,6 +2289,7 @@ export function useConfig() {
 
     const vue_ui_spark_trend = {
         theme: '',
+        downsample: LTTB,
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
@@ -3541,6 +3550,9 @@ export function useConfig() {
         responsive: false,
         theme: '',
         customPalette: [],
+        downsample: {
+            threshold: 10000
+        },
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,
