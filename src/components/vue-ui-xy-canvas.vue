@@ -20,6 +20,7 @@ import {
     functionReturnsString,
     isFunction,
     lightenHexColor,
+    largestTriangleThreeBucketsArray,
     objectIsEmpty,
     palette,
     sanitizeArray,
@@ -267,7 +268,10 @@ const dsCopy = computed(() => {
     return props.dataset.map((ds, i) => {
         return {
             ...ds,
-            series: sanitizeArray(ds.series),
+            series: largestTriangleThreeBucketsArray({
+                data: sanitizeArray(ds.series),
+                threshold: FINAL_CONFIG.value.downsample.threshold
+            }),
             absoluteIndex: i,
             color: convertColorToHex(ds.color || customPalette.value[i] || palette[i] || palette[i % palette.length]),
         }

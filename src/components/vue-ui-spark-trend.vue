@@ -8,6 +8,7 @@ import {
     createUid,
     dataLabel,
     error,
+    largestTriangleThreeBucketsArray,
     objectIsEmpty,
     setOpacity,
     XMLNS,
@@ -68,13 +69,21 @@ function prepareConfig() {
     }
 }
 
+const downsampled = computed(() => largestTriangleThreeBucketsArray({
+    data: props.dataset,
+    threshold: FINAL_CONFIG.value.downsample.threshold
+}))
+
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
     prepareChart();
 }, { deep: true });
 
 watch(() => props.dataset, (_) => {
-    safeDatasetCopy.value = props.dataset.map(v => {
+    safeDatasetCopy.value = largestTriangleThreeBucketsArray({
+        data: props.dataset,
+        threshold: FINAL_CONFIG.value.downsample.threshold
+    }).map(v => {
         return ![undefined, Infinity, -Infinity, null, NaN].includes(v) ? v : null
     })
 }, { deep: true })
@@ -83,7 +92,10 @@ function sanitize(arr) {
     return arr.map(v => checkNaN(v))
 }
 
-const safeDatasetCopy = ref(props.dataset.map(v => {
+const safeDatasetCopy = ref(largestTriangleThreeBucketsArray({
+    data: props.dataset,
+    threshold: FINAL_CONFIG.value.downsample.threshold
+}).map(v => {
     if(FINAL_CONFIG.value.style.animation.show) {
         return null
     } else {
@@ -111,13 +123,13 @@ onMounted(() => {
             let elapsed = now - then;
             if (elapsed > interval) {
                 then = now - (elapsed % interval);
-                if (start < props.dataset.length) {
-                    safeDatasetCopy.value.push(props.dataset[start]);
+                if (start < downsampled.value.length) {
+                    safeDatasetCopy.value.push(downsampled.value[start]);
                     start += 1;
                     raf.value = requestAnimationFrame(animate);
                 } else {
                     cancelAnimationFrame(raf.value)
-                    safeDatasetCopy.value = sanitize(props.dataset);
+                    safeDatasetCopy.value = sanitize(downsampled.value);
                     isAnimating.value = false;
                 }
             } else {
@@ -154,7 +166,7 @@ const drawingArea = computed(() => {
 });
 
 const extremes = computed(() => {
-    const ds = sanitize(props.dataset);
+    const ds = sanitize(downsampled.value);
     return {
         max: Math.max(...ds.map(v => checkNaN(v))),
         min: Math.min(...ds.map(v => checkNaN(v)))
@@ -174,7 +186,7 @@ function ratioToMax(v) {
     return v / absoluteMax.value;
 }
 
-const len = computed(() => props.dataset.length);
+const len = computed(() => downsampled.value.length);
 
 const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((v, i) => {
@@ -191,7 +203,7 @@ const mutableDataset = computed(() => {
 });
 
 const trendValue = computed(() => {
-    const ds = sanitize(props.dataset);
+    const ds = sanitize(downsampled.value);
     if (FINAL_CONFIG.value.style.trendLabel.trendType === 'global') {
         return calcTrend(ds)
     } 

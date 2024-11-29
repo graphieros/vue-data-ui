@@ -15,6 +15,7 @@ import {
     getMissingDatasetAttributes,
     giftWrap,
     isFunction,
+    largestTriangleThreeBuckets,
     objectIsEmpty,
     palette,
     setOpacity,
@@ -234,6 +235,10 @@ const datasetWithId = computed(() => {
         const id = `cluster_${uid.value}_${i}`;
         return {
             ...ds,
+            values: largestTriangleThreeBuckets({
+                data: ds.values,
+                threshold: FINAL_CONFIG.value.downsample.threshold
+            }),
             id,
             color: ds.color ? ds.color : (customPalette.value[i] || palette[i] || palette[i % palette.length]),
             opacity: segregated.value.includes(id) ? 0.5: 1,

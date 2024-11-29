@@ -1201,7 +1201,8 @@ import {
     functionReturnsString,
     hasDeepProperty,
     isFunction,
-    isSafeValue, 
+    isSafeValue,
+    largestTriangleThreeBucketsArray,
     opacity, 
     palette,
     setOpacity,
@@ -1272,7 +1273,10 @@ export default {
                 })
             }
         })
-        const maxX = Math.max(...this.dataset.map(datapoint => datapoint.series.length));
+
+        const lttbThreshold = this.config.downsample ? this.config.downsample.threshold ? this.config.downsample.threshold : 500 : 500
+
+        const maxX = Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data: datapoint.series, threshold: lttbThreshold}).length));
         const slicer = {
             start: 0,
             end: maxX,
@@ -1347,7 +1351,10 @@ export default {
     watch: {
         dataset: {
             handler(_newDs, _oldDs) {
-                this.maxX = Math.max(...this.dataset.map(datapoint => datapoint.series.length));
+                this.maxX = Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({
+                    data: datapoint.series,
+                    threshold: this.FINAL_CONFIG.downsample.threshold
+                }).length));
                 this.slicer = {
                     start: 0,
                     end: this.maxX
@@ -1504,16 +1511,25 @@ export default {
             return this.dataset.map((datapoint, i) => {
                 return {
                     ...datapoint,
+                    series: this.largestTriangleThreeBucketsArray({
+                        data: datapoint.series,
+                        threshold: this.FINAL_CONFIG.downsample.threshold
+                    }),
                     id: `uniqueId_${i}`
                 }
             });
         },
         safeDataset(){
             if(!this.useSafeValues) return this.dataset;
+
             return this.dataset.map((datapoint, i) => {
+                const LTTD = this.largestTriangleThreeBucketsArray({
+                    data: datapoint.series,
+                    threshold: this.FINAL_CONFIG.downsample.threshold
+                })
                 return {
                     ...datapoint,
-                    series: datapoint.series.map(d => {
+                    series: LTTD.map(d => {
                         return this.isSafeValue(d) ? d : null
                     }).slice(this.slicer.start, this.slicer.end),
                     color: this.convertColorToHex(datapoint.color ? datapoint.color : this.customPalette[i] ? this.customPalette[i] : this.palette[i]),
@@ -2252,6 +2268,7 @@ export default {
         hasDeepProperty,
         isFunction,
         isSafeValue,
+        largestTriangleThreeBucketsArray,
         objectIsEmpty,
         setOpacity,
         shiftHue,
@@ -2549,7 +2566,7 @@ export default {
         refreshSlicer() {
             this.slicer = {
                 start: 0,
-                end: Math.max(...this.dataset.map(datapoint => datapoint.series.length))
+                end: Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data:datapoint.series, threshold: this.FINAL_CONFIG.downsample.threshold}).length))
             }
             this.slicerStep += 1;
         },

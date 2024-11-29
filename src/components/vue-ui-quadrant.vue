@@ -13,6 +13,7 @@ import {
     functionReturnsString,
     giftWrap,
     isFunction,
+    largestTriangleThreeBuckets,
     objectIsEmpty,
     palette,
     setOpacity,
@@ -445,6 +446,10 @@ const segregated = ref([]);
 const immutableDataset = computed(() => props.dataset.map((category, i) => {
     return {
         ...category,
+        series: largestTriangleThreeBuckets({
+            data: category.series,
+            threshold: FINAL_CONFIG.value.downsample.threshold
+        }),
         id: `cat_${i}_${uid.value}`,
         color: convertColorToHex(category.color) || customPalette.value[i] || palette[i],
     }
@@ -1325,7 +1330,7 @@ defineExpose({
                     />
                 </g>
 
-                <g v-if="mutableConfig.plotLabels.show">
+                <g v-if="mutableConfig.plotLabels.show" style="pointer-events: none;">
                     <g v-for="category in drawableDataset">
                         <text 
                             v-for="plot in category.series" 

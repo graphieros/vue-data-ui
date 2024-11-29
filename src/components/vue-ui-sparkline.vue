@@ -9,6 +9,7 @@ import {
     dataLabel as dl,
     error,
     getMissingDatasetAttributes,
+    largestTriangleThreeBucketsArrayObjects,
     objectIsEmpty,
     setOpacity,
     shiftHue,
@@ -82,6 +83,13 @@ function prepareConfig() {
     }
 }
 
+const downsampled = computed(() => {
+    return largestTriangleThreeBucketsArrayObjects({
+        data: props.dataset,
+        threshold: FINAL_CONFIG.value.downsample.threshold
+    })
+})
+
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
     prepareChart();
@@ -89,29 +97,35 @@ watch(() => props.config, (_newCfg) => {
 }, { deep: true });
 
 watch(() => props.dataset, (_) => {
-    safeDatasetCopy.value = props.dataset.map(d => {
+    safeDatasetCopy.value = largestTriangleThreeBucketsArrayObjects({
+        data: props.dataset.map(d => {
         return {
             ...d,
             value: ![undefined].includes(d.value) ? d.value : null
         }
+    }),
+        threshold: FINAL_CONFIG.value.downsample.threshold
     })
 }, { deep: true })
 
 const safeDatasetCopy = ref(prepareDsCopy());
 
 function prepareDsCopy() {
-    return props.dataset.map(d => {
-        if (FINAL_CONFIG.value.style.animation.show) {
-            return {
-                ...d,
-                value: null
+    return largestTriangleThreeBucketsArrayObjects({
+        data: props.dataset.map(d => {
+            if (FINAL_CONFIG.value.style.animation.show) {
+                return {
+                    ...d,
+                    value: null
+                }
+            } else {
+                return {
+                    ...d,
+                    value: ![undefined].includes(d.value) ? d.value : null
+                }
             }
-        } else {
-            return {
-                ...d,
-                value: ![undefined].includes(d.value) ? d.value : null
-            }
-        }
+        }),
+        threshold: FINAL_CONFIG.value.downsample.threshold
     })
 }
 
@@ -125,17 +139,17 @@ onMounted(() => {
         let start = 0;
 
         function animate() {
-            if (start < props.dataset.length) {
-                safeDatasetCopy.value.push(props.dataset[start])
+            if (start < downsampled.value.length) {
+                safeDatasetCopy.value.push(downsampled.value[start])
                 setTimeout(() => {
                     requestAnimationFrame(animate)
                 }, chunks)
             } else {
-                safeDatasetCopy.value = props.dataset
+                safeDatasetCopy.value = downsampled.value
             }
             start += 1;
         }
-        animate()
+        animate();
     }
 })
 
@@ -228,7 +242,7 @@ function ratioToMax(v) {
     return v / absoluteMax.value;
 }
 
-const len = computed(() => props.dataset.length - 1);
+const len = computed(() => downsampled.value.length - 1);
 
 const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((s, i) => {
