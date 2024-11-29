@@ -1821,6 +1821,9 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        downsample?: {
+            threshold?: number;
+        };
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -2131,6 +2134,9 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        downsample?: {
+            threshold?: number;
+        };
         chart?: {
             fontFamily?: string;
             backgroundColor?: string;
@@ -2965,6 +2971,9 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         useCssAnimation?: boolean;
         zoomAnimationFrames?: number;
+        downsample?: {
+            threshold?: number;
+        };
         style?: {
             fontFamily?: string;
             chart?: {
@@ -3659,6 +3668,9 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         type?: "line" | "bar";
         responsive?: boolean;
+        downsample?: {
+            threshold?: number;
+        };
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -4488,6 +4500,9 @@ declare module 'vue-data-ui' {
 
     export type VueUiSparkTrendConfig = {
         theme?: Theme;
+        downsample?: {
+            threshold?: number;
+        };
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -4869,6 +4884,9 @@ declare module 'vue-data-ui' {
     }
 
     export type VueUiXyCanvasConfig = {
+        downsample?: {
+            threshold?: number;
+        };
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
