@@ -682,3 +682,28 @@ const config = ref({
 ```
 
 **Important:** when using the responsive feature, charts must be placed inside a container with fixed dimensions. Avoid setting a 100% height to this container, as it will result in the chart growing infinitely.
+
+# Big data optimization (since v2.4.11)
+
+Very large datasets (> 5k or > 10k datapoints) will cause the browsers rendering engines to slow down, caused by too many SVG DOM elements to render.
+The following charts use the LTTB algorithm (Largest-Triangle-Three-Bucket) beyond a certain threshold to downsample the rendered dataset while preserving its shape. These components are the most susceptible to be used with very large datasets:
+
+| Component       | Default Threshold | Remark                                                    |
+| --------------- | ----------------- | --------------------------------------------------------- |
+| VueUiXy         | 500               |                                                           |
+| VueUiXyCanvas   | 10000             | Since this chart uses canvas, threhsold can be set higher |
+| VueUiQuadrant   | 500               |                                                           |
+| VueUiScatter    | 500               |                                                           |
+| VueUiSparkline  | 500               |                                                           |
+| VueUiSparkTrend | 500               |                                                           |
+
+The downsample threshold for each component can be set in the config prop passed to components:
+
+```js
+const config = ref({
+  downsample: {
+    threshold: 500,
+  },
+  ...// rest of your config
+})
+```
