@@ -19,11 +19,11 @@ function createDs(n,m=100) {
 const dataset = ref([
     {
         name: "Curved",
-        series: createDs(100000),
+        series: createDs(12),
         type: "line",
         smooth: true,
         useArea: true,
-        dataLabels: true,
+        dataLabels: false,
     },
 ])
 
