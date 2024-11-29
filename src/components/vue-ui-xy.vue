@@ -986,7 +986,7 @@
                 </g>
 
                 <!-- TIME TAG -->
-                <g v-if="FINAL_CONFIG.chart.timeTag.show && ![null, undefined].includes(selectedSerieIndex) || selectedMinimapIndex !== null">
+                <g v-if="FINAL_CONFIG.chart.timeTag.show && (![null, undefined].includes(selectedSerieIndex) || selectedMinimapIndex !== null)">
                     <foreignObject
                         :x="drawingArea.left + (drawingArea.width / maxSeries) * (selectedSerieIndex || selectedMinimapIndex) - 100 + (drawingArea.width / maxSeries / 2)"
                         :y="drawingArea.bottom"
