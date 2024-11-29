@@ -8,79 +8,75 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
+function makeDs(n,m) {
+    const arr = [];
+    for(let i = 0; i < n; i += 1) {
+        arr.push({
+            name: 'Serie',
+            x: Math.random() > 0.5 ? Math.random()*m : -Math.random()*m,
+            y: Math.random() > 0.5 ? Math.random()*m : -Math.random()*m,
+        })
+    }
+    return arr
+}
+
 const dataset = ref([
-    {
-        name: 'Serie 1',
-        shape: 'star',
-        series: [
-            {
-                name: "Star 1",
-                x: 50,
-                y: 50
-            },
-            {
-                name: "Star 2",
-                x: -10,
-                y: -10
-            },
-            {
-                name: "Star 3",
-                x: -15,
-                y: 20
-            },
-            {
-                name: "Star 4",
-                x: 15,
-                y: -20
-            },
-        ]
-    },
-    {
-        name: 'Serie 2',
-        shape: 'diamond',
-        series: [
-            {
-                name: "Triangle 1",
-                x: -50,
-                y: -50
-            },
-            {
-                name: "Triangle 2",
-                x: 25,
-                y: -25
-            },
-            {
-                name: "Triangle 3",
-                x: -25,
-                y: 25
-            },
-            {
-                name: "Triangle 4",
-                x: 10,
-                y: 10
-            }
-        ]
-    },
+    // {
+    //     name: 'Serie 1',
+    //     shape: 'star',
+    //     series: [
+    //         {
+    //             name: "Star 1",
+    //             x: 50,
+    //             y: 50
+    //         },
+    //         {
+    //             name: "Star 2",
+    //             x: -10,
+    //             y: -10
+    //         },
+    //         {
+    //             name: "Star 3",
+    //             x: -15,
+    //             y: 20
+    //         },
+    //         {
+    //             name: "Star 4",
+    //             x: 15,
+    //             y: -20
+    //         },
+    //     ]
+    // },
+    // {
+    //     name: 'Serie 2',
+    //     shape: 'diamond',
+    //     series: [
+    //         {
+    //             name: "Triangle 1",
+    //             x: -50,
+    //             y: -50
+    //         },
+    //         {
+    //             name: "Triangle 2",
+    //             x: 25,
+    //             y: -25
+    //         },
+    //         {
+    //             name: "Triangle 3",
+    //             x: -25,
+    //             y: 25
+    //         },
+    //         {
+    //             name: "Triangle 4",
+    //             x: 10,
+    //             y: 10
+    //         }
+    //     ]
+    // },
     {
         name: 'Serie 3',
         shape: 'hexagon',
-        series: [
-            {
-                name: "Hexagon 1",
-                x: -39,
-                y: 39
-            },
-            {
-                name: "Hexagon 2",
-                x: -2,
-                y: 45
-            },
-            {
-                name: "Hexagon 3",
-                x: -15,
-                y: 30
-            },
-        ]
+        series: makeDs(1000, 100)
     }
 ]);
 

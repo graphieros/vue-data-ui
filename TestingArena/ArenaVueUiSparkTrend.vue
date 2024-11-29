@@ -5,10 +5,19 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+function makeDs(n,m) {
+    const arr = [];
+    for(let i = 0; i < n; i += 1) {
+        arr.push(Math.random()*m)
+    }
+    return arr
+}
+
+
 const datasets = ref({
-    neutral: [10.33, 10.33, 10.33, 10.33, 10.33, 10.33, 10.33, 10.33],
-    positive: [0, 1, 2, 3, 5, 0, 13,  21, 34, 55, 89, 144, 233.33],
-    negative: [100, 95, 80, 60, 40, 20, 10, 9, 8, 7, 6, 5, 3, 1.33]
+    neutral: makeDs(100000, 100),
+    positive: makeDs(100000, 100),
+    negative: makeDs(100000, 100),
 })
 
 const alternateDataset = ref({
@@ -55,7 +64,7 @@ const model = ref([
     { key: 'style.dataLabel.prefix', def: 'P', type: 'text'},
     { key: 'style.dataLabel.suffix', def: 'S', type: 'text'},
     { key: 'style.dataLabel.rounding', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.trendLabel.trendType', def: 'n-1', type: 'select', options: ['n-1', 'global', 'lastToFirst']},
+    { key: 'style.trendLabel.trendType', def: 'global', type: 'select', options: ['n-1', 'global', 'lastToFirst']},
     { key: 'style.trendLabel.useColorTrend', def: true, type: 'checkbox'},
     { key: 'style.trendLabel.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.trendLabel.fontSize', def: 14, type: 'number', min: 8, max: 24},

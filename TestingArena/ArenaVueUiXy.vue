@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import LocalVueUiXy from '../src/components/vue-ui-xy.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -8,71 +8,79 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
-// const dataset = ref([
-//     {
-//         name: "Curved",
-//         series: [60, 100, null, 0, 0, 100, 0, 0, 0, 100, 60, 100, 60, 60, 12],
-//         type: "line",
-//         smooth: true,
-//         useArea: true,
-//         dataLabels: true,
-//     },
-// ])
-
+function createDs(n,m=100) {
+    const arr = [];
+    for(let i = 0; i < n; i += 1) {
+        arr.push(Math.random()*m)
+    }
+    return arr
+}
 
 const dataset = ref([
-        {
-            name: "Long name serie",
-            series: [-80, -60, -30, 0, null, 60, 80, 60, 30, 0, -30, -60, -80],
-            comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
-            type: "line",
-            smooth: true,
-            useArea: true,
-            dataLabels: true,
-            scaleSteps: 2,
-            suffix: '$'
-        },
-        {
-            name: "Long name serie",
-            series: [10, 20, 12, 13, 10, -20, null, 20, 12, 16, 32, 64, 12],
-            comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
-            type: "line",
-            smooth: false,
-            useArea: true,
-            dataLabels: true,
-            scaleSteps: 2,
-            prefix: '£'
-        },
-        {
-            name: "S1",
-            series: [-20, 20, 8, 16, null, 13, -16, 55, 12, 3, 7, 12, 6],
-            comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
-            type: "bar",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2,
-            color: "#FF000050"
-        },
-        {
-            name: "S2",
-            series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
-            comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
-            type: "plot",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2
-        },
-        {
-            name: "S3",
-            series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
-            type: "line",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 5,
-            autoScaling: false,
-            stackRatio: 0.5
-        },
-    ])
+    {
+        name: "Curved",
+        series: createDs(100000),
+        type: "line",
+        smooth: true,
+        useArea: true,
+        dataLabels: true,
+    },
+])
+
+
+// const dataset = ref([
+//         {
+//             name: "Long name serie",
+//             series: [-80, -60, -30, 0, null, 60, 80, 60, 30, 0, -30, -60, -80],
+//             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+//             type: "line",
+//             smooth: true,
+//             useArea: true,
+//             dataLabels: true,
+//             scaleSteps: 2,
+//             suffix: '$'
+//         },
+//         {
+//             name: "Long name serie",
+//             series: [10, 20, 12, 13, 10, -20, null, 20, 12, 16, 32, 64, 12],
+//             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+//             type: "line",
+//             smooth: false,
+//             useArea: true,
+//             dataLabels: true,
+//             scaleSteps: 2,
+//             prefix: '£'
+//         },
+//         {
+//             name: "S1",
+//             series: [-20, 20, 8, 16, null, 13, -16, 55, 12, 3, 7, 12, 6],
+//             comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
+//             type: "bar",
+//             smooth: false,
+//             useArea: true,
+//             scaleSteps: 2,
+//             color: "#FF000050"
+//         },
+//         {
+//             name: "S2",
+//             series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
+//             comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
+//             type: "plot",
+//             smooth: false,
+//             useArea: true,
+//             scaleSteps: 2
+//         },
+//         {
+//             name: "S3",
+//             series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
+//             type: "line",
+//             smooth: false,
+//             useArea: true,
+//             scaleSteps: 5,
+//             autoScaling: false,
+//             stackRatio: 0.5
+//         },
+//     ])
 
     const alternateDataset = ref([
     {

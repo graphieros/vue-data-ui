@@ -10,7 +10,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const scat1 = computed(() => {
     const arr = [];
-    for (let i = -100; i < 100; i += 1) {
+    for (let i = -10000; i < 10000; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.3 ? i / 3 : -i / 5),
             y: Math.random() * i / 20,
@@ -22,11 +22,11 @@ const scat1 = computed(() => {
 
 const scat2 = computed(() => {
     const arr = [];
-    for (let i = -100; i < 100; i += 1) {
+    for (let i = -10000; i < 10000; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.1 ? i / 10 : -i / 10),
             y: Math.random() * i / 10,
-            name: `plot_${i}_cluster_2`
+            name: `plot_${i}_cluster_2`,
         });
     }
     return arr;
@@ -43,7 +43,8 @@ const dataset = computed(() => {
         {
             name: "Cluster 2",
             values: scat2.value,
-            shape: "triangle"
+            shape: "triangle",
+            color: 'orange'
         }
     ]
 });
