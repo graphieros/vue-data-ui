@@ -794,7 +794,24 @@ defineExpose({
                         })"
                         @mouseleave="selectedItem = null; isTooltip = false;"
                         :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? FINAL_CONFIG.style.chart.lines.opacity : 0.2 : FINAL_CONFIG.style.chart.lines.opacity}; stroke-dasharray:${serieSet.pathLength}; stroke-dashoffset: ${FINAL_CONFIG.useCssAnimation ? serieSet.pathLength : 0}`"
-                        
+                    />
+                    <!-- TOOLTIP TRAPS -->
+                    <path
+                        v-if="mutableConfig.showTooltip"
+                        :d="`M${FINAL_CONFIG.style.chart.lines.smooth ? serieSet.smoothPath : serieSet.straightPath}`" 
+                        stroke="red" 
+                        :stroke-width="12"
+                        fill="none"
+                        :class="{ 'vue-ui-pcp-animated vue-data-ui-line-animated': FINAL_CONFIG.useCssAnimation, 'vue-ui-pcp-transition': true  }"
+                        @mouseenter="useTooltip({
+                            shape: serie.shape,
+                            serieName: serie.name,
+                            serie: serieSet,
+                            relativeIndex: i,
+                            seriesIndex: serieSet.seriesIndex
+                        })"
+                        @mouseleave="selectedItem = null; isTooltip = false;"
+                        style="opacity:0"
                     />
                 </g>
             </g>
