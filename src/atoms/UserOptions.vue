@@ -261,7 +261,8 @@ const isInfo = ref({
 </script>
 
 <template>
-    <div 
+    <div
+        data-cy="user-options"
         v-click-outside="closeIfOpen" 
         data-html2canvas-ignore 
         class="vue-ui-user-options" 
