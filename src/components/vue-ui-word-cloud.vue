@@ -508,7 +508,7 @@ function useTooltip(word) {
                         :transform="`translate(${word.width / 2}, ${word.height / 2})`"
                         :class="{'animated': FINAL_CONFIG.useCssAnimation, 'word-selected': selectedWord && selectedWord === word.id && mutableConfig.showTooltip, 'word-not-selected': selectedWord && selectedWord !== word.id && mutableConfig.showTooltip }"
                         text-anchor="middle"
-                        dominant-baseline="middle"
+                        dominant-baseline="central"
                         @mouseover="useTooltip(word)"
                         @mouseleave="selectedWord = null; isTooltip = false"
                         :style="`animation-delay:${index * FINAL_CONFIG.animationDelayMs}ms !important;`"
