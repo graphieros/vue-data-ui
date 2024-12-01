@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import BaseIcon from './BaseIcon.vue';
 import { useResponsive } from '../useResponsive';
 import { throttle } from '../canvas-lib';
@@ -175,19 +175,25 @@ const svgMinimap = ref({
 const resizeObserver = ref(null);
 
 onMounted(() => {
-    if (hasMinimap.value) {
+    if (hasMinimap.value && minimapWrapper.value) {
         const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
-                chart: minimapWrapper.value,
-            })
-            svgMinimap.value.width = width;
-            svgMinimap.value.height = height - 47;
+            requestAnimationFrame(() => {
+                const { width, height } = useResponsive({
+                    chart: minimapWrapper.value,
+                });
+                svgMinimap.value.width = width;
+                svgMinimap.value.height = Math.max(0, height - 47);
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(minimapWrapper.value)
+        resizeObserver.value.observe(minimapWrapper.value);
     }
-})
+});
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+});
 
 const unitWidthX = computed(() => {
     if(!props.minimap.length) return 0
@@ -263,7 +269,7 @@ function trapMouse(trap) {
 </script>
 
 <template>
-    <div data-html2canvas-ignore style="padding: 0 24px">
+    <div data-html2canvas-ignore data-cy="slicer" style="padding: 0 24px">
         <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1; pointer-events: none;">
             <div v-if="valueStart > 0 || valueEnd < max" style="width: 100%; position: relative">
                 <button 
@@ -284,7 +290,7 @@ function trapMouse(trap) {
 
         <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0">
             <template v-if="hasMinimap">
-                <div class="minimap"  style="width: 100%">
+                <div class="minimap"  style="width: 100%" data-cy="minimap">
                     <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -399,7 +405,7 @@ function trapMouse(trap) {
                             :x="unitWidthX * i"
                             :y="0"
                             :height="svgMinimap.height"
-                            :width="unitWidthX"
+                            :width="unitWidthX < 0 ? 0 : unitWidthX"
                             fill="transparent"
                             style="pointer-events: all !important;"
                             @mouseenter="trapMouse(trap)"
