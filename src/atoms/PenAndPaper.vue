@@ -281,8 +281,11 @@ const range = ref(null);
         }"
             style="padding: 0 !important"
             >
-            <ColorPicker v-model:value="currentColor" />
-
+            <ColorPicker 
+                v-model:value="currentColor" 
+                :backgroundColor="backgroundColor"
+                :buttonBorderColor="buttonBorderColor"
+            />
         </button>
         <button
             :class="{
@@ -395,6 +398,7 @@ const range = ref(null);
     padding: 2px;
     transition: all 0.2s ease-in-out;
     cursor: pointer;
+    position: relative;
 }
 .vue-ui-pen-and-paper-action:hover {
     box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
