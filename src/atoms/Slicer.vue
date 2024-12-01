@@ -269,7 +269,7 @@ function trapMouse(trap) {
 </script>
 
 <template>
-    <div data-html2canvas-ignore data-cy="slicer" style="padding: 0 24px">
+    <div data-html2canvas-ignore data-cy="slicer" style="padding: 0 24px" class="vue-data-ui-zoom">
         <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1; pointer-events: none;">
             <div v-if="valueStart > 0 || valueEnd < max" style="width: 100%; position: relative">
                 <button 
