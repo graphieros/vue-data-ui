@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "2.4.14",
+  "version": "2.4.15",
   "type": "module",
   "description": "A user-empowering data visualization Vue 3 components library for eloquent data storytelling",
   "keywords": [
@@ -91,7 +91,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.4",
-    "cypress": "^13.14.2",
+    "cypress": "^13.16.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "remove-attr": "^0.0.13",
