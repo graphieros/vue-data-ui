@@ -1,4 +1,28 @@
 {
+    "dataset_single_line": [
+        {
+            "name": "Line",
+            "series": [0, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+            "type": "line",
+            "dataLabels": true
+        }
+    ],
+    "dataset_single_bar": [
+        {
+            "name": "Bar",
+            "series": [0, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+            "type": "bar",
+            "dataLabels": true
+        }
+    ],
+    "dataset_single_plot": [
+        {
+            "name": "Plot",
+            "series": [0, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+            "type": "plot",
+            "dataLabels": true
+        }
+    ],
     "dataset": [
         {
           "name": "Series 1",
@@ -141,8 +165,7 @@
           "color": "rgb(100,100,100)",
           "dataLabels": true,
           "useTag": "end"
-        }
-      ],
+        }],
     "config": {
         "useCanvas": false,
         "useCssAnimation": true,

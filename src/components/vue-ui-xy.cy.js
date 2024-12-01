@@ -4,7 +4,7 @@ describe('<VueUiXy />', () => {
 
   beforeEach(function() {
     cy.fixture('xy.json').as('fixture');
-    cy.viewport(1200, 850);
+    cy.viewport(600, 600);
   });
 
   function updateConfigInFixture(modifiedConfig) {
@@ -14,154 +14,167 @@ describe('<VueUiXy />', () => {
     });
   }
 
-  it('renders with different config attributes', function() {
+  function data(data) {
+    return cy.get(`[data-cy="${data}"]`)
+  }
+
+  function testUserOptions() {
+    data('user-options').should('exist').and('be.visible');
+  }
+  function testSlicer() {
+    data('slicer').should('exist').and('be.visible');
+  }
+  function testLegend(content='') {
+    data('xy-div-legend').as('legend').should('exist').and('be.visible');
+    if (content) {
+      cy.get('@legend').contains(content);
+    }
+  }
+  function testAxes() {
+    data('xy-grid-line-y').should('exist').and('be.visible');
+    data('xy-grid-line-x').should('exist').and('be.visible');
+  }
+  function testTooltipTraps(n) {
+    for (let i = 0; i < n; i += 1) {
+      data(`xy-tooltip-trap-${i}`).should('exist').and('be.visible');
+    }
+  }
+
+  it('renders a line chart with default config', () => {
     cy.get('@fixture').then((fixture) => {
       cy.mount(VueUiXy, {
         props: {
-          dataset: fixture.dataset,
-          config: fixture.config
+          dataset: fixture.dataset_single_line
         }
       });
 
-      cy.get('[data-cy="xy-svg"]').should('exist');
-      cy.get('[data-cy="xy-grid-line-x"]').should('exist');
-      cy.get('[data-cy="xy-grid-line-y"]').should('exist');
+      testUserOptions();
+      testSlicer();
+      testLegend(fixture.dataset_single_line[0].name);
+      testAxes();
+      testTooltipTraps(fixture.dataset_single_line[0].series.length)
 
-      let modifiedConfig = {
-        ...fixture.config,
-        chart: {
-          ...fixture.config.chart,
-          grid: {
-            ...fixture.config.chart.grid,
-            showVerticalLines: true
-          }
-        }
+      cy.log('--- Y AXIS TICKS ---');
+      const yLabels = [0, 10, 20, 30, 40, 55];
+      for (let i = 0; i < yLabels.length; i += 1) {
+        data(`xy-label-y-${i}`).should('exist').and('be.visible').contains(yLabels[i]);
+        data(`xy-label-y-tick-${i}`).should('exist').and('be.visible');
+        data(`xy-plot-0-${i}`).should('exist').and('be.visible');
       }
 
-      updateConfigInFixture(modifiedConfig);
+      cy.log('--- LINE ---');
+      for(let i = 0; i < fixture.dataset_single_line[0].series.length - 1; i += 1) {
+        data(`xy-line-segment-0-${i}`).should('exist');
+      }
 
+      cy.log('--- SMOOTH LINE ---');
+      const modifiedDataset = [
+        {
+          ...fixture.dataset_single_line[0],
+          smooth: true
+        }
+      ];
       cy.mount(VueUiXy, {
         props: {
-          dataset: fixture.dataset,
-          config: modifiedConfig
+          dataset: modifiedDataset
+        }
+      });
+      data('xy-line-area-path-0').should('exist').and('be.visible');
+
+      cy.log('--- TOOLTIP ---')
+      data('xy-tooltip-trap-0').trigger("mouseenter");
+      data('tooltip').should('exist');
+      data('highlighter-0').should('exist').and('have.attr', 'fill', '#2D353C0D');
+    });
+  });
+
+  it('renders a bar chart with default config', () => {
+    cy.get('@fixture').then((fixture) => {
+      cy.mount(VueUiXy, {
+        props: {
+          dataset: fixture.dataset_single_bar
         }
       });
 
-      cy.get('[data-cy="xy-grid-vertical-lines"]').should('exist');
+      testUserOptions();
+      testSlicer();
+      testLegend(fixture.dataset_single_bar[0].name);
+      testAxes();
+      testTooltipTraps(fixture.dataset_single_bar[0].series.length)
 
-      for(let i = 0; i < 22; i += 1) {
-        cy.get(`[data-cy="xy-grid-vertical-line-${i}"]`).should('exist');
+      cy.log('--- Y AXIS TICKS ---');
+      const yLabels = [0, 10, 20, 30, 40, 55];
+      for (let i = 0; i < yLabels.length; i += 1) {
+        data(`xy-label-y-${i}`).should('exist').and('be.visible').contains(yLabels[i]);
+        data(`xy-label-y-tick-${i}`).should('exist').and('be.visible');
       }
 
-      for(let i = 0; i < 2; i += 1) {
-        cy.get(`[data-cy="xy-def-bar-${i}"]`).should('exist');
-        cy.get(`[data-cy="xy-def-line-${i}"]`).should('exist');
-    
-        for(let k = 0; k < 21; k += 1) {
-          cy.get(`[data-cy="xy-bar-${i}-${k}"]`).should('exist')
+      cy.log('--- BARS ---');
+      for(let i = 0; i < fixture.dataset_single_line[0].series.length - 1; i += 1) {
+        data(`xy-bar-0-${i}`).should('exist');
+      }
+
+      cy.log('--- TOOLTIP ---')
+      data('xy-tooltip-trap-0').trigger("mouseenter");
+      data('tooltip').should('exist');
+      data('highlighter-0').should('exist').and('have.attr', 'fill', '#2D353C0D');
+    });
+  });
+
+  it('renders a plot chart with default config', () => {
+    cy.get('@fixture').then((fixture) => {
+      cy.mount(VueUiXy, {
+        props: {
+          dataset: fixture.dataset_single_plot
         }
+      });
+
+      testUserOptions();
+      testSlicer();
+      testLegend(fixture.dataset_single_plot[0].name);
+      testAxes();
+      testTooltipTraps(fixture.dataset_single_plot[0].series.length)
+
+      cy.log('--- Y AXIS TICKS ---');
+      const yLabels = [0, 10, 20, 30, 40, 55];
+      for (let i = 0; i < yLabels.length; i += 1) {
+        data(`xy-label-y-${i}`).should('exist').and('be.visible').contains(yLabels[i]);
+        data(`xy-label-y-tick-${i}`).should('exist').and('be.visible');
       }
 
-      cy.get(`[data-cy="xy-def-plot-0"]`).should('exist');
-      
-      cy.get(`[data-cy="xy-bar-progression-1"]`).should('exist');
-
-      cy.get(`[data-cy="xy-plot-progression-0"]`).should('exist');
-      cy.get(`[data-cy="xy-plot-progression-label-0"]`).should('contain', '100%');
-
-      for(let i = 0; i < 10; i += 1) {
-        cy.get(`[data-cy="xy-plot-0-${i}"]`).should('exist');
+      cy.log('--- PLOTS ---');
+      for(let i = 0; i < fixture.dataset_single_line[0].series.length - 1; i += 1) {
+        data(`xy-plot-0-${i}`).should('exist');
       }
 
-      cy.get(`[data-cy="xy-line-area-0"]`).should('exist');
-      cy.get(`[data-cy="xy-line-area-path-0"]`).should('exist');
+      cy.log('--- TOOLTIP ---')
+      data('xy-tooltip-trap-0').trigger("mouseenter");
+      data('tooltip').should('exist');
+      data('highlighter-0').should('exist').and('have.attr', 'fill', '#2D353C0D');
+    });
+  });
 
-      for(let i = 0; i < 20; i += 1) {
-        cy.get(`[data-cy="xy-line-segment-1-${i}"]`).should("exist");
-      }
-
-      cy.get(`[data-cy="xy-line-progression-0"]`).should("exist");
-      cy.get(`[data-cy="xy-line-progression-label-0"]`).should("exist");
-
-      for(let i = 0; i < 21; i += 1) {
-        cy.get(`[data-cy="xy-bar-label-x-0-${i}"]`).should('exist');
-      }
-
-      for(let i = 0; i < 10; i += 1) {
-        cy.get(`[data-cy="xy-plot-label-x-0-${i}"]`).should('exist');
-      }
-
-      cy.get(`[data-cy="xy-plot-tag-start-0"]`).should('exist');
-
-      for(let i = 0; i < 2; i += 1) {
-        cy.get(`[data-cy="xy-line-tag-end-${i}"]`).should('exist')
-      }
-
-      cy.get('[data-cy="xy-axis-xLabel"]').should('exist');
-      cy.get('[data-cy="xy-axis-yLabel"]').should('exist');
-
-      cy.get('[data-cy="xy-div-title"]')
-        .should('exist')
-        .contains('Title');
-      cy.get('[data-cy="xy-div-subtitle"]')
-        .should('exist')
-        .contains('Subtitle');
-
-      cy.get('[data-cy="xy-div-legend"]').should('exist');
-
-      for (let i = 0; i < 4; i += 1) {
-        cy.get(`[data-cy="xy-div-legend-item-${i}"]`).should('exist');
-      }
-
-        modifiedConfig = {
-          ...fixture.config,
-          chart: {
-            ...fixture.config.chart,
-            title: {
-              ...fixture.config.chart.title,
-            },
-            legend: {
-              ...fixture.config.legend,
+  it('renders a minimap', () => {
+    cy.get('@fixture').then((fixture) => {
+      cy.mount(VueUiXy, {
+        props: {
+          dataset: fixture.dataset_single_line,
+          config: {
+            chart: {
+              height: 400,
+              width: 600,
+              zoom: {
+                minimap: {
+                  show: true
+                }
+              }
             }
           }
         }
-  
-        updateConfigInFixture(modifiedConfig);
-  
-        cy.mount(VueUiXy, {
-          props: {
-            dataset: fixture.dataset,
-            config: modifiedConfig
-          }
-        });
+      });
 
-      for(let i = 0; i < 21; i += 1) {
-        cy.get(`[data-cy="xy-time-label-${i}"]`)
-          .should('exist')
-          .contains(String(i))
-      }
+      data('minimap').should('exist');
+    })
+  })
 
-      cy.get(`[data-cy="xy-tooltip-trap-0"]`).trigger("mouseenter");
-      cy.get(`[data-cy="tooltip"]`).should('exist');
-      cy.get(`[data-cy="xy-tooltip-trap-0"]`).trigger("mouseleave");
-      cy.get(`[data-cy="tooltip"]`).should('not.exist');
-      cy.get(`[data-cy="xy-tooltip-trap-6"]`).trigger("mouseenter");
-      cy.get(`[data-cy="tooltip"]`).should('exist');
-      cy.get(`[data-cy="xy-tooltip-trap-6"]`).trigger("mouseleave");
-
-      cy.get(`[data-cy="user-options-summary"]`).click({force:true});
-
-      // cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.pdf`);
-
-      // cy.get(`[data-cy="user-options-xls"]`).click({ force: true});
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.csv`);
-
-      // cy.get(`[data-cy="user-options-img"]`).click({ force: true});
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.chart.title.text}.png`);
-
-      // cy.clearDownloads();
-
-    });
-  });
 });

@@ -105,6 +105,7 @@
                 <g class="vue-ui-xy-grid">
                     <line 
                         v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showBaseline"
+                        data-cy="xy-grid-line-x"
                         :stroke="FINAL_CONFIG.chart.grid.stroke" 
                         stroke-width="1" 
                         :x1="drawingArea.left + xPadding"
@@ -260,8 +261,9 @@
 
                 <!-- HIGHLIGHTERS -->
                 <g>
-                    <g v-for="(_, i) in maxSeries" :key="`tooltip_trap_${i}`">
+                    <g v-for="(_, i) in maxSeries" :key="`tooltip_trap_highlighter_${i}`">
                         <rect
+                            :data-cy="`highlighter-${i}`"
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
                             :y="drawingArea.top"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
@@ -441,7 +443,8 @@
                     </template>
                     <template v-else>
                         <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
-                            <line 
+                            <line
+                                :data-cy="`xy-label-y-tick-${i}`"
                                 v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
                                 :x1="drawingArea.left + xPadding" 
                                 :x2="drawingArea.left - 5 + xPadding" 
