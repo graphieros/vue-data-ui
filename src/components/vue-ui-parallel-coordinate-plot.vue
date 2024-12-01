@@ -799,7 +799,7 @@ defineExpose({
                     <path
                         v-if="mutableConfig.showTooltip"
                         :d="`M${FINAL_CONFIG.style.chart.lines.smooth ? serieSet.smoothPath : serieSet.straightPath}`" 
-                        stroke="red" 
+                        stroke="transparent" 
                         :stroke-width="12"
                         fill="none"
                         :class="{ 'vue-ui-pcp-animated vue-data-ui-line-animated': FINAL_CONFIG.useCssAnimation, 'vue-ui-pcp-transition': true  }"
