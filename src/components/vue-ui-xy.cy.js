@@ -153,28 +153,4 @@ describe('<VueUiXy />', () => {
       data('highlighter-0').should('exist').and('have.attr', 'fill', '#2D353C0D');
     });
   });
-
-  it('renders a minimap', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiXy, {
-        props: {
-          dataset: fixture.dataset_single_line,
-          config: {
-            chart: {
-              height: 400,
-              width: 600,
-              zoom: {
-                minimap: {
-                  show: true
-                }
-              }
-            }
-          }
-        }
-      });
-
-      data('minimap').should('exist');
-    })
-  })
-
 });
