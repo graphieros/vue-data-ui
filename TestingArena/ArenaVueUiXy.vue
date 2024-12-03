@@ -16,6 +16,32 @@ function createDs(n,m=100) {
     return arr
 }
 
+// const to = ref(null);
+// const raf = ref(null);
+// const ds = ref(createDs(12));
+
+// const dataset = computed(() => {
+//     function anim() {
+//         ds.value.shift()
+//         ds.value.push(Math.random() * 100)
+//         to.value = setTimeout(() => {
+//             raf.value = requestAnimationFrame(anim)
+//         }, 300)
+//     }
+
+//     anim()
+//     return [
+//         {
+//             name: 'Serie',
+//             series: ds.value,
+//             type: 'line',
+//             smooth: true,
+//             useArea: true,
+//             dataLabels: false
+//         }
+//     ]
+// })
+
 const dataset = ref([
     {
         name: "Curved",
@@ -184,7 +210,7 @@ const model = ref([
     { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
-    { key: 'chart.backgroundColor', def: '#FFFFFF30', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
     { key: 'chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
     { key: 'chart.height', def: 600, type: 'range', min: 300, max: 1000, label: 'height', category: 'general' },
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
