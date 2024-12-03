@@ -174,6 +174,7 @@ const icons = computed(() => {
         trash: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 7 18 L 13 18 C 15 18 15 18 16 6 L 16 6 L 5 6 L 4 6 C 5 18 5 18 7 18 M 3 4 L 17 4 M 8 2 L 12 2 M 10 8 L 10 15 M 7 8 L 7.518 15.01 M 13 8 L 12.454 14.984" />`,
         palette: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" d="M 10 2 A 1 1 0 0 0 10 18 C 10 18 14 18 14 16 C 14 13 12 14 11 13 C 10 10 14 11 15 11 C 20 11 19 2 10 2 M 6 6 A 1 1 0 0 0 8 8 A 1 1 0 0 0 6 6 M 6 11 A 1 1 0 0 0 8 13 A 1 1 0 0 0 6 11 M 11 5 A 1 1 0 0 0 13 7 A 1 1 0 0 0 11 5"/>`,
         colorPicker: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" d="M3 17 4 13 11.759 5.267 15.265 9.324 7 17 3 17M12.35 3.14 17.47 9.206M14.438 3.062C18.298 2.432 18.77 4.716 17.864 7.079"/>`,
+        boxes: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" d="M10 11 6 9 2 11 2 16 6 18 10 16 10 11M10 11 14 9 18 11 18 16 14 18 10 16M6 9 6 4 10 2 14 4 14 9M6 4 10 6 14 4M2 11 6 13 10 11M10 11 14 13 18 11M10 6 10 11M6 13 6 18M14 13 14 18"/><path fill="${props.stroke}" stroke="none" style="opacity:0.5" d="M 6 4 L 10 6 L 10 11 L 6 9 L 6 4"/><path fill="${props.stroke}" stroke="none" style="opacity:0.5" d="M 2 11 L 6 13 L 6 18 L 2 16 L 2 11"/><path fill="${props.stroke}" stroke="none" style="opacity:0.5" d="M 10 11 L 14 13 L 14 18 L 10 16 L 10 11"/>`
     }
 });
 
