@@ -168,14 +168,15 @@ watch(
 const minimapWrapper = ref(null);
 
 const svgMinimap = ref({
-    width: 1,
-    height: 1
+    width: 0,
+    height: 0
 })
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
     if (hasMinimap.value && minimapWrapper.value) {
+
         const handleResize = throttle(() => {
             requestAnimationFrame(() => {
                 const { width, height } = useResponsive({
@@ -188,6 +189,10 @@ onMounted(() => {
 
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(minimapWrapper.value);
+
+        const { width, height } = minimapWrapper.value.getBoundingClientRect();
+        svgMinimap.value.width = width;
+        svgMinimap.value.height = height;
     }
 });
 
