@@ -168,31 +168,24 @@ watch(
 const minimapWrapper = ref(null);
 
 const svgMinimap = ref({
-    width: 0,
-    height: 40
+    width: 1,
+    height: 1
 })
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
-    if (hasMinimap.value && minimapWrapper.value) {
-
+    if (hasMinimap.value) {
         const handleResize = throttle(() => {
-            requestAnimationFrame(() => {
-                const { width, height } = useResponsive({
-                    chart: minimapWrapper.value,
-                });
-                svgMinimap.value.width = width;
-                svgMinimap.value.height = Math.max(0, height - 47);
-            });
+            const { width, height } = useResponsive({
+                chart: minimapWrapper.value,
+            })
+            svgMinimap.value.width = width;
+            svgMinimap.value.height = height - 47;
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(minimapWrapper.value);
-
-        const { width, height } = minimapWrapper.value.getBoundingClientRect();
-        svgMinimap.value.width = width;
-        svgMinimap.value.height = height;
+        resizeObserver.value.observe(minimapWrapper.value)
     }
 });
 
@@ -296,7 +289,7 @@ function trapMouse(trap) {
         <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0">
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%" data-cy="minimap">
-                    <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 40 : svgMinimap.height}`">
+                    <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
                                 <stop offset="0%" :stop-color="`${minimapLineColor}50`"/>
