@@ -169,7 +169,7 @@ const minimapWrapper = ref(null);
 
 const svgMinimap = ref({
     width: 0,
-    height: 0
+    height: 40
 })
 
 const resizeObserver = ref(null);
@@ -296,7 +296,7 @@ function trapMouse(trap) {
         <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0">
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%" data-cy="minimap">
-                    <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
+                    <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 40 : svgMinimap.height}`">
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
                                 <stop offset="0%" :stop-color="`${minimapLineColor}50`"/>
