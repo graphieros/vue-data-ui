@@ -311,7 +311,7 @@ function trapMouse(trap) {
                         <rect
                             :x="selectionRectCoordinates.x"
                             :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
-                            :height="svgMinimap.height"
+                            :height="Math.max(svgMinimap.height, 0)"
                             :y="0"
                             :fill="borderColor"
                             :rx="minimapSelectionRadius"
@@ -319,7 +319,7 @@ function trapMouse(trap) {
                         />
 
                         <path 
-                            :d="`M${unitWidthX / 2},${svgMinimap.height} ${minimapLine.fullSet} L${svgMinimap.width - (unitWidthX / 2)},${svgMinimap.height}Z`" 
+                            :d="`M${unitWidthX / 2},${Math.max(svgMinimap.height, 0)} ${minimapLine.fullSet} L${svgMinimap.width - (unitWidthX / 2)},${Math.max(svgMinimap.height, 0)}Z`" 
                             :fill="`url(#${uid})`"
                             stroke="none"
                             style="opacity: 1"
@@ -328,7 +328,7 @@ function trapMouse(trap) {
                         <rect
                             :x="selectionRectCoordinates.x"
                             :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
-                            :height="svgMinimap.height"
+                            :height="Math.max(svgMinimap.height, 0)"
                             :y="0"
                             :rx="minimapSelectionRadius"
                             :fill="borderColor"
@@ -337,7 +337,7 @@ function trapMouse(trap) {
                         <rect
                             :x="selectionRectCoordinates.x"
                             :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
-                            :height="svgMinimap.height"
+                            :height="Math.max(svgMinimap.height, 0)"
                             :y="0"
                             :fill="minimapSelectedColor"
                             :rx="minimapSelectionRadius"
@@ -347,7 +347,7 @@ function trapMouse(trap) {
                         />
 
                         <path 
-                            :d="`M${minimapLine.sliced[0].x},${svgMinimap.height} ${minimapLine.selectionSet} L${minimapLine.sliced.at(-1).x},${svgMinimap.height}Z`" 
+                            :d="`M${minimapLine.sliced[0].x},${Math.max(svgMinimap.height, 0)} ${minimapLine.selectionSet} L${minimapLine.sliced.at(-1).x},${Math.max(svgMinimap.height, 0)}Z`" 
                             :fill="`url(#${uid})`"
                             stroke="none"
                             style="opacity: 1"
@@ -387,7 +387,7 @@ function trapMouse(trap) {
                                     :x1="unitWidthX * i + (unitWidthX / 2)"
                                     :x2="unitWidthX * i + (unitWidthX / 2)"
                                     :y1="0"
-                                    :y2="svgMinimap.height"
+                                    :y2="Math.max(svgMinimap.height, 0)"
                                     :stroke="minimapIndicatorColor"
                                     stroke-linecap="round"
                                     stroke-dasharray="2"
@@ -402,7 +402,7 @@ function trapMouse(trap) {
                             v-for="(trap, i) in availableTraps"
                             :x="unitWidthX * i"
                             :y="0"
-                            :height="svgMinimap.height"
+                            :height="Math.max(svgMinimap.height, 0)"
                             :width="unitWidthX < 0 ? 0 : unitWidthX"
                             fill="transparent"
                             style="pointer-events: all !important;"
