@@ -222,8 +222,8 @@ function createDatapointCoordinates({ hasAutoScale, series, min, max, scale, yOf
 }
 
 const absoluteExtremes = computed(() => {
-    const min = Math.min(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
-    const max = Math.max(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
+    const min = FINAL_CONFIG.value.style.chart.scale.min !== null ? FINAL_CONFIG.value.style.chart.scale.min : Math.min(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
+    const max = FINAL_CONFIG.value.style.chart.scale.max !== null ? FINAL_CONFIG.value.style.chart.scale.max : Math.max(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).flatMap(ds => ds.series.slice(slicer.value.start, slicer.value.end)));
     const scale = calculateNiceScale(min < 0 ? min : 0, max === min ? min + 1 < 0 ? 0 : min + 1 : max < 0 ? 0 : max, FINAL_CONFIG.value.style.chart.scale.ticks);
 
     const absoluteMin = scale.min < 0 ? Math.abs(scale.min) : 0;
@@ -300,8 +300,8 @@ const formattedDataset = computed(() => {
             }
         })
         .map((ds, i) => {
-            let min = Math.min(...ds.series) || 0;
-            let max = Math.max(...ds.series) || 1;
+            let min = [null, undefined].includes(ds.scaleMin) ? (Math.min(...ds.series) || 0) : ds.scaleMin;
+            let max = [null, undefined].includes(ds.scaleMax) ? (Math.max(...ds.series) || 1) : ds.scaleMax;
 
             if (min === max) {
                 min = min >= 0 ? max - 1 : min;
