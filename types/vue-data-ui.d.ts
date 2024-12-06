@@ -4881,6 +4881,8 @@ declare module 'vue-data-ui' {
         suffix?: string;
         rounding?: number;
         autoScaling?: boolean;
+        scaleMin?: number | null;
+        scaleMax?: number | null;
     }
 
     export type VueUiXyCanvasConfig = {
@@ -4901,6 +4903,8 @@ declare module 'vue-data-ui' {
                 stackGap?: number;
                 scale?: {
                     ticks?: number;
+                    min?: number | null;
+                    max?: number | null;
                 };
                 zoom?: ChartZoom;
                 selector?: {
