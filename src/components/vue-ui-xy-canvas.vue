@@ -26,6 +26,7 @@ import {
     sanitizeArray,
     setOpacity,
     themePalettes,
+hasDeepProperty,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import {
@@ -116,8 +117,11 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     })
+
+    let finalConfig = {};
+
     if (mergedConfig.theme) {
-        return {
+        finalConfig = {
             ...useNestedProp({
                 userConfig: themes.vue_ui_xy_canvas[mergedConfig.theme] || props.config,
                 defaultConfig: mergedConfig
@@ -125,8 +129,26 @@ function prepareConfig() {
             customPalette: themePalettes[mergedConfig.theme] || palette
         }
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.scale.min')) {
+        finalConfig.style.chart.scale.min = props.config.style.chart.scale.min;
+    } else {
+        finalConfig.style.chart.scale.min = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.scale.max')) {
+        finalConfig.style.chart.scale.max = props.config.style.chart.scale.max;
+    } else {
+        finalConfig.style.chart.scale.max = null;
+    }
+
+    // ----------------------------------------------------------------------------
+
+    return finalConfig;
 }
 
 watch(() => props.config, (_newCfg) => {
