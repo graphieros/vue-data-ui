@@ -11,12 +11,19 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const crazyDs = [];
 const crazyDs2 = [];
 const crazyDs3 = []
-for (let i = 0; i < 100000; i += 1) {
+for (let i = 0; i < 12; i += 1) {
     crazyDs.push(Math.random() + (Math.random() > 0.5 ? Math.random() * 100 : 0))
     crazyDs2.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -10 : -10))
     crazyDs3.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -5 : Math.random() * 5))
 }
 
+function makeDs(n,m) {
+    const arr = [];
+    for (let i = 0; i < n; i += 1) {
+        arr.push(Math.random() * m)
+    }
+    return arr
+}
 
 const dataset = ref([
         {
@@ -30,25 +37,25 @@ const dataset = ref([
             suffix: '£',
             rounding: 1,
         },
-        {
-            name: "S1",
-            series: crazyDs,
-            type: "bar",
-            useArea: false,
-            dataLabels: true,
-            scaleSteps: 2,
-            rounding: 1
-        },
-        {
-            name: "S2",
-            series: crazyDs2,
-            type: "line",
-            useArea: false,
-            dataLabels: true,
-            smooth: false,
-            rounding: 1,
-            scaleSteps: 2
-        },
+        // {
+        //     name: "S1",
+        //     series: crazyDs,
+        //     type: "bar",
+        //     useArea: false,
+        //     dataLabels: true,
+        //     scaleSteps: 2,
+        //     rounding: 1
+        // },
+        // {
+        //     name: "S2",
+        //     series: crazyDs2,
+        //     type: "line",
+        //     useArea: false,
+        //     dataLabels: true,
+        //     smooth: false,
+        //     rounding: 1,
+        //     scaleSteps: 2
+        // },
         // {
         //     name: "S3",
         //     series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
@@ -61,13 +68,38 @@ const dataset = ref([
         // },
     ])
 
+    async function getData() {
+        setTimeout(() => {
+            return makeDs(800, 100)
+        }, 1000)
+    }
+
+async function longpolling ()
+{
+  try {
+    const response = await getData();
+    dataset.value[0].series = response;
+    console.log(response)
+  }
+    catch (error) {
+    console.error('error fetching wsjtx data', error);
+  }
+  finally {
+    setTimeout(longpolling, 1);
+  }
+}
+
+onMounted(async () => {
+  longpolling();
+});
 
 
-    onMounted(() => {
-    setTimeout(() => {
-        dataset.value[0].series.push(10)
-    }, 3000)
-})
+
+//     onMounted(() => {
+//     setTimeout(() => {
+//         dataset.value[0].series.push(10)
+//     }, 3000)
+// })
 
 
 const model = ref([

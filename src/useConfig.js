@@ -4811,6 +4811,96 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_funnel = {
+        theme: '',
+        responsive: false,
+        useCssAnimation: true,
+        table: {
+            ...TABLE,
+            th: TABLE_TH,
+            td: {
+                ...TABLE_TD,
+                roundingValue: 0,
+                roundingPercentage: 0,
+            },
+            columnNames: {
+                series: 'Step',
+                value: 'Value',
+                percentage: 'Percentage'
+            }
+        },
+        userOptions: USER_OPTIONS({
+            tooltip: true,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: false,
+            fullscreen: true,
+            stack: false,
+            annotator: true
+        }),
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                width: 600,
+                height: 500,
+                title: TITLE,
+                padding: PADDING([12, 128, 12, 24]),
+                barCircleSpacingRatio: 0.05,
+                circles: {
+                    stroke: COLOR_WHITE,
+                    strokeWidth: 1,
+                    dataLabels: {
+                        formatter: null,
+                        fontSize: FONT._16,
+                        offsetY: 0,
+                        adaptColorToBackground: true,
+                        color: COLOR_BLACK,
+                        rounding: 1,
+                        bold: true,
+                    }
+                },
+                circleLinks: {
+                    show: true,
+                    color: COLOR_GREY_LIGHT,
+                    widthRatio: 1,
+                },
+                area: {
+                    show: true,
+                    color: COLOR_GREY_LIGHT,
+                },
+                bars: {
+                    stroke: COLOR_WHITE,
+                    defaultColor: '#1f77b4',
+                    strokeWidth: 1,
+                    gapRatio: 0.2,
+                    borderRadius: 3,
+                    dataLabels: {
+                        name: {
+                            fontSize: FONT._16,
+                            color: COLOR_BLACK,
+                            bold: true,
+                            offsetX: 0
+                        },
+                        value: {
+                            formatter: null,
+                            fontSize: FONT._16,
+                            rounding: 0,
+                            bold: false,
+                            color: COLOR_BLACK,
+                            prefix: '',
+                            suffix: '',
+                            offsetX: 0
+                        }
+                    }
+                },
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -4857,6 +4947,7 @@ export function useConfig() {
         vue_ui_gizmo,
         vue_ui_stackbar,
         vue_ui_bullet,
+        vue_ui_funnel,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,
