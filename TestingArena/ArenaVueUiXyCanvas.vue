@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const crazyDs = [];
 const crazyDs2 = [];
 const crazyDs3 = []
-for (let i = 0; i < 10; i += 1) {
+for (let i = 0; i < 800; i += 1) {
     crazyDs.push(Math.random() + (Math.random() > 0.5 ? Math.random() * 100 : 0))
     crazyDs2.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -10 : -10))
     crazyDs3.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -5 : Math.random() * 5))
@@ -115,7 +115,7 @@ const model = ref([
     { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.aspectRatio', def: '12 / 9', type: 'text' },
-    { key: 'style.chart.stacked', def: true, type: 'checkbox' },
+    { key: 'style.chart.stacked', def: false, type: 'checkbox' },
     { key: 'style.chart.stackGap', def: 20, type: 'number', min: 0.1, max: 1, step: 0.1 },
     { key: 'style.chart.scale.ticks', def: 10, type: 'number', min: 2, max: 20 },
     { key: 'style.chart.scale.min', def: -100, type: 'number', min: -1000, max: 1000 },
@@ -163,13 +163,15 @@ const model = ref([
     { key: 'style.chart.grid.y.axisLabels.offsetX', def: 0, type: 'number', min: -100, max: 100 },
     { key: 'style.chart.grid.y.verticalLines.show', def: true, type: 'checkbox' },
     { key: 'style.chart.grid.y.verticalLines.color', def: '#CCCCCC', type: 'color' },
-    { key: 'style.chart.grid.y.verticalLines.hideUnderXLength', def: 20, type: 'number', min: 5, max: 40 },
+    { key: 'style.chart.grid.y.verticalLines.hideUnderXLength', def: 0, type: 'number', min: 5, max: 40 },
+    { key: 'style.chart.grid.y.verticalLines.position', def: 'middle', type: 'select', options: ['start', 'middle']},
+
     { key: 'style.chart.grid.y.timeLabels.show', def: true, type: 'checkbox' },
     { key: 'style.chart.grid.y.timeLabels.fontSizeRatio', def: 0.8, type: 'number', min: 0.1, max: 2, step: 0.1 },
     { key: 'style.chart.grid.y.timeLabels.rotation', def: 0, type: 'number', min: -360, max: 360 },
     { key: 'style.chart.grid.y.timeLabels.offsetY', def: 30, type: 'number', min: -100, max: 100 },
     { key: 'style.chart.grid.y.timeLabels.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.chart.grid.y.timeLabels.modulo', def: 6, type: 'number', min: 1, max: 100},
+    { key: 'style.chart.grid.y.timeLabels.modulo', def: 8, type: 'number', min: 1, max: 100},
     { key: 'style.chart.grid.x.showAxis', def: true, type: 'checkbox' },
     { key: 'style.chart.grid.x.axisName', def: 'X AXIS', type: 'text' },
     { key: 'style.chart.grid.x.axisColor', def: '#1A1A1A', type: 'color' },

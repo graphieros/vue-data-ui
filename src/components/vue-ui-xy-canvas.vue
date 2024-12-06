@@ -462,6 +462,22 @@ function setupChart() {
                     }
                 );
             }
+        } else if(FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) >= FINAL_CONFIG.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
+            for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
+
+                if(i % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo) === 0) {
+                    line(
+                        ctx.value,
+                        [
+                            { x: drawingArea.value.left + (drawingArea.value.slot * (i - slicer.value.start)) + (drawingArea.value.slot / 2), y: drawingArea.value.top },
+                            { x: drawingArea.value.left + (drawingArea.value.slot * (i - slicer.value.start)) + (drawingArea.value.slot / 2), y: drawingArea.value.bottom }
+                        ],
+                        {
+                            color: FINAL_CONFIG.value.style.chart.grid.y.verticalLines.color
+                        }
+                    );
+                }
+            }
         }
         // UNSTACKED
 
@@ -576,6 +592,7 @@ function setupChart() {
 
         if (FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
             formattedDataset.value.forEach((ds) => {
+                
                 for (let k = 0; k < (slicer.value.end - slicer.value.start) + 1; k += 1) {
                     line(
                         ctx.value,
@@ -593,6 +610,31 @@ function setupChart() {
                             color: FINAL_CONFIG.value.style.chart.grid.y.verticalLines.color
                         }
                     );
+                }
+            });
+        } else if (FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) >= FINAL_CONFIG.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
+            formattedDataset.value.forEach((ds) => {
+                
+                for (let k = slicer.value.start; k < slicer.value.end; k += 1) {
+
+                    if(k % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo) === 0) {
+                        line(
+                            ctx.value,
+                            [
+                                { 
+                                    x: drawingArea.value.left + (drawingArea.value.slot * (k - slicer.value.start)) + (drawingArea.value.slot / 2),
+                                    y: drawingArea.value.bottom - ds.yOffset - ds.individualHeight
+                                },
+                                {
+                                    x: drawingArea.value.left + (drawingArea.value.slot * (k - slicer.value.start)) + (drawingArea.value.slot / 2),
+                                    y: drawingArea.value.bottom - ds.yOffset
+                                }
+                            ],
+                            {
+                                color: FINAL_CONFIG.value.style.chart.grid.y.verticalLines.color
+                            }
+                        );
+                    }
                 }
             });
         }

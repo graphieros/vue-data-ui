@@ -4949,6 +4949,7 @@ declare module 'vue-data-ui' {
                             show?: boolean;
                             color?: string;
                             hideUnderXLength?: number;
+                            position?: "start" | "middle";
                         };
                         timeLabels?: {
                             show?: boolean;
