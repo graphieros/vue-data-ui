@@ -3573,7 +3573,9 @@ export function useConfig() {
                 stacked: false,
                 stackGap: 20,
                 scale: {
-                    ticks: 10
+                    ticks: 10,
+                    min: null,
+                    max: null,
                 },
                 zoom: ZOOM,
                 selector: {
