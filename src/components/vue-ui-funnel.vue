@@ -99,6 +99,7 @@ const noTitle = ref(null);
 const source = ref(null);
 const chartTitle = ref(null);
 const resizeObserver = ref(null);
+const loaded = ref(false);
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -166,7 +167,11 @@ const formattedDataset = computed(() => {
             color: ds.color ? convertColorToHex(ds.color) : lightenHexColor(FINAL_CONFIG.value.style.chart.bars.defaultColor, (i / props.dataset.length)),
         }
     })
-})
+});
+
+setTimeout(() => {
+    loaded.value = true;
+}, formattedDataset.value.length * 150)
 
 function setDrawingArea() {
     const left = FINAL_CONFIG.value.style.chart.padding.left;
@@ -359,6 +364,7 @@ defineExpose({
 <template>
     <div ref="funnelChart" :class="`vue-ui-funnel ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height:100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`funnel_${uid}`">
 
+        {{ loaded }}
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :parent="funnelChart"
@@ -457,7 +463,7 @@ defineExpose({
                 :stroke-width="12 * FINAL_CONFIG.style.chart.circleLinks.widthRatio"
                 stroke-linecap="round"
                 :class="{
-                    'animated': FINAL_CONFIG.useCssAnimation
+                    'animated': FINAL_CONFIG.useCssAnimation && !loaded
                 }"
                 :style="{
                     strokeDasharray: FINAL_CONFIG.useCssAnimation ? drawingArea.height : 0,
@@ -471,7 +477,7 @@ defineExpose({
                 :stroke="FINAL_CONFIG.style.chart.circles.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth"
                 :class="{
-                    'animated': FINAL_CONFIG.useCssAnimation
+                    'animated': FINAL_CONFIG.useCssAnimation && !loaded
                 }"
                 :style="{
                     animationDelay: `${150 * i}ms`
@@ -487,7 +493,7 @@ defineExpose({
                 :fill="FINAL_CONFIG.style.chart.circles.dataLabels.adaptColorToBackground ? adaptColorToBackground(datapoint.color) : FINAL_CONFIG.style.chart.circles.dataLabels.color"
                 :font-weight="FINAL_CONFIG.style.chart.circles.dataLabels.bold ? 'bold' : 'normal'"
                 :class="{
-                    'animated': FINAL_CONFIG.useCssAnimation
+                    'animated': FINAL_CONFIG.useCssAnimation && !loaded
                 }"
                 :style="{
                     animationDelay: `${150 * i}ms`
@@ -512,7 +518,7 @@ defineExpose({
                 :points="funnelArea" 
                 :fill="`url(#funnel_area_${uid})`"
                 :class="{
-                    'animated': FINAL_CONFIG.useCssAnimation
+                    'animated': FINAL_CONFIG.useCssAnimation && !loaded
                 }"
                 :style="{
                     transition: FINAL_CONFIG.useCssAnimation ? `all ${150 * formattedDataset.length}ms ease-in` : 'none'
@@ -526,7 +532,7 @@ defineExpose({
                 :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
                 :rx="FINAL_CONFIG.style.chart.bars.borderRadius"
                 :class="{
-                    'animated': FINAL_CONFIG.useCssAnimation
+                    'animated': FINAL_CONFIG.useCssAnimation && !loaded
                 }"
                 :style="{
                     animationDelay: `${150 * i}ms`
@@ -542,7 +548,7 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.bars.dataLabels.name.color"
                     :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.name.bold ? 'bold' : 'normal'"
                     :class="{
-                        'animated': FINAL_CONFIG.useCssAnimation
+                        'animated': FINAL_CONFIG.useCssAnimation && !loaded
                     }"
                     :style="{
                         animationDelay: `${150 * i}ms`
@@ -558,7 +564,7 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.bars.dataLabels.value.color"
                     :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.value.bold ? 'bold' : 'normal'"
                     :class="{
-                        'animated': FINAL_CONFIG.useCssAnimation
+                        'animated': FINAL_CONFIG.useCssAnimation && !loaded
                     }"
                     :style="{
                         animationDelay: `${150 * i}ms`

@@ -54,7 +54,7 @@ const model = ref([
 
     { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 200 },
     { key: 'style.chart.padding.right', def: 128, type: 'number', min: 0, max: 200 },
-    { key: 'style.chart.padding.bottom', def: 12, type: 'number', min: 0, max: 200 },
+    { key: 'style.chart.padding.bottom', def: 24, type: 'number', min: 0, max: 200 },
     { key: 'style.chart.padding.left', def: 24, type: 'number', min: 0, max: 200 },
 
     { key: 'style.chart.barCircleSpacingRatio', def: 0.05, type: 'range', min: 0, max: 0.5, step: 0.01},
