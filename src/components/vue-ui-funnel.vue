@@ -1,22 +1,30 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
     applyDataLabel,
     convertColorToHex,
+    createCsvContent,
     createUid, 
     dataLabel,
+    downloadCsv,
     error, 
     getMissingDatasetAttributes, 
     lightenHexColor, 
     objectIsEmpty, 
-    palette,
     XMLNS,
 } from "../lib";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import Title from "../atoms/Title.vue";
+import UserOptions from "../atoms/UserOptions.vue";
+import PenAndPaper from "../atoms/PenAndPaper.vue";
+import DataTable from "../atoms/DataTable.vue";
+import Accordion from "./vue-ui-accordion.vue";
+import { throttle } from "../canvas-lib";
+import { useResponsive } from "../useResponsive";
+import themes from "../themes.json";
 
 const { vue_ui_funnel: DEFAULT_CONFIG } = useConfig();
 
@@ -39,7 +47,7 @@ const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 });
 
-onMounted(prepareChart)
+onMounted(prepareChart);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -64,12 +72,33 @@ function prepareChart() {
         });
     }
 
-    // TODO: responsive
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: funnelChart.value,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                source: source.value,
+                noTitle: noTitle.value
+            });
+            svg.value.height = height;
+            svg.value.width = width;
+            drawingArea.value = setDrawingArea();
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(funnelChart.value.parentNode);
+    }
 }
 
 const funnelChart = ref(null);
 const uid = ref(createUid());
 const step = ref(0);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const noTitle = ref(null);
+const source = ref(null);
+const chartTitle = ref(null);
+const resizeObserver = ref(null);
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -77,7 +106,12 @@ function prepareConfig() {
         defaultConfig: DEFAULT_CONFIG
     });
     if (mergedConfig.theme) {
-        // TODO: theme
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_funnel[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+        }
     } else {
         return mergedConfig;
     }
@@ -95,10 +129,8 @@ const FINAL_CONFIG = computed({
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
     prepareChart();
-    // TODO:
-    // titleStep.value += 1;
-    // tableStep.value += 1;
-    // legendStep.value += 1;
+    titleStep.value += 1;
+    tableStep.value += 1;
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -114,10 +146,17 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
 });
 
-const svg = ref({
-    height: FINAL_CONFIG.value.style.chart.height,
-    width: FINAL_CONFIG.value.style.chart.width
-})
+const svg = computed({
+    get: () => {
+        return {
+            height: FINAL_CONFIG.value.style.chart.height,
+            width: FINAL_CONFIG.value.style.chart.width
+        }
+    },
+    set: (v) => {
+        return v
+    }
+});
 
 const formattedDataset = computed(() => {
     if(!isDataset.value) return []
@@ -129,7 +168,7 @@ const formattedDataset = computed(() => {
     })
 })
 
-const drawingArea = computed(() => {
+function setDrawingArea() {
     const left = FINAL_CONFIG.value.style.chart.padding.left;
     const top = FINAL_CONFIG.value.style.chart.padding.top;
     return {
@@ -140,20 +179,21 @@ const drawingArea = computed(() => {
         width: svg.value.width - left - FINAL_CONFIG.value.style.chart.padding.right,
         height: svg.value.height - top - FINAL_CONFIG.value.style.chart.padding.bottom
     }
-});
+}
 
+const drawingArea = ref(setDrawingArea());
 
 const barHeight = computed(() => {
-    return (drawingArea.value.height / (props.dataset.length))
-})
+    return (drawingArea.value.height / (props.dataset.length));
+});
 
 const gap = computed(() => {
-    return barHeight.value * FINAL_CONFIG.value.style.chart.bars.gapRatio
-})
+    return barHeight.value * FINAL_CONFIG.value.style.chart.bars.gapRatio;
+});
 
 const spacingRatio = computed(() => {
     return drawingArea.value.width * FINAL_CONFIG.value.style.chart.barCircleSpacingRatio;
-})
+});
 
 const datapoints = computed(() => {
     return formattedDataset.value.map((ds, i) => {
@@ -163,26 +203,26 @@ const datapoints = computed(() => {
         const width = (drawingArea.value.width - size - spacingRatio.value) * (ds.value / formattedDataset.value[0].value);
         return {
             ...ds,
-            datapointIndex: i,
-            x: drawingArea.value.left + size + spacingRatio.value, // TODO: right align option
-            y,
-            height: size,
-            width,
-            fill: ds.color,
-            r: size / 2,
             cx: drawingArea.value.left + size / 2,
             cy: y + size / 2,
-            proportion
+            datapointIndex: i,
+            fill: ds.color,
+            height: Math.max(size, 0),
+            proportion,
+            r: Math.max(size / 2, 0),
+            width: Math.max(width, 0),
+            x: drawingArea.value.left + size + spacingRatio.value,
+            y,
         }
-    })
-})
+    });
+});
 
 const funnelArea = computed(() => {
     const points = datapoints.value.map(dp => {
-        return `${dp.x + dp.width},${dp.y + ((barHeight.value - (gap.value)) / 2)}`
+        return `${dp.x + dp.width},${dp.y + ((barHeight.value - (gap.value)) / 2)}`;
     })
     return `${datapoints.value[0].x},${datapoints.value[0].y + ((barHeight.value - gap.value) / 2)} ${points.toString()} ${datapoints.value.at(-1).x},${datapoints.value.at(-1).y + ((barHeight.value - gap.value) / 2)}`;
-})
+});
 
 const circlesLink = computed(() => {
     return {
@@ -191,7 +231,7 @@ const circlesLink = computed(() => {
         x2: datapoints.value.at(-1).cx,
         y2: datapoints.value.at(-1).cy
     }
-})
+});
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -199,12 +239,134 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-const dashLen = computed(() => `${formattedDataset.value.length * 150}ms`)
+const dashLen = computed(() => `${formattedDataset.value.length * 150}ms`);
+
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+const table = computed(() => {
+    const head = formattedDataset.value.map(ds => {
+        return {
+            name: ds.name,
+            color: ds.color
+        }
+    });
+    const body = formattedDataset.value.map(ds => ds.value);
+
+    return { head, body };
+});
+
+const dataTable = computed(() => {
+    const head = [
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.percentage
+    ];
+
+    const body = table.value.head.map((h,i) => {
+        const labelValue = applyDataLabel(
+            FINAL_CONFIG.value.style.chart.bars.dataLabels.value.formatter,
+            table.value.body[i],
+            dataLabel({
+                p: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.prefix,
+                v: table.value.body[i],
+                s: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.suffix,
+                r: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.rounding
+            }),
+            { datapoint: datapoints.value[i] }
+        );
+        const labelPercentage = applyDataLabel(
+            FINAL_CONFIG.value.style.chart.circles.dataLabels.formatter,
+            datapoints.value[i].proportion * 100,
+            dataLabel({
+                v: datapoints.value[i].proportion * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.style.chart.circles.dataLabels.rounding
+            }),
+            { datapoint: datapoints.value[i] }
+        );
+
+        return [
+            { color: h.color, name: h.name },
+            labelValue,
+            labelPercentage
+        ];
+    });
+
+    const config = {
+        th: {
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
+        },
+        td: {
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
+        },
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
+    }
+
+    const colNames = [
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.value,
+        FINAL_CONFIG.value.table.columnNames.percentage
+    ];
+
+    return {
+        colNames,
+        head,
+        body,
+        config
+    }    
+})
+
+function generateCsv() {
+    nextTick(() => {
+        const labels = table.value.head.map((h,i) => {
+            return [[
+                h.name
+            ],[table.value.body[i]], [datapoints.value[i].proportion * 100]]
+        });
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[FINAL_CONFIG.value.table.columnNames.series],[FINAL_CONFIG.value.table.columnNames.value],["%"]]].concat(labels);
+
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-funnel" })
+    });
+}
+
+function getData() {
+    return formattedDataset.value;
+}
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateCsv,
+    generateImage,
+    toggleTable,
+    toggleAnnotator
+});
 
 </script>
 
 <template>
     <div ref="funnelChart" :class="`vue-ui-funnel ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height:100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`funnel_${uid}`">
+
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            :parent="funnelChart"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator"
+            @close="toggleAnnotator"
+        />
 
         <div
             ref="noTitle"
@@ -228,6 +390,55 @@ const dashLen = computed(() => `${formattedDataset.value.length * 150}ms`)
                 }"
             />
         </div>
+
+        <UserOptions
+            ref="details"
+            :key="`user_option_${step}`"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :isPrinting="isPrinting"
+            :isImaging="isImaging"
+            :uid="uid"
+            :hasTooltip="false"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasLabel="false"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :isFullscreen="isFullscreen"
+            :chartElement="funnelChart"
+            :position="FINAL_CONFIG.userOptions.position"
+            :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
+            @toggleAnnotator="toggleAnnotator"
+            @toggleFullscreen="toggleFullscreen"
+            @generatePdf="generatePdf"
+            @generateImage="generateImage"
+            @toggleTable="toggleTable"
+            @generateCsv="generateCsv"
+        >
+            <template #optionPdf v-if="$slots.optionPdf">
+                <slot name="optionPdf" />
+            </template>
+            <template #optionCsv v-if="$slots.optionCsv">
+                <slot name="optionCsv" />
+            </template>
+            <template #optionImg v-if="$slots.optionImg">
+                <slot name="optionImg" />
+            </template>
+            <template #optionTable v-if="$slots.optionTable">
+                <slot name="optionTable" />
+            </template>
+            <template v-if="$slots.optionFullscreen" #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            </template>
+        </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="funnel-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
 
@@ -270,7 +481,7 @@ const dashLen = computed(() => `${formattedDataset.value.length * 150}ms`)
             <text
                 v-for="(datapoint, i) in datapoints"
                 :x="datapoint.cx"
-                :y="datapoint.cy + FINAL_CONFIG.style.chart.circles.dataLabels.fontSize / 3"
+                :y="datapoint.cy + FINAL_CONFIG.style.chart.circles.dataLabels.fontSize / 3 + FINAL_CONFIG.style.chart.circles.dataLabels.offsetY"
                 text-anchor="middle"
                 :font-size="FINAL_CONFIG.style.chart.circles.dataLabels.fontSize"
                 :fill="FINAL_CONFIG.style.chart.circles.dataLabels.adaptColorToBackground ? adaptColorToBackground(datapoint.color) : FINAL_CONFIG.style.chart.circles.dataLabels.color"
@@ -325,7 +536,7 @@ const dashLen = computed(() => `${formattedDataset.value.length * 150}ms`)
             <g v-for="(datapoint, i) in datapoints">            
                 <text
                     :x="datapoint.x + datapoint.width + FINAL_CONFIG.style.chart.bars.dataLabels.name.offsetX + 12"
-                    :y="datapoint.cy - FINAL_CONFIG.style.chart.bars.dataLabels.name.fontSize / 2"
+                    :y="datapoint.cy - FINAL_CONFIG.style.chart.bars.dataLabels.name.fontSize / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.name.offsetY"
                     text-anchor="start"
                     :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.name.fontSize"
                     :fill="FINAL_CONFIG.style.chart.bars.dataLabels.name.color"
@@ -341,7 +552,7 @@ const dashLen = computed(() => `${formattedDataset.value.length * 150}ms`)
                 </text>
                 <text
                     :x="datapoint.x + datapoint.width + FINAL_CONFIG.style.chart.bars.dataLabels.value.offsetX + 12"
-                    :y="datapoint.cy + FINAL_CONFIG.style.chart.bars.dataLabels.value.fontSize"
+                    :y="datapoint.cy + FINAL_CONFIG.style.chart.bars.dataLabels.value.fontSize + FINAL_CONFIG.style.chart.bars.dataLabels.value.offsetY"
                     text-anchor="start"
                     :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.value.fontSize"
                     :fill="FINAL_CONFIG.style.chart.bars.dataLabels.value.color"
@@ -368,7 +579,50 @@ const dashLen = computed(() => `${formattedDataset.value.length * 150}ms`)
                     }}
                 </text>
             </g>
+
+            <slot name="svg" :svg="svg"/>
         </svg>
+
+        <div v-if="$slots.watermark" class="vue-data-ui-watermark">
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
+
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000,
+            body: {
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
+            },
+            head: {
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
+            }
+        }">
+            <template #content>            
+                <DataTable
+                    :key="`table_${tableStep}`"
+                    :colNames="dataTable.colNames"
+                    :head="dataTable.head" 
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false"
+                >
+                    <template #th="{ th }">
+                        <div v-html="th" style="display:flex;align-items:center"></div>
+                    </template>
+                    <template #td="{ td }">
+                        {{ td.name ? td.name : td }}
+                    </template>
+                </DataTable>
+            </template>
+        </Accordion>
     </div>
 </template>
 

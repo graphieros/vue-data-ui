@@ -4883,7 +4883,8 @@ export function useConfig() {
                             fontSize: FONT._16,
                             color: COLOR_BLACK,
                             bold: true,
-                            offsetX: 0
+                            offsetX: 0,
+                            offsetY: 0
                         },
                         value: {
                             formatter: null,
@@ -4893,7 +4894,8 @@ export function useConfig() {
                             color: COLOR_BLACK,
                             prefix: '',
                             suffix: '',
-                            offsetX: 0
+                            offsetX: 0,
+                            offsetY: 0
                         }
                     }
                 },

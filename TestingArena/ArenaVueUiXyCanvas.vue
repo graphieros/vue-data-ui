@@ -69,9 +69,7 @@ const dataset = ref([
     ])
 
     async function getData() {
-        setTimeout(() => {
-            return makeDs(800, 100)
-        }, 1000)
+        return makeDs(800, 100)
     }
 
 async function longpolling ()
@@ -89,9 +87,9 @@ async function longpolling ()
   }
 }
 
-onMounted(async () => {
-  longpolling();
-});
+// onMounted(async () => {
+//   longpolling();
+// });
 
 
 
