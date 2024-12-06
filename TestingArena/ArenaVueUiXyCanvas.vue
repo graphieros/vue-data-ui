@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const crazyDs = [];
 const crazyDs2 = [];
 const crazyDs3 = []
-for (let i = 0; i < 100000; i += 1) {
+for (let i = 0; i < 10; i += 1) {
     crazyDs.push(Math.random() + (Math.random() > 0.5 ? Math.random() * 100 : 0))
     crazyDs2.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -10 : -10))
     crazyDs3.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -5 : Math.random() * 5))
@@ -36,8 +36,7 @@ const dataset = ref([
             type: "bar",
             useArea: false,
             dataLabels: true,
-            scaleSteps: 2,
-            rounding: 1
+            rounding: 1,
         },
         {
             name: "S2",
@@ -47,7 +46,7 @@ const dataset = ref([
             dataLabels: true,
             smooth: false,
             rounding: 1,
-            scaleSteps: 2
+            scaleSteps: 2,
         },
         // {
         //     name: "S3",
@@ -89,6 +88,9 @@ const model = ref([
     { key: 'style.chart.stacked', def: true, type: 'checkbox' },
     { key: 'style.chart.stackGap', def: 20, type: 'number', min: 0.1, max: 1, step: 0.1 },
     { key: 'style.chart.scale.ticks', def: 10, type: 'number', min: 2, max: 20 },
+    { key: 'style.chart.scale.min', def: -100, type: 'number', min: -1000, max: 1000 },
+    { key: 'style.chart.scale.max', def: 100, type: 'number', min: -1000, max: 1000 },
+
     { key: 'style.chart.zoom.show', def: true, type: 'checkbox' },
     { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color' },
     { key: 'style.chart.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
