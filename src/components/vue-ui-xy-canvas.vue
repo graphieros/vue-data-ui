@@ -137,6 +137,13 @@ watch(() => props.config, (_newCfg) => {
     legendStep.value += 1;
 }, { deep: true });
 
+watch(() => props.dataset, () => {
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+}, { deep: true })
+
 const aspectRatio = ref(FINAL_CONFIG.value.style.chart.aspectRatio);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
