@@ -3604,7 +3604,8 @@ export function useConfig() {
                         verticalLines: {
                             show: true,
                             color: COLOR_GREY_MID,
-                            hideUnderXLength: 20
+                            hideUnderXLength: 20,
+                            position: 'middle' // 'start'
                         },
                         timeLabels: {
                             show: true,
