@@ -13,6 +13,7 @@ import {
     getMissingDatasetAttributes, 
     lightenHexColor, 
     objectIsEmpty, 
+    translateSize,
     XMLNS,
 } from "../lib";
 import { useNestedProp } from "../useNestedProp";
@@ -25,6 +26,7 @@ import Accordion from "./vue-ui-accordion.vue";
 import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
 import themes from "../themes.json";
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const { vue_ui_funnel: DEFAULT_CONFIG } = useConfig();
 
@@ -83,6 +85,30 @@ function prepareChart() {
             svg.value.height = height;
             svg.value.width = width;
             drawingArea.value = setDrawingArea();
+
+            fontSizes.value.circles = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize,
+                threshold: 10,
+                fallback: 10
+            });
+
+            fontSizes.value.names = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize,
+                threshold: 10,
+                fallback: 10
+            });
+
+            fontSizes.value.values = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize,
+                threshold: 10,
+                fallback: 10
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
@@ -132,6 +158,10 @@ watch(() => props.config, (_newCfg) => {
     prepareChart();
     titleStep.value += 1;
     tableStep.value += 1;
+    fontSizes.value.circles = FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize;
+    fontSizes.value.names = FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize;
+    fontSizes.value.values = FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize;
+
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -145,6 +175,12 @@ const hasOptionsNoTitle = computed(() => {
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
+});
+
+const fontSizes = ref({
+    circles: FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize,
+    names: FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize,
+    values: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize
 });
 
 const svg = computed({
@@ -282,7 +318,7 @@ const dataTable = computed(() => {
                 p: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.prefix,
                 v: table.value.body[i],
                 s: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.suffix,
-                r: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.rounding
+                r: FINAL_CONFIG.value.table.td.roundingValue
             }),
             { datapoint: datapoints.value[i] }
         );
@@ -292,7 +328,7 @@ const dataTable = computed(() => {
             dataLabel({
                 v: datapoints.value[i].proportion * 100,
                 s: '%',
-                r: FINAL_CONFIG.value.style.chart.circles.dataLabels.rounding
+                r: FINAL_CONFIG.value.table.td.roundingPercentage
             }),
             { datapoint: datapoints.value[i] }
         );
@@ -363,8 +399,6 @@ defineExpose({
 
 <template>
     <div ref="funnelChart" :class="`vue-ui-funnel ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height:100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`funnel_${uid}`">
-
-        {{ loaded }}
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :parent="funnelChart"
@@ -463,7 +497,7 @@ defineExpose({
                 :stroke-width="12 * FINAL_CONFIG.style.chart.circleLinks.widthRatio"
                 stroke-linecap="round"
                 :class="{
-                    'animated': FINAL_CONFIG.useCssAnimation && !loaded
+                    'animated': FINAL_CONFIG.useCssAnimation
                 }"
                 :style="{
                     strokeDasharray: FINAL_CONFIG.useCssAnimation ? drawingArea.height : 0,
@@ -487,9 +521,9 @@ defineExpose({
             <text
                 v-for="(datapoint, i) in datapoints"
                 :x="datapoint.cx"
-                :y="datapoint.cy + FINAL_CONFIG.style.chart.circles.dataLabels.fontSize / 3 + FINAL_CONFIG.style.chart.circles.dataLabels.offsetY"
+                :y="datapoint.cy + fontSizes.circles / 3 + FINAL_CONFIG.style.chart.circles.dataLabels.offsetY"
                 text-anchor="middle"
-                :font-size="FINAL_CONFIG.style.chart.circles.dataLabels.fontSize"
+                :font-size="fontSizes.circles"
                 :fill="FINAL_CONFIG.style.chart.circles.dataLabels.adaptColorToBackground ? adaptColorToBackground(datapoint.color) : FINAL_CONFIG.style.chart.circles.dataLabels.color"
                 :font-weight="FINAL_CONFIG.style.chart.circles.dataLabels.bold ? 'bold' : 'normal'"
                 :class="{
@@ -542,9 +576,9 @@ defineExpose({
             <g v-for="(datapoint, i) in datapoints">            
                 <text
                     :x="datapoint.x + datapoint.width + FINAL_CONFIG.style.chart.bars.dataLabels.name.offsetX + 12"
-                    :y="datapoint.cy - FINAL_CONFIG.style.chart.bars.dataLabels.name.fontSize / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.name.offsetY"
+                    :y="datapoint.cy - fontSizes.names / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.name.offsetY"
                     text-anchor="start"
-                    :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.name.fontSize"
+                    :font-size="fontSizes.names"
                     :fill="FINAL_CONFIG.style.chart.bars.dataLabels.name.color"
                     :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.name.bold ? 'bold' : 'normal'"
                     :class="{
@@ -558,9 +592,9 @@ defineExpose({
                 </text>
                 <text
                     :x="datapoint.x + datapoint.width + FINAL_CONFIG.style.chart.bars.dataLabels.value.offsetX + 12"
-                    :y="datapoint.cy + FINAL_CONFIG.style.chart.bars.dataLabels.value.fontSize + FINAL_CONFIG.style.chart.bars.dataLabels.value.offsetY"
+                    :y="datapoint.cy + fontSizes.values + FINAL_CONFIG.style.chart.bars.dataLabels.value.offsetY"
                     text-anchor="start"
-                    :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.value.fontSize"
+                    :font-size="fontSizes.values"
                     :fill="FINAL_CONFIG.style.chart.bars.dataLabels.value.color"
                     :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.value.bold ? 'bold' : 'normal'"
                     :class="{
@@ -593,6 +627,21 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
+        <Skeleton
+            v-if="!isDataset"
+            :config="{
+                type: 'verticalBar',
+                style: {
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                    verticalBar: {
+                        axis: {
+                            color: '#CCCCCC'
+                        },
+                        color: '#CCCCCC'
+                    }
+                }
+            }"
+        />
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
