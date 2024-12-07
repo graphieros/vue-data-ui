@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 const dataset = ref([
     {
         name: 'Lead',
-        value: 7745
+        value: 7745.8234576
     },
     {
         name: 'Opportunity',
@@ -113,6 +113,35 @@ const config = computed(() => {
     return {
         theme: currentTheme.value,
         ...c,
+        style: {
+            ...c.style,
+            chart: {
+                ...c.style.chart,
+                circles: {
+                    ...c.style.chart.circles,
+                    dataLabels: {
+                        ...c.style.chart.circles.dataLabels,
+                        // formatter: ({ value, config }) => {
+                        //     console.log(config)
+                        //     return `CIR ${value}`
+                        // }
+                    }
+                },
+                bars: {
+                    ...c.style.chart.bars,
+                    dataLabels: {
+                        ...c.style.chart.bars.dataLabels,
+                        value: {
+                            ...c.style.chart.bars.dataLabels.value,
+                            // formatter: ({ value, config }) => {
+                            //     console.log(config)
+                            //     return `BAR ${value}`
+                            // }
+                        }
+                    }
+                }
+            }
+        }
     }
 })
 
@@ -140,7 +169,91 @@ const step = ref(0);
         <template #title>VueUiFunnel</template>
 
         <template #local>
-            <LocalVueUiFunnel :dataset="dataset" :config="config"/>
+            <LocalVueUiFunnel :dataset="dataset" :config="config">
+                <template #source>
+                    #source
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template>
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #svg="{ svg }">
+                    <g style="pointer-events: none;">
+                        <circle :cx="svg.width - 30" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                        <text :x="svg.width - 30" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    </g>
+                </template>
+            </LocalVueUiFunnel>
+        </template>
+
+        <template #VDUI-local>
+            <LocalVueDataUi component="VueUiFunnel" :dataset="dataset" :config="config">
+                <template #source>
+                    #source
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template>
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #svg="{ svg }">
+                    <g style="pointer-events: none;">
+                        <circle :cx="svg.width - 30" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                        <text :x="svg.width - 30" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    </g>
+                </template>
+            </LocalVueDataUi>
+        </template>
+
+        <template #build>
+            <VueUiFunnel :dataset="dataset" :config="config">
+                <template #source>
+                    #source
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template>
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #svg="{ svg }">
+                    <g style="pointer-events: none;">
+                        <circle :cx="svg.width - 30" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                        <text :x="svg.width - 30" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    </g>
+                </template>
+            </VueUiFunnel>
+        </template>
+
+        <template #VDUI-build>
+            <VueDataUi component="VueUiFunnel" :dataset="dataset" :config="config">
+                <template #source>
+                    #source
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template>
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #svg="{ svg }">
+                    <g style="pointer-events: none;">
+                        <circle :cx="svg.width - 30" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                        <text :x="svg.width - 30" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    </g>
+                </template>
+            </VueDataUi>
         </template>
 
         <template #knobs>

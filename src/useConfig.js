@@ -4851,7 +4851,7 @@ export function useConfig() {
                 width: 600,
                 height: 500,
                 title: TITLE,
-                padding: PADDING([12, 128, 12, 24]),
+                padding: PADDING([12, 128, 24, 24]),
                 barCircleSpacingRatio: 0.05,
                 circles: {
                     stroke: COLOR_WHITE,
