@@ -69,7 +69,8 @@ const components = {
     VueUiCarouselTable: defineAsyncComponent(() => import('./vue-ui-carousel-table.vue')),
     VueUiGizmo: defineAsyncComponent(() => import('./vue-ui-gizmo.vue')),
     VueUiStackbar: defineAsyncComponent(() => import('./vue-ui-stackbar.vue')),
-    VueUiBullet: defineAsyncComponent(() => import('./vue-ui-bullet.vue'))
+    VueUiBullet: defineAsyncComponent(() => import('./vue-ui-bullet.vue')),
+    VueUiFunnel: defineAsyncComponent(() => import('./vue-ui-funnel.vue')),
 };
 
 const componentProps = {
@@ -130,6 +131,7 @@ const componentProps = {
     VueUiGizmo: ['config', 'dataset'],
     VueUiStackbar: ['config', 'dataset'],
     VueUiBullet: ['config', 'dataset'],
+    VueUiFunnel: ['config', 'dataset'],
 };
 
 const emit = defineEmits([

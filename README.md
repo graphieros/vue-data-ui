@@ -9,7 +9,7 @@
 # vue-data-ui
 
 [![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
-[![Static Badge](https://img.shields.io/badge/components-58-blue)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-59-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -30,6 +30,7 @@ Available components
 - [VueUiDonut](https://vue-data-ui.graphieros.com/docs#vue-ui-donut)
 - [VueUiDumbbell](https://vue-data-ui.graphieros.com/docs#vue-ui-dumbbell)
 - [VueUiFlow](https://vue-data-ui.graphieros.com/docs#vue-ui-flow)
+- [VueUiFunnel](https://vue-data-ui.graphieros.com/docs#vue-ui-funnel)
 - [VueUiGalaxy](https://vue-data-ui.graphieros.com/docs#vue-ui-galaxy)
 - [VueUiGauge](https://vue-data-ui.graphieros.com/docs#vue-ui-gauge)
 - [VueUiHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-heatmap)
@@ -209,7 +210,9 @@ The svg slot also works when using the VueDataUi universal component, if the com
 
 All charts expose a #legend slot except for:
 
+- VueUiDumbbell
 - VueUiFlow
+- VueUiFunnel
 - VueUiHeatmap
 - VueUiRelationCircle
 - VueUiSparkHistogram
@@ -218,10 +221,9 @@ All charts expose a #legend slot except for:
 - VueUiSparkgauge
 - VueUiSparkline
 - VueUiThermometer
+- VueUiTimer
 - VueUiTiremarks
 - VueUiWheel
-- VueUiDumbbell
-- VueUiTimer
 
 The legend slot also works when using the VueDataUi universal component, if the component it wraps supports it.
 It is recommended to set the show legend config attribute to false, to hide the default legend.
@@ -415,7 +417,8 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiDonutEvolution`         | `VueUiDonutEvolutionDatasetItem[]`         | `VueUiDonutEvolutionConfig`         | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                | `#svg`, `#legend`, `#reset-action`, `#watermark`                                                      | ❌             | ✅     |
 | `VueUiDonut`                  | `VueUiDonutDatasetItem[]`                  | `VueUiDonutConfig`                  | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`           | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`   | ✅             | ✅     |
 | `VueUiDumbbell`               | `VueUiDumbbellDataset[]`                   | `VueUiDumbbellConfig`               | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`, `#legend`, `#watermark`                                                                       | ❌             | ✅     |
-| `VueUiFlow`                   | `VueUiFlowDatasetItem[]`                   | `VueUiFlowConfig`                   | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`,, `#watermark`                                                                                 | ❌             | ✅     |
+| `VueUiFlow`                   | `VueUiFlowDatasetItem[]`                   | `VueUiFlowConfig`                   | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`, `#watermark`                                                                                  | ❌             | ✅     |
+| `VueUiFunnel`                 | `VueUiFunnelDatasetItem[]`                 | `VueUiFunnelConfig`                 | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`, `#watermark`                                                                                  | ❌             | ✅     |
 | `VueUiGalaxy`                 | `VueUiGalaxyDatasetItem[]`                 | `VueUiGalaxyConfig`                 | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                                                 | ✅             | ✅     |
 | `VueUiGauge`                  | `VueUiGaugeDataset`                        | `VueUiGaugeConfig`                  | `generatePdf`, `generateImage`                                                                                                                          | `#svg`, `#legend`, `#watermark`                                                                       | ❌             | ✅     |
 | `VueUiHeatmap`                | `VueUiHeatmapDatasetItem[]`                | `VueUiHeatmapConfig`                | `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                                                           | `#svg`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                             | ✅             | ✅     |
@@ -549,6 +552,7 @@ User options actions available per chart:
 | VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiFlow                   | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiFunnel                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiGalaxy                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiGauge                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
 | VueUiHeatmap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
@@ -637,6 +641,7 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiDonutEvolution         | -                              |
 | VueUiDumbbell               | ✅                             |
 | VueUiFlow                   | -                              |
+| VueUiFunnel                 | ✅                             |
 | VueUiGalaxy                 | -                              |
 | VueUiGauge                  | ✅                             |
 | VueUiHeatmap                | -                              |

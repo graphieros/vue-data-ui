@@ -17,6 +17,13 @@ for (let i = 0; i < 800; i += 1) {
     crazyDs3.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -5 : Math.random() * 5))
 }
 
+function makeDs(n,m) {
+    const arr = [];
+    for (let i = 0; i < n; i += 1) {
+        arr.push(Math.random() * m)
+    }
+    return arr
+}
 
 const dataset = ref([
         {
@@ -60,13 +67,36 @@ const dataset = ref([
         // },
     ])
 
+    async function getData() {
+        return makeDs(800, 100)
+    }
+
+async function longpolling ()
+{
+  try {
+    const response = await getData();
+    dataset.value[0].series = response;
+    console.log(response)
+  }
+    catch (error) {
+    console.error('error fetching wsjtx data', error);
+  }
+  finally {
+    setTimeout(longpolling, 1);
+  }
+}
+
+// onMounted(async () => {
+//   longpolling();
+// });
 
 
-    onMounted(() => {
-    setTimeout(() => {
-        dataset.value[0].series.push(10)
-    }, 3000)
-})
+
+//     onMounted(() => {
+//     setTimeout(() => {
+//         dataset.value[0].series.push(10)
+//     }, 3000)
+// })
 
 
 const model = ref([
