@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "2.4.25",
+  "version": "2.4.26",
   "type": "module",
   "description": "A user-empowering data visualization Vue 3 components library for eloquent data storytelling",
   "keywords": [
@@ -19,6 +19,7 @@
     "donut evolution",
     "donut",
     "dumbbell",
+    "funnel",
     "galaxy",
     "gauge",
     "graph",
@@ -99,7 +100,6 @@
     "simple-git": "^3.24.0",
     "vite": "^5.4.7",
     "vitest": "^2.1.1",
-    "vue": "^3.3.4",
-    "vue-data-ui": "file:../vue-data-ui"
+    "vue": "^3.3.4"
   }
 }
