@@ -762,7 +762,7 @@ defineExpose({
         <svg 
             v-if="isDataset"
             :xmlns="XMLNS"
-            :viewBox="`0 0 ${svg.width} ${svg.height}`"
+            :viewBox="`0 0 ${svg.width < 0 ? 0.1 : svg.width} ${svg.height < 0 ? 0.1 : svg.height}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <PackageVersion />
