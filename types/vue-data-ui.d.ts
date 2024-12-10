@@ -6,8 +6,8 @@ declare module 'vue-data-ui' {
     }
 
     export const VueDataUi: DefineComponent<{
-        dataset?: VueUi3dBarDataset | VueUiAgePyramidDataset | VueUiAnnotatorDataset | Array<Array<string | number>> | VueUiChestnutDatasetRoot[] | VueUiDashboardElement[] | number | string | VueUiDonutEvolutionDatasetItem[] | VueUiDonutDatasetItem[] | VueUiGaugeDataset | VueUiHeatmapDatasetItem[] | VueUiMoleculeDatasetNode[] | VueUiMoodRadarDataset | VueUiNestedDonutsDatasetItem[] | VueUiOnionDatasetItem[] | VueUiQuadrantDatasetItem[] | VueUiRadarDataset | VueUiRatingDataset | VueUiRelationCircleDatasetItem[] | VueUiRingsDatasetItem[] | VueUiScatterDatasetItem[] | VueUiSparkbarDatasetItem[] | VueUiSparkgaugeDataset | VueUiSparkHistogramDatasetItem[] | VueUiSparklineDatasetItem[] | VueUiSparkStackbarDatasetItem[] | VueUiTableSparklineDatasetItem[] | VueUiTableDataset | VueUiThermometerDataset | VueUiTiremarksDataset | VueUiVerticalBarDatasetItem[] | VueUiWaffleDatasetItem[] | VueUiWheelDataset | VueUiXyDatasetItem[] | VueUiTreemapDatasetItem[] | VueUiQuickChartDataset | number[] | VueUiStripPlotDataset[] | VueUiWordCloudDatasetItem[] | VueUiXyCanvasDatasetItem[] | VueUiFlowDatasetItem[] | VueUiParallelCoordinatePlotDatasetItem[] | VueUiCarouselTableDataset | VueUiGizmoDataset | VueUiStackbarDatasetItem[] | VueUiBulletDataset | VueUiFunnelDatasetItem[],
-        config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackbarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig | VueUiGizmoConfig | VueUiStackbarConfig | VueUiBulletConfig | VueUiFunnelConfig;
+        dataset?: VueUi3dBarDataset | VueUiAgePyramidDataset | VueUiAnnotatorDataset | Array<Array<string | number>> | VueUiChestnutDatasetRoot[] | VueUiDashboardElement[] | number | string | VueUiDonutEvolutionDatasetItem[] | VueUiDonutDatasetItem[] | VueUiGaugeDataset | VueUiHeatmapDatasetItem[] | VueUiMoleculeDatasetNode[] | VueUiMoodRadarDataset | VueUiNestedDonutsDatasetItem[] | VueUiOnionDatasetItem[] | VueUiQuadrantDatasetItem[] | VueUiRadarDataset | VueUiRatingDataset | VueUiRelationCircleDatasetItem[] | VueUiRingsDatasetItem[] | VueUiScatterDatasetItem[] | VueUiSparkbarDatasetItem[] | VueUiSparkgaugeDataset | VueUiSparkHistogramDatasetItem[] | VueUiSparklineDatasetItem[] | VueUiSparkStackbarDatasetItem[] | VueUiTableSparklineDatasetItem[] | VueUiTableDataset | VueUiThermometerDataset | VueUiTiremarksDataset | VueUiVerticalBarDatasetItem[] | VueUiWaffleDatasetItem[] | VueUiWheelDataset | VueUiXyDatasetItem[] | VueUiTreemapDatasetItem[] | VueUiQuickChartDataset | number[] | VueUiStripPlotDataset[] | VueUiWordCloudDatasetItem[] | VueUiXyCanvasDatasetItem[] | VueUiFlowDatasetItem[] | VueUiParallelCoordinatePlotDatasetItem[] | VueUiCarouselTableDataset | VueUiGizmoDataset | VueUiStackbarDatasetItem[] | VueUiBulletDataset | VueUiFunnelDatasetItem[] | VueUiHistoryPlotDatasetItem[],
+        config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackbarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig | VueUiGizmoConfig | VueUiStackbarConfig | VueUiBulletConfig | VueUiFunnelConfig | VueUiHistoryPlotConfig;
     }>
 
     export type ChartTitle = {
@@ -133,6 +133,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiTooltipParams<TDatapoint, TSeries, TConfig, TBar = any, TLine = any, TPlot = any> = {
         seriesIndex?: number;
+        plotIndex?: number;
         series?: TSeries;
         datapoint?: TDatapoint;
         config?: TConfig;
@@ -793,7 +794,7 @@ declare module 'vue-data-ui' {
         config?: VueUiMoodRadarConfig
     }>;
 
-    export type VueUiIconName = "annotator" | "chart3dBar" | "chartAgePyramid" | "chartBar" | "chartCandlestick" | "chartChestnut" | "chartDonut" | "chartDonutEvolution" | "chartGauge" | "chartHeatmap" | "chartLine" | "chartMoodRadar" | "chartOnion" | "chartQuadrant" | "chartRadar" | "chartRelationCircle" | "chartRings" | "chartScatter" | "chartSparkHistogram" | "chartSparkStackbar" | "chartTable" | "chartThermometer" | "chartTiremarks" | "chartVerticalBar" | "chartWaffle" | "chartWheel" | "close" | "dashboard" | "digit0" | "digit1" | "digit2" | "digit3" | "digit4" | "digit5" | "digit6" | "digit7" | "digit8" | "digit9" | "excel" | "image" | "labelClose" | "labelOpen" | "menu" | "moodFlat" | "moodHappy" | "moodNeutral" | "moodSad" | "pdf" | "screenshot" | "skeleton" | "smiley" | "sort" | "spin" | "star" | "tableClose" | "tableOpen" | "chartNestedDonuts" | "chartSparkbar" | "refresh" | "circleQuestion" | "circleExclamation" | "circleCheck" | "circleCancel" | "moodLaughing" | "moodWink" | "moodEmbarrassed" | "moodSurprised" | "exitFullscreen" | "fullscreen" | "arrowRight" | "arrowTop" | "arrowBottom" | "arrowLeft" | "chartCluster" | "chartSparkline" | "legend" | "csv" | "chartGalaxy" | "kpi" | "kpiBox" | "tooltip" | "vueDataUi" | "ratio" | "func" | "settings" | "trendUp" | "trendDown" | "clipBoard" | "zoomPlus" | "zoomMinus" | "clipboardLine" | "clipboardDonut" | "clipboardBar" | "clipboardVariable" | "triangle" | "triangleFill" | "square" | "squareFill" | "diamond" | "diamondFill" | "pentagon" | "pentagonFill" | "hexagon" | "hexagonFill" | "circle" | "circleFill" | "starFill" | "numbers" | "sigma" | "mu" | "lambda" | "people" | "copy" | "accordion" | "cursor" | "trend" | "chartStripPlot" | "chartDumbbell" | "copyLeft" | "chartWordCloud" | "stack" | "unstack" | "chartFlow" | "chartParallelCoordinatePlot" | "tooltipDisabled" | "pause" | "play" | "stop" | "restart" | "lap" | "carouselTable" | "battery" | "chartStackbar" | "starFace" | "chartBullet" | "trash" | "annotatorDisabled" | "palette" | "colorPicker" | "boxes" | "chartFunnel";
+    export type VueUiIconName = "annotator" | "chart3dBar" | "chartAgePyramid" | "chartBar" | "chartCandlestick" | "chartChestnut" | "chartDonut" | "chartDonutEvolution" | "chartGauge" | "chartHeatmap" | "chartLine" | "chartMoodRadar" | "chartOnion" | "chartQuadrant" | "chartRadar" | "chartRelationCircle" | "chartRings" | "chartScatter" | "chartSparkHistogram" | "chartSparkStackbar" | "chartTable" | "chartThermometer" | "chartTiremarks" | "chartVerticalBar" | "chartWaffle" | "chartWheel" | "close" | "dashboard" | "digit0" | "digit1" | "digit2" | "digit3" | "digit4" | "digit5" | "digit6" | "digit7" | "digit8" | "digit9" | "excel" | "image" | "labelClose" | "labelOpen" | "menu" | "moodFlat" | "moodHappy" | "moodNeutral" | "moodSad" | "pdf" | "screenshot" | "skeleton" | "smiley" | "sort" | "spin" | "star" | "tableClose" | "tableOpen" | "chartNestedDonuts" | "chartSparkbar" | "refresh" | "circleQuestion" | "circleExclamation" | "circleCheck" | "circleCancel" | "moodLaughing" | "moodWink" | "moodEmbarrassed" | "moodSurprised" | "exitFullscreen" | "fullscreen" | "arrowRight" | "arrowTop" | "arrowBottom" | "arrowLeft" | "chartCluster" | "chartSparkline" | "legend" | "csv" | "chartGalaxy" | "kpi" | "kpiBox" | "tooltip" | "vueDataUi" | "ratio" | "func" | "settings" | "trendUp" | "trendDown" | "clipBoard" | "zoomPlus" | "zoomMinus" | "clipboardLine" | "clipboardDonut" | "clipboardBar" | "clipboardVariable" | "triangle" | "triangleFill" | "square" | "squareFill" | "diamond" | "diamondFill" | "pentagon" | "pentagonFill" | "hexagon" | "hexagonFill" | "circle" | "circleFill" | "starFill" | "numbers" | "sigma" | "mu" | "lambda" | "people" | "copy" | "accordion" | "cursor" | "trend" | "chartStripPlot" | "chartDumbbell" | "copyLeft" | "chartWordCloud" | "stack" | "unstack" | "chartFlow" | "chartParallelCoordinatePlot" | "tooltipDisabled" | "pause" | "play" | "stop" | "restart" | "lap" | "carouselTable" | "battery" | "chartStackbar" | "starFace" | "chartBullet" | "trash" | "annotatorDisabled" | "palette" | "colorPicker" | "boxes" | "chartFunnel" | "chartHistoryPlot";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName,
@@ -4122,17 +4123,20 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSkeletonConfig = {
-        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution" | "tiremarks" | "molecule" | "relationCircle" | "thermometer" | "sparkbar" | "sparkStackbar" | "sparkHistogram" | "bar3d" | "galaxy" | "treemap" | "stripPlot" | "dumbbell" | "parallelCoordinatePlot" | "flow" | "bullet";
+        type?: "bar" | "chestnut" | "donut" | "gauge" | "line" | "onion" | "quadrant" | "radar" | "rating" | "table" | "verticalBar" | "waffle" | "heatmap" | "candlestick" | "pyramid" | "wheel" | "rings" | "donutEvolution" | "tiremarks" | "molecule" | "relationCircle" | "thermometer" | "sparkbar" | "sparkStackbar" | "sparkHistogram" | "bar3d" | "galaxy" | "treemap" | "stripPlot" | "dumbbell" | "parallelCoordinatePlot" | "flow" | "bullet" | "historyPlot";
         style?: {
             backgroundColor?: string;
             color?: string;
             animated?: boolean;
+            historyPlot?: {
+                color?: string;
+            };
             bullet?: {
                 color?: string;
-            },
+            };
             flow?: {
                 color?: string;
-            },
+            };
             parallelCoordinatePlot?: {
                 color?: string;
             };
@@ -5731,14 +5735,183 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiFunnel:DefineComponent<{
+    export const VueUiFunnel: DefineComponent<{
         dataset: VueUiFunnelDatasetItem[],
         config?: VueUiFunnelConfig
     }>
 
-    export type VueDataUiConfig = VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutConfig | VueUiDonutEvolutionConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkHistogramConfig | VueUiSparkStackbarConfig | VueUiSparkbarConfig | VueUiSparklineConfig | VueUiTableConfig | VueUiTableSparklineConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiNestedDonutsConfig | VueUiGalaxyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiTableHeatmapConfig | VueUiAccordionConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig | VueUiGizmoConfig | VueUiStackbarConfig | VueUiBulletConfig | VueUiFunnelConfig;
+    export type VueUiHistoryPlotDatasetItem = {
+        name: string;
+        values: Array<{ x: number; y: number; label?: string; }>;
+        color?: string;
+    }
 
-    export type VueDataUiConfigKey = "vue_ui_3d_bar" | "vue_ui_age_pyramid" | "vue_ui_annotator" | "vue_ui_candlestick" | "vue_ui_chestnut" | "vue_ui_dashboard" | "vue_ui_digits" | "vue_ui_donut" | "vue_ui_donut_evolution" | "vue_ui_gauge" | "vue_ui_heatmap" | "vue_ui_mini_loader" | "vue_ui_molecule" | "vue_ui_mood_radar" | "vue_ui_onion" | "vue_ui_quadrant" | "vue_ui_radar" | "vue_ui_rating" | "vue_ui_relation_circle" | "vue_ui_rings" | "vue_ui_scatter" | "vue_ui_screenshot" | "vue_ui_skeleton" | "vue_ui_smiley" | "vue_ui_sparkhistogram" | "vue_ui_sparkstackbar" | "vue_ui_sparkbar" | "vue_ui_sparkline" | "vue_ui_table" | "vue_ui_table_sparkline" | "vue_ui_thermometer" | "vue_ui_tiremarks" | "vue_ui_vertical_bar" | "vue_ui_waffle" | "vue_ui_wheel" | "vue_ui_xy" | "vue_ui_nested_donuts" | "vue_ui_galaxy" | "vue_ui_kpi" | "vue_ui_treemap" | "vue_ui_table_heatmap" | "vue_ui_accordion" | "vue_ui_quick_chart" | "vue_ui_cursor" | "vue_ui_spark_trend" | "vue_ui_strip_plot" | "vue_ui_dumbbell" | "vue_ui_word_cloud" | "vue_ui_xy_canvas" | "vue_ui_flow" | "vue_ui_parallel_coordinate_plot" | "vue_ui_timer" | "vue_ui_carousel_table" | "vue_ui_gizmo" | "vue_ui_stackbar" | "vue_ui_bullet" | "vue_ui_funnel";
+    export type VueUiHistoryPlotConfig = {
+        responsive?: boolean;
+        theme?: Theme;
+        customPalette?: string[];
+        useCssAnimation?: boolean;
+        userOptions?: ChartUserOptions;
+        table?: {
+            show?: boolean;
+            responsiveBreakpoint?: number;
+            th?: ChartTableCell;
+            td?: ChartTableCell;
+            columnNames?: {
+                series?: string;
+                datapoint?: string;
+                x?: string;
+                y?: string;
+            };
+        };
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                height?: number;
+                width?: number;
+                padding?: ChartPadding;
+                grid?: {
+                    xAxis?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                    horizontalLines?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                    yAxis?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                    verticalLines?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                };
+                axes?: {
+                    x?: {
+                        scaleMin?: number | null;
+                        scaleMax?: number | null;
+                        ticks?: number;
+                        labels?: {
+                            show?: boolean;
+                            fontSize?: number;
+                            color?: string;
+                            bold?: boolean;
+                            rounding?: number;
+                            offsetY?: number;
+                            rotation?: number;
+                            formatter?: Formatter;
+                            prefix?: string;
+                            suffix?: string;
+                        };
+                        name?: {
+                            text?: string;
+                            fontSize?: number;
+                            offsetX?: number;
+                            offsetY?: number;
+                            bold?: boolean;
+                            color?: string;
+                        };
+                    };
+                    y?: {
+                        scaleMin?: number | null;
+                        scaleMax?: number | null;
+                        ticks?: number;
+                        labels?: {
+                            show?: boolean;
+                            fontSize?: number;
+                            color?: string;
+                            bold?: boolean;
+                            rounding?: number;
+                            offsetX?: number;
+                            formatter?: Formatter;
+                            prefix?: string;
+                            suffix?: string;
+                        };
+                        name?: {
+                            text?: string;
+                            fontSize?: number;
+                            offsetX?: number;
+                            offsetY?: number;
+                            bold?: boolean;
+                            color?: string;
+                        };
+                    };
+                };
+                plots?: {
+                    radius?: number;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    gradient?: {
+                        show?: boolean;
+                        intensity?: number;
+                    };
+                    indexLabels?: {
+                        show?: boolean;
+                        startAtZero?: boolean;
+                        adaptColorToBackground?: boolean;
+                        color?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                        offsetY?: number;
+                        offsetX?: number;
+                    };
+                    labels?: {
+                        show?: boolean;
+                        fontSize?: number;
+                        color?: string;
+                        bold?: boolean;
+                        offsetY?: number;
+                        offsetX?: number;
+                    };
+                };
+                paths?: {
+                    show?: boolean;
+                    strokeWidth?: number;
+                    useSerieColor?: boolean;
+                    stroke?: string;
+                };
+                legend?: ChartBaseLegend & {
+                    backgroundColor?: string;
+                };
+                title?: ChartTitle,
+                tooltip?: ChartTooltip & {
+                    customFormat?: null | ((params: VueUiTooltipParams<VueUiHistoryPlotDatapoint, VueUiHistoryPlotDatpointSeries[], VueUiHistoryPlotConfig>) => string);
+                };
+            };
+        };
+    };
+
+    export type VueUiHistoryPlotDatapoint = {
+        color: string;
+        id: string;
+        label: string;
+        seriesName: string;
+        valueX: number;
+        valueY: number;
+        x: number;
+        y: number;
+    }
+
+    export type VueUiHistoryPlotDatpointSeries = VueUiHistoryPlotDatasetItem & {
+        seriesIndex: number;
+    }
+
+    export const VueUiHistoryPlot: DefineComponent<{
+        config?: VueUiHistoryPlotConfig,
+        dataset: VueUiHistoryPlotDatasetItem[]
+    }>
+
+    export type VueDataUiConfig = VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutConfig | VueUiDonutEvolutionConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkHistogramConfig | VueUiSparkStackbarConfig | VueUiSparkbarConfig | VueUiSparklineConfig | VueUiTableConfig | VueUiTableSparklineConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiNestedDonutsConfig | VueUiGalaxyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiTableHeatmapConfig | VueUiAccordionConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig | VueUiGizmoConfig | VueUiStackbarConfig | VueUiBulletConfig | VueUiFunnelConfig | VueUiHistoryPlotConfig;
+
+    export type VueDataUiConfigKey = "vue_ui_3d_bar" | "vue_ui_age_pyramid" | "vue_ui_annotator" | "vue_ui_candlestick" | "vue_ui_chestnut" | "vue_ui_dashboard" | "vue_ui_digits" | "vue_ui_donut" | "vue_ui_donut_evolution" | "vue_ui_gauge" | "vue_ui_heatmap" | "vue_ui_mini_loader" | "vue_ui_molecule" | "vue_ui_mood_radar" | "vue_ui_onion" | "vue_ui_quadrant" | "vue_ui_radar" | "vue_ui_rating" | "vue_ui_relation_circle" | "vue_ui_rings" | "vue_ui_scatter" | "vue_ui_screenshot" | "vue_ui_skeleton" | "vue_ui_smiley" | "vue_ui_sparkhistogram" | "vue_ui_sparkstackbar" | "vue_ui_sparkbar" | "vue_ui_sparkline" | "vue_ui_table" | "vue_ui_table_sparkline" | "vue_ui_thermometer" | "vue_ui_tiremarks" | "vue_ui_vertical_bar" | "vue_ui_waffle" | "vue_ui_wheel" | "vue_ui_xy" | "vue_ui_nested_donuts" | "vue_ui_galaxy" | "vue_ui_kpi" | "vue_ui_treemap" | "vue_ui_table_heatmap" | "vue_ui_accordion" | "vue_ui_quick_chart" | "vue_ui_cursor" | "vue_ui_spark_trend" | "vue_ui_strip_plot" | "vue_ui_dumbbell" | "vue_ui_word_cloud" | "vue_ui_xy_canvas" | "vue_ui_flow" | "vue_ui_parallel_coordinate_plot" | "vue_ui_timer" | "vue_ui_carousel_table" | "vue_ui_gizmo" | "vue_ui_stackbar" | "vue_ui_bullet" | "vue_ui_funnel" | "vue_ui_history_plot";
 
     export const getVueDataUiConfig: () => VueDataUiConfig;
 }
