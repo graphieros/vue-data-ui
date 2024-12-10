@@ -61,7 +61,8 @@ import {
     VueUiKpi,
     VueUiStackbar,
     VueUiBullet,
-    VueUiFunnel
+    VueUiFunnel,
+    VueUiHistoryPlot
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -126,5 +127,6 @@ app.component("VueUiKpi", VueUiKpi);
 app.component("VueUiStackbar", VueUiStackbar);
 app.component("VueUiBullet", VueUiBullet);
 app.component("VueUiFunnel", VueUiFunnel);
+app.component("VueUiHistoryPlot", VueUiHistoryPlot);
 
 app.mount('#app');
