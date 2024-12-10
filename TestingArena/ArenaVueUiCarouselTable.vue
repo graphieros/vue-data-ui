@@ -34,6 +34,7 @@ const model = ref([
     { key: 'caption.style.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
 
     { key: 'scrollbar.showOnlyOnHover', def: false, type: 'checkbox'},
+    { key: 'scrollbar.hide', def: false, type: 'checkbox'},
 
     { key: 'thead.tr.style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'thead.tr.style.boxShadow', def: '0px 6px 12px -6px #1A1A1A50' },
