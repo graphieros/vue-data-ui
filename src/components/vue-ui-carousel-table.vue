@@ -355,7 +355,7 @@ defineExpose({
                 overflow: 'auto',
                 fontFamily: FINAL_CONFIG.fontFamily
             }"
-            :class="{ 'vue-ui-responsive' : isResponsive, 'is-playing': !isPaused && FINAL_CONFIG.scrollbar.showOnlyOnHover }"
+            :class="{ 'vue-ui-responsive' : isResponsive, 'is-playing': FINAL_CONFIG.scrollbar.hide || (!isPaused && FINAL_CONFIG.scrollbar.showOnlyOnHover) }"
             @mouseover="pauseOnHover()"
             @mouseleave="resumeAnimation()"
             @touchstart="pauseOnTouch()"

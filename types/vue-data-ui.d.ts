@@ -5342,6 +5342,7 @@ declare module 'vue-data-ui' {
         };
         scrollbar?: {
             showOnlyOnHover?: boolean;
+            hide?: boolean;
         };
         thead?: {
             tr?: {
