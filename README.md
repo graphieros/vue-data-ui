@@ -9,7 +9,7 @@
 # vue-data-ui
 
 [![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
-[![Static Badge](https://img.shields.io/badge/components-59-blue)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-60-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -34,6 +34,7 @@ Available components
 - [VueUiGalaxy](https://vue-data-ui.graphieros.com/docs#vue-ui-galaxy)
 - [VueUiGauge](https://vue-data-ui.graphieros.com/docs#vue-ui-gauge)
 - [VueUiHeatmap](https://vue-data-ui.graphieros.com/docs#vue-ui-heatmap)
+- [VueUiHistoryPlot](https://vue-data-ui.graphieros.com/docs#vue-ui-history-plot)
 - [VueUiMolecule](https://vue-data-ui.graphieros.com/docs#vue-ui-molecule)
 - [VueUiMoodRadar](https://vue-data-ui.graphieros.com/docs#vue-ui-mood-radar)
 - [VueUiNestedDonuts](https://vue-data-ui.graphieros.com/docs#vue-ui-nested-donuts)
@@ -259,12 +260,13 @@ The following charts bear these slots:
 - VueUiDonut
 - VueUiGalaxy
 - VueUiHeatmap
+- VueUiHistoryPlot
 - VueUiMolecule
 - VueUiNestedDonuts
 - VueUiOnion
+- VueUiParallelCoordinatePlot
 - VueUiQuadrant
 - VueUiQuickChart
-- VueUiParallelCoordinatePlot
 - VueUiRadar
 - VueUiRings
 - VueUiScatter
@@ -272,10 +274,10 @@ The following charts bear these slots:
 - VueUiStackbar
 - VueUiTreemap
 - VueUiVerticalBar
-- VueUiXy \*
-- VueUiwaffle
 - VueUiWordCloud
+- VueUiXy \*
 - VueUiXyCanvas
+- VueUiwaffle
 
 \* VueUiXy slots specifically expose the following additional attributes:
 
@@ -422,6 +424,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiGalaxy`                 | `VueUiGalaxyDatasetItem[]`                 | `VueUiGalaxyConfig`                 | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                                                 | ✅             | ✅     |
 | `VueUiGauge`                  | `VueUiGaugeDataset`                        | `VueUiGaugeConfig`                  | `generatePdf`, `generateImage`                                                                                                                          | `#svg`, `#legend`, `#watermark`                                                                       | ❌             | ✅     |
 | `VueUiHeatmap`                | `VueUiHeatmapDatasetItem[]`                | `VueUiHeatmapConfig`                | `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                                                           | `#svg`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                             | ✅             | ✅     |
+| `VueUiHistoryPlot`            | `VueUiHistoryPlotDatasetItem[]`            | `VueUiHistoryPlotConfig`            | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
 | `VueUiMolecule`               | `VueUiMoleculeDatasetNode[]`               | `VueUiMoleculeConfig`               | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`                                                | `#svg`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                             | ✅             | ✅     |
 | `VueUiMoodRadar`              | `VueUiMoodRadarDataset`                    | `VueUiMoodRadarConfig`              | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`, `#legend`, `#watermark`                                                                       | ❌             | ✅     |
 | `VueUiNestedDonuts`           | `VueUiNestedDonutsDatasetItem[]`           | `VueUiNestedDonutsConfig`           | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
@@ -556,6 +559,7 @@ User options actions available per chart:
 | VueUiGalaxy                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiGauge                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
 | VueUiHeatmap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
+| VueUiHistoryPlot            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiMolecule               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
 | VueUiMoodRadar              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiNestedDonuts           | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
@@ -598,6 +602,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiFlow
 - VueUiGalaxy
 - VueUiGauge
+- VueUiHistoryPlot
 - VueUiMolecule
 - VueUiNestedDonuts
 - VueUiOnion
@@ -645,6 +650,7 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiGalaxy                 | -                              |
 | VueUiGauge                  | ✅                             |
 | VueUiHeatmap                | -                              |
+| VueUiHistoryPlot            | ✅                             |
 | VueUiMolecule               | -                              |
 | VueUiMoodRadar              | -                              |
 | VueUiNestedDonuts           | ✅                             |

@@ -4223,6 +4223,9 @@ export function useConfig() {
             color: COLOR_BLACK,
             maxHeight: 500,
             animated: true,
+            historyPlot: {
+                color: COLOR_GREY_LIGHT
+            },
             bullet: {
                 color: COLOR_GREY_LIGHT
             },
@@ -4910,6 +4913,160 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_history_plot = {
+        responsive: false,
+        theme: '',
+        customPalette: [],
+        useCssAnimation: true,
+        userOptions: USER_OPTIONS({
+            tooltip: true,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: false,
+            fullscreen: true,
+            stack: false,
+            annotator: true
+        }),
+        table: {
+            ...TABLE,
+            th: TABLE_TH,
+            td: {
+                ...TABLE_TD,
+                roundingValue: 0,
+            },
+            columnNames: {
+                series: 'Series',
+                datapoint:  'Datapoint',
+                x: 'x',
+                y: 'y'
+            }
+        },
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                height: 500,
+                width: 600,
+                padding: PADDING([12, 24, 48, 48]),
+                grid: {
+                    xAxis: {
+                        show: true,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 1,
+                    },
+                    horizontalLines: {
+                        show: true,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 0.6
+                    },
+                    yAxis: {
+                        show: true,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 1,
+                    },
+                    verticalLines: {
+                        show: true,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 0.6
+                    },
+                },
+                axes: {
+                    x: {
+                        scaleMin: null,
+                        scaleMax: null,
+                        ticks: 10,
+                        labels: {
+                            show: true,
+                            fontSize: FONT._16,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            rounding: 1,
+                            offsetY: 0,
+                            rotation: 0,
+                            formatter: null,
+                            prefix: '',
+                            suffix: ''
+                        },
+                        name: {
+                            text: '',
+                            fontSize: FONT._16,
+                            offsetX: 0,
+                            offsetY: 0,
+                            bold: false,
+                            color: COLOR_BLACK
+                        }
+                    },
+                    y: {
+                        scaleMin: null,
+                        scaleMax: null,
+                        ticks: 10,
+                        labels: {
+                            show: true,
+                            fontSize: FONT._16,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            rounding: 1,
+                            offsetX: 0,
+                            formatter: null,
+                            prefix: '',
+                            suffix: ''
+                        },
+                        name: {
+                            text: '',
+                            fontSize: FONT._16,
+                            offsetX: 0,
+                            offsetY: 0,
+                            bold: false,
+                            color: COLOR_BLACK
+                        }
+                    }
+                },
+                plots: {
+                    radius: 16,
+                    stroke: COLOR_WHITE,
+                    strokeWidth: 1,
+                    gradient: {
+                        show: true,
+                        intensity: 40
+                    },
+                    indexLabels: {
+                        show: true,
+                        startAtZero: false,
+                        adaptColorToBackground: true,
+                        color: COLOR_BLACK,
+                        fontSize: FONT._16,
+                        bold: false,
+                        offsetY: 0,
+                        offsetX: 0
+                    },
+                    labels: {
+                        show: true,
+                        fontSize: 10,
+                        color: COLOR_BLACK,
+                        bold: false,
+                        offsetY: 0,
+                        offsetX: 0,
+                    }
+                },
+                paths: {
+                    show: true,
+                    strokeWidth: 1.6,
+                    useSerieColor: true,
+                    stroke: COLOR_BLACK
+                },
+                legend: {
+                    ...LEGEND,
+                },
+                title: TITLE,
+                tooltip: TOOLTIP
+
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -4957,6 +5114,7 @@ export function useConfig() {
         vue_ui_stackbar,
         vue_ui_bullet,
         vue_ui_funnel,
+        vue_ui_history_plot,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,

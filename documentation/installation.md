@@ -155,6 +155,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiGalaxy`                 | `VueUiGalaxyDatasetItem[]`                 | `VueUiGalaxyConfig`                 | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                           | `#svg`, `#legend`,`#tooltip-before`, `#tooltip-after`                                                 | ✅             | ✅     |
 | `VueUiGauge`                  | `VueUiGaugeDataset`                        | `VueUiGaugeConfig`                  | `generatePdf`, `generateImage`                                                                                                                          | `#svg`, `#legend`, `#watermark`                                                                       | ❌             | ✅     |
 | `VueUiHeatmap`                | `VueUiHeatmapDatasetItem[]`                | `VueUiHeatmapConfig`                | `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                                                           | `#svg`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                             | ✅             | ✅     |
+| `VueUiHistoryPlot`            | `VueUiHistoryPlotDatasetItem[]`            | `VueUiHistoryPlotConfig`            | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
 | `VueUiMolecule`               | `VueUiMoleculeDatasetNode[]`               | `VueUiMoleculeConfig`               | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`                                                | `#svg`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                             | ✅             | ✅     |
 | `VueUiMoodRadar`              | `VueUiMoodRadarDataset`                    | `VueUiMoodRadarConfig`              | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`, `#legend`, `#watermark`                                                                       | ❌             | ✅     |
 | `VueUiNestedDonuts`           | `VueUiNestedDonutsDatasetItem[]`           | `VueUiNestedDonutsConfig`           | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`           | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                  | ✅             | ✅     |
@@ -235,6 +236,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiFlow
 - VueUiGalaxy
 - VueUiGauge
+- VueUiHistoryPlot
 - VueUiMolecule
 - VueUiNestedDonuts
 - VueUiOnion

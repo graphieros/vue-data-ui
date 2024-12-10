@@ -291,6 +291,27 @@ const ticks = computed(() => {
 
 <template>
     <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${FINAL_CONFIG.style.backgroundColor};color:${FINAL_CONFIG.style.color};display:flex;align-items:center;justify-content:center;`">
+        <template v-if="type === 'historyPlot'">
+            <svg :xmlns="XMLNS" width="100%" viewBox="0 0 612 512" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <PackageVersion />
+                <line x1="12" x2="12" y1="12" y2="500" :stroke="FINAL_CONFIG.style.historyPlot.color" stroke-width="3" stroke-linecap="round"/>
+                <line x1="12" x2="600" y1="500" y2="500" :stroke="FINAL_CONFIG.style.historyPlot.color" stroke-width="3" stroke-linecap="round"/>
+                <path d="M 80,100 300,200 400,150 560,230 360,420 230,320" fill="none" :stroke="FINAL_CONFIG.style.historyPlot.color" stroke-width="3"/>
+                <circle cx="80" cy="100" r="24" :fill="FINAL_CONFIG.style.historyPlot.color" :stroke="FINAL_CONFIG.style.backgroundColor" stroke-width="3" />
+                <text x="80" y="108" :fill="FINAL_CONFIG.style.backgroundColor" font-size="24" text-anchor="middle">1</text>
+                <circle cx="300" cy="200" r="24" :fill="FINAL_CONFIG.style.historyPlot.color" :stroke="FINAL_CONFIG.style.backgroundColor" stroke-width="3" />
+                <text x="300" y="208" :fill="FINAL_CONFIG.style.backgroundColor" font-size="24" text-anchor="middle">2</text>
+                <circle cx="400" cy="150" r="24" :fill="FINAL_CONFIG.style.historyPlot.color" :stroke="FINAL_CONFIG.style.backgroundColor" stroke-width="3" />
+                <text x="400" y="158" :fill="FINAL_CONFIG.style.backgroundColor" font-size="24" text-anchor="middle">3</text>
+                <circle cx="560" cy="230" r="24" :fill="FINAL_CONFIG.style.historyPlot.color" :stroke="FINAL_CONFIG.style.backgroundColor" stroke-width="3" />
+                <text x="560" y="238" :fill="FINAL_CONFIG.style.backgroundColor" font-size="24" text-anchor="middle">4</text>
+                <circle cx="360" cy="420" r="24" :fill="FINAL_CONFIG.style.historyPlot.color" :stroke="FINAL_CONFIG.style.backgroundColor" stroke-width="3" />
+                <text x="360" y="428" :fill="FINAL_CONFIG.style.backgroundColor" font-size="24" text-anchor="middle">5</text>
+                <circle cx="230" cy="320" r="24" :fill="FINAL_CONFIG.style.historyPlot.color" :stroke="FINAL_CONFIG.style.backgroundColor" stroke-width="3" />
+                <text x="230" y="328" :fill="FINAL_CONFIG.style.backgroundColor" font-size="24" text-anchor="middle">6</text>
+            </svg>
+        </template>
+
         <template v-if="type === 'flow'">
             <svg :xmlns="XMLNS" width="100%" viewBox="0 0 80 60" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
                 <PackageVersion />

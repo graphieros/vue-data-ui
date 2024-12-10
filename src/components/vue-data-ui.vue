@@ -71,6 +71,7 @@ const components = {
     VueUiStackbar: defineAsyncComponent(() => import('./vue-ui-stackbar.vue')),
     VueUiBullet: defineAsyncComponent(() => import('./vue-ui-bullet.vue')),
     VueUiFunnel: defineAsyncComponent(() => import('./vue-ui-funnel.vue')),
+    VueUiHistoryPlot: defineAsyncComponent(() => import('./vue-ui-history-plot.vue')),
 };
 
 const componentProps = {
@@ -132,6 +133,7 @@ const componentProps = {
     VueUiStackbar: ['config', 'dataset'],
     VueUiBullet: ['config', 'dataset'],
     VueUiFunnel: ['config', 'dataset'],
+    VueUiHistoryPlot: ['config', 'dataset'],
 };
 
 const emit = defineEmits([

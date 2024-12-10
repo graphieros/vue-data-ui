@@ -1,4 +1,227 @@
 {
+    "vue_ui_history_plot": {
+        "default": {},
+        "hack": {
+            "table": {
+                "th": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99" 
+                },
+                "td": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#AACCAA" 
+                }
+            },
+            "style": {
+                "chart": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#2A2F2A",
+                        "color": "#AACCAA",
+                        "borderColor": "#66CC66"
+                    },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
+                    "grid": {
+                        "xAxis": {
+                            "stroke": "#5F6A5F"
+                        },
+                        "horizontalLines": {
+                            "stroke": "#3A3A3A"
+                        },
+                        "yAxis": {
+                            "stroke": "#5F6A5F"
+                        },
+                        "verticalLines": {
+                            "stroke": "#3A3A3A"
+                        }
+                    },
+                    "axes": {
+                        "x": {
+                            "labels": {
+                                "color": "#5F6A5F"
+                            },
+                            "name": {
+                                "color": "#5F6A5F"
+                            }
+                        },
+                        "y": {
+                            "labels": {
+                                "color": "#5F6A5F"
+                            },
+                            "name": {
+                                "color": "#5F6A5F"
+                            }
+                        }
+                    },
+                    "plots": {
+                        "stroke": "#1A1A1A",
+                        "gradient": {
+                            "intensity": 20
+                        },
+                        "labels": {
+                            "color": "#5F6A5F"
+                        }
+                    }
+                }
+            }
+        },
+        "zen": {
+            "table": {
+                "th": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                },
+                "td": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8F837A" 
+                }
+            },
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
+                    "grid": {
+                        "xAxis": {
+                            "stroke": "#8F837A"
+                        },
+                        "horizontalLines": {
+                            "show": false
+                        },
+                        "yAxis": {
+                            "stroke": "#8F837A"
+                        },
+                        "verticalLines": {
+                            "show": false
+                        }
+                    },
+                    "axes": {
+                        "x": {
+                            "labels": {
+                                "color": "#8F837A"
+                            },
+                            "name": {
+                                "color": "#8F837A"
+                            }
+                        },
+                        "y": {
+                            "labels": {
+                                "color": "#8F837A"
+                            },
+                            "name": {
+                                "color": "#8F837A"
+                            }
+                        }
+                    },
+                    "plots": {
+                        "stroke": "#fbfafa",
+                        "gradient": {
+                            "intensity": 20
+                        },
+                        "labels": {
+                            "color": "#8F837A"
+                        }
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "table": {
+                "th": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                },
+                "td": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C" 
+                }
+            },
+            "style": {
+                "chart": {
+                    "backgroundColor":"#f6f6fb",
+                    "color": "#50606C",
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
+                    },
+                    "grid": {
+                        "xAxis": {
+                            "stroke": "#829C98"
+                        },
+                        "horizontalLines": {
+                            "stroke": "#92B0AB"
+                        },
+                        "yAxis": {
+                            "stroke": "#829C98"
+                        },
+                        "verticalLines": {
+                            "stroke": "#92B0AB"
+                        }
+                    },
+                    "axes": {
+                        "x": {
+                            "labels": {
+                                "color": "#50606C"
+                            },
+                            "name": {
+                                "color": "#50606C"
+                            }
+                        },
+                        "y": {
+                            "labels": {
+                                "color": "#50606C"
+                            },
+                            "name": {
+                                "color": "#50606C"
+                            }
+                        }
+                    },
+                    "plots": {
+                        "stroke": "#50606C",
+                        "gradient": {
+                            "intensity": 20
+                        },
+                        "labels": {
+                            "color": "#50606C"
+                        }
+                    }
+                }
+            }
+        }
+    },
     "vue_ui_funnel": {
         "default": {},
         "hack": {
