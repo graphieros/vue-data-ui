@@ -4664,6 +4664,7 @@ export function useConfig() {
         },
         scrollbar: {
             showOnlyOnHover: false,
+            hide: false,
         },
         thead: {
             style: {
