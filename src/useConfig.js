@@ -4223,6 +4223,9 @@ export function useConfig() {
             color: COLOR_BLACK,
             maxHeight: 500,
             animated: true,
+            historyPlot: {
+                color: COLOR_GREY_LIGHT
+            },
             bullet: {
                 color: COLOR_GREY_LIGHT
             },
@@ -4913,13 +4916,14 @@ export function useConfig() {
         responsive: false,
         theme: '',
         customPalette: [],
+        useCssAnimation: true,
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,
             csv: true,
             img: true,
             table: true,
-            labels: true,
+            labels: false,
             fullscreen: true,
             stack: false,
             annotator: true
@@ -4933,6 +4937,7 @@ export function useConfig() {
             },
             columnNames: {
                 series: 'Series',
+                datapoint:  'Datapoint',
                 x: 'x',
                 y: 'y'
             }
@@ -4977,17 +4982,20 @@ export function useConfig() {
                             fontSize: FONT._16,
                             color: COLOR_BLACK,
                             bold: false,
-                            rounding: 0,
+                            rounding: 1,
                             offsetY: 0,
                             rotation: 0,
+                            formatter: null,
+                            prefix: '',
+                            suffix: ''
                         },
                         name: {
-                            show: true,
                             text: '',
                             fontSize: FONT._16,
                             offsetX: 0,
                             offsetY: 0,
-                            bold: false
+                            bold: false,
+                            color: COLOR_BLACK
                         }
                     },
                     y: {
@@ -4999,16 +5007,19 @@ export function useConfig() {
                             fontSize: FONT._16,
                             color: COLOR_BLACK,
                             bold: false,
-                            rounding: 0,
+                            rounding: 1,
                             offsetX: 0,
+                            formatter: null,
+                            prefix: '',
+                            suffix: ''
                         },
                         name: {
-                            show: true,
                             text: '',
                             fontSize: FONT._16,
                             offsetX: 0,
                             offsetY: 0,
-                            bold: false
+                            bold: false,
+                            color: COLOR_BLACK
                         }
                     }
                 },
@@ -5016,13 +5027,27 @@ export function useConfig() {
                     radius: 16,
                     stroke: COLOR_WHITE,
                     strokeWidth: 1,
-                    indexLabel: {
+                    gradient: {
+                        show: true,
+                        intensity: 40
+                    },
+                    indexLabels: {
                         show: true,
                         startAtZero: false,
                         adaptColorToBackground: true,
                         color: COLOR_BLACK,
                         fontSize: FONT._16,
                         bold: false,
+                        offsetY: 0,
+                        offsetX: 0
+                    },
+                    labels: {
+                        show: true,
+                        fontSize: 10,
+                        color: COLOR_BLACK,
+                        bold: false,
+                        offsetY: 0,
+                        offsetX: 0,
                     }
                 },
                 paths: {
@@ -5033,13 +5058,9 @@ export function useConfig() {
                 },
                 legend: {
                     ...LEGEND,
-                    roundingValue: 0,
                 },
                 title: TITLE,
-                tooltip: {
-                    ...TOOLTIP,
-                    roundingValue: 0,
-                },
+                tooltip: TOOLTIP
 
             }
         }
