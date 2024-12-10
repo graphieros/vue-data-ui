@@ -180,6 +180,18 @@ const step = ref(0);
             <LocalVueUiHistoryPlot :dataset="dataset" :config="config"/>
         </template>
 
+        <template #VDUI-local>
+            <LocalVueDataUi component="VueUiHistoryPlot" :dataset="dataset" :config="config"/>
+        </template>
+
+        <template #build>
+            <VueUiHistoryPlot :dataset="dataset" :config="config"/>
+        </template>
+
+        <template #VDUI-build>
+            <VueDataUi component="VueUiHistoryPlot" :dataset="dataset" :config="config" />
+        </template>
+
         <template #knobs>
             <div
                 style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
