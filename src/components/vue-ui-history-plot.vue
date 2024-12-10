@@ -1,23 +1,42 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import { useConfig } from "../useConfig";
 import { 
-XMLNS,
-calculateNiceScale,
-convertColorToHex,
+    XMLNS,
+    adaptColorToBackground,
+    applyDataLabel,
+    calculateNiceScale,
+    convertColorToHex,
     convertCustomPalette, 
+    createCsvContent, 
     createUid, 
+    darkenHexColor,
+    dataLabel,
+    downloadCsv,
     error, 
     getMissingDatasetAttributes, 
     hasDeepProperty, 
+    isFunction, 
+    lightenHexColor,
     objectIsEmpty, 
     palette, 
-    themePalettes 
+    themePalettes,
+translateSize,
 } from "../lib";
 import { useNestedProp } from "../useNestedProp";
 import themes from "../themes.json";
 import { usePrinter } from "../usePrinter";
 import PackageVersion from "../atoms/PackageVersion.vue";
+import Legend from "../atoms/Legend.vue";
+import Title from "../atoms/Title.vue";
+import Tooltip from "../atoms/Tooltip.vue";
+import DataTable from "../atoms/DataTable.vue";
+import Accordion from "./vue-ui-accordion.vue";
+import UserOptions from "../atoms/UserOptions.vue";
+import PenAndPaper from "../atoms/PenAndPaper.vue";
+import Skeleton from "./vue-ui-skeleton.vue";
+import { throttle } from "../canvas-lib";
+import { useResponsive } from "../useResponsive";
 
 const { vue_ui_history_plot: DEFAULT_CONFIG } = useConfig();
 
@@ -50,6 +69,9 @@ const isTooltip = ref(false);
 const tooltipContent = ref('');
 const segregated = ref([]);
 const isFullscreen = ref(false);
+const selectedDatapoint = ref(null);
+const useCustomFormat = ref(false);
+const source = ref(null);
 
 const isDataset = computed({
     get: () => {
@@ -59,6 +81,8 @@ const isDataset = computed({
         return bool;
     }
 });
+
+const emit = defineEmits(['selectLegend', 'selectDatapoint'])
 
 onMounted(prepareChart);
 
@@ -87,6 +111,79 @@ function prepareChart() {
                 });
             });
         });
+    }
+
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: historyPlotChart.value,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                noTitle: noTitle.value,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                source: source.value
+            });
+            svg.value.width = width;
+            svg.value.height = height;
+
+            sizes.value.plots = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.plots.radius,
+                threshold: 3,
+                fallback: 3
+            });
+
+            sizes.value.indexLabels = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.plots.indexLabels.fontSize,
+                threshold: 6,
+                fallback: 6
+            });
+
+            sizes.value.labels = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.plots.labels.fontSize,
+                threshold: 6,
+                fallback: 6
+            });
+
+            sizes.value.xAxisLabels = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.axes.x.labels.fontSize,
+                threshold: 6,
+                fallback: 6
+            });
+
+            sizes.value.xAxisName = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.axes.x.name.fontSize,
+                threshold: 6,
+                fallback: 6
+            });
+
+            sizes.value.yAxisLabels = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.axes.y.labels.fontSize,
+                threshold: 6,
+                fallback: 6
+            });
+
+            sizes.value.yAxisName = translateSize({
+                relator: Math.min(width, height),
+                adjuster: 600,
+                source: FINAL_CONFIG.value.style.chart.axes.y.name.fontSize,
+                threshold: 6,
+                fallback: 6
+            });
+        });
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        resizeObserver.value.observe(historyPlotChart.value.parentNode);
     }
 
     // TODO: responsive
@@ -137,7 +234,6 @@ function prepareConfig() {
     }
 
     // ----------------------------------------------------------------------------
-
     return finalConfig;
 }
 
@@ -156,6 +252,15 @@ watch(() => props.config, (_newCfg) => {
     titleStep.value += 1;
     tableStep.value += 1;
     legendStep.value += 1;
+    svg.value.height = FINAL_CONFIG.value.style.chart.height;
+    svg.value.width = FINAL_CONFIG.value.style.chart.width;
+    sizes.value.plots = FINAL_CONFIG.value.style.chart.plots.radius;
+    sizes.value.indexLabels = FINAL_CONFIG.value.style.chart.plots.indexLabels.fontSize;
+    sizes.value.labels = FINAL_CONFIG.value.style.chart.plots.labels.fontSize;
+    sizes.value.xAxisLabels = FINAL_CONFIG.value.style.chart.axes.x.labels.fontSize;
+    sizes.value.xAxisName = FINAL_CONFIG.value.style.chart.axes.x.name.fontSize;
+    sizes.value.yAxisLabels = FINAL_CONFIG.value.style.chart.axes.y.labels.fontSize;
+    sizes.value.yAxisName = FINAL_CONFIG.value.style.chart.axes.y.name.fontSize;
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -172,9 +277,6 @@ const customPalette = computed(() => {
 });
 
 const mutableConfig = ref({
-    // dataLabels: {
-    //     show: FINAL_CONFIG.value.style.chart.lines.dataLabels.show,
-    // },
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
@@ -195,6 +297,16 @@ const drawingArea = computed(() => {
         width: svg.value.width - left - FINAL_CONFIG.value.style.chart.padding.right,
         height: svg.value.height - top - FINAL_CONFIG.value.style.chart.padding.bottom
     }
+});
+
+const sizes = ref({
+    plots: FINAL_CONFIG.value.style.chart.plots.radius,
+    indexLabels: FINAL_CONFIG.value.style.chart.plots.indexLabels.fontSize,
+    labels: FINAL_CONFIG.value.style.chart.plots.labels.fontSize,
+    xAxisLabels: FINAL_CONFIG.value.style.chart.axes.x.labels.fontSize,
+    xAxisName: FINAL_CONFIG.value.style.chart.axes.x.name.fontSize,
+    yAxisLabels: FINAL_CONFIG.value.style.chart.axes.y.labels.fontSize,
+    yAxisName: FINAL_CONFIG.value.style.chart.axes.y.name.fontSize
 });
 
 const formattedDataset = computed(() => {
@@ -228,6 +340,7 @@ const minY = computed(() => {
 });
 
 const scales = computed(() => {
+
     const x = calculateNiceScale(
             FINAL_CONFIG.value.style.chart.axes.x.scaleMin === null ? minX.value : FINAL_CONFIG.value.style.chart.axes.x.scaleMin,
             FINAL_CONFIG.value.style.chart.axes.x.scaleMax === null ? maxX.value : FINAL_CONFIG.value.style.chart.axes.x.scaleMax,
@@ -244,7 +357,7 @@ const scales = computed(() => {
         y,
         tickX: x.ticks.map(t => {
             return {
-                x: drawingArea.value.left + (t / x.max * drawingArea.value.width),
+                x: drawingArea.value.left + ((t - x.min) / (x.max - x.min) * drawingArea.value.width),
                 y1: drawingArea.value.top,
                 y2: drawingArea.value.bottom,
                 value: t
@@ -252,7 +365,7 @@ const scales = computed(() => {
         }),
         tickY: y.ticks.map(t => {
             return {
-                y: drawingArea.value.bottom - (t / y.max * drawingArea.value.height),
+                y: drawingArea.value.bottom - ((t - y.min) / (y.max - y.min) * drawingArea.value.height),
                 x1: drawingArea.value.left,
                 x2: drawingArea.value.right,
                 value: t
@@ -262,12 +375,20 @@ const scales = computed(() => {
 });
 
 function setDimensionX(value) {
-    const minOffset = scales.value.x.min < 0 ? Math.abs(scales.value.x.min) : 0;
+    const minOffset = scales.value.x.min < 0 
+        ? Math.abs(scales.value.x.min)
+            : scales.value.x.min > 0 ? -scales.value.x.min
+        : 0;
+
     return drawingArea.value.left + ((value || 0) + minOffset) / (scales.value.x.max + minOffset) * drawingArea.value.width;
 }
 function setDimensionY(value) {
-    const minOffset = scales.value.y.min < 0 ? Math.abs(scales.value.y.min) : 0;
-    return drawingArea.value.bottom - (1 - ((value || 0) + minOffset) / (scales.value.y.max + minOffset)) * drawingArea.value.height;
+    const minOffset = scales.value.y.min < 0 
+        ? Math.abs(scales.value.y.min)
+            : scales.value.y.min > 0 ? -scales.value.y.min
+        : 0
+        ;
+    return drawingArea.value.bottom - (((value || 0) + minOffset) / (scales.value.y.max + minOffset)) * drawingArea.value.height;
 }
 
 const drawableDataset = computed(() => {
@@ -279,24 +400,266 @@ const drawableDataset = computed(() => {
                     label: p.label,
                     x: setDimensionX(p.x),
                     y: setDimensionY(p.y),
-                    color: ds.color
+                    color: ds.color,
+                    seriesName: ds.name,
+                    id: createUid()
                 }
             });
-            // TODO: cleaner path gen
+            const path = plots.map(p => {
+                return `${p.x},${p.y} `
+            }).join('').trim();
         return {
             ...ds,
             plots,
-            track: plots.map(p => {
-                return ` ${p.x},${p.y} `
-            }).toString().trim()
+            path: `M${path}`
         }
     });
 });
+
+function segregate(index) {
+    if (segregated.value.includes(index)) {
+        segregated.value = segregated.value.filter(el => el !== index);
+    } else {
+        segregated.value.push(index);
+    }
+}
+
+const legendSet = computed(() => {
+    return formattedDataset.value.map(ds => {
+        return {
+            ...ds,
+            opacity: segregated.value.includes(ds.seriesIndex) ? 0.5 : 1,
+            segregate: () => segregate(ds.seriesIndex),
+            isSegregated: segregated.value.includes(ds.seriesIndex),
+            shape: 'circle'
+        }
+    });
+});
+
+const legendConfig = computed(() => {
+    return {
+        cy: 'history-plot-div-legend',
+        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+        color: FINAL_CONFIG.value.style.chart.legend.color,
+        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
+        paddingBottom: 12,
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
+    }
+});
+
+function selectDatapoint(datapoint) {
+    emit('selectDatapoint', datapoint)
+}
+
+function selectLegend(legend) {
+    emit('selectLegend', {
+        ...legend,
+        isSegregated: !legend.isSegregated,
+        opacity: legend.isSegregated ? 1 : 0.5
+    })
+}
 
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
 }
+
+const dataTooltipSlot = ref(null);
+
+function useTooltip({ datapoint, plotIndex, seriesIndex }) {
+    dataTooltipSlot.value = { datapoint, seriesIndex, plotIndex, config: FINAL_CONFIG.value, series: formattedDataset.value};
+    selectedDatapoint.value = datapoint;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    useCustomFormat.value = false;
+
+    if (isFunction(customFormat)) {
+        try {
+            const customFormatString = customFormat({
+                seriesIndex,
+                datapoint,
+                plotIndex,
+                series: formattedDataset.value,
+                config: FINAL_CONFIG.value
+            });
+            if (typeof customFormatString === 'string') {
+                tooltipContent.value = customFormatString;
+                useCustomFormat.value = true;
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied.');
+            useCustomFormat.value = false;
+        }
+    }
+
+    if (!useCustomFormat.value) {
+        let html = '';
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};margin-bottom:3px;padding-bottom:6px;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg><span>${datapoint.seriesName}</span></div>`;
+
+        html += `<div>${datapoint.label}</div>`;
+
+        html += `<div>${FINAL_CONFIG.value.style.chart.axes.x.name.text || 'x'}: ${
+            applyDataLabel(
+                FINAL_CONFIG.value.style.chart.axes.x.labels.formatter,
+                datapoint.valueX,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.axes.x.labels.prefix,
+                    v: datapoint.valueX,
+                    s: FINAL_CONFIG.value.style.chart.axes.x.labels.suffix,
+                    r: FINAL_CONFIG.value.style.chart.axes.x.labels.rounding
+                })
+            )
+        }</div>`;
+
+        html += `<div>${FINAL_CONFIG.value.style.chart.axes.y.name.text || 'y'}: ${
+            applyDataLabel(
+                FINAL_CONFIG.value.style.chart.axes.y.labels.formatter,
+                datapoint.valueY,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.axes.y.labels.prefix,
+                    v: datapoint.valueY,
+                    s: FINAL_CONFIG.value.style.chart.axes.y.labels.suffix,
+                    r: FINAL_CONFIG.value.style.chart.axes.y.labels.rounding
+                })
+            )
+        }</div>`
+
+        tooltipContent.value = `<div>${html}</div>`
+    }
+    isTooltip.value = true;
+}
+
+const table = computed(() => {
+    const head = drawableDataset.value.map(ds => {
+        return {
+            name: ds.name,
+            color: ds.color
+        }
+    });
+    return { head }
+});
+
+const dataTable = computed(() => {
+    const head = [
+        FINAL_CONFIG.value.table.columnNames.series,
+        FINAL_CONFIG.value.table.columnNames.datapoint,
+        FINAL_CONFIG.value.table.columnNames.x,
+        FINAL_CONFIG.value.table.columnNames.y,
+    ];
+
+    const body = drawableDataset.value.flatMap(ds => {
+        return ds.plots.map(dp => {
+            return [
+                {
+                    color: dp.color,
+                    name: dp.seriesName
+                },
+                dp.label,
+                applyDataLabel(
+                    FINAL_CONFIG.value.style.chart.axes.x.labels.formatter,
+                    dp.valueX,
+                    dataLabel({
+                        p: FINAL_CONFIG.value.style.chart.axes.x.labels.prefix,
+                        v: dp.valueX,
+                        s: FINAL_CONFIG.value.style.chart.axes.x.labels.suffix,
+                        r: FINAL_CONFIG.value.style.chart.axes.x.labels.rounding
+                    })
+                ),
+                applyDataLabel(
+                    FINAL_CONFIG.value.style.chart.axes.y.labels.formatter,
+                    dp.valueY,
+                    dataLabel({
+                        p: FINAL_CONFIG.value.style.chart.axes.y.labels.prefix,
+                        v: dp.valueY,
+                        s: FINAL_CONFIG.value.style.chart.axes.y.labels.suffix,
+                        r: FINAL_CONFIG.value.style.chart.axes.y.labels.rounding
+                    })
+                ),
+            ]
+        })
+    });
+
+    const config = {
+        th: {
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
+        },
+        td: {
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
+        },
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
+    }
+
+    return {
+        head,
+        body,
+        config,
+        colNames: head
+    }
+});
+
+function generateCsv() {
+    nextTick(() => {
+        const head = [
+            [ FINAL_CONFIG.value.table.columnNames.series ],
+            [ FINAL_CONFIG.value.table.columnNames.datapoint ],
+            [ FINAL_CONFIG.value.table.columnNames.x ],
+            [ FINAL_CONFIG.value.table.columnNames.y ],
+        ];
+
+        const rows = drawableDataset.value.flatMap(ds => {
+            return ds.plots.map(dp => {
+                return [
+                    [ dp.seriesName ],
+                    [ dp.label ],
+                    [ dp.valueX ],
+                    [ dp.valueY ]
+                ]
+            })
+        });
+
+        const tableXls = [
+            [ FINAL_CONFIG.value.style.chart.title.text ],
+            [ FINAL_CONFIG.value.style.chart.title.subtitle.text ],
+            head,
+        ].concat(rows);
+
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({
+            csvContent,
+            title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-history-plot"
+        });
+    });
+}
+
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
+function getData() {
+    return drawableDataset.value
+}
+
+defineExpose({
+    getData,
+    generatePdf,
+    generateCsv,
+    generateImage,
+    toggleTable,
+    toggleTooltip,
+    toggleAnnotator,
+})
 
 </script>
 
@@ -310,12 +673,91 @@ function toggleFullscreen(state) {
         
         <slot name="userConfig"/>
 
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            :parent="historyPlotChart"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator"
+            @close="toggleAnnotator"
+        />
+
         <div
             ref="noTitle"
             v-if="hasOptionsNoTitle" 
             class="vue-data-ui-no-title-space" 
             :style="`height:36px; width: 100%;background:transparent`"
         />
+
+        <div ref="chartTitle" class="vue-ui-xy-title" v-if="FINAL_CONFIG.style.chart.title.text" :style="`font-family:${FINAL_CONFIG.style.fontFamily}`">
+            <Title
+                :key="`title_${titleStep}`"
+                :config="{
+                    title: {
+                        cy: 'history-plot-div-title',
+                        ...FINAL_CONFIG.style.chart.title
+                    },
+                    subtitle: {
+                        cy: 'history-plot-div-subtitle',
+                        ...FINAL_CONFIG.style.chart.title.subtitle
+                    },
+                }"
+            />
+        </div>
+
+        <UserOptions
+            ref="details"
+            :key="`user_option_${step}`"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :isPrinting="isPrinting"
+            :isImaging="isImaging"
+            :uid="uid"
+            :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show && FINAL_CONFIG.userOptions.buttons.tooltip"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasLabel="false"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :isFullscreen="isFullscreen"
+            :chartElement="historyPlotChart"
+            :position="FINAL_CONFIG.userOptions.position"
+            :isTooltip="mutableConfig.showTooltip"
+            :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
+            @toggleFullscreen="toggleFullscreen"
+            @generatePdf="generatePdf"
+            @generateCsv="generateCsv"
+            @generateImage="generateImage"
+            @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
+            @toggleAnnotator="toggleAnnotator"
+        >
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip"/>
+            </template>
+            <template #optionPdf v-if="$slots.optionPdf">
+                <slot name="optionPdf" />
+            </template>
+            <template #optionCsv v-if="$slots.optionCsv">
+                <slot name="optionCsv" />
+            </template>
+            <template #optionImg v-if="$slots.optionImg">
+                <slot name="optionImg" />
+            </template>
+            <template #optionTable v-if="$slots.optionTable">
+                <slot name="optionTable" />
+            </template>
+            <template v-if="$slots.optionFullscreen" #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            </template>
+        </UserOptions>
 
         <svg 
             v-if="isDataset"
@@ -325,58 +767,115 @@ function toggleFullscreen(state) {
         >
             <PackageVersion />
 
-            <!-- GRID -->
+            <defs v-if="FINAL_CONFIG.style.chart.plots.gradient.show">
+                <radialGradient v-for="(ds, i) in drawableDataset" :id="`gradient_${i}_${uid}`" fy="30%">
+                    <stop offset="10%" :stop-color="lightenHexColor(ds.color, FINAL_CONFIG.style.chart.plots.gradient.intensity / 100)"/>
+                    <stop offset="90%" :stop-color="darkenHexColor(ds.color, 0.1)"/>
+                    <stop offset="100%" :stop-color="ds.color"/>
+                </radialGradient>
+            </defs>
 
+            <!-- GRID -->
             <!-- SCALE Y -->
-            <line
-                v-for="line in scales.tickX"
-                :x1="line.x"
-                :x2="line.x"
-                :y1="line.y1"
-                :y2="line.y2"
-                :stroke="FINAL_CONFIG.style.chart.grid.verticalLines.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.grid.verticalLines.strokeWidth"
-                stroke-linecap="round"
-            />
+            <g v-if="FINAL_CONFIG.style.chart.grid.verticalLines.show">
+                <line
+                    v-for="line in scales.tickX"
+                    :x1="line.x"
+                    :x2="line.x"
+                    :y1="line.y1"
+                    :y2="line.y2"
+                    :stroke="FINAL_CONFIG.style.chart.grid.verticalLines.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.verticalLines.strokeWidth"
+                    stroke-linecap="round"
+                />
+            </g>
             <!-- Y AXIS LABELS -->
             <g v-if="FINAL_CONFIG.style.chart.axes.y.labels.show">
                 <text
                     v-for="labelY in scales.tickY"
                     :x="drawingArea.left + FINAL_CONFIG.style.chart.axes.y.labels.offsetX - 4"
-                    :y="labelY.y + FINAL_CONFIG.style.chart.axes.y.labels.fontSize / 3"
+                    :y="labelY.y + sizes.yAxisLabels / 3"
                     :fill="FINAL_CONFIG.style.chart.axes.y.labels.color"
-                    :font-size="FINAL_CONFIG.style.chart.axes.y.labels.fontSize"
+                    :font-size="sizes.yAxisLabels"
                     text-anchor="end"
                 >
-                    {{ labelY.value }}
+                    {{ 
+                        applyDataLabel(
+                            FINAL_CONFIG.style.chart.axes.y.labels.formatter,
+                            labelY.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.axes.y.labels.prefix,
+                                v: labelY.value,
+                                s: FINAL_CONFIG.style.chart.axes.y.labels.suffix,
+                                r: FINAL_CONFIG.style.chart.axes.y.labels.rounding
+                            })
+                        )
+                    }}
                 </text>
             </g>
 
+            <!-- Y AXIS NAME -->
+            <text
+                v-if="FINAL_CONFIG.style.chart.axes.y.name.text"
+                :transform="`translate(${FINAL_CONFIG.style.chart.axes.y.name.offsetX + sizes.yAxisName}, ${(svg.height / 2) + FINAL_CONFIG.style.chart.axes.y.name.offsetY}), rotate(-90)`"
+                :font-size="sizes.yAxisName"
+                :fill="FINAL_CONFIG.style.chart.axes.y.name.color"
+                :font-weight="FINAL_CONFIG.style.chart.axes.y.name.bold ? 'bold' : 'normal'"
+                text-anchor="middle"
+            >
+                {{ FINAL_CONFIG.style.chart.axes.y.name.text }}
+            </text>
+
             <!-- SCALE X -->
-            <line
-                v-for="line in scales.tickY"
-                :x1="line.x1"
-                :x2="line.x2"
-                :y1="line.y"
-                :y2="line.y"
-                :stroke="FINAL_CONFIG.style.chart.grid.horizontalLines.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.grid.horizontalLines.strokeWidth"
-                stroke-linecap="round"
-            />
+            <g v-if="FINAL_CONFIG.style.chart.grid.horizontalLines.show">
+                <line
+                    v-for="line in scales.tickY"
+                    :x1="line.x1"
+                    :x2="line.x2"
+                    :y1="line.y"
+                    :y2="line.y"
+                    :stroke="FINAL_CONFIG.style.chart.grid.horizontalLines.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.horizontalLines.strokeWidth"
+                    stroke-linecap="round"
+                />
+            </g>
 
             <!-- X AXIS LABELS -->
             <g v-if="FINAL_CONFIG.style.chart.axes.x.labels.show">
                 <text
                     v-for="labelX in scales.tickX"
-                    :x="labelX.x"
-                    :y="drawingArea.bottom + FINAL_CONFIG.style.chart.axes.x.labels.offsetY + FINAL_CONFIG.style.chart.axes.x.labels.fontSize"
+                    :transform="`translate(${labelX.x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.axes.x.labels.offsetY + sizes.xAxisLabels}), rotate(${FINAL_CONFIG.style.chart.axes.x.labels.rotation})`"
                     :fill="FINAL_CONFIG.style.chart.axes.x.labels.color"
-                    :font-size="FINAL_CONFIG.style.chart.axes.x.labels.fontSize"
-                    text-anchor="middle"
+                    :font-size="sizes.xAxisLabels"
+                    :text-anchor="FINAL_CONFIG.style.chart.axes.x.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.axes.x.labels.rotation < 0 ? 'end' : 'middle'"
                 >
-                    {{ labelX.value }}
+                    {{ 
+                        applyDataLabel(
+                            FINAL_CONFIG.style.chart.axes.x.labels.formatter,
+                            labelX.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.axes.x.labels.prefix,
+                                v: labelX.value,
+                                s: FINAL_CONFIG.style.chart.axes.x.labels.suffix,
+                                r: FINAL_CONFIG.style.chart.axes.x.labels.rounding
+                            })
+                        )
+                    }}
                 </text>
             </g>
+
+            <!-- X AXIS NAME -->
+            <text
+                v-if="FINAL_CONFIG.style.chart.axes.x.name.text"
+                :x="(svg.width / 2) + FINAL_CONFIG.style.chart.axes.x.name.offsetX"
+                :y="svg.height + FINAL_CONFIG.style.chart.axes.x.name.offsetY"
+                :font-size="sizes.xAxisName"
+                :fill="FINAL_CONFIG.style.chart.axes.x.name.color"
+                :font-weight="FINAL_CONFIG.style.chart.axes.x.name.bold ? 'bold' : 'normal'"
+                text-anchor="middle"
+            >
+                {{ FINAL_CONFIG.style.chart.axes.x.name.text }}
+            </text>
 
             <!-- X AXIS -->
             <line
@@ -402,32 +901,211 @@ function toggleFullscreen(state) {
                 stroke-linecap="round"
             />
             
-            <!-- PLOTS & TRACKS -->
-            <g v-for="ds in drawableDataset">
-                <path
-                    :d="`M${ds.track}`"
-                    :stroke="'white'"
-                    :stroke-width="FINAL_CONFIG.style.chart.paths.strokeWidth * 2"
-                    fill="none"
-                />
-                <path
-                    :d="`M${ds.track}`"
-                    :stroke="FINAL_CONFIG.style.chart.paths.useSerieColor ? ds.color : FINAL_CONFIG.style.chart.paths.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.paths.strokeWidth"
-                    fill="none"
-                />
+            <!-- PLOTS & PATHS -->
+            <g v-for="(ds, i) in drawableDataset">
+                <!-- PATHS -->
+                <g 
+                    v-if="FINAL_CONFIG.style.chart.paths.show"
+                    :style="{
+                        opacity: selectedDatapoint === null ? 1 : 0.3
+                    }"
+                >
+                    <path
+                        :d="ds.path"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.paths.strokeWidth * 2"
+                        fill="none"
+                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                    />
+                    <path
+                        :d="ds.path"
+                        :stroke="FINAL_CONFIG.style.chart.paths.useSerieColor ? ds.color : FINAL_CONFIG.style.chart.paths.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.paths.strokeWidth"
+                        fill="none"
+                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                    />
+                </g>
+
+                <!-- PLOTS -->
+                <!-- Underlayers to hide track when !!selectedDatapoint -->
                 <circle
                     v-for="plot in ds.plots"
                     :cx="plot.x"
                     :cy="plot.y"
-                    :fill="plot.color"
-                    :r="FINAL_CONFIG.style.chart.plots.radius"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                    :r="sizes.plots"
+                    stroke="none"
+                />
+                <!-- Visible plots -->
+                <circle
+                    v-for="plot in ds.plots"
+                    :cx="plot.x"
+                    :cy="plot.y"
+                    :fill="FINAL_CONFIG.style.chart.plots.gradient.show ? `url(#gradient_${i}_${uid})` : plot.color"
+                    :r="sizes.plots"
                     :stroke="FINAL_CONFIG.style.chart.plots.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.plots.strokeWidth"
+                    :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                    :style="{
+                        opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === plot.id ? 1 : 0.3,
+                        transition: 'opacity 0.2s ease-in-out'
+                    }"
                 />
+
+                <g v-if="FINAL_CONFIG.style.chart.plots.labels.show">
+                    <text
+                        v-for="plot in ds.plots"
+                        :x="plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX"
+                        :y="plot.y + FINAL_CONFIG.style.chart.plots.labels.offsetY + sizes.plots + sizes.labels"
+                        :font-size="sizes.labels"
+                        :fill="FINAL_CONFIG.style.chart.plots.labels.color"
+                        :font-weight="FINAL_CONFIG.style.chart.plots.labels.bold ? 'bold' : 'normal'"
+                        text-anchor="middle"
+                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                        :style="{
+                            opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === plot.id ? 1 : 0.3,
+                            transition: 'opacity 0.2s ease-in-out'
+                        }"
+                    >
+                        {{ plot.label }}
+                    </text>
+                </g>
+
+                <!-- INDEX LABELS -->
+                <g v-if="FINAL_CONFIG.style.chart.plots.indexLabels.show">
+                    <text
+                        v-for="(label, n) in ds.plots"
+                        :x="label.x + FINAL_CONFIG.style.chart.plots.indexLabels.offsetX"
+                        :y="label.y + FINAL_CONFIG.style.chart.plots.indexLabels.offsetY + sizes.indexLabels / 3"
+                        :font-size="sizes.indexLabels"
+                        :font-weight="FINAL_CONFIG.style.chart.plots.indexLabels.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.plots.indexLabels.adaptColorToBackground ? adaptColorToBackground(ds.color) : FINAL_CONFIG.style.chart.plots.indexLabels.color"
+                        text-anchor="middle"
+                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                        :style="{
+                            opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === label.id ? 1 : 0.3,
+                            transition: 'opacity 0.2s ease-in-out'
+                        }"
+                    >
+                        {{ FINAL_CONFIG.style.chart.plots.indexLabels.startAtZero ? n : n + 1 }}
+                    </text>
+                </g>
             </g>
 
+            <!-- TOOLTIP TRAPS -->
+            <g v-for="(ds) in drawableDataset">
+                <circle
+                    v-for="(plot, i) in ds.plots"
+                    :cx="plot.x"
+                    :cy="plot.y"
+                    fill="transparent"
+                    :r="sizes.plots"
+                    stroke="none"
+                    @mouseenter="useTooltip({
+                        datapoint: plot,
+                        plotIndex: i,
+                        seriesIndex: ds.seriesIndex,
+                    })"
+                    @mouseleave="isTooltip = false; selectedDatapoint = null"
+                    @click="() => selectDatapoint(plot)"
+                />
+            </g>
+            <slot name="svg" :svg="svg"/>
         </svg>
+
+        <div v-if="$slots.watermark" class="vue-data-ui-watermark">
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'historyPlot',
+                style: {
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                    historyPlot: {
+                        color: '#CCCCCC',
+                    }
+                }
+            }"
+        />
+
+        <div ref="chartLegend">
+            <Legend
+                v-if="FINAL_CONFIG.style.chart.legend.show && isDataset"
+                :key="`legend_${legendStep}`"
+                :legendSet="legendSet"
+                :config="legendConfig"
+                @clickMarker="({ legend }) => { segregate(legend.seriesIndex); selectLegend(legend) }"
+            >
+                <template #item="{ legend, index }">
+                    <div :data-cy="`legend-item-${index}`" @click="legend.segregate(); selectLegend(legend)" :style="`opacity:${segregated.includes(legend.seriesIndex) ? 0.5 : 1}`">
+                        {{ legend.name }}
+                    </div>
+                </template>
+            </Legend>
+    
+            <slot v-else name="legend" v-bind:legend="legendSet"/>
+        </div>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
+
+        <Tooltip
+            :show="mutableConfig.showTooltip && isTooltip"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color"
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.style.chart.tooltip.position"
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :parent="historyPlotChart"
+            :content="tooltipContent"
+            :isCustom="useCustomFormat"
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+        </Tooltip>
+
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000,
+            body: {
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
+            },
+            head: {
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
+            }
+        }">
+            <template #content>            
+                <DataTable
+                    :key="`table_${tableStep}`"
+                    :colNames="dataTable.colNames"
+                    :head="dataTable.head" 
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false"
+                >
+                    <template #th="{ th }">
+                        <div v-html="th" style="display:flex;align-items:center"></div>
+                    </template>
+                    <template #td="{ td }">
+                        {{ td.name || td }}
+                    </template>
+                </DataTable>
+            </template>
+        </Accordion>
 
     </div>
 </template>
@@ -441,5 +1119,24 @@ function toggleFullscreen(state) {
 .vue-ui-history-plot {
     user-select: none;
     width: 100%;
+}
+
+.animated {
+    animation: hpanim 0.5s ease-in-out;
+    transform-origin: center;
+}
+@keyframes hpanim {
+    0% {
+        transform: scale(0.9,0.9);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.02,1.02);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1,1);
+        opacity: 1;
+    }
 }
 </style>
