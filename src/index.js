@@ -64,6 +64,7 @@ export const VueUiGizmo = defineAsyncComponent(() => import('./components/vue-ui
 export const VueUiStackbar = defineAsyncComponent(() => import('./components/vue-ui-stackbar.vue'))
 export const VueUiBullet = defineAsyncComponent(() => import('./components/vue-ui-bullet.vue'))
 export const VueUiFunnel = defineAsyncComponent(() => import('./components/vue-ui-funnel.vue'))
+export const VueUiHistoryPlot = defineAsyncComponent(() => import('./components/vue-ui-history-plot.vue'))
 export {
     createWordCloudDatasetFromPlainText,
     getPalette,
