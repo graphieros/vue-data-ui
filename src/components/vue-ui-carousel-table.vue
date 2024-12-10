@@ -355,7 +355,7 @@ defineExpose({
                 overflow: 'auto',
                 fontFamily: FINAL_CONFIG.fontFamily
             }"
-            :class="{ 'vue-ui-responsive' : isResponsive, 'is-playing': !isPaused }"
+            :class="{ 'vue-ui-responsive' : isResponsive, 'is-playing': !isPaused && FINAL_CONFIG.scrollbar.showOnlyOnHover }"
             @mouseover="pauseOnHover()"
             @mouseleave="resumeAnimation()"
             @touchstart="pauseOnTouch()"
@@ -385,7 +385,8 @@ defineExpose({
                         paddingBottom: FINAL_CONFIG.caption.padding.bottom +'px',
                         paddingLeft: FINAL_CONFIG.caption.padding.left + 'px',
                         boxShadow: isResponsive ? FINAL_CONFIG.thead.tr.style.boxShadow : 'none',
-                        minHeight: '36px'
+                        minHeight: '36px',
+                        display: $slots.caption || FINAL_CONFIG.caption.text ? 'block' : 'none'
                     }">
                     {{ FINAL_CONFIG.caption.text && !$slots.caption ? FINAL_CONFIG.caption.text : '' }}
                     <slot name="caption"/>

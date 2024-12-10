@@ -5336,6 +5336,9 @@ declare module 'vue-data-ui' {
                 textAlign?: TextAlign;
             };
         };
+        scrollbar?: {
+            showOnlyOnHover?: boolean;
+        };
         thead?: {
             tr?: {
                 style?: {
