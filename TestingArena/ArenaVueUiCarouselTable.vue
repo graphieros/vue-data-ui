@@ -20,7 +20,7 @@ const model = ref([
     { key: 'style.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
     
-    { key: 'caption.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
+    { key: 'caption.text', def: '', type: 'text'},
 
     { key: 'caption.padding.top', def: 12, type: 'number', min: 0, max: 24},
     { key: 'caption.padding.right', def: 12, type: 'number', min: 0, max: 24},
@@ -32,6 +32,8 @@ const model = ref([
     { key: 'caption.style.fontSize', def: '16px', type: 'text'},
     { key: 'caption.style.fontWeight', def: 'bold', type: 'text'},
     { key: 'caption.style.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
+
+    { key: 'scrollbar.showOnlyOnHover', def: false, type: 'checkbox'},
 
     { key: 'thead.tr.style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'thead.tr.style.boxShadow', def: '0px 6px 12px -6px #1A1A1A50' },
@@ -187,9 +189,6 @@ function resumeVduiBuild() {
                 :dataset="dataset"
                 ref="localComponent"
             >
-                <template #caption>
-                    Lorem ipsum dolor
-                </template>
                 <template #th="{th}">
                     {{ th }}
                 </template>
