@@ -1,4 +1,10 @@
 {
+    "vue_ui_history_plot": {
+        "default": {},
+        "hack": {},
+        "zen": {},
+        "concrete": {}
+    },
     "vue_ui_funnel": {
         "default": {},
         "hack": {

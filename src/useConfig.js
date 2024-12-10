@@ -4906,6 +4906,142 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_history_plot = {
+        responsive: false,
+        theme: '',
+        customPalette: [],
+        userOptions: USER_OPTIONS({
+            tooltip: true,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: true,
+            fullscreen: true,
+            stack: false,
+            annotator: true
+        }),
+        table: {
+            ...TABLE,
+            th: TABLE_TH,
+            td: {
+                ...TABLE_TD,
+                roundingValue: 0,
+            },
+            columnNames: {
+                series: 'Series',
+                x: 'x',
+                y: 'y'
+            }
+        },
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                height: 500,
+                width: 600,
+                padding: PADDING([12, 24, 48, 48]),
+                grid: {
+                    xAxis: {
+                        show: true,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 1,
+                    },
+                    horizontalLines: {
+                        show: true,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 0.6
+                    },
+                    yAxis: {
+                        show: true,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 1,
+                    },
+                    verticalLines: {
+                        show: true,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 0.6
+                    },
+                },
+                axes: {
+                    x: {
+                        scaleMin: null,
+                        scaleMax: null,
+                        ticks: 10,
+                        labels: {
+                            show: true,
+                            fontSize: FONT._16,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            rounding: 0,
+                            offsetY: 0,
+                            rotation: 0,
+                        },
+                        name: {
+                            show: true,
+                            text: '',
+                            fontSize: FONT._16,
+                            offsetX: 0,
+                            offsetY: 0,
+                            bold: false
+                        }
+                    },
+                    y: {
+                        scaleMin: null,
+                        scaleMax: null,
+                        ticks: 10,
+                        labels: {
+                            show: true,
+                            fontSize: FONT._16,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            rounding: 0,
+                            offsetX: 0,
+                        },
+                        name: {
+                            show: true,
+                            text: '',
+                            fontSize: FONT._16,
+                            offsetX: 0,
+                            offsetY: 0,
+                            bold: false
+                        }
+                    }
+                },
+                plots: {
+                    radius: 16,
+                    stroke: COLOR_WHITE,
+                    strokeWidth: 1,
+                    indexLabel: {
+                        show: true,
+                        startAtZero: false,
+                        adaptColorToBackground: true,
+                        color: COLOR_BLACK,
+                        fontSize: FONT._16,
+                        bold: false,
+                    }
+                },
+                paths: {
+                    show: true,
+                    strokeWidth: 1.6,
+                    useSerieColor: true,
+                    stroke: COLOR_BLACK
+                },
+                legend: {
+                    ...LEGEND,
+                    roundingValue: 0,
+                },
+                title: TITLE,
+                tooltip: {
+                    ...TOOLTIP,
+                    roundingValue: 0,
+                },
+
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -4953,6 +5089,7 @@ export function useConfig() {
         vue_ui_stackbar,
         vue_ui_bullet,
         vue_ui_funnel,
+        vue_ui_history_plot,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,
