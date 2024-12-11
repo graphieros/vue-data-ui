@@ -42,7 +42,8 @@ const props = defineProps({
 
 const uid = ref(createUid());
 const step = ref(0);
-const sparkStep = ref(0)
+const sparkStep = ref(0);
+const TD = ref(null)
 
 const FINAL_CONFIG = computed({
     get: () => {
@@ -263,6 +264,9 @@ const selectedSerieIndex = ref(undefined);
 function hoverSparkline({ dataIndex, serieIndex }) {
     selectedDataIndex.value = dataIndex;
     selectedSerieIndex.value = serieIndex;
+    if (TD.value[dataIndex]) {
+        TD.value[dataIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
 }
 
 const isFullscreen = ref(false)
@@ -305,7 +309,6 @@ defineExpose({
     <div ref="tableContainer" :class="{ 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`">
 
         <div style="overflow: auto" @pointerleave="selectedSerieIndex = undefined; selectedDataIndex = undefined">
-
             <table data-cy="vue-data-ui-table-sparkline" class="vue-ui-data-table"
                 :style="{ fontFamily: FINAL_CONFIG.fontFamily, position: 'relative' }">
                 <caption v-if="FINAL_CONFIG.title.text" :style="{ backgroundColor: FINAL_CONFIG.title.backgroundColor }">
@@ -397,27 +400,25 @@ defineExpose({
                     }" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}">
                         <td role="cell" :style="{
                             backgroundColor: FINAL_CONFIG.tbody.backgroundColor,
-                            outline: FINAL_CONFIG.tbody.outline,
-                            fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
-                            fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
-                            textAlign: FINAL_CONFIG.tbody.textAlign
-                        }" :data-cell="FINAL_CONFIG.translations.serie" class="vue-ui-data-table__tbody__td sticky-col-first">
-                            <div dir="auto" style="display: flex; flex-direction: row; align-items: center; gap: 6px">
-                                <span :style="{ color: tr.color }">⬤</span>
-                                <span>{{ tr.name ?? "-" }}</span>
-                            </div>
-                        </td>
-                        <td dir="auto" role="cell" v-for="(_, j) in maxSeries" :style="{
-                            outline: FINAL_CONFIG.tbody.outline,
+                            border: FINAL_CONFIG.tbody.outline,
                             fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
-                            backgroundColor:
+                        }" :data-cell="FINAL_CONFIG.translations.serie" class="vue-ui-data-table__tbody__td sticky-col-first">
+                            <div dir="auto" style="display: flex; flex-direction: row; align-items: center; gap: 6px">
+                                <span v-if="FINAL_CONFIG.tbody.showColorMarker" :style="{ color: tr.color }">⬤</span>
+                                <span>{{ tr.name ?? "-" }}</span>
+                            </div>
+                        </td>
+                        <td dir="auto" role="cell" v-for="(_, j) in maxSeries" ref="TD" :style="{
+                            border: FINAL_CONFIG.tbody.outline,
+                            fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
+                            fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
+                            textAlign: FINAL_CONFIG.tbody.textAlign,
+                            background:
                                 selectedDataIndex !== undefined &&
-                                    selectedSerieIndex !== undefined &&
-                                    j === selectedDataIndex &&
-                                    selectedSerieIndex === i
-                                    ? `${tr.color}33`
+                                    j === selectedDataIndex 
+                                    ? `${tr.color.length > 7 ? tr.color.slice(0,-2) : tr.color }33`
                                     : '',
                             borderRadius:
                                 selectedDataIndex !== undefined &&
@@ -441,7 +442,7 @@ defineExpose({
                             }}
                         </td>
                         <td dir="auto" role="cell" v-if="FINAL_CONFIG.showTotal" :style="{
-                            outline: FINAL_CONFIG.tbody.outline,
+                            border: FINAL_CONFIG.tbody.outline,
                             fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
@@ -460,7 +461,7 @@ defineExpose({
                             }}
                         </td>
                         <td dir="auto" role="cell" v-if="FINAL_CONFIG.showAverage" :style="{
-                            outline: FINAL_CONFIG.tbody.outline,
+                            border: FINAL_CONFIG.tbody.outline,
                             fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
@@ -479,7 +480,7 @@ defineExpose({
                             }}
                         </td>
                         <td dir="auto" role="cell" v-if="FINAL_CONFIG.showMedian" :style="{
-                            outline: FINAL_CONFIG.tbody.outline,
+                            border: FINAL_CONFIG.tbody.outline,
                             fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
@@ -497,10 +498,11 @@ defineExpose({
                             )}}
                         </td>
                         <td role="cell" v-if="FINAL_CONFIG.showSparklines" :data-cell="FINAL_CONFIG.translations.chart" :style="{
-                            outline: FINAL_CONFIG.tbody.outline,
+                            border: FINAL_CONFIG.tbody.outline,
                             fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
+                            backgroundColor: FINAL_CONFIG.tbody.backgroundColor,
                         }" class="vue-ui-data-table__tbody__td sticky-col">
                             <SparkLine :key="`sparkline_${i}_${sparkStep}`" @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
                                 " :dataset="tr.sparklineDataset" :showInfo="false" :selectedIndex="selectedDataIndex" :config="{
@@ -606,7 +608,6 @@ td {
         gap: 0.5rem;
         grid-template-columns: repeat(2, 1fr);
         padding: 0.5rem 1rem;
-        outline: none !important;
         text-align: left;
     }
 
