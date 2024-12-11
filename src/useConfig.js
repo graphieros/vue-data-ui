@@ -3438,6 +3438,7 @@ export function useConfig() {
             bold: false
         },
         tbody: {
+            showColorMarker: true,
             backgroundColor: COLOR_WHITE,
             color: COLOR_BLACK,
             fontSize: FONT._14,
