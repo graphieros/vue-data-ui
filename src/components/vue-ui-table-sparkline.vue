@@ -418,7 +418,7 @@ defineExpose({
                             background:
                                 selectedDataIndex !== undefined &&
                                     j === selectedDataIndex 
-                                    ? `${tr.color.length > 7 ? tr.color.slice(0,-2) : tr.color }33`
+                                    ? FINAL_CONFIG.tbody.selectedColor.useSerieColor ? `${tr.color.length > 7 ? tr.color.slice(0,-2) : tr.color }33` : FINAL_CONFIG.tbody.selectedColor.fallback
                                     : '',
                             borderRadius:
                                 selectedDataIndex !== undefined &&
