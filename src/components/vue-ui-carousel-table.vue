@@ -386,13 +386,13 @@ defineExpose({
                         paddingLeft: FINAL_CONFIG.caption.padding.left + 'px',
                         boxShadow: isResponsive ? FINAL_CONFIG.thead.tr.style.boxShadow : 'none',
                         minHeight: '36px',
-                        display: $slots.caption || FINAL_CONFIG.caption.text ? 'block' : 'none'
+                        display: $slots.caption || FINAL_CONFIG.caption.text || FINAL_CONFIG.userOptions.show ? '' : 'none'
                     }">
                     {{ FINAL_CONFIG.caption.text && !$slots.caption ? FINAL_CONFIG.caption.text : '' }}
                     <slot name="caption"/>
                 </caption>
     
-                <thead :style="{ ...FINAL_CONFIG.thead.style, position: 'sticky', top: `${captionHeight}px`, zIndex: 1 }">
+                <thead :style="{ ...FINAL_CONFIG.thead.style, position: 'sticky', top: `${$slots.caption || FINAL_CONFIG.caption.text || FINAL_CONFIG.userOptions.show ? captionHeight : 0}px`, zIndex: 1 }">
                     <tr
                         ref="tableRow"
                         role="row" 
