@@ -264,7 +264,7 @@ const selectedSerieIndex = ref(undefined);
 function hoverSparkline({ dataIndex, serieIndex }) {
     selectedDataIndex.value = dataIndex;
     selectedSerieIndex.value = serieIndex;
-    if (TD.value[dataIndex]) {
+    if (TD.value[dataIndex] && !isResponsive.value) {
         TD.value[dataIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 }
