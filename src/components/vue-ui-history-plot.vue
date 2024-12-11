@@ -913,8 +913,10 @@ defineExpose({
                     <path
                         :d="ds.path"
                         :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.paths.strokeWidth * 2"
+                        :stroke-width="FINAL_CONFIG.style.chart.paths.strokeWidth + 4"
                         fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                         :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
                     />
                     <path
@@ -922,6 +924,8 @@ defineExpose({
                         :stroke="FINAL_CONFIG.style.chart.paths.useSerieColor ? ds.color : FINAL_CONFIG.style.chart.paths.stroke"
                         :stroke-width="FINAL_CONFIG.style.chart.paths.strokeWidth"
                         fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                         :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
                     />
                 </g>
