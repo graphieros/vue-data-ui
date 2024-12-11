@@ -3445,6 +3445,10 @@ export function useConfig() {
             outline: "none",
             textAlign: POSITION.LEFT,
             bold: false,
+            selectedColor: {
+                useSerieColor: true,
+                fallback: COLOR_GREY_LIGHT,
+            }
         },
         userOptions: USER_OPTIONS({
             pdf: true,
