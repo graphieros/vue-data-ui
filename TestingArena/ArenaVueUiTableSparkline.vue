@@ -83,12 +83,15 @@ const model = ref([
     { key: 'thead.outline', def: 'none', type: 'text'},
     { key: 'thead.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
     { key: 'thead.bold', def: false, type: 'checkbox'},
-    { key: 'tbody.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'tbody.backgroundColor', def: '#BBBBBB', type: 'color'},
     { key: 'tbody.color', def: '#1A1A1A', type: 'color'},
     { key: 'tbody.fontSize', def: 14, type: 'number', min: 8, max: 24},
     { key: 'tbody.outline', def: '1px solid #CCCCCC', type: 'text'},
     { key: 'tbody.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
     { key: 'tbody.bold', def: false, type: 'checkbox'},
+
+    { key: 'tbody.selectedColor.useSerieColor', def: true, type: 'checkbox'},
+    { key: 'tbody.selectedColor.fallback', def: '#E1E5E840', type: 'text'}
 ])
 
 const themeOptions = ref([
