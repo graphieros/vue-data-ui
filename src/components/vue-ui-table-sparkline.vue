@@ -362,7 +362,7 @@ defineExpose({
                             border: FINAL_CONFIG.thead.outline,
                             textAlign: FINAL_CONFIG.thead.textAlign,
                             fontWeight: FINAL_CONFIG.thead.bold ? 'bold' : 'normal',
-                            minWidth: i === colNames.length - 1 ? '150px' : '48px',
+                            minWidth: i === colNames.length - 1 ? `${FINAL_CONFIG.sparkline.dimensions.width}px` : '48px',
                             cursor: datasetWithOrders[0].values[i] !== undefined ? 'pointer' : 'default',
                             paddingRight: i === colNames.length - 1 && FINAL_CONFIG.userOptions.show ? '36px' : '',
                         }" @click="() => orderDatasetByIndex(i)" :class="{'sticky-col': i === colNames.length - 1 && FINAL_CONFIG.showSparklines}" 
@@ -533,13 +533,18 @@ defineExpose({
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
                             backgroundColor: FINAL_CONFIG.tbody.backgroundColor,
-                            padding: '0'
+                            padding: '0',
                         }" class="vue-ui-data-table__tbody__td sticky-col">
-                            <SparkLine :key="`sparkline_${i}_${sparkStep}`" @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
-                                " :dataset="tr.sparklineDataset" :showInfo="false" :selectedIndex="selectedDataIndex" :config="{
+                            <SparkLine 
+                                :key="`sparkline_${i}_${sparkStep}`" 
+                                @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
+                                "
+                                :height-ratio="FINAL_CONFIG.sparkline.dimensions.heightRatio"
+                                :forced-padding="30"
+                                :dataset="tr.sparklineDataset" :showInfo="false" :selectedIndex="selectedDataIndex" :config="{
                                 type: FINAL_CONFIG.sparkline.type,
                                 style: {
-                                    backgroundColor: FINAL_CONFIG.tbody.backgroundColor,
+                                    backgroundColor: 'transparent',
                                     animation: {
                                         show: FINAL_CONFIG.sparkline.animation.show && !isPrinting && !isImaging,
                                         animationFrames: FINAL_CONFIG.sparkline.animation.animationFrames
