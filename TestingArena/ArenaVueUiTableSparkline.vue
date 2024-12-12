@@ -91,7 +91,10 @@ const model = ref([
     { key: 'tbody.bold', def: false, type: 'checkbox'},
 
     { key: 'tbody.selectedColor.useSerieColor', def: true, type: 'checkbox'},
-    { key: 'tbody.selectedColor.fallback', def: '#E1E5E840', type: 'text'}
+    { key: 'tbody.selectedColor.fallback', def: '#E1E5E840', type: 'text'},
+
+    { key: 'sparkline.dimensions.width', def: 150, min: 100, max: 300, type: 'number' },
+    { key: 'sparkline.dimensions.heightRatio', def: 1, type: 'number', min: 0.2, max: 2, step: 0.01 }
 ])
 
 const themeOptions = ref([
@@ -181,3 +184,7 @@ const step = ref(0)
         </template>
     </Box>
 </template>
+
+<style>
+
+</style>
