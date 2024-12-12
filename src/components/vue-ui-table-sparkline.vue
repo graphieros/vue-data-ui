@@ -22,6 +22,7 @@ import BaseIcon from "../atoms/BaseIcon.vue";
 import UserOptions from "../atoms/UserOptions.vue";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import vClickOutside from "../directives/vClickOutside";
 
 const { vue_ui_table_sparkline: DEFAULT_CONFIG } = useConfig();
 
@@ -102,6 +103,8 @@ onMounted(() => {
     prepareChart();
 });
 
+const usableColNames = ref(FINAL_CONFIG.value.colNames)
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
@@ -117,6 +120,11 @@ function prepareChart() {
     });
     if (tableContainer.value) {
         observer.observe(tableContainer.value);
+    }
+    usableColNames.value = [];
+
+    for(let i =0; i < maxSeriesLength.value; i += 1) {
+        usableColNames.value.push(FINAL_CONFIG.value.colNames[i] || `col ${i}`)
     }
 }
 
@@ -226,7 +234,8 @@ const maxSeriesLength = computed(() => {
 })
 
 const colNames = computed(() => {
-    let cn = FINAL_CONFIG.value.colNames;
+    let cn = usableColNames.value;
+
     if(!cn.length) {
         for(let i = 0; i < maxSeriesLength.value; i += 1) {
             cn.push(`col ${i+1}`)
@@ -331,13 +340,18 @@ defineExpose({
                 </caption>
 
                 <thead style="z-index: 1;padding-right:24px">
-                    <tr role="row" class="vue-ui-data-table__thead-row" :style="{
-                        backgroundColor: FINAL_CONFIG.thead.backgroundColor,
-                        color: FINAL_CONFIG.thead.color
-                    }">
+                    <tr 
+                        role="row" 
+                        class="vue-ui-data-table__thead-row"                         
+                        v-click-outside="restoreOrder" 
+                        :style="{
+                            backgroundColor: FINAL_CONFIG.thead.backgroundColor,
+                            color: FINAL_CONFIG.thead.color
+                        }"
+                    >
                         <th role="cell" :style="{
                             backgroundColor: FINAL_CONFIG.thead.backgroundColor,
-                            outline: FINAL_CONFIG.thead.outline,
+                            border: FINAL_CONFIG.thead.outline,
                             textAlign: FINAL_CONFIG.thead.textAlign,
                             fontWeight: FINAL_CONFIG.thead.bold ? 'bold' : 'normal',
                         }" class="sticky-col-first">
@@ -345,14 +359,18 @@ defineExpose({
                         </th>
                         <th role="cell" v-for="(th, i) in colNames" :style="{
                             background: FINAL_CONFIG.thead.backgroundColor,
-                            outline: FINAL_CONFIG.thead.outline,
+                            border: FINAL_CONFIG.thead.outline,
                             textAlign: FINAL_CONFIG.thead.textAlign,
                             fontWeight: FINAL_CONFIG.thead.bold ? 'bold' : 'normal',
-                            minWidth: i === colNames.length - 1 ? '150px' : '',
-                            cursor: datasetWithOrders[0].values[i] !== undefined ? 'pointer' : 'default'
-                        }" @click="() => orderDatasetByIndex(i)" :class="{'sticky-col': i === colNames.length - 1 && FINAL_CONFIG.showSparklines}" >
-                            <div style="display: flex; flex-direction: row; gap: 3px; align-items:center">
-                                <span>{{ th }}</span>
+                            minWidth: i === colNames.length - 1 ? '150px' : '48px',
+                            cursor: datasetWithOrders[0].values[i] !== undefined ? 'pointer' : 'default',
+                            paddingRight: i === colNames.length - 1 && FINAL_CONFIG.userOptions.show ? '36px' : '',
+                        }" @click="() => orderDatasetByIndex(i)" :class="{'sticky-col': i === colNames.length - 1 && FINAL_CONFIG.showSparklines}" 
+                        >
+                            <div>
+                                <span
+                                    :style="{ textAlign: FINAL_CONFIG.thead.textAlign }"
+                                >{{ th }}</span>
                                 <BaseIcon :size="18" v-if="isSorting && i === currentSortingIndex && datasetWithOrders[0].values[i] !== undefined" :name="currentSortOrder === 1 ? 'sort' : 'sortReverse'" :stroke="FINAL_CONFIG.thead.color"/>
                             </div>
                             <UserOptions
@@ -503,6 +521,7 @@ defineExpose({
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
                             backgroundColor: FINAL_CONFIG.tbody.backgroundColor,
+                            padding: '0'
                         }" class="vue-ui-data-table__tbody__td sticky-col">
                             <SparkLine :key="`sparkline_${i}_${sparkStep}`" @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
                                 " :dataset="tr.sparklineDataset" :showInfo="false" :selectedIndex="selectedDataIndex" :config="{
