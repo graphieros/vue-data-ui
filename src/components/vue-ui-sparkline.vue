@@ -45,6 +45,14 @@ const props = defineProps({
     selectedIndex: {
         type: Number,
         default: undefined
+    },
+    heightRatio: {
+        type: Number,
+        default: 1
+    },
+    forcedPadding: {
+        type: Number,
+        default: 30
     }
 });
 
@@ -185,7 +193,7 @@ function prepareChart() {
             svg.value.width = width;
             svg.value.height = height;
             svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth / 500 * width;
-            svg.value.padding = 30 / 500 * width;
+            svg.value.padding = props.forcedPadding / 500 * width;
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
@@ -194,10 +202,10 @@ function prepareChart() {
 }
 
 const svg = ref({
-    height: 80,
+    height: 80 * props.heightRatio,
     width: 500,
     chartWidth: FINAL_CONFIG.value.style.chartWidth,
-    padding: 30
+    padding: props.forcedPadding
 });
 
 const emits = defineEmits(['hoverIndex', 'selectDatapoint'])
@@ -338,7 +346,7 @@ function selectDatapoint(datapoint, index) {
 </script>
 
 <template>
-    <div ref="sparklineChart"  class="vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily}`">
+    <div ref="sparklineChart"  class="vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};`">
         <!-- SLOT BEFORE -->
         <slot 
             name="before" 
