@@ -495,6 +495,10 @@ declare module 'vue-data-ui' {
             strokeWidth?: number;
             type?: "line" | "bar",
             smooth?: boolean;
+            dimensions?: {
+                width?: number;
+                heightRatio?: number;
+            };
             animation?: {
                 show?: boolean;
                 animationFrames?: number;
