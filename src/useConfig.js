@@ -4705,6 +4705,7 @@ export function useConfig() {
             },
         },
         tbody: {
+            backgroundColor: COLOR_WHITE,
             tr: {
                 visible: 5,
                 height: 32,
