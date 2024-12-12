@@ -369,7 +369,8 @@ defineExpose({
                     ...FINAL_CONFIG.style,
                     border: `${FINAL_CONFIG.border.size}px solid ${FINAL_CONFIG.border.color}`,
                     width: '100%',
-                    borderCollapse: 'collapse'
+                    borderCollapse: 'collapse',
+                    backgroundColor: FINAL_CONFIG.tbody.backgroundColor
                 }">
                 <caption
                     ref="caption"
