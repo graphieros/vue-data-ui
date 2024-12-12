@@ -5370,6 +5370,7 @@ declare module 'vue-data-ui' {
             };
         };
         tbody?: {
+            backgroundColor?: string;
             tr?: {
                 visible?: number;
                 height?: number;
