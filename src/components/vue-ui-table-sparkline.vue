@@ -367,10 +367,15 @@ defineExpose({
                             paddingRight: i === colNames.length - 1 && FINAL_CONFIG.userOptions.show ? '36px' : '',
                         }" @click="() => orderDatasetByIndex(i)" :class="{'sticky-col': i === colNames.length - 1 && FINAL_CONFIG.showSparklines}" 
                         >
-                            <div>
-                                <span
-                                    :style="{ textAlign: FINAL_CONFIG.thead.textAlign }"
-                                >{{ th }}</span>
+                            <div
+                                :style="{
+                                    display: 'flex', 
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    justifyContent: FINAL_CONFIG.thead.textAlign
+                                }">
+                                <span>{{ th }}</span>
                                 <BaseIcon :size="18" v-if="isSorting && i === currentSortingIndex && datasetWithOrders[0].values[i] !== undefined" :name="currentSortOrder === 1 ? 'sort' : 'sortReverse'" :stroke="FINAL_CONFIG.thead.color"/>
                             </div>
                             <UserOptions
@@ -423,7 +428,14 @@ defineExpose({
                             fontWeight: FINAL_CONFIG.tbody.bold ? 'bold' : 'normal',
                             textAlign: FINAL_CONFIG.tbody.textAlign,
                         }" :data-cell="FINAL_CONFIG.translations.serie" class="vue-ui-data-table__tbody__td sticky-col-first">
-                            <div dir="auto" style="display: flex; flex-direction: row; align-items: center; gap: 6px">
+                            <div dir="auto"
+                                :style="{
+                                    display: 'flex', 
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    justifyContent: FINAL_CONFIG.tbody.textAlign
+                                }">
                                 <span v-if="FINAL_CONFIG.tbody.showColorMarker" :style="{ color: tr.color }">⬤</span>
                                 <span>{{ tr.name ?? "-" }}</span>
                             </div>
