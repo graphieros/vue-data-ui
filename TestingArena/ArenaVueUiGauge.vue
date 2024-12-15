@@ -80,7 +80,11 @@ const model = ref([
     { key: 'style.chart.layout.markers.bold', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.markers.fontSizeRatio', def: 1, type: 'range', min: 0, max: 2, step:0.01},
     { key: 'style.chart.layout.markers.offsetY', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.layout.markers.roundingVale', def: 0, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.layout.markers.roundingValue', def: 0, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.layout.markers.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.markers.prefix', def: 'P', type: 'text'},
+    { key: 'style.chart.layout.markers.suffix', def: 'S', type: 'text'},
+
     { key: 'style.chart.layout.pointer.type', def: 'pointy', type: 'select', options: ['rounded', 'pointy']},
     { key: 'style.chart.layout.pointer.size', def: 1, type: 'range', min: 0.2, max: 1.5, step: 0.01},
     { key: 'style.chart.layout.pointer.stroke', def: '#FFFFFF', type: 'color'},
@@ -98,6 +102,8 @@ const model = ref([
     { key: 'style.chart.legend.showPlusSymbol', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.useRatingColor', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.chart.legend.show', def: true, type: 'checkbox'},
+
     { key: 'style.chart.title.text', def: 'Lorem ipsum dolor amet', type: 'text'},
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.title.fontSize', def: 20, type: 'range', min: 8, max: 48},
@@ -127,6 +133,15 @@ const config = computed(() => {
             ...c.style,
             chart: {
                 ...c.style.chart,
+                layout: {
+                    ...c.style.chart.layout,
+                    markers: {
+                        ...c.style.chart.layout.markers,
+                        formatter: ({ value }) => {
+                            return 'V | ' + value
+                        }
+                    }
+                },
                 legend: {
                     ...c.style.chart.legend,
                     formatter: ({value}) => {
