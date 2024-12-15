@@ -514,32 +514,46 @@ defineExpose({
             </template>
 
             <!-- STEP MARKERS -->
-            <text
-                v-for="(arc, i) in arcs"
-                :data-cy="`gauge-step-marker-label-${i}`"
-                :x="offsetFromCenterPoint({
-                    centerX: svg.width / 2,
-                    centerY: arcSizeSource.base,
-                    initX: arc.center.startX,
-                    initY: arc.center.startY,
-                    offset: svg.markerOffset
-                }).x"
-                :y="offsetFromCenterPoint({
-                    centerX: svg.width / 2,
-                    centerY: arcSizeSource.base,
-                    initX: arc.center.startX,
-                    initY: arc.center.startY,
-                    offset: svg.markerOffset
-                }).y"
-                :text-anchor="arc.center.startX < (svg.width / 2 - 5) ? 'end' : arc.center.startX > (svg.width / 2 + 5) ? 'start' : 'middle'"
-                :font-size="svg.labelFontSize * FINAL_CONFIG.style.chart.layout.markers.fontSizeRatio"
-                :font-weight="`${FINAL_CONFIG.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
-                :fill="FINAL_CONFIG.style.chart.layout.markers.color"
-            >
-                {{ arc.from.toFixed(FINAL_CONFIG.style.chart.layout.markers.roundingValue) }}
-            </text>
+            <g v-if="FINAL_CONFIG.style.chart.layout.markers.show">
+                <text
+                    v-for="(arc, i) in arcs"
+                    :data-cy="`gauge-step-marker-label-${i}`"
+                    :x="offsetFromCenterPoint({
+                        centerX: svg.width / 2,
+                        centerY: arcSizeSource.base,
+                        initX: arc.center.startX,
+                        initY: arc.center.startY,
+                        offset: svg.markerOffset
+                    }).x"
+                    :y="offsetFromCenterPoint({
+                        centerX: svg.width / 2,
+                        centerY: arcSizeSource.base,
+                        initX: arc.center.startX,
+                        initY: arc.center.startY,
+                        offset: svg.markerOffset
+                    }).y"
+                    :text-anchor="arc.center.startX < (svg.width / 2 - 5) ? 'end' : arc.center.startX > (svg.width / 2 + 5) ? 'start' : 'middle'"
+                    :font-size="svg.labelFontSize * FINAL_CONFIG.style.chart.layout.markers.fontSizeRatio"
+                    :font-weight="`${FINAL_CONFIG.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
+                    :fill="FINAL_CONFIG.style.chart.layout.markers.color"
+                >
+                    {{ 
+                        applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.markers.formatter,
+                            arc.from,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.markers.prefix,
+                                v: arc.from,
+                                s: FINAL_CONFIG.style.chart.layout.markers.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
+                            })
+                        )
+                    }}
+                </text>
+            </g>
 
             <text
+                v-if="FINAL_CONFIG.style.chart.layout.markers.show"
                 data-cy="gauge-step-marker-label-last"
                 :x="offsetFromCenterPoint({
                     centerX: svg.width / 2,
@@ -560,7 +574,18 @@ defineExpose({
                 :font-weight="`${FINAL_CONFIG.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
                 :fill="FINAL_CONFIG.style.chart.layout.markers.color"
             >
-                {{ max.toFixed(FINAL_CONFIG.style.chart.layout.markers.roundingValue) }}
+                {{ 
+                    applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.markers.formatter,
+                        max,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.markers.prefix,
+                            v: max,
+                            s: FINAL_CONFIG.style.chart.layout.markers.suffix,
+                            r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
+                        })
+                    )
+                }}
             </text>
 
             <!-- GAUGE POINTER -->
@@ -622,6 +647,7 @@ defineExpose({
 
             <!-- GAUGE RATING --> 
             <text
+                v-if="FINAL_CONFIG.style.chart.legend.show"
                 data-cy="gauge-score"
                 :x="svg.width / 2"
                 :y="arcSizeSource.ratingBase"
