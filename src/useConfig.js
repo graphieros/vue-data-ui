@@ -1122,11 +1122,15 @@ export function useConfig() {
                         gradientIntensity: 20
                     },
                     markers: {
+                        show: true,
                         color: COLOR_BLACK,
                         bold: true,
                         fontSizeRatio: 1,
                         offsetY: 0,
-                        roundingValue: 0
+                        roundingValue: 0,
+                        formatter: null,
+                        prefix: '',
+                        suffix: '',
                     },
                     pointer: {
                         type: 'pointy',
@@ -1144,6 +1148,7 @@ export function useConfig() {
                     }
                 },
                 legend: {
+                    show: true,
                     fontSize: FONT._48,
                     prefix: '',
                     suffix: '',
