@@ -3148,11 +3148,15 @@ declare module 'vue-data-ui' {
                         gradientIntensity?: number;
                     };
                     markers?: {
+                        show?: boolean;
                         color?: string;
                         bold?: boolean;
                         fontSizeRatio?: number;
                         offsetY?: number;
                         roundingValue?: number;
+                        formatter?: Formatter;
+                        prefix?: string;
+                        suffix?: string;
                     };
                     pointer?: {
                         type?: "rounded" | "pointy";
@@ -3170,6 +3174,7 @@ declare module 'vue-data-ui' {
                     };
                 };
                 legend?: {
+                    show?: boolean;
                     fontSize?: number;
                     prefix?: string;
                     suffix?: string;
