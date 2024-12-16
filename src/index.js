@@ -1,7 +1,8 @@
 import { defineAsyncComponent } from "vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
 import getThemeConfig from "./getThemeConfig";
-import { getPalette, createWordCloudDatasetFromPlainText } from "./lib";
+import { getPalette, createWordCloudDatasetFromPlainText, abbreviate } from "./lib";
+import { lightenColor, darkenColor, shiftColorHue } from "./exposedLib";
 
 export const Arrow = defineAsyncComponent(() => import("./atoms/Arrow.vue"))
 export const VueDataUi = defineAsyncComponent(() => import("./components/vue-data-ui.vue"))
@@ -66,8 +67,12 @@ export const VueUiBullet = defineAsyncComponent(() => import('./components/vue-u
 export const VueUiFunnel = defineAsyncComponent(() => import('./components/vue-ui-funnel.vue'))
 export const VueUiHistoryPlot = defineAsyncComponent(() => import('./components/vue-ui-history-plot.vue'))
 export {
+    abbreviate,
     createWordCloudDatasetFromPlainText,
+    darkenColor,
     getPalette,
     getThemeConfig,
     getVueDataUiConfig,
+    lightenColor,
+    shiftColorHue,
 }
