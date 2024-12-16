@@ -5929,5 +5929,117 @@ declare module 'vue-data-ui' {
 
     export type VueDataUiConfigKey = "vue_ui_3d_bar" | "vue_ui_age_pyramid" | "vue_ui_annotator" | "vue_ui_candlestick" | "vue_ui_chestnut" | "vue_ui_dashboard" | "vue_ui_digits" | "vue_ui_donut" | "vue_ui_donut_evolution" | "vue_ui_gauge" | "vue_ui_heatmap" | "vue_ui_mini_loader" | "vue_ui_molecule" | "vue_ui_mood_radar" | "vue_ui_onion" | "vue_ui_quadrant" | "vue_ui_radar" | "vue_ui_rating" | "vue_ui_relation_circle" | "vue_ui_rings" | "vue_ui_scatter" | "vue_ui_screenshot" | "vue_ui_skeleton" | "vue_ui_smiley" | "vue_ui_sparkhistogram" | "vue_ui_sparkstackbar" | "vue_ui_sparkbar" | "vue_ui_sparkline" | "vue_ui_table" | "vue_ui_table_sparkline" | "vue_ui_thermometer" | "vue_ui_tiremarks" | "vue_ui_vertical_bar" | "vue_ui_waffle" | "vue_ui_wheel" | "vue_ui_xy" | "vue_ui_nested_donuts" | "vue_ui_galaxy" | "vue_ui_kpi" | "vue_ui_treemap" | "vue_ui_table_heatmap" | "vue_ui_accordion" | "vue_ui_quick_chart" | "vue_ui_cursor" | "vue_ui_spark_trend" | "vue_ui_strip_plot" | "vue_ui_dumbbell" | "vue_ui_word_cloud" | "vue_ui_xy_canvas" | "vue_ui_flow" | "vue_ui_parallel_coordinate_plot" | "vue_ui_timer" | "vue_ui_carousel_table" | "vue_ui_gizmo" | "vue_ui_stackbar" | "vue_ui_bullet" | "vue_ui_funnel" | "vue_ui_history_plot";
 
-    export const getVueDataUiConfig: () => VueDataUiConfig;
+    export type VueDataUiWordCloudTransformCallback = ((word: string) => string) | null;
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Create a dataset for VueUiWordCloud from a string
+     * ___
+     * @example
+     * const dataset = createWordCloudDatasetFromPlainText('Lorem Ipsum Dolor', (w) => w.toUpperCase())
+     * 
+     * @param text - The text from which the dataset will be generated
+     * @param callback - Optional transform callback to format each word of the dataset
+     */
+    export const createWordCloudDatasetFromPlainText: (text: string, callback?: VueDataUiWordCloudTransformCallback ) => VueUiWordCloudDatasetItem[];
+
+    export type VueDataUiAbbreviatePayload = {
+        source: string;
+        length?: number;
+    }
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Abbreviate a string to a given length
+     * ___
+     * @example
+     * const label = abbreviate({
+     *  source: 'Lorem Ipsum Dolor',
+     *  length: 3
+     * })
+     * 
+     * @param source - The string to abbreviate
+     * @param length - The number of letters to return (defaults to 3)
+     */
+    export const abbreviate: (payload: VueDataUiAbbreviatePayload) => string;
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Get the color palette for a given theme
+     * ___
+     * @example
+     * const palette = getPalette("hack");
+     * 
+     * @param theme - The theme for which the palette is requested (e.g., "hack" | "zen", | "concrete")
+     */
+    export const getPalette: (theme: Theme) => string[];
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Get the default config for a given component
+     * ___
+     * @example
+     * const defaultConfig = getVueDataUiConfig("vue_ui_xy");
+     * 
+     * @param key - The key of the component in snake case (e.g., "vue_ui_xy")
+     */
+    export const getVueDataUiConfig: (key: VueDataUiConfigKey) => VueDataUiConfig;
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Lightens a color by a specified strength.
+     * ___
+     * @example
+    * const color = lightenColor("#FF0000", 0.25);
+    * const color = lightenColor("#FF000080", 0.25);
+    * const color = lightenColor("rgb(255,0,0)", 0.25);
+    * const color = lightenColor("rgb(255,0,0,0.5)", 0.25);
+    * const color = lightenColor("red", 0.25);
+    * 
+    * @param color - The input color. Can be hexadecimal (e.g., "#FF0000", or "#FF000080" with alpha channel), RGB or RGBA, or a named color.
+    * @param strength - The strength to lighten the color, typically a value between 0 and 1.
+    * @returns The lightened color in hexadecimal format.
+    */
+    export const lightenColor: (color: string, strength: number) => string;
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Darkens a color by a specified strength.
+     * ___
+     * @example
+    * const color = darkenColor("#FF0000", 0.25);
+    * const color = darkenColor("#FF000080", 0.25);
+    * const color = darkenColor("rgb(255,0,0)", 0.25);
+    * const color = darkenColor("rgb(255,0,0,0.5)", 0.25);
+    * const color = darkenColor("red", 0.25);
+    * 
+    * @param color - The input color. Can be hexadecimal (e.g., "#FF0000", or "#FF000080" with alpha channel), or RGB or RGBA. 
+    * @param strength - The strength to darken the color, typically a value between 0 and 1.
+    * @returns The darkened color in hexadecimal format.
+    */
+    export const darkenColor: (color: string, strength: number) => string;
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Shifts hue for a given color, by a given strength.
+     * ___
+     * @example
+    * const color = shiftColorHue("#FF0000", 0.25);
+    * const color = shiftColorHue("#FF000080", 0.25);
+    * const color = shiftColorHue("rgb(255,0,0)", 0.25);
+    * const color = shiftColorHue("rgb(255,0,0,0.5)", 0.25);
+    * const color = shiftColorHue("red", 0.25);
+    * 
+    * @param color - The input color. Can be hexadecimal (e.g., "#FF0000", or "#FF000080" with alpha channel), or RGB or RGBA. 
+    * @param strength - The strength to darken the color, typically a value between 0 and 1.
+    * @returns The shifted color in hexadecimal format.
+    */
+    export const shiftColorHue: (color: string, strength: number) => string;
 }
