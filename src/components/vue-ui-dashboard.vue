@@ -30,7 +30,12 @@ function toggleLock() {
 }
 
 const gridSize = 20;
-const items = ref(props.dataset);
+const items = ref(props.dataset.map((item,i) => {
+    return {
+        ...item,
+        index: i
+    }
+}));
 const dragging = ref(null);
 const resizing = ref(null);
 const dragStart = ref({ x: 0, y: 0 });
@@ -39,6 +44,22 @@ const dashboardContainer = ref(null);
 const isDragOrResize = ref(false);
 const changeIndex = ref(null);
 const isPrinting = ref(false);
+const isPaused = ref(false);
+
+function handleInteraction(event) {
+    const target = event.target;
+    if (target.tagName === "INPUT" && target.type === "range") {
+        isPaused.value = true;
+    }
+}
+
+function handleInteractionEnd(event) {
+    const target = event.target;
+    if (target.tagName === "INPUT" && target.type === "range") {
+        isPaused.value = false;
+    }
+}
+
 
 function generatePdf(){
     isPrinting.value = true;
@@ -127,7 +148,7 @@ function checkDirection(item, deltaX, deltaY) {
 }
 
 function onMouseMove(event) {
-    if (isLocked.value) return;
+    if (isLocked.value || isPaused.value) return;
     isDragOrResize.value = true;
     if (dragging.value !== null) {
         const item = items.value[dragging.value];
@@ -182,7 +203,7 @@ function stopDragResize() {
 };
 
 function onTouchStart(index) {
-    if (isLocked.value) return;
+    if (isLocked.value || isPaused.value) return;
     isDragOrResize.value = true;
     changeIndex.value = index;
     if (resizing.value === null) {
@@ -214,7 +235,7 @@ function onTouchResizeMove(event) {
 };
 
 function onTouchMove(event) {
-    if (isLocked.value) return;
+    if (isLocked.value || isPaused.value) return;
     isDragOrResize.value = true;
     event.preventDefault();
     if (dragging.value !== null) {
@@ -280,7 +301,12 @@ defineExpose({
 </script>
 
 <template>
-    <div>
+    <div
+        @mousedown="handleInteraction"
+        @mouseup="handleInteractionEnd"
+        @touchstart="handleInteraction"
+        @touchend="handleInteractionEnd"
+    >
         <div data-html2canvas-ignore style="width: 100%; display:flex; justify-content: end;" v-if="FINAL_CONFIG.allowPrint">
             <button class="vue-ui-dashboard-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${FINAL_CONFIG.style.board.color}`">
                 <svg class="vue-ui-dashboard-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="FINAL_CONFIG.style.board.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -316,11 +342,11 @@ defineExpose({
                         top: `${item.top}%`,
                         cursor: 'move',
                         boxShadow: changeIndex === index ? '0 6px 12px -3px rgba(0,0,0,0.3)' : '',
-                        zIndex: changeIndex === index ? '1' : '0',
+                        zIndex: changeIndex === index ? items.length + 1 : item.index,
                         backgroundColor: FINAL_CONFIG.style.item.backgroundColor
                     }"
                     @mousedown="startDrag(index)"
-                    @touchstart="onTouchStart(index)"
+                    @touchstart="onTouchStart(index, item)"
                 >
                     <template v-if="!isLocked">                    
                         <div
@@ -352,6 +378,7 @@ defineExpose({
                             @touchend="onTouchEnd"
                         ></div>
                     </template>
+
                     <slot name="content" :item="item" :index="index" :left="item.left" :top="item.top" :height="item.height" :width="item.width"></slot>
                 </div>
             </div>
