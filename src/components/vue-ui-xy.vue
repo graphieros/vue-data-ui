@@ -2419,7 +2419,7 @@ export default {
                 // NoTitle height to substract
                 let noTitleHeight = 0;
                 if (this.$refs.noTitle) {
-                    noTitleHeight = this.$refs.source.getBoundingClientRect().height;
+                    noTitleHeight = this.$refs.noTitle.getBoundingClientRect().height;
                 }
 
                 this.height = height - titleHeight - legendHeight - slicerHeight - sourceHeight - noTitleHeight;
