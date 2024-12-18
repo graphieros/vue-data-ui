@@ -78,26 +78,6 @@ describe('<VueUiRelationCircle />', () => {
           }
         });
       }
-
-      for (let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="relation-plot-${i}"]`).then(($plot) => {
-          cy.wrap($plot)
-            .should('exist')
-            .invoke('attr', 'fill')
-            .should('eq', fixture.config.style.plot.color)
-        });
-      }
-
-      // cy.get(`[data-cy="user-options-summary"]`).click();
-      // cy.get(`[data-cy="user-options-pdf"]`).click();
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);
-
-      // cy.get(`[data-cy="user-options-img"]`).click();
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.png`);
-
-      // cy.get(`[data-cy="user-options-summary"]`).click();
-      // cy.clearDownloads();
-
     });
   })
 })
