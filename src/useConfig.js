@@ -206,7 +206,9 @@ export function useConfig() {
         color: COLOR_GREY_MID,
         highlightColor: COLOR_GREY_DARK,
         fontSize: FONT._14,
-        useResetSlot: false
+        useResetSlot: false,
+        startIndex: null,
+        endIndex: null,
     }
 
     const MINIMAP = {
@@ -2443,7 +2445,9 @@ export function useConfig() {
         zoomHighlightColor: COLOR_GREY_DARK,
         zoomFontSize: FONT._14,
         zoomUseResetSlot: false,
-        zoomMinimap: MINIMAP
+        zoomMinimap: MINIMAP,
+        zoomStartIndex: null,
+        zoomEndIndex: null
     }
 
     const vue_ui_age_pyramid = {
