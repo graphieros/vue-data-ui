@@ -10,13 +10,13 @@ const dataset = ref([
         id: "01",
         label: "Lorem",
         relations: ["02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"],
-        weights: [5, 3, 10, 2, 9, 3, 1, 2, 3, 7, 1],
+        weights: [5, 3, 20, 2, 9, 3, 1, 2, 3, 7, 1],
     },
     {
         id: "02",
         label: "Ipsum",
-        relations: ["01", "03", "07", "06", "07"],
-        weights: [3, 2, 9, 7, 1],
+        relations: ["01", "03"],
+        weights: [3, 2],
     },
     {
         id: "03",
@@ -28,7 +28,7 @@ const dataset = ref([
         id: "04",
         label: "Consectetur",
         relations: ["01", "05", "10"],
-        weights: [2, 1, 4],
+        weights: [3, 1, 4],
     },
     {
         id: "05",
@@ -89,7 +89,7 @@ const model = ref([
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
     
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.size', def: 400, type: 'number', min: 100, max: 1000},
     { key: 'style.limit', def: 50, type: 'range', min: 2, max: 100},
@@ -97,8 +97,9 @@ const model = ref([
     { key: 'style.animation.speedMs', def: 300, type: 'number', min: 0, max: 1000},
     { key: 'style.labels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.labels.fontSize', def: 10, type: 'number', min: 8, max: 48},
-    { key: 'style.labels.links.curved', def: true, type: 'checkbox'},
-    { key: 'style.labels.links.maxWidth', def: 3, type: 'number', min: 0, max: 100}, // useless ?
+    { key: 'style.links.curved', def: false, type: 'checkbox'},
+    { key: 'style.links.maxWidth', def: 5, type: 'number', min: 0, max: 100},
+    
     { key: 'style.circle.radiusProportion', def: 0.2, type: 'number', min: 0.1, max: 1, step: 0.01},
     { key: 'style.circle.stroke', def: '#CCCCCC', type: 'color'},
     { key: 'style.circle.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
@@ -126,10 +127,20 @@ const themeOptions = ref([
 const currentTheme = ref(themeOptions.value[4])
 
 const config = computed(() => {
+    const c = convertArrayToObject(model.value);
     return {
-        ...convertArrayToObject(model.value),
+        ...c,
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
+        style: {
+            ...c.style,
+            // weightLabels: {
+            //     formatter: ({ value, config }) =>{
+            //         console.log(value, config);
+            //         return value
+            //     }
+            // }
+        }
     }
 })
 
@@ -150,6 +161,9 @@ const step = ref(0)
             ...config,
             responsive: true
         }">
+        <!-- <template #dataLabel="{ x,y,color,weight }">
+            <circle :cx="x" :cy="y" r="12" :fill="color"/>
+        </template> -->
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                 WATERMARK
