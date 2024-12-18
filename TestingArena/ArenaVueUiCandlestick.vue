@@ -116,6 +116,9 @@ const model = ref([
     { key: 'style.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
     { key: 'style.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'style.zoom.useResetSlot', def: false, type: 'checkbox'},
+    { key: 'style.zoom.startIndex', def: 2, type: 'number', min: 0, max: 1000},
+    { key: 'style.zoom.endIndex', def: 6, type: 'number', min: 0, max: 1000},
+
     { key: 'style.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
     { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.title.fontSize', def: 20, type: 'number', min: 8, max: 48},

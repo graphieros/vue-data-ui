@@ -41,14 +41,14 @@ const dataset = ref([
     },
 ]);
 
-onMounted(() => {
-    setTimeout(() => {
-        dataset.value.push({
-            name: 'ALT',
-            series: [100, 100, 100, 100, 100, 100, 100, 100, 100]
-        })
-    }, 3000)
-})
+// onMounted(() => {
+//     setTimeout(() => {
+//         dataset.value.push({
+//             name: 'ALT',
+//             series: [100, 100, 100, 100, 100, 100, 100, 100, 100]
+//         })
+//     }, 3000)
+// })
 
 const model = ref([
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
@@ -86,6 +86,8 @@ const model = ref([
     { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.zoom.highlightColor', def: '#5A5A5A', type: 'color'},
     { key: 'style.chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
+    { key: 'style.chart.zoom.startIndex', def:1, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.zoom.endIndex', def: 2, type: 'number', min: 0, max: 100},
 
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -221,6 +223,11 @@ const step = ref(0);
             </template>
     </LocalVueUiStackbar>
 </div>
+
+<!-- <div style="width: 200px; position: fixed; top: 64px; left: 400px; transform-origin: right top; transform: translateY(0px)">
+    <LocalVueUiStackbar :dataset="dataset" :config="config" :key="`local_${step}`">
+    </LocalVueUiStackbar>
+</div> -->
 
 <Box>
     <template #title>VueUiStackbar</template>
