@@ -768,6 +768,7 @@ defineExpose({
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="onionChart"
             :content="tooltipContent"
+            :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>

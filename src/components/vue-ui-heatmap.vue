@@ -730,6 +730,7 @@ defineExpose({
             :offsetY="FINAL_CONFIG.style.tooltip.offsetY"
             :parent="heatmapChart"
             :content="tooltipContent"
+            :isFullscreen="isFullscreen"
             :isCustom="FINAL_CONFIG.style.tooltip.customFormat && typeof FINAL_CONFIG.style.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>

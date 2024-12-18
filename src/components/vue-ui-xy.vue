@@ -1063,6 +1063,8 @@
             :valueEnd="slicer.end"
             v-model:start="slicer.start"
             v-model:end="slicer.end"
+            :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
+            :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => largestTriangleThreeBucketsArray({data:datapoint.series, threshold: FINAL_CONFIG.downsample.threshold}).length))"
             @reset="refreshSlicer"
             @trapMouse="selectMinimapIndex"
         >
@@ -1120,6 +1122,7 @@
             :offsetY="FINAL_CONFIG.chart.tooltip.offsetY"
             :parent="$refs.chart"
             :content="tooltipContent"
+            :isFullscreen="isFullscreen"
             :isCustom="FINAL_CONFIG.chart.tooltip.customFormat && typeof FINAL_CONFIG.chart.tooltip.customFormat === 'function'"
             >
                 <template #tooltip-before>
@@ -2241,6 +2244,7 @@ export default {
     mounted() {
         // FIXME: all contents must be placed in a func and also called when ds or cfg are updated
         this.prepareChart();
+        this.setupSlicer();
 
         document.addEventListener("mousemove", (e) => {
             this.clientPosition = {
@@ -2325,6 +2329,18 @@ export default {
                     mergedConfig.chart.grid.labels.yAxis.scaleMax = this.config.chart.grid.labels.yAxis.scaleMax;
                 } else {
                     mergedConfig.chart.grid.labels.yAxis.scaleMax = null;
+                }
+
+                if (this.config && this.hasDeepProperty(this.config, 'chart.zoom.startIndex')) {
+                    mergedConfig.chart.zoom.startIndex = this.config.chart.zoom.startIndex;
+                } else {
+                    mergedConfig.chart.zoom.startIndex = null;
+                }
+
+                if (this.config && this.hasDeepProperty(this.config, 'chart.zoom.endIndex')) {
+                    mergedConfig.chart.zoom.endIndex = this.config.chart.zoom.endIndex;
+                } else {
+                    mergedConfig.chart.zoom.endIndex = null;
                 }
 
                 // ----------------------------------------------------------------------------
@@ -2566,12 +2582,42 @@ export default {
             }
             return res;
         },
-        refreshSlicer() {
-            this.slicer = {
-                start: 0,
-                end: Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data:datapoint.series, threshold: this.FINAL_CONFIG.downsample.threshold}).length))
+        async setupSlicer() {
+            if ((this.FINAL_CONFIG.chart.zoom.startIndex !== null || this.FINAL_CONFIG.chart.zoom.endIndex !== null) && this.$refs.chartSlicer) {
+                if (this.FINAL_CONFIG.chart.zoom.startIndex !== null) {
+                    await this.$nextTick();
+                    await this.$nextTick();
+                    this.$refs.chartSlicer.setStartValue(this.FINAL_CONFIG.chart.zoom.startIndex);
+                }
+                if (this.FINAL_CONFIG.chart.zoom.endIndex !== null) {
+                    await this.$nextTick();
+                    await this.$nextTick();
+                    this.$refs.chartSlicer.setEndValue(this.validSlicerEnd(this.FINAL_CONFIG.chart.zoom.endIndex + 1));
+                }
+            } else {
+                this.slicer = {
+                    start: 0,
+                    end: Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data:datapoint.series, threshold: this.FINAL_CONFIG.downsample.threshold}).length))
+                };
+                this.slicerStep += 1;
             }
-            this.slicerStep += 1;
+        },
+        refreshSlicer() {
+            this.setupSlicer();
+        },
+        validSlicerEnd(v) {
+            const max = Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data:datapoint.series, threshold: this.FINAL_CONFIG.downsample.threshold}).length));
+            if (v > max) {
+                return max;
+            }
+            if (v < 0 || (this.FINAL_CONFIG.chart.zoom.startIndex !== null && v < this.FINAL_CONFIG.chart.zoom.startIndex)) {
+                if (this.FINAL_CONFIG.chart.zoom.startIndex !== null) {
+                    return this.FINAL_CONFIG.chart.zoom.startIndex + 1
+                } else {
+                    return 1
+                }
+            }
+            return v
         },
         calcRectHeight(plot) {
             if(plot.value >= 0) {

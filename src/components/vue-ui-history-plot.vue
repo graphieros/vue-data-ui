@@ -1070,6 +1070,7 @@ defineExpose({
             :parent="historyPlotChart"
             :content="tooltipContent"
             :isCustom="useCustomFormat"
+            :isFullscreen="isFullscreen"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

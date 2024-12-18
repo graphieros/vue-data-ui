@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import themes from "../themes.json";
 import * as detector from "../chartDetector";
 import {
@@ -16,6 +16,7 @@ import {
     dataLabel,
     error,
     functionReturnsString,
+    hasDeepProperty,
     isFunction,
     makeDonut, 
     palette,
@@ -84,8 +85,10 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
+    let finalConfig = {};
+
     if (mergedConfig.theme) {
-        return {
+        finalConfig =  {
             ...useNestedProp({
                 userConfig: themes.vue_ui_quick_chart[mergedConfig.theme] || props.config,
                 defaultConfig: mergedConfig
@@ -93,8 +96,25 @@ function prepareConfig() {
             customPalette: themePalettes[mergedConfig.theme] || palette
         }
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'zoomStartIndex')) {
+        finalConfig.zoomStartIndex = props.config.zoomStartIndex;
+    } else {
+        finalConfig.zoomStartIndex = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'zoomEndIndex')) {
+        finalConfig.zoomEndIndex = props.config.zoomEndIndex;
+    } else {
+        finalConfig.zoomEndIndex = null;
+    }
+
+    // ----------------------------------------------------------------------------
+    return finalConfig;
 }
 
 watch(() => props.config, (_newCfg) => {
@@ -193,6 +213,7 @@ function prepareChart() {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(quickChart.value.parentNode);
     }
+    setupSlicer();
 }
 
 onBeforeUnmount(() => {
@@ -478,12 +499,47 @@ const slicer = ref({
 });
 
 function refreshSlicer() {
-    slicer.value = {
-        start: 0,
-        end: formattedDataset.value.maxSeriesLength
-    };
-    slicerStep.value += 1;
+    setupSlicer();
 }
+
+const slicerComponent = ref(null);
+
+async function setupSlicer() {
+    if ((FINAL_CONFIG.value.zoomStartIndex !== null || FINAL_CONFIG.value.zoomEndIndex !== null) && slicerComponent.value) {
+        if (FINAL_CONFIG.value.zoomStartIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.zoomStartIndex);
+        }
+        if (FINAL_CONFIG.value.zoomEndIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.zoomEndIndex + 1));
+        }
+    } else {
+        slicer.value = {
+            start: 0,
+            end: formattedDataset.value.maxSeriesLength
+        };
+        slicerStep.value += 1;
+    }
+}
+
+function validSlicerEnd(v) {
+    const max = formattedDataset.value.maxSeriesLength;
+    if (v > max) {
+        return max;
+    }
+    if (v < 0 || (FINAL_CONFIG.value.zoomStartIndex !== null && v < FINAL_CONFIG.value.zoomStartIndex)) {
+        if (FINAL_CONFIG.value.zoomStartIndex !== null) {
+            return FINAL_CONFIG.value.zoomStartIndex + 1
+        } else {
+            return 1
+        }
+    }
+    return v
+}
+
 
 const minimap = computed(() => {
     if(!FINAL_CONFIG.value.zoomMinimap.show || chartType.value === detector.chartType.DONUT) return [];
@@ -1560,6 +1616,7 @@ defineExpose({
         <div v-if="[detector.chartType.BAR, detector.chartType.LINE].includes(chartType) && FINAL_CONFIG.zoomXy && formattedDataset.maxSeriesLength > 1"
             :key="`slicer_${slicerStep}`" ref="quickChartSlicer">        
             <Slicer
+                ref="slicerComponent"
                 :key="`slicer_${slicerStep}`"
                 :background="FINAL_CONFIG.zoomColor"
                 :borderColor="FINAL_CONFIG.backgroundColor"
@@ -1584,6 +1641,8 @@ defineExpose({
                 :minimapSelectedIndex="commonSelectedIndex"
                 v-model:start="slicer.start"
                 v-model:end="slicer.end"
+                :refreshStartPoint="FINAL_CONFIG.zoomStartIndex !== null ? FINAL_CONFIG.zoomStartIndex : 0"
+                :refreshEndPoint="FINAL_CONFIG.zoomEndIndex !== null ? FINAL_CONFIG.zoomEndIndex + 1 : formattedDataset.maxSeriesLength"
                 @reset="refreshSlicer"
                 @trapMouse="setCommonSelectedIndex"
             >
@@ -1702,6 +1761,7 @@ defineExpose({
             :offsetY="FINAL_CONFIG.tooltipOffsetY"
             :parent="quickChart"
             :content="tooltipContent"
+            :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.tooltipCustomFormat)"
         >
             <template #tooltip-before>

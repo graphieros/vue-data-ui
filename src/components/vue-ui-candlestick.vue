@@ -9,6 +9,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    hasDeepProperty,
     isFunction,
     objectIsEmpty,
     setOpacity,
@@ -83,16 +84,37 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
+
+    let finalConfig = {};
+
     if (mergedConfig.theme) {
-        return {
+        finalConfig = {
             ...useNestedProp({
                 userConfig: themes.vue_ui_candlestick[mergedConfig.theme] || props.config,
                 defaultConfig: mergedConfig
             }),
         }
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'style.zoom.startIndex')) {
+        finalConfig.style.zoom.startIndex = props.config.style.zoom.startIndex;
+    } else {
+        finalConfig.style.zoom.startIndex = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.zoom.endIndex')) {
+        finalConfig.style.zoom.endIndex = props.config.style.zoom.endIndex;
+    } else {
+        finalConfig.style.zoom.endIndex = null;
+    }
+
+    // ----------------------------------------------------------------------------
+
+    return finalConfig;
 }
 
 watch(() => props.config, (_newCfg) => {
@@ -161,6 +183,7 @@ function prepareChart() {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(candlestickChart.value.parentNode);
     }
+    setupSlicer();
 }
 
 onBeforeUnmount(() => {
@@ -384,11 +407,45 @@ function useTooltip(index, datapoint) {
 }
 
 function refreshSlicer() {
-    slicer.value = {
-        start: 0,
-        end: len.value
-    };
-    slicerStep.value += 1;
+    setupSlicer();
+}
+
+const slicerComponent = ref(null);
+
+async function setupSlicer() {
+    if ((FINAL_CONFIG.value.style.zoom.startIndex !== null || FINAL_CONFIG.value.style.zoom.endIndex !== null) && slicerComponent.value) {
+        if (FINAL_CONFIG.value.style.zoom.startIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.style.zoom.startIndex);
+        }
+        if (FINAL_CONFIG.value.style.zoom.endIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.style.zoom.endIndex + 1));
+        }
+    } else {
+        slicer.value = {
+            start: 0,
+            end: len.value
+        };
+        slicerStep.value += 1;
+    }
+}
+
+function validSlicerEnd(v) {
+    const max = len.value;
+    if (v > max) {
+        return max;
+    }
+    if (v < 0 || (FINAL_CONFIG.value.style.zoom.startIndex !== null && v < FINAL_CONFIG.value.style.zoom.startIndex)) {
+        if (FINAL_CONFIG.value.style.zoom.startIndex !== null) {
+            return FINAL_CONFIG.value.style.zoom.startIndex + 1;
+        } else {
+            return 1;
+        }
+    }
+    return v;
 }
 
 function generateCsv() {
@@ -776,7 +833,8 @@ defineExpose({
         />
 
         <div ref="chartSlicer" v-if="FINAL_CONFIG.style.zoom.show && isDataset">
-            <Slicer 
+            <Slicer
+                ref="slicerComponent"
                 :key="`slicer_${slicerStep}`"
                 :background="FINAL_CONFIG.style.zoom.color"
                 :borderColor="FINAL_CONFIG.style.backgroundColor"
@@ -793,6 +851,8 @@ defineExpose({
                 :valueEnd="slicer.end"
                 v-model:start="slicer.start"
                 v-model:end="slicer.end"
+                :refreshStartPoint="FINAL_CONFIG.style.zoom.startIndex !== null ? FINAL_CONFIG.style.zoom.startIndex : 0"
+                :refreshEndPoint="FINAL_CONFIG.style.zoom.endIndex !== null ? FINAL_CONFIG.style.zoom.endIndex + 1 : len"
                 @reset="refreshSlicer"
             >
                 <template #reset-action="{ reset }">
@@ -823,6 +883,7 @@ defineExpose({
             :offsetY="FINAL_CONFIG.style.tooltip.offsetY"
             :parent="candlestickChart"
             :content="tooltipContent"
+            :isFullscreen="isFullscreen"
             :isCustom="FINAL_CONFIG.style.tooltip.customFormat && typeof FINAL_CONFIG.style.tooltip.customFormat === 'function'"
         >
             <template #tooltip-before>

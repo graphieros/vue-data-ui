@@ -785,6 +785,7 @@ defineExpose({
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="treemapChart"
             :content="tooltipContent"
+            :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>

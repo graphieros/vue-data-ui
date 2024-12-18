@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
@@ -86,6 +86,7 @@ const isLoaded = ref(false);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
+const slicerComponent = ref(null);
 
 onMounted(() => {
     prepareChart();
@@ -130,6 +131,18 @@ function prepareConfig() {
         finalConfig.style.chart.grid.scale.scaleMax = props.config.style.chart.grid.scale.scaleMax;
     } else {
         finalConfig.style.chart.grid.scale.scaleMax = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.startIndex')) {
+        finalConfig.style.chart.zoom.startIndex = props.config.style.chart.zoom.startIndex;
+    } else {
+        finalConfig.style.chart.zoom.startIndex = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.endIndex')) {
+        finalConfig.style.chart.zoom.endIndex = props.config.style.chart.zoom.endIndex;
+    } else {
+        finalConfig.style.chart.zoom.endIndex = null;
     }
 
     // ----------------------------------------------------------------------------
@@ -230,6 +243,7 @@ function prepareChart() {
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(stackbarChart.value.parentNode);
     }
+    setupSlicer();
 }
 
 const drawingArea = computed(() => {
@@ -284,11 +298,43 @@ const slicer = ref({
 });
 
 function refreshSlicer() {
-    slicer.value = {
-        start: 0,
-        end: Math.max(...props.dataset.map(ds => ds.series.length))
-    };
-    slicerStep.value += 1;
+    setupSlicer()
+}
+
+async function setupSlicer() {
+    if ((FINAL_CONFIG.value.style.chart.zoom.startIndex !== null || FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) && slicerComponent.value) {
+        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.style.chart.zoom.startIndex);
+        }
+        if (FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.style.chart.zoom.endIndex + 1));
+        }
+    } else {
+        slicer.value = {
+            start: 0,
+            end: Math.max(...props.dataset.map(ds => ds.series.length))
+        };
+        slicerStep.value += 1;
+    }
+}
+
+function validSlicerEnd(v) {
+    const max = Math.max(...props.dataset.map(ds => ds.series.length));
+    if (v > max) {
+        return max;
+    }
+    if (v < 0 || (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null && v < FINAL_CONFIG.value.style.chart.zoom.startIndex)) {
+        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
+            return FINAL_CONFIG.value.style.chart.zoom.startIndex + 1
+        } else {
+            return 1
+        }
+    }
+    return v
 }
 
 const barSlot = computed(() => {
@@ -1204,6 +1250,7 @@ defineExpose({
 
         <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-html2canvas-ignore>    
             <Slicer 
+                ref="slicerComponent"
                 v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 1"
                 :key="`slicer_${slicerStep}`"
                 :background="FINAL_CONFIG.style.chart.zoom.color"
@@ -1221,6 +1268,8 @@ defineExpose({
                 :valueEnd="slicer.end"
                 v-model:start="slicer.start"
                 v-model:end="slicer.end"
+                :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
+                :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : Math.max(...dataset.map(ds => ds.series.length))"
                 @reset="refreshSlicer"
             >
                 <template #reset-action="{ reset }">
@@ -1242,6 +1291,7 @@ defineExpose({
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="stackbarChart"
             :content="tooltipContent"
+            :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>

@@ -15,6 +15,7 @@ import {
     downloadCsv,
     error,
     getMissingDatasetAttributes,
+    hasDeepProperty,
     makeDonut,
     objectIsEmpty, 
     palette,
@@ -65,12 +66,47 @@ const slicer = ref({
 })
 
 function refreshSlicer() {
-    slicer.value = {
-        start: 0,
-        end: maxLength.value
-    };
-    slicerStep.value += 1;
+    setupSlicer();
 }
+
+const slicerComponent = ref(null);
+
+async function setupSlicer() {
+    if ((FINAL_CONFIG.value.style.chart.zoom.startIndex !== null || FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) && slicerComponent.value) {
+        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.style.chart.zoom.startIndex);
+        }
+        if (FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.style.chart.zoom.endIndex + 1));
+        }
+    } else {
+        slicer.value = {
+            start: 0,
+            end: maxLength.value
+        };
+        slicerStep.value += 1;
+    }
+}
+
+function validSlicerEnd(v) {
+    const max = maxLength.value;
+    if (v > max) {
+        return max;
+    }
+    if (v < 0 || (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null && v < FINAL_CONFIG.value.style.chart.zoom.startIndex)) {
+        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
+            return FINAL_CONFIG.value.style.chart.zoom.startIndex + 1;
+        } else {
+            return 1;
+        }
+    }
+    return v;
+}
+
 
 onMounted(() => {
     prepareChart();
@@ -99,6 +135,7 @@ function prepareChart() {
             })
         }
     }
+    setupSlicer();
 }
 
 const uid = ref(createUid());
@@ -131,8 +168,11 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
+
+    let finalConfig = {};
+
     if (mergedConfig.theme) {
-        return {
+        finalConfig = {
             ...useNestedProp({
                 userConfig: themes.vue_ui_donut_evolution[mergedConfig.theme] || props.config,
                 defaultConfig: mergedConfig
@@ -140,8 +180,26 @@ function prepareConfig() {
             customPalette: themePalettes[mergedConfig.theme] || palette
         }
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.startIndex')) {
+        finalConfig.style.chart.zoom.startIndex = props.config.style.chart.zoom.startIndex;
+    } else {
+        finalConfig.style.chart.zoom.startIndex = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.endIndex')) {
+        finalConfig.style.chart.zoom.endIndex = props.config.style.chart.zoom.endIndex;
+    } else {
+        finalConfig.style.chart.zoom.endIndex = null;
+    }
+
+    // ----------------------------------------------------------------------------
+
+    return finalConfig;
 }
 
 watch(() => props.config, (_newCfg) => {
@@ -962,6 +1020,7 @@ defineExpose({
         />
 
         <Slicer
+            ref="slicerComponent"
             v-if="maxLength > 1 && FINAL_CONFIG.style.chart.zoom.show"
             :key="`slicer_${slicerStep}`"
             :background="FINAL_CONFIG.style.chart.zoom.color"
@@ -979,6 +1038,8 @@ defineExpose({
             :valueEnd="slicer.end"
             v-model:start="slicer.start"
             v-model:end="slicer.end"
+            :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
+            :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxLength"
             @reset="refreshSlicer"
         >
             <template #reset-action="{ reset }">

@@ -750,6 +750,7 @@ defineExpose({
       :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
       :parent="ringsChart"
       :content="tooltipContent"
+      :isFullscreen="isFullscreen"
       :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
     >
         <template #tooltip-before>

@@ -867,6 +867,7 @@ defineExpose({
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="pcpChart"
             :content="tooltipContent"
+            :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
         >
             <template #tooltip-before>

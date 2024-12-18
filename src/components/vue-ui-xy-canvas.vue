@@ -4,7 +4,8 @@ import {
     computed,
     onMounted,
     watch,
-    onBeforeUnmount
+    onBeforeUnmount,
+    nextTick
 } from "vue";
 import {
     applyDataLabel,
@@ -144,6 +145,18 @@ function prepareConfig() {
         finalConfig.style.chart.scale.max = props.config.style.chart.scale.max;
     } else {
         finalConfig.style.chart.scale.max = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.startIndex')) {
+        finalConfig.style.chart.zoom.startIndex = props.config.style.chart.zoom.startIndex;
+    } else {
+        finalConfig.style.chart.zoom.startIndex = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.endIndex')) {
+        finalConfig.style.chart.zoom.endIndex = props.config.style.chart.zoom.endIndex;
+    } else {
+        finalConfig.style.chart.zoom.endIndex = null;
     }
 
     // ----------------------------------------------------------------------------
@@ -408,11 +421,44 @@ const slicer = ref({
 });
 
 function refreshSlicer() {
-    slicer.value = {
-        start: 0,
-        end: maxSeries.value
-    };
-    slicerStep.value += 1;
+    setupSlicer();
+}
+
+const slicerComponent = ref(null);
+async function setupSlicer() {
+    if ((FINAL_CONFIG.value.style.chart.zoom.startIndex !== null || FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) && slicerComponent.value) {
+        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.style.chart.zoom.startIndex);
+        }
+        if (FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) {
+            await nextTick();
+            await nextTick();
+            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.style.chart.zoom.endIndex + 1));
+        }
+    } else {
+        slicer.value = {
+            start: 0,
+            end: maxSeries.value
+        };
+        slicerStep.value += 1;
+    }
+}
+
+function validSlicerEnd(v) {
+    const max = maxSeries.value;
+    if (v > max) {
+        return max;
+    }
+    if (v < 0 || (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null && v < FINAL_CONFIG.value.style.chart.zoom.startIndex)) {
+        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
+            return FINAL_CONFIG.value.style.chart.zoom.startIndex + 1
+        } else {
+            return 1
+        }
+    }
+    return v
 }
 
 const lineAndPlotTypes = computed(() => {
@@ -1221,6 +1267,7 @@ function prepareChart() {
     });
 
     resizeObserver.value.observe(container.value);
+    setupSlicer();
 }
 
 onBeforeUnmount(() => {
@@ -1498,6 +1545,7 @@ defineExpose({
                 :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
                 :parent="canvas" 
                 :content="tooltipContent"
+                :isFullscreen="isFullscreen"
                 :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
                 :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)">
                 <template #tooltip-before>
@@ -1511,6 +1559,7 @@ defineExpose({
     
         <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-html2canvas-ignore>    
             <Slicer 
+                ref="slicerComponent"
                 v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 1"
                 :key="`slicer_${slicerStep}`"
                 :background="FINAL_CONFIG.style.chart.zoom.color"
@@ -1528,6 +1577,8 @@ defineExpose({
                 :valueEnd="slicer.end"
                 v-model:start="slicer.start"
                 v-model:end="slicer.end"
+                :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
+                :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxSeries"
                 @reset="refreshSlicer"
             >
                 <template #reset-action="{ reset }">
