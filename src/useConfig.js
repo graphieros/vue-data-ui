@@ -2561,8 +2561,16 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 fontSize: FONT._10
             },
+            weightLabels: {
+                size: 8,
+                show: true,
+                formatter: null,
+                prefix: '',
+                suffix: '',
+                rounding: 0
+            },
             links: {
-                curved: true,
+                curved: false,
                 maxWidth: 3
             },
             circle: {
@@ -2572,7 +2580,8 @@ export function useConfig() {
                 offsetY: 0
             },
             plot: {
-                radius: 2,
+                radius: 3,
+                useSerieColor: true,
                 color: COLOR_BLACK
             },
             title: TITLE
