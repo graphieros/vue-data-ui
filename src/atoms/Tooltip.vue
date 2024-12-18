@@ -60,12 +60,16 @@ const props = defineProps({
     blockShiftY: {
         type: Boolean,
         default: false,
+    },
+    isFullscreen: {
+        type: Boolean,
+        default: false
     }
 });
 
 const tooltip = ref(null)
 
-const clientPosition = ref(useMouse());
+const clientPosition = ref(useMouse(props.parent));
 
 const position = computed(() => {
     return calcTooltipPosition({
@@ -85,18 +89,20 @@ const convertedBackground = computed(() => {
 </script>
 
 <template>
-    <div
-        ref="tooltip"
-        data-cy="tooltip"
-        :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
-        v-if="show"
-        :style="`pointer-events:none;top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${convertedBackground};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};`"
-    >
-        <slot name="tooltip-before"/>
-        <slot/>
-        <div v-html="content"/>
-        <slot name="tooltip-after"/>
-    </div>
+    <teleport :to="isFullscreen ? parent : 'body'">
+        <div
+            ref="tooltip"
+            data-cy="tooltip"
+            :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
+            v-if="show"
+            :style="`pointer-events:none;top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${convertedBackground};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};`"
+        >
+            <slot name="tooltip-before"/>
+            <slot/>
+            <div v-html="content"/>
+            <slot name="tooltip-after"/>
+        </div>
+    </teleport>
 </template>
 
 <style>
