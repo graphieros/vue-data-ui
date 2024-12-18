@@ -1349,6 +1349,14 @@ declare module 'vue-data-ui' {
                 color?: string;
                 fontSize?: number;
             };
+            weightLabels?: {
+                size?: number;
+                show?: boolean;
+                formatter?: Formatter;
+                prefix?: string;
+                suffix?: string;
+                rounding?: number;
+            };
             links?: {
                 curved?: boolean;
                 maxWidth?: number;
@@ -1361,6 +1369,7 @@ declare module 'vue-data-ui' {
             };
             plot?: {
                 radius?: number;
+                useSerieColor?: boolean;
                 color?: string;
             };
             title?: ChartTitle;
