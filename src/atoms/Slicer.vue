@@ -89,6 +89,14 @@ const props = defineProps({
     minimapIndicatorColor: {
         type: String,
         default: '#2D353C'
+    },
+    refreshStartPoint: {
+        type: Number,
+        default: 0
+    },
+    refreshEndPoint: {
+        type: Number,
+        default: null
     }
 });
 
@@ -96,6 +104,10 @@ const startValue = ref(props.min);
 const endValue = ref(props.max);
 const hasMinimap = computed(() => !!props.minimap.length);
 const uid = ref(createUid());
+
+const endpoint = computed(() => {
+    return props.refreshEndPoint === null ? props.max : props.refreshEndPoint;
+})
 
 const emit = defineEmits(['update:start', 'update:end', 'reset', 'trapMouse']);
 
@@ -264,12 +276,37 @@ function trapMouse(trap) {
     }
 }
 
+const inputStep = ref(0)
+const rangeStart = ref(null);
+const rangeEnd = ref(null);
+
+function setStartValue(value) {
+    startValue.value = value;
+    if (rangeStart.value) {
+        rangeStart.value.value = value;
+    }
+    emit('update:start', Number(startValue.value));
+}
+
+function setEndValue(value) {
+    endValue.value = value;
+    if (rangeEnd.value) {
+        rangeEnd.value.value = value;
+    }
+    emit('update:end', Number(endValue.value));
+}
+
+defineExpose({
+    setStartValue,
+    setEndValue
+})
+
 </script>
 
 <template>
     <div data-html2canvas-ignore data-cy="slicer" style="padding: 0 24px" class="vue-data-ui-zoom">
         <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1; pointer-events: none;">
-            <div v-if="valueStart > 0 || valueEnd < max" style="width: 100%; position: relative">
+            <div v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint" style="width: 100%; position: relative">
                 <button 
                     v-if="!useResetSlot" 
                     data-cy-reset tabindex="0" 
@@ -414,11 +451,11 @@ function trapMouse(trap) {
             </template>
             <div class="slider-track"></div>
             <div class="range-highlight" :style="highlightStyle"></div>
-            <input type="range" class="range-left" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
+            <input ref="rangeStart" :key="`range-min${inputStep}`" type="range" class="range-left" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
             <div class="thumb-label thumb-label-left" :style="leftLabelPosition">
                 {{ labelLeft }}
             </div>
-            <input type="range" class="range-right" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
+            <input ref="rangeEnd" type="range" class="range-right" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
             <div class="thumb-label thumb-label-right" :style="rightLabelPosition">
                 {{ labelRight }}
             </div>
