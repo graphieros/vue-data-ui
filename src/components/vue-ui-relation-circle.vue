@@ -1,13 +1,17 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { 
+adaptColorToBackground,
+    applyDataLabel,
     convertCustomPalette,
     createUid, 
+    dataLabel, 
     error, 
     getMissingDatasetAttributes,
     objectIsEmpty, 
     palette,
     themePalettes,
+    translateSize,
     XMLNS
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
@@ -107,6 +111,9 @@ const limitedDataset = computed(() => {
 });
 
 const size = ref(FINAL_CONFIG.value.style.size);
+const dataLabelSize = ref(FINAL_CONFIG.value.style.weightLabels.size);
+const plotRadius = ref(FINAL_CONFIG.value.style.plot.radius);
+const labelFontSize = ref(FINAL_CONFIG.value.style.labels.fontSize);
 
 const svg = ref({
     height: FINAL_CONFIG.value.style.size,
@@ -184,6 +191,30 @@ function prepareChart() {
             relations.value = [];
             createPlots();
             createRelations();
+
+            dataLabelSize.value = translateSize({
+                relator: size.value,
+                adjuster: FINAL_CONFIG.value.style.size,
+                source: FINAL_CONFIG.value.style.weightLabels.size,
+                threshold: 6,
+                fallback: 6
+            });
+
+            plotRadius.value = translateSize({
+                relator: size.value,
+                adjuster: FINAL_CONFIG.value.style.size,
+                source: FINAL_CONFIG.value.style.plot.radius,
+                threshold: 1,
+                fallback: 1
+            });
+
+            labelFontSize.value = translateSize({
+                relator: size.value,
+                adjuster: FINAL_CONFIG.value.style.size,
+                source: FINAL_CONFIG.value.style.labels.fontSize,
+                threshold: 6,
+                fallback: 6
+            })
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
@@ -227,20 +258,30 @@ function createPlots() {
     let angle = 0;
     let regAngle = 0;
     limitedDataset.value.forEach((plot, i) => {
+        const totalWeight = plot.weights.reduce((a, b) => a + b, 0);
         const x = radius.value * Math.cos(angle) + (svg.value.width / 2);
         const y = radius.value * Math.sin(angle) + svg.value.height / 2 + FINAL_CONFIG.value.style.circle.offsetY;
-        circles.value.push({x,y, ...plot, color: plot.color ? plot.color : customPalette.value[i] ? customPalette.value[i] : palette[i], regAngle});
+        circles.value.push({x,y, ...plot, color: plot.color ? plot.color : customPalette.value[i] ? customPalette.value[i] : palette[i], regAngle, totalWeight });
         angle += angleGap;
         regAngle += regAngleGap
     });
 }
 
+function getMiddlePoint(point1, point2) {
+    const middleX = (point1.x + point2.x) / 2;
+    const middleY = (point1.y + point2.y) / 2;
+    return { x: middleX, y: middleY };
+}
+
 function createRelations() {
+    relations.value = [];
     circles.value.forEach((plot) => {
         let rels = circles.value.filter(c => c.relations.includes(plot.id));
+
         rels.forEach((relation, i) => {
+            const indexOfRelation = relation.relations.indexOf(plot.id)
             relations.value.push({
-                weight: plot.weights ? plot.weights[i] ? plot.weights[i] : 1 : 1,
+                weight: relation.weights[indexOfRelation] ? relation.weights[indexOfRelation] : 0,
                 relationId: `${plot.id}_${relation.id}`,
                 x1: plot.x,
                 y1: plot.y,
@@ -248,10 +289,39 @@ function createRelations() {
                 y2: relation.y,
                 colorSource: plot.color,
                 colorTarget: relation.color,
+                midPointLine: getMiddlePoint({x: plot.x, y: plot.y}, {x: relation.x, y: relation.y}),
+                midPointBezier: getBezierMidpoint({
+                    x1: plot.x,
+                    x2: relation.x,
+                    y1: plot.y,
+                    y2: relation.y
+                }),
                 ...plot
-            })
-        })
-    })
+            });
+        });
+    });
+}
+
+function getBezierMidpoint(relation) {
+    const P0 = { x: relation.x1, y: relation.y1 };
+    const P3 = { x: relation.x2, y: relation.y2 };
+    const P1 = { x: relation.x1, y: relation.y1 };
+    const P2 = { 
+        x: svg.value.width / 2, 
+        y: svg.value.height / 2 + FINAL_CONFIG.value.style.circle.offsetY 
+    };
+    const t = 0.5;
+    const x = Math.pow(1 - t, 3) * P0.x +
+                3 * Math.pow(1 - t, 2) * t * P1.x +
+                3 * (1 - t) * Math.pow(t, 2) * P2.x +
+                Math.pow(t, 3) * P3.x;
+
+    const y = Math.pow(1 - t, 3) * P0.y +
+                3 * Math.pow(1 - t, 2) * t * P1.y +
+                3 * (1 - t) * Math.pow(t, 2) * P2.y +
+                Math.pow(t, 3) * P3.y;
+
+    return { x, y };
 }
 
 const maxWeight = computed(() => {
@@ -271,11 +341,7 @@ function getCircleOpacity(plot) {
 }
 
 function getLineColor(plot) {
-    if (Object.hasOwn(selectedPlot.value, 'x')) {
-        return plot.colorTarget;
-    } else {
-        return plot.colorSource;
-    }
+    return plot.colorSource
 }
 
 function getLineOpacityAndWidth(plot) {
@@ -287,6 +353,18 @@ function getLineOpacityAndWidth(plot) {
         }
     } else {
         return 'opacity: 1';
+    }
+}
+
+function showLabel(plot) {
+    if(Object.hasOwn(selectedPlot.value, 'x')) {
+        if (selectedRelations.value.includes(plot.id) && plot.relationId === `${plot.id}_${selectedPlot.value.id}` || plot.relationId === `${selectedPlot.value.id}_${plot.id}`) {
+            return true
+        } else {
+            return false
+        }
+    } else {
+        return false
     }
 }
 
@@ -335,7 +413,8 @@ function selectPlot(plot) {
 }
 
 function calcLinkWidth(plot) {
-    return plot.weight / maxWeight.value * FINAL_CONFIG.value.style.links.maxWidth;
+    const w = plot.weight / maxWeight.value * FINAL_CONFIG.value.style.links.maxWidth;
+    return Math.max(0.3, w);
 }
 
 const isFullscreen = ref(false)
@@ -463,11 +542,56 @@ defineExpose({
                     :stroke-width="calcLinkWidth(relation)"
                     stroke-linecap="round"
                 />
+                <g v-for="(relation, i) in relations" style="pointer-events: none;">
+                    <slot 
+                        name="dataLabel" 
+                        v-bind="{ 
+                            x: relation.midPointBezier.x, 
+                            y: relation.midPointBezier.y, 
+                            color: getLineColor(relation), 
+                            weight: relation.weight, 
+                            fontSize: dataLabelSize 
+                        }" 
+                        v-if="showLabel(relation)"
+                    />
+                    <circle
+                        v-if="showLabel(relation) && !$slots.dataLabel"
+                        :cx="relation.midPointBezier.x"
+                        :cy="relation.midPointBezier.y"
+                        :fill="getLineColor(relation)"
+                        :r="dataLabelSize"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        stroke-width="1"
+                    />
+                    <text 
+                        v-if="showLabel(relation) && !$slots.dataLabel"
+                        :x="relation.midPointBezier.x"
+                        :y="relation.midPointBezier.y + dataLabelSize / 3"
+                        :fill="adaptColorToBackground(getLineColor(relation))"
+                        text-anchor="middle"
+                        :font-size="dataLabelSize"
+                    >
+                        {{ 
+                            applyDataLabel(
+                                FINAL_CONFIG.style.weightLabels.formatter,
+                                relation.weight,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.weightLabels.prefix,
+                                    v: relation.weight,
+                                    s: FINAL_CONFIG.style.weightLabels.suffix,
+                                    r: FINAL_CONFIG.style.weightLabels.rounding
+                                }),
+                                { ...relation }
+                            )
+                        }}
+                    </text>
+                </g>
             </g>
             <g v-else>
                 <line v-for="(relation,i) in relations" 
                     :key="`relation_${i}`" 
                     :stroke="getLineColor(relation)" 
+                    :stroke-width="calcLinkWidth(relation)"
                     :style="getLineOpacityAndWidth(relation)"
                     :x1="relation.x1" 
                     :x2="relation.x2" 
@@ -476,6 +600,50 @@ defineExpose({
                     :class="{'vue-ui-relation-circle-selected': selectedPlot.hasOwnProperty('id') && selectedRelations.includes(relation.id)}"
                     stroke-linecap="round"
                 />
+                <g v-for="(relation, i) in relations" style="pointer-events: none;">
+                    <slot 
+                        name="dataLabel" 
+                        v-bind="{ 
+                            x: relation.midPointLine.x, 
+                            y: relation.midPointLine.y, 
+                            color: getLineColor(relation), 
+                            weight: relation.weight, 
+                            fontSize: dataLabelSize 
+                        }" 
+                        v-if="showLabel(relation)"
+                    />
+                    <circle
+                        v-if="showLabel(relation) && !$slots.dataLabel && FINAL_CONFIG.style.weightLabels.show"
+                        :cx="relation.midPointLine.x"
+                        :cy="relation.midPointLine.y"
+                        :fill="getLineColor(relation)"
+                        :r="dataLabelSize"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        stroke-width="1"
+                    />
+                    <text 
+                        v-if="showLabel(relation) && !$slots.dataLabel && FINAL_CONFIG.style.weightLabels.show"
+                        :x="relation.midPointLine.x"
+                        :y="relation.midPointLine.y + dataLabelSize / 3"
+                        :fill="adaptColorToBackground(getLineColor(relation))"
+                        text-anchor="middle"
+                        :font-size="dataLabelSize"
+                    >
+                        {{ 
+                            applyDataLabel(
+                                FINAL_CONFIG.style.weightLabels.formatter,
+                                relation.weight,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.weightLabels.prefix,
+                                    v: relation.weight,
+                                    s: FINAL_CONFIG.style.weightLabels.suffix,
+                                    r: FINAL_CONFIG.style.weightLabels.rounding
+                                }),
+                                { ...relation }
+                            )
+                        }}
+                    </text>
+                </g>
             </g>
 
             <text v-for="(plot,i) in circles"
@@ -490,10 +658,22 @@ defineExpose({
                 transform-origin="start"
                 :font-weight="selectedPlot.id === plot.id ? '900' : '400'"
                 :style="`font-family:${FINAL_CONFIG.style.fontFamily};${getTextOpacity(plot)}`"
-                :font-size="FINAL_CONFIG.style.labels.fontSize"
+                :font-size="labelFontSize"
                 :fill="FINAL_CONFIG.style.labels.color"
             >
-                {{plot.label}}
+                {{plot.label}} ({{ 
+                    applyDataLabel(
+                        FINAL_CONFIG.style.weightLabels.formatter,
+                        plot.totalWeight,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.weightLabels.prefix,
+                            v: plot.totalWeight,
+                            s: FINAL_CONFIG.style.weightLabels.suffix,
+                            r: FINAL_CONFIG.style.weightLabels.rounding
+                        }),
+                        { ...plot }
+                    )
+                }})
             </text>
 
             <circle v-for="(plot,i) in circles"
@@ -503,9 +683,11 @@ defineExpose({
                 :key="`plot_${i}`" 
                 :style="getCircleOpacity(plot)"
                 class="vue-ui-relation-circle-plot" 
-                :fill="FINAL_CONFIG.style.plot.color" 
+                :fill="FINAL_CONFIG.style.plot.useSerieColor ? plot.color : FINAL_CONFIG.style.plot.color" 
+                :stroke="FINAL_CONFIG.style.backgroundColor"
+                stroke-width="1"
                 @click="selectPlot(plot)" 
-                :r="FINAL_CONFIG.style.plot.radius" 
+                :r="plotRadius" 
             />
             <slot name="svg" :svg="svg"/>
         </svg>
