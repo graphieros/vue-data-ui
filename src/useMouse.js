@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref } from "vue";
 import { useEventListener } from "./event";
 
 export function useMouse() {
