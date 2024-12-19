@@ -266,7 +266,8 @@ export function useConfig() {
                     showValue: true,
                     showPercentage: true,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
+                    showTimeLabel: true
                 },
                 highlighter: {
                     color: COLOR_BLACK,
@@ -485,6 +486,7 @@ export function useConfig() {
             },
             tooltip: {
                 ...TOOLTIP,
+                showTimeLabel: true,
                 showValue: true,
                 showPercentage: true,
                 roundingValue: 0,
