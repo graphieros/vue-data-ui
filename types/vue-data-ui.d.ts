@@ -2271,6 +2271,7 @@ declare module 'vue-data-ui' {
                 roundingValue?: number;
                 roundingPercentage?: number;
                 customFormat?: null | ((params: VueUiTooltipParams<VueUiXyDatapointItem[], VueUiXySeries, VueUiXyConfig, VueUiXyDatasetBarItem[], VueUiXyDatasetLineItem[], VueUiXyDatasetPlotItem[]>) => string);
+                showTimeLabel?: boolean;
             };
             userOptions?: ChartUserOptions;
         };
@@ -5505,6 +5506,7 @@ declare module 'vue-data-ui' {
                     roundingValue?: number;
                     roundingPercentage?: number;
                     customFormat?: null | ((params: VueUiTooltipParams<VueUiStackbarDatapointItem[], VueUiStackbarSeriesItem[], VueUiStackbarConfig>) => string);
+                    showTimeLabel?: boolean;
                 };
                 highlighter?: {
                     color?: string;
