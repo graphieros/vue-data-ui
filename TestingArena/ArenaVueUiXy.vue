@@ -328,6 +328,7 @@ const model = ref([
     { key: 'chart.tooltip.backgroundOpacity', def: 20, type: 'range', min: 0, max: 100 },
     { key: 'chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
     { key: 'chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
+    { key: 'chart.tooltip.showTimeLabel', def: true, type: 'checkbox'},
 
     { key: 'bar.borderRadius', def: 2, type: 'number', min: 0, max: 120, label: 'borderRadius', category: 'bar' },
     { key: 'bar.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'bar' },
@@ -511,23 +512,23 @@ const config = computed(() => {
                         },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
-                            values: [
-                                "JANUARY IS KIND OF LONG",
-                                "FEBRUARY IS KIND OF LONG TOO",
-                                "MARCH",
-                                "APRIL",
-                                "MAY",
-                                "JUNE",
-                                "JULY",
-                                "AUGUST",
-                                "SEPTEMBER",
-                                "OCTOBER",
-                                "NOVEMBER IS KIND OF LONG TOO",
-                                "DECEMBER",
-                                "JANUARY+",
-                                "FEBRUARY+",
-                                "MARCH+"
-                            ]
+                            // values: [
+                            //     "JANUARY IS KIND OF LONG",
+                            //     "FEBRUARY IS KIND OF LONG TOO",
+                            //     "MARCH",
+                            //     "APRIL",
+                            //     "MAY",
+                            //     "JUNE",
+                            //     "JULY",
+                            //     "AUGUST",
+                            //     "SEPTEMBER",
+                            //     "OCTOBER",
+                            //     "NOVEMBER IS KIND OF LONG TOO",
+                            //     "DECEMBER",
+                            //     "JANUARY+",
+                            //     "FEBRUARY+",
+                            //     "MARCH+"
+                            // ]
                         }
                     }
                 }
@@ -563,6 +564,10 @@ function selectX(selectedX) {
 //     resizeObserver.observe(resizable.value)
 // })
 
+function selectTimeLabel(data) {
+    console.log(data)
+}
+
 </script>
 
 <template>
@@ -586,7 +591,31 @@ function selectX(selectedX) {
         <LocalVueUiXy component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="{
             ...config,
             responsive: true,
-        }">
+        }" @selectTimeLabel="selectTimeLabel">
+
+        <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+            <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                <text
+                    :x="x"
+                    :y="y"
+                    :font-size="fontSize"
+                    :text-anchor="textAnchor"
+                    :fill="fill"
+                >
+                    {{ content }}
+                </text>
+                <text
+                    :x="x"
+                    :y="y + fontSize"
+                    :font-size="fontSize * 0.8"
+                    :text-anchor="textAnchor"
+                    fill="grey"
+                >
+                    {{ content }}
+                </text>
+            </g>
+        </template>
+
         <template #plot-comment="{ plot }">
             <div :style="`font-size: 12px; color:${plot.color}; text-align:center`">
                 {{ plot.comment }}
@@ -616,6 +645,28 @@ function selectX(selectedX) {
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template> -->
+                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                        <text
+                            :x="x"
+                            :y="y"
+                            :font-size="fontSize"
+                            :text-anchor="textAnchor"
+                            :fill="fill"
+                        >
+                            {{ content }}
+                        </text>
+                        <text
+                            :x="x"
+                            :y="y + fontSize"
+                            :font-size="fontSize * 0.8"
+                            :text-anchor="textAnchor"
+                            fill="grey"
+                        >
+                            {{ content }}
+                        </text>
+                    </g>
+                </template>
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -648,6 +699,29 @@ function selectX(selectedX) {
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset: dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
+                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                        <text
+                            :x="x"
+                            :y="y"
+                            :font-size="fontSize"
+                            :text-anchor="textAnchor"
+                            :fill="fill"
+                        >
+                            {{ content }}
+                        </text>
+                        <text
+                            :x="x"
+                            :y="y + fontSize"
+                            :font-size="fontSize * 0.8"
+                            :text-anchor="textAnchor"
+                            fill="grey"
+                        >
+                            {{ content }}
+                        </text>
+                    </g>
+                </template>
+
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -678,6 +752,28 @@ function selectX(selectedX) {
         <template #build>
             <VueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend"
                 @selectX="selectX" ref="build">
+                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                        <text
+                            :x="x"
+                            :y="y"
+                            :font-size="fontSize"
+                            :text-anchor="textAnchor"
+                            :fill="fill"
+                        >
+                            {{ content }}
+                        </text>
+                        <text
+                            :x="x"
+                            :y="y + fontSize"
+                            :font-size="fontSize * 0.8"
+                            :text-anchor="textAnchor"
+                            fill="grey"
+                        >
+                            {{ content }}
+                        </text>
+                    </g>
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
@@ -708,6 +804,28 @@ function selectX(selectedX) {
         <template #VDUI-build>
             <VueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiBuild">
+                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                        <text
+                            :x="x"
+                            :y="y"
+                            :font-size="fontSize"
+                            :text-anchor="textAnchor"
+                            :fill="fill"
+                        >
+                            {{ content }}
+                        </text>
+                        <text
+                            :x="x"
+                            :y="y + fontSize"
+                            :font-size="fontSize * 0.8"
+                            :text-anchor="textAnchor"
+                            fill="grey"
+                        >
+                            {{ content }}
+                        </text>
+                    </g>
+                </template>
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

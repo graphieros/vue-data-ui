@@ -103,6 +103,7 @@ const model = ref([
     { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.roundingValue', def: 0, type: 'number', min: 0, max: 6},
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6},
+    { key: 'style.chart.tooltip.showTimeLabel', def: true, type: 'checkbox'},
 
     { key: 'style.chart.highlighter.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.highlighter.opacity', def: 5, type: 'range', min: 0, max: 30},
@@ -196,7 +197,7 @@ const config = computed(() => {
                         ...c.style.chart.grid.x,
                         timeLabels: {
                             ...c.style.chart.grid.x.timeLabels,
-                            values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG']
+                            // values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG']
                         }
                     }
                 }
@@ -207,6 +208,9 @@ const config = computed(() => {
 
 const step = ref(0);
 
+function selectTimeLabel(data) {
+    console.log(data)
+}
     
 </script>
 
@@ -215,11 +219,33 @@ const step = ref(0);
 <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
     <LocalVueUiStackbar :dataset="dataset" :config="{...config,
         responsive: true,
-    }" :key="`local_resp_${step}`"> 
+    }" :key="`local_resp_${step}`" @selectTimeLabel="selectTimeLabel"> 
             <template #source>
                 <div style="width:100%;font-size:10px;text-align:left">
                     SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
                 </div>
+            </template>
+            <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                    <text
+                        :x="x"
+                        :y="y"
+                        :font-size="fontSize"
+                        :text-anchor="textAnchor"
+                        :fill="fill"
+                    >
+                        {{ content }}
+                    </text>
+                    <text
+                        :x="x"
+                        :y="y + fontSize"
+                        :font-size="fontSize * 0.8"
+                        :text-anchor="textAnchor"
+                        fill="grey"
+                    >
+                        {{ content }}
+                    </text>
+                </g>
             </template>
     </LocalVueUiStackbar>
 </div>
@@ -234,21 +260,109 @@ const step = ref(0);
 
     <template #local>
         <LocalVueUiStackbar :dataset="dataset" :config="config" :key="`local_${step}`">
+            <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                    <text
+                        :x="x"
+                        :y="y"
+                        :font-size="fontSize"
+                        :text-anchor="textAnchor"
+                        :fill="fill"
+                    >
+                        {{ content }}
+                    </text>
+                    <text
+                        :x="x"
+                        :y="y + fontSize"
+                        :font-size="fontSize * 0.8"
+                        :text-anchor="textAnchor"
+                        fill="grey"
+                    >
+                        {{ content }}
+                    </text>
+                </g>
+            </template>
         </LocalVueUiStackbar>
     </template>
 
     <template #VDUI-local>
         <LocalVueDataUi component="VueUiStackbar" :dataset="dataset" :config="config" :key="`local_vdui_${step}`">
+            <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                    <text
+                        :x="x"
+                        :y="y"
+                        :font-size="fontSize"
+                        :text-anchor="textAnchor"
+                        :fill="fill"
+                    >
+                        {{ content }}
+                    </text>
+                    <text
+                        :x="x"
+                        :y="y + fontSize"
+                        :font-size="fontSize * 0.8"
+                        :text-anchor="textAnchor"
+                        fill="grey"
+                    >
+                        {{ content }}
+                    </text>
+                </g>
+            </template>
         </LocalVueDataUi>
     </template>
     
     <template #build>
         <VueUiStackbar :dataset="dataset" :config="config" :key="`build_${step}`">
+            <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                    <text
+                        :x="x"
+                        :y="y"
+                        :font-size="fontSize"
+                        :text-anchor="textAnchor"
+                        :fill="fill"
+                    >
+                        {{ content }}
+                    </text>
+                    <text
+                        :x="x"
+                        :y="y + fontSize"
+                        :font-size="fontSize * 0.8"
+                        :text-anchor="textAnchor"
+                        fill="grey"
+                    >
+                        {{ content }}
+                    </text>
+                </g>
+            </template>
         </VueUiStackbar>
     </template>
 
     <template #VDUI-build>
         <VueDataUi component="VueUiStackbar" :dataset="dataset" :config="config" :key="`vdui_build_${step}`">
+            <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                    <text
+                        :x="x"
+                        :y="y"
+                        :font-size="fontSize"
+                        :text-anchor="textAnchor"
+                        :fill="fill"
+                    >
+                        {{ content }}
+                    </text>
+                    <text
+                        :x="x"
+                        :y="y + fontSize"
+                        :font-size="fontSize * 0.8"
+                        :text-anchor="textAnchor"
+                        fill="grey"
+                    >
+                        {{ content }}
+                    </text>
+                </g>
+            </template>
         </VueDataUi>
     </template>
 
