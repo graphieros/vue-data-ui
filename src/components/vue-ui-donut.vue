@@ -351,7 +351,7 @@ const legendSet = computed(() => {
                 ...el,
                 proportion: el.value / props.dataset.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
                 opacity: segregated.value.includes(i) ? 0.5 : 1,
-                segregate: () => segregate(i),
+                segregate: () => !isAnimating.value && segregate(i),
                 isSegregated: segregated.value.includes(i)
             }
         })
@@ -437,6 +437,10 @@ const total = computed(() => {
 const average = computed(() => {
     return total.value / donutSet.value.length;
 });
+
+const legendPercentage = computed(() => {
+    return legend => isAnimating.value ? legend.proportion * 100 : legend.value / total.value * 100
+})
 
 const dataTooltipSlot = ref(null);
 
@@ -1193,7 +1197,11 @@ defineExpose({
                 @clickMarker="({i}) => segregate(i)"
             >
                 <template #item="{ legend, index }">
-                    <div :data-cy="`legend-item-${index}`" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                    <div 
+                        :data-cy="`legend-item-${index}`"
+                        :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`"
+                        @click="legend.segregate()" 
+                    >
                         {{ legend.name }}: {{ applyDataLabel(
                             FINAL_CONFIG.style.chart.layout.labels.value.formatter,
                             legend.value,
@@ -1212,9 +1220,9 @@ defineExpose({
                         <span v-if="!segregated.includes(index)" style="font-variant-numeric: tabular-nums;">
                             ({{ isNaN(legend.value / total) ? '-' : applyDataLabel(
                                 FINAL_CONFIG.style.chart.layout.labels.percentage.formatter,
-                                isAnimating ? legend.proportion * 100 : legend.value / total * 100,
+                                legendPercentage(legend),
                                 dataLabel({
-                                    v: isAnimating ? legend.proportion * 100 : legend.value / total * 100,
+                                    v: legendPercentage(legend),
                                     s: '%',
                                     r: FINAL_CONFIG.style.chart.legend.roundingPercentage
                                 }))
