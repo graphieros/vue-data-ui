@@ -95,7 +95,7 @@ const convertedBackground = computed(() => {
             data-cy="tooltip"
             :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
             v-if="show"
-            :style="`pointer-events:none;top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${convertedBackground};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};`"
+            :style="`pointer-events:none;top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${convertedBackground};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};z-index:2147483647;`"
         >
             <slot name="tooltip-before"/>
             <slot/>
@@ -110,7 +110,6 @@ const convertedBackground = computed(() => {
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
     position: fixed;
     padding:12px;
-    z-index:3 !important;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
