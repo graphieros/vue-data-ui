@@ -57,7 +57,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['selectDatapoint', 'selectLegend']);
+const emit = defineEmits(['selectDatapoint', 'selectLegend', 'selectTimeLabel']);
 
 const isDataset = computed({
     get() {
@@ -400,8 +400,14 @@ const yLabels = computed(() => {
 });
 
 const timeLabels = computed(() => {
-    return FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values
-        .slice(slicer.value.start, slicer.value.end);
+    const labels = [];
+    for (let i = 0; i < maxSeries.value; i += 1) {
+        labels.push({
+            text: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values[i] || String(i),
+            absoluteIndex: i
+        })
+    }
+    return labels.slice(slicer.value.start, slicer.value.end);
 });
 
 const formattedDataset = computed(() => {
@@ -617,8 +623,8 @@ function useTooltip(seriesIndex) {
 
         let html = "";
 
-        if (timeLabels.value[seriesIndex]) {
-            html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${borderColor};padding-bottom:6px;margin-bottom:3px;">${timeLabels.value[seriesIndex]}</div>`;
+        if (timeLabels.value[seriesIndex] && timeLabels.value[seriesIndex].text && FINAL_CONFIG.value.style.chart.tooltip.showTimeLabel) {
+            html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${borderColor};padding-bottom:6px;margin-bottom:3px;">${timeLabels.value[seriesIndex].text}</div>`;
         }
 
         const parenthesis = [
@@ -770,6 +776,24 @@ const legendConfig = computed(() => {
 const isAnnotator = ref(false);
 function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
+}
+
+function selectTimeLabel(label, relativeIndex) {
+    const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(fd => {
+        return {
+            name: fd.name,
+            value: fd.series[relativeIndex] === 0 ? 0 : (fd.signedSeries[relativeIndex] === -1 ? (fd.series[relativeIndex] >= 0 ? -fd.series[relativeIndex] : fd.series[relativeIndex]) : fd.series[relativeIndex]) || null,
+            proportion: fd.proportions[relativeIndex] || null,
+            color: fd.color,
+            id: fd.id
+        }
+    });
+
+    emit('selectTimeLabel', {
+        datapoint,
+        absoluteIndex: label.absoluteIndex,
+        label: label.text
+    });
 }
 
 defineExpose({
@@ -1166,31 +1190,73 @@ defineExpose({
 
             <!-- TIME LABELS VERTICAL-->
             <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'vertical'">
-                <text
-                    v-for="(timeLabel, i) in timeLabels"
-                    :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
-                    :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.grid.x.timeLabels.bold ? 'bold': 'normal'"
-                    :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
-                    :transform="`translate(${drawingArea.left + (barSlot * i) + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
-                >
-                    {{ timeLabel }}
-                </text>
+                <g v-if="$slots['time-label']">
+                    <g v-for="(timeLabel, i) in timeLabels">
+                        <slot name="time-label" v-bind="{
+                            x: drawingArea.left + (barSlot * i) + barSlot / 2,
+                            y: drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY,
+                            fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
+                            fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
+                            transform: `translate(${drawingArea.left + (barSlot * i) + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`,
+                            absoluteIndex: timeLabel.absoluteIndex,
+                            content: timeLabel.text,
+                            textAnchor: FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle',
+                            show: true
+                        }"/>
+                    </g>
+                </g>
+                <g v-else>
+                    <text
+                        v-for="(timeLabel, i) in timeLabels"
+                        :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
+                        :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.grid.x.timeLabels.bold ? 'bold': 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
+                        :transform="`translate(${drawingArea.left + (barSlot * i) + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
+                        :style="{
+                            cursor: 'pointer'
+                        }"
+                        @click="() => selectTimeLabel(timeLabel, i)"
+                    >
+                        {{ timeLabel.text }}
+                    </text>
+                </g>
             </template>
 
             <!-- TIME LABELS HORIZONTAL -->
             <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'horizontal'">
-                <text
-                    v-for="(timeLabel, i) in timeLabels"
-                    text-anchor="end"
-                    :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                    :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                    :x="drawingArea.left - 8"
-                    :y="drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
-                >
-                    {{ timeLabel }}
-                </text>
+                <g v-if="$slots['time-label']">
+                    <g v-for="(timeLabel, i) in timeLabels">
+                        <slot name="time-label" v-bind="{
+                            x: drawingArea.left - 8,
+                            y: drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3,
+                            fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
+                            fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
+                            transform: null,
+                            absoluteIndex: timeLabel.absoluteIndex,
+                            content: timeLabel.text,
+                            textAnchor: 'end',
+                            show: true
+                        }" />
+                    </g>
+                </g>
+                <g v-else>
+                    <text
+                        v-for="(timeLabel, i) in timeLabels"
+                        text-anchor="end"
+                        :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                        :x="drawingArea.left - 8"
+                        :y="drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                        :style="{
+                            cursor: 'pointer'
+                        }"
+                        @click="() => selectTimeLabel(timeLabel, i)"
+                    >
+                        {{ timeLabel.text }}
+                    </text>
+                </g>
             </template>
 
             <!-- TOOLTIP TRAPS (vertical mode) -->

@@ -950,24 +950,47 @@
                 
                 <!-- TIME LABELS -->
                 <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show">
-                    <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
-                        
-                        <text
-                            :data-cy="`xy-time-label-${i}`"
-                            v-if="
-                                (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
-                                (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
-                                (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
-                            "
-                            :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
-                            :font-size="fontSizes.xAxis"
-                            :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                            :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
-                        >
-                            {{ label || "" }}
-                        </text>
-                    </g>
+                    <template v-if="$slots['time-label']">
+                        <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
+                            <slot name="time-label" v-bind="{
+                                x: drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2),
+                                y: drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset,
+                                fontSize: fontSizes.xAxis,
+                                fill: FINAL_CONFIG.chart.grid.labels.xAxisLabels.color,
+                                transform: `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`,
+                                absoluteIndex: label.absoluteIndex,
+                                content: label.text,
+                                textAnchor: FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle',
+                                show: (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
+                                    (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
+                                    (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
+                                    (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
+                            }" />
+                        </g>
+                    </template>
+                    <template v-else>
+                        <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
+                            <text
+                                :data-cy="`xy-time-label-${i}`"
+                                v-if="
+                                    (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
+                                    (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
+                                    (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
+                                    (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
+                                "
+                                :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
+                                :font-size="fontSizes.xAxis"
+                                :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
+                                :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                :style="{
+                                    cursor: 'pointer'
+                                }"
+                                @click="() => selectTimeLabel(label, i)"
+                            >
+                                {{ label.text || "" }}
+                            </text>
+                        </g>
+                    </template>
                 </g>
 
                 <!-- TOOLTIP TRAPS -->
@@ -998,7 +1021,7 @@
                         style="overflow: visible !important;"
                     >
                         <div class="vue-ui-xy-time-tag" :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${FINAL_CONFIG.chart.timeTag.backgroundColor};color:${FINAL_CONFIG.chart.timeTag.color};font-size:${FINAL_CONFIG.chart.timeTag.fontSize}px`">
-                            {{ timeLabels[(selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)] || ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) }}
+                            {{ timeLabels[(selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)].text || ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) }}
                         </div>
                     </foreignObject>
                     <circle
@@ -1984,7 +2007,17 @@ export default {
             return this.slicer.end - this.slicer.start;
         },
         timeLabels() {
-            return this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values.slice(this.slicer.start, this.slicer.end);
+            const max = Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data:datapoint.series, threshold: this.FINAL_CONFIG.downsample.threshold}).length));
+            const labels = [];
+
+            for (let i = 0; i < max; i += 1) {
+                labels.push({
+                    text: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values[i] || String(i),
+                    absoluteIndex: i
+                })
+            }
+
+            return labels.slice(this.slicer.start, this.slicer.end);
         },
         slot() {
             return {
@@ -2017,7 +2050,7 @@ export default {
             const body = [];
 
             this.timeLabels.forEach((t, i) => {
-                const row = [t];
+                const row = [t.text];
                 this.relativeDataset.forEach(s => {
                     row.push(this.canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(this.FINAL_CONFIG.table.rounding)) : '')
                 });
@@ -2041,7 +2074,7 @@ export default {
                 }).reduce((a, b) => a + b, 0)
 
                 body.push([
-                    this.timeLabels[i] ?? '-']
+                    this.timeLabels[i].text ?? '-']
                     .concat(this.relativeDataset
                         .map(ds => {
                             return this.applyDataLabel(
@@ -2130,8 +2163,8 @@ export default {
                     config: this.FINAL_CONFIG
                 })
             } else {
-                if(time) {
-                    html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${this.FINAL_CONFIG.chart.tooltip.borderColor}; width:100%">${time}</div>`;
+                if(time && time.text && this.FINAL_CONFIG.chart.tooltip.showTimeLabel) {
+                    html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${this.FINAL_CONFIG.chart.tooltip.borderColor}; width:100%">${time.text}</div>`;
                 }
                 this.selectedSeries.forEach(s => {
                     if(this.isSafeValue(s.value)) {
@@ -2285,7 +2318,26 @@ export default {
         useNestedProp,
         toggleAnnotator() {
             this.isAnnotator = !this.isAnnotator;
-        },  
+        },
+        selectTimeLabel(label, relativeIndex) {
+            const datapoint = this.relativeDataset.map(datapoint => {
+                return {
+                    shape: datapoint.shape || null,
+                    name: datapoint.name,
+                    color: datapoint.color,
+                    type: datapoint.type,
+                    value: datapoint.absoluteValues.find((_s,i) => i === relativeIndex),
+                    comments: datapoint.comments || [],
+                    prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
+                    suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
+                }
+            })
+            this.$emit('selectTimeLabel', {
+                datapoint,
+                absoluteIndex: label.absoluteIndex,
+                label: label.text
+            })
+        },
         getHighlightAreaPosition(area) {
             const x = this.drawingArea.left + (this.drawingArea.width / this.maxSeries) * (area.from - this.slicer.start);
 
