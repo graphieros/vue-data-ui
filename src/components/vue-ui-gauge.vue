@@ -16,6 +16,7 @@ import {
     translateSize,
     offsetFromCenterPoint,
     XMLNS,
+calcMarkerOffsetX,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
@@ -123,8 +124,8 @@ const mutableDataset = computed(() => {
     const arr = [];
 
     (props.dataset.series || []).forEach(serie => {
-        arr.push(serie.from || 0);
-        arr.push(serie.to || 0);
+        arr.push(serie.from || 0.0000001);
+        arr.push(serie.to || 0.0000001);
     });
     const max = Math.max(...arr);
     return {
@@ -155,6 +156,7 @@ const svg = ref({
     pointerSize: FINAL_CONFIG.value.style.chart.layout.pointer.size,
     pointerStrokeWidth: FINAL_CONFIG.value.style.chart.layout.pointer.strokeWidth,
     markerOffset: FINAL_CONFIG.value.style.chart.layout.markers.offsetY + 3,
+    segmentFontSize: FINAL_CONFIG.value.style.chart.layout.segmentNames.fontSize
 });
 
 const max = ref(0);
@@ -283,6 +285,13 @@ function prepareChart() {
                 threshold: 2,
                 fallback: 2
             })
+            svg.value.segmentFontSize = translateSize({
+                relator: Math.min(width, height),
+                adjuster: baseSize.value,
+                source: FINAL_CONFIG.value.style.chart.layout.segmentNames.fontSize,
+                threshold: 8,
+                fallback: 8
+            })
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
@@ -350,6 +359,43 @@ const arcs = computed(() => {
         40 * svg.value.trackSize
     );
     return donut;
+})
+
+const labelArcs = computed(() => {
+    const donut = makeDonut(
+        {series: mutableDataset.value.series},
+        svg.value.width / 2,
+        arcSizeSource.value.base,
+        arcSizeSource.value.arcs * FINAL_CONFIG.value.style.chart.layout.segmentNames.offsetRatio,
+        arcSizeSource.value.arcs * FINAL_CONFIG.value.style.chart.layout.segmentNames.offsetRatio,
+        1,
+        1,
+        1,
+        180,
+        109.9495,
+        40 * svg.value.trackSize
+    );
+    return donut;
+});
+
+const pathRadius = computed(() => arcSizeSource.value.arcs * FINAL_CONFIG.value.style.chart.layout.segmentNames.offsetRatio);
+
+function calculateCumulativeHalfCircleOffsets(percentages) {
+    const totalPercentage = percentages.reduce((sum, val) => sum + val, 0);
+    if (totalPercentage > 100) {
+        throw new Error("Total % must not exceed 100");
+    }
+    const halfCircleLength = 50;
+    let cumulative = 0;
+    return percentages.map(percentage => {
+        cumulative += percentage;
+        const offset = (cumulative / 100) * halfCircleLength;
+        return `${offset - percentage / 4}%`;
+    });
+}
+
+const curveLabelOffsets = computed(() => {
+    return calculateCumulativeHalfCircleOffsets(arcs.value.map(arc => arc.proportion * 100))
 })
 
 const gradientArcs = computed(() => {
@@ -498,6 +544,42 @@ defineExpose({
                 :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                 stroke-linecap="round"
             />
+
+            <template v-if="FINAL_CONFIG.style.chart.layout.segmentNames.show && FINAL_CONFIG.style.chart.layout.segmentNames.curved">            
+                <!-- CIRCLE PATH AS BASE FOR CURVED LABELS -->
+                <path
+                    :id="`curve_${uid}`"
+                    :d="`M ${pointer.x1},${pointer.y1} m -${pathRadius},0 a ${pathRadius},${pathRadius} 0 1,1 ${2 * pathRadius},0 a ${pathRadius},${pathRadius} 0 1,1 -${2 * pathRadius},0`" fill="transparent"
+                />
+    
+                <!-- CURVED LABELS -->
+                <text 
+                    v-for="(arc, i) in arcs"
+                    :fill="FINAL_CONFIG.style.chart.layout.segmentNames.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.segmentNames.color"
+                    :font-size="svg.segmentFontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.segmentNames.bold ? 'bold' : 'normal'"
+                    text-anchor="middle"
+                >
+                    <textPath :href="`#curve_${uid}`" :startOffset="curveLabelOffsets[i]">
+                        {{ arc.name || '' }}
+                    </textPath>
+                </text>
+            </template>
+
+            <template v-if="FINAL_CONFIG.style.chart.layout.segmentNames.show && !FINAL_CONFIG.style.chart.layout.segmentNames.curved">            
+                <text 
+                    v-for="(arc, i) in labelArcs"
+                    :x="arc.center.endX"
+                    :y="arc.center.endY"
+                    :text-anchor="calcMarkerOffsetX(arc, false, 12).anchor"
+                    :fill="FINAL_CONFIG.style.chart.layout.segmentNames.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.segmentNames.color"
+                    :font-size="svg.segmentFontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.segmentNames.bold ? 'bold' : 'normal'"
+                >
+                    {{ arc.name || '' }}
+                </text>
+            </template>
+
 
             <!-- ARC STEPS GRADIENTS-->
             <template v-if="FINAL_CONFIG.style.chart.layout.track.useGradient">            
