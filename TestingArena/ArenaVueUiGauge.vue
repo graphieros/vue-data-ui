@@ -9,9 +9,9 @@ const source = ref({
     base: 100,
     value: 25,
     series: [
-        { from: -100, to: 0 },
-        { from: 0, to: 50 },
-        { from: 50, to: 100 }
+        { from: -100, to: 0, name: 'series 1 is kinda long' },
+        { from: 0, to: 50, name: 'series 2' },
+        { from: 50, to: 100, name: 'series 3' }
     ]
 })
 
@@ -112,7 +112,15 @@ const model = ref([
     { key: 'style.chart.title.subtitle.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
-    { key: 'translations.base', def: 'Base population'}
+    { key: 'translations.base', def: 'Base population'},
+
+    { key: 'style.chart.layout.segmentNames.show', def: true, type: 'checkbox' },
+    { key: 'style.chart.layout.segmentNames.curved', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.segmentNames.offsetRatio', def: 1.1, type: 'range', min: 0.5, max: 1.3, step: 0.01},
+    { key: 'style.chart.layout.segmentNames.fontSize', def: 16, type: 'number', min: 8, max: 42},
+    { key: 'style.chart.layout.segmentNames.useSerieColor', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.segmentNames.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.chart.layout.segmentNames.bold', def: false, type: 'checkbox'}
 ])
 
 const themeOptions = ref([
