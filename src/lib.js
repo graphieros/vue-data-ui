@@ -14,16 +14,19 @@ export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult =
             center: {},
         };
     const sum = [...series]
-        .map((serie) => serie.value)
+        .map((serie) => {
+            return serie.value
+        })
         .reduce((a, b) => a + b, 0);
 
     const ratios = [];
     let acc = 0;
     for (let i = 0; i < series.length; i += 1) {
-        let proportion = series[i].value / sum;
+        const val = Math.min(series[i].value - 0.0001, sum);
+        let proportion = val / sum;
         const ratio = proportion * (Math.PI * piProportion); // (Math.PI * 2) fails to display a donut with only one value > 0 as it goes full circle again
         // midProportion & midRatio are used to find the midpoint of the arc to display markers
-        const midProportion = series[i].value / 2 / sum;
+        const midProportion = val / 2 / sum;
         const midRatio = midProportion * (Math.PI * piMult);
         const { startX, startY, endX, endY, path } = createArc(
             [cx, cy],
