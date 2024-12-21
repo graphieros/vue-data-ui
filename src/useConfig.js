@@ -1136,6 +1136,15 @@ export function useConfig() {
                         prefix: '',
                         suffix: '',
                     },
+                    segmentNames: {
+                        show: true,
+                        curved: true,
+                        offsetRatio: 1.1,
+                        fontSize: FONT._16,
+                        useSerieColor: true,
+                        color: COLOR_BLACK,
+                        bold: false,
+                    },
                     pointer: {
                         type: 'pointy',
                         size: 1,
