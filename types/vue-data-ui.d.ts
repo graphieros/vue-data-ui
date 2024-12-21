@@ -3130,6 +3130,7 @@ declare module 'vue-data-ui' {
         from: number;
         to: number;
         color?: string;
+        name?: string;
     };
 
     export type VueUiGaugeDataset = {
@@ -3169,6 +3170,15 @@ declare module 'vue-data-ui' {
                         formatter?: Formatter;
                         prefix?: string;
                         suffix?: string;
+                    };
+                    segmentNames?: {
+                        show?: boolean;
+                        curved?: boolean;
+                        offsetRatio?: number;
+                        fontSize?: number;
+                        useSerieColor?: boolean;
+                        color?: boolean;
+                        bold?: boolean;
                     };
                     pointer?: {
                         type?: "rounded" | "pointy";
