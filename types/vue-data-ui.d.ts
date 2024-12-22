@@ -3173,6 +3173,13 @@ declare module 'vue-data-ui' {
                         prefix?: string;
                         suffix?: string;
                     };
+                    segmentSeparators?: {
+                        show?: boolean;
+                        offsetOut?: number;
+                        offsetIn?: number;
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
                     segmentNames?: {
                         show?: boolean;
                         curved?: boolean;
