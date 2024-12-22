@@ -59,6 +59,14 @@ export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult =
             startY: checkNaN(startY),
             endX: checkNaN(endX),
             endY: checkNaN(endY),
+            separator: {
+                x: inner.startX,
+                y: inner.startY,
+            },
+            firstSeparator: {
+                x: Number(inner.path.split(' ').at(-2)),
+                y: Number(inner.path.split(' ').at(-1))
+            },
             center: createArc(
                 [cx, cy],
                 [rx * arcAmpl, ry * arcAmpl],
