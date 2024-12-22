@@ -9,11 +9,11 @@ const source = ref({
     base: 100,
     value: 25,
     series: [
-        { from: -100, to: -80, name: 'series 1', nameOffsetRatio: 1.2 },
-        { from: -80, to: -65, name: 'series 2', nameOffsetRatio: 1.1 },
-        { from: -75, to: 0, name: 'series 3', nameOffsetRatio: 0.6 },
-        { from: 0, to: 50, name: 'series 4', nameOffsetRatio: 0 },
-        { from: 50, to: 100, name: 'series 5' }
+        { from: -100, to: -70, name: 'series 1', nameOffsetRatio: 1},
+        { from: -70, to: -35, name: 'series 2', nameOffsetRatio: 1 },
+        { from: -35, to: 0, name: 'series 3', nameOffsetRatio: 1  },
+        { from: 0, to: 50, name: 'series 4', nameOffsetRatio: 1  },
+        { from: 50, to: 100, name: 'series 5'  }
     ]
 })
 
@@ -66,13 +66,13 @@ const model = ref([
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
     
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.animation.use', def: true, type: 'checkbox'},
     { key: 'style.chart.animation.speed', def: 1, type: 'range', min: 0, max: 100},
     { key: 'style.chart.animation.acceleration', def: 1, type: 'range', min: 0, max: 10},
 
-    { key: 'style.chart.layout.radiusRatio', def: 1, min: 0.5, max: 1.2, step: 0.01, type: 'range'},
+    { key: 'style.chart.layout.radiusRatio', def: 0.8, min: 0.5, max: 1.2, step: 0.01, type: 'range'},
     { key: 'style.chart.layout.track.size', def: 1, type: 'range', min: 0.5, max: 2, step: 0.01},
     { key: 'style.chart.layout.track.useGradient', def: true, type:  'checkbox'},
     { key: 'style.chart.layout.track.gradientIntensity', def: 20, type: 'range', min: 10, max: 30},
@@ -127,8 +127,14 @@ const model = ref([
     { key: 'style.chart.layout.segmentNames.bold', def: false, type: 'checkbox'},
 
     { key: 'style.chart.layout.segmentNames.markers.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.segmentNames.markers.useSerieColor', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.segmentNames.markers.color', def: '#1A1A1A', type: 'color'}
+    { key: 'style.chart.layout.segmentNames.markers.useSerieColor', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.segmentNames.markers.color', def: '#1A1A1A', type: 'color'},
+
+    { key: 'style.chart.layout.segmentSeparators.show', def: false, type: 'checkbox'},
+    { key: 'style.chart.layout.segmentSeparators.offsetOut', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.layout.segmentSeparators.offsetIn', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.layout.segmentSeparators.stroke', def: '#1A1A1A', type: 'color' },
+    { key: 'style.chart.layout.segmentSeparators.strokeWidth', def: 2, type: 'number', min: 0, max: 12 },
 ])
 
 const themeOptions = ref([
