@@ -1120,6 +1120,7 @@ export function useConfig() {
                     acceleration: 1
                 },
                 layout: {
+                    radiusRatio: 1,
                     track: {
                         size: 1,
                         useGradient: true,
