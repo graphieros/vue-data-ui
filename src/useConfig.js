@@ -1137,6 +1137,13 @@ export function useConfig() {
                         prefix: '',
                         suffix: '',
                     },
+                    segmentSeparators: {
+                        show: false,
+                        offsetOut: 0,
+                        offsetIn: 0,
+                        stroke: COLOR_BLACK,
+                        strokeWidth: 2
+                    },
                     segmentNames: {
                         show: true,
                         curved: true,
