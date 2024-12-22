@@ -9,9 +9,11 @@ const source = ref({
     base: 100,
     value: 25,
     series: [
-        { from: -100, to: 0, name: 'series 1 is kinda long' },
-        { from: 0, to: 50, name: 'series 2' },
-        { from: 50, to: 100, name: 'series 3' }
+        { from: -100, to: -80, name: 'series 1', nameOffsetRatio: 1.2 },
+        { from: -80, to: -65, name: 'series 2', nameOffsetRatio: 1.1 },
+        { from: -75, to: 0, name: 'series 3', nameOffsetRatio: 0.6 },
+        { from: 0, to: 50, name: 'series 4', nameOffsetRatio: 0 },
+        { from: 50, to: 100, name: 'series 5' }
     ]
 })
 
@@ -69,6 +71,8 @@ const model = ref([
     { key: 'style.chart.animation.use', def: true, type: 'checkbox'},
     { key: 'style.chart.animation.speed', def: 1, type: 'range', min: 0, max: 100},
     { key: 'style.chart.animation.acceleration', def: 1, type: 'range', min: 0, max: 10},
+
+    { key: 'style.chart.layout.radiusRatio', def: 1, min: 0.5, max: 1.2, step: 0.01, type: 'range'},
     { key: 'style.chart.layout.track.size', def: 1, type: 'range', min: 0.5, max: 2, step: 0.01},
     { key: 'style.chart.layout.track.useGradient', def: true, type:  'checkbox'},
     { key: 'style.chart.layout.track.gradientIntensity', def: 20, type: 'range', min: 10, max: 30},
@@ -82,8 +86,8 @@ const model = ref([
     { key: 'style.chart.layout.markers.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.layout.markers.roundingValue', def: 0, type: 'number', min: 0, max: 12},
     { key: 'style.chart.layout.markers.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.markers.prefix', def: 'P', type: 'text'},
-    { key: 'style.chart.layout.markers.suffix', def: 'S', type: 'text'},
+    { key: 'style.chart.layout.markers.prefix', def: '', type: 'text'},
+    { key: 'style.chart.layout.markers.suffix', def: '', type: 'text'},
 
     { key: 'style.chart.layout.pointer.type', def: 'pointy', type: 'select', options: ['rounded', 'pointy']},
     { key: 'style.chart.layout.pointer.size', def: 1, type: 'range', min: 0.2, max: 1.5, step: 0.01},
@@ -120,7 +124,11 @@ const model = ref([
     { key: 'style.chart.layout.segmentNames.fontSize', def: 16, type: 'number', min: 8, max: 42},
     { key: 'style.chart.layout.segmentNames.useSerieColor', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.segmentNames.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.segmentNames.bold', def: false, type: 'checkbox'}
+    { key: 'style.chart.layout.segmentNames.bold', def: false, type: 'checkbox'},
+
+    { key: 'style.chart.layout.segmentNames.markers.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.segmentNames.markers.useSerieColor', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.segmentNames.markers.color', def: '#1A1A1A', type: 'color'}
 ])
 
 const themeOptions = ref([
@@ -145,16 +153,16 @@ const config = computed(() => {
                     ...c.style.chart.layout,
                     markers: {
                         ...c.style.chart.layout.markers,
-                        formatter: ({ value }) => {
-                            return 'V | ' + value
-                        }
+                        // formatter: ({ value }) => {
+                        //     return 'V | ' + value
+                        // }
                     }
                 },
                 legend: {
                     ...c.style.chart.legend,
-                    formatter: ({value}) => {
-                        return `f - ${value}`
-                    }
+                    // formatter: ({value}) => {
+                    //     return `f - ${value}`
+                    // }
                 }
             }
         },
