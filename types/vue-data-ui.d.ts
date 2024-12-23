@@ -490,6 +490,11 @@ declare module 'vue-data-ui' {
         showSparklines?: boolean;
         fontFamily?: string;
         colNames?: string[];
+        sortedDataColumnIndices?: number[];
+        sortedNames: boolean;
+        sortedSum: boolean;
+        sortedAverage: boolean;
+        sortedMedian: boolean;
         formatter?: Formatter;
         sparkline?: {
             useGradient?: boolean;

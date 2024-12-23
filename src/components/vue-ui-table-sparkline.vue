@@ -146,13 +146,15 @@ const computedDataset = computed(() => {
     return props.dataset.map((ds, i) => {
         const cleanValues = (ds.values || []).map((v) => (isNaN(v) ? 0 : v ?? 0));
         const sum = cleanValues.reduce((a, b) => a + b, 0);
+        const average = sum / cleanValues.length;
+        const median = calcMedian(cleanValues);
         return {
             ...ds,
             values: ds.values || [],
             color: convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             sum,
-            average: sum / cleanValues.length,
-            median: calcMedian(cleanValues),
+            average,
+            median,
             sparklineDataset: cleanValues.map((v, i) => {
                 return {
                     period: FINAL_CONFIG.value.colNames[i] || `col ${i}`,
@@ -207,9 +209,20 @@ function restoreOrder() {
 }
 
 function orderDatasetByIndex(index) {
+    if (!hasSorting(index)) return;
+
+    if (currentSortOrder.value === 1) {
+        currentSortOrder.value = -1;
+        currentSortingIndex.value = undefined;
+        restoreOrder();
+        return;
+    }
+
     isSorting.value = true;
     currentSortingIndex.value = index;
+
     const combinedValues = datasetWithOrders.value.map(series => (series.values[index] || []));
+
     const sortOrder = sortIndex.value === index ? 1 : -1;
     currentSortOrder.value = sortOrder;
     if(index === sortIndex.value) {
@@ -305,6 +318,10 @@ function generateCsv() {
     })
 }
 
+function hasSorting(index) {
+    return FINAL_CONFIG.value.sortedColIndices.includes(index);
+}
+
 defineExpose({
     generatePdf,
     generateImage,
@@ -354,7 +371,7 @@ defineExpose({
                             border: FINAL_CONFIG.thead.outline,
                             textAlign: FINAL_CONFIG.thead.textAlign,
                             fontWeight: FINAL_CONFIG.thead.bold ? 'bold' : 'normal',
-                        }" class="sticky-col-first">
+                        }" class="sticky-col-first" >
                             {{ FINAL_CONFIG.translations.serie }}
                         </th>
                         <th role="cell" v-for="(th, i) in colNames" :style="{
@@ -363,7 +380,7 @@ defineExpose({
                             textAlign: FINAL_CONFIG.thead.textAlign,
                             fontWeight: FINAL_CONFIG.thead.bold ? 'bold' : 'normal',
                             minWidth: i === colNames.length - 1 ? `${FINAL_CONFIG.sparkline.dimensions.width}px` : '48px',
-                            cursor: datasetWithOrders[0].values[i] !== undefined ? 'pointer' : 'default',
+                            cursor: hasSorting(i) ? 'pointer' : 'default',
                             paddingRight: i === colNames.length - 1 && FINAL_CONFIG.userOptions.show ? '36px' : '',
                         }" @click="() => orderDatasetByIndex(i)" :class="{'sticky-col': i === colNames.length - 1 && FINAL_CONFIG.showSparklines}" 
                         >
@@ -376,7 +393,17 @@ defineExpose({
                                     justifyContent: FINAL_CONFIG.thead.textAlign
                                 }">
                                 <span>{{ th }}</span>
-                                <BaseIcon :size="18" v-if="isSorting && i === currentSortingIndex && datasetWithOrders[0].values[i] !== undefined" :name="currentSortOrder === 1 ? 'sort' : 'sortReverse'" :stroke="FINAL_CONFIG.thead.color"/>
+                                
+                                <slot name="arrow" v-if="$slots.arrow && hasSorting(i)" v-bind="{ isSorted: i === currentSortingIndex }" />
+                                <BaseIcon 
+                                    :size="18" 
+                                    v-else-if="hasSorting(i)" 
+                                    :name="'sort'" 
+                                    :stroke="FINAL_CONFIG.thead.color"
+                                    :style="{
+                                        opacity: i === currentSortingIndex ? 1 : 0.3
+                                    }"
+                                />
                             </div>
                             <UserOptions
                                 ref="details"
@@ -449,13 +476,6 @@ defineExpose({
                                 selectedDataIndex !== undefined &&
                                     j === selectedDataIndex 
                                     ? FINAL_CONFIG.tbody.selectedColor.useSerieColor ? `${tr.color.length > 7 ? tr.color.slice(0,-2) : tr.color }33` : FINAL_CONFIG.tbody.selectedColor.fallback
-                                    : '',
-                            borderRadius:
-                                selectedDataIndex !== undefined &&
-                                    selectedSerieIndex !== undefined &&
-                                    j === selectedDataIndex &&
-                                    selectedSerieIndex === i
-                                    ? '3px'
                                     : '',
                         }" :data-cell="colNames[j]" class="vue-ui-data-table__tbody__td" @pointerenter="selectedSerieIndex = i; selectedDataIndex = j">
                             {{ [null, undefined].includes(tr.values[j]) ? '-' : applyDataLabel(
