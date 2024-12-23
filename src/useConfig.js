@@ -3435,7 +3435,7 @@ export function useConfig() {
         fontFamily: 'inherit',
         colNames: [],
         sortedDataColumnIndices: [],
-        sortedNames: false,
+        sortedSeriesName: false,
         sortedSum: false,
         sortedAverage: false,
         sortedMedian: false,
