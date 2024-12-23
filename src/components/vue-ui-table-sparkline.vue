@@ -221,13 +221,12 @@ function orderDatasetByIndex(th, index) {
     selectedDataIndex.value = index;
     currentAdditionalSort.value = undefined;
 
-    // Maybe for later:
-    // if (currentSortOrder.value === 1) {
-    //     currentSortOrder.value = -1;
-    //     currentSortingIndex.value = undefined;
-    //     restoreOrder();
-    //     return;
-    // }
+    if (currentSortOrder.value === 1) {
+        currentSortOrder.value = -1;
+        currentSortingIndex.value = undefined;
+        restoreOrder();
+        return;
+    }
 
     isSorting.value = true;
     currentSortingIndex.value = index;
@@ -309,8 +308,19 @@ function orderDatasetByAttribute(attribute) {
     if (!mutableDataset.value || mutableDataset.value.length === 0) return;
     if (!hasAdditionalSorting(attribute)) return;
 
-    currentAdditionalSort.value = attribute;
+    if (currentAdditionalSort.value !== attribute) {
+        currentAdditionalSort.value = undefined;
+    }
+
     currentSortingIndex.value = undefined;
+
+    if (sortOrders.value[attribute] === -1 && currentAdditionalSort.value) {
+        currentAdditionalSort.value = undefined;
+        restoreOrder();
+        return;
+    }
+    
+    currentAdditionalSort.value = attribute;
     isSorting.value = true;
 
     sortOrders.value[attribute] = sortOrders.value[attribute] === -1 ? 1 : -1;
@@ -396,6 +406,10 @@ function getArrowOpacity(index, th) {
     }
 }
 
+function resetOnClickOutside() {
+    FINAL_CONFIG.value.resetSortOnClickOutside && restoreOrder();
+}
+
 defineExpose({
     generatePdf,
     generateImage,
@@ -434,7 +448,7 @@ defineExpose({
                     <tr 
                         role="row" 
                         class="vue-ui-data-table__thead-row"                         
-                        v-click-outside="restoreOrder" 
+                        v-click-outside="resetOnClickOutside" 
                         :style="{
                             backgroundColor: FINAL_CONFIG.thead.backgroundColor,
                             color: FINAL_CONFIG.thead.color
@@ -456,7 +470,6 @@ defineExpose({
                                     justifyContent: FINAL_CONFIG.thead.textAlign
                                 }">
                                 <span>{{ FINAL_CONFIG.translations.serie }}</span>
-                                
                                 <BaseIcon 
                                     :size="18" 
                                     v-if="FINAL_CONFIG.sortedSeriesName" 
@@ -649,7 +662,6 @@ defineExpose({
                             padding: '0',
                         }" class="vue-ui-data-table__tbody__td sticky-col">
                             <SparkLine 
-                                :key="`sparkline_${i}_${sparkStep}`" 
                                 @hoverIndex="({ index }) => hoverSparkline({ dataIndex: index, serieIndex: i })
                                 "
                                 :height-ratio="FINAL_CONFIG.sparkline.dimensions.heightRatio"
