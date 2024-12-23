@@ -495,6 +495,7 @@ declare module 'vue-data-ui' {
         sortedSum?: boolean;
         sortedAverage?: boolean;
         sortedMedian?: boolean;
+        resetSortOnClickOutside?: boolean;
         formatter?: Formatter;
         sparkline?: {
             useGradient?: boolean;
