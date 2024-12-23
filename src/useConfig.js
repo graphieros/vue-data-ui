@@ -3434,6 +3434,11 @@ export function useConfig() {
         showSparklines: true,
         fontFamily: 'inherit',
         colNames: [],
+        sortedDataColumnIndices: [],
+        sortedNames: false,
+        sortedSum: false,
+        sortedAverage: false,
+        sortedMedian: false,
         sparkline: {
             useGradient: true,
             showArea: true,
