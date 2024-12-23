@@ -77,16 +77,17 @@ const model = ref([
     { key: 'title.subtitle.color', def: '#1A1A1A', type: 'color'},
     { key: 'title.subtitle.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'title.subtitle.bold', def: false, type: 'checkbox'},
+
     { key: 'thead.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'thead.color', def: '#1A1A1A', type: 'color'},
     { key: 'thead.fontSize', def: 14, type: 'number', min: 8, max: 24},
-    { key: 'thead.outline', def: 'solid', type: 'text'},
+    { key: 'thead.outline', def: 'none', type: 'text'},
     { key: 'thead.textAlign', def: 'right', type: 'select', options: ['left', 'center', 'right']},
     { key: 'thead.bold', def: false, type: 'checkbox'},
     { key: 'tbody.backgroundColor', def: '#BBBBBB', type: 'color'},
     { key: 'tbody.color', def: '#1A1A1A', type: 'color'},
     { key: 'tbody.fontSize', def: 14, type: 'number', min: 8, max: 24},
-    { key: 'tbody.outline', def: 'solid', type: 'text'},
+    { key: 'tbody.outline', def: 'none', type: 'text'},
     { key: 'tbody.textAlign', def: 'right', type: 'select', options: ['left', 'center', 'right']},
     { key: 'tbody.bold', def: false, type: 'checkbox'},
 
@@ -94,7 +95,12 @@ const model = ref([
     { key: 'tbody.selectedColor.fallback', def: '#E1E5E840', type: 'text'},
 
     { key: 'sparkline.dimensions.width', def: 150, min: 100, max: 300, type: 'number' },
-    { key: 'sparkline.dimensions.heightRatio', def: 1, type: 'number', min: 0.2, max: 2, step: 0.01 }
+    { key: 'sparkline.dimensions.heightRatio', def: 1, type: 'number', min: 0.2, max: 2, step: 0.01 },
+
+    { key: 'sortedSeriesName', def: true, type: 'checkbox'},
+    { key: 'sortedSum', def: true, type: 'checkbox'},
+    { key: 'sortedAverage', def: true, type: 'checkbox'},
+    { key: 'sortedMedian', def: true, type: 'checkbox'},
 ])
 
 const themeOptions = ref([
@@ -116,7 +122,8 @@ const config = computed(() => {
         // },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
-        colNames: ['A', 'B', 'C', 'D', 'E']
+        colNames: ['A', 'B', 'C', 'D', 'E'],
+        sortedDataColumnIndices: [0, 1, 2],
     }
 })
 
