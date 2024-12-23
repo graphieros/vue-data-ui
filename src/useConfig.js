@@ -3439,6 +3439,7 @@ export function useConfig() {
         sortedSum: false,
         sortedAverage: false,
         sortedMedian: false,
+        resetSortOnClickOutside: false,
         sparkline: {
             useGradient: true,
             showArea: true,
