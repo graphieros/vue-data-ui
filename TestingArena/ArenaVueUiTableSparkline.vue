@@ -101,6 +101,7 @@ const model = ref([
     { key: 'sortedSum', def: true, type: 'checkbox'},
     { key: 'sortedAverage', def: true, type: 'checkbox'},
     { key: 'sortedMedian', def: true, type: 'checkbox'},
+    { key: 'resetSortOnClickOutside', def: true, type: 'checkbox'}
 ])
 
 const themeOptions = ref([
