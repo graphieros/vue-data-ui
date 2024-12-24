@@ -199,20 +199,27 @@ const maxSeries = computed(() =>{
 const sortIndex = ref(undefined)
 const isSorting = ref(false);
 const currentSortingIndex = ref(undefined);
-const currentSortOrder = ref(-1);
+const currentSortOrder = ref(1);
 
 function restoreOrder() {
     isSorting.value = false;
     currentSortingIndex.value = undefined;
     currentAdditionalSort.value = undefined;
-    currentSortOrder.value = -1;
+    currentSortOrder.value = 1;
+    sortStates.value.forEach(c => c.state = 1)
+    sortOrders.value = {
+        name: 1,
+        sum: 1,
+        average: 1,
+        median: 1
+    }
     mutableDataset.value = datasetWithOrders.value;
 }
 
 function orderDatasetByIndex(th, index) {
 
     if ((['name', 'sum', 'average', 'median'].includes(th.type))) {
-        orderDatasetByAttribute(th.type);
+        orderDatasetByAttribute(th.type, index);
         return;
     }
 
@@ -221,8 +228,12 @@ function orderDatasetByIndex(th, index) {
     selectedDataIndex.value = index;
     currentAdditionalSort.value = undefined;
 
-    if (currentSortOrder.value === 1) {
-        currentSortOrder.value = -1;
+    if ((![null, undefined].includes(currentSortingIndex.value) && index !== currentSortingIndex.value)) {
+        currentSortingIndex.value = undefined;
+        restoreOrder();
+    }
+
+    if (sortStates.value[index].state === 1 && currentSortingIndex.value === index) {
         currentSortingIndex.value = undefined;
         restoreOrder();
         return;
@@ -234,6 +245,8 @@ function orderDatasetByIndex(th, index) {
     const combinedValues = datasetWithOrders.value.map(series => (series.values[index] || []));
 
     const sortOrder = sortIndex.value === index ? 1 : -1;
+    sortStates.value[index].state = sortOrder;
+
     currentSortOrder.value = sortOrder;
     if(index === sortIndex.value) {
         sortIndex.value = undefined
@@ -296,15 +309,15 @@ const colNames = computed(() => {
 });
 
 const sortOrders = ref({
-    name: -1,
-    sum: -1,
-    average: -1,
-    median: -1
+    name: 1,
+    sum: 1,
+    average: 1,
+    median: 1
 })
 
 const currentAdditionalSort = ref(undefined);
 
-function orderDatasetByAttribute(attribute) {
+function orderDatasetByAttribute(attribute, index) {
     if (!mutableDataset.value || mutableDataset.value.length === 0) return;
     if (!hasAdditionalSorting(attribute)) return;
 
@@ -312,18 +325,28 @@ function orderDatasetByAttribute(attribute) {
         currentAdditionalSort.value = undefined;
     }
 
+    if (![null, undefined].includes(currentSortingIndex.value) && index !== currentSortingIndex.value) {
+        restoreOrder();
+    }
+
     currentSortingIndex.value = undefined;
 
-    if (sortOrders.value[attribute] === -1 && currentAdditionalSort.value) {
+
+    if (sortOrders.value[attribute] === 1 && currentAdditionalSort.value) {
         currentAdditionalSort.value = undefined;
         restoreOrder();
         return;
     }
-    
+
     currentAdditionalSort.value = attribute;
     isSorting.value = true;
 
     sortOrders.value[attribute] = sortOrders.value[attribute] === -1 ? 1 : -1;
+
+    if (![null, undefined].includes(index)) {
+        sortStates.value[index].state = sortOrders.value[attribute];
+    }
+
     const sortOrder = sortOrders.value[attribute];
 
     const sortedDataset = [...mutableDataset.value].sort((a, b) => {
@@ -410,6 +433,17 @@ function resetOnClickOutside() {
     FINAL_CONFIG.value.resetSortOnClickOutside && restoreOrder();
 }
 
+const sortStates = computed({
+    get: () => {
+        return colNames.value.map(_c => {
+            return { state: 1 };
+        })
+    },
+    set: (_) => {
+        return _;
+    }
+});
+
 defineExpose({
     generatePdf,
     generateImage,
@@ -420,8 +454,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tableContainer" :class="{ 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`">
-
+    <div ref="tableContainer" :class="{ 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`">    
         <div style="overflow: auto" @pointerleave="selectedSerieIndex = undefined; selectedDataIndex = undefined">
             <table data-cy="vue-data-ui-table-sparkline" class="vue-ui-data-table"
                 :style="{ fontFamily: FINAL_CONFIG.fontFamily, position: 'relative' }">
@@ -467,13 +500,14 @@ defineExpose({
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     gap: '6px',
-                                    justifyContent: FINAL_CONFIG.thead.textAlign
+                                    justifyContent: FINAL_CONFIG.thead.textAlign,
+                                    pointerEvents: 'none'
                                 }">
                                 <span>{{ FINAL_CONFIG.translations.serie }}</span>
                                 <BaseIcon 
-                                    :size="18" 
+                                    :size="12" 
                                     v-if="FINAL_CONFIG.sortedSeriesName" 
-                                    :name="'sort'" 
+                                    :name="sortOrders.name === 1 ? 'arrowBottom' : 'arrowTop'" 
                                     :stroke="FINAL_CONFIG.thead.color"
                                     :style="{
                                         opacity: currentAdditionalSort === 'name' ? 1 : 0.3
@@ -497,14 +531,15 @@ defineExpose({
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     gap: '6px',
-                                    justifyContent: FINAL_CONFIG.thead.textAlign
+                                    justifyContent: FINAL_CONFIG.thead.textAlign,
+                                    pointerEvents: 'none'
                                 }">
                                 <span>{{ th.value }}</span>
                                 
                                 <BaseIcon 
-                                    :size="18" 
+                                    :size="12" 
                                     v-if="hasSorting(i) || hasAdditionalSorting(th)" 
-                                    :name="'sort'" 
+                                    :name="sortStates[i].state === 1 ? 'arrowBottom' : 'arrowTop'" 
                                     :stroke="FINAL_CONFIG.thead.color"
                                     :style="{
                                         opacity: getArrowOpacity(i, th)
