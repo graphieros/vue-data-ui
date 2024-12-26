@@ -78,6 +78,7 @@ function prepareConfig() {
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
+    userOptionsVisible.value = !FINAL_CONFIG.value.showOnChartHover;
     prepareChart();
     sparkStep.value += 1;
 }, { deep: true });
@@ -219,10 +220,10 @@ function restoreOrder() {
     mutableDataset.value = datasetWithOrders.value;
 }
 
-function orderDatasetByIndex(th, index) {
+function orderDatasetByIndex(th, index, order) {
 
     if ((['name', 'sum', 'average', 'median'].includes(th.type))) {
-        orderDatasetByAttribute(th.type, index);
+        orderDatasetByAttribute(th.type, index, order);
         return;
     }
 
@@ -236,7 +237,7 @@ function orderDatasetByIndex(th, index) {
         restoreOrder();
     }
 
-    if (sortStates.value[index].state === 1 && currentSortingIndex.value === index) {
+    if (sortStates.value[index].state === order && currentSortingIndex.value === index) {
         currentSortingIndex.value = undefined;
         restoreOrder();
         return;
@@ -247,7 +248,7 @@ function orderDatasetByIndex(th, index) {
 
     const combinedValues = datasetWithOrders.value.map(series => (series.values[index] || []));
 
-    const sortOrder = sortIndex.value === index ? 1 : -1;
+    const sortOrder = order;
     sortStates.value[index].state = sortOrder;
 
     currentSortOrder.value = sortOrder;
@@ -320,7 +321,7 @@ const sortOrders = ref({
 
 const currentAdditionalSort = ref(undefined);
 
-function orderDatasetByAttribute(attribute, index) {
+function orderDatasetByAttribute(attribute, index, order) {
     if (!mutableDataset.value || mutableDataset.value.length === 0) return;
     if (!hasAdditionalSorting(attribute)) return;
 
@@ -335,7 +336,7 @@ function orderDatasetByAttribute(attribute, index) {
     currentSortingIndex.value = undefined;
 
 
-    if (sortOrders.value[attribute] === 1 && currentAdditionalSort.value) {
+    if (sortOrders.value[attribute] === order && currentAdditionalSort.value) {
         currentAdditionalSort.value = undefined;
         restoreOrder();
         return;
@@ -344,7 +345,7 @@ function orderDatasetByAttribute(attribute, index) {
     currentAdditionalSort.value = attribute;
     isSorting.value = true;
 
-    sortOrders.value[attribute] = sortOrders.value[attribute] === -1 ? 1 : -1;
+    sortOrders.value[attribute] = order;
 
     if (![null, undefined].includes(index)) {
         sortStates.value[index].state = sortOrders.value[attribute];
@@ -424,11 +425,11 @@ function hasAdditionalSorting(th) {
     return false;
 }
 
-function getArrowOpacity(index, th) {
+function getArrowOpacity(index, th, order) {
     if (['sum', 'average', 'median'].includes(th.type)) {
-        return currentAdditionalSort.value === th.type ? 1 : 0.3;
+        return currentAdditionalSort.value === th.type ? sortOrders.value[th.type] === order ? 1 : 0.3 : 0.3;
     } else {
-        return index === currentSortingIndex.value ? 1 : 0.3;
+        return index === currentSortingIndex.value ? sortStates.value[index].state === order ? 1 : 0.3 : 0.3;
     }
 }
 
@@ -495,27 +496,52 @@ defineExpose({
                             border: FINAL_CONFIG.thead.outline,
                             textAlign: FINAL_CONFIG.thead.textAlign,
                             fontWeight: FINAL_CONFIG.thead.bold ? 'bold' : 'normal',
-                            cursor: FINAL_CONFIG.sortedSeriesName ? 'pointer' : 'default'
-                        }" class="sticky-col-first" @click="orderDatasetByIndex({type: 'name'}, null)">
+                        }" class="sticky-col-first">
                             <div
                                 :style="{
                                     display: 'flex', 
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    gap: '6px',
+                                    gap: '3px',
                                     justifyContent: FINAL_CONFIG.thead.textAlign,
-                                    pointerEvents: 'none'
                                 }">
                                 <span>{{ FINAL_CONFIG.translations.serie }}</span>
-                                <BaseIcon 
-                                    :size="12" 
-                                    v-if="FINAL_CONFIG.sortedSeriesName" 
-                                    :name="sortOrders.name === 1 ? 'arrowBottom' : 'arrowTop'" 
-                                    :stroke="FINAL_CONFIG.thead.color"
+
+                                <div 
+                                    v-if="mutableDataset.length > 1 && FINAL_CONFIG.sortedSeriesName"
                                     :style="{
-                                        opacity: currentAdditionalSort === 'name' ? 1 : 0.3
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center'
                                     }"
-                                />
+                                >
+                                    <button 
+                                        class="vue-ui-table-sparkline-sorting-button vue-ui-table-sparkline-sorting-button-down"
+                                        @click="orderDatasetByIndex({type: 'name'}, null, -1)"
+                                    >
+                                        <BaseIcon 
+                                            :size="12" 
+                                            name="arrowBottom"
+                                            :stroke="FINAL_CONFIG.thead.color"
+                                            :style="{
+                                                opacity: currentAdditionalSort === 'name' ? sortOrders.name === -1 ? 1 : 0.3 : 0.3
+                                            }"
+                                        />
+                                    </button>
+                                    <button 
+                                        class="vue-ui-table-sparkline-sorting-button vue-ui-table-sparkline-sorting-button-up"
+                                        @click="orderDatasetByIndex({type: 'name'}, null, 1)"
+                                    >
+                                        <BaseIcon 
+                                            :size="12" 
+                                            name="arrowTop"
+                                            :stroke="FINAL_CONFIG.thead.color"
+                                            :style="{
+                                                opacity: currentAdditionalSort === 'name' ? sortOrders.name === 1 ? 1 : 0.3 : 0.3
+                                            }"
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </th>
                         <th role="cell" v-for="(th, i) in colNames" :style="{
@@ -524,30 +550,55 @@ defineExpose({
                             textAlign: FINAL_CONFIG.thead.textAlign,
                             fontWeight: FINAL_CONFIG.thead.bold ? 'bold' : 'normal',
                             minWidth: i === colNames.length - 1 ? `${FINAL_CONFIG.sparkline.dimensions.width}px` : '48px',
-                            cursor: hasSorting(i) || hasAdditionalSorting(th) ? 'pointer' : 'default',
                             paddingRight: i === colNames.length - 1 && FINAL_CONFIG.userOptions.show ? '36px' : '',
-                        }" @click="() => orderDatasetByIndex(th, i)" :class="{'sticky-col': i === colNames.length - 1 && FINAL_CONFIG.showSparklines}" 
+                        }" :class="{'sticky-col': i === colNames.length - 1 && FINAL_CONFIG.showSparklines}" 
                         >
                             <div
                                 :style="{
                                     display: 'flex', 
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    gap: '6px',
+                                    gap: '3px',
                                     justifyContent: FINAL_CONFIG.thead.textAlign,
-                                    pointerEvents: 'none'
                                 }">
                                 <span>{{ th.value }}</span>
-                                
-                                <BaseIcon 
-                                    :size="12" 
-                                    v-if="hasSorting(i) || hasAdditionalSorting(th)" 
-                                    :name="sortStates[i].state === 1 ? 'arrowBottom' : 'arrowTop'" 
-                                    :stroke="FINAL_CONFIG.thead.color"
+
+                                <div
+                                    v-if="mutableDataset.length > 1 && (hasSorting(i) || hasAdditionalSorting(th))"
                                     :style="{
-                                        opacity: getArrowOpacity(i, th)
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center'
                                     }"
-                                />
+                                >                                
+                                    <button 
+                                        class="vue-ui-table-sparkline-sorting-button vue-ui-table-sparkline-sorting-button-down"
+                                        @click="() => orderDatasetByIndex(th, i, -1)"
+                                    >
+                                        <BaseIcon 
+                                            :size="12" 
+                                            
+                                            name="arrowBottom"
+                                            :stroke="FINAL_CONFIG.thead.color"
+                                            :style="{
+                                                opacity: getArrowOpacity(i, th, -1)
+                                            }"
+                                        />
+                                    </button>
+                                    <button 
+                                        class="vue-ui-table-sparkline-sorting-button vue-ui-table-sparkline-sorting-button-up"
+                                        @click="() => orderDatasetByIndex(th, i, 1)"
+                                    >
+                                        <BaseIcon 
+                                            :size="12" 
+                                            name="arrowTop"
+                                            :stroke="FINAL_CONFIG.thead.color"
+                                            :style="{
+                                                opacity: getArrowOpacity(i, th, 1)
+                                            }"
+                                        />
+                                    </button>
+                                </div>
                             </div>
                             <UserOptions
                                 ref="details"
@@ -830,5 +881,21 @@ td {
         font-weight: 700;
         text-transform: capitalize;
     }
+}
+
+.vue-ui-table-sparkline-sorting-button {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items:center;
+    justify-content:center;
+    height: 16px;
+    width: 16px;
+    padding: 0;
+}
+
+.vue-ui-table-sparkline-sorting-button-down {
+    margin-left: 3px;
 }
 </style>
