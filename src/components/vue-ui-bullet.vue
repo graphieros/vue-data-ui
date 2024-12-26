@@ -165,6 +165,7 @@ const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = us
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
+    userOptionsVisible.value = !FINAL_CONFIG.value.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
 }, { deep: true });

@@ -122,6 +122,7 @@ function prepareConfig() {
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
+    userOptionsVisible.value = !FINAL_CONFIG.value.showOnChartHover;
     prepareChart();
     slicerStep.value += 1;
     titleStep.value += 1;
