@@ -154,6 +154,8 @@ export function useConfig() {
 
         return {
             show: true,
+            showOnChartHover: false,
+            keepStateOnChartLeave: true,
             position: 'right',
             buttons: {
                 tooltip,
@@ -2407,6 +2409,8 @@ export function useConfig() {
         showTooltip: true,
         showUserOptions: true,
         userOptionsPosition: 'right',
+        showUserOptionsOnChartHover: false,
+        keepUserOptionsStateOnChartLeave: true,
         userOptionsButtons: {
             tooltip: true,
             pdf: true,
