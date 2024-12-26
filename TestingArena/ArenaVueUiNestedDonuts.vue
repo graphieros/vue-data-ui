@@ -62,6 +62,8 @@ const model = ref([
     { key: 'userOptions.buttons.labels', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
+    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
     
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},

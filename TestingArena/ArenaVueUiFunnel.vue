@@ -95,6 +95,9 @@ const model = ref([
     { key: 'style.chart.bars.dataLabels.value.suffix', def: 'S', type: 'text'},
     { key: 'style.chart.bars.dataLabels.value.offsetX', def: 0, type: 'number', min: -100, max: 100 },
     { key: 'style.chart.bars.dataLabels.value.offsetY', def: 0, type: 'number', min: -100, max: 100 },
+
+    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
+    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
 ])
 
 const themeOptions = ref([

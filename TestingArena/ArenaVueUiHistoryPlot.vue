@@ -115,6 +115,9 @@ const model = ref([
     { key: 'style.chart.title.text', def: 'Title', type: 'text'},
     { key: 'style.chart.title.subtitle.text', def: 'Subtitle', type: 'text'},
 
+    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
+    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+
 ]);
 
 const themeOptions = ref([

@@ -24,6 +24,8 @@ const model = ref([
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
+    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
     
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'animationDelayMs', def: 20, type: 'number', min: 0, max: 100},

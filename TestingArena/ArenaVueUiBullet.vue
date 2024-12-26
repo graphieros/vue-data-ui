@@ -45,6 +45,8 @@ const model = ref([
     { key: 'userOptions.buttonTitles.pdf', def: 'PDF', type: 'text'},
     { key: 'userOptions.buttonTitles.img', def: 'IMG', type: 'text'},
     { key: 'userOptions.buttonTitles.fullscreen', def: 'FSC', type: 'text'},
+    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
+    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
 
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
