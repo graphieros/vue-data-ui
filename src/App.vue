@@ -90,23 +90,23 @@ const components = ref([
   /*________________*/"VueUiGalaxy", // 31 OK
   /*_____________*/"VueUiStripPlot", // 32 OK
   /*______________*/"VueUiDumbbell", // 33 OK
-  /*_________________*/"VueUi3dBar", // 34 _
-  /*________*/"VueUiTableSparkline", // 35 _
-  /*__________*/"VueUiTableHeatmap", // 36 _
-  /*____________ */"VueUiWordCloud", // 37 _
-  /*______________*/"VueUiXyCanvas", // 38 _
+  /*_________________*/"VueUi3dBar", // 34 OK
+  /*________*/"VueUiTableSparkline", // 35 OK
+  /*__________*/"VueUiTableHeatmap", // 36 OK
+  /*____________ */"VueUiWordCloud", // 37 OK
+  /*______________*/"VueUiXyCanvas", // 38 OK
   /*__________________*/"VueUiFlow", // 39 OK
   /**/"VueUiParallelCoordinatePlot", // 40 OK
   /*_________________*/"VueUiTimer", // 41 _
-  /*_________*/"VueUiCarouselTable", // 42 _
+  /*_________*/"VueUiCarouselTable", // 42 OK
   /*_________________*/"VueUiGizmo", // 43 _
   /*___________________*/"VueUiKpi", // 44 _
-  /*______________*/"VueUiStackbar", // 45
+  /*______________*/"VueUiStackbar", // 45 OK
   /*________________*/"VueUiRating", // 46 _
   /*________________*/"VueUiSmiley", // 47 _
-  /*________________*/"VueUiBullet", // 48
-  /*________________*/"VueUiFunnel", // 49
-  /*___________*/"VueUiHistoryPlot", // 50
+  /*________________*/"VueUiBullet", // 48 OK
+  /*________________*/"VueUiFunnel", // 49 OK
+  /*___________*/"VueUiHistoryPlot", // 50 OK
 
   // screenshot
   // dashboard

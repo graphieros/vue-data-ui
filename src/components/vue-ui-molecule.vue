@@ -31,6 +31,7 @@ import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
+import { useUserOptionState } from "../useUserOptionState";
 
 const { vue_ui_molecule: DEFAULT_CONFIG } = useConfig();
 
@@ -87,6 +88,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -526,11 +529,13 @@ defineExpose({
 
 <template>
     <div
-        @mouseleave="hoveredNode = null; hoveredUid = null"
         ref="moleculeChart"
         :class="`vue-ui-molecule ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
-        :id="`cluster_${uid}`">
+        :id="`cluster_${uid}`"
+        @mouseleave="hoveredNode = null; hoveredUid = null; setUserOptionsVisibility(false)"
+        @mouseenter="() => setUserOptionsVisibility(true)"
+    >
 
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
@@ -567,7 +572,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
@@ -594,6 +599,9 @@ defineExpose({
             @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            :style="{
+                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+            }"
         >
             <template #optionTooltip v-if="$slots.optionTooltip">
                 <slot name="optionTooltip"/>

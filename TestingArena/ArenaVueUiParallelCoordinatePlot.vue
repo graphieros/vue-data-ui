@@ -54,6 +54,7 @@ const model = ref([
     { key: 'style.chart.comments.offsetX', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.comments.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'responsive', def: false, type: 'checkbox'},
+    
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
@@ -62,6 +63,8 @@ const model = ref([
     { key: 'userOptions.buttons.labels', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
+    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
     
     { key: 'useCssAnimation', def: true, type: 'checkbox' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },

@@ -52,6 +52,8 @@ const model = ref([
     { key: 'userOptions.buttons.table', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
+    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
     
     { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},

@@ -172,6 +172,9 @@ const model = ref([
 
     { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 6},
 
+    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
+    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+
 ])
 
 const config = computed(() => {

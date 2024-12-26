@@ -113,6 +113,8 @@ const model = ref([
     { key: 'userOptionsButtons.img', def: true, type: 'checkbox'},
     { key: 'userOptionsButtons.fullscreen', def: true, type: 'checkbox'},
     { key: 'userOptionsPosition', def: 'right', type: 'select', options: ['left', 'right']},
+    { key: 'showUserOptionsOnChartHover', def: true, type: 'checkbox'},
+    { key: 'keepUserOptionsStateOnChartLeave', def: true, type: 'checkbox'},
 
     { key: 'axisLabelsFontSize', def: 12, type: 'number', min: 8, max: 24},
     { key: 'barGap', def: 12, type: 'range', min: 0, max: 48},

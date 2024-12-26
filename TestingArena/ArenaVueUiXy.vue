@@ -206,6 +206,8 @@ const model = ref([
     { key: 'chart.userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
     { key: 'chart.userOptions.buttons.stack', def: true, type: 'checkbox'},
     { key: 'chart.userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
+    { key: 'chart.userOptions.showOnChartHover', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
 
     { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },

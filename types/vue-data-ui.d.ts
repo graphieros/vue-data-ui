@@ -50,6 +50,8 @@ declare module 'vue-data-ui' {
 
     export type ChartUserOptions = {
         show?: boolean;
+        showOnChartHover?: boolean;
+        keepStateOnChartLeave?: boolean;
         position?: 'left' | 'right';
         buttons?: {
             animation?: boolean;
@@ -4510,7 +4512,9 @@ declare module 'vue-data-ui' {
             pdf?: string;
             img?: string;
             fullscreen?: string;
-        }
+        };
+        showUserOptionsOnChartHover?: boolean;
+        keepUserOptionsStateOnChartLeave?: boolean;
     };
 
     export type VueUiQuickChartDatasetObjectItem = {

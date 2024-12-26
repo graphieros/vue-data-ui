@@ -1,6 +1,6 @@
 
 <template>
-    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`">
+    <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper 
             v-if="FINAL_CONFIG.chart.userOptions.buttons.annotator"
             :parent="$refs.chart"
@@ -37,7 +37,7 @@
         <UserOptions
             ref="defails"
             :key="`user_options_${step}`"
-            v-if="FINAL_CONFIG.chart.userOptions.show && isDataset"
+            v-if="FINAL_CONFIG.chart.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.chart.backgroundColor"
             :color="FINAL_CONFIG.chart.color"
             :isPrinting="isPrinting"
@@ -68,6 +68,9 @@
             @toggleStack="toggleStack"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            :style="{
+                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+            }"
         >
             <template #optionTooltip v-if="$slots.optionTooltip">
                 <slot name="optionTooltip"/>
@@ -1374,7 +1377,10 @@ export default {
                 plot: 3,
                 line: 3
             },
-            selectedMinimapIndex: null
+            selectedMinimapIndex: null,
+            showUserOptionsOnChartHover: false,
+            keepUserOptionState: true,
+            userOptionsVisible: true,
         }
     },
     watch: {
@@ -2316,6 +2322,10 @@ export default {
         treeShake,
         useMouse,
         useNestedProp,
+        setUserOptionsVisibility(state = false) {
+            if (!this.showUserOptionsOnChartHover) return;
+            this.userOptionsVisible = state
+        },
         toggleAnnotator() {
             this.isAnnotator = !this.isAnnotator;
         },
@@ -2437,6 +2447,10 @@ export default {
                     });
                 });
             }
+
+            this.showUserOptionsOnChartHover = this.FINAL_CONFIG.chart.userOptions.showOnChartHover;
+            this.keepUserOptionState = this.FINAL_CONFIG.chart.userOptions.keepStateOnChartLeave;
+            this.userOptionsVisible = !this.FINAL_CONFIG.chart.userOptions.showOnChartHover;
 
             this.mutableConfig = {
                 dataLabels: {

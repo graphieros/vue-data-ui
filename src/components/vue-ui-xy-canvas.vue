@@ -53,6 +53,7 @@ import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
+import { useUserOptionState } from "../useUserOptionState";
 
 const { vue_ui_xy_canvas: DEFAULT_CONFIG } = useConfig();
 
@@ -112,6 +113,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -1423,7 +1426,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :style="`width:100%; position:relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`">
+    <div :style="`width:100%; position:relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text"
             :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <Title 
@@ -1443,7 +1446,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
@@ -1474,6 +1477,9 @@ defineExpose({
             @toggleStack="toggleStack"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            :style="{
+                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+            }"
         >
             <template #optionTooltip v-if="$slots.optionTooltip">
                 <slot name="optionTooltip"/>

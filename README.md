@@ -508,6 +508,18 @@ const config = ref({
 })
 ```
 
+User options menu can be set to appear only when hovering the component:
+
+```js
+const config = ref({
+  userOptions: {
+    show: true,
+    showOnChartHover: true, // Default: false
+    keepStateOnChartLeave: true, // Set to false to always close the menu when hovering out of the chart
+  },
+});
+```
+
 Predefined actions in user options menu depend on the type of chart. Some charts have more or less actions available. Action buttons contain an predefined icons by default.
 
 To hide a given action, set the userOption.buttons, for example:

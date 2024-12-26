@@ -24,6 +24,7 @@ import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
+import { useUserOptionState } from "../useUserOptionState";
 
 const { vue_ui_thermometer: DEFAULT_CONFIG } = useConfig()
 
@@ -83,6 +84,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -269,7 +272,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="thermoChart" :class="`vue-ui-thermometer ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color};font-family:${FINAL_CONFIG.style.fontFamily}`" :id="`thermometer__${uid}`">
+    <div ref="thermoChart" :class="`vue-ui-thermometer ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color};font-family:${FINAL_CONFIG.style.fontFamily}`" :id="`thermometer__${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :parent="thermoChart"
@@ -307,7 +310,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isImaging="isImaging"
@@ -327,6 +330,9 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateImage="generateImage"
             @toggleAnnotator="toggleAnnotator"
+            :style="{
+                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+            }"
         >
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />

@@ -13,6 +13,7 @@ import {
 import { usePrinter } from "../usePrinter";
 import UserOptions from "../atoms/UserOptions.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import { useUserOptionState } from "../useUserOptionState";
 
 const { vue_ui_carousel_table: DEFAULT_CONFIG } = useConfig();
 
@@ -74,6 +75,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
     return useNestedProp({
@@ -344,7 +347,7 @@ defineExpose({
 </script>
 
 <template>
-    <div style="position:relative; overflow:visible;" ref="chartContainer">
+    <div style="position:relative; overflow:visible;" ref="chartContainer" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <div 
             ref="tableContainer"
             :id="`carousel-table_${uid}`"
@@ -471,7 +474,7 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.backgroundColor"
             :color="FINAL_CONFIG.style.color"
             :isPrinting="isPrinting"
@@ -497,6 +500,9 @@ defineExpose({
             @generateImage="generateImage"
             @toggleAnimation="toggleAnimation"
             @toggleFullscreen="toggleFullscreen"
+            :style="{
+                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+            }"
         >
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
