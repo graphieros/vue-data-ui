@@ -458,28 +458,34 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tableContainer" :class="{ 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">    
+    <div ref="tableContainer" :class="{ 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+        
+        <div 
+            v-if="FINAL_CONFIG.title.text" 
+            class="vue-ui-table-sparkline-caption" 
+            :style="{ backgroundColor: FINAL_CONFIG.title.backgroundColor }"
+        >
+            <div :style="{
+                fontSize: `${FINAL_CONFIG.title.fontSize}px`,
+                fontWeight: FINAL_CONFIG.title.bold ? 'bold' : 'normal',
+                color: FINAL_CONFIG.title.color,
+                textAlign: FINAL_CONFIG.title.textAlign,
+            }">
+                {{ FINAL_CONFIG.title.text }}
+            </div>
+            <div v-if="FINAL_CONFIG.title.subtitle.text" :style="{
+                fontSize: `${FINAL_CONFIG.title.subtitle.fontSize}px`,
+                fontWeight: FINAL_CONFIG.title.subtitle.bold ? 'bold' : 'normal',
+                color: FINAL_CONFIG.title.subtitle.color,
+                textAlign: FINAL_CONFIG.title.textAlign,
+            }">
+                {{ FINAL_CONFIG.title.subtitle.text }}
+            </div>
+        </div>
         <div style="overflow: auto" @pointerleave="selectedSerieIndex = undefined; selectedDataIndex = undefined">
             <table data-cy="vue-data-ui-table-sparkline" class="vue-ui-data-table"
                 :style="{ fontFamily: FINAL_CONFIG.fontFamily, position: 'relative' }">
-                <caption v-if="FINAL_CONFIG.title.text" :style="{ backgroundColor: FINAL_CONFIG.title.backgroundColor }">
-                    <div :style="{
-                        fontSize: `${FINAL_CONFIG.title.fontSize}px`,
-                        fontWeight: FINAL_CONFIG.title.bold ? 'bold' : 'normal',
-                        color: FINAL_CONFIG.title.color,
-                        textAlign: FINAL_CONFIG.title.textAlign,
-                    }">
-                        {{ FINAL_CONFIG.title.text }}
-                    </div>
-                    <div v-if="FINAL_CONFIG.title.subtitle.text" :style="{
-                        fontSize: `${FINAL_CONFIG.title.subtitle.fontSize}px`,
-                        fontWeight: FINAL_CONFIG.title.subtitle.bold ? 'bold' : 'normal',
-                        color: FINAL_CONFIG.title.subtitle.color,
-                        textAlign: FINAL_CONFIG.title.textAlign,
-                    }">
-                        {{ FINAL_CONFIG.title.subtitle.text }}
-                    </div>
-                </caption>
+
 
                 <thead style="z-index: 1;padding-right:24px">
                     <tr 
@@ -675,7 +681,7 @@ defineExpose({
                                     j === selectedDataIndex 
                                     ? FINAL_CONFIG.tbody.selectedColor.useSerieColor ? `${tr.color.length > 7 ? tr.color.slice(0,-2) : tr.color }33` : FINAL_CONFIG.tbody.selectedColor.fallback
                                     : '',
-                        }" :data-cell="colNames[j]" class="vue-ui-data-table__tbody__td" @pointerenter="selectedSerieIndex = i; selectedDataIndex = j">
+                        }" :data-cell="colNames[j] ? colNames[j].value : ''" class="vue-ui-data-table__tbody__td" @pointerenter="selectedSerieIndex = i; selectedDataIndex = j">
                             {{ [null, undefined].includes(tr.values[j]) ? '-' : applyDataLabel(
                                 FINAL_CONFIG.formatter,
                                 Number(tr.values[j]),
@@ -840,6 +846,7 @@ td {
     width: 100px;
     min-width: 100px;
     left: 0;
+    z-index: 1;
 }
 
 .vue-ui-responsive {
