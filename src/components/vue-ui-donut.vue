@@ -244,6 +244,7 @@ function segregate(index) {
     const target = immutableSet.value.find((_, idx) => idx === index)
     const source = mutableSet.value.find((_, idx) => idx === index)
     let initVal = source.value;
+    let incr = 1;
     if(segregated.value.includes(index)) {
         segregated.value = segregated.value.filter(s => s !== index);
         const targetVal = target.value;
@@ -280,7 +281,7 @@ function segregate(index) {
         animUp()
     } else if (segregated.value.length < immutableSet.value.length - 1) {
         function animDown() {
-            if(initVal < 0.1) {
+            if(initVal < source.value / 100) {
                 cancelAnimationFrame(rafDown.value);
                 segregated.value.push(index);
                 mutableSet.value = mutableSet.value.map((ds, i) => {
@@ -296,7 +297,8 @@ function segregate(index) {
                 isAnimating.value = false;
             } else {
                 isAnimating.value = true;
-                initVal /= 1.1;
+                initVal /= (1.1 * incr);
+                incr += 0.01;
                 mutableSet.value = mutableSet.value.map((ds, i) => {
                     if(index === i) {
                         return {
