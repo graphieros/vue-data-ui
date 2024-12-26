@@ -17,6 +17,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import Shape from "../atoms/Shape.vue";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import { useUserOptionState } from "../useUserOptionState";
 
 const { vue_ui_table_heatmap: DEFAULT_CONFIG } = useConfig();
 
@@ -49,6 +50,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -194,12 +197,12 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tableContainer" :style="`width:100%; overflow-x:auto; container-type: inline-size;padding-top:${FINAL_CONFIG.userOptions.show ? '36px' : ''}; ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}; position:relative;`" :class="{ 'vue-ui-responsive' : isResponsive }" :id="`table_heatmap_${uid}`">
+    <div ref="tableContainer" :style="`width:100%; overflow-x:auto; container-type: inline-size;padding-top:${FINAL_CONFIG.userOptions.show ? '36px' : ''}; ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}; position:relative;`" :class="{ 'vue-ui-responsive' : isResponsive }" :id="`table_heatmap_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
 
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.backgroundColor"
             :color="FINAL_CONFIG.style.color"
             :isPrinting="isPrinting"
@@ -217,6 +220,9 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            :style="{
+                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+            }"
         >
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />

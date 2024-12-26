@@ -16,6 +16,7 @@ import { usePrinter } from "../usePrinter";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
+import { useUserOptionState } from "../useUserOptionState";
 
 const { vue_ui_bullet: DEFAULT_CONFIG } = useConfig();
 
@@ -159,6 +160,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
@@ -363,6 +366,8 @@ defineExpose({
         :class="`vue-ui-bullet ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`bullet_${uid}`"
+        @mouseenter="() => setUserOptionsVisibility(true)" 
+        @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
@@ -399,7 +404,7 @@ defineExpose({
 
         <UserOptions
             ref="details"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
@@ -422,6 +427,9 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateImage="generateImage"
             @toggleAnnotator="toggleAnnotator"
+            :style="{
+                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+            }"
         >
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />

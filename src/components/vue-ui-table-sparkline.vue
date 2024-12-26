@@ -23,6 +23,7 @@ import UserOptions from "../atoms/UserOptions.vue";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
 import vClickOutside from "../directives/vClickOutside";
+import { useUserOptionState } from "../useUserOptionState";
 
 const { vue_ui_table_sparkline: DEFAULT_CONFIG } = useConfig();
 
@@ -54,6 +55,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -454,7 +457,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tableContainer" :class="{ 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`">    
+    <div ref="tableContainer" :class="{ 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">    
         <div style="overflow: auto" @pointerleave="selectedSerieIndex = undefined; selectedDataIndex = undefined">
             <table data-cy="vue-data-ui-table-sparkline" class="vue-ui-data-table"
                 :style="{ fontFamily: FINAL_CONFIG.fontFamily, position: 'relative' }">
@@ -549,7 +552,7 @@ defineExpose({
                             <UserOptions
                                 ref="details"
                                 :key="`user_option_${step}`"
-                                v-if="FINAL_CONFIG.userOptions.show && i === colNames.length - 1"
+                                v-if="FINAL_CONFIG.userOptions.show && i === colNames.length - 1 && (keepUserOptionState ? true : userOptionsVisible)"
                                 :backgroundColor="FINAL_CONFIG.thead.backgroundColor"
                                 :color="FINAL_CONFIG.thead.color"
                                 :isPrinting="isPrinting"
@@ -567,6 +570,9 @@ defineExpose({
                                 @generatePdf="generatePdf"
                                 @generateImage="generateImage"
                                 @generateCsv="generateCsv"
+                                :style="{
+                                    visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                                }"
                             >
                                 <template #optionPdf v-if="$slots.optionPdf">
                                     <slot name="optionPdf" />
