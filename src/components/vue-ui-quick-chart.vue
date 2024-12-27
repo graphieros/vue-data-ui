@@ -275,9 +275,9 @@ const isSegregatingDonut = ref(false);
 function segregateDonut(arc, ds) {
     isSegregatingDonut.value = true;
     let initVal = arc.value;
+    const targetVal = fd.value.dataset.find((el, i) => arc.id === `donut_${i}`).VALUE;
     if(segregated.value.includes(arc.id)) {
         segregated.value = segregated.value.filter(el => el !== arc.id)
-        const targetVal = fd.value.dataset.find((el, i) => arc.id === `donut_${i}`).VALUE;
         function animUp() {
             if(initVal > targetVal) {
                 isSegregatingDonut.value = false;
@@ -292,7 +292,7 @@ function segregateDonut(arc, ds) {
                                 VALUE: targetVal
                             }
                         } else {
-                            return ds
+                            return ds;
                         }
                     })
                 }
@@ -308,17 +308,17 @@ function segregateDonut(arc, ds) {
                                 VALUE: initVal
                             }
                         } else {
-                            return ds
+                            return ds;
                         }
                     })
                 };
-                rafUp.value = requestAnimationFrame(animUp)
+                rafUp.value = requestAnimationFrame(animUp);
             }
         }
         animUp()
     } else if(ds.length > 1) {
         function anim() {
-            if(initVal < 0.1) {
+            if(initVal < targetVal / 100) {
                 isSegregatingDonut.value = false;
                 cancelAnimationFrame(raf.value)
                 segregated.value.push(arc.id)
@@ -332,7 +332,7 @@ function segregateDonut(arc, ds) {
                             VALUE: 0
                         }
                     } else {
-                        return ds
+                        return ds;
                     }
                 })
                 }
@@ -348,14 +348,14 @@ function segregateDonut(arc, ds) {
                             VALUE: initVal
                         }
                     } else {
-                        return ds
+                        return ds;
                     }
                 })
                 }
-                raf.value = requestAnimationFrame(anim)
+                raf.value = requestAnimationFrame(anim);
             }
         }
-        anim()
+        anim();
     }
 }
 
