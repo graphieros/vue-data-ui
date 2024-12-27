@@ -5376,6 +5376,7 @@ declare module 'vue-data-ui' {
     export type VueUiCarouselTableConfig = {
         responsiveBreakpoint?: number;
         animation?: {
+            type?: 'scroll' | 'marquee';
             use?: boolean;
             speedMs?: number;
             pauseOnHover?: boolean;
