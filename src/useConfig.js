@@ -4697,6 +4697,7 @@ export function useConfig() {
             animation: true
         }),
         animation: {
+            type: 'scroll', // 'scroll' | 'marquee'
             use: true,
             speedMs: 1000,
             pauseOnHover: true,
