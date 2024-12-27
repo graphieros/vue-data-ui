@@ -20,24 +20,24 @@ import { useArena } from "../src/useArena";
 const dataset = ref([
     {
         name: "Serie 1",
-        series: [10, 20, 30],
+        series: [0, 0, 30],
         color: "rgba(255,0,0,0.5)"
     },
     {
         name: "Serie 2",
-        series: [-10, -20, -30],
+        series: [0, -20, -30],
     },
     {
         name: "Serie 3",
-        series: [-5, 5, -5, -10],
+        series: [0, 5, -5, -10],
     },
     {
         name: "Serie 4",
-        series: [-5, 5, -5],
+        series: [0, 5, -5],
     },
     {
         name: "Serie 4",
-        series: [5, -5, 5],
+        series: [0, -5, 5],
     },
 ]);
 
@@ -57,12 +57,12 @@ const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'theme', def: '', type: 'select', options: ['', 'zen', 'hack', 'concrete']},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.height', def: 500, type: 'number', min: 200, max: 1000},
     { key: 'style.chart.width', def: 800, type: 'number', min: 200, max: 1000},
     { key: 'style.chart.padding.top', def: 24, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.right', def: 64, type: 'number', min: 0, max: 100},
     { key: 'style.chart.padding.bottom', def: 36, type: 'number', min: 0, max: 100},
     { key: 'style.chart.padding.left', def: 48, type: 'number', min: 0, max: 100},
 
@@ -109,7 +109,7 @@ const model = ref([
     { key: 'style.chart.highlighter.opacity', def: 5, type: 'range', min: 0, max: 30},
     
     { key: 'style.chart.bars.gapRatio', def: 0.5, type: 'range', min: 0, max: 1, step: 0.01 },
-    { key: 'style.chart.bars.distributed', def: false, type: 'checkbox'},
+    { key: 'style.chart.bars.distributed', def: true, type: 'checkbox'},
     { key: 'style.chart.bars.showDistributedPercentage', def: true, type: 'checkbox'},
     { key: 'style.chart.bars.borderRadius', def: 6, type: 'number', min: 0, max: 12},
     { key: 'style.chart.bars.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
@@ -124,6 +124,9 @@ const model = ref([
     { key: 'style.chart.bars.totalValues.color', def: '#1A1A1A', type: 'color'},
 
     { key: 'style.chart.bars.dataLabels.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.bars.dataLabels.hideEmptyValues', def: false, type: 'checkbox'},
+    { key: 'style.chart.bars.dataLabels.hideEmptyPercentages', def: true, type: 'checkbox'},
+
     { key: 'style.chart.bars.dataLabels.adaptColorToBackground', def: true, type: 'checkbox'},
     { key: 'style.chart.bars.dataLabels.color', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.bars.dataLabels.fontSize', def: 14, type: 'number', min: 8, max: 42},
