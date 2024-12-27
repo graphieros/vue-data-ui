@@ -411,7 +411,7 @@ function segregate(uid) {
                             values: [targetVal]
                         }
                     } else {
-                        return ds
+                        return ds;
                     }
                 });
                 isAnimating.value = false;
@@ -428,13 +428,13 @@ function segregate(uid) {
                         return ds;
                     }
                 })
-                rafUp.value = requestAnimationFrame(animUp)
+                rafUp.value = requestAnimationFrame(animUp);
             }
         }
         animUp()
     } else if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
         function animDown() {
-            if(initVal < 0.1) {
+            if(initVal < source / 100) {
                 cancelAnimationFrame(rafDown.value)
                 segregated.value.push(uid);
                 datasetCopy.value = datasetCopy.value.map((ds, i) => {
@@ -450,18 +450,18 @@ function segregate(uid) {
                 isAnimating.value = false;
             } else {
                 isAnimating.value = true;
-                initVal /= 1.5;
-                datasetCopy.value = datasetCopy.value.map((ds, i) => {
+                initVal /= 1.15;
+                datasetCopy.value = datasetCopy.value.map(ds => {
                     if (ds.uid === uid) {
                         return {
                             ...ds,
                             values: [initVal]
                         }
                     } else {
-                        return ds
+                        return ds;
                     }
                 })
-                rafDown.value = requestAnimationFrame(animDown)
+                rafDown.value = requestAnimationFrame(animDown);
             }
         }
         animDown();
@@ -487,7 +487,7 @@ const legendSet = computed(() => {
                 shape: 'square'
             }
         })
-        .map((el, i) => {
+        .map(el => {
             return {
                 ...el,
                 proportion: el.value / datasetCopy.value.map(ds => (ds.values || []).reduce((a,b) => a + b, 0)).reduce((a, b) => a + b, 0),
