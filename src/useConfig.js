@@ -294,6 +294,8 @@ export function useConfig() {
                     },
                     dataLabels: {
                         show: true,
+                        hideEmptyValues: false,
+                        hideEmptyPercentages: false,
                         adaptColorToBackground: true,
                         color: COLOR_BLACK,
                         fontSize: FONT._14,
