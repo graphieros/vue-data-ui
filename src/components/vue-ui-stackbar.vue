@@ -564,7 +564,7 @@ function barDataLabelPercentage(val, datapoint, index, dpIndex) {
         FINAL_CONFIG.value.style.chart.bars.dataLabels.formatter,
         val,
         dataLabel({
-            v: val,
+            v: isNaN(val) ? 0 : val,
             s: '%',
             r: FINAL_CONFIG.value.style.chart.bars.dataLabels.rounding,
         }),
@@ -798,6 +798,14 @@ function selectTimeLabel(label, relativeIndex) {
         absoluteIndex: label.absoluteIndex,
         label: label.text
     });
+}
+
+function isLabelDisplayed(value, proportion) {
+    if (FINAL_CONFIG.value.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.value.style.chart.bars.distributed) {
+        return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideEmptyPercentages ? proportion > 0 : true
+    } else {
+        return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideEmptyValues ? value !== 0 : true
+    }
 }
 
 defineExpose({
@@ -1074,34 +1082,38 @@ defineExpose({
             <template v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.orientation === 'vertical'">
                 <g v-for="(dp, i) in formattedDataset">            
                     <!-- RECT LABELS -->
-                    <text 
-                        v-for="(rect, j) in dp.x"
-                        :x="rect + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2)"
-                        :y="dp.y[j] + dp.height[j] / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.fontSize / 3"
-                        :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
-                        :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
-                        text-anchor="middle"
-                    >
-                        {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
-                            barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
-                            barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
-                    </text>
+                    <template v-for="(rect, j) in dp.x">                    
+                        <text
+                            v-if="isLabelDisplayed(dp.series[j], dp.proportions[j])"
+                            :x="rect + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2)"
+                            :y="dp.y[j] + dp.height[j] / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.fontSize / 3"
+                            :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
+                            text-anchor="middle"
+                        >
+                            {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
+                                barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
+                                barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
+                        </text>
+                    </template>
                 </g>
 
                 <!-- RECT TOTAL LABELS -->
                 <g v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
-                    <text
-                        v-for="(total, i) in totalLabels"
-                        :x="drawingArea.left + (barSlot * i) + barSlot / 2"
-                        :y="drawingArea.top - FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
-                        text-anchor="middle"
-                        :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
-                        :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
-                    >
-                        {{ barDataLabel(total.value, total, i, total.sign) }}
-                    </text>
+                    <template v-for="(total, i) in totalLabels">
+                        <text
+                            v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
+                            :x="drawingArea.left + (barSlot * i) + barSlot / 2"
+                            :y="drawingArea.top - FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
+                            text-anchor="middle"
+                            :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
+                            :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
+                        >
+                            {{ barDataLabel(total.value, total, i, total.sign) }}
+                        </text>
+                    </template>
                 </g>
             </template>
 
@@ -1109,33 +1121,37 @@ defineExpose({
             <template v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.orientation === 'horizontal'">
                 <g v-for="(dp, i) in formattedDataset">            
                     <!-- RECT LABELS -->
-                    <text 
-                        v-for="(rect, j) in dp.horizontal_x"
-                        :x="rect + ((dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2)"
-                        :y="dp.horizontal_y[j] + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2) + (FINAL_CONFIG.style.chart.bars.dataLabels.fontSize /3)"
-                        :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
-                        :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
-                        text-anchor="middle"
-                    >
-                        {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
-                            barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
-                            barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
-                    </text>
+                    <template v-for="(rect, j) in dp.horizontal_x">
+                        <text 
+                            v-if="isLabelDisplayed(dp.series[j], dp.proportions[j])"
+                            :x="rect + ((dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2)"
+                            :y="dp.horizontal_y[j] + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2) + (FINAL_CONFIG.style.chart.bars.dataLabels.fontSize /3)"
+                            :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
+                            text-anchor="middle"
+                        >
+                            {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
+                                barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
+                                barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
+                        </text>
+                    </template>
                 </g>
                 <!-- RECT TOTAL LABELS -->
                 <g v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
-                    <text
-                        v-for="(total, i) in totalLabels"
-                        :x="drawingArea.right + FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
-                        :y="drawingArea.top + (barSlot * i) + barSlot / 2"
-                        text-anchor="start"
-                        :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
-                        :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
-                    >
-                        {{ barDataLabel(total.value, total, i, total.sign) }}
-                    </text>
+                    <template v-for="(total, i) in totalLabels">
+                        <text
+                            v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
+                            :x="drawingArea.right + FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
+                            :y="drawingArea.top + (barSlot * i) + barSlot / 2"
+                            text-anchor="start"
+                            :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
+                            :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
+                        >
+                            {{ barDataLabel(total.value, total, i, total.sign) }}
+                        </text>
+                    </template>
                 </g>
             </template>
 
