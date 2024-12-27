@@ -244,7 +244,6 @@ function segregate(index) {
     const target = immutableSet.value.find((_, idx) => idx === index)
     const source = mutableSet.value.find((_, idx) => idx === index)
     let initVal = source.value;
-    let incr = 1;
     if(segregated.value.includes(index)) {
         segregated.value = segregated.value.filter(s => s !== index);
         const targetVal = target.value;
@@ -291,14 +290,13 @@ function segregate(index) {
                             value: 0,
                         }
                     } else {
-                        return ds
+                        return ds;
                     }
                 });
                 isAnimating.value = false;
             } else {
                 isAnimating.value = true;
-                initVal /= (1.1 * incr);
-                incr += 0.01;
+                initVal /= 1.1;
                 mutableSet.value = mutableSet.value.map((ds, i) => {
                     if(index === i) {
                         return {
@@ -306,10 +304,10 @@ function segregate(index) {
                             value: initVal
                         }
                     } else {
-                        return ds
+                        return ds;
                     }
                 })
-                rafDown.value = requestAnimationFrame(animDown)
+                rafDown.value = requestAnimationFrame(animDown);
             }
         }
         animDown()
