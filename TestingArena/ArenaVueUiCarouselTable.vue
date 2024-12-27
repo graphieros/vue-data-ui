@@ -10,6 +10,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 
 const model = ref([
     { key: 'responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
+    { key: 'animation.type', def: 'scroll', type:'select', options: ['scroll', 'marquee']},
     { key: 'animation.use', def: true, type: 'checkbox'},
     { key: 'animation.speedMs', def: 1000, type: 'number', type: 'range', min: 200, max: 2000},
     { key: 'animation.pauseOnHover', def: true, type: 'checkbox'},
