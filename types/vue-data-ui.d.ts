@@ -5561,6 +5561,8 @@ declare module 'vue-data-ui' {
                     };
                     dataLabels?: {
                         show?: boolean;
+                        hideEmptyValues?: boolean;
+                        hideEmptyPercentages?: boolean;
                         adaptColorToBackground?: boolean;
                         color?: string;
                         fontSize?: number;
