@@ -196,7 +196,11 @@ function toggleFullscreen(state) {
 
 function startAnimation() {
     if (!raf.value && !isPaused.value) {
-        raf.value = requestAnimationFrame(animate);
+        if (FINAL_CONFIG.value.animation.type === 'scroll') {
+            raf.value = requestAnimationFrame(animate);
+        } else {
+            raf.value = requestAnimationFrame(animateMarquee);
+        }
     }
 }
 
@@ -231,6 +235,29 @@ function animate(timestamp) {
     }
 
     raf.value = requestAnimationFrame(animate);
+}
+
+function animateMarquee(timestamp) {
+    if (isPaused.value) return;
+    if (!lastTimestamp.value) lastTimestamp.value = timestamp;
+
+    const deltaTime = timestamp - lastTimestamp.value;
+    const marqueeSpeed = (FINAL_CONFIG.value.animation.speedMs / 4) / 1000;
+
+    if (deltaTime >= marqueeSpeed) {
+        init.value += marqueeSpeed;
+        if (init.value >= (tableContainer.value.scrollHeight - tableContainer.value.clientHeight)) {
+            init.value = 0;
+        }
+        if (tableContainer.value) {
+            tableContainer.value.scrollTo({
+                top: init.value,
+                behavior: 'auto',
+            });
+        }
+        lastTimestamp.value = timestamp;
+    }
+    raf.value = requestAnimationFrame(animateMarquee);
 }
 
 function pauseAnimation() {
@@ -277,6 +304,20 @@ watch(
         }
     }
 );
+
+watch(
+    () => FINAL_CONFIG.value.animation.type,
+    (_newVal) => {
+        pauseAnimation();
+        init.value = 0;
+        scrollIndex.value = 0;
+        tableContainer.value.scrollTo({
+            top: 0,
+            behavior: 'auto',
+        });
+        resumeAnimation();
+    }
+    );
 
 const breakpoint = computed(() => FINAL_CONFIG.value.responsiveBreakpoint);
 
