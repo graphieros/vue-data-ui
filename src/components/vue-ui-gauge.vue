@@ -166,7 +166,11 @@ const svg = ref({
 const max = ref(0);
 const min = ref(0);
 
-const activeRating = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : props.dataset.value);
+const activeRating = ref(
+    FINAL_CONFIG.value.style.chart.animation.use 
+    ? Math.min(...props.dataset.series.map(s => s.from)) 
+    : props.dataset.value
+);
 
 watch(() => props.dataset.value, () => {
     useAnimation(props.dataset.value);
