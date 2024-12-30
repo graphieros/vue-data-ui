@@ -193,6 +193,9 @@ function resumeVduiBuild() {
                 :dataset="dataset"
                 ref="localComponent"
             >
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
                 <template #th="{th}">
                     {{ th }}
                 </template>

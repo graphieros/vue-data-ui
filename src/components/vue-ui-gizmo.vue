@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, useSlots } from "vue";
 import { useConfig } from "../useConfig";
 import { createUid, error, applyDataLabel, dataLabel } from "../lib";
 import { useNestedProp } from "../useNestedProp";
@@ -21,9 +21,16 @@ const props = defineProps({
 });
 
 const uid = ref(createUid());
+const slots = useSlots();
 
 onMounted(() => {
     prepareChart();
+});
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiGizmo does not support the #chart-background slot.')
+    }
 });
 
 function prepareChart() {

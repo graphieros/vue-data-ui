@@ -335,6 +335,11 @@ function toggleLabels() {
             ...config,
             responsive: true
         }">
+
+        <template #chart-background>
+            <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+        </template>
+
         <template #plot-comment="{ plot }">
             <div :style="`text-align:${plot.textAlign};font-size: 10px; padding: 6px;`">
                 {{ plot.comment }}

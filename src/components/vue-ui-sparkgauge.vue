@@ -195,6 +195,20 @@ const trackColor = computed(() => {
     </div>
     <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:transparent; width:100%;`">
         <PackageVersion />
+
+        <!-- BACKGROUND SLOT -->
+        <foreignObject 
+            v-if="$slots['chart-background']"
+            :x="0"
+            :y="0"
+            :width="svg.width"
+            :height="svg.height"
+            :style="{
+                pointerEvents: 'none'
+            }"
+        >
+            <slot name="chart-background"/>
+        </foreignObject>
         
         <defs>
             <linearGradient :id="`gradient_${ uid}`" x1="-10%" y1="100%" x2="110%" y2="100%">

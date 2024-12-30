@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, useSlots } from "vue";
 import { 
     abbreviate,
     adaptColorToBackground,
@@ -53,6 +53,14 @@ const props = defineProps({
             return []
         }
     },
+});
+
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiWaffle does not support the #chart-background slot.')
+    }
 });
 
 const isDataset = computed(() => {

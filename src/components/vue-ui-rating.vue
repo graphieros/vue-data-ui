@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, useSlots } from "vue";
 import { 
     createStar, 
     createUid,
@@ -34,6 +34,13 @@ const uid = ref(createUid());
 const isTooltip = ref(false);
 const hoveredValue = ref(undefined);
 const units = ref([]);
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiRating does not support the #chart-background slot.')
+    }
+});
 
 const emit = defineEmits(['rate']);
 

@@ -608,6 +608,20 @@ defineExpose({
     >
       <PackageVersion />
 
+      <!-- BACKGROUND SLOT -->
+      <foreignObject 
+          v-if="$slots['chart-background']"
+          :x="0"
+          :y="0"
+          :width="svg.width <= 0 ? 10 : svg.width"
+          :height="svg.height <= 0 ? 10 : svg.height"
+          :style="{
+              pointerEvents: 'none'
+          }"
+      >
+          <slot name="chart-background"/>
+      </foreignObject>
+
       <!-- DEFS  -->
       <defs>
         <radialGradient

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch } from 'vue';
+import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch, useSlots } from 'vue';
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -55,7 +55,14 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['selectLegend', 'selectDatapoint'])
+const emit = defineEmits(['selectLegend', 'selectDatapoint']);
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiTreemap does not support the #chart-background slot.')
+    }
+})
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;

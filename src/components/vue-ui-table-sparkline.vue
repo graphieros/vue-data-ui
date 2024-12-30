@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { ref, computed, onMounted, nextTick, watch, useSlots } from "vue";
 import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
 import {
@@ -45,7 +45,14 @@ const props = defineProps({
 const uid = ref(createUid());
 const step = ref(0);
 const sparkStep = ref(0);
-const TD = ref(null)
+const TD = ref(null);
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiTableSparkline does not support the #chart-background slot.')
+    }
+});
 
 const FINAL_CONFIG = computed({
     get: () => {

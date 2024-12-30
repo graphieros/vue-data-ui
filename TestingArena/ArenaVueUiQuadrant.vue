@@ -76,7 +76,7 @@ const dataset = ref([
     {
         name: 'Serie 3',
         shape: 'hexagon',
-        series: makeDs(1000, 100)
+        series: makeDs(10, 10)
     }
 ]);
 
@@ -343,6 +343,10 @@ function selectSide(side) {
             ...config,
             responsive: true
         }">
+        <template #chart-background>
+            <div style="height: 100%; width: 100%; background: radial-gradient(at top left, red, white)"/>
+        </template>
+
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                 WATERMARK

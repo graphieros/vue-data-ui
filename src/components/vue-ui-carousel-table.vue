@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, useSlots } from "vue";
 import { useConfig } from "../useConfig";
 import { useNestedProp } from "../useNestedProp";
 import { 
@@ -34,11 +34,17 @@ const props = defineProps({
 
 const uid = ref(createUid());
 const isFullscreen = ref(false);
-
 const isDataset = ref(!!props.dataset);
+const slots = useSlots();
 
 onMounted(() => {
     prepareChart();
+});
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiCarouselTable does not support the #chart-background slot.')
+    }
 });
 
 function prepareChart() {

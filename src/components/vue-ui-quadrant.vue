@@ -1059,6 +1059,20 @@ defineExpose({
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`" :style="`max-width:100%;overflow:${isZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  :id="`svg_${uid}`">
             <PackageVersion />
 
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="mutableSvg.startX"
+                :y="mutableSvg.startY"
+                :width="mutableSvg.width"
+                :height="mutableSvg.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
+
             <!-- DEFS -->
             <defs>
                 <radialGradient

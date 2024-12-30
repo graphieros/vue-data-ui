@@ -5,7 +5,8 @@ import {
     onMounted,
     watch,
     onBeforeUnmount,
-    nextTick
+    nextTick,
+    useSlots
 } from "vue";
 import {
     applyDataLabel,
@@ -104,6 +105,13 @@ const isDataset = computed(() => {
 });
 
 const emit = defineEmits(['selectLegend']);
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiXyCanvas does not support the #chart-background slot.')
+    }
+});
 
 const FINAL_CONFIG = computed({
     get: () => {

@@ -84,7 +84,11 @@ const config = computed(() => {
         <template #title>VueUiSmiley</template>
 
         <template #local>
-            <LocalVueUiSmiley :dataset="dataset" :config="config" ref="local"/>
+            <LocalVueUiSmiley :dataset="dataset" :config="config" ref="local">
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
+            </LocalVueUiSmiley>
         </template>
 
         <template #VDUI-local>

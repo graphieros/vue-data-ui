@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, useSlots } from "vue";
 import {
     applyDataLabel,
     convertColorToHex, 
@@ -37,6 +37,14 @@ const props = defineProps({
         default() {
             return [];
         }
+    }
+});
+
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiSparkStackbar does not support the #chart-background slot.')
     }
 });
 

@@ -248,11 +248,11 @@ function computeSankeyCoordinates(ds) {
 
     const links = [];
     for (const node in nodes) {
-        let sourceY = nodeCoordinates[node].absoluteY;
+        let sourceY = nodeCoordinates[node].absoluteY + FINAL_CONFIG.value.style.chart.padding.top;
 
         if (nodes[node].children) {
             nodes[node].children.forEach(({ target, value }, i) => {
-                const targetY = nodeCoordinates[target].y;
+                const targetY = nodeCoordinates[target].y + FINAL_CONFIG.value.style.chart.padding.top;
                 const sourceCoord = nodeCoordinates[node];
                 const targetCoord = nodeCoordinates[target];
 
@@ -582,6 +582,20 @@ defineExpose({
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <PackageVersion />
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="0"
+                :y="0"
+                :width="drawingArea.width"
+                :height="drawingArea.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
             
             <defs>
                 <linearGradient 
@@ -611,7 +625,7 @@ defineExpose({
                 v-for="(node, i) in mutableDataset.nodes"
                 class="vue-ui-flow-node"
                 :x="node.x"
-                :y="checkNaN(node.absoluteY)"
+                :y="checkNaN(node.absoluteY) + FINAL_CONFIG.style.chart.padding.top"
                 :height="checkNaN(node.height)"
                 :width="nodeWidth"
                 :fill="node.color"
@@ -625,7 +639,7 @@ defineExpose({
             <text 
                 v-for="(node, i) in mutableDataset.nodes"
                 :x="node.x + nodeWidth / 2"
-                :y="checkNaN(node.absoluteY + node.height / 2 - (FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4))"
+                :y="checkNaN(node.absoluteY + node.height / 2 - (FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4)) + FINAL_CONFIG.style.chart.padding.top"
                 :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
                 :fill="adaptColorToBackground(node.color)"
                 text-anchor="middle"
@@ -636,7 +650,7 @@ defineExpose({
             <text 
                 v-for="(node, i) in mutableDataset.nodes"
                 :x="node.x + nodeWidth / 2"
-                :y="checkNaN(node.absoluteY + node.height / 2 + (FINAL_CONFIG.style.chart.nodes.labels.fontSize))"
+                :y="checkNaN(node.absoluteY + node.height / 2 + (FINAL_CONFIG.style.chart.nodes.labels.fontSize)) + FINAL_CONFIG.style.chart.padding.top"
                 :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
                 :fill="adaptColorToBackground(node.color)"
                 text-anchor="middle"

@@ -38,7 +38,11 @@ const step = ref(0)
         <template #title>VueUiGizmo</template>
         
         <template #local>
-            <LocalVueUiGizmo :dataset="dataset" :config="config"/>
+            <LocalVueUiGizmo :dataset="dataset" :config="config">
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
+            </LocalVueUiGizmo>
             <LocalVueUiGizmo :dataset="dataset" :config="{
                 ...config,
                 type: 'gauge'

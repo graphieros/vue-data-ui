@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, useSlots } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import { applyDataLabel, dataLabel } from "../lib";
 import { useConfig } from "../useConfig";
@@ -26,6 +26,14 @@ const FINAL_CONFIG = computed({
     },
     set: (newCfg) => {
         return newCfg
+    }
+});
+
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiKpi does not support the #chart-background slot.')
     }
 });
 

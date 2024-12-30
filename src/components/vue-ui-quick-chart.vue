@@ -1040,6 +1040,45 @@ defineExpose({
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.color}`"
         >
             <PackageVersion />
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background'] && chartType === detector.chartType.BAR"
+                :x="bar.drawingArea.left"
+                :y="bar.drawingArea.top"
+                :width="bar.drawingArea.width"
+                :height="bar.drawingArea.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
+            <foreignObject 
+                v-if="$slots['chart-background'] && chartType === detector.chartType.LINE"
+                :x="line.drawingArea.left"
+                :y="line.drawingArea.top"
+                :width="line.drawingArea.width"
+                :height="line.drawingArea.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
+            <foreignObject 
+                v-if="$slots['chart-background'] && chartType === detector.chartType.DONUT"
+                :x="0"
+                :y="0"
+                :width="defaultSizes.width"
+                :height="defaultSizes.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
+
             
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">

@@ -134,6 +134,9 @@ const config = computed(() => {
 
         <template #local>
             <LocalVueUiBullet :dataset="dataset" :config="config" ref="local">
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
                 <template #source>
                     <div style="width:100%;font-size:10px;text-align:left">
                         SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.

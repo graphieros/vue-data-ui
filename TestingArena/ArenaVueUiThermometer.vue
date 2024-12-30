@@ -135,6 +135,9 @@ const step = ref(0);
 
         <template #local>
             <LocalVueUiThermometer :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
                 <template #optionPdf>
                     PRINT PDF
                 </template>

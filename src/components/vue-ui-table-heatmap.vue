@@ -1,6 +1,5 @@
 <script setup>
-// TODO: custom class prefix
-import { computed, ref, onMounted, nextTick, watch } from "vue";
+import { computed, ref, onMounted, nextTick, watch, useSlots } from "vue";
 import {
     adaptColorToBackground,
     calcMedian,
@@ -41,6 +40,13 @@ const isResponsive = ref(false);
 const tableContainer = ref(null);
 const isFullscreen = ref(false);
 const step = ref(0);
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiTableHeatmap does not support the #chart-background slot.')
+    }
+});
 
 const FINAL_CONFIG = computed({
     get: () => {

@@ -176,12 +176,6 @@ const svg = computed(() => {
         height: isVertical.value ? big : small,
         width: isVertical.value ? small : big,
     }
-})
-
-const max = ref(100);
-
-const proportion = computed(() => {
-    return props.dataset.percentage / max.value
 });
 
 const tickSize = computed(() => {
@@ -372,6 +366,20 @@ defineExpose({
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
             <PackageVersion />
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="0"
+                :y="0"
+                :width="svg.width"
+                :height="svg.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
             
             <g v-if="FINAL_CONFIG.style.chart.layout.curved">
                 <path

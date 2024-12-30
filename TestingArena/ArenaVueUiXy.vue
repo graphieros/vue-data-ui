@@ -595,6 +595,11 @@ function selectTimeLabel(data) {
             responsive: true,
         }" @selectTimeLabel="selectTimeLabel">
 
+        <template #chart-background>
+            <div style="width: 100%; height:100%; background: radial-gradient(at top left, red, white)">
+            </div>
+        </template>
+
         <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
             <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
                 <text

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, useSlots } from "vue";
 import { applyDataLabel, dataLabel, error, objectIsEmpty, shiftHue, XMLNS } from "../lib";
 import { useNestedProp } from "../useNestedProp";
 import { useConfig } from "../useConfig";
@@ -19,6 +19,14 @@ const props = defineProps({
         return {};
         },
     },
+});
+
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiSmiley does not support the #chart-background slot.')
+    }
 });
 
 onMounted(() => {

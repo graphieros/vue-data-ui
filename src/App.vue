@@ -55,11 +55,11 @@ import ArenaVueUiHistoryPlot from "../TestingArena/ArenaVueUiHistoryPlot.vue";
 
 const showOldArena = ref(false);
 
-const components = ref([
+const components = ref([             //--- BG SLOT
   /*____________________*/"VueUiXy", //  0 OK
   /*_________________*/"VueUiDonut", //  1 OK
-  /*_______________*/"VueUiTreemap", //  2 OK
-  /*________________*/"VueUiWaffle", //  3 OK
+  /*_______________*/"VueUiTreemap", //  2 _/
+  /*________________*/"VueUiWaffle", //  3 _/
   /*_________________*/"VueUiRadar", //  4 OK
   /*______________*/"VueUiQuadrant", //  5 OK
   /*_________________*/"VueUiGauge", //  6 OK
@@ -71,12 +71,12 @@ const components = ref([
   /*_______________*/"VueUiHeatmap", // 12 OK
   /*_______________*/"VueUiScatter", // 13 OK
   /*___________*/"VueUiCandlestick", // 14 OK
-  /*_____________*/"VueUiSparkline", // 15 _
-  /*______________*/"VueUiSparkbar", // 16 _
-  /*_________*/"VueUiSparkStackbar", // 17 _
-  /*________*/"VueUiSparkHistogram", // 18 _
-  /*____________*/"VueUiSparkgauge", // 19 _
-  /*____________*/"VueUiSparkTrend", // 20 _
+  /*_____________*/"VueUiSparkline", // 15 OK
+  /*______________*/"VueUiSparkbar", // 16 _/
+  /*_________*/"VueUiSparkStackbar", // 17 _/
+  /*________*/"VueUiSparkHistogram", // 18 OK
+  /*____________*/"VueUiSparkgauge", // 19 OK
+  /*____________*/"VueUiSparkTrend", // 20 OK
   /*____________*/"VueUiQuickChart", // 21 OK
   /*____________*/"VueUiAgePyramid", // 22 OK
   /*________*/"VueUiRelationCircle", // 23 OK
@@ -91,19 +91,19 @@ const components = ref([
   /*_____________*/"VueUiStripPlot", // 32 OK
   /*______________*/"VueUiDumbbell", // 33 OK
   /*_________________*/"VueUi3dBar", // 34 OK
-  /*________*/"VueUiTableSparkline", // 35 OK
-  /*__________*/"VueUiTableHeatmap", // 36 OK
+  /*________*/"VueUiTableSparkline", // 35 _/
+  /*__________*/"VueUiTableHeatmap", // 36 _/
   /*____________ */"VueUiWordCloud", // 37 OK
-  /*______________*/"VueUiXyCanvas", // 38 OK
+  /*______________*/"VueUiXyCanvas", // 38 _/
   /*__________________*/"VueUiFlow", // 39 OK
   /**/"VueUiParallelCoordinatePlot", // 40 OK
-  /*_________________*/"VueUiTimer", // 41 _
-  /*_________*/"VueUiCarouselTable", // 42 OK
-  /*_________________*/"VueUiGizmo", // 43 _
-  /*___________________*/"VueUiKpi", // 44 _
+  /*_________________*/"VueUiTimer", // 41 OK
+  /*_________*/"VueUiCarouselTable", // 42 _/
+  /*_________________*/"VueUiGizmo", // 43 _/
+  /*___________________*/"VueUiKpi", // 44 _/
   /*______________*/"VueUiStackbar", // 45 OK
-  /*________________*/"VueUiRating", // 46 _
-  /*________________*/"VueUiSmiley", // 47 _
+  /*________________*/"VueUiRating", // 46 _/
+  /*________________*/"VueUiSmiley", // 47 _/
   /*________________*/"VueUiBullet", // 48 OK
   /*________________*/"VueUiFunnel", // 49 OK
   /*___________*/"VueUiHistoryPlot", // 50 OK
