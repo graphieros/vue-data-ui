@@ -207,6 +207,10 @@ function selectDatapoint(dp) {
             ...config,
             responsive: true
         }">
+        <template #chart-background>
+            <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+        </template>
+        
         <template #plot-comment="{ plot }">
             <div :style="`width: 100%; text-align:center; color:${plot.color}`">
                 {{  plot.comment }}

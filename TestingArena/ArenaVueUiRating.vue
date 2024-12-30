@@ -98,7 +98,11 @@ const step = ref(0);
         <template #title>VueUiRating</template>
 
         <template #local>
-            <LocalVueUiRating :dataset="dataset" :config="config" ref="local"/>
+            <LocalVueUiRating :dataset="dataset" :config="config" ref="local">
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
+            </LocalVueUiRating>
         </template>
 
         <template #VDUI-local>

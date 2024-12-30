@@ -166,6 +166,9 @@ const step = ref(0)
         <!-- <template #dataLabel="{ x,y,color,weight }">
             <circle :cx="x" :cy="y" r="12" :fill="color"/>
         </template> -->
+        <template #chart-background>
+            <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+        </template>
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                 WATERMARK

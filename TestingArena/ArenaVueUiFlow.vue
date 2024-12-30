@@ -38,9 +38,9 @@ const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.left', def: 24, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.left', def: 12, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.right', def: 12, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.title.text', def: 'Lorem ipsum dolor', type: 'text' },
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color' },
@@ -117,6 +117,10 @@ const step = ref(0);
 
         <template #local>
             <LocalVueUiFlow :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
+
                 <template #optionPdf>
                     PRINT PDF
                 </template>

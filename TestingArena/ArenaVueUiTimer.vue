@@ -8,7 +8,7 @@ import convertArrayToObject from "./convertModel";
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'type', def: 'stopwatch', type: 'select', options: ['stopwatch']},
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.height', def: 300, type: 'number', min: 100, max: 1000},
     { key: 'style.width', def: 300, type: 'number', min: 100, max: 1000},
     { key: 'style.title.text', def: 'Title', type: 'text'},
@@ -43,7 +43,7 @@ const model = ref([
     { key: 'stopwatch.label.fontSize', def: 24, type: 'number', min: 8, max: 42},
     { key: 'stopwatch.label.color', def: '#1A1A1A', type: 'color'},
     { key: 'stopwatch.label.bold', def: false, type: 'checkbox'},
-    { key: 'stopwatch.legend.backgroundColor', def: '#FFFFFF20s', type: 'color'},
+    { key: 'stopwatch.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'stopwatch.legend.buttons.start', def: true, type: 'checkbox'},
     { key: 'stopwatch.legend.buttons.pause', def: true, type: 'checkbox'},
     { key: 'stopwatch.legend.buttons.reset', def: true, type: 'checkbox'},
@@ -108,6 +108,10 @@ const localActions = computed(() => {
 
         <template #local>
             <LocalVueUiTimer :config="config" :key="`local_${step}`">
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
+
                 <template #laps="{ laps }">
                     <div v-for="l in laps">{{ l }}</div>
                 </template>

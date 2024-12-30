@@ -222,6 +222,9 @@ const step = ref(0)
             ...config,
             responsive: true
         }">
+        <template #chart-background>
+            <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+        </template>
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                 WATERMARK

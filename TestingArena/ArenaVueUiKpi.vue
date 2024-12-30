@@ -28,7 +28,11 @@ const config = ref({
 <template>
     <div>
         <button @click="updateVal">NEW VAL</button>
-        <LocalVueUiKpi :dataset="dataset"/>
+        <LocalVueUiKpi :dataset="dataset">
+            <template #chart-background>
+                <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+            </template>
+        </LocalVueUiKpi>
     </div>
     <Box>
         <template #title>VueUiKpi</template>

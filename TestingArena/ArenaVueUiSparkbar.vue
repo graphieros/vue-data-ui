@@ -154,6 +154,10 @@ const showTitleSlot = ref(false);
         
         <template #local>
             <LocalVueUiSparkbar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
+
                 <template #title="{ title }" v-if="showTitleSlot">
                     <div style="width:100%;">
                         {{ title.title }}
