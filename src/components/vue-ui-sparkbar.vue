@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, computed, onMounted, watch, nextTick, useSlots } from "vue";
 import {
     applyDataLabel,
     convertColorToHex,
@@ -42,6 +42,14 @@ const props = defineProps({
     backgroundOpacity: {
         type: Number,
         default: null
+    }
+});
+
+const slots = useSlots();
+
+onMounted(() => {
+    if (slots['chart-background']) {
+        console.warn('VueUiSparkbar does not support the #chart-background slot.')
     }
 });
 

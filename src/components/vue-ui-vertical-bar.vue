@@ -747,6 +747,20 @@ defineExpose({
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" >
             <PackageVersion />
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="0"
+                :y="0"
+                :width="svg.width <= 0 ? 10 : svg.width"
+                :height="drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
             
             <!-- defs -->
             <linearGradient

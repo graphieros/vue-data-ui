@@ -408,6 +408,20 @@ defineExpose({
         :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
             <PackageVersion />
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="0"
+                :y="0"
+                :width="svg.width"
+                :height="svg.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
             
             <!-- DEFS -->
             <defs>

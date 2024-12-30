@@ -370,6 +370,20 @@ function selectDatapoint(datapoint, index) {
         <!-- CHART -->
         <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`">
             <PackageVersion />
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="0"
+                :y="0"
+                :width="svg.width <= 0 ? 10 : svg.width"
+                :height="svg.height <= 0 ? 10 : svg.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
             
             <!-- DEFS -->
             <defs>

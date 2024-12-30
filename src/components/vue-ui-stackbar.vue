@@ -923,6 +923,20 @@ defineExpose({
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <PackageVersion />
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="drawingArea.left"
+                :y="drawingArea.top"
+                :width="drawingArea.width <= 0 ? 10 : drawingArea.width"
+                :height="drawingArea.height <= 0 ? 10 : drawingArea.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
             
             <!-- GRADIENT DEFS -->
             <defs v-if="FINAL_CONFIG.style.chart.bars.gradient.show">

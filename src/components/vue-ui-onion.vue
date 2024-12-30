@@ -587,8 +587,22 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 0.0001 : svg.width} ${svg.height <= 0 ? 0.0001 : svg.height}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" >
+        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" >
             <PackageVersion />
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="0"
+                :y="0"
+                :width="svg.width <= 0 ? 10 : svg.width"
+                :height="svg.height <= 0 ? 10 : svg.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
 
             <!-- GUTTERS -->
             <circle 

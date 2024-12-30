@@ -774,6 +774,20 @@ defineExpose({
         >
             <PackageVersion />
 
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="drawingArea.left"
+                :y="drawingArea.top"
+                :width="drawingArea.width <= 0 ? 10 : drawingArea.width"
+                :height="drawingArea.height <= 0 ? 10 : drawingArea.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
+
             <defs v-if="FINAL_CONFIG.style.chart.plots.gradient.show">
                 <radialGradient v-for="(ds, i) in drawableDataset" :id="`gradient_${i}_${uid}`" fy="30%">
                     <stop offset="10%" :stop-color="lightenHexColor(ds.color, FINAL_CONFIG.style.chart.plots.gradient.intensity / 100)"/>

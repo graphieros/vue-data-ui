@@ -28,6 +28,7 @@ import { useResponsive } from "../useResponsive";
 import themes from "../themes.json";
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import PackageVersion from "../atoms/PackageVersion.vue";
 
 const { vue_ui_funnel: DEFAULT_CONFIG } = useConfig();
 
@@ -488,6 +489,22 @@ defineExpose({
         </UserOptions>
 
         <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="funnel-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+
+            <PackageVersion/>
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="0"
+                :y="0"
+                :width="svg.width <= 0 ? 10 : svg.width"
+                :height="svg.height <= 0 ? 10 : svg.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
 
             <defs>
                 <linearGradient :id="`funnel_area_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">

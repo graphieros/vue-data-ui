@@ -660,6 +660,21 @@ defineExpose({
         >
             <PackageVersion />
 
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="drawingArea.left"
+                :y="drawingArea.top"
+                :width="drawingArea.width"
+                :height="drawingArea.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
+
+
             <!-- SCALES -->
             <g v-for="(scale, i) in scales" style="pointer-events: none;">
                 <!-- AXIS -->
