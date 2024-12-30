@@ -838,12 +838,12 @@ defineExpose({
             </template>
             
             <circle
-                v-if="FINAL_CONFIG.type === 'classic'"
+                v-if="FINAL_CONFIG.type === 'classic' && FINAL_CONFIG.style.chart.layout.donut.useShadow"
                 :cx="svg.width / 2"
                 :cy="svg.height / 2"
                 :r="minSize <= 0 ? 10 : minSize"
                 :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                :filter="FINAL_CONFIG.style.chart.layout.donut.useShadow ? `url(#shadow_${uid})`: ''"
+                :filter="`url(#shadow_${uid})`"
             />
 
             <template v-if="total && FINAL_CONFIG.type === 'classic'">
