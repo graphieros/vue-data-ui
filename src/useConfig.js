@@ -3746,7 +3746,7 @@ export function useConfig() {
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
-                padding: PADDING([0, 24, 0, 24]),
+                padding: PADDING([12, 12, 0, 12]),
                 title: TITLE,
                 nodes: {
                     gap: 10,
