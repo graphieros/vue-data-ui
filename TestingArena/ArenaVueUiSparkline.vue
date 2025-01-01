@@ -5,88 +5,88 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-// const dataset = ref([
-//     {
-//         period: "period 1",
-//         value: 0
-//     },
-//     {
-//         period: "period 2",
-//         value: -1
-//     },
-//     {
-//         period: "period 3",
-//         value: 2
-//     },
-//     {
-//         period: "period 4",
-//         value: -3
-//     },
-//     {
-//         period: "period 5",
-//         value: 4
-//     },
-//     {
-//         period: "period 6",
-//         value: -5
-//     },
-//     {
-//         period: "period 7",
-//         value: 6
-//     },
-//     {
-//         period: "period 8",
-//         value: -7
-//     },
-//     {
-//         period: "period 9",
-//         value: 8
-//     },
-//     {
-//         period: "period 10",
-//         value: -9
-//     },
-//     {
-//         period: "period 11",
-//         value: 10
-//     },
-//     {
-//         period: "period 12",
-//         value: -11
-//     },
-//     {
-//         period: "period 13",
-//         value: 12
-//     },
-//     {
-//         period: "period 14",
-//         value: -13
-//     },
-//     {
-//         period: "period 15",
-//         value: 14
-//     },
-//     {
-//         period: "period 16",
-//         value: -15
-//     },
-//     {
-//         period: "period 17",
-//         value: 16
-//     },
-// ])
+const dataset = ref([
+    {
+        period: "period 1",
+        value: 0
+    },
+    {
+        period: "period 2",
+        value: -1
+    },
+    {
+        period: "period 3",
+        value: 2
+    },
+    {
+        period: "period 4",
+        value: -3
+    },
+    {
+        period: "period 5",
+        value: 4
+    },
+    {
+        period: "period 6",
+        value: -5
+    },
+    {
+        period: "period 7",
+        value: 6
+    },
+    {
+        period: "period 8",
+        value: -7
+    },
+    {
+        period: "period 9",
+        value: 8
+    },
+    {
+        period: "period 10",
+        value: -9
+    },
+    {
+        period: "period 11",
+        value: 10
+    },
+    {
+        period: "period 12",
+        value: -11
+    },
+    {
+        period: "period 13",
+        value: 12
+    },
+    {
+        period: "period 14",
+        value: -13
+    },
+    {
+        period: "period 15",
+        value: 14
+    },
+    {
+        period: "period 16",
+        value: -15
+    },
+    {
+        period: "period 17",
+        value: 16
+    },
+])
 
-const dataset = computed(() => {
-    const arr = [];
+// const dataset = computed(() => {
+//     const arr = [];
 
-    for (let i = 0; i < 10000; i += 1) {
-        arr.push({
-            period: `Period ${i}`,
-            value: Math.random() * 100
-        })
-    }
-    return arr
-})
+//     for (let i = 0; i < 10000; i += 1) {
+//         arr.push({
+//             period: `Period ${i}`,
+//             value: Math.random() * 100
+//         })
+//     }
+//     return arr
+// })
 
 const alternateDataset = ref([
     {
@@ -135,6 +135,9 @@ function alterDataset() {
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'type', def: 'line', type: 'select', options: ['line', 'bar']},
+    { key: 'style.scaleMin', def: null, type: 'number', min: -1000, max: 1000},
+    { key: 'style.scaleMax', def: null, type: 'number', min: -1000, max: 1000},
+
     { key: 'style.chartWidth', def: 400, type: 'number', min: 100, max: 500},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.animationFrames', def: 360, type: 'number', min: 0, max: 1000},
