@@ -3729,6 +3729,8 @@ declare module 'vue-data-ui' {
             backgroundColor?: string;
             fontFamily?: string;
             chartWidth?: number;
+            scaleMin?: number | null;
+            scaleMax?: number | null;
             animation?: {
                 show?: boolean;
                 animationFrames?: number;
