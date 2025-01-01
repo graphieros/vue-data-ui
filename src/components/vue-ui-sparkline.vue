@@ -9,6 +9,7 @@ import {
     dataLabel as dl,
     error,
     getMissingDatasetAttributes,
+    hasDeepProperty,
     largestTriangleThreeBucketsArrayObjects,
     objectIsEmpty,
     setOpacity,
@@ -79,16 +80,36 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
+    let finalConfig = {};
+
     if (mergedConfig.theme) {
-        return {
+        finalConfig = {
             ...useNestedProp({
                 userConfig: themes.vue_ui_sparkline[mergedConfig.theme] || props.config,
                 defaultConfig: mergedConfig
             }),
         }
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'style.scaleMin')) {
+        finalConfig.style.scaleMin = props.config.style.scaleMin;
+    } else {
+        finalConfig.style.scaleMin = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.scaleMax')) {
+        finalConfig.style.scaleMax = props.config.style.scaleMax;
+    } else {
+        finalConfig.style.scaleMax = null;
+    }
+
+    // ----------------------------------------------------------------------------
+
+    return finalConfig;
 }
 
 const downsampled = computed(() => {
@@ -226,12 +247,20 @@ const drawingArea = computed(() => {
 });
 
 const min = computed(() => {
-    return Math.min(...safeDatasetCopy.value.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
-});
-const max = computed(() => {
-    return Math.max(...safeDatasetCopy.value.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
+    if (![null, undefined].includes(FINAL_CONFIG.value.style.scaleMin)) {
+        return FINAL_CONFIG.value.style.scaleMin;
+    } else {
+        return Math.min(...safeDatasetCopy.value.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
+    }
 });
 
+const max = computed(() => {
+    if (![null, undefined].includes(FINAL_CONFIG.value.style.scaleMax)) {
+        return FINAL_CONFIG.value.style.scaleMax;
+    } else {
+        return Math.max(...safeDatasetCopy.value.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
+    }
+});
 
 const absoluteMin = computed(() => {
     const num = min.value >= 0 ? 0 : min.value
@@ -368,7 +397,7 @@ function selectDatapoint(datapoint, index) {
         </div>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`">
+        <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:hidden`">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
