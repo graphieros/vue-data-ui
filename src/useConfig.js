@@ -2029,6 +2029,8 @@ export function useConfig() {
             },
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
+            scaleMin: null,
+            scaleMax: null,
             line: {
                 color: COLOR_BLUE,
                 strokeWidth: 3,
