@@ -1106,6 +1106,8 @@
             v-model:end="slicer.end"
             :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
             :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => largestTriangleThreeBucketsArray({data:datapoint.series, threshold: FINAL_CONFIG.downsample.threshold}).length))"
+            :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
+            :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag"
             @reset="refreshSlicer"
             @trapMouse="selectMinimapIndex"
         >

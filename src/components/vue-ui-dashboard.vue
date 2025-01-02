@@ -48,7 +48,7 @@ const isPaused = ref(false);
 
 function handleInteraction(event) {
     const target = event.target;
-    if (target.tagName === "INPUT" && target.type === "range") {
+    if ((target.tagName === "INPUT" && target.type === "range") || target.classList.contains('range-handle')) {
         isPaused.value = true;
     }
 }

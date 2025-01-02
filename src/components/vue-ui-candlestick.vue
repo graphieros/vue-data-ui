@@ -874,6 +874,8 @@ defineExpose({
                 v-model:end="slicer.end"
                 :refreshStartPoint="FINAL_CONFIG.style.zoom.startIndex !== null ? FINAL_CONFIG.style.zoom.startIndex : 0"
                 :refreshEndPoint="FINAL_CONFIG.style.zoom.endIndex !== null ? FINAL_CONFIG.style.zoom.endIndex + 1 : len"
+                :enableRangeHandles="FINAL_CONFIG.style.zoom.enableRangeHandles"
+                :enableSelectionDrag="FINAL_CONFIG.style.zoom.enableSelectionDrag"
                 @reset="refreshSlicer"
             >
                 <template #reset-action="{ reset }">

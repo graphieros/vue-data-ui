@@ -1375,6 +1375,8 @@ defineExpose({
                 v-model:end="slicer.end"
                 :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
                 :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : Math.max(...dataset.map(ds => ds.series.length))"
+                :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
+                :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
                 @reset="refreshSlicer"
             >
                 <template #reset-action="{ reset }">

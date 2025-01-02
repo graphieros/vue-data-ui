@@ -1696,6 +1696,8 @@ defineExpose({
                 v-model:end="slicer.end"
                 :refreshStartPoint="FINAL_CONFIG.zoomStartIndex !== null ? FINAL_CONFIG.zoomStartIndex : 0"
                 :refreshEndPoint="FINAL_CONFIG.zoomEndIndex !== null ? FINAL_CONFIG.zoomEndIndex + 1 : formattedDataset.maxSeriesLength"
+                :enableRangeHandles="FINAL_CONFIG.zoomEnableRangeHandles"
+                :enableSelectionDrag="FINAL_CONFIG.zoomEnableSelectionDrag"
                 @reset="refreshSlicer"
                 @trapMouse="setCommonSelectedIndex"
             >
