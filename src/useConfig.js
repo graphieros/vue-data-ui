@@ -211,6 +211,8 @@ export function useConfig() {
         useResetSlot: false,
         startIndex: null,
         endIndex: null,
+        enableRangeHandles: true,
+        enableSelectionDrag: true
     }
 
     const MINIMAP = {
@@ -2475,7 +2477,9 @@ export function useConfig() {
         zoomUseResetSlot: false,
         zoomMinimap: MINIMAP,
         zoomStartIndex: null,
-        zoomEndIndex: null
+        zoomEndIndex: null,
+        zoomEnableRangeHandles: true,
+        zoomEnableSelectionDrag: true
     }
 
     const vue_ui_age_pyramid = {
