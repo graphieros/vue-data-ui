@@ -17,29 +17,47 @@ import { useArena } from "../src/useArena";
 //     },
 // ]);
 
-const dataset = ref([
+const dataset = computed(() => {
+  return [
     {
-        name: "Serie 1",
-        series: [0, 0, 30],
-        color: "rgba(255,0,0,0.5)"
+      name: "Series 1",
+      series: [
+        10, 20, 30, 10, 20, 4, 4, 5, 99, 34, 8, 43, 2, 8, 0, 52, 5, 3, 6, 23, 9,
+        18, 3, 5, 87, 5, 3, 5, 25, 12,
+      ],
+      color: "#5f8aee",
     },
     {
-        name: "Serie 2",
-        series: [0, -20, -30],
+      name: "Series 2",
+      series: [20, 40, 60, 20, 10],
+      color: "#42d392",
     },
-    {
-        name: "Serie 3",
-        series: [0, 5, -5, -10],
-    },
-    {
-        name: "Serie 4",
-        series: [0, 5, -5],
-    },
-    {
-        name: "Serie 4",
-        series: [0, -5, 5],
-    },
-]);
+  ];
+});
+
+// const dataset = ref([
+//     {
+//         name: "Serie 1",
+//         series: [0, 0, 30],
+//         color: "rgba(255,0,0,0.5)"
+//     },
+//     {
+//         name: "Serie 2",
+//         series: [0, -20, -30],
+//     },
+//     {
+//         name: "Serie 3",
+//         series: [0, 5, -5, -10],
+//     },
+//     {
+//         name: "Serie 4",
+//         series: [0, 5, -5],
+//     },
+//     {
+//         name: "Serie 4",
+//         series: [0, -5, 5],
+//     },
+// ]);
 
 // onMounted(() => {
 //     setTimeout(() => {
@@ -88,6 +106,8 @@ const model = ref([
     { key: 'style.chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'style.chart.zoom.startIndex', def:1, type: 'number', min: 0, max: 100},
     { key: 'style.chart.zoom.endIndex', def: 2, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'chexkbox'},
+    { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'chexkbox'},
 
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},

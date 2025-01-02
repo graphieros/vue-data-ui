@@ -111,6 +111,8 @@ const model = ref([
     { key: 'style.chart.zoom.useResetSlot', def: false, type: 'checkbox'},
     { key: 'style.chart.zoom.startIndex', def: 2, type: 'number', min: 0, max: 100},
     { key: 'style.chart.zoom.endIndex', def: 6, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'checkbox'},
+    { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
 ]);
 
 const themeOptions = ref([

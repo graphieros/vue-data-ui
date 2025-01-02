@@ -198,7 +198,8 @@ const model = ref([
     { key: 'zoomMinimap.indicatorColor', def: '#1A1A1A', type: 'color'},
     { key: 'zoomStartIndex', def: 1, type: 'number', min: 0, max: 100},
     { key: 'zoomEndIndex', def: 3, type: 'number', min: 0, max: 100},
-    
+    { key: 'zoomEnableRangeHandles', def: true, type: 'chexkbox'},
+    { key: 'zoomEnableSelectionDrag', def: true, type: 'chexkbox'},
 ]);
 
 const themeOptions = ref([

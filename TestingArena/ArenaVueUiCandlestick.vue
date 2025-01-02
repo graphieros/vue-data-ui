@@ -113,6 +113,7 @@ const model = ref([
     { key: 'style.layout.candle.gradient.intensity', def: 40, type: 'range', min: 0, max: 100}, // not applied ?
     { key: 'style.layout.candle.gradient.underlayer', def: '#FFFFFF', type: 'color'},
     { key: 'style.layout.candle.widthRatio', def: 0.5, type: 'number', min: 0.1, max: 1, step: 0.1},
+    
     { key: 'style.zoom.show', def: true, type: 'checkbox'},
     { key: 'style.zoom.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
@@ -120,6 +121,8 @@ const model = ref([
     { key: 'style.zoom.useResetSlot', def: false, type: 'checkbox'},
     { key: 'style.zoom.startIndex', def: 2, type: 'number', min: 0, max: 1000},
     { key: 'style.zoom.endIndex', def: 6, type: 'number', min: 0, max: 1000},
+    { key: 'style.zoom.enableRangeHandles', def: true, type: 'chexkbox'},
+    { key: 'style.zoom.enableSelectionDrag', def: true, type: 'chexkbox'},
 
     { key: 'style.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
     { key: 'style.title.color', def: '#1A1A1A', type: 'color'},

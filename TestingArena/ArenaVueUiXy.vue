@@ -221,6 +221,8 @@ const model = ref([
     { key: 'chart.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
     { key: 'chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'chart.zoom.useResetSlot', def: false, type: 'checkbox'},
+    { key: 'chart.zoom.enableRangeHandles', def: true, type: 'chexkbox'},
+    { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
 
     { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox'},
     { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox'},

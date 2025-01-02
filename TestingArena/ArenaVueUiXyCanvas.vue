@@ -130,6 +130,8 @@ const model = ref([
     { key: 'style.chart.zoom.useResetSlot', def: false, type: 'checkbox' },
     { key: 'style.chart.zoom.startIndex', def: 100, type: 'number', min: 0, max: 1000},
     { key: 'style.chart.zoom.endIndex', def: 400, type: 'number', min: 0, max: 1000},
+    { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'checkbox'},
+    { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
 
     { key: 'style.chart.selector.show', def: true, type: 'checkbox' },
     { key: 'style.chart.selector.color', def: '#1A1A1A', type: 'color' },
