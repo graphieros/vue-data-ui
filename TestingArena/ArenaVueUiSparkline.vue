@@ -138,10 +138,15 @@ const model = ref([
     { key: 'style.scaleMin', def: null, type: 'number', min: -1000, max: 1000},
     { key: 'style.scaleMax', def: null, type: 'number', min: -1000, max: 1000},
 
+    { key: 'style.padding.top', def: 12, type: 'number', min: 0, max: 100 },
+    { key: 'style.padding.right', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.padding.bottom', def: 3, type: 'number', min: 0, max: 100 },
+    { key: 'style.padding.left', def: 0, type: 'number', min: 0, max: 100 },
+
     { key: 'style.chartWidth', def: 400, type: 'number', min: 100, max: 500},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.animationFrames', def: 360, type: 'number', min: 0, max: 1000},
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.line.color', def: '#3366CC', type: 'color'},
     { key: 'style.line.strokeWidth', def: 3, type: 'number', min: 0, max: 20},
