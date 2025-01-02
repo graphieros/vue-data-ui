@@ -3731,6 +3731,7 @@ declare module 'vue-data-ui' {
             chartWidth?: number;
             scaleMin?: number | null;
             scaleMax?: number | null;
+            padding?: ChartPadding;
             animation?: {
                 show?: boolean;
                 animationFrames?: number;
