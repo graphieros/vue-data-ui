@@ -121,6 +121,8 @@ declare module 'vue-data-ui' {
         minimap?: ZoomMinimap;
         startIndex?: number | null;
         endIndex?: number | null;
+        enableRangeHandles?: boolean;
+        enableSelectionDrag?: boolean;
     }
 
     export type Theme = "" | "zen" | "hack" | "concrete";
@@ -4501,6 +4503,8 @@ declare module 'vue-data-ui' {
         zoomMinimap?: ZoomMinimap;
         zoomStartIndex?: number | null;
         zoomEndIndex?: number | null;
+        zoomEnableRangeHandles?: boolean;
+        zoomEnableSelectionDrag?: boolean;
         userOptionsPosition?: 'right' | 'left';
         userOptionsButtons?: {
             tooltip?: boolean;
