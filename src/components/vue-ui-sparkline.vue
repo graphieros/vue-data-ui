@@ -231,18 +231,16 @@ const svg = ref({
 
 const emits = defineEmits(['hoverIndex', 'selectDatapoint'])
 
-const bottomPadding = ref(6)
-
 const drawingArea = computed(() => {
-    const topPadding = 12;
+    const { top: p_top, right: p_right, bottom: p_bottom, left: p_left } = FINAL_CONFIG.value.style.padding;
     return {
-        top: topPadding,
-        left: 0,
-        right: svg.value.width,
-        bottom: svg.value.height - 3,
-        start: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show && FINAL_CONFIG.value.style.dataLabel.position === 'left' ? svg.value.width - svg.value.chartWidth : svg.value.padding,
-        width: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show ? svg.value.chartWidth : svg.value.width - svg.value.padding,
-        height: svg.value.height - topPadding
+        top: p_top,
+        left: p_left,
+        right: svg.value.width - p_right,
+        bottom: svg.value.height - p_bottom,
+        start: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show && FINAL_CONFIG.value.style.dataLabel.position === 'left' ? svg.value.width - svg.value.chartWidth + p_left : svg.value.padding + p_left,
+        width: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show ? svg.value.chartWidth - p_left - p_right : svg.value.width - svg.value.padding - p_left - p_right,
+        height: svg.value.height - p_top - p_bottom
     }
 });
 
@@ -268,7 +266,7 @@ const absoluteMin = computed(() => {
 });
 
 const absoluteMax = computed(() => {
-    return max.value + absoluteMin.value + bottomPadding.value;
+    return max.value + absoluteMin.value;
 });
 
 const absoluteZero = computed(() => {
@@ -397,7 +395,7 @@ function selectDatapoint(datapoint, index) {
         </div>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:hidden`">
+        <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
