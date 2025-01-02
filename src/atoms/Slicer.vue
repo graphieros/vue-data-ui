@@ -97,9 +97,18 @@ const props = defineProps({
     refreshEndPoint: {
         type: Number,
         default: null
+    },
+    enableRangeHandles: {
+        type: Boolean,
+        default: false
+    },
+    enableSelectionDrag: {
+        type: Boolean,
+        default: true
     }
 });
 
+const zoomWrapper = ref(null);
 const startValue = ref(props.min);
 const endValue = ref(props.max);
 const hasMinimap = computed(() => !!props.minimap.length);
@@ -296,6 +305,87 @@ function setEndValue(value) {
     emit('update:end', Number(endValue.value));
 }
 
+const currentRange = computed(() => {
+    return props.valueEnd - props.valueStart;
+});
+
+const isDragging = ref(false);
+let initialMouseX = ref(null);
+
+const dragThreshold = computed(() => {
+    if (!zoomWrapper.value) return 20;
+    const w = zoomWrapper.value.getBoundingClientRect().width - 48;
+    return w / (props.max - props.min);
+});
+
+const startDragging = (event) => {
+    if (!props.enableSelectionDrag) {
+        return;
+    }
+    const isTouch = event.type === 'touchstart';
+    const target = isTouch ? event.targetTouches[0].target : event.target;
+    if (target.classList.contains('range-handle')) {
+        return;
+    }
+    isDragging.value = true;
+    initialMouseX.value = isTouch ? event.targetTouches[0].clientX : event.clientX;
+
+    const moveHandler = isTouch ? handleTouchDragging : handleDragging;
+    const endHandler = isTouch ? stopTouchDragging : stopDragging;
+
+    window.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, { passive: false });
+    window.addEventListener(isTouch ? 'touchend' : 'mouseup', endHandler);
+};
+
+function handleDragging(event) {
+    updateDragging(event.clientX);
+};
+
+function handleTouchDragging(event) {
+    if (event.target.classList.contains('range-handle')) {
+        return;
+    }
+    event.preventDefault(); 
+    updateDragging(event.targetTouches[0].clientX);
+};
+
+function updateDragging(currentX) {
+    if (!isDragging.value) return;
+
+    const deltaX = currentX - initialMouseX.value;
+
+    if (Math.abs(deltaX) > dragThreshold.value) {
+        if (deltaX > 0) {
+            if (Number(endValue.value) + 1 <= props.max) {
+                const v = Number(endValue.value) + 1;
+                setEndValue(v);
+                setStartValue(v - currentRange.value);
+            }
+        } else {
+            if (Number(startValue.value) - 1 >= props.min) {
+                const v = Number(startValue.value) - 1;
+                setStartValue(v);
+                setEndValue(v + currentRange.value);
+            }
+        }
+        initialMouseX.value = currentX;
+    }
+};
+
+function stopDragging() {
+    endDragging('mousemove', 'mouseup');
+};
+
+function stopTouchDragging () {
+    endDragging('touchmove', 'touchend');
+};
+
+function endDragging(moveEvent, endEvent) {
+    isDragging.value = false;
+    window.removeEventListener(moveEvent, handleDragging);
+    window.removeEventListener(endEvent, stopDragging);
+};
+
 defineExpose({
     setStartValue,
     setEndValue
@@ -304,7 +394,14 @@ defineExpose({
 </script>
 
 <template>
-    <div data-html2canvas-ignore data-cy="slicer" style="padding: 0 24px" class="vue-data-ui-zoom">
+    <div 
+        data-html2canvas-ignore data-cy="slicer" 
+        style="padding: 0 24px" 
+        class="vue-data-ui-zoom"
+        ref="zoomWrapper"
+        @mousedown="startDragging"
+        @touchstart="startDragging"
+    >
         <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1; pointer-events: none;">
             <div v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint" style="width: 100%; position: relative">
                 <button 
@@ -443,6 +540,9 @@ defineExpose({
                             :width="unitWidthX < 0 ? 0 : unitWidthX"
                             fill="transparent"
                             style="pointer-events: all !important;"
+                            :style="{
+                                cursor: trap >= valueStart && trap < valueEnd && enableSelectionDrag ? 'move' : 'default',
+                            }"
                             @mouseenter="trapMouse(trap)"
                             @mouseleave="selectedTrap = null; emit('trapMouse', null)"
                         />
@@ -450,12 +550,34 @@ defineExpose({
                 </div>
             </template>
             <div class="slider-track"></div>
-            <div class="range-highlight" :style="highlightStyle"></div>
-            <input ref="rangeStart" :key="`range-min${inputStep}`" type="range" class="range-left" :min="min" :max="max" v-model="startValue" @input="onStartInput" />
+            <div :class="{
+                'range-highlight': true,
+                'move': enableSelectionDrag
+            }" :style="highlightStyle"></div>
+            <input 
+                v-if="enableRangeHandles"
+                ref="rangeStart" 
+                :key="`range-min${inputStep}`" 
+                type="range" 
+                class="range-left range-handle" 
+                :min="min" 
+                :max="max" 
+                v-model="startValue" 
+                @input="onStartInput"
+            />
             <div class="thumb-label thumb-label-left" :style="leftLabelPosition">
                 {{ labelLeft }}
             </div>
-            <input ref="rangeEnd" type="range" class="range-right" :min="min" :max="max" v-model="endValue" @input="onEndInput" />
+            <input 
+                v-if="enableRangeHandles"
+                ref="rangeEnd" 
+                type="range" 
+                class="range-right range-handle" 
+                :min="min" 
+                :max="max" 
+                v-model="endValue" 
+                @input="onEndInput" 
+            />
             <div class="thumb-label thumb-label-right" :style="rightLabelPosition">
                 {{ labelRight }}
             </div>
@@ -569,6 +691,10 @@ input[type="range"]::-ms-thumb {
     top: 8px;
     z-index: 1;
     border-radius: 4px;
+}
+
+.move {
+    cursor: move;
 }
 
 .vue-data-ui-refresh-button {
