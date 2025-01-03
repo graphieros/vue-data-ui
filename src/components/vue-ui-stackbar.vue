@@ -1010,7 +1010,7 @@ defineExpose({
                         v-for="(rect, j) in dp.x"
                         :x="rect"
                         :y="dp.y[j] < 0 ? 0 : dp.y[j]"
-                        :height="dp.height[j] < 0 ? 0.0001 : dp.height[j]"
+                        :height="dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0"
                         :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
                         :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
                         :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"

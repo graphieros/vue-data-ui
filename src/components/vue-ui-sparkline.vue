@@ -297,13 +297,12 @@ const mutableDataset = computed(() => {
 });
 
 const area = computed(() => {
-    const start = { x: mutableDataset.value[0].x, y: svg.value.height - 6 };
-    const end = { x: mutableDataset.value[mutableDataset.value.length -1].x, y: svg.value.height - 6 };
+    const start = { x: mutableDataset.value[0].x || 0, y: (svg.value.height || 0) - 6 };
+    const end = { x: mutableDataset.value[mutableDataset.value.length -1].x || 0, y: (svg.value.height || 0) - 6 };
     const path = [];
     mutableDataset.value.forEach(v => {
-        path.push(`${v.x},${v.y} `)
+        path.push(`${v.x || 0},${v.y || 0} `)
     });
-
     return [ start.x,start.y, ...path, end.x, end.y ].toString();
 });
 
@@ -455,8 +454,8 @@ function selectDatapoint(datapoint, index) {
                     :data-cy="`sparkline-segment-${i}`"
                     :x1="plot.x"
                     :x2="mutableDataset[i + 1].x"
-                    :y1="plot.y"
-                    :y2="mutableDataset[i + 1].y"
+                    :y1="plot.y || 0"
+                    :y2="mutableDataset[i + 1].y || 0"
                     :stroke="plot.color"
                     :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
                     stroke-linecap="round"
