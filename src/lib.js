@@ -175,6 +175,10 @@ export function isSafeValue(val) {
     return ![undefined, NaN, Infinity, -Infinity].includes(val)
 }
 
+export function forceValidValue(val, fallback = 0) {
+    return isValidUserValue(val) ? val : fallback;
+}
+
 export function checkNaN(val, fallback = 0) {
     if (isNaN(val)) {
         return fallback
@@ -2146,6 +2150,7 @@ const lib = {
     degreesToRadians,
     downloadCsv,
     error,
+    forceValidValue,
     functionReturnsString,
     generateSpiralCoordinates,
     getCloserPoint,

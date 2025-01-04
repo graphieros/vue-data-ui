@@ -602,6 +602,12 @@ defineExpose({
                     <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / FINAL_CONFIG.style.chart.layout.track.gradientIntensity" />
                 </filter>
             </defs>
+            
+            <g v-if="$slots.pattern">
+                <defs v-for="(arc, i) in arcs">
+                    <slot name="pattern" v-bind="{ seriesIndex: i, patternId: `pattern_${uid}_${i}` }"/>
+                </defs>
+            </g>
 
             <!-- ARC STEPS -->
             <path 
@@ -613,6 +619,17 @@ defineExpose({
                 :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                 stroke-linecap="round"
             />
+            <template v-if="$slots.pattern">
+                <path 
+                    v-for="(arc, i) in arcs" 
+                    :data-cy="`gauge-arc-${i}`"
+                    :key="`arc_${i}`"
+                    :d="arc.arcSlice"
+                    :fill="`url(#pattern_${uid}_${i})`"
+                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    stroke-linecap="round"
+                />
+            </template>
 
             <template v-if="FINAL_CONFIG.style.chart.layout.segmentNames.show && FINAL_CONFIG.style.chart.layout.segmentNames.curved">            
                 <!-- CIRCLE PATH AS BASE FOR CURVED LABELS -->

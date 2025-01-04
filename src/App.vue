@@ -55,65 +55,65 @@ import ArenaVueUiHistoryPlot from "../TestingArena/ArenaVueUiHistoryPlot.vue";
 
 const showOldArena = ref(false);
 
-const components = ref([             //--- BG SLOT
+const components = ref([             //--- PATTERN SLOT
   /*____________________*/"VueUiXy", //  0 OK
   /*_________________*/"VueUiDonut", //  1 OK
-  /*_______________*/"VueUiTreemap", //  2 _/
-  /*________________*/"VueUiWaffle", //  3 _/
-  /*_________________*/"VueUiRadar", //  4 OK
-  /*______________*/"VueUiQuadrant", //  5 OK
+  /*_______________*/"VueUiTreemap", //  2 _
+  /*________________*/"VueUiWaffle", //  3 _
+  /*_________________*/"VueUiRadar", //  4 _
+  /*______________*/"VueUiQuadrant", //  5 _
   /*_________________*/"VueUiGauge", //  6 OK
-  /*_________________*/"VueUiWheel", //  7 OK
-  /*_____________*/"VueUiTiremarks", //  8 OK
-  /*______________*/"VueUiChestnut", //  9 OK
-  /*_________________*/"VueUiOnion", // 10 OK
+  /*_________________*/"VueUiWheel", //  7 _
+  /*_____________*/"VueUiTiremarks", //  8 _
+  /*______________*/"VueUiChestnut", //  9 _
+  /*_________________*/"VueUiOnion", // 10 _
   /*___________*/"VueUiVerticalBar", // 11 OK
-  /*_______________*/"VueUiHeatmap", // 12 OK
-  /*_______________*/"VueUiScatter", // 13 OK
-  /*___________*/"VueUiCandlestick", // 14 OK
-  /*_____________*/"VueUiSparkline", // 15 OK
-  /*______________*/"VueUiSparkbar", // 16 _/
-  /*_________*/"VueUiSparkStackbar", // 17 _/
-  /*________*/"VueUiSparkHistogram", // 18 OK
-  /*____________*/"VueUiSparkgauge", // 19 OK
-  /*____________*/"VueUiSparkTrend", // 20 OK
-  /*____________*/"VueUiQuickChart", // 21 OK
-  /*____________*/"VueUiAgePyramid", // 22 OK
-  /*________*/"VueUiRelationCircle", // 23 OK
-  /*___________*/"VueUiThermometer", // 24 OK
+  /*_______________*/"VueUiHeatmap", // 12 _
+  /*_______________*/"VueUiScatter", // 13 _
+  /*___________*/"VueUiCandlestick", // 14 _
+  /*_____________*/"VueUiSparkline", // 15 _
+  /*______________*/"VueUiSparkbar", // 16 _
+  /*_________*/"VueUiSparkStackbar", // 17 _
+  /*________*/"VueUiSparkHistogram", // 18 _
+  /*____________*/"VueUiSparkgauge", // 19 _
+  /*____________*/"VueUiSparkTrend", // 20 _
+  /*____________*/"VueUiQuickChart", // 21 _
+  /*____________*/"VueUiAgePyramid", // 22 _
+  /*________*/"VueUiRelationCircle", // 23 _
+  /*___________*/"VueUiThermometer", // 24 _
   /*_________________*/"VueUiRings", // 25 OK
-  /*________*/"VueUiDonutEvolution", // 26 OK
+  /*________*/"VueUiDonutEvolution", // 26 _
   /*__________________*/"VueUiIcon", // 27 _
-  /*_____________*/"VueUiMoodRadar", // 28 OK
-  /*______________*/"VueUiMolecule", // 29 OK
-  /*__________*/"VueUiNestedDonuts", // 30 OK
-  /*________________*/"VueUiGalaxy", // 31 OK
-  /*_____________*/"VueUiStripPlot", // 32 OK
-  /*______________*/"VueUiDumbbell", // 33 OK
-  /*_________________*/"VueUi3dBar", // 34 OK
-  /*________*/"VueUiTableSparkline", // 35 _/
-  /*__________*/"VueUiTableHeatmap", // 36 _/
-  /*____________ */"VueUiWordCloud", // 37 OK
-  /*______________*/"VueUiXyCanvas", // 38 _/
-  /*__________________*/"VueUiFlow", // 39 OK
-  /**/"VueUiParallelCoordinatePlot", // 40 OK
-  /*_________________*/"VueUiTimer", // 41 OK
-  /*_________*/"VueUiCarouselTable", // 42 _/
-  /*_________________*/"VueUiGizmo", // 43 _/
-  /*___________________*/"VueUiKpi", // 44 _/
+  /*_____________*/"VueUiMoodRadar", // 28 _
+  /*______________*/"VueUiMolecule", // 29 _
+  /*__________*/"VueUiNestedDonuts", // 30 _
+  /*________________*/"VueUiGalaxy", // 31 _
+  /*_____________*/"VueUiStripPlot", // 32 _
+  /*______________*/"VueUiDumbbell", // 33 _
+  /*_________________*/"VueUi3dBar", // 34 _
+  /*________*/"VueUiTableSparkline", // 35 _
+  /*__________*/"VueUiTableHeatmap", // 36 _
+  /*____________ */"VueUiWordCloud", // 37 _
+  /*______________*/"VueUiXyCanvas", // 38 _
+  /*__________________*/"VueUiFlow", // 39 _
+  /**/"VueUiParallelCoordinatePlot", // 40 _
+  /*_________________*/"VueUiTimer", // 41 _
+  /*_________*/"VueUiCarouselTable", // 42 _
+  /*_________________*/"VueUiGizmo", // 43 _
+  /*___________________*/"VueUiKpi", // 44 _
   /*______________*/"VueUiStackbar", // 45 OK
-  /*________________*/"VueUiRating", // 46 _/
-  /*________________*/"VueUiSmiley", // 47 _/
-  /*________________*/"VueUiBullet", // 48 OK
-  /*________________*/"VueUiFunnel", // 49 OK
-  /*___________*/"VueUiHistoryPlot", // 50 OK
+  /*________________*/"VueUiRating", // 46 _
+  /*________________*/"VueUiSmiley", // 47 _
+  /*________________*/"VueUiBullet", // 48 _
+  /*________________*/"VueUiFunnel", // 49 _
+  /*___________*/"VueUiHistoryPlot", // 50 _
 
   // screenshot
   // dashboard
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[50]);
+const selectedComponent = ref(components.value[30]);
 
 </script>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, useSlots } from "vue";
 import {
     applyDataLabel,
     checkNaN,
@@ -35,8 +35,10 @@ import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import Shape from "../atoms/Shape.vue";
 
-const { vue_ui_vertical_bar: DEFAULT_CONFIG } = useConfig()
+const { vue_ui_vertical_bar: DEFAULT_CONFIG } = useConfig();
+const slots = useSlots();
 
 const props = defineProps({
     config: {
@@ -243,6 +245,7 @@ const immutableDataset = computed(() => {
             return {
                 ...serie,
                 id,
+                absoluteIndex: i,
                 shape: 'square',
                 opacity: segregated.value.includes(id) ? 0.5 : 1,
                 value: Math.abs(parentValue),
@@ -258,6 +261,7 @@ const immutableDataset = computed(() => {
                         return {
                             ...c,
                             value: checkNaN(Math.abs(c.value)),
+                            absoluteIndex: i,
                             sign: c.value >= 0 ? 1 : -1,
                             isChild: true,
                             parentId: id,
@@ -450,7 +454,7 @@ function useTooltip(bar, seriesIndex) {
         })
     } else {
         html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;text-align:left;">
-                <div style="display:flex;align-items:center;gap:4px;"><svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" height="12" width="12" rx="2" stroke="none" fill="${bar.color}"/></svg> ${ serieName }</div>
+                <div style="display:flex;align-items:center;gap:4px;"><svg viewBox="0 0 60 60" height="14" width="14"><rect x="0" y="0" height="60" width="60" rx="5" stroke="none" fill="${bar.color}"/>${slots.pattern ? `<rect x="0" y="0" height="60" width="60" rx="5" stroke="none" fill="url(#pattern_${uid.value}_${bar.absoluteIndex})"/>` : ''}</svg> ${ serieName }</div>
                 ${childName ? `<div>${childName}</div>` : ''}
             </div>`;
         
@@ -725,6 +729,16 @@ defineExpose({
                 :config="legendConfig"
                 @clickMarker="({ legend }) => segregate(legend.id)"
             >
+                <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
+                    <Shape
+                        :shape="legend.shape"
+                        :radius="30"
+                        stroke="none"
+                        :plot="{ x: 30, y: 30}"
+                        :fill="`url(#pattern_${uid}_${index})`"
+                    />
+                </template>
+
                 <template #item="{ legend, index }">
                     <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                         {{ legend.name }}: 
@@ -772,6 +786,12 @@ defineExpose({
                     <stop offset="100%" :stop-color="setOpacity(shiftHue(bar.color, 0.03), 100 - FINAL_CONFIG.style.chart.layout.bars.gradientIntensity)"/>
             </linearGradient>
 
+            <g v-if="$slots.pattern">
+                <defs v-for="(bar) in bars">
+                    <slot name="pattern" v-bind="{ seriesIndex: bar.absoluteIndex, patternId: `pattern_${uid}_${bar.absoluteIndex}`}"/>
+                </defs>
+            </g>
+
             <g v-for="(serie, i) in bars">
                 <!-- UNDERLAYER -->
                 <rect
@@ -793,6 +813,17 @@ defineExpose({
                     :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
                     :height="barHeight <= 0 ? 0.0001 : barHeight"
                     :fill="FINAL_CONFIG.style.chart.layout.bars.useGradient ? `url(#vertical_bar_gradient_${uid}_${i})` : setOpacity(serie.color, FINAL_CONFIG.style.chart.layout.bars.fillOpacity)"
+                    :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
+                    :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke ? serie.color : 'none'"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth : 0"
+                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
+                />
+                <rect v-if="$slots.pattern"
+                    :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
+                    :y="drawableArea.top + ((barGap + barHeight) * i)"
+                    :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
+                    :height="barHeight <= 0 ? 0.0001 : barHeight"
+                    :fill="`url(#pattern_${uid}_${serie.absoluteIndex})`"
                     :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
                     :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke ? serie.color : 'none'"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth : 0"
@@ -916,6 +947,16 @@ defineExpose({
                 :config="legendConfig"
                 @clickMarker="({ legend }) => segregate(legend.id)"
             >
+                <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
+                    <Shape
+                        :shape="legend.shape"
+                        :radius="30"
+                        stroke="none"
+                        :plot="{ x: 30, y: 30}"
+                        :fill="`url(#pattern_${uid}_${index})`"
+                    />
+                </template>
+
                 <template #item="{ legend, index }">
                     <div @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                         {{ legend.name }}: 

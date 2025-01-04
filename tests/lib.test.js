@@ -41,6 +41,7 @@ import {
     dataLabel,
     degreesToRadians,
     error,
+    forceValidValue,
     functionReturnsString,
     generateSpiralCoordinates,
     getCloserPoint,
@@ -2358,7 +2359,7 @@ describe("largestTriangleThreeBuckets", () => {
                 threshold: 10,
             })[0]
         ).toStrictEqual(series[0])
-    })
+    });
     test('should end downsampled series with last coordinates', () => {
         expect(
             largestTriangleThreeBuckets({
@@ -2366,5 +2367,22 @@ describe("largestTriangleThreeBuckets", () => {
                 threshold: 10,
             }).at(-1)
         ).toStrictEqual(series.at(-1))
-    })
+    });
+});
+
+describe('forceValidValue', () => {
+    test('should convert invalid values to zero', () => {
+        expect(forceValidValue(undefined)).toBe(0)
+        expect(forceValidValue(null)).toBe(0)
+        expect(forceValidValue(NaN)).toBe(0)
+        expect(forceValidValue(Infinity)).toBe(0)
+        expect(forceValidValue(-Infinity)).toBe(0)
+    });
+    test('should convert invalid values to custom fallback', () => {
+        expect(forceValidValue(undefined, 1)).toBe(1)
+        expect(forceValidValue(null, 1)).toBe(1)
+        expect(forceValidValue(NaN, 1)).toBe(1)
+        expect(forceValidValue(Infinity, 1)).toBe(1)
+        expect(forceValidValue(-Infinity, 1)).toBe(1)
+    });
 });
