@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, computed, onMounted, watch, nextTick, useSlots } from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
@@ -13,6 +13,7 @@ import {
     dataLabel, 
     downloadCsv,
     error, 
+    forceValidValue, 
     functionReturnsString, 
     getMissingDatasetAttributes, 
     hasDeepProperty, 
@@ -40,8 +41,10 @@ import Skeleton from "./vue-ui-skeleton.vue"
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import Shape from "../atoms/Shape.vue";
 
-const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig()
+const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig();
+const slots = useSlots();
 
 const props = defineProps({
     config: {
@@ -595,6 +598,7 @@ function useTooltip(seriesIndex) {
     const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(fd => {
         return {
             name: fd.name,
+            absoluteIndex: fd.absoluteIndex,
             value: fd.series[seriesIndex] === 0 ? 0 : (fd.signedSeries[seriesIndex] === -1 ? (fd.series[seriesIndex] >= 0 ? -fd.series[seriesIndex] : fd.series[seriesIndex]) : fd.series[seriesIndex]) || null,
             proportion: fd.proportions[seriesIndex] || null,
             color: fd.color,
@@ -618,7 +622,7 @@ function useTooltip(seriesIndex) {
         });
     } else {
         const { 
-            showValue, 
+            showValue,
             showPercentage, 
             borderColor,
             roundingValue,
@@ -639,7 +643,7 @@ function useTooltip(seriesIndex) {
         datapoint.reverse().forEach(ds => {
             html += `
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px">
-                    <svg viewBox="0 0 12 12" height="14" width="14"><rect rx="1" x="0" y="0" height="12" width="12" stroke="none" fill="${FINAL_CONFIG.value.style.chart.bars.gradient.show ? `url(#gradient_${ds.id})` : ds.color}"/></svg>
+                    <svg viewBox="0 0 60 60" height="14" width="14"><rect rx="5" x="0" y="0" height="60" width="60" stroke="none" fill="${FINAL_CONFIG.value.style.chart.bars.gradient.show ? `url(#gradient_${ds.id})` : ds.color}"/>${slots.pattern ? `<rect rx="5" x="0" y="0" height="60" width="60" stroke="none" fill="url(#pattern_${uid.value}_${ds.absoluteIndex})"/>` : ''}</svg>
                     ${ds.name}${showValue || showPercentage ? ':' : ''} ${showValue ? dataLabel({
                         p: FINAL_CONFIG.value.style.chart.bars.dataLabels.prefix,
                         v: ds.value,
@@ -1004,6 +1008,11 @@ defineExpose({
             </template>
 
             <g v-for="(dp, i) in formattedDataset">
+
+                <defs v-if="$slots.pattern">
+                    <slot name="pattern" v-bind="{ seriesIndex: dp.absoluteIndex, patternId: `pattern_${uid}_${dp.absoluteIndex}`}"/>
+                </defs>
+
                 <!-- STACKED BARS (vertical mode) -->
                 <template v-if="FINAL_CONFIG.orientation === 'vertical'">
                     <rect 
@@ -1019,16 +1028,32 @@ defineExpose({
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
-                    />           
+                    />     
+                    <g v-if="$slots.pattern">
+                        <rect 
+                        v-for="(rect, j) in dp.x"
+                        :x="rect"
+                        :y="dp.y[j] < 0 ? 0 : dp.y[j]"
+                        :height="dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0"
+                        :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
+                        :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
+                        :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
+                    /> 
+                    </g>      
                 </template>
 
                 <!-- STACKED BARS (horizontal mode) -->
                 <template v-else>
                     <rect 
                         v-for="(rect, j) in dp.horizontal_x"
-                        :x="rect"
+                        :x="forceValidValue(rect, drawingArea.left)"
                         :y="dp.horizontal_y[j] < 0 ? 0 : dp.horizontal_y[j]"
-                        :width="dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]"
+                        :width="forceValidValue(dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j])"
                         :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
                         :height="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
                         :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
@@ -1037,7 +1062,23 @@ defineExpose({
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
-                    />    
+                    />
+                    <g v-if="$slots.pattern">
+                        <rect 
+                            v-for="(rect, j) in dp.horizontal_x"
+                            :x="forceValidValue(rect, drawingArea.left)"
+                            :y="dp.horizontal_y[j] < 0 ? 0 : dp.horizontal_y[j]"
+                            :width="forceValidValue(dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j])"
+                            :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
+                            :height="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
+                            :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
+                        />
+                    </g>    
                 </template>
             </g>
 
@@ -1412,6 +1453,16 @@ defineExpose({
         <div ref="chartLegend">
             <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig"
                 @clickMarker="({ legend }) => legend.segregate()">
+                <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
+                    <Shape
+                        :shape="legend.shape"
+                        :radius="30"
+                        stroke="none"
+                        :plot="{ x: 30, y: 30}"
+                        :fill="`url(#pattern_${uid}_${index})`"
+                    />
+                </template>
+
                 <template #item="{ legend }">
                     <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                         {{ legend.name }}

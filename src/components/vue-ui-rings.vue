@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
+import { computed, ref, nextTick, onMounted, onBeforeUnmount, watch, useSlots } from "vue";
 import {
   applyDataLabel,
   checkNaN,
@@ -37,8 +37,10 @@ import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import Shape from "../atoms/Shape.vue";
 
 const { vue_ui_rings: DEFAULT_CONFIG } = useConfig();
+const slots = useSlots();
 
 const props = defineProps({
   config: {
@@ -238,11 +240,11 @@ const datasetCopy = computed(() => {
         const subTotal = sanitizeArray(values).reduce((a, b) => a + b, 0);
         return {
             name,
-            color:
-          color || convertColorToHex(color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
-          value: subTotal,
-          proportion: subTotal / props.dataset.map(ds => (ds.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
-            uid: createUid()
+            color: color || convertColorToHex(color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
+            value: subTotal,
+            proportion: subTotal / props.dataset.map(ds => (ds.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
+            uid: createUid(),
+            absoluteIndex: i
         }
     })
 })
@@ -283,12 +285,12 @@ const grandTotal = computed(() => {
 const convertedDataset = computed(() => {
   return datasetCopy.value
     .filter(el => !segregated.value.includes(el.uid))
-    .map(({ name, value, color = null, uid }, i) => {
+    .map(({ name, value, color = null, uid, absoluteIndex }, i) => {
       return {
+        absoluteIndex,
         uid,
         name,
-        color:
-          color || convertColorToHex(color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
+        color: color || convertColorToHex(color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
         value,
         proportion: proportionToMax(value),
         percentage: (value / grandTotal.value) * 100,
@@ -299,8 +301,6 @@ const convertedDataset = computed(() => {
     })
     .toSorted((a, b) => b.value - a.value);
 });
-
-
 
 function getData() {
   return convertedDataset.value.map(
@@ -353,7 +353,7 @@ function useTooltip(index, datapoint) {
   
     html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
   
-    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="waffle-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${selected.color}" /></svg>`;
+    html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><circle data-cy="waffle-tooltip-marker" cx="30" cy="30" r="30" stroke="none" fill="${selected.color}" />${slots.pattern ? `<circle data-cy="waffle-tooltip-marker" cx="30" cy="30" r="30" stroke="none" fill="url(#pattern_${uid.value}_${datapoint.absoluteIndex})" />`: ''}</svg>`;
     if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
       html += `<b data-cy="waffle-tooltip-value">${applyDataLabel(
         FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
@@ -641,6 +641,12 @@ defineExpose({
         </radialGradient>
       </defs>
 
+      <g v-if="$slots.pattern">
+          <defs v-for="(ring) in convertedDataset">
+              <slot name="pattern" v-bind="{ seriesIndex: ring.absoluteIndex, patternId: `pattern_${uid}_${ring.absoluteIndex}`}"/>
+          </defs>
+      </g>
+
       <!-- RINGS -->
       <g v-for="(ring, i) in convertedDataset">
         <circle
@@ -656,6 +662,7 @@ defineExpose({
           :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
           :fill="FINAL_CONFIG.style.chart.layout.rings.gradient.underlayerColor"
         />
+
         <circle
         :data-cy="`ring-${i}`"
           :class="{
@@ -676,6 +683,25 @@ defineExpose({
               : ring.color
           "
         />
+
+        <circle
+        v-if="$slots.pattern"
+          :data-cy="`ring-pattern-${i}`"
+          :class="{
+            'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
+            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation,
+            'vue-ui-rings-shadow': FINAL_CONFIG.style.chart.layout.rings.useShadow,
+            'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
+          }"
+          :style="`animation-delay:${i * 100}ms`"
+          :stroke="FINAL_CONFIG.style.chart.layout.rings.stroke"
+          :stroke-width="ring.strokeWidth < 0.5 ? 0.5 : ring.strokeWidth"
+          :cx="svg.width / 2"
+          :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
+          :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
+          :fill="`url(#pattern_${uid}_${ring.absoluteIndex})`"
+        />
+        
         <circle
           :data-cy="`mouse-trap-${i}`"
           data-cy-trap
@@ -720,6 +746,16 @@ defineExpose({
         :config="legendConfig"
         @clickMarker="({legend}) => segregate(legend.uid)"
       >
+        <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
+          <Shape
+              :shape="legend.shape"
+              :radius="30"
+              stroke="none"
+              :plot="{ x: 30, y: 30}"
+              :fill="`url(#pattern_${uid}_${index})`"
+          />
+        </template>
+
         <template #item="{legend, index }">
             <div data-cy-legend-item @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
                 {{ legend.name }}: {{ applyDataLabel(

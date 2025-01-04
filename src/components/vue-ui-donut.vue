@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount, useSlots } from "vue";
 import { 
     applyDataLabel,
     calcMarkerOffsetX, 
@@ -40,8 +40,10 @@ import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import Shape from "../atoms/Shape.vue";
 
 const { vue_ui_donut: DEFAULT_CONFIG } = useConfig()
+const slots = useSlots();
 
 const props = defineProps({
     config: {
@@ -216,7 +218,8 @@ const immutableSet = computed(() => {
                 color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 value: serie.values.reduce((a,b) => a + b, 0),
                 absoluteValues: serie.values,
-                comment: serie.comment || ''
+                comment: serie.comment || '',
+                patternIndex: i
             }
         })
 });
@@ -348,6 +351,7 @@ const legendSet = computed(() => {
                 color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 value: (serie.values || []).reduce((a,b) => a + b, 0),
                 shape: 'circle',
+                patternIndex: i
             }
         })
         .map((el, i) => {
@@ -480,7 +484,7 @@ function useTooltip({datapoint, relativeIndex, seriesIndex, show = false}) {
     
     if (!useCustomFormat.value) {
         html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
-        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="30" cy="30" r="30" stroke="none" fill="${datapoint.color}"/>${slots.pattern ? `<circle data-cy="donut-tooltip-marker" cx="30" cy="30" r="30" stroke="none" fill="url(#pattern_${uid.value}_${seriesIndex})"/>`: ''}</svg>`;
 
         if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
             html += `<b data-cy="donut-tooltip-value">${ applyDataLabel(
@@ -846,6 +850,12 @@ defineExpose({
                 :filter="`url(#shadow_${uid})`"
             />
 
+            <g v-if="$slots.pattern">
+                <defs v-for="(arc, i) in currentDonut">
+                    <slot name="pattern" v-bind="{...arc, patternId: `pattern_${uid}_${arc.patternIndex}`}"/>
+                </defs>
+            </g>
+
             <template v-if="total && FINAL_CONFIG.type === 'classic'">
                 <path 
                     v-for="(arc, i) in currentDonut"
@@ -853,6 +863,18 @@ defineExpose({
                     :d="arc.arcSlice"
                     fill="#FFFFFF"
                 />
+                <g v-if="$slots.pattern">
+                    <path 
+                        v-for="(arc, i) in currentDonut"
+                        class="vue-ui-donut-arc-path"
+                        :data-cy="`donut-arc-pattern-${arc.patternIndex}`"
+                        :d="arc.arcSlice" 
+                        :fill="`url(#pattern_${uid}_${arc.patternIndex})`"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                        :filter="getBlurFilter(i)"
+                    />
+                </g>
                 <path 
                     v-for="(arc, i) in currentDonut"
                     class="vue-ui-donut-arc-path"
@@ -884,6 +906,19 @@ defineExpose({
                             :filter="`url(#drop_shadow_${uid})`"
                         />
                     </g>
+
+                    <g v-if="$slots.pattern">
+                        <path 
+                            v-for="(arc, i) in currentDonut"
+                            class="vue-ui-donut-arc-path"
+                            :data-cy="`polar-arc-${arc.patternIndex}`"
+                            :d="polarAreas[i].path"
+                            :fill="`url(#pattern_${uid}_${arc.patternIndex})`"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                            :filter="getBlurFilter(i)"
+                        />
+                    </g>
                     <path 
                         v-for="(arc, i) in currentDonut"
                         class="vue-ui-donut-arc-path"
@@ -896,6 +931,15 @@ defineExpose({
                     />
                 </g>
                 <g v-else>
+                    <circle
+                        v-if="$slots.pattern"
+                        :cx="svg.width / 2" 
+                        :cy="svg.height / 2" 
+                        :r="minSize"
+                        :fill="`url(#pattern_${uid}_${currentDonut[0].patternIndex})`"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                    />
                     <circle 
                         :cx="svg.width / 2" 
                         :cy="svg.height / 2" 
@@ -1217,6 +1261,16 @@ defineExpose({
                 :config="legendConfig"
                 @clickMarker="({i}) => segregate(i)"
             >
+                <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
+                    <Shape
+                        :shape="legend.shape"
+                        :radius="30"
+                        stroke="none"
+                        :plot="{ x: 30, y: 30}"
+                        :fill="`url(#pattern_${uid}_${index})`"
+                    />
+                </template>
+
                 <template #item="{ legend, index }">
                     <div 
                         :data-cy="`legend-item-${index}`"

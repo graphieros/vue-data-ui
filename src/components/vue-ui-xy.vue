@@ -128,8 +128,8 @@
                         stroke-width="1" 
                         :x1="drawingArea.left + xPadding"
                         :x2="drawingArea.right - xPadding"
-                        :y1="drawingArea.bottom"
-                        :y2="drawingArea.bottom"
+                        :y1="forceValidValue(drawingArea.bottom)"
+                        :y2="forceValidValue(drawingArea.bottom)"
                         stroke-linecap="round"
                     />
                     <template v-if="!mutableConfig.useIndividualScale">
@@ -140,8 +140,8 @@
                             stroke-width="1" 
                             :x1="drawingArea.left + xPadding" 
                             :x2="drawingArea.left + xPadding" 
-                            :y1="drawingArea.top" 
-                            :y2="drawingArea.bottom" 
+                            :y1="forceValidValue(drawingArea.top)" 
+                            :y2="forceValidValue(drawingArea.bottom)" 
                             stroke-linecap="round"
                         />
                         <g v-if="FINAL_CONFIG.chart.grid.showHorizontalLines">
@@ -149,8 +149,8 @@
                                 v-for="l in yLabels"
                                 :x1="drawingArea.left + xPadding"
                                 :x2="drawingArea.right - xPadding"
-                                :y1="checkNaN(l.y)"
-                                :y2="checkNaN(l.y)"
+                                :y1="forceValidValue(l.y)"
+                                :y2="forceValidValue(l.y)"
                                 :stroke="FINAL_CONFIG.chart.grid.stroke"
                                 :stroke-width="0.5"
                                 stroke-linecap="round"
@@ -164,8 +164,8 @@
                                     v-for="l in grid.yLabels"
                                     :x1="drawingArea.left + xPadding"
                                     :x2="drawingArea.right - xPadding"
-                                    :y1="checkNaN(l.y)"
-                                    :y2="checkNaN(l.y)"
+                                    :y1="forceValidValue(l.y)"
+                                    :y2="forceValidValue(l.y)"
                                     :stroke="grid.color"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
@@ -176,8 +176,8 @@
                                     v-for="l in grid.yLabels"
                                     :x1="drawingArea.left + xPadding"
                                     :x2="drawingArea.right - xPadding"
-                                    :y1="checkNaN(l.y)"
-                                    :y2="checkNaN(l.y)"
+                                    :y1="forceValidValue(l.y)"
+                                    :y2="forceValidValue(l.y)"
                                     :stroke="FINAL_CONFIG.chart.grid.stroke"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
@@ -192,8 +192,8 @@
                             :key="`grid_vertical_line_${i}`"
                             :x1="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
                             :x2="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
-                            :y1="drawingArea.top"
-                            :y2="drawingArea.bottom"
+                            :y1="forceValidValue(drawingArea.top)"
+                            :y2="forceValidValue(drawingArea.top)"
                             stroke-width="0.5"
                             :stroke="FINAL_CONFIG.chart.grid.stroke"
                         />
@@ -310,6 +310,18 @@
                                 :stroke="FINAL_CONFIG.bar.border.useSerieColor ? serie.color : FINAL_CONFIG.bar.border.stroke"
                                 :stroke-width="FINAL_CONFIG.bar.border.strokeWidth"
                             />
+                            <rect
+                                :data-cy="`xy-bar-${i}-${j}`"
+                                v-if="canShowValue(plot.value) && $slots.pattern"
+                                :x="calcRectX(plot)"
+                                :y="mutableConfig.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
+                                :height="mutableConfig.useIndividualScale ? Math.abs(calcIndividualHeight(plot)) : Math.abs(calcRectHeight(plot))"
+                                :width="calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap)"
+                                :rx="FINAL_CONFIG.bar.borderRadius"
+                                :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
+                                :stroke="FINAL_CONFIG.bar.border.useSerieColor ? serie.color : FINAL_CONFIG.bar.border.stroke"
+                                :stroke-width="FINAL_CONFIG.bar.border.strokeWidth"
+                            />
 
                             <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
                                 <foreignObject style="overflow: visible" height="12" :width="(calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) / 2) + FINAL_CONFIG.chart.comments.width" :x="calcRectX(plot) - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX" :y="checkNaN(plot.y) + FINAL_CONFIG.chart.comments.offsetY + 6">
@@ -331,8 +343,8 @@
                                 v-if="serie.plots.length > 1"
                                 :x1="calcLinearProgression(serie.plots).x1"
                                 :x2="calcLinearProgression(serie.plots).x2"
-                                :y1="calcLinearProgression(serie.plots).y1"
-                                :y2="calcLinearProgression(serie.plots).y2"
+                                :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
+                                :y2="forceValidValue(calcLinearProgression(serie.plots).y2)"
                                 :stroke-width="1"
                                 :stroke="serie.color"
                                 :stroke-dasharray="2"
@@ -365,8 +377,8 @@
                         stroke-width="1" 
                         :x1="drawingArea.left + xPadding" 
                         :x2="drawingArea.right - xPadding" 
-                        :y1="checkNaN(zero)" 
-                        :y2="checkNaN(zero)" 
+                        :y1="forceValidValue(zero)" 
+                        :y2="forceValidValue(zero)" 
                         stroke-linecap="round"
                     />
                 </template>
@@ -375,8 +387,8 @@
                     <line
                         :x1="drawingArea.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) + (drawingArea.width / maxSeries / 2)"
                         :x2="drawingArea.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) + (drawingArea.width / maxSeries / 2)"
-                        :y1="drawingArea.top"
-                        :y2="drawingArea.bottom"
+                        :y1="forceValidValue(drawingArea.top)"
+                        :y2="forceValidValue(drawingArea.bottom)"
                         :stroke="FINAL_CONFIG.chart.highlighter.color"
                         :stroke-width="FINAL_CONFIG.chart.highlighter.lineWidth"
                         :stroke-dasharray="FINAL_CONFIG.chart.highlighter.lineDasharray"
@@ -408,8 +420,8 @@
                             <line 
                                 :x1="el.x + xPadding"
                                 :x2="el.x + xPadding"
-                                :y1="mutableConfig.isStacked ? checkNaN((drawingArea.bottom - el.yOffset - el.individualHeight)) : checkNaN(drawingArea.top)"
-                                :y2="mutableConfig.isStacked ? checkNaN((drawingArea.bottom - el.yOffset)) : checkNaN(drawingArea.bottom)"
+                                :y1="mutableConfig.isStacked ? forceValidValue((drawingArea.bottom - el.yOffset - el.individualHeight)) : forceValidValue(drawingArea.top)"
+                                :y2="mutableConfig.isStacked ? forceValidValue((drawingArea.bottom - el.yOffset)) : forceValidValue(drawingArea.bottom)"
                                 :stroke="el.color"
                                 :stroke-width="FINAL_CONFIG.chart.grid.stroke"
                                 stroke-linecap="round"
@@ -429,8 +441,8 @@
                                 v-for="(yLabel, j) in el.yLabels"
                                 :x1="el.x - 3 + xPadding"
                                 :x2="el.x + xPadding"
-                                :y1="checkNaN(yLabel.y)"
-                                :y2="checkNaN(yLabel.y)"
+                                :y1="forceValidValue(yLabel.y)"
+                                :y2="forceValidValue(yLabel.y)"
                                 :stroke="el.color"
                                 :stroke-width="1"
                                 stroke-linecap="round"
@@ -438,7 +450,7 @@
                             <text 
                                 v-for="(yLabel, j) in el.yLabels"
                                 :x="el.x - 5 + xPadding" 
-                                :y="checkNaN(yLabel.y) + fontSizes.dataLabels / 3" 
+                                :y="forceValidValue(yLabel.y) + fontSizes.dataLabels / 3" 
                                 :font-size="fontSizes.dataLabels" 
                                 text-anchor="end"
                                 :fill="el.color"
@@ -466,8 +478,8 @@
                                 v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
                                 :x1="drawingArea.left + xPadding" 
                                 :x2="drawingArea.left - 5 + xPadding" 
-                                :y1="checkNaN(yLabel.y)" 
-                                :y2="checkNaN(yLabel.y)" 
+                                :y1="forceValidValue(yLabel.y)" 
+                                :y2="forceValidValue(yLabel.y)" 
                                 :stroke="FINAL_CONFIG.chart.grid.stroke" 
                                 stroke-width="1" 
                                 stroke-linecap="round"
@@ -535,8 +547,8 @@
                             v-if="serie.plots.length > 1"
                             :x1="calcLinearProgression(serie.plots).x1"
                             :x2="calcLinearProgression(serie.plots).x2"
-                            :y1="calcLinearProgression(serie.plots).y1"
-                            :y2="calcLinearProgression(serie.plots).y2"
+                            :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
+                            :y2="forceValidValue(calcLinearProgression(serie.plots).y2)"
                             :stroke-width="1"
                             :stroke="serie.color"
                             :stroke-dasharray="2"
@@ -578,8 +590,8 @@
                                 v-if="plot && j < serie.plots.length - 1 && serie.plots[j+1] && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
                                 :x1="plot.x"
                                 :x2="serie.plots[j+1].x"
-                                :y1="plot.y"
-                                :y2="serie.plots[j+1].y"
+                                :y1="forceValidValue(plot.y)"
+                                :y2="forceValidValue(serie.plots[j+1].y)"
                                 :stroke="FINAL_CONFIG.chart.backgroundColor"
                                 :stroke-width="FINAL_CONFIG.line.strokeWidth + 1"
                                 :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
@@ -589,15 +601,30 @@
                         </g>
                     </g>
                 </g>
-                
+
+                <defs v-if="$slots.pattern">
+                    <slot v-for="(serie, i) in safeDataset" :key="`serie_pattern_slot_${i}`" name="pattern" v-bind="{...serie, seriesIndex: serie.slotAbsoluteIndex, patternId: `pattern_${uniqueId}_${i}`}"/>
+
+                </defs>
+
                 <!-- LINES -->
                 <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">    
+
                     <g :data-cy="`xy-line-area-${i}`" v-if="serie.useArea && serie.plots.length > 1">
-                        <path 
-                            v-if="serie.smooth" 
-                            :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"
-                        />
-                        <path v-else :d="`M${serie.area}Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"/>
+                        <template v-if="serie.smooth">
+                            <path 
+                                v-if="$slots.pattern" 
+                                :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
+                            />
+                            <path 
+                                v-else
+                                :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"
+                            />
+                        </template>
+                        <template v-else>
+                            <path v-if="$slots.pattern" :d="`M${serie.area}Z`" :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"/>
+                            <path v-else :d="`M${serie.area}Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"/>
+                        </template>
                     </g>
 
                     <path 
@@ -616,8 +643,8 @@
                                 v-if="plot && j < serie.plots.length - 1 && serie.plots[j+1] && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
                                 :x1="plot.x"
                                 :x2="serie.plots[j+1].x"
-                                :y1="plot.y"
-                                :y2="serie.plots[j+1].y"
+                                :y1="forceValidValue(plot.y)"
+                                :y2="forceValidValue(serie.plots[j+1].y)"
                                 :stroke="serie.color"
                                 :stroke-width="FINAL_CONFIG.line.strokeWidth"
                                 :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
@@ -663,8 +690,8 @@
                             v-if="serie.plots.length > 1"
                             :x1="calcLinearProgression(serie.plots).x1"
                             :x2="calcLinearProgression(serie.plots).x2"
-                            :y1="calcLinearProgression(serie.plots).y1"
-                            :y2="calcLinearProgression(serie.plots).y2"
+                            :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
+                            :y2="forceValidValue(calcLinearProgression(serie.plots).y2)"
                             :stroke-width="1"
                             :stroke="serie.color"
                             :stroke-dasharray="2"
@@ -1130,9 +1157,12 @@
                             :strokeWidth="0.5"
                         />
                 </svg>
+                <svg v-else-if="icons[legendItem.type] === 'bar'" viewBox="0 0 40 40" height="14" width="14">
+                    <rect v-if="icons[legendItem.type] === 'bar' && $slots.pattern" x="0" y="0" rx="1" height="40" width="40" stroke="none" :fill="legendItem.color" />
+                    <rect v-if="icons[legendItem.type] === 'bar'" x="0" y="0" rx="1" height="40" width="40" stroke="none" :fill="$slots.pattern ? `url(#pattern_${uniqueId}_${legendItem.slotAbsoluteIndex})` : legendItem.color" />
+                </svg>
                 <svg v-else viewBox="0 0 12 12" height="14" width="14">
-                    <rect v-if="icons[legendItem.type] === 'bar'" x="0" y="0" rx="1" height="12" width="12" stroke="none" :fill="legendItem.color" />
-                    <Shape v-else
+                    <Shape
                         :plot="{x: 6, y:6}"
                         :radius="5"
                         :color="legendItem.color"
@@ -1247,6 +1277,7 @@ import {
     createUid,
     dataLabel,
     downloadCsv,
+    forceValidValue,
     functionReturnsString,
     hasDeepProperty,
     isFunction,
@@ -1581,6 +1612,7 @@ export default {
                 })
                 return {
                     ...datapoint,
+                    slotAbsoluteIndex: i,
                     series: LTTD.map(d => {
                         return this.isSafeValue(d) ? d : null
                     }).slice(this.slicer.start, this.slicer.end),
@@ -2148,6 +2180,7 @@ export default {
         selectedSeries() {
             return this.relativeDataset.map(datapoint => {
                 return {
+                    slotAbsoluteIndex: datapoint.slotAbsoluteIndex,
                     shape: datapoint.shape || null,
                     name: datapoint.name,
                     color: datapoint.color,
@@ -2195,7 +2228,7 @@ export default {
                         let insideShape = '';
                         switch (this.icons[s.type]) {
                             case 'bar':
-                                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="0" y="0" rx="1" stroke="none" height="12" width="12" fill="${s.color}" /></svg>`;
+                                shape = `<svg viewBox="0 0 40 40" height="14" width="14">${this.$slots.pattern ? `<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${s.color}" />`: ''}<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${this.$slots.pattern ? `url(#pattern_${this.uniqueId}_${s.slotAbsoluteIndex}` : s.color}" /></svg>`;
                                 break;
                             
                             case 'line':
@@ -2327,6 +2360,7 @@ export default {
         dataLabel,
         downloadCsv,
         error,
+        forceValidValue,
         functionReturnsString,
         hasDeepProperty,
         isFunction,
