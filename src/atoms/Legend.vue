@@ -1,4 +1,5 @@
 <script setup>
+import { isValidUserValue } from '../lib';
 import Shape from './Shape.vue';
 
 const props = defineProps({
@@ -41,14 +42,15 @@ function handleClick(legend, i) {
     >
         <slot name="legendTitle" :titleSet="legendSet"></slot>
         <div v-for="(legend, i) in legendSet" :class="{ 'vue-data-ui-legend-item': true, 'active': clickable }">
-            <svg @click="handleClick(legend, i)" v-if="legend.shape" :height="config.fontSize" :width="config.fontSize" viewBox="0 0 20 20" :style="`overflow: visible;opacity:${legend.opacity}`">
+            <svg @click="handleClick(legend, i)" v-if="legend.shape" :height="config.fontSize" :width="config.fontSize" viewBox="0 0 60 60" :style="`overflow: visible;opacity:${legend.opacity}`">
                 <Shape
                     :shape="legend.shape"
-                    :radius="9"
+                    :radius="30"
                     stroke="none"
-                    :plot="{ x: 10, y: 10 }"
+                    :plot="{ x: 30, y: 30 }"
                     :fill="legend.color"
                 />
+                <slot name="legend-pattern" v-bind="{ legend, index: isValidUserValue(legend.absoluteIndex) ? legend.absoluteIndex : i}"/>
             </svg>
             <slot name="item" :legend="legend" :index="i"/>
         </div>
