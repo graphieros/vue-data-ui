@@ -193,7 +193,7 @@
                             :x1="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
                             :x2="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
                             :y1="forceValidValue(drawingArea.top)"
-                            :y2="forceValidValue(drawingArea.top)"
+                            :y2="forceValidValue(drawingArea.bottom)"
                             stroke-width="0.5"
                             :stroke="FINAL_CONFIG.chart.grid.stroke"
                         />
