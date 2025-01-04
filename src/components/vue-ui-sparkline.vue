@@ -8,6 +8,7 @@ import {
     createUid,
     dataLabel as dl,
     error,
+    forceValidValue,
     getMissingDatasetAttributes,
     hasDeepProperty,
     largestTriangleThreeBucketsArrayObjects,
@@ -492,8 +493,8 @@ function selectDatapoint(datapoint, index) {
                 v-if="min < 0"
                 :x1="drawingArea.start"
                 :x2="drawingArea.start + drawingArea.width - 16"
-                :y1="absoluteZero"
-                :y2="absoluteZero"
+                :y1="forceValidValue(absoluteZero, drawingArea.bottom)"
+                :y2="forceValidValue(absoluteZero, drawingArea.bottom)"
                 :stroke="FINAL_CONFIG.style.zeroLine.color"
                 :stroke-dasharray="FINAL_CONFIG.style.zeroLine.strokeWidth * 2"
                 :stroke-width="FINAL_CONFIG.style.zeroLine.strokeWidth"
