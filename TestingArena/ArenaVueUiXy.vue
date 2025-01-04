@@ -653,4 +653,244 @@ function selectTimeLabel(data) {
     </LocalVueUiXy>
     </div>
 
+    <Box :dataset="isPropsToggled ? alternateDataset : dataset" comp="VueUiXy">
+        <template #title>VueUiXy</template>
+
+        <template #local>
+            <LocalVueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend"
+                @selectX="selectX" ref="local">
+                <!-- <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template> -->
+                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                        <text
+                            :x="x"
+                            :y="y"
+                            :font-size="fontSize"
+                            :text-anchor="textAnchor"
+                            :fill="fill"
+                        >
+                            {{ content }}
+                        </text>
+                        <text
+                            :x="x"
+                            :y="y + fontSize"
+                            :font-size="fontSize * 0.8"
+                            :text-anchor="textAnchor"
+                            fill="grey"
+                        >
+                            {{ content }}
+                        </text>
+                    </g>
+                </template>
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #optionStack>
+                    STACK IT
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
+            </LocalVueUiXy>
+        </template>
+
+        <template #VDUI-local>
+            <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset: dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
+                @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
+                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                        <text
+                            :x="x"
+                            :y="y"
+                            :font-size="fontSize"
+                            :text-anchor="textAnchor"
+                            :fill="fill"
+                        >
+                            {{ content }}
+                        </text>
+                        <text
+                            :x="x"
+                            :y="y + fontSize"
+                            :font-size="fontSize * 0.8"
+                            :text-anchor="textAnchor"
+                            fill="grey"
+                        >
+                            {{ content }}
+                        </text>
+                    </g>
+                </template>
+
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template>
+            </LocalVueDataUi>
+        </template>
+
+        <template #build>
+            <VueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend"
+                @selectX="selectX" ref="build">
+                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                        <text
+                            :x="x"
+                            :y="y"
+                            :font-size="fontSize"
+                            :text-anchor="textAnchor"
+                            :fill="fill"
+                        >
+                            {{ content }}
+                        </text>
+                        <text
+                            :x="x"
+                            :y="y + fontSize"
+                            :font-size="fontSize * 0.8"
+                            :text-anchor="textAnchor"
+                            fill="grey"
+                        >
+                            {{ content }}
+                        </text>
+                    </g>
+                </template>
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
+            </VueUiXy>
+        </template>
+
+        <template #VDUI-build>
+            <VueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`"
+                @selectLegend="selectLegend" @selectX="selectX" ref="vduiBuild">
+                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                        <text
+                            :x="x"
+                            :y="y"
+                            :font-size="fontSize"
+                            :text-anchor="textAnchor"
+                            :fill="fill"
+                        >
+                            {{ content }}
+                        </text>
+                        <text
+                            :x="x"
+                            :y="y + fontSize"
+                            :font-size="fontSize * 0.8"
+                            :text-anchor="textAnchor"
+                            fill="grey"
+                        >
+                            {{ content }}
+                        </text>
+                    </g>
+                </template>
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template> 
+            </VueDataUi>
+        </template>
+
+        <template #knobs>
+            <div
+                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
+                <div v-for="knob in model">
+                    <label style="font-size: 10px">{{ knob.key }}</label>
+                    <div
+                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
+                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
+                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
+                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
+                            <option v-for="opt in knob.options">{{ opt }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template #config>
+            {{ config }}
+        </template>
+    </Box>
+
 </template>

@@ -113,7 +113,7 @@ const components = ref([             //--- PATTERN SLOT
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[30]);
+const selectedComponent = ref(components.value[0]);
 
 </script>
 
