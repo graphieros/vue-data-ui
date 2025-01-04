@@ -762,7 +762,7 @@ The following components do not support this slot, because it would not make sen
 - VueUiWaffle
 - VueUiXyCanvas
 
-# Pattern slot (since v2.4.65)
+# Pattern slot (since v2.4.66)
 
 A #pattern slot is available on some components to apply custom patterns on datapoints for further customization.
 The slot exposes the seriesIndex, and a patternId which must be used on the pattern element to be recognized.
