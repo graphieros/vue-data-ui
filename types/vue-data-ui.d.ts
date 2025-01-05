@@ -10,6 +10,17 @@ declare module 'vue-data-ui' {
         config?: VueUi3dBarConfig | VueUiAgePyramidConfig | VueUiAnnotatorConfig | VueUiCandlestickConfig | VueUiChestnutConfig | VueUiDashboardConfig | VueUiDigitsConfig | VueUiDonutEvolutionConfig | VueUiDonutConfig | VueUiGaugeConfig | VueUiHeatmapConfig | VueUiMiniLoaderConfig | VueUiMoleculeConfig | VueUiMoodRadarConfig | VueUiNestedDonutsConfig | VueUiOnionConfig | VueUiQuadrantConfig | VueUiRadarConfig | VueUiRatingConfig | VueUiRelationCircleConfig | VueUiRingsConfig | VueUiScatterConfig | VueUiScreenshotConfig | VueUiSkeletonConfig | VueUiSmileyConfig | VueUiSparkbarConfig | VueUiSparkgaugeConfig | VueUiSparkHistogramConfig | VueUiSparklineConfig | VueUiSparkStackbarConfig | VueUiTableSparklineConfig | VueUiTableConfig | VueUiThermometerConfig | VueUiTiremarksConfig | VueUiVerticalBarConfig | VueUiWaffleConfig | VueUiWheelConfig | VueUiXyConfig | VueUiKpiConfig | VueUiTreemapConfig | VueUiQuickChartConfig | VueUiCursorConfig | VueUiSparkTrendConfig | VueUiStripPlotConfig | VueUiDumbbellConfig | VueUiWordCloudConfig | VueUiXyCanvasConfig | VueUiFlowConfig | VueUiParallelCoordinatePlotConfig | VueUiTimerConfig | VueUiCarouselTableConfig | VueUiGizmoConfig | VueUiStackbarConfig | VueUiBulletConfig | VueUiFunnelConfig | VueUiHistoryPlotConfig;
     }>
 
+    export type VueUiPatternName = 'bubbles' | 'flooring' | 'grid' | 'hexagon-diamond' | 'hexagon-flooring' | 'hexagon-grid' | 'maze' | 'redrum' | 'scales' | 'squares' | 'wave' | 'zig-zag';
+
+    export const VueUiPattern: DefineComponent<{
+        name: VueUiPatternName,
+        id: string,
+        fill?: string,
+        stroke?: string,
+        strokeWidth?: number,
+        scale?: number
+    }>;
+
     export type ChartTitle = {
         text?: string;
         color?: string;
