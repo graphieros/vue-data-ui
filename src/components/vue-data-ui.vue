@@ -358,14 +358,41 @@ defineExpose({
     toggleAnimation,
     toggleAnnotator
 });
+
+const notSupported = computed(() => {
+    let message = `The provided component ${props.component} does not exist.`;
+    if (['VueUiIcon', 'VueUiPattern', 'Arrow'].includes(props.component)) {
+        message = `${props.component} is not supported by the VueDataUi universal component. You must import it individually.`;
+        console.warn(message);
+        return {
+            status: 'notSupported',
+            message
+        }
+    }
+    console.warn(message);
+    return {
+        status: 'unknown',
+        message
+    }
+})
+
 </script>
 
 <template>
-    <div v-if="isError" style="width:100%; display: flex; gap:6px; align-items:center; color:#FF0000">
+    <div 
+        v-if="isError" 
+        :style="{
+            width:'100%',
+            display: 'flex',
+            gap:'6px',
+            alignItems: 'center',
+            color: notSupported.status === 'notSupported' ? '#FF9000' : '#FF0000'
+        }">
         <div style="width:36px">
-            <BaseIcon name="moodFlat" stroke="#FF0000" />
+            <BaseIcon name="moodFlat" v-if="notSupported.status === 'unknown'" stroke="#FF0000" />
+            <BaseIcon name="circleExclamation" v-if="notSupported.status === 'notSupported'" stroke="#FF9000" />
         </div>
-        The provided component "{{ component }}" does not exist
+        {{ notSupported.message}}
     </div>
 
     <component
