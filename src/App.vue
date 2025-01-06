@@ -59,7 +59,7 @@ const components = ref([             //--- PATTERN SLOT
   /*____________________*/"VueUiXy", //  0 OK
   /*_________________*/"VueUiDonut", //  1 OK
   /*_______________*/"VueUiTreemap", //  2 _
-  /*________________*/"VueUiWaffle", //  3 _
+  /*________________*/"VueUiWaffle", //  3 OK
   /*_________________*/"VueUiRadar", //  4 _
   /*______________*/"VueUiQuadrant", //  5 _
   /*_________________*/"VueUiGauge", //  6 OK
@@ -113,7 +113,7 @@ const components = ref([             //--- PATTERN SLOT
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[1]);
+const selectedComponent = ref(components.value[3]);
 
 </script>
 

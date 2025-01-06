@@ -263,6 +263,11 @@ function selectLegend(legend) {
 
         <template #local>
             <LocalVueUiWaffle :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+                <template #pattern="{ seriesIndex, patternId }">
+                    <VueUiPattern v-if="seriesIndex === 0" :id="patternId" name="squares" stroke="#FFFFFF50" :scale="0.64"/>
+                    <VueUiPattern v-if="seriesIndex === 1" :id="patternId" name="squares" stroke="#0000FF40" :scale="0.64"/>
+                    <VueUiPattern v-if="seriesIndex === 2" :id="patternId" name="squares" stroke="#FF000060" :scale="0.64"/>
+                </template>
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -309,6 +314,11 @@ function selectLegend(legend) {
 
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiWaffle" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
+                <template #pattern="{ seriesIndex, patternId }">
+                    <VueUiPattern v-if="seriesIndex === 0" :id="patternId" name="squares" stroke="#FFFFFF50" :scale="0.64"/>
+                    <VueUiPattern v-if="seriesIndex === 1" :id="patternId" name="squares" stroke="#0000FF40" :scale="0.64"/>
+                    <VueUiPattern v-if="seriesIndex === 2" :id="patternId" name="squares" stroke="#FF000060" :scale="0.64"/>
+                </template>
                 <!-- <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
@@ -352,6 +362,11 @@ function selectLegend(legend) {
 
         <template #build>
             <VueUiWaffle :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
+                <template #pattern="{ seriesIndex, patternId }">
+                    <VueUiPattern v-if="seriesIndex === 0" :id="patternId" name="squares" stroke="#FFFFFF50" :scale="0.64"/>
+                    <VueUiPattern v-if="seriesIndex === 1" :id="patternId" name="squares" stroke="#0000FF40" :scale="0.64"/>
+                    <VueUiPattern v-if="seriesIndex === 2" :id="patternId" name="squares" stroke="#FF000060" :scale="0.64"/>
+                </template>
                 <!-- <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
@@ -395,6 +410,11 @@ function selectLegend(legend) {
 
         <template #VDUI-build>
             <VueDataUi component="VueUiWaffle" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
+                <template #pattern="{ seriesIndex, patternId }">
+                    <VueUiPattern v-if="seriesIndex === 0" :id="patternId" name="squares" stroke="#FFFFFF50" :scale="0.64"/>
+                    <VueUiPattern v-if="seriesIndex === 1" :id="patternId" name="squares" stroke="#0000FF40" :scale="0.64"/>
+                    <VueUiPattern v-if="seriesIndex === 2" :id="patternId" name="squares" stroke="#FF000060" :scale="0.64"/>
+                </template>
                 <!-- <template #cell="{ cell, isSelected }">
                     <div :style="`opacity:${isSelected ? 1 : 0.3}`">
                         <VueUiIcon
