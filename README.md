@@ -446,7 +446,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiTiremarks`              | `VueUiTiremarksDataset`                    | `VueUiTiremarksConfig`              | `generatePdf`, `generateImage`                                                                                                                                           | `#svg`, `#legend`, `#watermark`, `#chart-background`                                                                                                  | ❌             | ✅     |
 | `VueUiTreemap`                | `VueUiTreemapDatasetItem[]`                | `VueUiTreemapConfig`                | `@selectLegend`, `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                            | `#svg`, `#rect`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                                                         | ✅             | ✅     |
 | `VueUiVerticalBar`            | `VueUiVerticalBarDatasetItem[]`            | `VueUiWheelConfig`                  | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleSort`, `toggleTooltip`                                                  | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#pattern`                                                 | ✅             | ✅     |
-| `VueUiWaffle`                 | `VueUiWaffleDatasetItem[]`                 | `VueUiWaffleConfig`                 | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`                                                                                  | ✅             | ✅     |
+| `VueUiWaffle`                 | `VueUiWaffleDatasetItem[]`                 | `VueUiWaffleConfig`                 | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`                                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#pattern`                                                                      | ✅             | ✅     |
 | `VueUiWheel`                  | `VueUiWheelDataset`                        | `VueUiWheelConfig`                  | `generatePdf`, `generateImage`                                                                                                                                           | `#svg`, `#watermark`, `#chart-background`                                                                                                             | ❌             | ✅     |
 | `VueUiWordCloud`              | `VueUiWordCloudDatasetItem[] / string`     | `VueUiWordCloudConfig`              | `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTooltip`                                                                                                | `#svg`, `#reset-action`, `#watermark`, `#tooltip-before`, `#tooltip-after`, `#chart-background`                                                       | ✅             | ✅     |
 | `VueUiXyCanvas`               | `VueUiXyCanvasDatasetItem[]`               | `VueUiXyCanvasConfig`               | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip`                                 | `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`                                                                         | ✅             | ✅     |
@@ -768,7 +768,7 @@ The following components do not support this slot, because it would not make sen
 - VueUiWaffle
 - VueUiXyCanvas
 
-# Pattern slot (since v2.4.67)
+# Pattern slot (v2.4.67+)
 
 A #pattern slot is available on some components to apply custom patterns on datapoints for further customization.
 The slot exposes the seriesIndex, and a patternId which must be used on the pattern element to be recognized.
@@ -798,6 +798,7 @@ The #pattern slot is available on the following components:
 - VueUiRings
 - VueUiStackbar
 - VueUiVerticalBar
+- VueUiWaffle
 - VueUiXy
 
 A set of 12 readymade patterns are available through the VueUiPattern component:
