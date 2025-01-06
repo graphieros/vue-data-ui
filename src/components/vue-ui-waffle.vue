@@ -37,8 +37,9 @@ import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import Shape from "../atoms/Shape.vue";
 
-const { vue_ui_waffle: DEFAULT_CONFIG } = useConfig()
+const { vue_ui_waffle: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -56,12 +57,6 @@ const props = defineProps({
 });
 
 const slots = useSlots();
-
-onMounted(() => {
-    if (slots['chart-background']) {
-        console.warn('VueUiWaffle does not support the #chart-background slot.')
-    }
-});
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length
@@ -554,7 +549,7 @@ function useTooltip(index) {
         let html = "";
     
         html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
-        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" rx="1" fill="${selected.color}" /></svg>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="60" width="60" stroke="none" rx="1" fill="${selected.color}" />${slots.pattern ? `<rect x="0" y="0" height="60" width="60" stroke="none" rx="1" stroke="none" fill="url(#pattern_${uid.value}_${selected.absoluteIndex})"/>`: ''}</svg>`;
         if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
             html += `<b data-cy="waffle-tooltip-value">${applyDataLabel(
                 FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
@@ -866,6 +861,13 @@ defineExpose({
             />
 
             <template v-else-if="rects.length && !FINAL_CONFIG.useCustomCells">
+
+                <g v-if="$slots.pattern">
+                    <defs v-for="ds in datasetCopyReference">
+                        <slot name="pattern" v-bind="{seriesIndex: ds.absoluteIndex, patternId: `pattern_${uid}_${ds.absoluteIndex}`}"/>
+                    </defs>
+                </g>
+
                 <rect
                     v-for="(position, i) in positions"
                     :data-cy="`waffle-rect-underlayer-${i}`"
@@ -891,6 +893,20 @@ defineExpose({
                     :stroke-width="FINAL_CONFIG.style.chart.layout.rect.strokeWidth"
                     :filter="getBlurFilter(rects[i].serieIndex)"
                 />
+                <g v-if="$slots.pattern">
+                    <rect
+                        v-for="(position, i) in positions"
+                        :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
+                        :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                        :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                        :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
+                        :width="rectDimension <= 0 ? 0.0001 : rectDimension"
+                        :fill="`url(#pattern_${uid}_${rects[i].absoluteIndex})`"
+                        stroke="none"
+                        :filter="getBlurFilter(rects[i].serieIndex)"
+                    />
+                
+                </g>
             </template>
 
             <!-- DATA LABELS -->
@@ -980,6 +996,16 @@ defineExpose({
                 :config="legendConfig"
                 @clickMarker="({legend}) => segregate(legend.uid)"
             >
+                <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
+                    <Shape
+                        :shape="legend.shape"
+                        :radius="30"
+                        stroke="none"
+                        :plot="{ x: 30, y: 30}"
+                        :fill="`url(#pattern_${uid}_${index})`"
+                    />
+                </template>
+
                 <template #item="{ legend }">
                     <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
                         {{ legend.name }}: {{ applyDataLabel(
