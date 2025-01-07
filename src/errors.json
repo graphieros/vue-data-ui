@@ -3,5 +3,6 @@
     "datasetAttribute": "#COMP# dataset is missing the '#ATTR#' attribute.",
     "datasetAttributeEmpty": "#COMP# dataset '#ATTR#' attribute cannot be empty.",
     "datasetSerieAttribute": "#COMP# dataset #KEY# item at index #INDX# is missing the '#ATTR#' attribute.",
-    "notBuildable": "#COMP# : Chart could not be built. Dataset is not formatted correctly"
+    "notBuildable": "#COMP# : Chart could not be built. Dataset is not formatted correctly",
+    "attributeWrongValue": "#COMP# : A wrong value was provided to the #ATTR# attribute (#KEY# is not a valid value)."
 }
