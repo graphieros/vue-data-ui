@@ -65,7 +65,8 @@ export function useConfig() {
 
     const SORT = {
         ASC: 'asc',
-        DESC: 'desc'
+        DESC: 'desc',
+        NONE: 'none'
     }
 
     const LTTB = {
