@@ -256,7 +256,7 @@ const immutableDataset = computed(() => {
                 isSegregated: segregated.value.includes(id),
                 color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 children: !serie.children || !serie.children.length ? [] : serie.children
-                    .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
+                    .toSorted(isSortNeutral.value ? () => 0 : (a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
                     .map((c, j) => {
                         return {
                             ...c,
@@ -282,7 +282,7 @@ const immutableDataset = computed(() => {
                     })
             }
         })
-        .toSorted((a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
+        .toSorted(isSortNeutral.value ? () => 0 : (a, b) => isSortDown.value ? b.value - a.value : a.value - b.value)
 });
 
 const legendConfig = computed(() => {
@@ -594,9 +594,42 @@ function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
+const sorts = ref({
+    none: 0,
+    asc: 1,
+    desc: 2
+});
+
+const sortIndex = ref(0);
+const isSortNeutral = ref(false);
+
+onMounted(() => {
+    if (!['none', 'asc', 'desc'].includes(FINAL_CONFIG.value.style.chart.layout.bars.sort)) {
+        error({
+            componentName: 'VueUiVerticalBar',
+            type: 'attributeWrongValue',
+            property: 'style.chart.layout.bars.sort',
+            key: FINAL_CONFIG.value.style.chart.layout.bars.sort
+        })
+    }
+
+    sortIndex.value = sorts.value[FINAL_CONFIG.value.style.chart.layout.bars.sort];
+    mutableConfig.value.sortDesc = sortIndex.value === 2;
+    isSortNeutral.value = sortIndex.value === 0;
+});
+
+function incrementSort() {
+    sortIndex.value += 1;
+    if (sortIndex.value > 2) {
+        sortIndex.value = 0;
+    }
+}
+
 function toggleSort() {
-    mutableConfig.value.sortDesc = !mutableConfig.value.sortDesc;
-    recalculateHeight()
+    incrementSort();
+    mutableConfig.value.sortDesc = sortIndex.value === 2;
+    isSortNeutral.value = sortIndex.value === 0;
+    recalculateHeight();
 }
 
 function toggleTooltip() {
