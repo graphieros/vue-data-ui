@@ -3591,7 +3591,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 layout?: {
                     bars?: {
-                        sort?: "desc" | "asc";
+                        sort?: "desc" | "asc" | "none";
                         useStroke?: boolean;
                         strokeWidth?: number;
                         height?: number;
