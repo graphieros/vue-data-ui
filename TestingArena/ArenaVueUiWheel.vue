@@ -8,11 +8,11 @@ import convertArrayToObject from "./convertModel";
 const dataset = ref({ percentage: 99 })
 
 
-onMounted(() => {
-    setTimeout(() => {
-        dataset.value.percentage = 10
-    }, 3000)
-})
+// onMounted(() => {
+//     setTimeout(() => {
+//         dataset.value.percentage = 10
+//     }, 3000)
+// })
 
 const isPropsToggled = ref(false);
 function toggleProps() {
@@ -81,10 +81,12 @@ const themeOptions = ref([
     "hack",
     "zen",
     "concrete",
-    "default"
+    "default",
+    "celebration",
+    "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[4])
+const currentTheme = ref(themeOptions.value[6])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

@@ -213,13 +213,16 @@ const model = ref([
 const testCustomTooltip = ref(false);
 
 const themeOptions = ref([
-    "hack",
+    "",
+    "default",
     "zen",
     "concrete",
-    "default"
+    "hack",
+    "celebration",
+    "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[2])
+const currentTheme = ref(themeOptions.value[6])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

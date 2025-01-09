@@ -10,7 +10,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const scat1 = computed(() => {
     const arr = [];
-    for (let i = -10000; i < 10000; i += 1) {
+    for (let i = -100; i < 100; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.3 ? i / 3 : -i / 5),
             y: Math.random() * i / 20,
@@ -22,7 +22,7 @@ const scat1 = computed(() => {
 
 const scat2 = computed(() => {
     const arr = [];
-    for (let i = -10000; i < 10000; i += 1) {
+    for (let i = -100; i < 100; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.1 ? i / 10 : -i / 10),
             y: Math.random() * i / 10,
@@ -238,10 +238,12 @@ const themeOptions = ref([
     "hack",
     "zen",
     "concrete",
-    "default"
+    "default",
+    "celebration",
+    "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[4])
+const currentTheme = ref(themeOptions.value[6])
 
 
 const config = computed(() => {

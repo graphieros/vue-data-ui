@@ -14,7 +14,7 @@ const dataset = ref([
         color: '#FF0000'
     },
     {
-        value: 1.3,
+        value: -1.3,
         valueLabel: "50%",
         timeLabel: "10:00",
         intensity: 0.5,
@@ -200,10 +200,12 @@ const themeOptions = ref([
     "hack",
     "zen",
     "concrete",
-    "default"
+    "default",
+    "celebration",
+    "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[4])
+const currentTheme = ref(themeOptions.value[6])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

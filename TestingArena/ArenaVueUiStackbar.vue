@@ -25,12 +25,10 @@ const dataset = computed(() => {
         10, 20, 30, 10, 20, 4, 4, 5, 99, 34, 8, 43, 2, 8, 0, 52, 5, 3, 6, 23, 9,
         18, 3, 5, 87, 5, 3, 5, 25, 12,
       ],
-      color: "#5f8aee",
     },
     {
       name: "Series 2",
       series: [20, 40, -60, 20, 10],
-      color: "#42d392",
     },
     {
       name: "Series 3",
@@ -204,10 +202,23 @@ const model = ref([
 
 ])
 
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default",
+    "celebration",
+    "celebrationNight"
+])
+
+const currentTheme = ref(themeOptions.value[6])
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        theme: currentTheme.value,
         style: {
             ...c.style,
             chart: {
@@ -245,7 +256,12 @@ function selectTimeLabel(data) {
 </script>
 
 <template>
-
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
 <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
     <LocalVueUiStackbar :dataset="dataset" :config="{...config,
         responsive: true,

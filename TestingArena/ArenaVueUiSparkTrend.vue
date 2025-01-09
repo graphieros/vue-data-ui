@@ -15,9 +15,9 @@ function makeDs(n,m) {
 
 
 const datasets = ref({
-    neutral: makeDs(100000, 100),
-    positive: makeDs(100000, 100),
-    negative: makeDs(100000, 100),
+    neutral: makeDs(10, 100),
+    positive: makeDs(10, 100),
+    negative: makeDs(10, 100),
 })
 
 const alternateDataset = ref({
@@ -84,10 +84,12 @@ const themeOptions = ref([
     "hack",
     "zen",
     "concrete",
-    "default"
+    "default",
+    "celebration",
+    "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[4])
+const currentTheme = ref(themeOptions.value[6])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
