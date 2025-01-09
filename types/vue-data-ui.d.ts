@@ -136,7 +136,7 @@ declare module 'vue-data-ui' {
         enableSelectionDrag?: boolean;
     }
 
-    export type Theme = "" | "zen" | "hack" | "concrete";
+    export type Theme = "" | "zen" | "hack" | "concrete" | "celebration" | "celebrationNight";
     export type TextAlign = "left" | "center" | "right";
     export type TooltipPosition = TextAlign;
     export type FontVariantNumeric = "normal" | "slashed-zero" | "tabular-nums" | "oldstyle-nums";
