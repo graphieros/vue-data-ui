@@ -367,11 +367,13 @@ const defaultConfigXy = getVueDataUiConfig("vue_ui_xy");
 
 All charts are set by default without a theme, and use the default color palette.
 
-3 themes are available for all charts:
+5 themes are available for all charts:
 
 - zen
 - hack
 - concrete
+- celebration (v2.4.70+)
+- celebrationNight (v2.4.70+)
 
 Any color provided in dataset props will override the colors used by the theme for datapoints.
 
