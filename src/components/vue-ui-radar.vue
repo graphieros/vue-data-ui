@@ -173,7 +173,7 @@ const mutableConfig = ref({
 const sparkBarConfig = computed(() => {
     return {
         style: {
-            backgroundColor: FINAL_CONFIG.value.style.chart.tooltip.backgroundColor,
+            backgroundColor: '#FFFFFF00',
             animation: {
                 show: FINAL_CONFIG.value.style.chart.tooltip.animation.show,
                 animationFrames: FINAL_CONFIG.value.style.chart.tooltip.animation.animationFrames
@@ -864,7 +864,7 @@ defineExpose({
             </template>
             <template #tooltip-after>
                 <div style="max-width: 200px;margin:0 auto" v-if="!['function'].includes(typeof FINAL_CONFIG.style.chart.tooltip.customFormat)">
-                    <SparkBar :dataset="sparkBarData" :config="sparkBarConfig" :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"/>
+                    <SparkBar :dataset="sparkBarData" :config="sparkBarConfig" :backgroundOpacity="0"/>
                 </div>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
