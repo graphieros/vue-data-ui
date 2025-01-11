@@ -209,6 +209,12 @@ export function getPalette(palette = 'default') {
         case 'concrete':
             return themePalettes.concrete;
 
+        case 'celebration':
+            return themePalettes.celebration;
+
+        case 'celebrationNight':
+            return themePalettes.celebrationNight;
+
         default:
             return themePalettes.default;
     }
@@ -239,11 +245,11 @@ export const themePalettes = {
         "#FFECB3"
     ],
     celebrationNight: [
-        "#FF6B6B", 
-        "#FF784E", 
-        "#FF8C42", 
-        "#FFA644",
-        "#FF7043",
+        "#D32F2F", 
+        "#E64A19", 
+        "#F57C00", 
+        "#FF9800", 
+        "#FF5722", 
         "#FFC947",
         "#FFEB3B",
         "#FFD95B",
