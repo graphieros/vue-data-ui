@@ -121,6 +121,7 @@ declare module 'vue-data-ui' {
         lineColor?: string;
         selectionRadius?: number;
         indicatorColor?: string;
+        verticalHandles?: boolean;
     }
 
     export type ChartZoom = {
