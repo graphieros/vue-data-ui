@@ -231,6 +231,8 @@ const model = ref([
     { key: 'chart.zoom.minimap.lineColor', def: '#1A1A1A', type: 'color'},
     { key: 'chart.zoom.minimap.selectionRadius', def: 2, type: 'number', min: 0, max: 24},
     { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color'},
+    { key: 'chart.zoom.minimap.verticalHandles', def: true, type: 'checkbox'},
+
     { key: 'chart.zoom.startIndex', def: 2, type: 'number', min: 0, max: 100},
     { key: 'chart.zoom.endIndex', def: 6, type: 'number', min: 0, max: 100},
 
@@ -410,7 +412,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const size = ref({
     height: 600,
@@ -519,23 +521,23 @@ const config = computed(() => {
                         },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
-                            // values: [
-                            //     "JANUARY IS KIND OF LONG",
-                            //     "FEBRUARY IS KIND OF LONG TOO",
-                            //     "MARCH",
-                            //     "APRIL",
-                            //     "MAY",
-                            //     "JUNE",
-                            //     "JULY",
-                            //     "AUGUST",
-                            //     "SEPTEMBER",
-                            //     "OCTOBER",
-                            //     "NOVEMBER IS KIND OF LONG TOO",
-                            //     "DECEMBER",
-                            //     "JANUARY+",
-                            //     "FEBRUARY+",
-                            //     "MARCH+"
-                            // ]
+                            values: [
+                                "JANUARY IS KIND OF LONG",
+                                "FEBRUARY IS KIND OF LONG TOO",
+                                "MARCH",
+                                "APRIL",
+                                "MAY",
+                                "JUNE",
+                                "JULY",
+                                "AUGUST",
+                                "SEPTEMBER",
+                                "OCTOBER",
+                                "NOVEMBER IS KIND OF LONG TOO",
+                                "DECEMBER",
+                                "JANUARY+",
+                                "FEBRUARY+",
+                                "MARCH+"
+                            ]
                         }
                     }
                 }

@@ -113,7 +113,7 @@ const components = ref([             //--- CELEBRATION THEMES
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[4]);
+const selectedComponent = ref(components.value[0]);
 
 </script>
 
