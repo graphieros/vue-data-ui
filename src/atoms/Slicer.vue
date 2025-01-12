@@ -322,6 +322,19 @@ const dragThreshold = computed(() => {
     return w / (props.max - props.min);
 });
 
+const selectionWidth = computed(() => {
+    const w = zoomWrapper.value.getBoundingClientRect().width - 48;
+    return w / (props.max - props.min) * currentRange.value;
+})
+
+const RA_SPECIAL_MAGIC_NUMBER = ref(2.5);
+
+const flooredDatapointsToWidth = computed(() => {
+    const w = zoomWrapper.value.getBoundingClientRect().width - 48;
+
+    return Math.ceil((props.max - props.min) / ((w - selectionWidth.value) / RA_SPECIAL_MAGIC_NUMBER.value));
+})
+
 const startDragging = (event) => {
     if (!props.enableSelectionDrag) {
         return;
@@ -361,13 +374,13 @@ function updateDragging(currentX) {
     if (Math.abs(deltaX) > dragThreshold.value) {
         if (deltaX > 0) {
             if (Number(endValue.value) + 1 <= props.max) {
-                const v = Number(endValue.value) + 1;
+                const v = Math.min(props.max, Number(endValue.value) + flooredDatapointsToWidth.value)
                 setEndValue(v);
                 setStartValue(v - currentRange.value);
             }
         } else {
             if (Number(startValue.value) - 1 >= props.min) {
-                const v = Number(startValue.value) - 1;
+                const v = Math.max(0, Number(startValue.value) - flooredDatapointsToWidth.value);
                 setStartValue(v);
                 setEndValue(v + currentRange.value);
             }
