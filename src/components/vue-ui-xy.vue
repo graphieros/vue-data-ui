@@ -1125,6 +1125,7 @@
             :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
             :minimapSelectedIndex="selectedSerieIndex"
             :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
+            :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles"
             :max="maxX"
             :min="0"
             :valueStart="slicer.start"

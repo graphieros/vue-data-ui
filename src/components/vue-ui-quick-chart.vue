@@ -1691,6 +1691,7 @@ defineExpose({
                 :minimapLineColor="FINAL_CONFIG.zoomMinimap.lineColor"
                 :minimap="minimap"
                 :minimapIndicatorColor="FINAL_CONFIG.zoomMinimap.indicatorColor"
+                :verticalHandles="FINAL_CONFIG.zoomMinimap.verticalHandles"
                 :minimapSelectedIndex="commonSelectedIndex"
                 v-model:start="slicer.start"
                 v-model:end="slicer.end"
