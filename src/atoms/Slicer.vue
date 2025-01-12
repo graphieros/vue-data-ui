@@ -105,6 +105,10 @@ const props = defineProps({
     enableSelectionDrag: {
         type: Boolean,
         default: true
+    },
+    verticalHandles: {
+        type: Boolean,
+        default: false,
     }
 });
 
@@ -559,7 +563,7 @@ defineExpose({
                 ref="rangeStart" 
                 :key="`range-min${inputStep}`" 
                 type="range" 
-                class="range-left range-handle" 
+                :class="{'range-left': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles }" 
                 :min="min" 
                 :max="max" 
                 v-model="startValue" 
@@ -572,7 +576,7 @@ defineExpose({
                 v-if="enableRangeHandles"
                 ref="rangeEnd" 
                 type="range" 
-                class="range-right range-handle" 
+                :class="{'range-right': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles }" 
                 :min="min" 
                 :max="max" 
                 v-model="endValue" 
@@ -598,7 +602,6 @@ defineExpose({
     pointer-events: none;
     position: absolute;
     top: -33px;
-    left: 0;
     svg{
         position: absolute;
         top: 0;
@@ -617,6 +620,11 @@ input[type="range"] {
     z-index: 3;
 }
 
+input[type="range"].range-minimap {
+    width: calc(100%);
+    left: 0;
+}
+
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     pointer-events: auto;
@@ -624,7 +632,7 @@ input[type="range"]::-webkit-slider-thumb {
     height: 20px;
     background-color: v-bind(slicerColor);
     border-radius: 50%;
-    cursor: pointer;
+    cursor: ew-resize;
     position: relative;
     z-index: 2;
     outline: 2px solid v-bind(borderColor);
@@ -634,6 +642,16 @@ input[type="range"]::-webkit-slider-thumb {
         box-shadow: 0 0 0 10px v-bind(selectColorOpaque);
         background-color: v-bind(selectColor);
     }
+}
+
+input[type="range"].range-minimap::-webkit-slider-thumb {
+    width: 6px;
+    height: 50px;
+    border-radius: 0px;
+    margin-top: -36px;
+    border-right: 1px solid v-bind(selectColor);
+    border-left: 1px solid v-bind(selectColor);
+    cursor:ew-resize;
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -642,7 +660,7 @@ input[type="range"]::-moz-range-thumb {
     height: 20px;
     background-color: v-bind(slicerColor);
     border-radius: 50%;
-    cursor: pointer;
+    cursor: ew-resize;
     position: relative;
     z-index: 2;
     outline: 2px solid v-bind(borderColor);
@@ -654,13 +672,24 @@ input[type="range"]::-moz-range-thumb {
     }
 }
 
+input[type="range"].range-minimap::-moz-range-thumb {
+    width: 6px;
+    height: 50px;
+    border-radius: 0px;
+    border-right: 1px solid v-bind(selectColor);
+    border-left: 1px solid v-bind(selectColor);
+    cursor: ew-resize;
+    transform: translateY(-20px); 
+    pointer-events: auto;
+}
+
 input[type="range"]::-ms-thumb {
     pointer-events: auto;
     width: 20px;
     height: 20px;
     background-color: v-bind(slicerColor);
     border-radius: 50%;
-    cursor: pointer;
+    cursor: ew-resize;
     position: relative;
     z-index: 2;
     outline: 2px solid v-bind(borderColor);
