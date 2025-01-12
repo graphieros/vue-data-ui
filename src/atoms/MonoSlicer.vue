@@ -121,7 +121,7 @@ input[type="range"]::-webkit-slider-thumb {
     height: 20px;
     background-color: v-bind(slicerColor);
     border-radius: 50%;
-    cursor: pointer;
+    cursor: ew-resize;
     position: relative;
     z-index: 2;
     outline: 2px solid v-bind(borderColor);
@@ -139,7 +139,7 @@ input[type="range"]::-moz-range-thumb {
     height: 20px;
     background-color: v-bind(slicerColor);
     border-radius: 50%;
-    cursor: pointer;
+    cursor: ew-resize;
     position: relative;
     z-index: 2;
     outline: 2px solid v-bind(borderColor);
@@ -157,7 +157,7 @@ input[type="range"]::-ms-thumb {
     height: 20px;
     background-color: v-bind(slicerColor);
     border-radius: 50%;
-    cursor: pointer;
+    cursor: ew-resize;
     position: relative;
     z-index: 2;
     outline: 2px solid v-bind(borderColor);
