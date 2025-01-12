@@ -8864,10 +8864,10 @@
                         "stroke": "#1E1E1E",
                         "dataLabels": {
                             "name": {
-                                "color": "#424242"
+                                "color": "#BDBDBD"
                             },
                             "value": {
-                                "color": "#424242"
+                                "color": "#BDBDBD"
                             }
                         }
                     },
