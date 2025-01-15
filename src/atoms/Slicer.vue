@@ -359,21 +359,15 @@ function handleDragging(event) {
 };
 
 function handleTouchDragging(event) {
+    if (!zoomWrapper.value.contains(event.target)) {
+        // Allow scrolling
+        return;
+    }
+
     if (event.target.classList.contains('range-handle')) {
         return;
     }
-
-    const touch = event.targetTouches[0];
-    const deltaY = Math.abs(touch.clientY - initialMouseX.value);
-
-    if (deltaY > dragThreshold.value) {
-        // Allow vertical scroll
-        return;
-    }
-    
-    if (event.cancelable) {
-        event.preventDefault(); 
-    }
+    event.preventDefault(); 
     updateDragging(event.targetTouches[0].clientX);
 };
 
