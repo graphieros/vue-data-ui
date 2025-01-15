@@ -362,7 +362,18 @@ function handleTouchDragging(event) {
     if (event.target.classList.contains('range-handle')) {
         return;
     }
-    event.preventDefault(); 
+
+    const touch = event.targetTouches[0];
+    const deltaY = Math.abs(touch.clientY - initialMouseX.value);
+
+    if (deltaY > dragThreshold.value) {
+        // Allow vertical scroll
+        return;
+    }
+    
+    if (event.cancelable) {
+        event.preventDefault(); 
+    }
     updateDragging(event.targetTouches[0].clientX);
 };
 
