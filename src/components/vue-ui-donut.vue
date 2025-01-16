@@ -574,13 +574,12 @@ const dataTable = computed(() => {
     ];
 
     const body = table.value.head.map((h,i) => {
-        const label = dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.table.td.roundingValue});
         return [
             {
                 color: h.color,
                 name: h.name
             },
-            label,
+            table.value.body[i],
             isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
         ]
     });
