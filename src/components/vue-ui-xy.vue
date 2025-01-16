@@ -433,7 +433,7 @@
                                 :fill="el.color"
                                 :font-size="fontSizes.dataLabels"
                                 text-anchor="middle"
-                                :transform="`translate(${el.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + 5}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                                :transform="`translate(${el.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + 5 + xPadding}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                             >
                                 {{ el.name }} {{ el.scaleLabel ? `- ${el.scaleLabel}` : '' }}
                             </text>
@@ -502,7 +502,7 @@
                                         s: yLabel.suffix, 
                                         r: 1,
                                     })) : '' 
-                                    }}
+                                }}
                             </text>
                         </g>
                     </template>
@@ -956,7 +956,7 @@
                 <template v-if="mutableConfig.useIndividualScale && !mutableConfig.isStacked">
                     <rect 
                         v-for="trap in allScales"
-                        :x="trap.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth"
+                        :x="trap.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + xPadding"
                         :y="drawingArea.top"
                         :width="FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
@@ -970,7 +970,7 @@
                 <g>
                     <text 
                         data-cy="xy-axis-yLabel" 
-                        v-if="FINAL_CONFIG.chart.grid.labels.axis.yLabel && ! mutableConfig.useIndividualScale" 
+                        v-if="FINAL_CONFIG.chart.grid.labels.axis.yLabel && !mutableConfig.useIndividualScale" 
                         :font-size="fontSizes.yAxis" 
                         :fill="FINAL_CONFIG.chart.grid.labels.color"
                         :transform="`translate(${fontSizes.yAxis + FINAL_CONFIG.chart.grid.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
