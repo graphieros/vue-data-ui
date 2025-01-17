@@ -1,9 +1,9 @@
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onUpdated } from 'vue';
 import BaseIcon from './BaseIcon.vue';
 import { useResponsive } from '../useResponsive';
 import { throttle } from '../canvas-lib';
-import { XMLNS, createSmoothPath, createStraightPath, createUid } from '../lib';
+import { XMLNS, adaptColorToBackground, createSmoothPath, createStraightPath, createUid } from '../lib';
 
 const props = defineProps({
     background: {
@@ -128,12 +128,27 @@ const highlightStyle = computed(() => {
     const range = props.max - props.min;
     const startPercent = ((startValue.value - props.min) / range) * 100;
     const endPercent = ((endValue.value - props.min) / range) * 100;
+
     return {
         left: `${startPercent}%`,
         width: `${endPercent - startPercent}%`,
-        background: props.selectColor
+        background: props.selectColor,
+        tooltipLeft: `calc(${startPercent}% - ${overflowsLeft.value ? 0 : tooltipLeftWidth.value / 2}px)`,
+        tooltipRight: `calc(${endPercent}% - ${overflowsRight.value ? tooltipRightWidth.value : tooltipRightWidth.value / 2}px)`,
+        arrowLeft: !overflowsLeft.value,
+        arrowRight: !overflowsRight.value
     };
 });
+
+const overflowsLeft = computed(() => {
+    if (!zoomWrapper.value) return false;
+    return zoomWrapper.value.getBoundingClientRect().width * ((startValue.value - props.min) / (props.max - props.min)) - tooltipLeftWidth.value / 2 < 0
+});
+
+const overflowsRight = computed(() => {
+    if (!zoomWrapper.value) return false;
+    return zoomWrapper.value.getBoundingClientRect().width * ((endValue.value - props.min) / (props.max - props.min)) + tooltipRightWidth.value / 2 > zoomWrapper.value.getBoundingClientRect().width;
+})
 
 const slicerColor = computed(() => props.inputColor);
 const backgroundColor = computed(() => props.background);
@@ -336,6 +351,7 @@ const flooredDatapointsToWidth = computed(() => {
 })
 
 const startDragging = (event) => {
+    showTooltip.value = true;
     if (!props.enableSelectionDrag) {
         return;
     }
@@ -408,6 +424,39 @@ function endDragging(moveEvent, endEvent) {
     window.removeEventListener(endEvent, stopDragging);
 };
 
+const isMouseDown = ref(false)
+const tooltipLeft = ref(null);
+const tooltipRight = ref(null);
+const tooltipLeftWidth = ref(1);
+const tooltipRightWidth = ref(1);
+const showTooltip = ref(false);
+
+function setTooltipLeft() {
+    if(tooltipLeft.value) {
+        tooltipLeftWidth.value = tooltipLeft.value.getBoundingClientRect().width;
+    }
+}
+
+function setTooltipRight() {
+    if (tooltipRight.value) {
+        tooltipRightWidth.value = tooltipRight.value.getBoundingClientRect().width;
+    }
+}
+
+onUpdated(() => {
+    setTooltipLeft();
+    setTooltipRight();
+})
+
+watch(() => props.labelLeft, () => {
+    nextTick(setTooltipLeft);
+}, { deep: true });
+
+watch(() => props.labelRight, () => {
+    nextTick(setTooltipRight);
+}, { deep: true });
+
+
 defineExpose({
     setStartValue,
     setEndValue
@@ -423,6 +472,7 @@ defineExpose({
         ref="zoomWrapper"
         @mousedown="startDragging"
         @touchstart="startDragging"
+        @touchend="showTooltip = false"
     >
         <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1; pointer-events: none;">
             <div v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint" style="width: 100%; position: relative">
@@ -442,7 +492,7 @@ defineExpose({
             </div>
         </div>
 
-        <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0">
+        <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%" data-cy="minimap">
                     <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
@@ -563,8 +613,10 @@ defineExpose({
                             fill="transparent"
                             style="pointer-events: all !important;"
                             :style="{
-                                cursor: trap >= valueStart && trap < valueEnd && enableSelectionDrag ? 'move' : 'default',
+                                cursor: trap >= valueStart && trap < valueEnd && enableSelectionDrag ? isMouseDown ? 'grabbing' : 'grab' : 'default',
                             }"
+                            @mousedown="isMouseDown = true"
+                            @mouseup="isMouseDown = false"
                             @mouseenter="trapMouse(trap)"
                             @mouseleave="selectedTrap = null; emit('trapMouse', null)"
                         />
@@ -572,10 +624,19 @@ defineExpose({
                 </div>
             </template>
             <div class="slider-track"></div>
-            <div :class="{
-                'range-highlight': true,
-                'move': enableSelectionDrag
-            }" :style="highlightStyle"></div>
+            <div 
+                :class="{
+                    'range-highlight': true,
+                    'move': enableSelectionDrag
+                }" 
+                @mousedown="isMouseDown = true"
+                @mouseup="isMouseDown = false"
+                :style="{
+                    ...highlightStyle,
+                    cursor: isMouseDown ? 'grabbing' : 'grab'
+                }"
+            />
+            
             <input 
                 v-if="enableRangeHandles"
                 ref="rangeStart" 
@@ -587,9 +648,9 @@ defineExpose({
                 v-model="startValue" 
                 @input="onStartInput"
             />
-            <div class="thumb-label thumb-label-left" :style="leftLabelPosition">
+            <!-- <div class="thumb-label thumb-label-left" :style="leftLabelPosition">
                 {{ labelLeft }}
-            </div>
+            </div> -->
             <input 
                 v-if="enableRangeHandles"
                 ref="rangeEnd" 
@@ -600,7 +661,43 @@ defineExpose({
                 v-model="endValue" 
                 @input="onEndInput" 
             />
-            <div class="thumb-label thumb-label-right" :style="rightLabelPosition">
+            <!-- <div class="thumb-label thumb-label-right" :style="rightLabelPosition">
+                {{ labelRight }}
+            </div> -->
+            <div
+                v-if="labelLeft"
+                ref="tooltipLeft"
+                :class="{
+                    'range-tooltip': true,
+                    'range-tooltip-visible': showTooltip,
+                    'range-tooltip-arrow': highlightStyle.arrowLeft && !verticalHandles,
+                    'range-tooltip-arrow-left': !highlightStyle.arrowLeft && !verticalHandles
+                }"
+                :style="{
+                    left: highlightStyle.tooltipLeft,
+                    color: adaptColorToBackground(selectColor),
+                    backgroundColor: selectColor,
+                    border: `1px solid ${borderColor}`
+                }"
+            >
+                {{ labelLeft }}
+            </div>
+            <div
+                v-if="labelRight"
+                ref="tooltipRight"
+                :class="{
+                    'range-tooltip': true,
+                    'range-tooltip-visible': showTooltip,
+                    'range-tooltip-arrow': highlightStyle.arrowRight && !verticalHandles,
+                    'range-tooltip-arrow-right': !highlightStyle.arrowRight && !verticalHandles
+                }"
+                :style="{
+                    left: highlightStyle.tooltipRight,
+                    color: adaptColorToBackground(selectColor),
+                    backgroundColor: selectColor,
+                    border: `1px solid ${borderColor}`
+                }"
+            >
                 {{ labelRight }}
             </div>
         </div>
@@ -786,5 +883,56 @@ input[type="range"]::-ms-thumb {
     transform: translateX(-50%);
     width: 1px;
     white-space: nowrap;
+}
+
+.range-tooltip {
+    z-index: 4;
+    padding: 2px 4px;
+    font-size: 10px;
+    border-radius: 3px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    text-align:center;
+    pointer-events: none;
+    position: absolute;
+    top: -100%;
+    width: fit-content;
+}
+
+.range-tooltip-arrow,
+.range-tooltip-arrow-left,
+.range-tooltip-arrow-right {
+    &::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        border-width: 4px;
+        border-style: solid;
+        border-color: v-bind(selectColor) transparent transparent transparent;
+    }
+}
+
+.range-tooltip-arrow {
+    &::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+.range-tooltip-arrow-left {
+    &::after {
+        left: 3px;
+    }
+}
+
+.range-tooltip-arrow-right {
+    &::after {
+        right: 3px;
+    }
+}
+
+.range-tooltip-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
 }
 </style>
