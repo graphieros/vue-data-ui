@@ -897,6 +897,7 @@ input[type="range"]::-ms-thumb {
     position: absolute;
     top: -100%;
     width: fit-content;
+    white-space:nowrap;
 }
 
 .range-tooltip-arrow,
