@@ -233,8 +233,8 @@ const model = ref([
     { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color'},
     { key: 'chart.zoom.minimap.verticalHandles', def: false, type: 'checkbox'},
 
-    { key: 'chart.zoom.startIndex', def: 2, type: 'number', min: 0, max: 100},
-    { key: 'chart.zoom.endIndex', def: 6, type: 'number', min: 0, max: 100},
+    { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100},
+    { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100},
 
     { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
     { key: 'chart.padding.right', def: 36, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
@@ -419,6 +419,14 @@ const size = ref({
             width: 1000
 })
 
+const timeValues = computed(() => {
+    const arr = [];
+    for (let i = 0; i < 30; i += 1) {
+        arr.push(`${i >= 10 ? i : '0' + String(i)}-01-2026`)
+    }
+    return arr
+})
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     if (testCustomTooltip.value) {
@@ -521,23 +529,7 @@ const config = computed(() => {
                         },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
-                            values: [
-                                "JANUARY IS KIND OF LONG",
-                                "FEBRUARY IS KIND OF LONG TOO",
-                                "MARCH",
-                                "APRIL",
-                                "MAY",
-                                "JUNE",
-                                "JULY",
-                                "AUGUST",
-                                "SEPTEMBER",
-                                "OCTOBER",
-                                "NOVEMBER IS KIND OF LONG TOO",
-                                "DECEMBER",
-                                "JANUARY+",
-                                "FEBRUARY+",
-                                "MARCH+"
-                            ]
+                            values: timeValues.value
                         }
                     }
                 }
