@@ -231,7 +231,7 @@ const model = ref([
     { key: 'chart.zoom.minimap.lineColor', def: '#1A1A1A', type: 'color'},
     { key: 'chart.zoom.minimap.selectionRadius', def: 2, type: 'number', min: 0, max: 24},
     { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color'},
-    { key: 'chart.zoom.minimap.verticalHandles', def: true, type: 'checkbox'},
+    { key: 'chart.zoom.minimap.verticalHandles', def: false, type: 'checkbox'},
 
     { key: 'chart.zoom.startIndex', def: 2, type: 'number', min: 0, max: 100},
     { key: 'chart.zoom.endIndex', def: 6, type: 'number', min: 0, max: 100},
