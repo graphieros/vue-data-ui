@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount, onBeforeMount } from 'vue';
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue';
 import UserOptions from '../atoms/UserOptions.vue';
@@ -53,9 +53,9 @@ const isDataset = computed({
     set(bool) {
         return bool
     }
-})
+});
 
-const drawableDataset = ref(typeof props.dataset === 'string' ? createWordCloudDatasetFromPlainText(props.dataset) : props.dataset.map(dp => {
+const drawableDataset = ref(typeof props.dataset === 'string' ? createWordCloudDatasetFromPlainText(props.dataset) : props.dataset.map((dp, i) => {
     return {
         ...dp,
         value: checkNaN(dp.value)
@@ -253,10 +253,10 @@ const positionedWords = ref([]);
 watch(() => props.dataset, generateWordCloud, { immediate: true });
 
 const wordMin = computed(() => {
-    return Math.min(...drawableDataset.value.map(w => w.value))
+    return Math.round(Math.min(...drawableDataset.value.map(w => w.value)));
 })
 const wordMax = computed(() => {
-    return Math.max(...drawableDataset.value.map(w => w.value))
+    return Math.round(Math.max(...drawableDataset.value.map(w => w.value)));
 })
 
 function generateWordCloud() {
@@ -265,7 +265,8 @@ function generateWordCloud() {
     const minValue = Math.min(...values);
 
     const scaledWords = [...drawableDataset.value].filter(w => w.value >= slicer.value).map((word, i) => {
-        const fontSize = ((word.value - minValue) / (maxValue - minValue)) * (svg.value.maxFontSize - svg.value.minFontSize) + svg.value.minFontSize;
+        let fontSize = ((word.value - minValue) / (maxValue - minValue)) * (svg.value.maxFontSize - svg.value.minFontSize) + svg.value.minFontSize;
+        fontSize = isNaN(fontSize) ? svg.value.minFontSize : fontSize;
         const size = measureTextSize(word.name, fontSize);
         return {
             ...word,
@@ -570,7 +571,7 @@ function useTooltip(word) {
 
         <div ref="chartSlicer" :style="`width:100%;background:transparent`" data-html2canvas-ignore>
             <MonoSlicer
-                v-if="FINAL_CONFIG.style.chart.zoom.show"
+                v-if="FINAL_CONFIG.style.chart.zoom.show && wordMin < wordMax"
                 v-model:value="slicer"
                 :min="wordMin"
                 :max="wordMax"
