@@ -1,7 +1,5 @@
 <p align="center">
-    <a href="https://vue-data-ui.graphieros.com/"><img width="700" src="https://github.com/user-attachments/assets/19d4334d-679c-4c19-bc4f-6050810afa05"></a>
-    <br>
-    <br>
+    <a href="https://vue-data-ui.graphieros.com/"><img width="500" src="https://github.com/user-attachments/assets/19d4334d-679c-4c19-bc4f-6050810afa05"></a>
     <br>
     <a href="https://vue-data-ui.graphieros.com/"><img src="https://github.com/user-attachments/assets/f5c8868d-24bd-495d-b793-0ef5be76fe7e"></a>
 </p>
