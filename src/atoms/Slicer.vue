@@ -716,9 +716,10 @@ defineExpose({
 .minimap {
     pointer-events: none;
     position: absolute;
-    top: -33px;
+    top: calc(-50% - 12px);
     svg{
         position: absolute;
+        overflow: visible;
         top: 0;
         left: 0;
     }
