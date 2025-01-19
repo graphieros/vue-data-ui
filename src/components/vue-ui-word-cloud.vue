@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount, onBeforeMount } from 'vue';
+import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue';
 import UserOptions from '../atoms/UserOptions.vue';
