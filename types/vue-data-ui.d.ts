@@ -78,8 +78,8 @@ declare module 'vue-data-ui' {
             tooltip?: boolean;
         };
         buttonTitles?: {
-            animation?: boolean;
-            annotator?: boolean;
+            animation?: string;
+            annotator?: string;
             close?: string;
             csv?: string;
             fullscreen?: string;
