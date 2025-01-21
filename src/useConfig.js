@@ -543,6 +543,7 @@ export function useConfig() {
             useGradient: true,
             strokeWidth: 3,
             dot: {
+                hideAboveMaxSerieLength: 62,
                 useSerieColor: true,
                 fill: '#FFFFFF',
                 strokeWidth: 0.5
