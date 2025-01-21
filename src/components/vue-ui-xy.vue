@@ -583,28 +583,21 @@
                         :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" 
                         fill="none" 
                     />
-                    <g v-else-if="serie.plots.length > 1">
-                        <g v-for="(plot, j) in serie.plots" :key="`line_${i}_${j}`">
-                            <line
-                                :data-cy="`xy-line-segment-${i}-${j}`"
-                                v-if="plot && j < serie.plots.length - 1 && serie.plots[j+1] && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
-                                :x1="plot.x"
-                                :x2="serie.plots[j+1].x"
-                                :y1="forceValidValue(plot.y)"
-                                :y2="forceValidValue(serie.plots[j+1].y)"
-                                :stroke="FINAL_CONFIG.chart.backgroundColor"
-                                :stroke-width="FINAL_CONFIG.line.strokeWidth + 1"
-                                :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
-                                stroke-linejoin="round"
-                                stroke-linecap="round"
-                            />
-                        </g>
-                    </g>
+
+                    <path
+                        v-else-if="serie.plots.length > 1"
+                        :d="`M${serie.straight}`"
+                        :stroke="FINAL_CONFIG.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.line.strokeWidth + 1"
+                        :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
                 </g>
 
                 <defs v-if="$slots.pattern">
                     <slot v-for="(serie, i) in safeDataset" :key="`serie_pattern_slot_${i}`" name="pattern" v-bind="{...serie, seriesIndex: serie.slotAbsoluteIndex, patternId: `pattern_${uniqueId}_${i}`}"/>
-
                 </defs>
 
                 <!-- LINES -->
@@ -633,31 +626,26 @@
                         :stroke="serie.color" 
                         :stroke-width="FINAL_CONFIG.line.strokeWidth" 
                         :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" 
-                        fill="none" 
+                        fill="none"
+                        stroke-linecap="round"
                     />
-                    <g v-else-if="serie.plots.length > 1">
-                        <g v-for="(plot, j) in serie.plots" :key="`line_${i}_${j}`">
-                            <line
-                                :data-cy="`xy-line-segment-${i}-${j}`"
-                                v-if="plot && j < serie.plots.length - 1 && serie.plots[j+1] && canShowValue(plot.value) && canShowValue(serie.plots[j+1].value)"
-                                :x1="plot.x"
-                                :x2="serie.plots[j+1].x"
-                                :y1="forceValidValue(plot.y)"
-                                :y2="forceValidValue(serie.plots[j+1].y)"
-                                :stroke="serie.color"
-                                :stroke-width="FINAL_CONFIG.line.strokeWidth"
-                                :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
-                                stroke-linejoin="round"
-                                stroke-linecap="round"
-                            />
-                        </g>
-                    </g>
+
+                    <path
+                        v-else-if="serie.plots.length > 1"
+                        :d="`M${serie.straight}`"
+                        :stroke="serie.color"
+                        :stroke-width="FINAL_CONFIG.line.strokeWidth"
+                        :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
                     <g v-for="(plot, j) in serie.plots" 
                         :key="`circle_line_${i}_${j}`">
-
                         <Shape
                             :data-cy="`xy-plot-${i}-${j}`"
-                            v-if="plot && canShowValue(plot.value)"
+                            v-if="(!optimize.linePlot && plot && canShowValue(plot.value)) || (optimize.linePlot && plot && canShowValue(plot.value) && ((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)))"
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                             :color="FINAL_CONFIG.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : FINAL_CONFIG.line.dot.useSerieColor ? serie.color : FINAL_CONFIG.line.dot.fill"
                             :plot="{ x: checkNaN(plot.x), y: checkNaN(plot.y) }"
@@ -1272,6 +1260,7 @@ import {
     createCsvContent,
     createPolygonPath,
     createSmoothPath,
+    createStraightPath,
     createStar,
     createTSpans,
     createUid,
@@ -1458,6 +1447,11 @@ export default {
         }
     },
     computed: {
+        optimize() {
+            return {
+                linePlot: this.maxSeries > this.FINAL_CONFIG.line.dot.hideAboveMaxSerieLength
+            };
+        },
         hasOptionsNoTitle() {
             return this.FINAL_CONFIG.chart.userOptions.show && (!this.FINAL_CONFIG.chart.title.show || !this.FINAL_CONFIG.chart.title.text);
         },
@@ -1894,6 +1888,8 @@ export default {
                 })
                 const curve = this.createSmoothPath(plots);
                 const autoScaleCurve = this.createSmoothPath(autoScalePlots);
+                const straight = this.createStraightPath(plots);
+                const autoScaleStraight = this.createStraightPath(autoScalePlots);
 
                 const scaleYLabels = individualScale.ticks.map(t => {
                     return {
@@ -1927,7 +1923,8 @@ export default {
                     zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
                     curve: datapoint.autoScaling ? autoScaleCurve : curve,
                     plots: datapoint.autoScaling ? autoScalePlots : plots,
-                    area: !datapoint.useArea ? '' : this.mutableConfig.useIndividualScale ? this.createIndividualArea(datapoint.autoScaling ? autoScalePlots: plots, datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition) :  this.createArea(plots)
+                    area: !datapoint.useArea ? '' : this.mutableConfig.useIndividualScale ? this.createIndividualArea(datapoint.autoScaling ? autoScalePlots: plots, datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition) :  this.createArea(plots),
+                    straight: datapoint.autoScaling ? autoScaleStraight : straight
                 }
             })
         },
@@ -2359,6 +2356,7 @@ export default {
         convertCustomPalette,
         createCsvContent,
         createSmoothPath,
+        createStraightPath,
         createTSpans,
         dataLabel,
         downloadCsv,
