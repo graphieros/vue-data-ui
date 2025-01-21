@@ -267,29 +267,7 @@ const selectionRectCoordinates = computed(() => {
         x: unitWidthX.value * startValue.value + (unitWidthX.value / 2),
         width: svgMinimap.value.width * ((endValue.value - startValue.value) / props.max) - unitWidthX.value
     }
-})
-
-const leftLabelPosition = computed(() => {
-    return {
-        left: 0,
-        color: props.textColor,
-        fontSize: `${props.fontSize}px`,
-        top: hasMinimap.value ? '28px' : '-28px',
-        pointerEvents: 'none',
-    };
 });
-
-const rightLabelPosition = computed(() => {
-    return {
-        right: 0,
-        color: props.textColor,
-        fontSize: `${props.fontSize}px`,
-        top: hasMinimap.value ? '28px' : '-28px',
-        direction: 'rtl',
-        pointerEvents: 'none'
-    };
-});
-
 
 const selectedTrap = ref(props.minimapSelectedIndex)
 
@@ -648,9 +626,7 @@ defineExpose({
                 v-model="startValue" 
                 @input="onStartInput"
             />
-            <!-- <div class="thumb-label thumb-label-left" :style="leftLabelPosition">
-                {{ labelLeft }}
-            </div> -->
+
             <input 
                 v-if="enableRangeHandles"
                 ref="rangeEnd" 
@@ -661,9 +637,7 @@ defineExpose({
                 v-model="endValue" 
                 @input="onEndInput" 
             />
-            <!-- <div class="thumb-label thumb-label-right" :style="rightLabelPosition">
-                {{ labelRight }}
-            </div> -->
+
             <div
                 v-if="labelLeft"
                 ref="tooltipLeft"
@@ -682,6 +656,7 @@ defineExpose({
             >
                 {{ labelLeft }}
             </div>
+            
             <div
                 v-if="labelRight"
                 ref="tooltipRight"
