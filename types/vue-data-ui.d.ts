@@ -2328,6 +2328,7 @@ declare module 'vue-data-ui' {
             useGradient?: boolean;
             strokeWidth?: number;
             dot?: {
+                hideAboveMaxSerieLength?: number;
                 useSerieColor?: boolean;
                 fill?: string;
                 strokeWidth?: number;
