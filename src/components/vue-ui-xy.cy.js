@@ -63,9 +63,7 @@ describe('<VueUiXy />', () => {
       }
 
       cy.log('--- LINE ---');
-      for(let i = 0; i < fixture.dataset_single_line[0].series.length - 1; i += 1) {
-        data(`xy-line-segment-0-${i}`).should('exist');
-      }
+      data(`xy-line-path-0`).should('exist')
 
       cy.log('--- SMOOTH LINE ---');
       const modifiedDataset = [

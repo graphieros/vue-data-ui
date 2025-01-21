@@ -632,6 +632,7 @@
 
                     <path
                         v-else-if="serie.plots.length > 1"
+                        :data-cy="`xy-line-path-${i}`"
                         :d="`M${serie.straight}`"
                         :stroke="serie.color"
                         :stroke-width="FINAL_CONFIG.line.strokeWidth"
