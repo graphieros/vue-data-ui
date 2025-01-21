@@ -42,31 +42,34 @@ function prepareChart() {
                 title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
                 legend: chartLegend.value
             });
-            svg.value.width = width;
-            svg.value.height = height;
 
-            svg.value.tracker.core = translateSize({
-                relator: Math.min(width, height),
-                adjuster: FINAL_CONFIG.value.style.width,
-                source: 6 * FINAL_CONFIG.value.stopwatch.tracker.radiusRatio,
-                threshold: 1,
-                fallback: 1
-            });
-
-            svg.value.tracker.aura = translateSize({
-                relator: Math.min(width, height),
-                adjuster: FINAL_CONFIG.value.style.width,
-                source: 12 * FINAL_CONFIG.value.stopwatch.tracker.aura.radiusRatio,
-                threshold: 1,
-                fallback: 1
-            });
-
-            svg.value.label = translateSize({
-                relator: Math.min(width, height),
-                adjuster: FINAL_CONFIG.value.style.width,
-                source: FINAL_CONFIG.value.stopwatch.label.fontSize,
-                threshold: 10,
-                fallback: 10
+            requestAnimationFrame(() => {
+                svg.value.width = width;
+                svg.value.height = height;
+    
+                svg.value.tracker.core = translateSize({
+                    relator: Math.min(width, height),
+                    adjuster: FINAL_CONFIG.value.style.width,
+                    source: 6 * FINAL_CONFIG.value.stopwatch.tracker.radiusRatio,
+                    threshold: 1,
+                    fallback: 1
+                });
+    
+                svg.value.tracker.aura = translateSize({
+                    relator: Math.min(width, height),
+                    adjuster: FINAL_CONFIG.value.style.width,
+                    source: 12 * FINAL_CONFIG.value.stopwatch.tracker.aura.radiusRatio,
+                    threshold: 1,
+                    fallback: 1
+                });
+    
+                svg.value.label = translateSize({
+                    relator: Math.min(width, height),
+                    adjuster: FINAL_CONFIG.value.style.width,
+                    source: FINAL_CONFIG.value.stopwatch.label.fontSize,
+                    threshold: 10,
+                    fallback: 10
+                });
             });
         });
 

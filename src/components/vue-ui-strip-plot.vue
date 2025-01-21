@@ -169,18 +169,21 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value
             });
-            absoluteHeight.value = height;
 
-            svg.value.width = width;
-            svg.value.height = height;
-            
-            stripWidth.value = (width - padding.value.left - padding.value.right) / props.dataset.length;
-            plotRadius.value = translateSize({
-                relator: Math.min(height, width),
-                adjuster: 600,
-                source: FINAL_CONFIG.value.style.chart.plots.radius,
-                threshold: 6,
-                fallback: 6
+            requestAnimationFrame(() => {
+                absoluteHeight.value = height;
+    
+                svg.value.width = width;
+                svg.value.height = height;
+                
+                stripWidth.value = (width - padding.value.left - padding.value.right) / props.dataset.length;
+                plotRadius.value = translateSize({
+                    relator: Math.min(height, width),
+                    adjuster: 600,
+                    source: FINAL_CONFIG.value.style.chart.plots.radius,
+                    threshold: 6,
+                    fallback: 6
+                });
             });
         });
 

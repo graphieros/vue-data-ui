@@ -212,10 +212,13 @@ function prepareChart() {
                 title: FINAL_CONFIG.value.style.title.show && props.showInfo ? chartTitle.value : null,
                 source: source.value
             });
-            svg.value.width = width;
-            svg.value.height = height;
-            svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth / 500 * width;
-            svg.value.padding = props.forcedPadding / 500 * width;
+
+            requestAnimationFrame(() => {
+                svg.value.width = width;
+                svg.value.height = height;
+                svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth / 500 * width;
+                svg.value.padding = props.forcedPadding / 500 * width;
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

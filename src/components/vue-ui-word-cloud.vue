@@ -126,9 +126,12 @@ const handleResize = throttle(() => {
         slicer: FINAL_CONFIG.value.style.chart.zoom.show && chartSlicer.value,
         source: source.value
     });
-    svg.value.width = width;
-    svg.value.height = height;
-    nextTick(generateWordCloud)
+
+    requestAnimationFrame(() => {
+        svg.value.width = width;
+        svg.value.height = height;
+        nextTick(generateWordCloud);
+    });
 });
 
 watch(() => slicer.value, () => {

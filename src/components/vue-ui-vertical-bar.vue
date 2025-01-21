@@ -169,8 +169,10 @@ function prepareChart() {
                 noTitle: noTitle.value
             });
 
-            baseWidth.value = width;
-            barHeight.value = height / barCount.value - (barGap.value * 2)
+            requestAnimationFrame(() => {
+                baseWidth.value = width;
+                barHeight.value = height / barCount.value - (barGap.value * 2)
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

@@ -2576,10 +2576,12 @@ export default {
                         if (this.$refs.source) {
                             sourceHeight = this.$refs.source.getBoundingClientRect().height;
                         }
-                        this.height = entry.contentBoxSize[0].blockSize - titleHeight - legendHeight - slicerHeight - sourceHeight - 24;
-                        this.width = entry.contentBoxSize[0].inlineSize;
-                        this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
-                        this.convertSizes();
+                        requestAnimationFrame(() => {
+                            this.height = entry.contentBoxSize[0].blockSize - titleHeight - legendHeight - slicerHeight - sourceHeight - 24;
+                            this.width = entry.contentBoxSize[0].inlineSize;
+                            this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
+                            this.convertSizes();
+                        })
                     }
                 })
 

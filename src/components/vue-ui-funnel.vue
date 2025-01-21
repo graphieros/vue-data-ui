@@ -84,32 +84,35 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value
             });
-            svg.value.height = height;
-            svg.value.width = width;
-            drawingArea.value = setDrawingArea();
 
-            fontSizes.value.circles = translateSize({
-                relator: Math.min(width, height),
-                adjuster: 600,
-                source: FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize,
-                threshold: 10,
-                fallback: 10
-            });
-
-            fontSizes.value.names = translateSize({
-                relator: Math.min(width, height),
-                adjuster: 600,
-                source: FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize,
-                threshold: 10,
-                fallback: 10
-            });
-
-            fontSizes.value.values = translateSize({
-                relator: Math.min(width, height),
-                adjuster: 600,
-                source: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize,
-                threshold: 10,
-                fallback: 10
+            requestAnimationFrame(() => {
+                svg.value.height = height;
+                svg.value.width = width;
+                drawingArea.value = setDrawingArea();
+    
+                fontSizes.value.circles = translateSize({
+                    relator: Math.min(width, height),
+                    adjuster: 600,
+                    source: FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize,
+                    threshold: 10,
+                    fallback: 10
+                });
+    
+                fontSizes.value.names = translateSize({
+                    relator: Math.min(width, height),
+                    adjuster: 600,
+                    source: FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize,
+                    threshold: 10,
+                    fallback: 10
+                });
+    
+                fontSizes.value.values = translateSize({
+                    relator: Math.min(width, height),
+                    adjuster: 600,
+                    source: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize,
+                    threshold: 10,
+                    fallback: 10
+                });
             });
         });
 

@@ -151,9 +151,12 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value
             });
-            baseWidth.value = width;
-            baseRowHeight.value = height / props.dataset.length;
-            mutableDataset.value = getMutableDataset();
+
+            requestAnimationFrame(() => {
+                baseWidth.value = width;
+                baseRowHeight.value = height / props.dataset.length;
+                mutableDataset.value = getMutableDataset();
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

@@ -161,13 +161,16 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value
             });
-            svg.value.width = width;
-            svg.value.height = height;
-            svg.value.padding.top = Math.max(width, height) * paddingRatio;
-            svg.value.padding.right = Math.max(width, height) * paddingRatio;
-            svg.value.padding.bottom = Math.max(width, height) * paddingRatio;
-            svg.value.padding.left = Math.max(width, height) * paddingRatio;
-            svg.value.minRadius = Math.min(width, height) * paddingRatio;
+
+            requestAnimationFrame(() => {
+                svg.value.width = width;
+                svg.value.height = height;
+                svg.value.padding.top = Math.max(width, height) * paddingRatio;
+                svg.value.padding.right = Math.max(width, height) * paddingRatio;
+                svg.value.padding.bottom = Math.max(width, height) * paddingRatio;
+                svg.value.padding.left = Math.max(width, height) * paddingRatio;
+                svg.value.minRadius = Math.min(width, height) * paddingRatio;
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

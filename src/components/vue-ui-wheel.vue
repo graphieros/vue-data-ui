@@ -154,9 +154,12 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value
             });
-            svg.value.width = width;
-            svg.value.height = height;
-            baseLabelFontSize.value = (FINAL_CONFIG.value.style.chart.layout.percentage.fontSize / 360) * Math.min(width, height);
+
+            requestAnimationFrame(() => {
+                svg.value.width = width;
+                svg.value.height = height;
+                baseLabelFontSize.value = (FINAL_CONFIG.value.style.chart.layout.percentage.fontSize / 360) * Math.min(width, height);
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

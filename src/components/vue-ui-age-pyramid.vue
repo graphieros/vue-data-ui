@@ -123,8 +123,11 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value
             });
-            svg.value.width = width;
-            svg.value.height = height;
+
+            requestAnimationFrame(() => {
+                svg.value.width = width;
+                svg.value.height = height;
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

@@ -167,17 +167,19 @@ function prepareChart() {
             
             basePadding.value = 48;
 
-            svg.value.height = height;
-            svg.value.usableHeight = height - (basePadding.value * 2);
-            svg.value.width = width;
-            svg.value.usableWidth = width - (basePadding.value * 2);
-            svg.value.top = basePadding.value;
-            svg.value.left = basePadding.value;
-            svg.value.right = width - basePadding.value;
-            svg.value.bottom = height - basePadding.value;
-            svg.value.centerX = width / 2;
-            svg.value.centerY = height - (height / 2)
-            svg.value.padding = basePadding.value;
+            requestAnimationFrame(() => {
+                svg.value.height = height;
+                svg.value.usableHeight = height - (basePadding.value * 2);
+                svg.value.width = width;
+                svg.value.usableWidth = width - (basePadding.value * 2);
+                svg.value.top = basePadding.value;
+                svg.value.left = basePadding.value;
+                svg.value.right = width - basePadding.value;
+                svg.value.bottom = height - basePadding.value;
+                svg.value.centerX = width / 2;
+                svg.value.centerY = height - (height / 2)
+                svg.value.padding = basePadding.value;
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

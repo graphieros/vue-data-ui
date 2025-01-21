@@ -201,8 +201,11 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value
             });
-            chartDimensions.value.width = width;
-            chartDimensions.value.height = height;
+
+            requestAnimationFrame(() => {
+                chartDimensions.value.width = width;
+                chartDimensions.value.height = height;
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

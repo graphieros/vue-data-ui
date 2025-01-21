@@ -270,36 +270,39 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value
             });
-            svg.value.width = width;
-            svg.value.height = height;
-            svg.value.centerX = width / 2;
-            svg.value.centerY = ((baseSize.value / 2) / 358.4) * height;
-            svg.value.bottom = height;
-            svg.value.labelFontSize = (18 / baseSize.value) * Math.min(height, width) < 10 ? 10 : (18 / baseSize.value) * Math.min(height, width);
-            svg.value.legendFontSize = (FINAL_CONFIG.value.style.chart.legend.fontSize / baseSize.value) * Math.min(height, width) < 14 ? 14 : (FINAL_CONFIG.value.style.chart.legend.fontSize / baseSize.value) * Math.min(height, width);
-            svg.value.pointerRadius = (FINAL_CONFIG.value.style.chart.layout.pointer.circle.radius / baseSize.value) * (Math.min(height, width));
-            svg.value.trackSize = (FINAL_CONFIG.value.style.chart.layout.track.size / baseSize.value) * (Math.min(height, width));
-            svg.value.pointerStrokeWidth = translateSize({
-                relator: Math.min(width, height),
-                adjuster: baseSize.value,
-                source: FINAL_CONFIG.value.style.chart.layout.pointer.strokeWidth,
-                threshold: 2,
-                fallback: 2
+
+            requestAnimationFrame(() => {
+                svg.value.width = width;
+                svg.value.height = height;
+                svg.value.centerX = width / 2;
+                svg.value.centerY = ((baseSize.value / 2) / 358.4) * height;
+                svg.value.bottom = height;
+                svg.value.labelFontSize = (18 / baseSize.value) * Math.min(height, width) < 10 ? 10 : (18 / baseSize.value) * Math.min(height, width);
+                svg.value.legendFontSize = (FINAL_CONFIG.value.style.chart.legend.fontSize / baseSize.value) * Math.min(height, width) < 14 ? 14 : (FINAL_CONFIG.value.style.chart.legend.fontSize / baseSize.value) * Math.min(height, width);
+                svg.value.pointerRadius = (FINAL_CONFIG.value.style.chart.layout.pointer.circle.radius / baseSize.value) * (Math.min(height, width));
+                svg.value.trackSize = (FINAL_CONFIG.value.style.chart.layout.track.size / baseSize.value) * (Math.min(height, width));
+                svg.value.pointerStrokeWidth = translateSize({
+                    relator: Math.min(width, height),
+                    adjuster: baseSize.value,
+                    source: FINAL_CONFIG.value.style.chart.layout.pointer.strokeWidth,
+                    threshold: 2,
+                    fallback: 2
+                });
+                svg.value.markerOffset = translateSize({
+                    relator: Math.max(width, height),
+                    adjuster: baseSize.value,
+                    source: FINAL_CONFIG.value.style.chart.layout.markers.offsetY + 3,
+                    threshold: 2,
+                    fallback: 2
+                });
+                svg.value.segmentFontSize = translateSize({
+                    relator: Math.min(width, height),
+                    adjuster: baseSize.value,
+                    source: FINAL_CONFIG.value.style.chart.layout.segmentNames.fontSize,
+                    threshold: 8,
+                    fallback: 8
+                });
             });
-            svg.value.markerOffset = translateSize({
-                relator: Math.max(width, height),
-                adjuster: baseSize.value,
-                source: FINAL_CONFIG.value.style.chart.layout.markers.offsetY + 3,
-                threshold: 2,
-                fallback: 2
-            })
-            svg.value.segmentFontSize = translateSize({
-                relator: Math.min(width, height),
-                adjuster: baseSize.value,
-                source: FINAL_CONFIG.value.style.chart.layout.segmentNames.fontSize,
-                threshold: 8,
-                fallback: 8
-            })
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

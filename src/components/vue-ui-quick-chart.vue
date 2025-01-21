@@ -216,8 +216,11 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value
             });
-            defaultSizes.value.width = width;
-            defaultSizes.value.height = height;
+
+            requestAnimationFrame(() => {
+                defaultSizes.value.width = width;
+                defaultSizes.value.height = height;                
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

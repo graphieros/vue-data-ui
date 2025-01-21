@@ -239,12 +239,15 @@ function prepareChart() {
                 slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxSeries.value > 1 ? chartSlicer.value : null,
                 source: source.value
             });
-            defaultSizes.value.width = width;
-            defaultSizes.value.height = height;
-            clearTimeout(to.value);
-            to.value = setTimeout(() => {
-                isLoaded.value = true;
-            },10)
+
+            requestAnimationFrame(() => {
+                defaultSizes.value.width = width;
+                defaultSizes.value.height = height;
+                clearTimeout(to.value);
+                to.value = setTimeout(() => {
+                    isLoaded.value = true;
+                },10)
+            });
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);

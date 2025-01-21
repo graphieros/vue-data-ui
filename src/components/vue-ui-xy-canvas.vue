@@ -1262,7 +1262,10 @@ function prepareChart() {
                 slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxSeries.value > 1 ? chartSlicer.value : null,
                 source: source.value
             });
-            aspectRatio.value = `${width} / ${height}`;
+
+            requestAnimationFrame(() => {
+                aspectRatio.value = `${width} / ${height}`;
+            });
         });
 
         responsiveObserver.value = new ResizeObserver(handleResize);
