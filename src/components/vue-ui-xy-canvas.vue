@@ -20,6 +20,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    hasDeepProperty,
     isFunction,
     lightenHexColor,
     largestTriangleThreeBucketsArray,
@@ -28,7 +29,6 @@ import {
     sanitizeArray,
     setOpacity,
     themePalettes,
-hasDeepProperty,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import {
@@ -182,6 +182,12 @@ watch(() => props.config, (_newCfg) => {
     titleStep.value += 1;
     tableStep.value += 1;
     legendStep.value += 1;
+    
+    // Reset mutable config
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+    mutableConfig.value.showDataLabels = FINAL_CONFIG.value.style.chart.dataLabels.show;
+    mutableConfig.value.stacked = FINAL_CONFIG.value.style.chart.stacked;
+    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
 watch(() => props.dataset, () => {

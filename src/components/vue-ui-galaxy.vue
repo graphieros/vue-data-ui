@@ -129,6 +129,11 @@ watch(() => props.config, (_newCfg) => {
     titleStep.value += 1;
     tableStep.value += 1;
     legendStep.value += 1;
+
+    // Reset mutable config
+    mutableConfig.value.dataLabels.show = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({

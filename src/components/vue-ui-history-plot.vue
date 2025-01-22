@@ -266,6 +266,10 @@ watch(() => props.config, (_newCfg) => {
     sizes.value.xAxisName = FINAL_CONFIG.value.style.chart.axes.x.name.fontSize;
     sizes.value.yAxisLabels = FINAL_CONFIG.value.style.chart.axes.y.labels.fontSize;
     sizes.value.yAxisName = FINAL_CONFIG.value.style.chart.axes.y.name.fontSize;
+
+    // Reset mutable config
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({

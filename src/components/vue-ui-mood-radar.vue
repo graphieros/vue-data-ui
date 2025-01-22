@@ -107,6 +107,9 @@ watch(() => props.config, (_newCfg) => {
     titleStep.value += 1;
     tableStep.value += 1;
     legendStep.value += 1;
+
+    // Reset mutable config
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({

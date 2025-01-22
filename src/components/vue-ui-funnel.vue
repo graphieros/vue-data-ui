@@ -170,6 +170,8 @@ watch(() => props.config, (_newCfg) => {
     fontSizes.value.names = FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize;
     fontSizes.value.values = FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize;
 
+    // Reset mutable config
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({

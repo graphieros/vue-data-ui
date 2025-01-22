@@ -108,6 +108,9 @@ watch(() => props.config, (_newCfg) => {
     userOptionsVisible.value = !FINAL_CONFIG.value.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
+
+    // Reset mutable config
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({

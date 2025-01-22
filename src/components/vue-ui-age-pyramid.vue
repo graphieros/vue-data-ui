@@ -99,6 +99,10 @@ watch(() => props.config, (_newCfg) => {
     prepareChart();
     titleStep.value += 1;
     tableStep.value += 1;
+
+    // Reset mutable config
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.tooltip.show;
 }, { deep: true });
 
 const resizeObserver = ref(null);

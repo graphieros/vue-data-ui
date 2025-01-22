@@ -1443,6 +1443,17 @@ export default {
                 this.prepareChart();
                 this.titleStep += 1;
                 this.tableStep += 1;
+
+                // Reset mutable config
+                this.mutableConfig = {
+                    dataLabels: {
+                        show: true,
+                    },
+                    showTooltip: this.FINAL_CONFIG.chart.tooltip.show === true,
+                    showTable: this.FINAL_CONFIG.showTable === true,
+                    isStacked: this.FINAL_CONFIG.chart.grid.labels.yAxis.stacked,
+                    useIndividualScale: this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale
+                }
             },
             deep: true
         }

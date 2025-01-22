@@ -132,6 +132,9 @@ watch(() => props.config, (_newCfg) => {
     defaultSizes.value.height = FINAL_CONFIG.value.height;
     userOptionsVisible.value = !FINAL_CONFIG.value.showUserOptionsOnChartHover;
     prepareChart();
+
+    // Reset mutable config
+    mutableConfig.value.showTooltip = FINAL_CONFIG.value.showTooltip;
 }, { deep: true });
 
 watch(() => props.dataset, (_) => {

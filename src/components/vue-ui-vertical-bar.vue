@@ -113,6 +113,11 @@ watch(() => props.config, (_newCfg) => {
     legendStep.value += 1;
     barHeight.value = FINAL_CONFIG.value.style.chart.layout.bars.height;
     barGap.value = FINAL_CONFIG.value.style.chart.layout.bars.gap;
+
+    // Reset mutable config
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+    mutableConfig.value.sortDesc = FINAL_CONFIG.value.style.chart.layout.bars.sort === "desc";
+    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
 watch(() => props.dataset, recalculateHeight, { deep: true });

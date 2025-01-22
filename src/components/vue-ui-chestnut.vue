@@ -92,6 +92,10 @@ function prepareConfig() {
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
     userOptionsVisible.value = !FINAL_CONFIG.value.showOnChartHover;
+
+    // Reset mutable config
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+
     prepareChart();
 }, { deep: true });
 

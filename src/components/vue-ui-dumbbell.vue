@@ -107,6 +107,9 @@ watch(() => props.config, (_newCfg) => {
     legendStep.value += 1;
     baseRowHeight.value = FINAL_CONFIG.value.style.chart.rowHeight;
     baseWidth.value = FINAL_CONFIG.value.style.chart.width;
+
+    // Reset mutable config
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
 }, { deep: true });
 
 watch(() => props.dataset, (_) => {
