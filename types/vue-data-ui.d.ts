@@ -3209,7 +3209,7 @@ declare module 'vue-data-ui' {
                         offsetRatio?: number;
                         fontSize?: number;
                         useSerieColor?: boolean;
-                        color?: boolean;
+                        color?: string;
                         bold?: boolean;
                     };
                     pointer?: {
