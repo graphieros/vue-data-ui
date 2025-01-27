@@ -471,7 +471,7 @@ const gradientArcs = computed(() => {
 });
 
 const gaugeArc = computed(() => {
-    const added = min.value >= 0 ? 0 : Math.abs(min.value);
+    const added = min.value >= 0 ? -min.value : Math.abs(min.value);
     return createHalfCircleArc({
         radius: FINAL_CONFIG.value.style.chart.layout.indicatorArc.radius * svg.value.trackSize,
         centerX: svg.value.width / 2,
