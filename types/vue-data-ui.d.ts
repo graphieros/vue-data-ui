@@ -3212,7 +3212,13 @@ declare module 'vue-data-ui' {
                         color?: string;
                         bold?: boolean;
                     };
+                    indicatorArc?: {
+                        fill?: string;
+                        radius?: number;
+                        show?: boolean;
+                    };
                     pointer?: {
+                        show?: boolean;
                         type?: "rounded" | "pointy";
                         size?: number;
                         stroke?: string;
