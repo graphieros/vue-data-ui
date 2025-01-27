@@ -29,6 +29,7 @@ import {
     convertCustomPalette,
     convertNameColorToHex,
     createArc,
+    createHalfCircleArc,
     createPolarAreas,
     createPolygonPath,
     createSmoothPath,
@@ -2384,5 +2385,112 @@ describe('forceValidValue', () => {
         expect(forceValidValue(NaN, 1)).toBe(1)
         expect(forceValidValue(Infinity, 1)).toBe(1)
         expect(forceValidValue(-Infinity, 1)).toBe(1)
+    });
+});
+
+describe("createHalfCircleArc", () => {
+    test("should return a valid path for 0% (no arc)", () => {
+        const result = createHalfCircleArc({
+            radius: 50,
+            centerX: 100,
+            centerY: 100,
+            percentage: 0,
+        });
+
+        expect(result).toBe(`M 100,100 L 50,100 A 50,50 0 0 1 50,100 Z`);
+    });
+
+    test("should return a valid path for 100% (full half-circle)", () => {
+        const result = createHalfCircleArc({
+            radius: 50,
+            centerX: 100,
+            centerY: 100,
+            percentage: 1,
+        });
+
+        expect(result).toBe(`M 100,100 L 50,100 A 50,50 0 0 1 150,100 Z`);
+    });
+
+    test("should return a valid path for 50% (half of the half-circle)", () => {
+        const result = createHalfCircleArc({
+            radius: 50,
+            centerX: 100,
+            centerY: 100,
+            percentage: 0.5,
+        });
+
+        expect(result).toBe(`M 100,100 L 50,100 A 50,50 0 0 1 100,50 Z`);
+    });
+
+    test("should return a valid path for a small percentage (10%)", () => {
+        const result = createHalfCircleArc({
+            radius: 50,
+            centerX: 100,
+            centerY: 100,
+            percentage: 0.1,
+        });
+
+        const expectedEndX = 100 - 50 * Math.cos(0.1 * Math.PI);
+        const expectedEndY = 100 - 50 * Math.sin(0.1 * Math.PI);
+
+        expect(result).toBe(`M 100,100 L 50,100 A 50,50 0 0 1 ${expectedEndX},${expectedEndY} Z`);
+    });
+
+    test("should clamp percentage to 0 if a negative value is passed", () => {
+        const result = createHalfCircleArc({
+            radius: 50,
+            centerX: 100,
+            centerY: 100,
+            percentage: -0.5,
+        });
+
+        expect(result).toBe(`M 100,100 L 50,100 A 50,50 0 0 1 50,100 Z`);
+    });
+
+    test("should clamp percentage to 1 if a value greater than 1 is passed", () => {
+        const result = createHalfCircleArc({
+            radius: 50,
+            centerX: 100,
+            centerY: 100,
+            percentage: 1.5,
+        });
+
+        expect(result).toBe(`M 100,100 L 50,100 A 50,50 0 0 1 150,100 Z`);
+    });
+
+    test("should work with a large radius", () => {
+        const result = createHalfCircleArc({
+            radius: 100,
+            centerX: 200,
+            centerY: 200,
+            percentage: 0.5,
+        });
+
+        expect(result).toBe(`M 200,200 L 100,200 A 100,100 0 0 1 200,100 Z`);
+    });
+
+    test("should handle different center coordinates", () => {
+        const result = createHalfCircleArc({
+            radius: 50,
+            centerX: 150,
+            centerY: 150,
+            percentage: 0.5,
+        });
+
+        expect(result).toBe(`M 150,150 L 100,150 A 50,50 0 0 1 150,100 Z`);
+    });
+
+    test("should handle very small percentages close to 0", () => {
+        const result = createHalfCircleArc({
+            radius: 50,
+            centerX: 100,
+            centerY: 100,
+            percentage: 0.01,
+        });
+
+        const expectedEndX = 100 - 50 * Math.cos(0.01 * Math.PI);
+        const expectedEndY = 100 - 50 * Math.sin(0.01 * Math.PI);
+
+        expect(result).toBe(`M 100,100 L 50,100 A 50,50 0 0 1 ${expectedEndX},${expectedEndY} Z`);
     });
 });

@@ -2158,6 +2158,19 @@ export function largestTriangleThreeBucketsArrayObjects({ data, threshold, key='
     return sampled;
 }
 
+export function createHalfCircleArc({ radius, centerX, centerY, percentage }) {
+    percentage = Math.max(0, Math.min(1, percentage));
+    const angleRadians = percentage * Math.PI;
+    const startX = centerX - radius;
+    const startY = centerY;
+    const endX = centerX - radius * Math.cos(angleRadians);
+    const endY = centerY - radius * Math.sin(angleRadians);
+    const largeArcFlag = 0;
+    const sweepFlag = 1;
+    const path = `M ${centerX},${centerY} L ${startX},${startY} A ${radius},${radius} 0 ${largeArcFlag} ${sweepFlag} ${endX},${endY} Z`;
+    return path.trim();
+}
+
 
 const lib = {
     XMLNS,
@@ -2184,6 +2197,7 @@ const lib = {
     convertConfigColors,
     convertCustomPalette,
     createCsvContent,
+    createHalfCircleArc,
     createPolarAreas,
     createPolygonPath,
     createShadesOfGrey,
