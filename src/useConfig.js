@@ -1162,7 +1162,13 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         bold: false,
                     },
+                    indicatorArc: {
+                        show: false,
+                        radius: 123,
+                        fill: '#E1E5E8',
+                    },
                     pointer: {
+                        show: true,
                         type: 'pointy',
                         size: 1,
                         stroke: COLOR_WHITE,
