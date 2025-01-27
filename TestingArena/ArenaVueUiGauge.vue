@@ -7,7 +7,7 @@ import convertArrayToObject from "./convertModel";
 
 const source = ref({
     base: 100,
-    value: 25,
+    value: 0,
     series: [
         { from: -100, to: -70, name: 'series 1', nameOffsetRatio: 1},
         { from: -70, to: -35, name: 'series 2', nameOffsetRatio: 1 },
@@ -51,11 +51,11 @@ function alterDataset() {
 }
 
 
-onMounted(() => {
-    setTimeout(() => {
-        source.value.value = 50
-    }, 2000)
-})
+// onMounted(() => {
+//     setTimeout(() => {
+//         source.value.value = 50
+//     }, 2000)
+// })
 
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
@@ -91,13 +91,14 @@ const model = ref([
     { key: 'style.chart.layout.markers.prefix', def: '', type: 'text'},
     { key: 'style.chart.layout.markers.suffix', def: '', type: 'text'},
 
+    { key: 'style.chart.layout.pointer.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.pointer.type', def: 'pointy', type: 'select', options: ['rounded', 'pointy']},
     { key: 'style.chart.layout.pointer.size', def: 1, type: 'range', min: 0.2, max: 1.5, step: 0.01},
     { key: 'style.chart.layout.pointer.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.layout.pointer.strokeWidth', def: 12, type: 'range', min: 1, max: 48, step: 0.5},
     { key: 'style.chart.layout.pointer.useRatingColor', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.pointer.color', def: '#CCCCCC', type: 'color'},
-    { key: 'style.chart.layout.pointer.circle.radius', def: 10, type: 'range', min: 0, max: 48, step: 0.5},
+    { key: 'style.chart.layout.pointer.circle.radius', def: 3, type: 'range', min: 0, max: 48, step: 0.5},
     { key: 'style.chart.layout.pointer.circle.stroke', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.pointer.circle.strokeWidth', def: 2, type: 'range', min: 0, max: 12, step: 0.5},
     { key: 'style.chart.layout.pointer.circle.color', def: '#FFFFFF', type: 'color'},
@@ -137,6 +138,10 @@ const model = ref([
     { key: 'style.chart.layout.segmentSeparators.offsetIn', def: 0, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.layout.segmentSeparators.stroke', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.layout.segmentSeparators.strokeWidth', def: 2, type: 'number', min: 0, max: 12 },
+
+    { key: 'style.chart.layout.indicatorArc.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.indicatorArc.fill', def: '#E1E5E890', type: 'color'},
+    { key: 'style.chart.layout.indicatorArc.radius', def: 123, type: 'number', min: 0, max: 200 },
 ])
 
 const themeOptions = ref([
