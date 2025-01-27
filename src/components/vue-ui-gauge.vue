@@ -1,22 +1,23 @@
 <script setup>
 import { ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
-import { 
+import {
     applyDataLabel,
-    convertColorToHex, 
-    convertCustomPalette, 
+    convertColorToHex,
+    convertCustomPalette,
+    createHalfCircleArc,
     createUid,
     dataLabel,
     error,
     getMissingDatasetAttributes,
     objectIsEmpty,
-    palette, 
+    palette,
     themePalettes,
     makeDonut,
     setOpacity,
     translateSize,
     offsetFromCenterPoint,
     XMLNS,
-calcMarkerOffsetX,
+    calcMarkerOffsetX,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
 import themes from "../themes.json";
@@ -34,7 +35,7 @@ import { useUserOptionState } from "../useUserOptionState";
 const { vue_ui_gauge: DEFAULT_CONFIG } = useConfig()
 
 const props = defineProps({
-    config:{
+    config: {
         type: Object,
         default() {
             return {}
@@ -115,7 +116,7 @@ const mutableDataset = computed(() => {
 
     if (!isDataset.value || objectIsEmpty(props.dataset.series || {})) {
         return {
-            value:0,
+            value: 0,
             series: [
                 {
                     from: 0,
@@ -167,9 +168,9 @@ const max = ref(0);
 const min = ref(0);
 
 const activeRating = ref(
-    FINAL_CONFIG.value.style.chart.animation.use 
-    ? Math.min(...props.dataset.series.map(s => s.from)) 
-    : props.dataset.value
+    FINAL_CONFIG.value.style.chart.animation.use
+        ? Math.min(...props.dataset.series.map(s => s.from))
+        : props.dataset.value
 );
 
 watch(() => props.dataset.value, () => {
@@ -200,15 +201,15 @@ const pointyPointerPath = computed(() => {
     const baseX2 = centerX + baseLength * Math.cos(angle - (Math.PI / 2));
     const baseY2 = centerY + baseLength * Math.sin(angle - (Math.PI / 2));
 
-    if(isNaN(tipX)) return null;
+    if (isNaN(tipX)) return null;
 
     return `M ${tipX},${tipY} ${baseX1},${baseY1} ${baseX2},${baseY2} Z`;
 })
 
 const ratingColor = computed(() => {
-    for(let i = 0; i < mutableDataset.value.series.length; i += 1) {
+    for (let i = 0; i < mutableDataset.value.series.length; i += 1) {
         const { color, from, to } = mutableDataset.value.series[i];
-        if(activeRating.value >= from && activeRating.value <= to) {
+        if (activeRating.value >= from && activeRating.value <= to) {
             return color;
         }
     }
@@ -234,8 +235,8 @@ function prepareChart() {
                 property: attr
             })
         });
-        if(Object.hasOwn(props.dataset, 'series')) {
-            if(!props.dataset.series.length) {
+        if (Object.hasOwn(props.dataset, 'series')) {
+            if (!props.dataset.series.length) {
                 error({
                     componentName: 'VueUiGauge',
                     type: 'datasetAttributeEmpty',
@@ -331,17 +332,17 @@ function useAnimation(targetValue) {
     const chunk = Math.abs(targetValue - activeRating.value) / (speed * 60);
 
     function animate() {
-        if(activeRating.value < targetValue) {
+        if (activeRating.value < targetValue) {
             activeRating.value = Math.min(activeRating.value + chunk, targetValue);
         } else if (activeRating.value > targetValue) {
             activeRating.value = Math.max(activeRating.value - chunk, targetValue)
         }
-        
+
         if (activeRating.value !== targetValue) {
             requestAnimationFrame(animate)
         }
     }
-    animate()
+    animate();
 }
 
 const arcSizeSource = computed(() => {
@@ -354,11 +355,11 @@ const arcSizeSource = computed(() => {
         ratingBase: FINAL_CONFIG.value.responsive ? svg.value.height / 2 + (svg.value.height / 4) : svg.value.height * 0.9,
         pointerSize: FINAL_CONFIG.value.responsive ? Math.min(svg.value.width, svg.value.height) / 3 : svg.value.width / 3.2
     }
-})
+});
 
 const arcs = computed(() => {
     const donut = makeDonut(
-        {series: mutableDataset.value.series},
+        { series: mutableDataset.value.series },
         svg.value.width / 2,
         arcSizeSource.value.base,
         arcSizeSource.value.arcs,
@@ -371,11 +372,11 @@ const arcs = computed(() => {
         40 * svg.value.trackSize
     );
     return donut;
-})
+});
 
 const labelArcs = computed(() => {
     const donut = makeDonut(
-        {series: mutableDataset.value.series},
+        { series: mutableDataset.value.series },
         svg.value.width / 2,
         arcSizeSource.value.base,
         arcSizeSource.value.arcs * FINAL_CONFIG.value.style.chart.layout.segmentNames.offsetRatio,
@@ -412,7 +413,7 @@ const firstSeparator = computed(() => {
         offset: FINAL_CONFIG.value.style.chart.layout.segmentSeparators.offsetOut
     });
     return { x1, y1, x2, y2 };
-})
+});
 
 const segmentSeparators = computed(() => {
     return arcs.value.map(arc => {
@@ -431,8 +432,8 @@ const segmentSeparators = computed(() => {
             offset: FINAL_CONFIG.value.style.chart.layout.segmentSeparators.offsetOut
         })
         return { x1, y1, x2, y2 };
-    })
-})
+    });
+});
 
 function calculateCumulativeHalfCircleOffsets(percentages) {
     const totalPercentage = percentages.reduce((sum, val) => sum + val, 0);
@@ -450,11 +451,11 @@ function calculateCumulativeHalfCircleOffsets(percentages) {
 
 const curveLabelOffsets = computed(() => {
     return calculateCumulativeHalfCircleOffsets(arcs.value.map(arc => arc.proportion * 100))
-})
+});
 
 const gradientArcs = computed(() => {
     const donut = makeDonut(
-        {series: mutableDataset.value.series},
+        { series: mutableDataset.value.series },
         svg.value.width / 2,
         arcSizeSource.value.base,
         arcSizeSource.value.gradients,
@@ -466,10 +467,21 @@ const gradientArcs = computed(() => {
         110.02,
         2 * svg.value.trackSize
     );
-    return donut
+    return donut;
 });
 
-const isFullscreen = ref(false)
+const gaugeArc = computed(() => {
+    const added = min.value >= 0 ? 0 : Math.abs(min.value);
+    return createHalfCircleArc({
+        radius: FINAL_CONFIG.value.style.chart.layout.indicatorArc.radius * svg.value.trackSize,
+        centerX: svg.value.width / 2,
+        centerY: arcSizeSource.value.base,
+        percentage: (activeRating.value + added) / (max.value + added)
+    }
+    );
+});
+
+const isFullscreen = ref(false);
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -489,77 +501,48 @@ defineExpose({
 </script>
 
 <template>
-    <div 
-        :class="`vue-ui-gauge ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
-        ref="gaugeChart"
+    <div :class="`vue-ui-gauge ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="gaugeChart"
         :id="`vue-ui-gauge_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
-        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
-    >
-        <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
-            :parent="gaugeChart"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
-            :active="isAnnotator"
-            @close="toggleAnnotator"
-        />
+        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+        <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator" :parent="gaugeChart"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator" @close="toggleAnnotator" />
 
-        <div
-            ref="noTitle"
-            v-if="hasOptionsNoTitle" 
-            class="vue-data-ui-no-title-space" 
-            :style="`height:36px; width: 100%;background:transparent`"
-        />
+        <div ref="noTitle" v-if="hasOptionsNoTitle" class="vue-data-ui-no-title-space"
+            :style="`height:36px; width: 100%;background:transparent`" />
 
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
-            <Title
-                :key="`title_${titleStep}`"
-                :config="{
-                    title: {
-                        cy: 'gauge-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
-                    },
-                    subtitle: {
-                        cy: 'gauge-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle
-                    }
-                }"
-            >
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:transparent;padding-bottom:12px`">
+            <Title :key="`title_${titleStep}`" :config="{
+        title: {
+            cy: 'gauge-div-title',
+            ...FINAL_CONFIG.style.chart.title,
+        },
+        subtitle: {
+            cy: 'gauge-div-subtitle',
+            ...FINAL_CONFIG.style.chart.title.subtitle
+        }
+    }">
                 <span v-if="FINAL_CONFIG.translations.base && dataset.base">
                     {{ FINAL_CONFIG.translations.base }}: {{ dataset.base }}
                 </span>
-        </Title>
+            </Title>
         </div>
 
         <!-- OPTIONS -->
-        <UserOptions
-            ref="details"
-            :key="`user_options_${step}`"
+        <UserOptions ref="details" :key="`user_options_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
-            :isImaging="isImaging"
-            :isPrinting="isPrinting"
-            :uid="uid"
-            :hasXls="false"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :chartElement="gaugeChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
-            :isAnnotation="isAnnotator"
-            @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf"
-            @generateImage="generateImage"
-            @toggleAnnotator="toggleAnnotator"
-            :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
-            }"
-        >
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
+            :isImaging="isImaging" :isPrinting="isPrinting" :uid="uid" :hasXls="false"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="gaugeChart"
+            :position="FINAL_CONFIG.userOptions.position" :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator" @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf"
+            @generateImage="generateImage" @toggleAnnotator="toggleAnnotator" :style="{
+        visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+    }">
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -567,7 +550,7 @@ defineExpose({
                 <slot name="optionImg" />
             </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }" />
             </template>
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
@@ -575,318 +558,235 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset"  :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:hidden !important;background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+        <svg :xmlns="XMLNS" v-if="isDataset"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+            :style="`max-width:100%;overflow:hidden !important;background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.width <= 0 ? 10 : svg.width"
-                :height="svg.height <= 0 ? 10 : svg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
-            >
-                <slot name="chart-background"/>
+            <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="svg.width <= 0 ? 10 : svg.width"
+                :height="svg.height <= 0 ? 10 : svg.height" :style="{
+        pointerEvents: 'none'
+    }">
+                <slot name="chart-background" />
             </foreignObject>
 
             <defs>
                 <radialGradient :id="`gradient_${uid}`" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
                     <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 1)" />
-                    <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.track.gradientIntensity)" />
+                    <stop offset="80%"
+                        :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.track.gradientIntensity)" />
                     <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 1)" />
                 </radialGradient>
             </defs>
 
             <defs>
                 <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / FINAL_CONFIG.style.chart.layout.track.gradientIntensity" />
+                    <feGaussianBlur in="SourceGraphic"
+                        :stdDeviation="100 / FINAL_CONFIG.style.chart.layout.track.gradientIntensity" />
                 </filter>
             </defs>
-            
+
             <g v-if="$slots.pattern">
                 <defs v-for="(arc, i) in arcs">
-                    <slot name="pattern" v-bind="{ seriesIndex: i, patternId: `pattern_${uid}_${i}` }"/>
+                    <slot name="pattern" v-bind="{ seriesIndex: i, patternId: `pattern_${uid}_${i}` }" />
                 </defs>
             </g>
 
             <!-- ARC STEPS -->
-            <path 
-                v-for="(arc, i) in arcs" 
-                :data-cy="`gauge-arc-${i}`"
-                :key="`arc_${i}`"
-                :d="arc.arcSlice"
-                :fill="arc.color"
-                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                stroke-linecap="round"
-            />
+            <path v-for="(arc, i) in arcs" :data-cy="`gauge-arc-${i}`" :key="`arc_${i}`" :d="arc.arcSlice"
+                :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor" stroke-linecap="round" />
             <template v-if="$slots.pattern">
-                <path 
-                    v-for="(arc, i) in arcs" 
-                    :data-cy="`gauge-arc-${i}`"
-                    :key="`arc_${i}`"
-                    :d="arc.arcSlice"
-                    :fill="`url(#pattern_${uid}_${i})`"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    stroke-linecap="round"
-                />
+                <path v-for="(arc, i) in arcs" :data-cy="`gauge-arc-${i}`" :key="`arc_${i}`" :d="arc.arcSlice"
+                    :fill="`url(#pattern_${uid}_${i})`" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    stroke-linecap="round" />
             </template>
 
-            <template v-if="FINAL_CONFIG.style.chart.layout.segmentNames.show && FINAL_CONFIG.style.chart.layout.segmentNames.curved">            
+            <!-- GAUGE ARC -->
+            <path 
+                v-if="FINAL_CONFIG.style.chart.layout.indicatorArc.show" 
+                :d="gaugeArc"
+                :fill="FINAL_CONFIG.style.chart.layout.indicatorArc.fill" 
+            />
+
+            <template
+                v-if="FINAL_CONFIG.style.chart.layout.segmentNames.show && FINAL_CONFIG.style.chart.layout.segmentNames.curved">
                 <!-- CIRCLE PATH AS BASE FOR CURVED LABELS -->
-                <path
-                    v-for="(arc, i) in arcs"
-                    :id="`curve_${uid}_${i}`"
-                    :d="`M ${pointer.x1},${pointer.y1} m -${pathRadii[i]},0 a ${pathRadii[i]},${pathRadii[i]} 0 1,1 ${2 * pathRadii[i]},0 a ${pathRadii[i]},${pathRadii[i]} 0 1,1 -${2 * pathRadii[i]},0`" fill="transparent"
-                />
-    
+                <path v-for="(arc, i) in arcs" :id="`curve_${uid}_${i}`"
+                    :d="`M ${pointer.x1},${pointer.y1} m -${pathRadii[i]},0 a ${pathRadii[i]},${pathRadii[i]} 0 1,1 ${2 * pathRadii[i]},0 a ${pathRadii[i]},${pathRadii[i]} 0 1,1 -${2 * pathRadii[i]},0`"
+                    fill="transparent" />
+
                 <!-- CURVED LABELS -->
-                <text 
-                    v-for="(arc, i) in arcs"
+                <text v-for="(arc, i) in arcs"
                     :fill="FINAL_CONFIG.style.chart.layout.segmentNames.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.segmentNames.color"
                     :font-size="svg.segmentFontSize"
                     :font-weight="FINAL_CONFIG.style.chart.layout.segmentNames.bold ? 'bold' : 'normal'"
-                    text-anchor="middle"
-                >
+                    text-anchor="middle">
                     <textPath :href="`#curve_${uid}_${i}`" :startOffset="curveLabelOffsets[i]">
                         {{ arc.name || '' }}
                     </textPath>
                 </text>
             </template>
 
-            <template v-if="FINAL_CONFIG.style.chart.layout.segmentNames.show && !FINAL_CONFIG.style.chart.layout.segmentNames.curved">            
-                <text 
-                    v-for="(arc, i) in labelArcs"
-                    :x="arc.center.endX"
-                    :y="arc.center.endY"
+            <template
+                v-if="FINAL_CONFIG.style.chart.layout.segmentNames.show && !FINAL_CONFIG.style.chart.layout.segmentNames.curved">
+                <text v-for="(arc, i) in labelArcs" :x="arc.center.endX" :y="arc.center.endY"
                     :text-anchor="calcMarkerOffsetX(arc, false, 12).anchor"
                     :fill="FINAL_CONFIG.style.chart.layout.segmentNames.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.segmentNames.color"
                     :font-size="svg.segmentFontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.segmentNames.bold ? 'bold' : 'normal'"
-                >
+                    :font-weight="FINAL_CONFIG.style.chart.layout.segmentNames.bold ? 'bold' : 'normal'">
                     {{ arc.name || '' }}
                 </text>
             </template>
 
-
             <!-- ARC STEPS GRADIENTS-->
-            <template v-if="FINAL_CONFIG.style.chart.layout.track.useGradient">            
-                <path 
-                    v-for="(arc, i) in gradientArcs" 
-                    :data-cy="`gauge-arc-${i}`"
-                    :key="`arc_${i}`"
-                    :d="arc.arcSlice"
-                    fill="#FFFFFF"
-                    stroke="none"
-                    stroke-linecap="round"
-                    :filter="`url(#blur_${uid})`"
-                />
+            <template v-if="FINAL_CONFIG.style.chart.layout.track.useGradient">
+                <path v-for="(arc, i) in gradientArcs" :data-cy="`gauge-arc-${i}`" :key="`arc_${i}`" :d="arc.arcSlice"
+                    fill="#FFFFFF" stroke="none" stroke-linecap="round" :filter="`url(#blur_${uid})`" />
             </template>
 
             <template v-if="FINAL_CONFIG.style.chart.layout.segmentSeparators.show">
-                <line
-                    v-bind="firstSeparator"
+                <line v-bind="firstSeparator" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth + 2"
+                    stroke-linecap="round" />
+                <line v-bind="firstSeparator" :stroke="FINAL_CONFIG.style.chart.layout.segmentSeparators.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth"
+                    stroke-linecap="round" />
+                <line v-for="segmentSeparator in segmentSeparators" v-bind="segmentSeparator"
                     :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth + 2"
-                    stroke-linecap="round"
-                />
-                <line
-                    v-bind="firstSeparator"
+                    stroke-linecap="round" />
+                <line v-for="segmentSeparator in segmentSeparators" v-bind="segmentSeparator"
                     :stroke="FINAL_CONFIG.style.chart.layout.segmentSeparators.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth"
-                    stroke-linecap="round"
-                />
-                <line
-                    v-for="segmentSeparator in segmentSeparators"
-                    v-bind="segmentSeparator"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth + 2"
-                    stroke-linecap="round"
-                />
-                <line
-                    v-for="segmentSeparator in segmentSeparators"
-                    v-bind="segmentSeparator"
-                    :stroke="FINAL_CONFIG.style.chart.layout.segmentSeparators.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth"
-                    stroke-linecap="round"
-                />
+                    stroke-linecap="round" />
             </template>
 
             <!-- STEP MARKERS -->
             <g v-if="FINAL_CONFIG.style.chart.layout.markers.show">
-                <text
-                    v-for="(arc, i) in arcs"
-                    :data-cy="`gauge-step-marker-label-${i}`"
-                    :x="offsetFromCenterPoint({
-                        centerX: pointer.x1,
-                        centerY: arcSizeSource.base,
-                        initX: arc.center.startX,
-                        initY: arc.center.startY,
-                        offset: svg.markerOffset
-                    }).x"
-                    :y="offsetFromCenterPoint({
-                        centerX: pointer.x1,
-                        centerY: arcSizeSource.base,
-                        initX: arc.center.startX,
-                        initY: arc.center.startY,
-                        offset: svg.markerOffset
-                    }).y"
-                    :text-anchor="arc.center.startX < (pointer.x1 - 5) ? 'end' : arc.center.startX > (pointer.x1 + 5) ? 'start' : 'middle'"
+                <text v-for="(arc, i) in arcs" :data-cy="`gauge-step-marker-label-${i}`" :x="offsetFromCenterPoint({
+        centerX: pointer.x1,
+        centerY: arcSizeSource.base,
+        initX: arc.center.startX,
+        initY: arc.center.startY,
+        offset: svg.markerOffset
+    }).x" :y="offsetFromCenterPoint({
+        centerX: pointer.x1,
+        centerY: arcSizeSource.base,
+        initX: arc.center.startX,
+        initY: arc.center.startY,
+        offset: svg.markerOffset
+    }).y" :text-anchor="arc.center.startX < (pointer.x1 - 5) ? 'end' : arc.center.startX > (pointer.x1 + 5) ? 'start' : 'middle'"
                     :font-size="svg.labelFontSize * FINAL_CONFIG.style.chart.layout.markers.fontSizeRatio"
                     :font-weight="`${FINAL_CONFIG.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
-                    :fill="FINAL_CONFIG.style.chart.layout.markers.color"
-                >
-                    {{ 
-                        applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.markers.formatter,
-                            arc.from,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.markers.prefix,
-                                v: arc.from,
-                                s: FINAL_CONFIG.style.chart.layout.markers.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
-                            })
-                        )
-                    }}
+                    :fill="FINAL_CONFIG.style.chart.layout.markers.color">
+                    {{
+        applyDataLabel(
+            FINAL_CONFIG.style.chart.layout.markers.formatter,
+            arc.from,
+            dataLabel({
+                p: FINAL_CONFIG.style.chart.layout.markers.prefix,
+                v: arc.from,
+                s: FINAL_CONFIG.style.chart.layout.markers.suffix,
+                r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
+            })
+        )
+    }}
                 </text>
             </g>
 
-            <text
-                v-if="FINAL_CONFIG.style.chart.layout.markers.show"
-                data-cy="gauge-step-marker-label-last"
-                :x="offsetFromCenterPoint({
-                    centerX: svg.width / 2,
-                    centerY: arcSizeSource.base,
-                    initX: arcs.at(-1).endX,
-                    initY: arcs.at(-1).endY,
-                    offset: svg.markerOffset
-                }).x"
-                :y="offsetFromCenterPoint({
-                    centerX: svg.width / 2,
-                    centerY: arcSizeSource.base,
-                    initX: arcs.at(-1).endX,
-                    initY: arcs.at(-1).endY,
-                    offset: svg.markerOffset
-                }).y"
-                text-anchor="start"
-                :font-size="svg.labelFontSize * FINAL_CONFIG.style.chart.layout.markers.fontSizeRatio"
+            <text v-if="FINAL_CONFIG.style.chart.layout.markers.show" data-cy="gauge-step-marker-label-last" :x="offsetFromCenterPoint({
+        centerX: svg.width / 2,
+        centerY: arcSizeSource.base,
+        initX: arcs.at(-1).endX,
+        initY: arcs.at(-1).endY,
+        offset: svg.markerOffset
+    }).x" :y="offsetFromCenterPoint({
+        centerX: svg.width / 2,
+        centerY: arcSizeSource.base,
+        initX: arcs.at(-1).endX,
+        initY: arcs.at(-1).endY,
+        offset: svg.markerOffset
+    }).y" text-anchor="start" :font-size="svg.labelFontSize * FINAL_CONFIG.style.chart.layout.markers.fontSizeRatio"
                 :font-weight="`${FINAL_CONFIG.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
-                :fill="FINAL_CONFIG.style.chart.layout.markers.color"
-            >
-                {{ 
-                    applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.markers.formatter,
-                        max,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.markers.prefix,
-                            v: max,
-                            s: FINAL_CONFIG.style.chart.layout.markers.suffix,
-                            r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
-                        })
-                    )
-                }}
+                :fill="FINAL_CONFIG.style.chart.layout.markers.color">
+                {{
+        applyDataLabel(
+            FINAL_CONFIG.style.chart.layout.markers.formatter,
+            max,
+            dataLabel({
+                p: FINAL_CONFIG.style.chart.layout.markers.prefix,
+                v: max,
+                s: FINAL_CONFIG.style.chart.layout.markers.suffix,
+                r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
+            })
+        )
+    }}
             </text>
 
             <!-- GAUGE POINTER -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.pointer.type === 'rounded'">            
-                <line
-                    data-cy="gauge-pointer-border"
-                    v-if="!isNaN(pointer.x2)"
-                    :x1="pointer.x1"
-                    :y1="pointer.y1"
-                    :x2="pointer.x2"
-                    :y2="pointer.y2"
-                    :stroke="FINAL_CONFIG.style.chart.layout.pointer.stroke"
-                    :stroke-width="svg.pointerStrokeWidth"
-                    stroke-linecap="round"
-                />
-                <line
-                    data-cy="gauge-pointer"
-                    v-if="!isNaN(pointer.x2)"
-                    :x1="pointer.x1"
-                    :y1="pointer.y1"
-                    :x2="pointer.x2"
-                    :y2="pointer.y2"
-                    :stroke="FINAL_CONFIG.style.chart.layout.pointer.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.layout.pointer.color"
-                    stroke-linecap="round"
-                    :stroke-width="svg.pointerStrokeWidth * 0.7"
-                />
-                <line
-                    data-cy="gauge-pointer"
-                    v-if="!isNaN(pointer.x2) && FINAL_CONFIG.style.chart.layout.track.useGradient"
-                    :x1="pointer.x1"
-                    :y1="pointer.y1"
-                    :x2="pointer.x2"
-                    :y2="pointer.y2"
-                    :stroke="'white'"
-                    stroke-linecap="round"
-                    :stroke-width="svg.pointerStrokeWidth * 0.3"
-                    :filter="`url(#blur_${uid})`"
-                />
-            </g>
-            <g v-else>
-                <path
-                    v-if="pointyPointerPath"
-                    :d="pointyPointerPath"
-                    :fill="FINAL_CONFIG.style.chart.layout.pointer.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.layout.pointer.color"
-                    :stroke="FINAL_CONFIG.style.chart.layout.pointer.stroke"
+            <template v-if="FINAL_CONFIG.style.chart.layout.pointer.show">
+                <g v-if="FINAL_CONFIG.style.chart.layout.pointer.type === 'rounded'">
+                    <line data-cy="gauge-pointer-border" v-if="!isNaN(pointer.x2)" :x1="pointer.x1" :y1="pointer.y1"
+                        :x2="pointer.x2" :y2="pointer.y2" :stroke="FINAL_CONFIG.style.chart.layout.pointer.stroke"
+                        :stroke-width="svg.pointerStrokeWidth" stroke-linecap="round" />
+                    <line data-cy="gauge-pointer" v-if="!isNaN(pointer.x2)" :x1="pointer.x1" :y1="pointer.y1"
+                        :x2="pointer.x2" :y2="pointer.y2"
+                        :stroke="FINAL_CONFIG.style.chart.layout.pointer.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.layout.pointer.color"
+                        stroke-linecap="round" :stroke-width="svg.pointerStrokeWidth * 0.7" />
+                    <line data-cy="gauge-pointer"
+                        v-if="!isNaN(pointer.x2) && FINAL_CONFIG.style.chart.layout.track.useGradient" :x1="pointer.x1"
+                        :y1="pointer.y1" :x2="pointer.x2" :y2="pointer.y2" :stroke="'white'" stroke-linecap="round"
+                        :stroke-width="svg.pointerStrokeWidth * 0.3" :filter="`url(#blur_${uid})`" />
+                </g>
+                <g v-else>
+                    <path v-if="pointyPointerPath" :d="pointyPointerPath"
+                        :fill="FINAL_CONFIG.style.chart.layout.pointer.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.layout.pointer.color"
+                        :stroke="FINAL_CONFIG.style.chart.layout.pointer.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.pointer.circle.strokeWidth"
+                        stroke-linejoin="round" />
+                </g>
+                <circle data-cy="gauge-pointer-circle" :cx="svg.width / 2" :cy="arcSizeSource.base"
+                    :fill="FINAL_CONFIG.style.chart.layout.pointer.circle.color"
+                    :r="svg.pointerRadius <= 0 ? 0.0001 : svg.pointerRadius"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.pointer.circle.strokeWidth"
-                    stroke-linejoin="round"
-                />
-            </g>
-            <circle
-                data-cy="gauge-pointer-circle"
-                :cx="svg.width / 2"
-                :cy="arcSizeSource.base"
-                :fill="FINAL_CONFIG.style.chart.layout.pointer.circle.color"
-                :r="svg.pointerRadius <= 0 ? 0.0001 : svg.pointerRadius"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.pointer.circle.strokeWidth"
-                :stroke="FINAL_CONFIG.style.chart.layout.pointer.circle.stroke"
-            />
+                    :stroke="FINAL_CONFIG.style.chart.layout.pointer.circle.stroke" />
+            </template>
 
-            <!-- GAUGE RATING --> 
-            <text
-                v-if="FINAL_CONFIG.style.chart.legend.show"
-                data-cy="gauge-score"
-                :x="svg.width / 2"
-                :y="arcSizeSource.ratingBase"
-                text-anchor="middle"
-                :font-size="svg.legendFontSize"
-                font-weight="bold"
-                :fill="FINAL_CONFIG.style.chart.legend.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.legend.color"
-            >
+            <!-- GAUGE RATING -->
+            <text v-if="FINAL_CONFIG.style.chart.legend.show" data-cy="gauge-score" :x="svg.width / 2"
+                :y="arcSizeSource.ratingBase" text-anchor="middle" :font-size="svg.legendFontSize" font-weight="bold"
+                :fill="FINAL_CONFIG.style.chart.legend.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.legend.color">
                 {{ applyDataLabel(
-                    FINAL_CONFIG.style.chart.legend.formatter,
-                    activeRating,
-                    dataLabel({
-                        p: FINAL_CONFIG.style.chart.legend.prefix + (FINAL_CONFIG.style.chart.legend.showPlusSymbol && activeRating > 0 ? '+' : ''),
-                        v: activeRating,
-                        s: FINAL_CONFIG.style.chart.legend.suffix,
-                        r: FINAL_CONFIG.style.chart.legend.roundingValue
-                    })) 
+        FINAL_CONFIG.style.chart.legend.formatter,
+        activeRating,
+        dataLabel({
+            p: FINAL_CONFIG.style.chart.legend.prefix + (FINAL_CONFIG.style.chart.legend.showPlusSymbol &&
+                activeRating > 0
+                ? '+' : ''),
+            v: activeRating,
+            s: FINAL_CONFIG.style.chart.legend.suffix,
+            r: FINAL_CONFIG.style.chart.legend.roundingValue
+        }))
                 }}
             </text>
-            <slot name="svg" :svg="svg"/>
+            <slot name="svg" :svg="svg" />
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
 
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'gauge',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    gauge: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
+        <Skeleton v-if="!isDataset" :config="{
+        type: 'gauge',
+        style: {
+            backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+            gauge: {
+                color: '#CCCCCC'
+            }
+        }
+    }" />
 
         <div ref="chartLegend">
             <slot name="legend" v-bind:legend="mutableDataset"></slot>
@@ -899,46 +799,52 @@ defineExpose({
 
 <style scoped>
 @import "../vue-data-ui.css";
-.vue-ui-gauge *{
+
+.vue-ui-gauge * {
     transition: unset;
 }
+
 .vue-ui-gauge {
     user-select: none;
     position: relative;
 }
+
 .vue-ui-gauge .vue-ui-gauge-label {
     align-items: center;
     display: flex;
     flex-direction: column;
-    height:100%;
+    height: 100%;
     justify-content: center;
-    text-align:center;
-    width:100%;
+    text-align: center;
+    width: 100%;
 }
+
 .vue-ui-gauge-legend {
     height: 100%;
-    width:100%;
+    width: 100%;
     display: flex;
-    align-items:center;
+    align-items: center;
     flex-wrap: wrap;
-    justify-content:center;
+    justify-content: center;
     column-gap: 18px;
 }
+
 .vue-ui-gauge-legend-item {
     display: flex;
-    align-items:center;
+    align-items: center;
     justify-content: center;
     gap: 6px;
     cursor: pointer;
     height: 24px;
 }
+
 .vue-ui-gauge-tooltip {
     border: 1px solid #e1e5e8;
     border-radius: 4px;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.2);
     max-width: 300px;
     position: fixed;
-    padding:12px;
-    z-index:1;
+    padding: 12px;
+    z-index: 1;
 }
 </style>
