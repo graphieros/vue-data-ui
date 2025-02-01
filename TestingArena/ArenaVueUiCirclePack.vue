@@ -23,9 +23,11 @@ function makeDs({ name, qty, maxVal }) {
 }
 
 const dataset = ref([
-    makeDs({ name: 'Pack 1', qty: 33, maxVal: 100 }),
-    makeDs({ name: 'Pack 2', qty: 5, maxVal: 1000 }),
-    makeDs({ name: 'Pack 3', qty: 5, maxVal: 1000 }),
+    makeDs({ name: 'Pack 1', qty: 50, maxVal: 1 }),
+    makeDs({ name: 'Pack 2', qty: 12, maxVal: 1 }),
+    makeDs({ name: 'Pack 2', qty: 12, maxVal: 1 }),
+    makeDs({ name: 'Pack 2', qty: 12, maxVal: 1 }),
+    makeDs({ name: 'Pack 2', qty: 12, maxVal: 1 }),
 ])
 
 const model = ref([

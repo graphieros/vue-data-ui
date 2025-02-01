@@ -151,24 +151,17 @@ function findInitialPosition(placedCircles, radius, width, height) {
 }
 
 function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
-
     const maxDataPoint = Math.max(...dp.map(d => d.value));
 
-    const radii = dp.map((d, index) => {
-        return {
-            ...d,
-            radius: (d.value / maxDataPoint) * maxRadius,
-            index
-        }
-    });
+    const radii = dp.map((d, index) => ({
+        ...d,
+        radius: (d.value / maxDataPoint) * maxRadius,
+        index
+    }));
 
-    const sortedCircles = radii.map((r, index) => {
-        return ({ 
-            ...r,
-            radius: r.radius,
-            index
-        })
-    }).toSorted((a, b) => b.radius - a.radius);
+    const sortedCircles = radii
+        .map((r, index) => ({ ...r, index }))
+        .toSorted((a, b) => b.radius - a.radius);
 
     let placedCircles = [];
 
@@ -176,25 +169,25 @@ function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
         ...sortedCircles[0],
         x: width / 2 + offsetX, 
         y: height / 2 + offsetY, 
-        radius: sortedCircles[0].radius,
     });
 
-    for (let { radius, ...el } of sortedCircles.slice(1)) {
+    for (let circleData of sortedCircles.slice(1)) {
+        let { radius, ...el } = circleData;
         let position = findInitialPosition(placedCircles, radius, width, height);
+        
         if (position) {
-            placedCircles.push({ x: position.x, y: position.y, radius, ...el });
+            placedCircles.push({ ...el, x: position.x, y: position.y, radius });
         } else {
             let bestFit = null;
             let minOverlap = Infinity;
 
             for (let circle of placedCircles) {
-
                 for (let angle = 0; angle < 360; angle += 15) {
                     let rad = (angle * Math.PI) / 180;
                     let x = circle.x + (radius + circle.radius) * Math.cos(rad);
                     let y = circle.y + (radius + circle.radius) * Math.sin(rad);
 
-                    let candidate = { ...circle, x, y, radius };
+                    let candidate = { ...el, x, y, radius };
 
                     if (
                         x - radius >= 0 &&
@@ -221,10 +214,33 @@ function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
         }
     }
 
-    let iterations = 1000;
-    while (iterations-- > 0 && resolveOverlaps(placedCircles));
-
     return placedCircles;
+}
+
+function findPolygonCentroid(circles) {
+    if (circles.length < 3) return [
+        svg.value.width / 2,
+        svg.value.height / 2
+    ];
+
+    let sumX = 0, sumY = 0;
+    let signedArea = 0;
+
+    for (let i = 0; i < circles.length; i++) {
+        let [x1, y1] = circles[i];
+        let [x2, y2] = circles[(i + 1) % circles.length]; // Next vertex (with wrap-around)
+
+        let a = x1 * y2 - x2 * y1;
+        signedArea += a;
+        sumX += (x1 + x2) * a;
+        sumY += (y1 + y2) * a;
+    }
+
+    signedArea *= 0.5;
+    let centroidX = sumX / (6 * signedArea);
+    let centroidY = sumY / (6 * signedArea);
+
+    return [centroidX, centroidY];
 }
 
 const formattedDataset = computed(() => {
@@ -249,14 +265,6 @@ const formattedDataset = computed(() => {
     })
 })
 
-const flatDataset = computed(() => {
-    return formattedDataset.value.flatMap(ds => [ds, ...ds.children]);
-});
-
-function getColor(id) {
-    return flatDataset.value.find(el => el.id === id).color
-}
-
 const parentCircles = ref([]);
 const circles = ref([]);
 
@@ -278,34 +286,40 @@ async function packParents() {
     )
 }
 
+const svg = computed(() => {
+    return {
+        width: FINAL_CONFIG.value.style.chart.width,
+        height: FINAL_CONFIG.value.style.chart.height,
+    }
+})
+
+const centerPoint = ref([svg.value.width / 2, svg.value.height / 2]);
+
 onMounted(async () => {
     circles.value = [];
     parentCircles.value = [];
     
     await packParents().then(() => {
         if (parentCircles.value.length) {
-            parentCircles.value.flat().forEach((p, i) => {
+            parentCircles.value.flat().forEach((p, _i) => {
                 circles.value.push(
                     packCircles(
-                        formattedDataset.value[i].children,
+                        formattedDataset.value.find(el => el.id === p.id).children,
                         FINAL_CONFIG.value.style.chart.width,
                         FINAL_CONFIG.value.style.chart.height,
-                        p.radius / 8,
+                        p.radius / 5.5,
                         p.x - (FINAL_CONFIG.value.style.chart.width / 2),
                         p.y - (FINAL_CONFIG.value.style.chart.height / 2)
                     )
                 )
             })
         }
+    }).then(() => {
+        centerPoint.value = findPolygonCentroid(parentCircles.value.flat().map((p, i) => {
+            return [p.x, p.y, p.radius]
+        }))
     })
 
-})
-
-const svg = computed(() => {
-    return {
-        width: FINAL_CONFIG.value.style.chart.width,
-        height: FINAL_CONFIG.value.style.chart.height,
-    }
 })
 
 const isFullscreen = ref(false)
@@ -323,15 +337,29 @@ function toggleFullscreen(state) {
         :id="`vue-ui-circle-pack_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
     >
+    {{ centerPoint }}
 
         <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
             <template v-for="pack in parentCircles">            
-                <circle v-for="(circle, index) in pack" :key="index" :cx="circle.x" :cy="circle.y" :r="circle.radius"
-                    stroke="white" :fill="getColor(circle.id)" />
+                <circle 
+                    v-for="(circle, index) in pack" 
+                    :key="index" 
+                    :cx="circle.x - (((centerPoint[0]) - (svg.width / 2)) / 2)" 
+                    :cy="circle.y - (((centerPoint[1]) - (svg.height / 2)) / 2)" 
+                    :r="circle.radius"
+                    stroke="white" :fill="circle.color + '30'" 
+                />
             </template>
             <template v-for="pack in circles">            
-                <circle v-for="(circle, index) in pack" :key="index" :cx="circle.x" :cy="circle.y" :r="circle.radius"
-                    stroke="white" :fill="getColor(circle.id)" />
+                <circle 
+                    v-for="(circle, index) in pack" 
+                    :key="index" 
+                    :cx="circle.x - (((centerPoint[0]) - (svg.width / 2)) / 2)" 
+                    :cy="circle.y - (((centerPoint[1]) - (svg.height / 2)) / 2)" 
+                    :r="circle.radius"
+                    stroke="white" 
+                    :fill="circle.color" 
+                />
             </template>
         </svg>
     </div>
