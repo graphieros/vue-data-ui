@@ -52,6 +52,7 @@ import ArenaVueUiSmiley from "../TestingArena/ArenaVueUiSmiley.vue";
 import ArenaVueUiBullet from "../TestingArena/ArenaVueUiBullet.vue";
 import ArenaVueUiFunnel from "../TestingArena/ArenaVueUiFunnel.vue";
 import ArenaVueUiHistoryPlot from "../TestingArena/ArenaVueUiHistoryPlot.vue";
+import ArenaVueUiCirclePack from "../TestingArena/ArenaVueUiCirclePack.vue";
 
 const showOldArena = ref(false);
 
@@ -107,13 +108,14 @@ const components = ref([             //--- CELEBRATION THEMES
   /*________________*/"VueUiBullet", // 48 OK /
   /*________________*/"VueUiFunnel", // 49 OK /
   /*___________*/"VueUiHistoryPlot", // 50 OK -
+  /*____________*/"VueUiCirclePack", // 51
 
   // screenshot
   // dashboard
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[0]);
+const selectedComponent = ref(components.value[51]);
 
 </script>
 
@@ -280,4 +282,7 @@ const selectedComponent = ref(components.value[0]);
 
   <!-- 50 -->
   <ArenaVueUiHistoryPlot v-if="selectedComponent === 'VueUiHistoryPlot'" />
+
+  <!-- 51 -->
+  <ArenaVueUiCirclePack v-if="selectedComponent === 'VueUiCirclePack'" />
 </template>

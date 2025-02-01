@@ -5143,6 +5143,22 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_circle_pack = {
+        customPalette: [],
+        style: {
+            fontFamily: 'inehrit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                width: 800,
+                height: 800,
+                circles: {
+                    maxRadiusRatio: 5 // the smaller the bigger the circle
+                }
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -5204,5 +5220,6 @@ export function useConfig() {
         vue_ui_screenshot,
         vue_ui_table,
         vue_ui_digits,
+        vue_ui_circle_pack
     }
 }
