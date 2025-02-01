@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, useSlots, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, useSlots, watch, watchEffect } from 'vue'
 import { useConfig } from '../useConfig';
-import { convertColorToHex, convertCustomPalette, createUid, error, objectIsEmpty, palette } from '../lib';
+import { XMLNS, convertColorToHex, convertCustomPalette, createUid, darkenHexColor, error, lightenHexColor, makeDonut, objectIsEmpty, palette } from '../lib';
 import { useNestedProp } from '../useNestedProp';
 
 const props = defineProps({
@@ -17,6 +17,10 @@ const props = defineProps({
             return []
         }
     },
+    debug: {
+        type: Boolean,
+        default: false
+    }
 });
 
 const { vue_ui_circle_pack: DEFAULT_CONFIG } = useConfig();
@@ -94,34 +98,6 @@ function distance(a, b) {
 
 function isOverlapping(circle, others) {
     return others.some((other) => distance(circle, other) < circle.radius + other.radius)
-}
-
-function resolveOverlaps(circles) {
-    let moved = false;
-    for (let i = 0; i < circles.length; i += 1) {
-        for (let j = i + 1; j < circles.length; j += 1) {
-            let c1 = circles[i],
-                c2 = circles[j]
-            let d = distance(c1, c2);
-            let minDist = c1.radius + c2.radius;
-
-            if (d < minDist) {
-                let overlap = minDist - d;
-                let angle = Math.atan2(c2.y - c1.y, c2.x - c1.x);
-
-                let moveX = Math.cos(angle) * (overlap / 2);
-                let moveY = Math.sin(angle) * (overlap / 2);
-
-                c1.x -= moveX;
-                c1.y -= moveY;
-                c2.x += moveX;
-                c2.y += moveY;
-
-                moved = true;
-            }
-        }
-    }
-    return moved;
 }
 
 function findInitialPosition(placedCircles, radius, width, height) {
@@ -216,111 +192,173 @@ function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
 
     return placedCircles;
 }
-
 function findPolygonCentroid(circles) {
-    if (circles.length < 3) return [
-        svg.value.width / 2,
-        svg.value.height / 2
-    ];
+    if (circles.length < 3) {
+        if (circles.length === 2) {
+            return [
+                (circles[0][0] + circles[1][0]) / 2,
+                (circles[0][1] + circles[1][1]) / 2
+            ];
+        }
+        return [
+            svg.value.width / 2,
+            svg.value.height / 2 
+        ];
+    }
+    
 
-    let sumX = 0, sumY = 0;
-    let signedArea = 0;
+    let area = 0;
+    let centroidX = 0;
+    let centroidY = 0;
 
     for (let i = 0; i < circles.length; i++) {
-        let [x1, y1] = circles[i];
-        let [x2, y2] = circles[(i + 1) % circles.length]; // Next vertex (with wrap-around)
+        const [x1, y1] = circles[i];
+        const [x2, y2] = circles[(i + 1) % circles.length];
 
-        let a = x1 * y2 - x2 * y1;
-        signedArea += a;
-        sumX += (x1 + x2) * a;
-        sumY += (y1 + y2) * a;
+        const crossProduct = x1 * y2 - x2 * y1;
+        area += crossProduct;
+        centroidX += (x1 + x2) * crossProduct;
+        centroidY += (y1 + y2) * crossProduct;
     }
 
-    signedArea *= 0.5;
-    let centroidX = sumX / (6 * signedArea);
-    let centroidY = sumY / (6 * signedArea);
+    area = Math.abs(area) * 0.5; // always positive
+    centroidX = Math.abs(centroidX / (6 * area));
+    centroidY = Math.abs(centroidY / (6 * area));
 
     return [centroidX, centroidY];
 }
 
 const formattedDataset = computed(() => {
-    return props.dataset.map((ds, i) => {
-        const parentId = createUid()
+    return props.dataset.children.map((ds, i) => {
         const color = convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
         return {
             ...ds,
-            id: parentId,
+            id: createUid(),
             color,
-            value: ds.children.map(c => c.value).reduce((a, b) => a + b, 0),
-            children: ds.children.map(c => {
-                return {
-                    ...c,
-                    parentId,
-                    parentName: ds.name,
-                    color: convertColorToHex(c.color) || color,
-                    id: createUid()
-                }
-            })
         }
-    })
-})
+    });
+});
 
 const parentCircles = ref([]);
 const circles = ref([]);
 
-async function packParents() {
-    parentCircles.value.push(
-        packCircles(
-            formattedDataset.value.map(d => {
-                return {
-                    value: d.value,
-                    id: d.id,
-                    color: d.color,
-                    name: d.name
-                }
-            }),
-            FINAL_CONFIG.value.style.chart.width,
-            FINAL_CONFIG.value.style.chart.height,
-            svg.value.width / FINAL_CONFIG.value.style.chart.circles.maxRadiusRatio
-        )
-    )
+async function packSingleSet() {
+    circles.value = 
+    packCircles(
+        formattedDataset.value,
+        10000,
+        10000,
+        32
+    );
 }
 
 const svg = computed(() => {
     return {
-        width: FINAL_CONFIG.value.style.chart.width,
-        height: FINAL_CONFIG.value.style.chart.height,
+        width: 100,
+        height: 100,
     }
-})
-
-const centerPoint = ref([svg.value.width / 2, svg.value.height / 2]);
+});
 
 onMounted(async () => {
     circles.value = [];
     parentCircles.value = [];
-    
-    await packParents().then(() => {
-        if (parentCircles.value.length) {
-            parentCircles.value.flat().forEach((p, _i) => {
-                circles.value.push(
-                    packCircles(
-                        formattedDataset.value.find(el => el.id === p.id).children,
-                        FINAL_CONFIG.value.style.chart.width,
-                        FINAL_CONFIG.value.style.chart.height,
-                        p.radius / 5.5,
-                        p.x - (FINAL_CONFIG.value.style.chart.width / 2),
-                        p.y - (FINAL_CONFIG.value.style.chart.height / 2)
-                    )
-                )
-            })
-        }
-    }).then(() => {
-        centerPoint.value = findPolygonCentroid(parentCircles.value.flat().map((p, i) => {
-            return [p.x, p.y, p.radius]
-        }))
-    })
+    await packSingleSet();
+});
 
+const viewBox = computed(() => {
+    const min_c_x = circles.value.reduce((o, _o) => (_o.x - _o.radius < o.x - o.radius ? _o : o), circles.value[0]);
+    const min_c_y = circles.value.reduce((o, _o) => (_o.y - _o.radius < o.y - o.radius ? _o : o), circles.value[0]);
+    const max_c_x = circles.value.reduce((o, _o) => (_o.x + _o.radius > o.x + o.radius ? _o : o), circles.value[0]);
+    const max_c_y = circles.value.reduce((o, _o) => (_o.y + _o.radius > o.y + o.radius ? _o : o), circles.value[0]);
+
+    const minX = min_c_x?.x || 0;
+    const maxX = max_c_x?.x || svg.value.width;
+    const minY = min_c_y?.y || 0;
+    const maxY = max_c_y?.y || svg.value.height;
+
+    return {
+        maxX,
+        minX,
+        width: Math.abs(maxX - minX) + (min_c_x ? min_c_x.radius : 0) + (max_c_x ? max_c_x.radius : 0) + (FINAL_CONFIG.value.style.chart.circles.strokeWidth * 4),
+        height: Math.abs(maxY - minY) + (min_c_y ? min_c_y.radius : 0) + (max_c_y ? max_c_y.radius : 0) + (FINAL_CONFIG.value.style.chart.circles.strokeWidth * 4),
+        x: min_c_x ? (min_c_x?.x - min_c_x?.radius) - (FINAL_CONFIG.value.style.chart.circles.strokeWidth * 2) : 0,
+        y: min_c_y ? (min_c_y?.y - min_c_y?.radius) - (FINAL_CONFIG.value.style.chart.circles.strokeWidth * 2) : 0
+    };
 })
+
+const donuts = computed(() => {
+    return circles.value.map(c => {
+
+        if (!c.breakdown) return
+
+        return makeDonut(
+            { series: c.breakdown.map((b, i) => {
+                return {
+                    ...b,
+                    color: convertColorToHex(b.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
+                }
+            }) },
+            c.x,
+            c.y,
+            c.radius,
+            c.radius,
+            1.99999,
+            2,
+            1,
+            360,
+            105.25,
+            c.radius / 2
+        )
+    })
+})
+
+const zoom = ref(null);
+function zoomTo(circle) {
+    zoom.value = circle;
+}
+
+const zoomRadiusStart = computed(() => {
+    return zoom.value ? zoom.value.radius : 0;
+})
+
+const zoomRadiusEnd = computed(() => {
+    return zoom.value ? (zoom.value.radius > viewBox.value.width / 6 ? zoom.value.radius : viewBox.value.width / 6) : 0;
+})
+
+const zoomOpacity = ref(0);
+
+const zoomStyle = computed(() => ({
+    pointerEvents: 'none',
+    opacity: zoomOpacity.value,
+    filter: `drop-shadow(0px 0px 6px ${darkenHexColor(zoom.value.color, 0.5)})` // TODO config
+}));
+
+const currentRadius = ref(zoomRadiusStart.value);
+
+watchEffect(() => {
+    currentRadius.value = zoomRadiusStart.value;
+    zoomOpacity.value = 0; 
+
+    let start = null;
+
+    function animate(timestamp) {
+        if (!start) {
+            start = timestamp;
+        }
+        const progress = (timestamp - start) / 200;
+
+        if (progress < 1) {
+            currentRadius.value = zoomRadiusStart.value + (zoomRadiusEnd.value - zoomRadiusStart.value) * progress;
+            zoomOpacity.value = 0 + (0.8 * progress);
+            requestAnimationFrame(animate);
+        } else {
+            currentRadius.value = zoomRadiusEnd.value;
+            zoomOpacity.value = 0.8;
+        }
+    }
+
+    requestAnimationFrame(animate);
+});
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -337,31 +375,79 @@ function toggleFullscreen(state) {
         :id="`vue-ui-circle-pack_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
     >
-    {{ centerPoint }}
+        <svg 
+            :xmlns="XMLNS"
+            :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`" 
+            width="100%"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+        >
+        
+            
+            <template v-for="circle in circles">
+                
+                <defs>
+                    <radialGradient :id="circle.id" fy="30%">
+                        <stop offset="10%" :stop-color="lightenHexColor(circle.color, FINAL_CONFIG.style.chart.circles.gradient.intensity / 100)"/>
+                        <stop offset="90%" :stop-color="darkenHexColor(circle.color, 0.1)"/>
+                        <stop offset="100%" :stop-color="circle.color"/>
+                    </radialGradient>
+                </defs>
 
-        <svg :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
-            <template v-for="pack in parentCircles">            
                 <circle 
-                    v-for="(circle, index) in pack" 
-                    :key="index" 
-                    :cx="circle.x - (((centerPoint[0]) - (svg.width / 2)) / 2)" 
-                    :cy="circle.y - (((centerPoint[1]) - (svg.height / 2)) / 2)" 
+                    :cx="circle.x" 
+                    :cy="circle.y" 
                     :r="circle.radius"
-                    stroke="white" :fill="circle.color + '30'" 
+                    :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
+                    :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth"
+                    :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${circle.id})`: circle.color" 
+                    @mouseenter="() => zoomTo(circle)"
+                    @mouseout="zoom = null"
                 />
+                <template v-for="donut in donuts">
+                    <template v-for="arc in donut">
+                        <path
+                            :d="arc.arcSlice"
+                            :fill="arc.color"
+                            stroke="black"
+                        />
+                    </template>
+                </template>
             </template>
-            <template v-for="pack in circles">            
+
+            <template v-if="zoom">
                 <circle 
-                    v-for="(circle, index) in pack" 
-                    :key="index" 
-                    :cx="circle.x - (((centerPoint[0]) - (svg.width / 2)) / 2)" 
-                    :cy="circle.y - (((centerPoint[1]) - (svg.height / 2)) / 2)" 
-                    :r="circle.radius"
+                    :style="zoomStyle"
+                    :cx="zoom.x" 
+                    :cy="zoom.y" 
+                    :r="currentRadius" 
+                    :opacity="currentRadius === zoomRadiusStart ? 0 : 1"
                     stroke="white" 
-                    :fill="circle.color" 
+                    :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})`: zoom.color" 
                 />
             </template>
         </svg>
     </div>
 
 </template>
+
+<style scoped>
+.vue-ui-circle-pack-zoom {
+    opacity: 0;
+    animation: zoomCircle 0.2s ease-in-out forwards;
+    -webkit-animation: zoomCircle 0.2s ease-in-out forwards;
+    -moz-animation: zoomCircle 0.2s ease-in-out forwards;
+    -o-animation: zoomCircle 0.2s ease-in-out forwards;
+}
+
+@keyframes zoomCircle {
+    from {
+        r: v-bind(zoomRadiusStart);
+        opacity: 0;
+    }
+    to {
+        r: v-bind(zoomRadiusEnd);
+        opacity: 1;
+    }
+}
+</style>

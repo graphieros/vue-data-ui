@@ -5150,10 +5150,13 @@ export function useConfig() {
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
-                width: 800,
-                height: 800,
                 circles: {
-                    maxRadiusRatio: 5 // the smaller the bigger the circle
+                    stroke: COLOR_WHITE,
+                    strokeWidth: 1,
+                    gradient: {
+                        show: true,
+                        intensity: 40
+                    }
                 }
             }
         }

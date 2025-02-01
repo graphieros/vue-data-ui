@@ -13,7 +13,13 @@ function makeDs({ name, qty, maxVal }) {
     for (let i = 0; i < qty; i += 1) {
         children.push({
             name: `child ${i}`,
-            value: Math.random() * maxVal
+            value: Math.random() * maxVal,
+            // color: '#FFFFFF',
+            // breakdown: [
+            //     { name: 'br 1', value: Math.random() * 10 },
+            //     { name: 'br 2', value: Math.random() * 20 },
+            //     { name: 'br 3', value: Math.random() * 30 },
+            // ]
         });
     }
     return {
@@ -22,13 +28,7 @@ function makeDs({ name, qty, maxVal }) {
     }
 }
 
-const dataset = ref([
-    makeDs({ name: 'Pack 1', qty: 50, maxVal: 1 }),
-    makeDs({ name: 'Pack 2', qty: 12, maxVal: 1 }),
-    makeDs({ name: 'Pack 2', qty: 12, maxVal: 1 }),
-    makeDs({ name: 'Pack 2', qty: 12, maxVal: 1 }),
-    makeDs({ name: 'Pack 2', qty: 12, maxVal: 1 }),
-])
+const dataset = ref(makeDs({ name: 'Pack 1', qty: 100, maxVal: 100 }))
 
 const model = ref([
 ])
@@ -50,6 +50,7 @@ const step = ref(0);
 
         <template #local>
             <LocalVueUiCirclePack
+                debug
                 :dataset="dataset"
                 :config="config"
                 ref="local"
