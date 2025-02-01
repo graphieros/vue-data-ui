@@ -25,7 +25,7 @@ function makeDs({ name, qty, maxVal }) {
     return datapoints
 }
 
-const dataset = ref(makeDs({ name: 'Pack 1', qty: 100, maxVal: 200 }))
+const dataset = ref(makeDs({ name: 'Pack 1', qty: 120, maxVal: 2000 }))
 
 const model = ref([
 ])

@@ -5158,13 +5158,22 @@ export function useConfig() {
                         intensity: 40
                     },
                     labels: {
-                        show: true,
-                        color: 'auto',
-                        rounding: 0,
-                        prefix: '',
-                        suffix: '',
-                        formatter: null,
-                        bold: false
+                        name: {
+                            show: true,
+                            bold: false,
+                            offsetY: 0,
+                            color: 'auto'
+                        },
+                        value: {
+                            show: true,
+                            color: 'auto',
+                            rounding: 0,
+                            prefix: '',
+                            suffix: '',
+                            formatter: null,
+                            bold: false,
+                            offsetY: 0
+                        },
                     },
                     zoom: {
                         show: true,
@@ -5172,7 +5181,7 @@ export function useConfig() {
                         opacity: 0.8,
                         animationFrameMs: 200, // The higher the slower
                         zoomRatio: 1,
-                        labels: {
+                        label: {
                             name: {
                                 fontSize: 14,
                                 bold: false,

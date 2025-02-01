@@ -358,8 +358,8 @@ watchEffect(() => {
 
 const labels = computed(() => {
     return {
-        name: FINAL_CONFIG.value.style.chart.circles.zoom.labels.name.fontSize * viewBox.value.width / 300,
-        value: FINAL_CONFIG.value.style.chart.circles.zoom.labels.value.fontSize * viewBox.value.width / 300
+        name: FINAL_CONFIG.value.style.chart.circles.zoom.label.name.fontSize * viewBox.value.width / 300,
+        value: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.fontSize * viewBox.value.width / 300
     }
 })
 
@@ -407,29 +407,46 @@ function toggleFullscreen(state) {
                     @mouseenter="() => zoomTo(circle)"
                     @mouseout="zoom = null"
                 />
+                <!-- ADD NAME -->
                 <text
-                    v-if="FINAL_CONFIG.style.chart.circles.labels.show"
+                    v-if="FINAL_CONFIG.style.chart.circles.labels.name.show && circle.name"
                     :style="{
                         pointerEvents: 'none',
                         transition: 'opacity 0.2s ease-in-out'
                     }"
                     :opacity="zoom ? 0.2 : 1"
                     :x="circle.x"
-                    :y="circle.y + ((circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.rounding).length * 2) / 3)"
-                    :font-size="circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.rounding).length * 2"
-                    :fill="FINAL_CONFIG.style.chart.circles.labels.color === 'auto' ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.color"
-                    :font-weight="FINAL_CONFIG.style.chart.circles.labels.bold ? 'bold' : 'normal'"
+                    :y="circle.y - (circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.value.rounding).length) + FINAL_CONFIG.style.chart.circles.labels.name.offsetY"
+                    :font-size="circle.radius / circle.name.length * 2"
+                    :fill="FINAL_CONFIG.style.chart.circles.labels.name.color === 'auto' ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
+                    :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
+                    text-anchor="middle"
+                >
+                    {{ circle.name }}
+                </text>
+                <text
+                    v-if="FINAL_CONFIG.style.chart.circles.labels.value.show"
+                    :style="{
+                        pointerEvents: 'none',
+                        transition: 'opacity 0.2s ease-in-out'
+                    }"
+                    :opacity="zoom ? 0.2 : 1"
+                    :x="circle.x"
+                    :y="circle.y + ((circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.value.rounding).length * 2) / 2) + FINAL_CONFIG.style.chart.circles.labels.value.offsetY"
+                    :font-size="circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.value.rounding).length * 2"
+                    :fill="FINAL_CONFIG.style.chart.circles.labels.value.color === 'auto' ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
+                    :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
                     text-anchor="middle"
                 >
                     {{ 
                         applyDataLabel(
-                            FINAL_CONFIG.style.chart.circles.labels.formatter,
+                            FINAL_CONFIG.style.chart.circles.labels.value.formatter,
                             circle.value,
                             dataLabel({
-                                p: FINAL_CONFIG.style.chart.circles.labels.prefix,
+                                p: FINAL_CONFIG.style.chart.circles.labels.value.prefix,
                                 v: circle.value,
-                                s: FINAL_CONFIG.style.chart.circles.labels.suffix,
-                                r: FINAL_CONFIG.style.chart.circles.labels.rounding
+                                s: FINAL_CONFIG.style.chart.circles.labels.value.suffix,
+                                r: FINAL_CONFIG.style.chart.circles.labels.value.rounding
                             })
                         )
                     }}
@@ -465,11 +482,11 @@ function toggleFullscreen(state) {
                         }"
                         :opacity="zoomOpacity"
                         :x="zoom.x"
-                        :y="zoom.y + FINAL_CONFIG.style.chart.circles.zoom.labels.name.offsetY - (labels.name / 4)"
+                        :y="zoom.y + FINAL_CONFIG.style.chart.circles.zoom.label.name.offsetY - (labels.name / 4)"
                         text-anchor="middle"
                         :font-size="labels.name"
-                        :fill="FINAL_CONFIG.style.chart.circles.zoom.labels.name.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.labels.name.color"
-                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.labels.name.bold ? 'bold' : 'auto'"
+                        :fill="FINAL_CONFIG.style.chart.circles.zoom.label.name.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.name.color"
+                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.name.bold ? 'bold' : 'auto'"
                     >
                         {{ zoom.name }}
                     </text>
@@ -479,21 +496,21 @@ function toggleFullscreen(state) {
                         }"
                         :opacity="zoomOpacity"
                         :x="zoom.x"
-                        :y="zoom.y + labels.value + FINAL_CONFIG.style.chart.circles.zoom.labels.value.offsetY"
+                        :y="zoom.y + labels.value + FINAL_CONFIG.style.chart.circles.zoom.label.value.offsetY"
                         text-anchor="middle"
                         :font-size="labels.value"
-                        :fill="FINAL_CONFIG.style.chart.circles.zoom.labels.value.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.labels.value.color"
-                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.labels.value.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.circles.zoom.label.value.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.value.color"
+                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.value.bold ? 'bold' : 'normal'"
                     >
                         {{ 
                             applyDataLabel(
-                                FINAL_CONFIG.style.chart.circles.zoom.labels.value.formatter,
+                                FINAL_CONFIG.style.chart.circles.zoom.label.value.formatter,
                                 zoom.value,
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.chart.circles.zoom.labels.value.prefix,
+                                    p: FINAL_CONFIG.style.chart.circles.zoom.label.value.prefix,
                                     v: zoom.value,
-                                    s: FINAL_CONFIG.style.chart.circles.zoom.labels.value.suffix,
-                                    r: FINAL_CONFIG.style.chart.circles.zoom.labels.value.rounding
+                                    s: FINAL_CONFIG.style.chart.circles.zoom.label.value.suffix,
+                                    r: FINAL_CONFIG.style.chart.circles.zoom.label.value.rounding
                                 })
                             )
                         }}
