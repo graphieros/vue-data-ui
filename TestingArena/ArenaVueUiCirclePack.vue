@@ -9,10 +9,10 @@ import { useArena } from "../src/useArena";
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 function makeDs({ name, qty, maxVal }) {
-    let children = [];
+    let datapoints = [];
     for (let i = 0; i < qty; i += 1) {
-        children.push({
-            name: `child ${i}`,
+        datapoints.push({
+            name: `Datapoint ${i}`,
             value: Math.random() * maxVal,
             // color: '#FFFFFF',
             // breakdown: [
@@ -22,13 +22,10 @@ function makeDs({ name, qty, maxVal }) {
             // ]
         });
     }
-    return {
-        name,
-        children
-    }
+    return datapoints
 }
 
-const dataset = ref(makeDs({ name: 'Pack 1', qty: 100, maxVal: 100 }))
+const dataset = ref(makeDs({ name: 'Pack 1', qty: 100, maxVal: 200 }))
 
 const model = ref([
 ])
@@ -55,7 +52,20 @@ const step = ref(0);
                 :config="config"
                 ref="local"
                 :key="`local_${step}`"
-            />
+            >
+            <!-- <template #zoom-label="{ x, y, name, value, color, zoomOpacity, currentRadius, fontSize }">
+                <foreignObject
+                    :x="x - currentRadius / 2"
+                    :y="y - currentRadius / 2"
+                    :width="currentRadius"
+                    :height="currentRadius"
+                >
+                    <div :style="{color}">
+                        {{ name }}
+                    </div>
+                </foreignObject>
+            </template> -->
+        </LocalVueUiCirclePack>
         </template>
     </Box>
 </template>

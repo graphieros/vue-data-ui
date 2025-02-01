@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, useSlots, watch, watchEffect } from 'vue'
 import { useConfig } from '../useConfig';
-import { XMLNS, convertColorToHex, convertCustomPalette, createUid, darkenHexColor, error, lightenHexColor, makeDonut, objectIsEmpty, palette } from '../lib';
+import { XMLNS, adaptColorToBackground, applyDataLabel, convertColorToHex, convertCustomPalette, createUid, darkenHexColor, dataLabel, error, lightenHexColor, makeDonut, objectIsEmpty, palette } from '../lib';
 import { useNestedProp } from '../useNestedProp';
 
 const props = defineProps({
@@ -229,7 +229,7 @@ function findPolygonCentroid(circles) {
 }
 
 const formattedDataset = computed(() => {
-    return props.dataset.children.map((ds, i) => {
+    return props.dataset.map((ds, i) => {
         const color = convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
         return {
             ...ds,
@@ -289,7 +289,7 @@ const viewBox = computed(() => {
 const donuts = computed(() => {
     return circles.value.map(c => {
 
-        if (!c.breakdown) return
+        if (!c.breakdown) return;
 
         return makeDonut(
             { series: c.breakdown.map((b, i) => {
@@ -322,7 +322,7 @@ const zoomRadiusStart = computed(() => {
 })
 
 const zoomRadiusEnd = computed(() => {
-    return zoom.value ? (zoom.value.radius > viewBox.value.width / 6 ? zoom.value.radius : viewBox.value.width / 6) : 0;
+    return zoom.value ? (zoom.value.radius > (viewBox.value.width / 6 * FINAL_CONFIG.value.style.chart.circles.zoom.zoomRatio) ? zoom.value.radius : (viewBox.value.width / 6 * FINAL_CONFIG.value.style.chart.circles.zoom.zoomRatio)) : 0;
 })
 
 const zoomOpacity = ref(0);
@@ -330,7 +330,7 @@ const zoomOpacity = ref(0);
 const zoomStyle = computed(() => ({
     pointerEvents: 'none',
     opacity: zoomOpacity.value,
-    filter: `drop-shadow(0px 0px 6px ${darkenHexColor(zoom.value.color, 0.5)})` // TODO config
+    filter: `drop-shadow(0px 0px 6px ${darkenHexColor(zoom.value.color, FINAL_CONFIG.value.style.chart.circles.zoom.shadowForce)})`
 }));
 
 const currentRadius = ref(zoomRadiusStart.value);
@@ -338,27 +338,30 @@ const currentRadius = ref(zoomRadiusStart.value);
 watchEffect(() => {
     currentRadius.value = zoomRadiusStart.value;
     zoomOpacity.value = 0; 
-
     let start = null;
-
     function animate(timestamp) {
         if (!start) {
             start = timestamp;
         }
-        const progress = (timestamp - start) / 200;
-
+        const progress = (timestamp - start) / FINAL_CONFIG.value.style.chart.circles.zoom.animationFrameMs;
         if (progress < 1) {
             currentRadius.value = zoomRadiusStart.value + (zoomRadiusEnd.value - zoomRadiusStart.value) * progress;
-            zoomOpacity.value = 0 + (0.8 * progress);
+            zoomOpacity.value = 0 + (FINAL_CONFIG.value.style.chart.circles.zoom.opacity * progress);
             requestAnimationFrame(animate);
         } else {
             currentRadius.value = zoomRadiusEnd.value;
-            zoomOpacity.value = 0.8;
+            zoomOpacity.value = FINAL_CONFIG.value.style.chart.circles.zoom.opacity;
         }
     }
-
     requestAnimationFrame(animate);
 });
+
+const labels = computed(() => {
+    return {
+        name: FINAL_CONFIG.value.style.chart.circles.zoom.labels.name.fontSize * viewBox.value.width / 300,
+        value: FINAL_CONFIG.value.style.chart.circles.zoom.labels.value.fontSize * viewBox.value.width / 300
+    }
+})
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -370,7 +373,7 @@ function toggleFullscreen(state) {
 
 <template>
     <div 
-        :class="`vue-ui-waffle ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
+        :class="`vue-ui-circle-pack ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
         ref="circlePackChart" 
         :id="`vue-ui-circle-pack_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
@@ -380,7 +383,7 @@ function toggleFullscreen(state) {
             :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`" 
             width="100%"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
         >
         
             
@@ -404,6 +407,33 @@ function toggleFullscreen(state) {
                     @mouseenter="() => zoomTo(circle)"
                     @mouseout="zoom = null"
                 />
+                <text
+                    v-if="FINAL_CONFIG.style.chart.circles.labels.show"
+                    :style="{
+                        pointerEvents: 'none',
+                        transition: 'opacity 0.2s ease-in-out'
+                    }"
+                    :opacity="zoom ? 0.2 : 1"
+                    :x="circle.x"
+                    :y="circle.y + ((circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.rounding).length * 2) / 3)"
+                    :font-size="circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.rounding).length * 2"
+                    :fill="FINAL_CONFIG.style.chart.circles.labels.color === 'auto' ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.color"
+                    :font-weight="FINAL_CONFIG.style.chart.circles.labels.bold ? 'bold' : 'normal'"
+                    text-anchor="middle"
+                >
+                    {{ 
+                        applyDataLabel(
+                            FINAL_CONFIG.style.chart.circles.labels.formatter,
+                            circle.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.circles.labels.prefix,
+                                v: circle.value,
+                                s: FINAL_CONFIG.style.chart.circles.labels.suffix,
+                                r: FINAL_CONFIG.style.chart.circles.labels.rounding
+                            })
+                        )
+                    }}
+                </text>
                 <template v-for="donut in donuts">
                     <template v-for="arc in donut">
                         <path
@@ -421,10 +451,54 @@ function toggleFullscreen(state) {
                     :cx="zoom.x" 
                     :cy="zoom.y" 
                     :r="currentRadius" 
-                    :opacity="currentRadius === zoomRadiusStart ? 0 : 1"
+                    :opacity="zoomOpacity"
                     stroke="white" 
                     :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})`: zoom.color" 
                 />
+                <g v-if="$slots['zoom-label']" :style="{ pointerEvents: 'none' }">
+                    <slot name="zoom-label" v-bind="{ ...zoom, zoomOpacity, currentRadius, fontSize: labelFontSize }" />
+                </g>
+                <g v-else>
+                    <text
+                        :style="{
+                            pointerEvents: 'none'
+                        }"
+                        :opacity="zoomOpacity"
+                        :x="zoom.x"
+                        :y="zoom.y + FINAL_CONFIG.style.chart.circles.zoom.labels.name.offsetY - (labels.name / 4)"
+                        text-anchor="middle"
+                        :font-size="labels.name"
+                        :fill="FINAL_CONFIG.style.chart.circles.zoom.labels.name.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.labels.name.color"
+                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.labels.name.bold ? 'bold' : 'auto'"
+                    >
+                        {{ zoom.name }}
+                    </text>
+                    <text
+                        :style="{
+                            pointerEvents: 'none',
+                        }"
+                        :opacity="zoomOpacity"
+                        :x="zoom.x"
+                        :y="zoom.y + labels.value + FINAL_CONFIG.style.chart.circles.zoom.labels.value.offsetY"
+                        text-anchor="middle"
+                        :font-size="labels.value"
+                        :fill="FINAL_CONFIG.style.chart.circles.zoom.labels.value.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.labels.value.color"
+                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.labels.value.bold ? 'bold' : 'normal'"
+                    >
+                        {{ 
+                            applyDataLabel(
+                                FINAL_CONFIG.style.chart.circles.zoom.labels.value.formatter,
+                                zoom.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.circles.zoom.labels.value.prefix,
+                                    v: zoom.value,
+                                    s: FINAL_CONFIG.style.chart.circles.zoom.labels.value.suffix,
+                                    r: FINAL_CONFIG.style.chart.circles.zoom.labels.value.rounding
+                                })
+                            )
+                        }}
+                    </text>
+                </g>
             </template>
         </svg>
     </div>
@@ -432,6 +506,17 @@ function toggleFullscreen(state) {
 </template>
 
 <style scoped>
+@import "../vue-data-ui.css";
+
+.vue-ui-circle-pack * {
+    transition: unset;
+}
+
+.vue-ui-circle-pack {
+    position: relative;
+    user-select: none;
+}
+
 .vue-ui-circle-pack-zoom {
     opacity: 0;
     animation: zoomCircle 0.2s ease-in-out forwards;

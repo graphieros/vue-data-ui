@@ -5146,7 +5146,7 @@ export function useConfig() {
     const vue_ui_circle_pack = {
         customPalette: [],
         style: {
-            fontFamily: 'inehrit',
+            fontFamily: 'inherit',
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
@@ -5156,6 +5156,40 @@ export function useConfig() {
                     gradient: {
                         show: true,
                         intensity: 40
+                    },
+                    labels: {
+                        show: true,
+                        color: 'auto',
+                        rounding: 0,
+                        prefix: '',
+                        suffix: '',
+                        formatter: null,
+                        bold: false
+                    },
+                    zoom: {
+                        show: true,
+                        shadowForce: 1,
+                        opacity: 0.8,
+                        animationFrameMs: 200, // The higher the slower
+                        zoomRatio: 1,
+                        labels: {
+                            name: {
+                                fontSize: 14,
+                                bold: false,
+                                offsetY: 0,
+                                color: 'auto'
+                            },
+                            value: {
+                                fontSize: 14,
+                                bold: false,
+                                offsetY: 0,
+                                rounding: 0,
+                                prefix: '',
+                                suffix: '',
+                                formatter: null,
+                                color: 'auto'
+                            }
+                        }
                     }
                 }
             }
