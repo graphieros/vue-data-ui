@@ -4297,6 +4297,9 @@ export function useConfig() {
             color: COLOR_BLACK,
             maxHeight: 500,
             animated: true,
+            circlePack: {
+                color: COLOR_GREY_LIGHT
+            },
             historyPlot: {
                 color: COLOR_GREY_LIGHT
             },
@@ -5143,6 +5146,91 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_circle_pack = {
+        customPalette: [],
+        userOptions: USER_OPTIONS({
+            tooltip: false,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: false,
+            fullscreen: true,
+            stack: false,
+            annotator: true
+        }),
+        table: {
+            ...TABLE,
+            th: TABLE_TH,
+            td: TABLE_TD,
+            columnNames: {
+                datapoint: 'Datapoint',
+                value: 'Value'
+            }
+        },
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                title: TITLE,
+                circles: {
+                    stroke: COLOR_WHITE,
+                    strokeWidth: 1,
+                    gradient: {
+                        show: true,
+                        intensity: 40
+                    },
+                    labels: {
+                        name: {
+                            show: true,
+                            bold: false,
+                            offsetY: 0,
+                            color: 'auto'
+                        },
+                        value: {
+                            show: true,
+                            color: 'auto',
+                            rounding: 0,
+                            prefix: '',
+                            suffix: '',
+                            formatter: null,
+                            bold: false,
+                            offsetY: 0
+                        },
+                    },
+                    zoom: {
+                        show: true,
+                        shadowForce: 1,
+                        opacity: 0.8,
+                        animationFrameMs: 200, // The higher the slower
+                        zoomRatio: 1,
+                        label: {
+                            name: {
+                                fontSize: 14,
+                                bold: false,
+                                offsetY: 0,
+                                color: 'auto'
+                            },
+                            value: {
+                                fontSize: 14,
+                                bold: false,
+                                offsetY: 0,
+                                rounding: 0,
+                                prefix: '',
+                                suffix: '',
+                                formatter: null,
+                                color: 'auto'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    console.log(vue_ui_circle_pack);
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -5204,5 +5292,6 @@ export function useConfig() {
         vue_ui_screenshot,
         vue_ui_table,
         vue_ui_digits,
+        vue_ui_circle_pack
     }
 }
