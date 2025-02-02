@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, useSlots, watch, watchEffect } from 'vue'
+import { ref, computed, onMounted, useSlots, watch, watchEffect, nextTick } from 'vue'
 import { useConfig } from '../useConfig';
 import { 
     XMLNS, 
@@ -7,9 +7,11 @@ import {
     applyDataLabel, 
     convertColorToHex, 
     convertCustomPalette, 
+    createCsvContent, 
     createUid, 
     darkenHexColor, 
     dataLabel, 
+    downloadCsv, 
     error, 
     lightenHexColor, 
     makeDonut, 
@@ -17,6 +19,15 @@ import {
     palette 
 } from '../lib';
 import { useNestedProp } from '../useNestedProp';
+import { usePrinter } from '../usePrinter';
+import Title from '../atoms/Title.vue';
+import PenAndPaper from '../atoms/PenAndPaper.vue';
+import UserOptions from '../atoms/UserOptions.vue';
+import { useUserOptionState } from '../useUserOptionState';
+import PackageVersion from '../atoms/PackageVersion.vue';
+import Accordion from "./vue-ui-accordion.vue";
+import DataTable from '../atoms/DataTable.vue';
+import Skeleton from "./vue-ui-skeleton.vue";
 
 const props = defineProps({
     config: {
@@ -43,6 +54,12 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 const circlePackChart = ref(null);
+const chartTitle = ref(null);
+const noTitle = ref(null);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const step = ref(0);
+const source = ref(null);
 
 const FINAL_CONFIG = computed({
     get: () => {
@@ -52,6 +69,12 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { 
+    userOptionsVisible, 
+    setUserOptionsVisibility, 
+    keepUserOptionState 
+} = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -76,17 +99,27 @@ function prepareConfig() {
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
-    // userOptionsVisible.value = !FINAL_CONFIG.value.showOnChartHover;
+    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
-    // titleStep.value += 1;
-    // tableStep.value += 1;
-    // legendStep.value += 1;
+    titleStep.value += 1;
+    tableStep.value += 1;
 
     // Reset mutable config
-    // mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-    // mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
 }, { deep: true });
 
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-circle-pack_${uid.value}`,
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-circle-pack'
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
+});
+
+const mutableConfig = ref({
+    showTable: FINAL_CONFIG.value.table.show,
+});
 
 async function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -208,41 +241,6 @@ function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
 
     return placedCircles;
 }
-function findPolygonCentroid(circles) {
-    if (circles.length < 3) {
-        if (circles.length === 2) {
-            return [
-                (circles[0][0] + circles[1][0]) / 2,
-                (circles[0][1] + circles[1][1]) / 2
-            ];
-        }
-        return [
-            svg.value.width / 2,
-            svg.value.height / 2 
-        ];
-    }
-    
-
-    let area = 0;
-    let centroidX = 0;
-    let centroidY = 0;
-
-    for (let i = 0; i < circles.length; i++) {
-        const [x1, y1] = circles[i];
-        const [x2, y2] = circles[(i + 1) % circles.length];
-
-        const crossProduct = x1 * y2 - x2 * y1;
-        area += crossProduct;
-        centroidX += (x1 + x2) * crossProduct;
-        centroidY += (y1 + y2) * crossProduct;
-    }
-
-    area = Math.abs(area) * 0.5; // always positive
-    centroidX = Math.abs(centroidX / (6 * area));
-    centroidY = Math.abs(centroidY / (6 * area));
-
-    return [centroidX, centroidY];
-}
 
 const formattedDataset = computed(() => {
     return props.dataset.map((ds, i) => {
@@ -252,7 +250,7 @@ const formattedDataset = computed(() => {
             id: createUid(),
             color,
         }
-    });
+    }).filter(ds => ![null, undefined, Infinity, -Infinity].includes(ds.value))
 });
 
 const circles = ref([]);
@@ -261,6 +259,7 @@ async function packSingleSet() {
     circles.value = 
     packCircles(
         formattedDataset.value,
+        // Huge plane size to place all datapoints
         10000,
         10000,
         32
@@ -323,6 +322,7 @@ const donuts = computed(() => {
 
 const zoom = ref(null);
 function zoomTo(circle) {
+    if (!FINAL_CONFIG.value.style.chart.circles.zoom.show) return;
     zoom.value = circle;
 }
 
@@ -404,26 +404,226 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
+const table = computed(() => {
+    const head = formattedDataset.value.map(d => {
+        return {
+            name: d.name,
+            value: d.value,
+            color: d.color
+        }
+    }).toSorted((a, b) => b.value - a.value);
+
+    const body = head.map(h => h.value);
+    return { head, body };
+});
+
+function generateCsv() {
+    nextTick(() => {
+        const labels = table.value.head.map((h, i) => {
+            return [[
+                h.name
+            ], [table.value.body[i]]]
+        });
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [[""], [FINAL_CONFIG.value.table.columnNames.value],]].concat(labels);
+
+        const csvContent = createCsvContent(tableXls);
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-circle-pack" })
+    });
+}
+
+const dataTable = computed(() => {
+    const head = [
+        FINAL_CONFIG.value.table.columnNames.datapoint,
+        FINAL_CONFIG.value.table.columnNames.value
+    ];
+
+    const body = table.value.head.map((h, i) => {
+        const label = dataLabel({
+            p: FINAL_CONFIG.value.style.chart.circles.labels.value.prefix,
+            v: table.value.body[i],
+            s: FINAL_CONFIG.value.style.chart.circles.labels.value.suffix,
+            r: FINAL_CONFIG.value.style.chart.circles.labels.value.rounding
+        });
+        return [
+            {
+                color: h.color,
+                name: h.name
+            },
+            label
+        ]
+    });
+
+    const config = {
+        th: {
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
+        },
+        td: {
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
+        },
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
+    }
+
+    const colNames = [
+        FINAL_CONFIG.value.table.columnNames.datapoint,
+        FINAL_CONFIG.value.table.columnNames.value,
+    ]
+
+    return {
+        colNames,
+        head,
+        body,
+        config
+    }
+})
+
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function getData() {
+    return formattedDataset.value;
+}
+
+defineExpose({
+    getData,
+    generateCsv,
+    generatePdf,
+    generateImage,
+    toggleTable,
+    toggleAnnotator
+});
+
 </script>
 
 <template>
     <div 
+        :id="`vue-ui-circle-pack_${uid}`"
         :class="`vue-ui-circle-pack ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
         ref="circlePackChart" 
-        :id="`vue-ui-circle-pack_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
     >
+
+        <PenAndPaper
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            :parent="circlePackChart"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator"
+            @close="toggleAnnotator"
+        />
+
+        <slot name="userConfig"/>
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle" 
+            class="vue-data-ui-no-title-space" 
+            :style="`height:36px; width: 100%;background:transparent`"
+        />
+
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
+            <Title
+                :key="`title_${titleStep}`"
+                :config="{
+                    title: {
+                        cy: 'donut-div-title',
+                        ...FINAL_CONFIG.style.chart.title,
+                    },
+                    subtitle: {
+                        cy: 'donut-div-subtitle',
+                        ...FINAL_CONFIG.style.chart.title.subtitle
+                    }
+                }"
+            />
+        </div>
+
+        <UserOptions
+            ref="details"
+            :key="`user_option_${step}`"
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.color"
+            :isPrinting="isPrinting"
+            :isImaging="isImaging"
+            :uid="uid"
+            :hasTooltip="false"
+            :hasLabel="false"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :isFullscreen="isFullscreen"
+            :chartElement="circlePackChart"
+            :position="FINAL_CONFIG.userOptions.position"
+            :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
+            @toggleFullscreen="toggleFullscreen"
+            @generatePdf="generatePdf"
+            @generateCsv="generateCsv"
+            @generateImage="generateImage"
+            @toggleTable="toggleTable"
+            @toggleAnnotator="toggleAnnotator"
+            :style="{
+                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+            }"
+        >
+            <template #optionPdf v-if="$slots.optionPdf">
+                <slot name="optionPdf" />
+            </template>
+            <template #optionCsv v-if="$slots.optionCsv">
+                <slot name="optionCsv" />
+            </template>
+            <template #optionImg v-if="$slots.optionImg">
+                <slot name="optionImg" />
+            </template>
+            <template #optionTable v-if="$slots.optionTable">
+                <slot name="optionTable" />
+            </template>
+            <template v-if="$slots.optionFullscreen" #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            </template>
+        </UserOptions>
+
         <svg 
+            v-if="isDataset"
             :xmlns="XMLNS"
             :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`" 
             width="100%"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
         >
-        
-            
+            <PackageVersion />
+
+            <!-- BACKGROUND SLOT -->
+            <foreignObject 
+                v-if="$slots['chart-background']"
+                :x="viewBox.x"
+                :y="viewBox.y"
+                :width="viewBox.width"
+                :height="viewBox.height"
+                :style="{
+                    pointerEvents: 'none'
+                }"
+            >
+                <slot name="chart-background"/>
+            </foreignObject>
+
             <template v-for="circle in circles">
-                
                 <defs>
                     <radialGradient :id="circle.id" fy="30%">
                         <stop offset="10%" :stop-color="lightenHexColor(circle.color, FINAL_CONFIG.style.chart.circles.gradient.intensity / 100)"/>
@@ -432,17 +632,41 @@ function toggleFullscreen(state) {
                     </radialGradient>
                 </defs>
 
-                <circle 
-                    :cx="circle.x" 
-                    :cy="circle.y" 
-                    :r="circle.radius"
+                <g v-if="$slots.pattern">
+                    <defs>
+                        <slot name="pattern" v-bind="{...circle, patternId: `pattern_${uid}_${circle.id}`}"/>
+                    </defs>
+                </g>
+
+                <!-- 'CIRCLE' (using rect as circle does not css transition properly) -->
+                <rect
+                    :x="circle.x - circle.radius"
+                    :y="circle.y - circle.radius"
+                    :width="circle.radius * 2"
+                    :height="circle.radius * 2"
                     :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
                     :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth"
                     :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${circle.id})`: circle.color" 
+                    :rx="circle.radius"
                     @mouseenter="() => zoomTo(circle)"
                     @mouseout="zoom = null"
                 />
-                <!-- ADD NAME -->
+                <rect
+                    v-if="$slots.pattern"
+                    :x="circle.x - circle.radius"
+                    :y="circle.y - circle.radius"
+                    :width="circle.radius * 2"
+                    :height="circle.radius * 2"
+                    :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
+                    :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth"
+                    :fill="`url(#pattern_${uid}_${circle.id})`" 
+                    :rx="circle.radius"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                />
+
+                <!-- LABEL NAME -->
                 <text
                     v-if="FINAL_CONFIG.style.chart.circles.labels.name.show && circle.name"
                     :style="{
@@ -453,12 +677,14 @@ function toggleFullscreen(state) {
                     :x="circle.x"
                     :y="circle.y - (circle.radius / 2.5) + FINAL_CONFIG.style.chart.circles.labels.name.offsetY"
                     :font-size="circle.radius / circle.name.length * 2"
-                    :fill="FINAL_CONFIG.style.chart.circles.labels.name.color === 'auto' ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
+                    :fill="!FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
                     :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
                     text-anchor="middle"
                 >
                     {{ circle.name }}
                 </text>
+
+                <!-- LABEL VALUE -->
                 <text
                     v-if="FINAL_CONFIG.style.chart.circles.labels.value.show"
                     :style="{
@@ -469,12 +695,14 @@ function toggleFullscreen(state) {
                     :x="circle.x"
                     :y="circle.y + ((circle.radius / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2)) / 2) + FINAL_CONFIG.style.chart.circles.labels.value.offsetY"
                     :font-size="circle.radius / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2)"
-                    :fill="FINAL_CONFIG.style.chart.circles.labels.value.color === 'auto' ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
+                    :fill="!FINAL_CONFIG.style.chart.circles.labels.value.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
                     :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
                     text-anchor="middle"
                 >
                     {{ getCircleLabel(circle) }}
                 </text>
+
+                <!-- DONUTS -->
                 <template v-for="donut in donuts">
                     <template v-for="arc in donut">
                         <path
@@ -486,7 +714,7 @@ function toggleFullscreen(state) {
                 </template>
             </template>
 
-            <template v-if="zoom">
+            <template v-if="zoom && FINAL_CONFIG.style.chart.circles.zoom.show">
                 <circle 
                     :style="zoomStyle"
                     :cx="zoom.x" 
@@ -496,10 +724,13 @@ function toggleFullscreen(state) {
                     stroke="white" 
                     :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})`: zoom.color" 
                 />
+
                 <g v-if="$slots['zoom-label']" :style="{ pointerEvents: 'none' }">
                     <slot name="zoom-label" v-bind="{ ...zoom, zoomOpacity, currentRadius, fontSize: zoomLabelFontSizes }" />
                 </g>
+
                 <g v-else>
+                    <!-- ZOOM LABEL NAME -->
                     <text
                         :style="{
                             pointerEvents: 'none'
@@ -509,11 +740,13 @@ function toggleFullscreen(state) {
                         :y="zoom.y + FINAL_CONFIG.style.chart.circles.zoom.label.name.offsetY - (zoomLabelFontSizes.name / 4)"
                         text-anchor="middle"
                         :font-size="zoomLabelFontSizes.name"
-                        :fill="FINAL_CONFIG.style.chart.circles.zoom.label.name.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.name.color"
-                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.name.bold ? 'bold' : 'auto'"
+                        :fill="!FINAL_CONFIG.style.chart.circles.zoom.label.name.color ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.name.color"
+                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.name.bold ? 'bold' : 'normal'"
                     >
                         {{ zoom.name }}
                     </text>
+
+                    <!-- ZOOM LABEL VALUE -->
                     <text
                         :style="{
                             pointerEvents: 'none',
@@ -523,16 +756,70 @@ function toggleFullscreen(state) {
                         :y="zoom.y + zoomLabelFontSizes.value + FINAL_CONFIG.style.chart.circles.zoom.label.value.offsetY"
                         text-anchor="middle"
                         :font-size="zoomLabelFontSizes.value"
-                        :fill="FINAL_CONFIG.style.chart.circles.zoom.label.value.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.value.color"
+                        :fill="!FINAL_CONFIG.style.chart.circles.zoom.label.value.color ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.value.color"
                         :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.value.bold ? 'bold' : 'normal'"
                     >
                         {{ getZoomLabel() }}
                     </text>
                 </g>
             </template>
-        </svg>
-    </div>
 
+            <slot name="svg" :svg="{ ...viewBox }"/>
+        </svg>
+
+        <Skeleton 
+            v-if="!isDataset"
+            :config="{
+                type: 'circlePack',
+                style: {
+                    color: '#CCCCCC',
+                }
+            }"
+        />
+
+        <div v-if="$slots.watermark" class="vue-data-ui-watermark">
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
+        <div v-if="$slots.source" ref="source" dir="auto">
+            <slot name="source" />
+        </div>
+
+        <Accordion
+            hideDetails
+            v-if="isDataset"
+            :config="{
+                open: mutableConfig.showTable,
+                maxHeight: 10000,
+                body: {
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                    color: FINAL_CONFIG.style.chart.color
+                },
+                head: {
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                    color: FINAL_CONFIG.style.chart.color
+                }
+            }"
+        >
+            <template #content>
+                <DataTable
+                    :key="`table_${tableStep}`"
+                    :colNames="dataTable.colNames" 
+                    :head="dataTable.head" 
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
+                    @close="mutableConfig.showTable = false">
+                    <template #th="{ th }">
+                        <div v-html="th" style="display:flex;align-items:center"></div>
+                    </template>
+                    <template #td="{ td }">
+                        {{ td.name || td }}
+                    </template>
+                </DataTable>
+            </template>
+        </Accordion>
+    </div>
 </template>
 
 <style scoped>
@@ -547,14 +834,6 @@ function toggleFullscreen(state) {
     user-select: none;
 }
 
-.vue-ui-circle-pack-zoom {
-    opacity: 0;
-    animation: zoomCircle 0.2s ease-in-out forwards;
-    -webkit-animation: zoomCircle 0.2s ease-in-out forwards;
-    -moz-animation: zoomCircle 0.2s ease-in-out forwards;
-    -o-animation: zoomCircle 0.2s ease-in-out forwards;
-}
-
 @keyframes zoomCircle {
     from {
         r: v-bind(zoomRadiusStart);
@@ -567,6 +846,6 @@ function toggleFullscreen(state) {
 }
 
 rect {
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out !important;
 }
 </style>
