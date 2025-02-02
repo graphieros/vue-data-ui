@@ -1,4 +1,83 @@
 {
+    "vue_ui_circle_pack": {
+        "default": {},
+        "celebration": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#FFF8E1",
+                    "color": "#424242",
+                    "title": {
+                        "color": "#424242",
+                        "subtitle": {
+                            "color": "#757575"
+                        }
+                    }
+                }
+            }
+        },
+        "celebrationNight": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#1E1E1E",
+                    "color": "#BDBDBD",
+                    "title": {
+                        "color": "#FFF8E1",
+                        "subtitle": {
+                            "color": "#BDBDBD"
+                        }
+                    },
+                    "circles": {
+                        "stroke": "#3A3A3A"
+                    }
+                }
+            }
+        },
+        "hack": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#1A1A1A",
+                    "color": "#99AA99",
+                    "title": {
+                        "color": "#66CC66",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    },
+                    "circles": {
+                        "stroke": "#3A3A3A"
+                    }
+                }
+            }
+        },
+        "zen": {
+            "style": {
+                "chart": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "title": {
+                        "color": "#8A9892",
+                        "subtitle": {
+                            "color": "#99AA99"
+                        }
+                    }
+                }
+            }
+        },
+        "concrete": {
+            "style": {
+                "chart": {
+                    "backgroundColor":"#f6f6fb",
+                    "color": "#50606C",
+                    "title": {
+                        "color": "#50606C",
+                        "subtitle": {
+                            "color": "#718890"
+                        }
+                    }
+                }
+            }
+        }
+    },
     "vue_ui_xy": {
         "default": {},
         "celebration": {

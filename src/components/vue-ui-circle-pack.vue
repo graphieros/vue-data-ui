@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, useSlots, watch, watchEffect, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, watchEffect, nextTick } from 'vue'
 import { useConfig } from '../useConfig';
 import { 
     XMLNS, 
@@ -16,8 +16,10 @@ import {
     lightenHexColor, 
     makeDonut, 
     objectIsEmpty, 
-    palette 
+    palette,
+    themePalettes
 } from '../lib';
+import themes from "../themes.json";
 import { useNestedProp } from '../useNestedProp';
 import { usePrinter } from '../usePrinter';
 import Title from '../atoms/Title.vue';
@@ -45,8 +47,6 @@ const props = defineProps({
 });
 
 const { vue_ui_circle_pack: DEFAULT_CONFIG } = useConfig();
-
-const slots = useSlots();
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length
@@ -82,19 +82,17 @@ function prepareConfig() {
         defaultConfig: DEFAULT_CONFIG
     });
 
-    // if (mergedConfig.theme) {
-    //     return {
-    //         ...useNestedProp({
-    //             userConfig: themes.vue_ui_waffle[mergedConfig.theme] || props.config,
-    //             defaultConfig: mergedConfig
-    //         }),
-    //         customPalette: themePalettes[mergedConfig.theme] || palette
-    //     }
-    // } else {
-    //     return mergedConfig;
-    // }
-
-    return mergedConfig;
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_circle_pack[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || palette
+        }
+    } else {
+        return mergedConfig;
+    }
 }
 
 watch(() => props.config, (_newCfg) => {
@@ -244,7 +242,7 @@ function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
 
 const formattedDataset = computed(() => {
     return props.dataset.map((ds, i) => {
-        const color = convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
+        const color = convertColorToHex(ds.color) || customPalette.value[i] || themePalettes[FINAL_CONFIG.value.theme][i % themePalettes[FINAL_CONFIG.value.theme].length] || palette[i] || palette[i % palette.length];
         return {
             ...ds,
             id: createUid(),
@@ -721,7 +719,7 @@ defineExpose({
                     :cy="zoom.y" 
                     :r="currentRadius" 
                     :opacity="zoomOpacity"
-                    stroke="white" 
+                    :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
                     :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})`: zoom.color" 
                 />
 

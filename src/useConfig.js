@@ -5147,6 +5147,7 @@ export function useConfig() {
     }
 
     const vue_ui_circle_pack = {
+        theme: '',
         customPalette: [],
         userOptions: USER_OPTIONS({
             tooltip: false,

@@ -195,17 +195,37 @@ const model = ref([
   },
 ]);
 
+const themeOptions = ref([
+    "",
+    "hack",
+    "zen",
+    "concrete",
+    "default",
+    "celebration",
+    "celebrationNight"
+])
+
+const currentTheme = ref(themeOptions.value[1])
+
 const config = computed(() => {
   const c = convertArrayToObject(model.value);
   return {
     ...c,
+    theme: currentTheme.value
   };
 });
 
 const step = ref(0);
+
 </script>
 
 <template>
+      <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
   <Box>
     <template #title>VueUiCirclePack</template>
 

@@ -6552,6 +6552,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiCirclePackConfig = {
+        theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
         table?: {
