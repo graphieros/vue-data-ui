@@ -242,7 +242,7 @@ function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
 
 const formattedDataset = computed(() => {
     return props.dataset.map((ds, i) => {
-        const color = convertColorToHex(ds.color) || customPalette.value[i] || themePalettes[FINAL_CONFIG.value.theme][i % themePalettes[FINAL_CONFIG.value.theme].length] || palette[i] || palette[i % palette.length];
+        const color = convertColorToHex(ds.color) || customPalette.value[i] || themePalettes[FINAL_CONFIG.value.theme || 'default'][i % themePalettes[FINAL_CONFIG.value.theme].length] || palette[i] || palette[i % palette.length];
         return {
             ...ds,
             id: createUid(),
