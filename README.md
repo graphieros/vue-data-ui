@@ -7,7 +7,7 @@
 # vue-data-ui
 
 [![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
-[![Static Badge](https://img.shields.io/badge/components-60-blue)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-61-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -24,6 +24,7 @@ Available components
 - [VueUiAgePyramid](https://vue-data-ui.graphieros.com/docs#vue-ui-age-pyramid)
 - [VueUiCandlestick](https://vue-data-ui.graphieros.com/docs#vue-ui-candlestick)
 - [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
+- [VueUiCirclePack](https://vue-data-ui.graphieros.com/docs#vue-ui-circle-pack)
 - [VueUiDonutEvolution](https://vue-data-ui.graphieros.com/docs#vue-ui-donut-evolution)
 - [VueUiDonut](https://vue-data-ui.graphieros.com/docs#vue-ui-donut)
 - [VueUiDumbbell](https://vue-data-ui.graphieros.com/docs#vue-ui-dumbbell)
@@ -215,6 +216,7 @@ The svg slot also works when using the VueDataUi universal component, if the com
 
 All charts expose a #legend slot except for:
 
+- VueUiCirclePack
 - VueUiDumbbell
 - VueUiFlow
 - VueUiFunnel
@@ -421,6 +423,7 @@ From the dataset you pass into the props, this component will produce the most a
 | ----------------------------- | ------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------ |
 | `VueUiAgePyramid`             | `Array<Array<string / number>>`            | `VueUiSparklineConfig`              | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`                                                                                            | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`                                                             | ✅             | ✅     |
 | `VueUiCandlestick`            | `Array<Array<string / number>>`            | `VueUiCandlestickConfig`            | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`                                                                                            | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`                                            | ✅             | ✅     |
+| `VueUiCirclePack`             | `VueUiCirclePackDatasetItem[]`             | `VueUiCirclePackConfig`             | `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`                                                                                                  | `#svg`, `#legend`, `#watermark`, `#chart-background` , `#pattern`, `#zoom-label`                                                                      | ✅             | ✅     |
 | `VueUiChestnut`               | `VueUiChestnutDatasetRoot[]`               | `VueUiChestnutConfig`               | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                    | `#svg`, `#legend`, `#watermark`, `#chart-background`                                                                                                  | ❌             | ✅     |
 | `VueUiDonutEvolution`         | `VueUiDonutEvolutionDatasetItem[]`         | `VueUiDonutEvolutionConfig`         | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`, `#legend`, `#reset-action`, `#watermark`, `#chart-background`                                                                                 | ❌             | ✅     |
 | `VueUiDonut`                  | `VueUiDonutDatasetItem[]`                  | `VueUiDonutConfig`                  | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`                            | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`, `#chart-background`, `#pattern`                  | ✅             | ✅     |
@@ -569,6 +572,7 @@ User options actions available per chart:
 | VueUiCandlestick            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiCarouselTable          | optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen                                                        |
 | VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiCirclePack             | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiDonut                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
 | VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
@@ -615,6 +619,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 
 - VueUi3dBar
 - VueUiChestnut
+- VueUiCirclePack
 - VueUiDonut
 - VueUiDonutEvolution
 - VueUiFlow
@@ -660,6 +665,7 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiBullet                 | -                              |
 | VueUiCarouselTable          | -                              |
 | VueUiChestnut               | -                              |
+| VueUiCirclePack             | -                              |
 | VueUiDonut                  | ✅                             |
 | VueUiDonutEvolution         | -                              |
 | VueUiDumbbell               | ✅                             |
@@ -793,6 +799,7 @@ A pattern element must be used inside this slot. It will be injected inside a de
 
 The #pattern slot is available on the following components:
 
+- VueUiCirclePack
 - VueUiDonut
 - VueUiGauge
 - VueUiRings
