@@ -4297,6 +4297,9 @@ export function useConfig() {
             color: COLOR_BLACK,
             maxHeight: 500,
             animated: true,
+            circlePack: {
+                color: COLOR_GREY_LIGHT
+            },
             historyPlot: {
                 color: COLOR_GREY_LIGHT
             },
@@ -5145,11 +5148,32 @@ export function useConfig() {
 
     const vue_ui_circle_pack = {
         customPalette: [],
+        userOptions: USER_OPTIONS({
+            tooltip: false,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: false,
+            fullscreen: true,
+            stack: false,
+            annotator: true
+        }),
+        table: {
+            ...TABLE,
+            th: TABLE_TH,
+            td: TABLE_TD,
+            columnNames: {
+                datapoint: 'Datapoint',
+                value: 'Value'
+            }
+        },
         style: {
             fontFamily: 'inherit',
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
+                title: TITLE,
                 circles: {
                     stroke: COLOR_WHITE,
                     strokeWidth: 1,
@@ -5204,6 +5228,8 @@ export function useConfig() {
             }
         }
     }
+
+    console.log(vue_ui_circle_pack);
 
     return {
         vue_ui_xy,

@@ -1,7 +1,21 @@
 <script setup>
 import { ref, computed, onMounted, useSlots, watch, watchEffect } from 'vue'
 import { useConfig } from '../useConfig';
-import { XMLNS, adaptColorToBackground, applyDataLabel, convertColorToHex, convertCustomPalette, createUid, darkenHexColor, dataLabel, error, lightenHexColor, makeDonut, objectIsEmpty, palette } from '../lib';
+import { 
+    XMLNS, 
+    adaptColorToBackground, 
+    applyDataLabel, 
+    convertColorToHex, 
+    convertCustomPalette, 
+    createUid, 
+    darkenHexColor, 
+    dataLabel, 
+    error, 
+    lightenHexColor, 
+    makeDonut, 
+    objectIsEmpty, 
+    palette 
+} from '../lib';
 import { useNestedProp } from '../useNestedProp';
 
 const props = defineProps({
@@ -17,13 +31,10 @@ const props = defineProps({
             return []
         }
     },
-    debug: {
-        type: Boolean,
-        default: false
-    }
 });
 
 const { vue_ui_circle_pack: DEFAULT_CONFIG } = useConfig();
+
 const slots = useSlots();
 
 const isDataset = computed(() => {
@@ -77,16 +88,21 @@ watch(() => props.config, (_newCfg) => {
 }, { deep: true });
 
 
-function prepareChart() {
+async function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiCirclePack',
             type: 'dataset'
         })
     }
+    await packSingleSet();
 }
 
 onMounted(prepareChart);
+
+watch(() => props.dataset, async (_ds) => {
+    await prepareChart();
+}, { deep: true })
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
@@ -239,7 +255,6 @@ const formattedDataset = computed(() => {
     });
 });
 
-const parentCircles = ref([]);
 const circles = ref([]);
 
 async function packSingleSet() {
@@ -257,12 +272,6 @@ const svg = computed(() => {
         width: 100,
         height: 100,
     }
-});
-
-onMounted(async () => {
-    circles.value = [];
-    parentCircles.value = [];
-    await packSingleSet();
 });
 
 const viewBox = computed(() => {
@@ -356,12 +365,38 @@ watchEffect(() => {
     requestAnimationFrame(animate);
 });
 
-const labels = computed(() => {
+const zoomLabelFontSizes = computed(() => {
     return {
         name: FINAL_CONFIG.value.style.chart.circles.zoom.label.name.fontSize * viewBox.value.width / 300,
         value: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.fontSize * viewBox.value.width / 300
     }
-})
+});
+
+function getCircleLabel(circle) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.circles.labels.value.formatter,
+        circle.value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.circles.labels.value.prefix,
+            v: circle.value,
+            s: FINAL_CONFIG.value.style.chart.circles.labels.value.suffix,
+            r: FINAL_CONFIG.value.style.chart.circles.labels.value.rounding
+        })
+    )
+}
+
+function getZoomLabel() {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.circles.zoom.label.value.formatter,
+        zoom.value.value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.prefix,
+            v: zoom.value.value,
+            s: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.suffix,
+            r: FINAL_CONFIG.value.style.chart.circles.zoom.label.rounding
+        })
+    )
+}
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -416,7 +451,7 @@ function toggleFullscreen(state) {
                     }"
                     :opacity="zoom ? 0.2 : 1"
                     :x="circle.x"
-                    :y="circle.y - (circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.value.rounding).length) + FINAL_CONFIG.style.chart.circles.labels.name.offsetY"
+                    :y="circle.y - (circle.radius / 2.5) + FINAL_CONFIG.style.chart.circles.labels.name.offsetY"
                     :font-size="circle.radius / circle.name.length * 2"
                     :fill="FINAL_CONFIG.style.chart.circles.labels.name.color === 'auto' ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
                     :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
@@ -432,24 +467,13 @@ function toggleFullscreen(state) {
                     }"
                     :opacity="zoom ? 0.2 : 1"
                     :x="circle.x"
-                    :y="circle.y + ((circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.value.rounding).length * 2) / 2) + FINAL_CONFIG.style.chart.circles.labels.value.offsetY"
-                    :font-size="circle.radius / circle.value.toFixed(FINAL_CONFIG.style.chart.circles.labels.value.rounding).length * 2"
+                    :y="circle.y + ((circle.radius / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2)) / 2) + FINAL_CONFIG.style.chart.circles.labels.value.offsetY"
+                    :font-size="circle.radius / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2)"
                     :fill="FINAL_CONFIG.style.chart.circles.labels.value.color === 'auto' ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
                     :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
                     text-anchor="middle"
                 >
-                    {{ 
-                        applyDataLabel(
-                            FINAL_CONFIG.style.chart.circles.labels.value.formatter,
-                            circle.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.circles.labels.value.prefix,
-                                v: circle.value,
-                                s: FINAL_CONFIG.style.chart.circles.labels.value.suffix,
-                                r: FINAL_CONFIG.style.chart.circles.labels.value.rounding
-                            })
-                        )
-                    }}
+                    {{ getCircleLabel(circle) }}
                 </text>
                 <template v-for="donut in donuts">
                     <template v-for="arc in donut">
@@ -473,7 +497,7 @@ function toggleFullscreen(state) {
                     :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})`: zoom.color" 
                 />
                 <g v-if="$slots['zoom-label']" :style="{ pointerEvents: 'none' }">
-                    <slot name="zoom-label" v-bind="{ ...zoom, zoomOpacity, currentRadius, fontSize: labelFontSize }" />
+                    <slot name="zoom-label" v-bind="{ ...zoom, zoomOpacity, currentRadius, fontSize: zoomLabelFontSizes }" />
                 </g>
                 <g v-else>
                     <text
@@ -482,9 +506,9 @@ function toggleFullscreen(state) {
                         }"
                         :opacity="zoomOpacity"
                         :x="zoom.x"
-                        :y="zoom.y + FINAL_CONFIG.style.chart.circles.zoom.label.name.offsetY - (labels.name / 4)"
+                        :y="zoom.y + FINAL_CONFIG.style.chart.circles.zoom.label.name.offsetY - (zoomLabelFontSizes.name / 4)"
                         text-anchor="middle"
-                        :font-size="labels.name"
+                        :font-size="zoomLabelFontSizes.name"
                         :fill="FINAL_CONFIG.style.chart.circles.zoom.label.name.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.name.color"
                         :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.name.bold ? 'bold' : 'auto'"
                     >
@@ -496,24 +520,13 @@ function toggleFullscreen(state) {
                         }"
                         :opacity="zoomOpacity"
                         :x="zoom.x"
-                        :y="zoom.y + labels.value + FINAL_CONFIG.style.chart.circles.zoom.label.value.offsetY"
+                        :y="zoom.y + zoomLabelFontSizes.value + FINAL_CONFIG.style.chart.circles.zoom.label.value.offsetY"
                         text-anchor="middle"
-                        :font-size="labels.value"
+                        :font-size="zoomLabelFontSizes.value"
                         :fill="FINAL_CONFIG.style.chart.circles.zoom.label.value.color === 'auto' ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.value.color"
                         :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.value.bold ? 'bold' : 'normal'"
                     >
-                        {{ 
-                            applyDataLabel(
-                                FINAL_CONFIG.style.chart.circles.zoom.label.value.formatter,
-                                zoom.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.circles.zoom.label.value.prefix,
-                                    v: zoom.value,
-                                    s: FINAL_CONFIG.style.chart.circles.zoom.label.value.suffix,
-                                    r: FINAL_CONFIG.style.chart.circles.zoom.label.value.rounding
-                                })
-                            )
-                        }}
+                        {{ getZoomLabel() }}
                     </text>
                 </g>
             </template>
@@ -551,5 +564,9 @@ function toggleFullscreen(state) {
         r: v-bind(zoomRadiusEnd);
         opacity: 1;
     }
+}
+
+rect {
+    transition: all 0.2s ease-in-out;
 }
 </style>
