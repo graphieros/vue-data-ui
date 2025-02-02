@@ -6549,6 +6549,7 @@ declare module "vue-data-ui" {
     export type VueUiCirclePackDatasetItem = {
         name: string;
         value: number;
+        color?: string;
     };
 
     export type VueUiCirclePackConfig = {
