@@ -253,6 +253,14 @@ const formattedDataset = computed(() => {
 
 const circles = ref([]);
 
+const maxRadius = computed(() => {
+    return Math.max(...circles.value.map(c => c.radius))
+})
+
+function calcOffsetY(radius, offset) {
+    return offset / maxRadius.value * radius;
+}
+
 async function packSingleSet() {
     circles.value = 
     packCircles(
@@ -673,7 +681,7 @@ defineExpose({
                     }"
                     :opacity="zoom ? 0.2 : 1"
                     :x="circle.x"
-                    :y="circle.y - (circle.radius / 2.5) + FINAL_CONFIG.style.chart.circles.labels.name.offsetY"
+                    :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.name.offsetY) - circle.radius / 6"
                     :font-size="circle.radius / circle.name.length * 2"
                     :fill="!FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
                     :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
@@ -691,7 +699,7 @@ defineExpose({
                     }"
                     :opacity="zoom ? 0.2 : 1"
                     :x="circle.x"
-                    :y="circle.y + ((circle.radius / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2)) / 2) + FINAL_CONFIG.style.chart.circles.labels.value.offsetY"
+                    :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.value.offsetY) + circle.radius / 3"
                     :font-size="circle.radius / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2)"
                     :fill="!FINAL_CONFIG.style.chart.circles.labels.value.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
                     :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
