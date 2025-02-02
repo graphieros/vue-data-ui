@@ -312,6 +312,20 @@ const ticks = computed(() => {
             </svg>
         </template>
 
+        <template v-if="type === 'circlePack'">
+            <svg :xmlns="XMLNS" width="100%" viewBox="0 0 100 100" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
+                <circle :cx="50" :cy="50" :r="20" :stroke="FINAL_CONFIG.style.circlePack.color" :stroke-width="1" fill="none"/>
+                <circle :cx="80" :cy="50" :r="10" :stroke="FINAL_CONFIG.style.circlePack.color" :stroke-width="1" fill="none"/>
+                <circle :cx="28" :cy="30" :r="10" :stroke="FINAL_CONFIG.style.circlePack.color" :stroke-width="1" fill="none"/>
+                <circle :cx="25" :cy="76" :r="16" :stroke="FINAL_CONFIG.style.circlePack.color" :stroke-width="1" fill="none"/>
+                <circle :cx="60" :cy="78.5" :r="10" :stroke="FINAL_CONFIG.style.circlePack.color" :stroke-width="1" fill="none"/>
+                <circle :cx="64" :cy="20" :r="13" :stroke="FINAL_CONFIG.style.circlePack.color" :stroke-width="1" fill="none"/>
+                <circle :cx="72" :cy="37" :r="5" :stroke="FINAL_CONFIG.style.circlePack.color" :stroke-width="1" fill="none"/>
+                <circle :cx="25" :cy="45" :r="5" :stroke="FINAL_CONFIG.style.circlePack.color" :stroke-width="1" fill="none"/>
+                <circle :cx="70" :cy="66" :r="5" :stroke="FINAL_CONFIG.style.circlePack.color" :stroke-width="1" fill="none"/>
+            </svg>
+        </template>
+
         <template v-if="type === 'flow'">
             <svg :xmlns="XMLNS" width="100%" viewBox="0 0 80 60" :style="`background:${FINAL_CONFIG.style.backgroundColor}`">
                 <PackageVersion />

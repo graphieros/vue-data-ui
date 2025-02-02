@@ -78,7 +78,7 @@ function prepareConfig() {
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
-    userOptionsVisible.value = !FINAL_CONFIG.value.showOnChartHover;
+    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
 }, { deep: true });
 
