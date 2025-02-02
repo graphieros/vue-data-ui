@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "2.4.90",
+  "version": "2.5.0",
   "type": "module",
   "description": "A user-empowering data visualization Vue 3 components library for eloquent data storytelling",
   "keywords": [
@@ -49,7 +49,8 @@
     "treemap",
     "waffle",
     "wheel",
-    "wordcloud"
+    "wordcloud",
+    "circle packing"
   ],
   "author": "Alec Lloyd Probert",
   "repository": {
