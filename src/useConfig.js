@@ -5230,8 +5230,6 @@ export function useConfig() {
         }
     }
 
-    console.log(vue_ui_circle_pack);
-
     return {
         vue_ui_xy,
         vue_ui_donut,
