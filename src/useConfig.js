@@ -5184,12 +5184,14 @@ export function useConfig() {
                     },
                     labels: {
                         name: {
+                            fontSizeRatio: 1,
                             show: true,
                             bold: false,
                             offsetY: 0,
                             color: 'auto'
                         },
                         value: {
+                            fontSizeRatio: 1,
                             show: true,
                             color: 'auto',
                             rounding: 0,

@@ -6585,6 +6585,7 @@ declare module "vue-data-ui" {
                             bold?: boolean;
                             offsetY?: number;
                             color?: string;
+                            fontSizeRatio?: number;
                         };
                         value?: {
                             show?: boolean;
@@ -6595,6 +6596,7 @@ declare module "vue-data-ui" {
                             formatter?: Formatter;
                             bold?: boolean;
                             offsetY?: number;
+                            fontSizeRatio?: number;
                         };
                     };
                     zoom?: {

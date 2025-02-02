@@ -404,6 +404,15 @@ function getZoomLabel() {
     )
 }
 
+function getValueFontSize(circle) {
+    if (!circle) {
+        return 0
+    }
+
+    const max = circle.radius / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2);
+    return Math.min(circle.radius / 2.5, max);
+}
+
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
     isFullscreen.value = state;
@@ -682,7 +691,7 @@ defineExpose({
                     :opacity="zoom ? 0.2 : 1"
                     :x="circle.x"
                     :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.name.offsetY) - circle.radius / 6"
-                    :font-size="circle.radius / circle.name.length * 2"
+                    :font-size="(circle.radius / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio"
                     :fill="!FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
                     :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
                     text-anchor="middle"
@@ -700,7 +709,7 @@ defineExpose({
                     :opacity="zoom ? 0.2 : 1"
                     :x="circle.x"
                     :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.value.offsetY) + circle.radius / 3"
-                    :font-size="circle.radius / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2)"
+                    :font-size="getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio"
                     :fill="!FINAL_CONFIG.style.chart.circles.labels.value.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
                     :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
                     text-anchor="middle"
