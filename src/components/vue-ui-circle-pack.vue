@@ -399,7 +399,7 @@ function getZoomLabel() {
             p: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.prefix,
             v: zoom.value.value,
             s: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.suffix,
-            r: FINAL_CONFIG.value.style.chart.circles.zoom.label.rounding
+            r: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.rounding
         })
     )
 }
