@@ -8,6 +8,7 @@ import {
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
+    createTSpans, 
     createUid, 
     darkenHexColor, 
     dataLabel, 
@@ -45,6 +46,8 @@ const props = defineProps({
         }
     },
 });
+
+const emit = defineEmits(['selectDatapoint']);
 
 const { vue_ui_circle_pack: DEFAULT_CONFIG } = useConfig();
 
@@ -151,10 +154,10 @@ function findInitialPosition(placedCircles, radius, width, height) {
     const spacing = radius * 2;
 
     for (let circle of placedCircles) {
-        for (let angle = 0; angle < 360; angle += 30) {
+        for (let angle = 0; angle < 360; angle += 1) {
             let rad = (angle * Math.PI) / 180;
             let x = circle.x + spacing * Math.cos(rad);
-            let y = circle.y + spacing * Math.sin(rad);
+            let y = circle.y - spacing * Math.sin(rad);
 
             let candidate = { x, y, radius };
 
@@ -169,16 +172,22 @@ function findInitialPosition(placedCircles, radius, width, height) {
             }
         }
     }
-
     return null;
 }
 
-function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
-    const maxDataPoint = Math.max(...dp.map(d => d.value));
+function packCircles({
+    datapoints, 
+    width, 
+    height, 
+    maxRadius, 
+    offsetX = 0, 
+    offsetY = 0
+}) {
+    const maxDataPoint = Math.max(...datapoints.map(dp => dp.value));
 
-    const radii = dp.map((d, index) => ({
-        ...d,
-        radius: (d.value / maxDataPoint) * maxRadius,
+    const radii = datapoints.map((dp, index) => ({
+        ...dp,
+        radius: (dp.value / maxDataPoint) * maxRadius,
         index
     }));
 
@@ -195,11 +204,11 @@ function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
     });
 
     for (let circleData of sortedCircles.slice(1)) {
-        let { radius, ...el } = circleData;
+        let { radius, ...dp } = circleData;
         let position = findInitialPosition(placedCircles, radius, width, height);
         
         if (position) {
-            placedCircles.push({ ...el, x: position.x, y: position.y, radius });
+            placedCircles.push({ ...dp, x: position.x, y: position.y, radius });
         } else {
             let bestFit = null;
             let minOverlap = Infinity;
@@ -210,7 +219,7 @@ function packCircles(dp, width, height, maxRadius, offsetX = 0, offsetY = 0) {
                     let x = circle.x + (radius + circle.radius) * Math.cos(rad);
                     let y = circle.y + (radius + circle.radius) * Math.sin(rad);
 
-                    let candidate = { ...el, x, y, radius };
+                    let candidate = { ...dp, x, y, radius };
 
                     if (
                         x - radius >= 0 &&
@@ -263,13 +272,12 @@ function calcOffsetY(radius, offset) {
 
 async function packSingleSet() {
     circles.value = 
-    packCircles(
-        formattedDataset.value,
-        // Huge plane size to place all datapoints
-        10000,
-        10000,
-        32
-    );
+    packCircles({
+        datapoints: formattedDataset.value,
+        width: 10000,
+        height: 10000,
+        maxRadius: 32
+    });
 }
 
 const svg = computed(() => {
@@ -665,6 +673,7 @@ defineExpose({
                     :rx="circle.radius"
                     @mouseenter="() => zoomTo(circle)"
                     @mouseout="zoom = null"
+                    @click="emit('selectDatapoint', circle)"
                 />
                 <rect
                     v-if="$slots.pattern"
@@ -681,41 +690,45 @@ defineExpose({
                     }"
                 />
 
-                <!-- LABEL NAME -->
-                <text
-                    v-if="FINAL_CONFIG.style.chart.circles.labels.name.show && circle.name"
-                    :style="{
-                        pointerEvents: 'none',
-                        transition: 'opacity 0.2s ease-in-out'
-                    }"
-                    :opacity="zoom ? 0.2 : 1"
-                    :x="circle.x"
-                    :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.name.offsetY) - circle.radius / 6"
-                    :font-size="(circle.radius / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio"
-                    :fill="!FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
-                    :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
-                    text-anchor="middle"
-                >
-                    {{ circle.name }}
-                </text>
+                <slot name="data-label" v-if="$slots['data-label']" v-bind="{ ...circle, createTSpans, fontSize: { name: (circle.radius / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio, value: getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio}, color: !FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color }"/>
 
-                <!-- LABEL VALUE -->
-                <text
-                    v-if="FINAL_CONFIG.style.chart.circles.labels.value.show"
-                    :style="{
-                        pointerEvents: 'none',
-                        transition: 'opacity 0.2s ease-in-out'
-                    }"
-                    :opacity="zoom ? 0.2 : 1"
-                    :x="circle.x"
-                    :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.value.offsetY) + circle.radius / 3"
-                    :font-size="getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio"
-                    :fill="!FINAL_CONFIG.style.chart.circles.labels.value.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
-                    :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
-                    text-anchor="middle"
-                >
-                    {{ getCircleLabel(circle) }}
-                </text>
+                <template v-else>
+                    <!-- LABEL NAME -->
+                    <text
+                        v-if="FINAL_CONFIG.style.chart.circles.labels.name.show && circle.name"
+                        :style="{
+                            pointerEvents: 'none',
+                            transition: 'opacity 0.2s ease-in-out'
+                        }"
+                        :opacity="zoom ? 0.2 : 1"
+                        :x="circle.x"
+                        :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.name.offsetY) - circle.radius / 6"
+                        :font-size="(circle.radius / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio"
+                        :fill="!FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
+                        :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
+                        text-anchor="middle"
+                    >
+                        {{ circle.name }}
+                    </text>
+    
+                    <!-- LABEL VALUE -->
+                    <text
+                        v-if="FINAL_CONFIG.style.chart.circles.labels.value.show"
+                        :style="{
+                            pointerEvents: 'none',
+                            transition: 'opacity 0.2s ease-in-out'
+                        }"
+                        :opacity="zoom ? 0.2 : 1"
+                        :x="circle.x"
+                        :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.value.offsetY) + circle.radius / 3"
+                        :font-size="getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio"
+                        :fill="!FINAL_CONFIG.style.chart.circles.labels.value.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
+                        :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
+                        text-anchor="middle"
+                    >
+                        {{ getCircleLabel(circle) }}
+                    </text>
+                </template>
 
                 <!-- DONUTS -->
                 <template v-for="donut in donuts">
@@ -737,7 +750,7 @@ defineExpose({
                     :r="currentRadius" 
                     :opacity="zoomOpacity"
                     :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
-                    :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})`: zoom.color" 
+                    :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})`: zoom.color"
                 />
 
                 <g v-if="$slots['zoom-label']" :style="{ pointerEvents: 'none' }">
