@@ -423,7 +423,7 @@ From the dataset you pass into the props, this component will produce the most a
 | ----------------------------- | ------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------ |
 | `VueUiAgePyramid`             | `Array<Array<string / number>>`            | `VueUiSparklineConfig`              | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`                                                                                            | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`                                                             | ✅             | ✅     |
 | `VueUiCandlestick`            | `Array<Array<string / number>>`            | `VueUiCandlestickConfig`            | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`                                                                                            | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`                                            | ✅             | ✅     |
-| `VueUiCirclePack`             | `VueUiCirclePackDatasetItem[]`             | `VueUiCirclePackConfig`             | `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`                                                                                                  | `#svg`, `#legend`, `#watermark`, `#chart-background` , `#pattern`, `#zoom-label`                                                                      | ✅             | ✅     |
+| `VueUiCirclePack`             | `VueUiCirclePackDatasetItem[]`             | `VueUiCirclePackConfig`             | `@selectDatapoint`, `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`                                                                              | `#svg`, `#legend`, `#watermark`, `#chart-background` , `#pattern`, `#zoom-label`, `#data-label`                                                       | ✅             | ✅     |
 | `VueUiChestnut`               | `VueUiChestnutDatasetRoot[]`               | `VueUiChestnutConfig`               | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                    | `#svg`, `#legend`, `#watermark`, `#chart-background`                                                                                                  | ❌             | ✅     |
 | `VueUiDonutEvolution`         | `VueUiDonutEvolutionDatasetItem[]`         | `VueUiDonutEvolutionConfig`         | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`                                                                                 | `#svg`, `#legend`, `#reset-action`, `#watermark`, `#chart-background`                                                                                 | ❌             | ✅     |
 | `VueUiDonut`                  | `VueUiDonutDatasetItem[]`                  | `VueUiDonutConfig`                  | `@selectDatapoint`, `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`                            | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`, `#chart-background`, `#pattern`                  | ✅             | ✅     |
@@ -848,3 +848,85 @@ List of available patterns:
 | squares          |
 | wave             |
 | zigzag           |
+
+# Utility functions
+
+A set of uility functions is available:
+
+```js
+import {
+  abbreviate,
+  darkenColor,
+  lightenColor,
+  shiftColorHue,
+  createTSpans,
+} from "vue-data-ui";
+```
+
+### abreviate
+
+```js
+import { abbreviate } from "vue-data-ui";
+
+const text = "lorem ipsum dolor sit amet";
+const abbreviated = abbreviate({
+  source: text,
+  length: 5,
+}); // Result: LIDSA
+```
+
+### darkenColor
+
+```js
+import { darkenColor } from "vue-data-ui";
+
+const color = "#FF0000";
+const darkened = darkenColor(color, 0.5); // Result: #800000ff
+```
+
+### lightenColor
+
+```js
+import { lightenColor } from "vue-data-ui";
+
+const color = "#FF0000";
+const lightened = lightenColor(color, 0.5); // Result: #ff8080ff
+```
+
+### shiftColorHue
+
+```js
+import { shiftColorHue } from "vue-data-ui";
+
+// Color format can be HEX (with or without alpha channel), RGB, RGBA, or named color
+const color = "#FF0000";
+const shifted = shiftColorHue(color, 0.1); // Result: #ff9900ff
+```
+
+### createTSpans
+
+```js
+import { createTSpans } from "vue-data-ui";
+
+const textContent = createTSpans({
+  content: "This is an example of multiline text",
+  fontSize: 16,
+  fill: "#1A1A1A",
+  maxWords: 3,
+  x: 10,
+  y: 20,
+});
+```
+
+```html
+<!-- The output must be used inside a svg text element with `v-html`, for example in a #data-label slot, or in your own svg -->
+
+<text
+  :x="10"
+  :y="20"
+  fill="#1A1A1A"
+  :font-size="16"
+  text-anchor="middle"
+  v-html="textContent"
+/>
+```
