@@ -6874,4 +6874,50 @@ declare module "vue-data-ui" {
      * @returns The shifted color in hexadecimal format.
      */
     export const shiftColorHue: (color: string, strength: number) => string;
+
+    export type CreateTSpansArgs = {
+        content: string;
+        fontSize: number;
+        fill: string;
+        maxWords: number;
+        x: number;
+        y: number;
+    }
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Creates TSpan elements from a string to break text into multiple lines.
+     * The output should be placed with `v-html` inside an SVG `<text>` element.
+     * ___
+     * @example
+     * const textContent = createTSpans({
+     *   content: "This is an example of multiline text",
+     *   fontSize: 16,
+     *   fill: "#1A1A1A",
+     *   maxWords: 3, // Will create lines of 3 words max
+     *   x: 10,
+     *   y: 20
+     * });
+     * 
+     * // Usage: <text :x="10" :y="20" fill="#1A1A1A" :font-size="16" v-html="textContent"/>
+     * 
+     * @param {Object} args - The arguments object.
+     * @param {string} args.content - The text content to be split into lines.
+     * @param {number} args.fontSize - The font size used to determine line spacing.
+     * @param {string} args.fill - The fill color for the text.
+     * @param {number} args.maxWords - Maximum number of words per line.
+     * @param {number} args.x - The x-coordinate for each `tspan` element.
+     * @param {number} args.y - The starting y-coordinate for the first `tspan`.
+     * 
+     * @returns {string} A string containing the HTML content to be placed with `v-html` inside an SVG `<text>` element.
+    */
+    export const createTSpans: ({
+        content,
+        fontSize,
+        fill,
+        maxWords,
+        x,
+        y
+    }: CreateTSpansArgs) => string;
 }
