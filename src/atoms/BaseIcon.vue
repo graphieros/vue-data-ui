@@ -1,4 +1,4 @@
-‹<script setup>
+<script setup>
 import { computed } from "vue";
 import { XMLNS } from "../lib";
 
@@ -189,10 +189,6 @@ const icons = computed(() => {
 </template>
 
 <style scoped>
-svg * {
-    all: unset;
-}
-
 .spin {
     animation: smartspin 0.5s infinite linear;
 }

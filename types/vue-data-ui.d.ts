@@ -5444,6 +5444,7 @@ declare module "vue-data-ui" {
                     | ((
                         params: VueUiTooltipParams<
                             VueUiWordCloudDatapoint,
+                            any,
                             VueUiDonutConfig
                         >
                     ) => string);
