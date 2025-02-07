@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "2.6.0-beta.0",
+  "version": "2.6.0-beta.1",
   "type": "module",
   "description": "A user-empowering data visualization Vue 3 components library for eloquent data storytelling",
   "keywords": [
@@ -82,14 +82,14 @@
     "dev": "node add-dev-dep.cjs && npm i && vite",
     "clean": "node cleanup.cjs",
     "build": "npm run clean && vite build --mode production && node copy-types.cjs && npm i",
-    "prod": "node del-dev-dep.cjs && npm run test && npx cypress run --component && npm run clean && vite build --mode production && node copy-types.cjs && node copy-docs.cjs",
+    "prod": "node del-dev-dep.cjs && npm run test && npx cypress run --component && npm run clean && vite build --mode production && node copy-types.cjs && node copy-docs.cjs && node post-build.cjs",
     "prod:publish": "npm run prod && node publish-build.cjs",
     "build:dev": "npm run build && npm run dev",
     "test": "vitest --run",
     "test:w": "vitest --watch",
     "test:e2e": "npx cypress open",
     "simple-build": "npm run clean && vite build --mode production && node copy-types.cjs",
-    "preprod": "node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node copy-docs.cjs"
+    "preprod": "node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node copy-docs.cjs && node post-build.cjs"
   },
   "peerDependencies": {
     "vue": "^3.3.0"
