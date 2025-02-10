@@ -1898,10 +1898,11 @@ export default {
                         }
                     }
                 })
-                const curve = this.createSmoothPath(plots);
-                const autoScaleCurve = this.createSmoothPath(autoScalePlots);
-                const straight = this.createStraightPath(plots);
-                const autoScaleStraight = this.createStraightPath(autoScalePlots);
+
+                const curve = this.createSmoothPath(plots.filter(p => p.value !== null));
+                const autoScaleCurve = this.createSmoothPath(autoScalePlots.filter(p => p.value !== null));
+                const straight = this.createStraightPath(plots.filter(p => p.value !== null));
+                const autoScaleStraight = this.createStraightPath(autoScalePlots.filter(p => p.value !== null));
 
                 const scaleYLabels = individualScale.ticks.map(t => {
                     return {
