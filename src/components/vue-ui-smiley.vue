@@ -34,10 +34,11 @@ onMounted(() => {
 });
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (!Object.hasOwn(props.dataset, 'rating') || objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSmiley',
-            type: 'dataset'
+            type: 'datasetAttribute',
+            property: 'rating'
         })
     }
 }
