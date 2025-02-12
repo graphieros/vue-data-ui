@@ -115,7 +115,7 @@ const components = ref([             //--- CELEBRATION THEMES
   // cursor
 ]);
 
-const selectedComponent = ref(components.value[51]);
+const selectedComponent = ref(components.value[46]);
 
 </script>
 
