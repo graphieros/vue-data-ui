@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Wed Feb 12 05:58:31 2025 +0100 - graphieros
+### Commit: 59e8fc6
+- v2.6.3
+
+## Wed Feb 12 05:58:20 2025 +0100 - graphieros
+### Commit: a07f1cd
+- Update documentation
+
+## Wed Feb 12 05:57:16 2025 +0100 - graphieros
+### Commit: f416666
+- Improvement - VueUiRating - Add layer-under and layer-above scoped slots to customize rating units
+
+## Wed Feb 12 05:56:25 2025 +0100 - graphieros
+### Commit: 585835a
+- Dev environment - Update VueUiRating testing arena
+
+## Tue Feb 11 07:02:54 2025 +0100 - graphieros
+### Commit: 73c502c
+- Add changelog
+
 ## Tue Feb 11 06:37:44 2025 +0100 - graphieros
 ### Commit: e004f00
 - Add warning message when dataset is empty or has the wrong format
