@@ -472,10 +472,10 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Rating
 
-| Name          | dataset type         | config type         | emits / exposed methods             |
-| ------------- | -------------------- | ------------------- | ----------------------------------- |
-| `VueUiRating` | `VueUiRatingDataset` | `VueUiRatingConfig` | `@rate`, `getData`,`toggleReadonly` |
-| `VueUiSmiley` | `VueUiRatingDataset` | `VueUiSmileyConfig` | `@rate`, `getData`,`toggleReadonly` |
+| Name          | dataset type         | config type         | emits / exposed methods             | slots                          |
+| ------------- | -------------------- | ------------------- | ----------------------------------- | ------------------------------ |
+| `VueUiRating` | `VueUiRatingDataset` | `VueUiRatingConfig` | `@rate`, `getData`,`toggleReadonly` | `#layer-under`, `#layer-above` |
+| `VueUiSmiley` | `VueUiRatingDataset` | `VueUiSmileyConfig` | `@rate`, `getData`,`toggleReadonly` |                                |
 
 ### Utilities
 
