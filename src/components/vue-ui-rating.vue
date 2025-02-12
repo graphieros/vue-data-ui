@@ -33,6 +33,7 @@ const props = defineProps({
 const uid = ref(createUid());
 const isTooltip = ref(false);
 const hoveredValue = ref(undefined);
+const focusedValue = ref(undefined);
 const units = ref([]);
 const slots = useSlots();
 
@@ -214,104 +215,117 @@ defineExpose({
                     class="vue-ui-rating-unit-container"
                     :style="`position:relative;height:${FINAL_CONFIG.style.itemSize}px;width:${FINAL_CONFIG.style.itemSize}px`"
                 >
-                    <!-- IMAGE FIRST LAYER -->
-                    <img
-                        :data-cy="`rating-image-${i}`"
-                        v-if="isImage"
-                        :src="FINAL_CONFIG.style.image.src"
-                        :height="FINAL_CONFIG.style.itemSize"
-                        :width="FINAL_CONFIG.style.itemSize"
-                        class="vue-ui-rating-unit"
-                        :style="`position:absolute;top:0;left:0;opacity:${!isNaN(hoveredValue) ? getInactiveFill(value, true) : FINAL_CONFIG.style.image.inactiveOpacity}`"
-                    />
+                    <!-- LAYER SLOTS -->
+                    <div v-if="$slots['layer-under'] || $slots['layer-above']" style="position:relative">
+                        <div v-if="$slots['layer-under']" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%">
+                            <slot name="layer-under" v-bind="{ value, size: FINAL_CONFIG.style.itemSize, hoveredValue, focusedValue }"/>
+                        </div>
+                        <div v-if="$slots['layer-above']" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%">
+                            <slot name="layer-above" v-bind="{ value, size: FINAL_CONFIG.style.itemSize, hoveredValue, focusedValue }"/>
+                        </div>
+                    </div>
+                        
 
-                    <!-- STAR FIRST LAYER -->
-                    <svg
-                        :xmlns="XMLNS"
-                        v-else
-                        viewBox="0 0 100 100"
-                        :height="FINAL_CONFIG.style.itemSize"
-                        :width="FINAL_CONFIG.style.itemSize"
-                        class="vue-ui-rating-unit"
-                    >
-                        <defs>
-                            <radialGradient
-                                cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
-                                :id="`star_gradient_under_${uid}`"
-                            >
-                                <stop offset="0%" :stop-color="`${shiftHue(FINAL_CONFIG.style.star.activeColor, 0.05)}`"/>
-                                <stop offset="100%" :stop-color="FINAL_CONFIG.style.star.activeColor" />
-                            </radialGradient>
-                        </defs>
-                        <polygon
-                            :data-cy="`rating-shape-${i}`"
-                            :points="createStar({
-                                plot: { x: 50, y: 50 },
-                                radius: 30,
-                                apexes: FINAL_CONFIG.style.star.apexes
-                            })"
-                            :fill="
-                                !isNaN(hoveredValue)
-                                    ? getInactiveFill(value)
-                                    : FINAL_CONFIG.style.star.inactiveColor
-                            "
-                            :stroke="
-                                FINAL_CONFIG.style.star.borderColor
-                                    ? FINAL_CONFIG.style.star.borderColor
-                                    : hoveredValue
-                                    ? getInactiveFill(value)
-                                    : FINAL_CONFIG.style.star.inactiveColor
-                            "
-                            :stroke-width="FINAL_CONFIG.style.star.borderWidth"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                    <template v-else>
+                        <!-- IMAGE FIRST LAYER -->
+                        <img
+                            :data-cy="`rating-image-${i}`"
+                            v-if="isImage"
+                            :src="FINAL_CONFIG.style.image.src"
+                            :height="FINAL_CONFIG.style.itemSize"
+                            :width="FINAL_CONFIG.style.itemSize"
+                            class="vue-ui-rating-unit"
+                            :style="`position:absolute;top:0;left:0;opacity:${!isNaN(hoveredValue) ? getInactiveFill(value, true) : FINAL_CONFIG.style.image.inactiveOpacity}`"
                         />
-                    </svg>
-
-                    <!-- IMAGE SECOND LAYER -->
-                    <img
-                        :data-cy="`rating-image-overlay-${i}`"
-                        v-if="isImage"
-                        :src="FINAL_CONFIG.style.image.src"
-                        :alt="`${FINAL_CONFIG.style.image.alt} ${value}`"
-                        :height="FINAL_CONFIG.style.itemSize"
-                        :width="FINAL_CONFIG.style.itemSize"
-                        :id="`active_${uid}_${value}`"
-                        class="vue-ui-rating-unit"
-                        :style="`position:absolute;top:0;left:0;clip:rect(0px,${calcShapeFill(i, true) * FINAL_CONFIG.style.itemSize}px,${FINAL_CONFIG.style.itemSize}px,0px`"
-                    />
-
-                    <!-- STAR SECOND LAYER -->
-                    <svg
-                        :xmlns="XMLNS"
-                        :data-cy="`rating-shape-overlay-${i}`"
-                        v-else
-                        :viewBox="`0 0 ${calcShapeFill(i)} 100`"
-                        :height="FINAL_CONFIG.style.itemSize"
-                        class="vue-ui-rating-unit"
-                        :id="`active_${uid}_${value}`"
-                        style="position:absolute;top:0;left:0"
-                    >
-                        <defs>
-                            <radialGradient
-                                cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
-                                :id="`star_gradient_over_${uid}`"
-                            >
-                                <stop offset="0%" :stop-color="`${shiftHue(FINAL_CONFIG.style.star.activeColor, 0.05)}`"/>
-                                <stop offset="100%" :stop-color="FINAL_CONFIG.style.star.activeColor" />
-                            </radialGradient>
-                        </defs>
-
-                        <polygon
-                            :points="createStar({
-                                plot: { x: 50, y: 50 },
-                                radius: 30,
-                                apexes: FINAL_CONFIG.style.star.apexes
-                            })"
-                            :fill="FINAL_CONFIG.style.star.useGradient ? `url(#star_gradient_over_${uid})` : FINAL_CONFIG.style.star.activeColor"
-                            :stroke="FINAL_CONFIG.style.star.activeColor"
+    
+                        <!-- STAR FIRST LAYER -->
+                        <svg
+                            :xmlns="XMLNS"
+                            v-else
+                            viewBox="0 0 100 100"
+                            :height="FINAL_CONFIG.style.itemSize"
+                            :width="FINAL_CONFIG.style.itemSize"
+                            class="vue-ui-rating-unit"
+                        >
+                            <defs>
+                                <radialGradient
+                                    cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                                    :id="`star_gradient_under_${uid}`"
+                                >
+                                    <stop offset="0%" :stop-color="`${shiftHue(FINAL_CONFIG.style.star.activeColor, 0.05)}`"/>
+                                    <stop offset="100%" :stop-color="FINAL_CONFIG.style.star.activeColor" />
+                                </radialGradient>
+                            </defs>
+                            <polygon
+                                :data-cy="`rating-shape-${i}`"
+                                :points="createStar({
+                                    plot: { x: 50, y: 50 },
+                                    radius: 30,
+                                    apexes: FINAL_CONFIG.style.star.apexes
+                                })"
+                                :fill="
+                                    !isNaN(hoveredValue)
+                                        ? getInactiveFill(value)
+                                        : FINAL_CONFIG.style.star.inactiveColor
+                                "
+                                :stroke="
+                                    FINAL_CONFIG.style.star.borderColor
+                                        ? FINAL_CONFIG.style.star.borderColor
+                                        : hoveredValue
+                                        ? getInactiveFill(value)
+                                        : FINAL_CONFIG.style.star.inactiveColor
+                                "
+                                :stroke-width="FINAL_CONFIG.style.star.borderWidth"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+    
+                        <!-- IMAGE SECOND LAYER -->
+                        <img
+                            :data-cy="`rating-image-overlay-${i}`"
+                            v-if="isImage"
+                            :src="FINAL_CONFIG.style.image.src"
+                            :alt="`${FINAL_CONFIG.style.image.alt} ${value}`"
+                            :height="FINAL_CONFIG.style.itemSize"
+                            :width="FINAL_CONFIG.style.itemSize"
+                            :id="`active_${uid}_${value}`"
+                            class="vue-ui-rating-unit"
+                            :style="`position:absolute;top:0;left:0;clip:rect(0px,${calcShapeFill(i, true) * FINAL_CONFIG.style.itemSize}px,${FINAL_CONFIG.style.itemSize}px,0px`"
                         />
-                    </svg>
+    
+                        <!-- STAR SECOND LAYER -->
+                        <svg
+                            :xmlns="XMLNS"
+                            :data-cy="`rating-shape-overlay-${i}`"
+                            v-else
+                            :viewBox="`0 0 ${calcShapeFill(i)} 100`"
+                            :height="FINAL_CONFIG.style.itemSize"
+                            class="vue-ui-rating-unit"
+                            :id="`active_${uid}_${value}`"
+                            style="position:absolute;top:0;left:0"
+                        >
+                            <defs>
+                                <radialGradient
+                                    cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                                    :id="`star_gradient_over_${uid}`"
+                                >
+                                    <stop offset="0%" :stop-color="`${shiftHue(FINAL_CONFIG.style.star.activeColor, 0.05)}`"/>
+                                    <stop offset="100%" :stop-color="FINAL_CONFIG.style.star.activeColor" />
+                                </radialGradient>
+                            </defs>
+    
+                            <polygon
+                                :points="createStar({
+                                    plot: { x: 50, y: 50 },
+                                    radius: 30,
+                                    apexes: FINAL_CONFIG.style.star.apexes
+                                })"
+                                :fill="FINAL_CONFIG.style.star.useGradient ? `url(#star_gradient_over_${uid})` : FINAL_CONFIG.style.star.activeColor"
+                                :stroke="FINAL_CONFIG.style.star.activeColor"
+                            />
+                        </svg>
+                    </template>
 
                     <!-- MOUSE TRAPS -->
                     <svg
@@ -333,6 +347,8 @@ defineExpose({
                             @click="rate(value)"
                             @mouseenter="hoveredValue = value"
                             @mouseleave="hoveredValue = undefined"
+                            @focus="focusedValue = value"
+                            @blur="focusedValue = undefined"
                             tabindex="0"
                             @keyup.enter="rate(value)"
                         />
@@ -347,6 +363,8 @@ defineExpose({
                             fill="transparent"
                             @mouseenter="hoveredValue = value"
                             @mouseleave="hoveredValue = undefined"
+                            @focus="focusedValue = value"
+                            @blur="focusedValue = undefined"
                         />
                     </svg>
                     <template v-if="FINAL_CONFIG.style.tooltip.show && hasBreakdown && isReadonly">
