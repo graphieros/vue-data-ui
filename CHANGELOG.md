@@ -17,10 +17,6 @@ All notable changes to this project will be documented in this file.
 ### Commit: 585835a
 - Dev environment - Update VueUiRating testing arena
 
-## Tue Feb 11 07:02:54 2025 +0100 - graphieros
-### Commit: 73c502c
-- Add changelog
-
 ## Tue Feb 11 06:37:44 2025 +0100 - graphieros
 ### Commit: e004f00
 - Add warning message when dataset is empty or has the wrong format
