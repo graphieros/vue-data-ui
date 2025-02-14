@@ -54,68 +54,79 @@ import ArenaVueUiFunnel from "../TestingArena/ArenaVueUiFunnel.vue";
 import ArenaVueUiHistoryPlot from "../TestingArena/ArenaVueUiHistoryPlot.vue";
 import ArenaVueUiCirclePack from "../TestingArena/ArenaVueUiCirclePack.vue";
 
+/**
+ * Modify the index to display a component
+ * [0] = VueUiXy 
+ */
+const selectedComponent = ref(components.value[0]);
+
+/**
+ * Legacy testing arena where some non chart components can be tested
+ */
 const showOldArena = ref(false);
 
-const components = ref([             //--- CELEBRATION THEMES
-  /*____________________*/"VueUiXy", //  0 OK 
-  /*_________________*/"VueUiDonut", //  1 OK -
-  /*_______________*/"VueUiTreemap", //  2 OK -
-  /*________________*/"VueUiWaffle", //  3 OK -
-  /*_________________*/"VueUiRadar", //  4 OK -
-  /*______________*/"VueUiQuadrant", //  5 OK -
-  /*_________________*/"VueUiGauge", //  6 OK /
-  /*_________________*/"VueUiWheel", //  7 OK /
-  /*_____________*/"VueUiTiremarks", //  8 OK /
-  /*______________*/"VueUiChestnut", //  9 OK -
-  /*_________________*/"VueUiOnion", // 10 OK -
-  /*___________*/"VueUiVerticalBar", // 11 OK -
-  /*_______________*/"VueUiHeatmap", // 12 OK -
-  /*_______________*/"VueUiScatter", // 13 OK -
-  /*___________*/"VueUiCandlestick", // 14 OK -
-  /*_____________*/"VueUiSparkline", // 15 OK /
-  /*______________*/"VueUiSparkbar", // 16 OK /
-  /*_________*/"VueUiSparkStackbar", // 17 OK /
-  /*________*/"VueUiSparkHistogram", // 18 OK /
-  /*____________*/"VueUiSparkgauge", // 19 OK /
-  /*____________*/"VueUiSparkTrend", // 20 OK /
-  /*____________*/"VueUiQuickChart", // 21 OK -
-  /*____________*/"VueUiAgePyramid", // 22 OK -
-  /*________*/"VueUiRelationCircle", // 23 OK /
-  /*___________*/"VueUiThermometer", // 24 OK /
-  /*_________________*/"VueUiRings", // 25 OK -
-  /*________*/"VueUiDonutEvolution", // 26 OK -
-  /*__________________*/"VueUiIcon", // 27 _/ -
-  /*_____________*/"VueUiMoodRadar", // 28 OK -
-  /*______________*/"VueUiMolecule", // 29 OK -
-  /*__________*/"VueUiNestedDonuts", // 30 OK -
-  /*________________*/"VueUiGalaxy", // 31 OK -
-  /*_____________*/"VueUiStripPlot", // 32 OK -
-  /*______________*/"VueUiDumbbell", // 33 OK -
-  /*_________________*/"VueUi3dBar", // 34 OK -
-  /*________*/"VueUiTableSparkline", // 35 OK /
-  /*__________*/"VueUiTableHeatmap", // 36 OK -
-  /*____________ */"VueUiWordCloud", // 37 OK -
-  /*______________*/"VueUiXyCanvas", // 38 OK -
-  /*__________________*/"VueUiFlow", // 39 OK -
-  /**/"VueUiParallelCoordinatePlot", // 40 OK -
-  /*_________________*/"VueUiTimer", // 41 _/ /
-  /*_________*/"VueUiCarouselTable", // 42 _/ /
-  /*_________________*/"VueUiGizmo", // 43 _/ /
-  /*___________________*/"VueUiKpi", // 44 _/ /
-  /*______________*/"VueUiStackbar", // 45 OK /
-  /*________________*/"VueUiRating", // 46 _/ /
-  /*________________*/"VueUiSmiley", // 47 _/ /
-  /*________________*/"VueUiBullet", // 48 OK /
-  /*________________*/"VueUiFunnel", // 49 OK /
-  /*___________*/"VueUiHistoryPlot", // 50 OK -
+
+const components = ref([             //------|
+  /*____________________*/"VueUiXy", //  0
+  /*_________________*/"VueUiDonut", //  1
+  /*_______________*/"VueUiTreemap", //  2
+  /*________________*/"VueUiWaffle", //  3
+  /*_________________*/"VueUiRadar", //  4
+  /*______________*/"VueUiQuadrant", //  5
+  /*_________________*/"VueUiGauge", //  6
+  /*_________________*/"VueUiWheel", //  7
+  /*_____________*/"VueUiTiremarks", //  8
+  /*______________*/"VueUiChestnut", //  9
+  /*_________________*/"VueUiOnion", // 10
+  /*___________*/"VueUiVerticalBar", // 11
+  /*_______________*/"VueUiHeatmap", // 12
+  /*_______________*/"VueUiScatter", // 13
+  /*___________*/"VueUiCandlestick", // 14
+  /*_____________*/"VueUiSparkline", // 15
+  /*______________*/"VueUiSparkbar", // 16
+  /*_________*/"VueUiSparkStackbar", // 17
+  /*________*/"VueUiSparkHistogram", // 18
+  /*____________*/"VueUiSparkgauge", // 19
+  /*____________*/"VueUiSparkTrend", // 20
+  /*____________*/"VueUiQuickChart", // 21
+  /*____________*/"VueUiAgePyramid", // 22
+  /*________*/"VueUiRelationCircle", // 23
+  /*___________*/"VueUiThermometer", // 24
+  /*_________________*/"VueUiRings", // 25
+  /*________*/"VueUiDonutEvolution", // 26
+  /*__________________*/"VueUiIcon", // 27
+  /*_____________*/"VueUiMoodRadar", // 28
+  /*______________*/"VueUiMolecule", // 29
+  /*__________*/"VueUiNestedDonuts", // 30
+  /*________________*/"VueUiGalaxy", // 31
+  /*_____________*/"VueUiStripPlot", // 32
+  /*______________*/"VueUiDumbbell", // 33
+  /*_________________*/"VueUi3dBar", // 34
+  /*________*/"VueUiTableSparkline", // 35
+  /*__________*/"VueUiTableHeatmap", // 36
+  /*____________ */"VueUiWordCloud", // 37
+  /*______________*/"VueUiXyCanvas", // 38
+  /*__________________*/"VueUiFlow", // 39
+  /**/"VueUiParallelCoordinatePlot", // 40
+  /*_________________*/"VueUiTimer", // 41
+  /*_________*/"VueUiCarouselTable", // 42
+  /*_________________*/"VueUiGizmo", // 43
+  /*___________________*/"VueUiKpi", // 44
+  /*______________*/"VueUiStackbar", // 45
+  /*________________*/"VueUiRating", // 46
+  /*________________*/"VueUiSmiley", // 47
+  /*________________*/"VueUiBullet", // 48
+  /*________________*/"VueUiFunnel", // 49
+  /*___________*/"VueUiHistoryPlot", // 50
   /*____________*/"VueUiCirclePack", // 51
 
-  // screenshot
-  // dashboard
-  // cursor
+  /**
+   * TODO: migrate manual testing for the following:
+   * - VueUiScreenshot
+   * - VueUiDashboard
+   * - VueUiCursor
+   */
 ]);
-
-const selectedComponent = ref(components.value[46]);
 
 </script>
 
@@ -285,4 +296,6 @@ const selectedComponent = ref(components.value[46]);
 
   <!-- 51 -->
   <ArenaVueUiCirclePack v-if="selectedComponent === 'VueUiCirclePack'" />
+
+  <!-- Add testing arena for new components here -->
 </template>
