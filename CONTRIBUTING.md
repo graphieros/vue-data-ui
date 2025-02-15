@@ -19,7 +19,7 @@ We'd also love PRs. If you're thinking of a large PR, we advise opening up an is
 
 0. [Fork][fork] and clone the repository.
 1. Configure and install the dependencies: `npm install`.
-2. `npm run simple-build` will create the local dist
+2. `npm run prod`
 3. Run development: `npm run dev`. This step will install a temporary local vue-data-ui
 4. Create a new branch: `git checkout -b my-branch-name`.
 5. Make your change, add tests, and make sure the tests still pass by running `npm run prod`.
