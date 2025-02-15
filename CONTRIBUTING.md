@@ -82,3 +82,12 @@ The page shows either 4 or 5 versions of the tested component:
 All versions 2 to 5 must be identical after running `npm run prod` then `npm run dev`
 
 The testing arena is pretty raw in terms of layout. Feel free to make it better ;)
+
+### Tests
+
+1. Unit tests (Vitest)
+
+   - `npm run test` to run, add `-w` flag to watch
+
+2. Component tests (Cypress)
+   - `npm run test:e2e` to open Cypress
