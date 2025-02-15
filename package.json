@@ -98,7 +98,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "cypress": "^14.0.2",
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
+    "jspdf": "^2.5.2",
     "remove-attr": "^0.0.13",
     "sass": "^1.57.1",
     "simple-git": "^3.24.0",
