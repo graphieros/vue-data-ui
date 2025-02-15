@@ -23,5 +23,8 @@ import { mount } from 'cypress/vue'
 
 Cypress.Commands.add('mount', mount)
 
-// Example use:
-// cy.mount(MyComponent)
+Cypress.on("uncaught:exception", (err) => {
+    if (err.message.includes("ResizeObserver loop completed with undelivered notifications")) {
+        return false;
+    }
+});
