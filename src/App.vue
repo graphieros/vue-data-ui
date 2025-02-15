@@ -54,18 +54,6 @@ import ArenaVueUiFunnel from "../TestingArena/ArenaVueUiFunnel.vue";
 import ArenaVueUiHistoryPlot from "../TestingArena/ArenaVueUiHistoryPlot.vue";
 import ArenaVueUiCirclePack from "../TestingArena/ArenaVueUiCirclePack.vue";
 
-/**
- * Modify the index to display a component
- * [0] = VueUiXy 
- */
-const selectedComponent = ref(components.value[0]);
-
-/**
- * Legacy testing arena where some non chart components can be tested
- */
-const showOldArena = ref(false);
-
-
 const components = ref([             //------|
   /*____________________*/"VueUiXy", //  0
   /*_________________*/"VueUiDonut", //  1
@@ -127,6 +115,17 @@ const components = ref([             //------|
    * - VueUiCursor
    */
 ]);
+
+/**
+ * Modify the index to display a component
+ * [0] = VueUiXy 
+ */
+ const selectedComponent = ref(components.value[0]);
+
+/**
+ * Legacy testing arena where some non chart components can be tested
+ */
+const showOldArena = ref(false);
 
 </script>
 
