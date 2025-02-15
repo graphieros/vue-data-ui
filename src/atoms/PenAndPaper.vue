@@ -265,7 +265,7 @@ const range = ref(null);
             'visible': active
         }"
     >
-        <button 
+        <button
             class="vue-ui-pen-and-paper-action"
             :style="{
                 backgroundColor: backgroundColor,
@@ -276,9 +276,10 @@ const range = ref(null);
             <BaseIcon name="close" :stroke="color"/>
         </button>
         <button
-        :class="{
-            'vue-ui-pen-and-paper-action': true, 
-        }"
+            data-cy="pen-and-paper-color-picker"
+            :class="{
+                'vue-ui-pen-and-paper-action': true, 
+            }"
             style="padding: 0 !important"
             >
             <ColorPicker 
@@ -288,6 +289,7 @@ const range = ref(null);
             />
         </button>
         <button
+            data-cy="pen-and-paper-undo"
             :class="{
                 'vue-ui-pen-and-paper-action': true, 
                 'vue-ui-pen-and-paper-action-disabled': !stack.length
@@ -302,6 +304,7 @@ const range = ref(null);
             <BaseIcon name="restart" :stroke="color"/>
         </button>
         <button
+            data-cy="pen-and-paper-redo"
             :class="{
                 'vue-ui-pen-and-paper-action': true, 
                 'vue-ui-pen-and-paper-action-disabled': !redoStack.length
@@ -315,6 +318,7 @@ const range = ref(null);
             <BaseIcon name="restart" :stroke="color" style="transform: scaleX(-1)"/>
         </button>
         <button
+            data-cy="pen-and-paper-reset"
             :class="{
                 'vue-ui-pen-and-paper-action': true, 
                 'vue-ui-pen-and-paper-action-disabled': !stack.length
@@ -329,6 +333,7 @@ const range = ref(null);
             <BaseIcon name="trash" :stroke="color"/>
         </button>
         <input 
+            data-cy="pen-and-paper-thickness"
             ref="range" 
             type="range" 
             class="vertical-range" 
@@ -342,6 +347,7 @@ const range = ref(null);
         />
     </div>
     <svg
+        data-cy="pen-and-paper"
         ref="svgElement"
         :xmlns="XMLNS"
         :viewBox="viewBox"
