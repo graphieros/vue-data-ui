@@ -1,6 +1,6 @@
 import PenAndPaper from "./PenAndPaper.vue";
 
-describe('Pen and Paper Component', () => {
+describe('<PenAndPaper />', () => {
     beforeEach(() => {
         const parent = document.createElement('div');
         cy.get('body').invoke('css', 'overflow', 'hidden');
