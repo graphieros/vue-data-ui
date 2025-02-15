@@ -89,5 +89,5 @@ The testing arena is pretty raw in terms of layout. Feel free to make it better 
 
    - `npm run test` to run, add `-w` flag to watch
 
-2. Component tests (Cypress)
+2. Component tests (Cypress, Component testing)
    - `npm run test:e2e` to open Cypress
