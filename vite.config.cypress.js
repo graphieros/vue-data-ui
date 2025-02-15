@@ -7,5 +7,8 @@ export default defineConfig({
         alias: {
             'vue': 'vue/dist/vue.esm-bundler.js'
         }
-    }
+    },
+    optimizeDeps: {
+        include: ['vue-data-ui']
+    },
 });

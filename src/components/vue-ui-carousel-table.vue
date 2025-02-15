@@ -395,7 +395,7 @@ defineExpose({
 </script>
 
 <template>
-    <div style="position:relative; overflow:visible;" ref="chartContainer" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div class="vue-ui-carousel-table" style="position:relative; overflow:visible;" ref="chartContainer" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <div 
             ref="tableContainer"
             :id="`carousel-table_${uid}`"

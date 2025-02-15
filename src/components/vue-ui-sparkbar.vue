@@ -233,6 +233,7 @@ function selectDatapoint(datapoint, index) {
 
 <template>
     <div
+        class="vue-ui-sparkbar"
         :style="{
             width: '100%',
             fontFamily: FINAL_CONFIG.style.fontFamily,

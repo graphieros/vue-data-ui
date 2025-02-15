@@ -162,7 +162,7 @@ function getActiveColor(index) {
 </script>
 
 <template>
-    <div :style="`background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily};width:100%;`" @mouseover="isTooltip = true" @mouseleave="isTooltip = false; hoveredValue = undefined">
+    <div class="vue-ui-smiley" :style="`background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily};width:100%;`" @mouseover="isTooltip = true" @mouseleave="isTooltip = false; hoveredValue = undefined">
         <!-- TITLE -->
         <div class="vue-ui-rating-title" v-if="FINAL_CONFIG.style.title.text" style="width:100%">
             <div data-cy="smiley-title" :style="`color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};text-align:${FINAL_CONFIG.style.title.textAlign};margin-bottom:${FINAL_CONFIG.style.title.offsetY}px;font-size:${FINAL_CONFIG.style.title.fontSize}px`">

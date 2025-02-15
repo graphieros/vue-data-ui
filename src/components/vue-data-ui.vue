@@ -204,7 +204,7 @@ const toggleAnnotator = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
-        throw new Error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n${Object.keys(components).map(key => `. ${key}\n`).join('')}`);
+        console.error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n${Object.keys(components).map(key => `. ${key}\n`).join('')}`);
     }
 });
 

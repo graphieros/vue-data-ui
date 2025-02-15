@@ -57,7 +57,7 @@ const barBlur = computed(() => `blur(${FINAL_CONFIG.value.bar.trackBlur}px) hue-
 </script>
 
 <template>
-    <svg :xmlns="XMLNS" :viewBox="viewBox[FINAL_CONFIG.type]" style="background: transparent" width="100%">
+    <svg class="vue-ui-mini-loader" :xmlns="XMLNS" :viewBox="viewBox[FINAL_CONFIG.type]" style="background: transparent" width="100%">
         <g v-if="FINAL_CONFIG.type === 'onion'">        
             <path d="M 3 32 C 3 45 12 62 32 62 A 1 1 0 0 0 32 3" stroke-width="4" fill="none" stroke-linecap="round" :style="onionStyle.gutter + onionStyle.gutterBlur"/>
             <path d="M 13 32 C 13 39 19 52 32 52 A 1 1 0 0 0 32 13" stroke-width="4" fill="none" stroke-linecap="round" :style="onionStyle.gutter + onionStyle.gutterBlur"/>
