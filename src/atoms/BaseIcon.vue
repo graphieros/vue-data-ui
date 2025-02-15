@@ -185,7 +185,7 @@ const icons = computed(() => {
 </script>
 
 <template>
-    <svg :xmlns="XMLNS" :class="{ 'spin ': isSpin }" :viewBox="viewBox" :height="size" :width="size" v-html="icons[name]" style="background:transparent" />
+    <svg data-cy="base-icon" :xmlns="XMLNS" :class="{ 'spin ': isSpin }" :viewBox="viewBox" :height="size" :width="size" v-html="icons[name]" style="background:transparent" />
 </template>
 
 <style scoped>
