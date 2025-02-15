@@ -456,7 +456,7 @@ defineExpose({
             <div v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint" style="width: 100%; position: relative">
                 <button 
                     v-if="!useResetSlot" 
-                    data-cy-reset tabindex="0" 
+                    data-cy="slicer-reset" tabindex="0" 
                     role="button" 
                     class="vue-data-ui-refresh-button"
                     :style="{
@@ -473,7 +473,7 @@ defineExpose({
         <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
             <template v-if="hasMinimap">
                 <div class="minimap"  style="width: 100%" data-cy="minimap">
-                    <svg :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
+                    <svg data-cy="slicer-minimap-svg" :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
                                 <stop offset="0%" :stop-color="`${minimapLineColor}50`"/>
@@ -493,6 +493,7 @@ defineExpose({
                         
                         <!-- SELECTION RECT -->
                         <rect
+                            data-cy="slicer-minimap-selection-rect"
                             :x="selectionRectCoordinates.x"
                             :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
                             :height="Math.max(svgMinimap.height, 0)"
@@ -603,6 +604,7 @@ defineExpose({
             </template>
             <div class="slider-track"></div>
             <div 
+                data-cy="slicer-range-highlight"
                 :class="{
                     'range-highlight': true,
                     'move': enableSelectionDrag
@@ -617,6 +619,7 @@ defineExpose({
             
             <input 
                 v-if="enableRangeHandles"
+                data-cy="slicer-handle-left"
                 ref="rangeStart" 
                 :key="`range-min${inputStep}`" 
                 type="range" 
@@ -629,6 +632,7 @@ defineExpose({
 
             <input 
                 v-if="enableRangeHandles"
+                data-cy="slicer-handle-right"
                 ref="rangeEnd" 
                 type="range" 
                 :class="{'range-right': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles }" 
@@ -640,6 +644,7 @@ defineExpose({
 
             <div
                 v-if="labelLeft"
+                data-cy="slicer-label-left"
                 ref="tooltipLeft"
                 :class="{
                     'range-tooltip': true,
@@ -659,6 +664,7 @@ defineExpose({
             
             <div
                 v-if="labelRight"
+                data-cy="slicer-label-right"
                 ref="tooltipRight"
                 :class="{
                     'range-tooltip': true,
