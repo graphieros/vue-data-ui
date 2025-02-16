@@ -471,7 +471,8 @@ defineExpose({
 
             <g v-if="hasSegments">
                 <!-- SEGMENTS -->
-                <rect 
+                <rect
+                    data-cy="vue-ui-bullet-segment"
                     v-for="segment in segments.chunks"
                     :x="segment.x"
                     :y="segment.y"
@@ -483,6 +484,7 @@ defineExpose({
                 />
                 <!-- TARGET BELOW-->
                 <rect
+                    data-cy="vue-ui-bullet-target-below"
                     v-if="!FINAL_CONFIG.style.chart.target.onTop"
                     :x="segments.target.x"
                     :y="svg.top + (svg.chartHeight - ((svg.chartHeight * FINAL_CONFIG.style.chart.target.heightRatio))) / 2"
@@ -495,6 +497,7 @@ defineExpose({
                 />
                 <!-- VALUE BAR -->
                 <rect
+                    data-cy="vue-ui-bullet-value-bar"
                     :x="svg.left"
                     :y="svg.top + (svg.chartHeight - ((svg.chartHeight * FINAL_CONFIG.style.chart.valueBar.heightRatio))) / 2"
                     :height="svg.chartHeight * FINAL_CONFIG.style.chart.valueBar.heightRatio"
@@ -505,6 +508,7 @@ defineExpose({
                 />
                 <!-- VALUE LABEL -->
                 <text
+                    data-cy="vue-ui-bullet-value-label"
                     v-if="FINAL_CONFIG.style.chart.valueBar.label.show"
                     :x="svg.left + segments.value.width"
                     :y="svg.top - 6 + FINAL_CONFIG.style.chart.valueBar.label.offsetY"
@@ -528,6 +532,7 @@ defineExpose({
                 </text>
                 <!-- TARGET ON TOP-->
                 <rect
+                    data-cy="vue-ui-bullet-target-top"
                     v-if="FINAL_CONFIG.style.chart.target.onTop"
                     :x="segments.target.x"
                     :y="svg.top + (svg.chartHeight - ((svg.chartHeight * FINAL_CONFIG.style.chart.target.heightRatio))) / 2"
@@ -541,6 +546,7 @@ defineExpose({
                 <!-- TICK LABELS -->
                 <g v-if="FINAL_CONFIG.style.chart.segments.dataLabels.show">
                     <text
+                        data-cy="vue-ui-bullet-tick-label"
                         v-for="tick in segments.ticks"
                         :x="tick.x"
                         :y="tick.y"
@@ -566,6 +572,7 @@ defineExpose({
                 <!-- TICK MARKERS -->
                 <g v-if="FINAL_CONFIG.style.chart.segments.dataLabels.show && FINAL_CONFIG.style.chart.segments.ticks.show">
                     <line
+                        data-cy="vue-ui-bullet-tick-marker"
                         v-for="marker in segments.ticks"
                         :x1="marker.x"
                         :x2="marker.x"

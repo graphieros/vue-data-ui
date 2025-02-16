@@ -3,7 +3,8 @@ export function testCommonFeatures({
     title = false,
     subtitle = false,
     dataTable = false,
-    tooltipCallback = false
+    tooltipCallback = false,
+    legend = false
 }) {
 
     if (userOptions) {
@@ -32,5 +33,9 @@ export function testCommonFeatures({
     if (tooltipCallback) {
         tooltipCallback();
         cy.get('body').find('.vue-data-ui-tooltip').should('exist')
+    }
+
+    if (legend) {
+        cy.get('.vue-data-ui-legend').should('exist').and('be.visible');
     }
 }
