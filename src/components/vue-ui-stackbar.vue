@@ -1092,6 +1092,7 @@ defineExpose({
 
             <!-- X AXIS -->
             <line
+                data-cy="line-axis-x"
                 v-if="FINAL_CONFIG.style.chart.grid.x.showAxis"
                 :x1="drawingArea.left"
                 :x2="drawingArea.right"
@@ -1105,6 +1106,7 @@ defineExpose({
 
             <!-- Y AXIS -->
             <line
+                data-cy="line-axis-y"
                 v-if="FINAL_CONFIG.style.chart.grid.y.showAxis && !FINAL_CONFIG.style.chart.bars.distributed"
                 :x1="drawingArea.left"
                 :x2="drawingArea.left"
@@ -1117,7 +1119,8 @@ defineExpose({
             />
 
             <!-- X AXIS LABEL -->
-            <text 
+            <text
+                data-cy="axis-label-x"
                 v-if="FINAL_CONFIG.style.chart.grid.x.axisName.show && FINAL_CONFIG.style.chart.grid.x.axisName.text"
                 :x="drawingArea.left + (drawingArea.width / 2)"
                 :y="drawingArea.chartHeight + FINAL_CONFIG.style.chart.grid.x.axisName.offsetY"
@@ -1130,7 +1133,8 @@ defineExpose({
             </text>
 
             <!-- Y AXIS LABEL -->
-            <text 
+            <text
+                data-cy="axis-label-y"
                 v-if="FINAL_CONFIG.style.chart.grid.y.axisName.show && FINAL_CONFIG.style.chart.grid.y.axisName.text"
                 :transform="`translate(${FINAL_CONFIG.style.chart.grid.y.axisName.fontSize + FINAL_CONFIG.style.chart.grid.y.axisName.offsetX}, ${drawingArea.top + (drawingArea.height / 2)}) rotate(-90)`"
                 :font-size="FINAL_CONFIG.style.chart.grid.y.axisName.fontSize"
@@ -1147,6 +1151,7 @@ defineExpose({
                     <!-- RECT LABELS -->
                     <template v-for="(rect, j) in dp.x">                    
                         <text
+                            data-cy="label-datapoint"
                             v-if="isLabelDisplayed(dp.series[j], dp.proportions[j])"
                             :x="rect + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2)"
                             :y="dp.y[j] + dp.height[j] / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.fontSize / 3"
@@ -1166,6 +1171,7 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
                     <template v-for="(total, i) in totalLabels">
                         <text
+                            data-cy="label-total"
                             v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
                             :x="drawingArea.left + (barSlot * i) + barSlot / 2"
                             :y="drawingArea.top - FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
@@ -1185,7 +1191,8 @@ defineExpose({
                 <g v-for="(dp, i) in formattedDataset">            
                     <!-- RECT LABELS -->
                     <template v-for="(rect, j) in dp.horizontal_x">
-                        <text 
+                        <text
+                            data-cy="label-datapoint"
                             v-if="isLabelDisplayed(dp.series[j], dp.proportions[j])"
                             :x="rect + ((dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2)"
                             :y="dp.horizontal_y[j] + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2) + (FINAL_CONFIG.style.chart.bars.dataLabels.fontSize /3)"
@@ -1204,6 +1211,7 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
                     <template v-for="(total, i) in totalLabels">
                         <text
+                            data-cy="label-total"
                             v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
                             :x="drawingArea.right + FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
                             :y="drawingArea.top + (barSlot * i) + barSlot / 2"
@@ -1221,6 +1229,7 @@ defineExpose({
             <!-- SCALE LABELS (vertical mode) -->
             <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'vertical'">
                 <line
+                    data-cy="scale-line-y"
                     v-for="(yLabel, i) in yLabels"
                     :x1="drawingArea.left"
                     :x2="drawingArea.left - 6"
@@ -1230,6 +1239,7 @@ defineExpose({
                     :stroke-width="1"
                 />
                 <text
+                    data-cy="scale-label-y"
                     v-for="(yLabel, i) in yLabels"
                     :x="yLabel.x"
                     :y="yLabel.y + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
@@ -1250,6 +1260,7 @@ defineExpose({
             <!-- SCALE LABELS (horizontal mode) -->
             <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'horizontal'">
                 <line
+                    data-cy="scale-line-y"
                     v-for="(yLabel, i) in yLabels"
                     :x1="yLabel.horizontal_x"
                     :x2="yLabel.horizontal_x"
@@ -1260,6 +1271,7 @@ defineExpose({
                     stroke-linecap="round"
                 />
                 <text
+                    data-cy="scale-label-y"
                     v-for="(yLabel, i) in yLabels"
                     :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
                     :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
@@ -1295,6 +1307,7 @@ defineExpose({
                 </g>
                 <g v-else>
                     <text
+                        data-cy="time-label"
                         v-for="(timeLabel, i) in timeLabels"
                         :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
                         :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
@@ -1330,6 +1343,7 @@ defineExpose({
                 </g>
                 <g v-else>
                     <text
+                        data-cy="time-label"
                         v-for="(timeLabel, i) in timeLabels"
                         text-anchor="end"
                         :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
@@ -1350,6 +1364,7 @@ defineExpose({
             <!-- TOOLTIP TRAPS (vertical mode) -->
             <template v-if="mutableConfig.showTooltip && FINAL_CONFIG.orientation === 'vertical'">            
                 <rect
+                    data-cy="tooltip-trap"
                     v-for="(_, i) in (slicer.end - slicer.start)"
                     :x="drawingArea.left + (i * barSlot)"
                     :y="drawingArea.top"
@@ -1366,6 +1381,7 @@ defineExpose({
             <!-- TOOLTIP TRAPS (vertical mode) -->
             <template v-if="mutableConfig.showTooltip && FINAL_CONFIG.orientation === 'horizontal'">            
                 <rect
+                    data-cy="tooltip-trap"
                     v-for="(_, i) in (slicer.end - slicer.start)"
                     :x="drawingArea.left"
                     :y="drawingArea.top + (i * barSlot)"

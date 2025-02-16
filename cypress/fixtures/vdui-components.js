@@ -1491,6 +1491,24 @@ export const components = [
                 series: [20, 40, 60, 20, 10],
             },
         ],
+        config: {
+            style: {
+                chart: {
+                    grid: {
+                        x: {
+                            axisName: { text: 'x'}
+                        },
+                        y: {
+                            axisName: { text: 'y' }
+                        }
+                    }
+,                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-stackbar'
     },
     {
