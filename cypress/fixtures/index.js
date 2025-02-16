@@ -4,7 +4,8 @@ export function testCommonFeatures({
     subtitle = false,
     dataTable = false,
     tooltipCallback = false,
-    legend = false
+    legend = false,
+    slicer = false
 }) {
 
     if (userOptions) {
@@ -37,5 +38,9 @@ export function testCommonFeatures({
 
     if (legend) {
         cy.get('.vue-data-ui-legend').should('exist').and('be.visible');
+    }
+
+    if (slicer) {
+        cy.get('[data-cy="slicer"]').should('exist').and('be.visible')
     }
 }

@@ -444,7 +444,8 @@ defineExpose({
 
 <template>
     <div 
-        data-html2canvas-ignore data-cy="slicer" 
+        data-cy="slicer" 
+        data-html2canvas-ignore
         style="padding: 0 24px" 
         class="vue-data-ui-zoom"
         ref="zoomWrapper"

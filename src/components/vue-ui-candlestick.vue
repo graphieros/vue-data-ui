@@ -702,6 +702,7 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.show">
                 <g v-for="(yLabel, i) in yLabels">
                     <line 
+                        data-cy="y-scale-tick"
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
                         :x1="drawingArea.left" 
                         :x2="drawingArea.left - 5" 
@@ -712,6 +713,7 @@ defineExpose({
                         stroke-linecap="round"
                     />
                     <text 
+                        data-cy="y-scale-label"
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
                         :x="drawingArea.left - 8 + FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.offsetX" 
                         :y="yLabel.y + svg.yAxisFontSize / 3" 
@@ -728,7 +730,7 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show">
                 <g v-for="(xLabel, i) in xLabels">
                     <text
-                        :data-cy="`candlestick-time-label-${i}`"
+                        data-cy="x-label"
                         :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + svg.xAxisFontSize * 2 + FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.offsetY}), rotate(${FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation})`"
                         :text-anchor="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
                         :font-size="svg.xAxisFontSize"
@@ -824,7 +826,7 @@ defineExpose({
             <g>
                 <rect 
                     v-for="(rect, i) in drawableDataset"
-                    :data-cy="`candlestick-trap-${i}`"
+                    data-cy="tooltip-trap"
                     :x="drawingArea.left + i * slot"
                     :y="drawingArea.top"
                     :height="drawingArea.height <= 0 ? 0.0001 : drawingArea.height"

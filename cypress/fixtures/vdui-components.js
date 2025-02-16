@@ -79,7 +79,18 @@ export const components = [
         dataset: [
             ["2024-01-01", 56, 120, 40, 110, 1250],
             ["2024-02-01", 110, 150, 80, 98, 2200],
+            ["2024-03-01", 110, 150, 80, 98, 2200],
+            ["2024-04-01", 110, 150, 80, 98, 2200],
+            ["2024-05-01", 110, 150, 80, 98, 2200],
         ],
+        config: {
+            style: {
+                title: {
+                    text: 'Title',
+                    subtitle: { text: 'Subtitle' }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-candlestick",
     },
     {
