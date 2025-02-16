@@ -1461,6 +1461,11 @@ export const components = [
                 return arr
             })(10)
         },
+        config: {
+            caption: {
+                text: 'Caption'
+            }
+        },
         wrapperClass: '.vue-ui-carousel-table'
     },
     {

@@ -424,6 +424,7 @@ defineExpose({
                     backgroundColor: FINAL_CONFIG.tbody.backgroundColor
                 }">
                 <caption
+                    data-cy="caption"
                     ref="caption"
                     class="vue-data-ui-carousel-table-caption" 
                     :style="{
