@@ -617,6 +617,7 @@ defineExpose({
             <g>
                 <g v-if="FINAL_CONFIG.style.layout.dataLabels.sideTitles.show">
                     <text
+                        data-cy="label-left"
                         :x="drawingArea.left"
                         :y="drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.sideTitles.offsetY"
                         :fill="FINAL_CONFIG.style.layout.dataLabels.sideTitles.useSideColor ? FINAL_CONFIG.style.layout.bars.left.color : FINAL_CONFIG.style.layout.dataLabels.sideTitles.color"
@@ -627,6 +628,7 @@ defineExpose({
                         {{ FINAL_CONFIG.translations.female }}
                     </text>
                     <text
+                        data-cy="label-right"
                         :x="drawingArea.right"
                         :y="drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.sideTitles.offsetY"
                         :fill="FINAL_CONFIG.style.layout.dataLabels.sideTitles.useSideColor ? FINAL_CONFIG.style.layout.bars.right.color : FINAL_CONFIG.style.layout.dataLabels.sideTitles.color"
@@ -640,7 +642,8 @@ defineExpose({
 
                 <g v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show">
                     <template v-for="(label, i) in yLabels"> 
-                        <text 
+                        <text
+                            data-cy="y-axis-label"
                             v-if="i % FINAL_CONFIG.style.layout.dataLabels.yAxis.showEvery === 0"
                             :x="drawingArea.centerX"
                             :y="drawingArea.top + (drawingArea.height / len) * i + (FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize / 3)"
@@ -662,6 +665,7 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.layout.dataLabels.xAxis.show">
                     <g v-if="FINAL_CONFIG.style.layout.grid.show">
                         <line
+                            data-cy="scale-line-left"
                             :x1="xLabels.right[0].x"
                             :x2="xLabels.right.at(-1).x"
                             :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
@@ -671,6 +675,7 @@ defineExpose({
                             stroke-linecap="round"
                         />
                         <line
+                            data-cy="scale-line-right"
                             :x1="xLabels.left[0].x"
                             :x2="xLabels.left.at(-1).x"
                             :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
@@ -681,7 +686,9 @@ defineExpose({
                         />
                     </g>
                     <g v-for="(rightLabel, i) in xLabels.right">
-                        <line v-if="FINAL_CONFIG.style.layout.grid.show"
+                        <line 
+                            v-if="FINAL_CONFIG.style.layout.grid.show"
+                            data-cy="scale-tick-right"
                             :x1="rightLabel.x"
                             :x2="rightLabel.x"
                             :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
@@ -691,6 +698,7 @@ defineExpose({
                             stroke-linecap="round"
                         />
                         <text
+                            data-cy="scale-tick-right-label"
                             :x="rightLabel.x"
                             :y="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2"
                             :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
@@ -709,7 +717,9 @@ defineExpose({
                         </text>
                     </g>
                     <g v-for="(leftLabel, i) in xLabels.left">
-                        <line v-if="FINAL_CONFIG.style.layout.grid.show"
+                        <line 
+                            v-if="FINAL_CONFIG.style.layout.grid.show"
+                            data-cy="scale-tick-left"
                             :x1="leftLabel.x"
                             :x2="leftLabel.x"
                             :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
@@ -719,6 +729,7 @@ defineExpose({
                             stroke-linecap="round"
                         />
                         <text
+                            data-cy="scale-tick-left-label"
                             :x="leftLabel.x"
                             :y="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2"
                             :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
@@ -752,6 +763,7 @@ defineExpose({
             <!-- TOOLTIP TRAPS -->
             <g v-for="(datapoint, i) in dataset">
                 <rect
+                    data-cy="tooltip-trap"
                     :x="drawingArea.left"
                     :y="drawingArea.top + (drawingArea.height / len) * i - FINAL_CONFIG.style.layout.bars.gap / 2"
                     :width="drawingArea.width <= 0 ? 0.0001 : drawingArea.width"

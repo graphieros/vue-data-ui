@@ -59,6 +59,14 @@ export const components = [
             ["2021", 1, 343026, 357351],
             ["2022", 0, 330929, 345538],
         ],
+        config: {
+            style: {
+                title: {
+                    text: 'Title',
+                    subtitle: { text: 'Subtitle' }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-age-pyramid",
     },
     {

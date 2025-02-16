@@ -41,6 +41,7 @@ const CONFIG = useNestedProp({
 
 <template>
   <div
+    class="atom-title"
     :data-cy="CONFIG.title.cy"
     :style="`width: calc(100% - ${CONFIG.title.paddingLeft + CONFIG.title.paddingRight}px); text-align:${CONFIG.title.textAlign};color:${
       CONFIG.title.color
@@ -51,6 +52,7 @@ const CONFIG = useNestedProp({
     {{ CONFIG.title.text }}
   </div>
   <div
+    class="atom-subtitle"
     :data-cy="CONFIG.subtitle.cy"
     v-if="CONFIG.subtitle.text"
     :style="`width: calc(100% - ${CONFIG.title.paddingLeft + CONFIG.title.paddingRight}px); text-align:${CONFIG.title.textAlign};color:${
