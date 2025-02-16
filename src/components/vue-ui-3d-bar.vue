@@ -662,6 +662,7 @@ defineExpose({
             </defs>
 
             <text
+                data-cy="vue-ui-3d-bar-simple-datalabel"
                 v-if="FINAL_CONFIG.style.chart.dataLabel.show && ![null, undefined].includes(props.dataset.percentage) && [null, undefined].includes(props.dataset.series)"
                 :x="svg.width / 2"
                 :y="svg.top - FINAL_CONFIG.style.chart.dataLabel.fontSize / 2"
@@ -701,7 +702,7 @@ defineExpose({
                 </g>
                 
                 <g v-if="hasStack">
-                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack">
+                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack" :data-cy="`bar-3d-value-${bar.value}`">
                         <path :d="bar.fill.right" :fill="`url(#grad_right_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie"/>
                         <path :d="bar.fill.left" :fill="`url(#grad_left_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie"/>
                         <path :d="bar.fill.top" :fill="`url(#grad_top_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie"/>

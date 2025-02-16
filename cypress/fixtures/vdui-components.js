@@ -5,6 +5,48 @@ export const components = [
     {
         name: "VueUi3dBar",
         dataset: { percentage: 100 },
+        dataset2: {
+            series: [
+                {
+                    name:  'Serie 1 with a long name that should be shorter but we do not have the choice',
+                    value: 256,
+                    breakdown: [
+                        {
+                            name: 'Sub serie 1',
+                            value: 100
+                        },
+                        {
+                            name: 'Sub serie 2',
+                            value: 90
+                        },
+                        {
+                            name: 'Sub serie 3',
+                            value: 66
+                        }
+                    ]
+                },
+                {
+                    name: 'Serie 2',
+                    value: 128
+                },
+                {
+                    name: 'Serie 3',
+                    value: 64
+                },
+                {
+                    name: 'Serie 4',
+                    value: 32
+                },
+                {
+                    name: 'Serie 5',
+                    value: 16
+                },
+                {
+                    name: 'Serie 6',
+                    value: 8
+                }
+            ]
+        },
         wrapperClass: ".vue-ui-3d-bar",
     },
     {
