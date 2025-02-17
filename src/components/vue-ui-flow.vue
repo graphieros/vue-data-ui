@@ -614,7 +614,8 @@ defineExpose({
                 </linearGradient>
             </defs>
 
-            <path 
+            <path
+                data-cy="link"
                 v-for="path in mutableDataset.links" 
                 class="vue-ui-flow-link"
                 :d="path.path" 
@@ -625,6 +626,7 @@ defineExpose({
             />
 
             <rect 
+                data-cy="node"
                 v-for="(node, i) in mutableDataset.nodes"
                 class="vue-ui-flow-node"
                 :x="node.x"
@@ -640,6 +642,7 @@ defineExpose({
             />
 
             <text 
+                data-cy="node-name"
                 v-for="(node, i) in mutableDataset.nodes"
                 :x="node.x + nodeWidth / 2"
                 :y="checkNaN(node.absoluteY + node.height / 2 - (FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4)) + FINAL_CONFIG.style.chart.padding.top"
@@ -650,7 +653,8 @@ defineExpose({
             >
                 {{ FINAL_CONFIG.style.chart.nodes.labels.abbreviation.use ? abbreviate({ source: node.name, length: FINAL_CONFIG.style.chart.nodes.labels.abbreviation.length}) : node.name }}
             </text>
-            <text 
+            <text
+                data-cy="node-value"
                 v-for="(node, i) in mutableDataset.nodes"
                 :x="node.x + nodeWidth / 2"
                 :y="checkNaN(node.absoluteY + node.height / 2 + (FINAL_CONFIG.style.chart.nodes.labels.fontSize)) + FINAL_CONFIG.style.chart.padding.top"

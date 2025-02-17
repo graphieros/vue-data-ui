@@ -1407,6 +1407,16 @@ export const components = [
             ['C2', 'D2', 2],
             ['C3', 'D2', 1],
         ],
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-flow'
     },
     {
