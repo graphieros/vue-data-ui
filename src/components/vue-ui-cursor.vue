@@ -31,7 +31,7 @@ function setClientPosition({ clientX, clientY, ...rest }) {
     position.value.x = clientX - (FINAL_CONFIG.value.centerCircleRadius);
     position.value.y = clientY - (FINAL_CONFIG.value.centerCircleRadius);
 }
-  
+
 function setFingerPosition(data) {
     position.value.x = data.targetTouches[0].clientX - (FINAL_CONFIG.value.centerCircleRadius);
     position.value.y = data.targetTouches[0].clientY - (FINAL_CONFIG.value.centerCircleRadius);
@@ -84,7 +84,7 @@ const waveScale = computed(() => {
 </script>
 
 <template>
-    <svg data-html2canvas-ignore :xmlns="XMLNS" v-if="isVisible" :style="`z-index: 2147483647; overflow: visible; pointer-events: none;background: transparent; position:fixed; top:${position.y}px; left:${position.x}px;`" viewBox="0 0 100 100" :height="FINAL_CONFIG.centerCircleRadius * 2" :width="FINAL_CONFIG.centerCircleRadius * 2">
+    <svg data-cy="vue-ui-cursor" data-html2canvas-ignore :xmlns="XMLNS" v-if="isVisible" :style="`z-index: 2147483647; overflow: visible; pointer-events: none;background: transparent; position:fixed; top:${position.y}px; left:${position.x}px;`" viewBox="0 0 100 100" :height="FINAL_CONFIG.centerCircleRadius * 2" :width="FINAL_CONFIG.centerCircleRadius * 2">
         <defs>
             <radialGradient id="follower" fy="30%" fx="30%">
                 <stop offset="10%" :stop-color="FINAL_CONFIG.bubbleEffectColor" :stop-opacity="FINAL_CONFIG.bubbleEffectOpacity"/>
@@ -92,6 +92,7 @@ const waveScale = computed(() => {
             </radialGradient>
         </defs>
         <circle
+            data-cy="center-circle"
             v-if="FINAL_CONFIG.showCenterCircle"
             :cx="50" 
             :cy="50" 
@@ -102,6 +103,7 @@ const waveScale = computed(() => {
             :stroke-dasharray="FINAL_CONFIG.centerCircleDasharray"
         />
         <circle
+            data-cy="bubble"
             v-if="FINAL_CONFIG.bubbleEffect"
             :cx="50" 
             :cy="50" 
@@ -117,6 +119,7 @@ const waveScale = computed(() => {
                 </filter>
             </defs>
             <circle
+                data-cy="wave"
                 v-if="isClicked"
                 :class="{'circle-wave': isClicked}"
                 :cx="50"
@@ -130,6 +133,7 @@ const waveScale = computed(() => {
         </g>
         <g class="crosshair" v-if="FINAL_CONFIG.showCrosshair">        
             <line
+                data-cy="crosshair-x-left"
                 :x1="-FINAL_CONFIG.centerCircleRadius + 50"
                 :x2="-5000"
                 :y1="50"
@@ -140,6 +144,7 @@ const waveScale = computed(() => {
                 stroke-linecap="round"
             />
             <line
+                data-cy="crosshair-x-right"
                 :x1="50 + FINAL_CONFIG.centerCircleRadius"
                 :x2="5000"
                 :y1="50"
@@ -150,6 +155,7 @@ const waveScale = computed(() => {
                 stroke-linecap="round"
             />
             <line
+                data-cy="crosshair-y-top"
                 :x1="50"
                 :x2="50"
                 :y1="-FINAL_CONFIG.centerCircleRadius + 50"
@@ -160,6 +166,7 @@ const waveScale = computed(() => {
                 stroke-linecap="round"
             />
             <line
+                data-cy="crosshair-y-bottom"
                 :x1="50"
                 :x2="50"
                 :y1="FINAL_CONFIG.centerCircleRadius + 50"
@@ -172,24 +179,28 @@ const waveScale = computed(() => {
         </g>
         <g v-if="FINAL_CONFIG.showIntersectCircles" :class="{ 'rotating-circles': FINAL_CONFIG.isLoading }">
             <circle
+                data-cy="intersect-circle-bottom"
                 :cx="50"
                 :cy="FINAL_CONFIG.centerCircleRadius + 50"
                 :r="FINAL_CONFIG.intersectCirclesRadius"
                 :fill="FINAL_CONFIG.intersectCirclesFill"
             />
             <circle
+                data-cy="intersect-circle-top"
                 :cx="50"
                 :cy="-FINAL_CONFIG.centerCircleRadius + 50"
                 :r="FINAL_CONFIG.intersectCirclesRadius"
                 :fill="FINAL_CONFIG.intersectCirclesFill"
             />
             <circle
+                data-cy="intersect-circle-left"
                 :cx="-FINAL_CONFIG.centerCircleRadius + 50"
                 :cy="50"
                 :r="FINAL_CONFIG.intersectCirclesRadius"
                 :fill="FINAL_CONFIG.intersectCirclesFill"
             />
             <circle
+                data-cy="intersect-circle-right"
                 :cx="FINAL_CONFIG.centerCircleRadius + 50"
                 :cy="50"
                 :r="FINAL_CONFIG.intersectCirclesRadius"
@@ -198,6 +209,7 @@ const waveScale = computed(() => {
         </g>
         <g class="coordinates" v-if="FINAL_CONFIG.showCoordinates">
             <text
+                data-cy="coordinates-x"
                 text-anchor="end"
                 :x="-FINAL_CONFIG.centerCircleRadius + 50 - (FINAL_CONFIG.coordinatesFontSize / 2) + FINAL_CONFIG.coordinatesOffset"
                 :y="50 - (FINAL_CONFIG.coordinatesFontSize / 2) + FINAL_CONFIG.coordinatesOffset"
@@ -210,6 +222,7 @@ const waveScale = computed(() => {
             </text>
             <g :transform="`translate(${50 - (FINAL_CONFIG.coordinatesFontSize / 2) + FINAL_CONFIG.coordinatesOffset}, ${-FINAL_CONFIG.centerCircleRadius + 50 - (FINAL_CONFIG.coordinatesFontSize / 2) + FINAL_CONFIG.coordinatesOffset})`">
                 <text
+                    data-cy="coordinates-y"
                     text-anchor="start"
                     :font-size="FINAL_CONFIG.coordinatesFontSize"
                     :fill="FINAL_CONFIG.coordinatesColor"
