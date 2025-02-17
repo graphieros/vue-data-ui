@@ -18,7 +18,7 @@ describe('<VueUiCirclePack />', () => {
                 userOptions: true,
                 title: true,
                 subtitle: true,
-                table: true,
+                dataTable: true,
             });
 
             cy.log('datapoints');

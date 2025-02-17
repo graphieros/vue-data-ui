@@ -18,7 +18,7 @@ describe('<VueUiCandlestick />', () => {
         title: true,
         subtitle: true,
         slicer: true,
-        table: true,
+        dataTable: true,
         tooltipCallback: () => {
           cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseover');
         }
