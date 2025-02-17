@@ -108,13 +108,15 @@ const gaugeBody = computed(() => {
 
         <!-- BATTERY -->
         <template v-if="FINAL_CONFIG.type === 'battery'">
-            <path 
+            <path
+                data-cy="battery-shape"
                 d="M 5 10 L 5 40 C 5 43 7 45 9 45 L 65 45 C 68 45 70 43 70 40 L 70 38 C 73 38 75 38 75 33 L 75 17 C 75 12 73 12 70 12 L 70 10 C 70 7 68 5 65 5 L 10 5 C 7 5 5 7 5 10"
                 :stroke="FINAL_CONFIG.stroke"
                 :stroke-width="2"
                 fill="none"
             />
             <path
+                data-cy="battery-cap"
                 d="M 70 16 L 70 34"
                 :stroke="FINAL_CONFIG.stroke"
                 :stroke-width="2"
@@ -122,6 +124,7 @@ const gaugeBody = computed(() => {
                 style="opacity: 0.5"
             />
             <rect
+                data-cy="battery-level"
                 :x="10"
                 :y="10"
                 :height="30"
@@ -130,6 +133,7 @@ const gaugeBody = computed(() => {
                 :rx="2"
             />
             <text
+                data-cy="battery-label"
                 v-if="FINAL_CONFIG.showPercentage"
                 :x="85"
                 :y="32"
@@ -155,7 +159,8 @@ const gaugeBody = computed(() => {
                     <feGaussianBlur in="SourceGraphic" :stdDeviation="1" />
                 </filter>
             </defs>
-            <circle 
+            <circle
+                data-cy="gauge-gutter"
                 :cx="40"
                 :cy="40"
                 :r="35"
@@ -164,6 +169,7 @@ const gaugeBody = computed(() => {
                 fill="none"
             />
             <circle
+                data-cy="gauge-track"
                 :cx="40"
                 :cy="40"
                 :r="35"
@@ -177,6 +183,7 @@ const gaugeBody = computed(() => {
             />
             <g v-if="FINAL_CONFIG.useGradient" :filter="`url(#blur_${uid})`">
                 <circle
+                    data-cy="gauge-gradient"
                     :cx="40"
                     :cy="40"
                     :r="35"
@@ -189,6 +196,7 @@ const gaugeBody = computed(() => {
                 />
             </g>
             <text
+                data-cy="gauge-label"
                 v-if="FINAL_CONFIG.showPercentage"
                 :x="40"
                 :y="47"
