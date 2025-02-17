@@ -807,6 +807,7 @@ defineExpose({
             <!-- SCALE Y -->
             <g v-if="FINAL_CONFIG.style.chart.grid.verticalLines.show">
                 <line
+                    data-cy="grid-line-vertical"
                     v-for="line in scales.tickX"
                     :x1="line.x"
                     :x2="line.x"
@@ -820,6 +821,7 @@ defineExpose({
             <!-- Y AXIS LABELS -->
             <g v-if="FINAL_CONFIG.style.chart.axes.y.labels.show">
                 <text
+                    data-cy="y-axis-label"
                     v-for="labelY in scales.tickY"
                     :x="drawingArea.left + FINAL_CONFIG.style.chart.axes.y.labels.offsetX - 4"
                     :y="labelY.y + sizes.yAxisLabels / 3"
@@ -844,6 +846,7 @@ defineExpose({
 
             <!-- Y AXIS NAME -->
             <text
+                data-cy="axis-name-y"
                 v-if="FINAL_CONFIG.style.chart.axes.y.name.text"
                 :transform="`translate(${FINAL_CONFIG.style.chart.axes.y.name.offsetX + sizes.yAxisName}, ${(svg.height / 2) + FINAL_CONFIG.style.chart.axes.y.name.offsetY}), rotate(-90)`"
                 :font-size="sizes.yAxisName"
@@ -857,6 +860,7 @@ defineExpose({
             <!-- SCALE X -->
             <g v-if="FINAL_CONFIG.style.chart.grid.horizontalLines.show">
                 <line
+                    data-cy="grid-line-horizontal"
                     v-for="line in scales.tickY"
                     :x1="line.x1"
                     :x2="line.x2"
@@ -871,6 +875,7 @@ defineExpose({
             <!-- X AXIS LABELS -->
             <g v-if="FINAL_CONFIG.style.chart.axes.x.labels.show">
                 <text
+                    data-cy="x-axis-label"
                     v-for="labelX in scales.tickX"
                     :transform="`translate(${labelX.x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.axes.x.labels.offsetY + sizes.xAxisLabels}), rotate(${FINAL_CONFIG.style.chart.axes.x.labels.rotation})`"
                     :fill="FINAL_CONFIG.style.chart.axes.x.labels.color"
@@ -894,6 +899,7 @@ defineExpose({
 
             <!-- X AXIS NAME -->
             <text
+                data-cy="axis-name-x"
                 v-if="FINAL_CONFIG.style.chart.axes.x.name.text"
                 :x="(svg.width / 2) + FINAL_CONFIG.style.chart.axes.x.name.offsetX"
                 :y="svg.height + FINAL_CONFIG.style.chart.axes.x.name.offsetY"
@@ -907,6 +913,7 @@ defineExpose({
 
             <!-- X AXIS -->
             <line
+                data-cy="x-axis"
                 v-if="FINAL_CONFIG.style.chart.grid.xAxis.show"
                 :x1="drawingArea.left"
                 :x2="drawingArea.left + drawingArea.width"
@@ -919,6 +926,7 @@ defineExpose({
 
             <!-- Y AXIS -->
             <line
+                data-cy="y-axis"
                 v-if="FINAL_CONFIG.style.chart.grid.yAxis.show"
                 :x1="drawingArea.left"
                 :x2="drawingArea.left"
@@ -939,6 +947,7 @@ defineExpose({
                     }"
                 >
                     <path
+                        data-cy="datapoint-path-wrapper"
                         :d="ds.path"
                         :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         :stroke-width="FINAL_CONFIG.style.chart.paths.strokeWidth + 4"
@@ -948,6 +957,7 @@ defineExpose({
                         :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
                     />
                     <path
+                        data-cy="datapoint-path"
                         :d="ds.path"
                         :stroke="FINAL_CONFIG.style.chart.paths.useSerieColor ? ds.color : FINAL_CONFIG.style.chart.paths.stroke"
                         :stroke-width="FINAL_CONFIG.style.chart.paths.strokeWidth"
@@ -961,6 +971,7 @@ defineExpose({
                 <!-- PLOTS -->
                 <!-- Underlayers to hide track when !!selectedDatapoint -->
                 <circle
+                    data-cy="datapoint-plot-underlayer"
                     v-for="plot in ds.plots"
                     :cx="plot.x"
                     :cy="plot.y"
@@ -970,6 +981,7 @@ defineExpose({
                 />
                 <!-- Visible plots -->
                 <circle
+                    data-cy="datapoint-plot"
                     v-for="plot in ds.plots"
                     :cx="plot.x"
                     :cy="plot.y"
@@ -986,6 +998,7 @@ defineExpose({
 
                 <g v-if="FINAL_CONFIG.style.chart.plots.labels.show">
                     <text
+                        data-cy="datapoint-label"
                         v-for="plot in ds.plots"
                         :x="plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX"
                         :y="plot.y + FINAL_CONFIG.style.chart.plots.labels.offsetY + sizes.plots + sizes.labels"
@@ -1006,6 +1019,7 @@ defineExpose({
                 <!-- INDEX LABELS -->
                 <g v-if="FINAL_CONFIG.style.chart.plots.indexLabels.show">
                     <text
+                        data-cy="datapoint-index-label"
                         v-for="(label, n) in ds.plots"
                         :x="label.x + FINAL_CONFIG.style.chart.plots.indexLabels.offsetX"
                         :y="label.y + FINAL_CONFIG.style.chart.plots.indexLabels.offsetY + sizes.indexLabels / 3"
@@ -1027,6 +1041,7 @@ defineExpose({
             <!-- TOOLTIP TRAPS -->
             <g v-for="(ds) in drawableDataset">
                 <circle
+                    data-cy="tooltip-trap"
                     v-for="(plot, i) in ds.plots"
                     :cx="plot.x"
                     :cy="plot.y"

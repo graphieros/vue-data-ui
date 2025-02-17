@@ -1643,6 +1643,24 @@ export const components = [
                 ],
             },
         ],
+        config: {
+            style: {
+                chart: {
+                    axes: {
+                        x: {
+                            name: { text: 'x' },
+                        },
+                        y: {
+                            name: { text: 'y' },
+                        }
+                    },
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' } 
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-history-plot'
     },
     {
