@@ -663,6 +663,7 @@ defineExpose({
 
                 <!-- 'CIRCLE' (using rect as circle does not css transition properly) -->
                 <rect
+                    data-cy="datapoint-circle"
                     :x="circle.x - circle.radius"
                     :y="circle.y - circle.radius"
                     :width="circle.radius * 2"
@@ -695,6 +696,7 @@ defineExpose({
                 <template v-else>
                     <!-- LABEL NAME -->
                     <text
+                        data-cy="label-name"
                         v-if="FINAL_CONFIG.style.chart.circles.labels.name.show && circle.name"
                         :style="{
                             pointerEvents: 'none',
@@ -713,6 +715,7 @@ defineExpose({
     
                     <!-- LABEL VALUE -->
                     <text
+                        data-cy="label-value"
                         v-if="FINAL_CONFIG.style.chart.circles.labels.value.show"
                         :style="{
                             pointerEvents: 'none',
@@ -743,7 +746,8 @@ defineExpose({
             </template>
 
             <template v-if="zoom && FINAL_CONFIG.style.chart.circles.zoom.show">
-                <circle 
+                <circle
+                    data-cy="datapoint-zoom"
                     :style="zoomStyle"
                     :cx="zoom.x" 
                     :cy="zoom.y" 
@@ -760,6 +764,7 @@ defineExpose({
                 <g v-else>
                     <!-- ZOOM LABEL NAME -->
                     <text
+                        data-cy="datapoint-zoom-label-name"
                         :style="{
                             pointerEvents: 'none'
                         }"
@@ -776,6 +781,7 @@ defineExpose({
 
                     <!-- ZOOM LABEL VALUE -->
                     <text
+                        data-cy="datapoint-zoom-label-value"
                         :style="{
                             pointerEvents: 'none',
                         }"
