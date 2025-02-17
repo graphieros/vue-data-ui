@@ -538,8 +538,8 @@ defineExpose({
             
             <!-- VERTICAL GRID -->
             <g v-if="FINAL_CONFIG.style.chart.grid.verticalGrid.show">
-
                 <line
+                    data-cy="grid-line-y"
                     v-for="(_, i) in scale.ticks"
                     :x1="drawingArea.left + ((i) * drawingArea.width / (scale.ticks.length - 1))"
                     :x2="drawingArea.left + ((i) * drawingArea.width / (scale.ticks.length - 1))"
@@ -553,6 +553,7 @@ defineExpose({
             <!-- HORIZONTAL GRID -->
             <g v-if="FINAL_CONFIG.style.chart.grid.horizontalGrid.show">
                 <line
+                    data-cy="grid-line-x"
                     v-for="(_, i) in immutableDataset"
                     :x1="drawingArea.left"
                     :x2="drawingArea.right"
@@ -563,6 +564,7 @@ defineExpose({
                     :stroke-dasharray="FINAL_CONFIG.style.chart.grid.horizontalGrid.strokeDasharray"
                 />
                 <line
+                    data-cy="grid-base-x"
                     :x1="drawingArea.left"
                     :x2="drawingArea.right"
                     :y1="drawingArea.bottom"
@@ -575,6 +577,7 @@ defineExpose({
             <!-- Y AXIS LABELS -->
             <g v-if="FINAL_CONFIG.style.chart.labels.yAxisLabels.show">
                 <text
+                    data-cy="label-y-name"
                     v-for="(datapoint, i) in immutableDataset"
                     :x="drawingArea.left - 6 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX"
                     :y="drawingArea.top + (i * baseRowHeight) + (FINAL_CONFIG.style.chart.labels.yAxisLabels.showProgression ? baseRowHeight / 3 : baseRowHeight / 2) + (FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3)"
@@ -587,6 +590,7 @@ defineExpose({
                 </text>
                 <template v-if="FINAL_CONFIG.style.chart.labels.yAxisLabels.showProgression">
                     <text
+                        data-cy="label-y-value"
                         v-for="(datapoint, i) in immutableDataset"
                         :x="drawingArea.left - 6 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX"
                         :y="drawingArea.top + (i * baseRowHeight) + (baseRowHeight / 1.3) + (FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3)"
@@ -605,6 +609,7 @@ defineExpose({
             <!-- X AXIS LABELS -->
             <g v-if="FINAL_CONFIG.style.chart.labels.xAxisLabels.show">
                 <text
+                    data-cy="label-x"
                     v-for="(tick, i) in scale.ticks"
                     :x="drawingArea.left + (i * (drawingArea.width / (scale.ticks.length - 1)))"
                     :y="drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY"
@@ -654,7 +659,8 @@ defineExpose({
                     </linearGradient>
                 </defs>
                 <g v-if="FINAL_CONFIG.style.chart.plots.link.type === 'curved'">
-                    <path 
+                    <path
+                        data-cy="link-curved"
                         :d="`M 
                             ${plot.startX},${plot.y + FINAL_CONFIG.style.chart.plots.radius / 2} 
                             C ${plot.centerX},${plot.y} ${plot.centerX},${plot.y} 
@@ -669,6 +675,7 @@ defineExpose({
                 </g>
                 <g v-else>
                     <rect
+                        data-cy="link-straight"
                         :x="plot.endX > plot.startX ? plot.startX : plot.endX"
                         :y="plot.y - (FINAL_CONFIG.style.chart.plots.link.strokeWidth / 2)"
                         :height="FINAL_CONFIG.style.chart.plots.link.strokeWidth"
@@ -679,6 +686,7 @@ defineExpose({
 
                 <!-- START -->
                 <circle
+                    data-cy="datapoint-start"
                     :cx="plot.startX"
                     :cy="plot.y"
                     :r="FINAL_CONFIG.style.chart.plots.radius"
@@ -689,6 +697,7 @@ defineExpose({
                 />
                 <!-- END -->
                 <circle
+                    data-cy="datapoint-end"
                     :cx="plot.endX"
                     :cy="plot.y"
                     :r="FINAL_CONFIG.style.chart.plots.radius"
@@ -697,57 +706,58 @@ defineExpose({
                     :stroke-width="FINAL_CONFIG.style.chart.plots.strokeWidth"
                     
                 />
-
-                <!-- START LABELS -->
-                <g v-if="FINAL_CONFIG.style.chart.labels.startLabels.show">
-                    <text
-                        v-for="(plot, i) in mutableDataset"
-                        :x="plot.startX"
-                        :y="drawingArea.top + ((i + 1) * baseRowHeight) - (FINAL_CONFIG.style.chart.labels.startLabels.fontSize / 3) + FINAL_CONFIG.style.chart.labels.startLabels.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.labels.startLabels.useStartColor ? FINAL_CONFIG.style.chart.plots.startColor : FINAL_CONFIG.style.chart.labels.startLabels.color"
-                        :font-size="FINAL_CONFIG.style.chart.labels.startLabels.fontSize"
-                        text-anchor="middle"
-                        
-                    >
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.labels.formatter,
-                            plot.start,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.labels.prefix,
-                                v: plot.start,
-                                s: FINAL_CONFIG.style.chart.labels.suffix,
-                                r: FINAL_CONFIG.style.chart.labels.startLabels.rounding
-                            }),
-                            { datapoint: plot, seriesIndex: i }
-                            )
-                        }}
-                    </text>
-                </g>
-                <!-- END LABELS -->
-                <g v-if="FINAL_CONFIG.style.chart.labels.endLabels.show">
-                    <text
-                        v-for="(plot, i) in mutableDataset"
-                        :x="plot.endX"
-                        :y="drawingArea.top + (i * baseRowHeight) + FINAL_CONFIG.style.chart.labels.endLabels.fontSize + FINAL_CONFIG.style.chart.labels.endLabels.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.labels.endLabels.useEndColor ? FINAL_CONFIG.style.chart.plots.endColor : FINAL_CONFIG.style.chart.labels.endLabels.color"
-                        :font-size="FINAL_CONFIG.style.chart.labels.endLabels.fontSize"
-                        text-anchor="middle"
-                        
-                    >
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.labels.formatter,
-                            plot.end,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.labels.prefix,
-                                v: plot.end,
-                                s: FINAL_CONFIG.style.chart.labels.suffix,
-                                r: FINAL_CONFIG.style.chart.labels.endLabels.rounding
-                            }),
-                            { datapoint: plot, seriesIndex: i }
-                            )
-                        }}
-                    </text>
-                </g>
+            </g>
+            <!-- START LABELS -->
+            <g v-if="FINAL_CONFIG.style.chart.labels.startLabels.show">
+                <text
+                    data-cy="datapoint-label-start"
+                    v-for="(plot, i) in mutableDataset"
+                    :x="plot.startX"
+                    :y="drawingArea.top + ((i + 1) * baseRowHeight) - (FINAL_CONFIG.style.chart.labels.startLabels.fontSize / 3) + FINAL_CONFIG.style.chart.labels.startLabels.offsetY"
+                    :fill="FINAL_CONFIG.style.chart.labels.startLabels.useStartColor ? FINAL_CONFIG.style.chart.plots.startColor : FINAL_CONFIG.style.chart.labels.startLabels.color"
+                    :font-size="FINAL_CONFIG.style.chart.labels.startLabels.fontSize"
+                    text-anchor="middle"
+                    
+                >
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.labels.formatter,
+                        plot.start,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.labels.prefix,
+                            v: plot.start,
+                            s: FINAL_CONFIG.style.chart.labels.suffix,
+                            r: FINAL_CONFIG.style.chart.labels.startLabels.rounding
+                        }),
+                        { datapoint: plot, seriesIndex: i }
+                        )
+                    }}
+                </text>
+            </g>
+            <!-- END LABELS -->
+            <g v-if="FINAL_CONFIG.style.chart.labels.endLabels.show">
+                <text
+                    data-cy="datapoint-label-end"
+                    v-for="(plot, i) in mutableDataset"
+                    :x="plot.endX"
+                    :y="drawingArea.top + (i * baseRowHeight) + FINAL_CONFIG.style.chart.labels.endLabels.fontSize + FINAL_CONFIG.style.chart.labels.endLabels.offsetY"
+                    :fill="FINAL_CONFIG.style.chart.labels.endLabels.useEndColor ? FINAL_CONFIG.style.chart.plots.endColor : FINAL_CONFIG.style.chart.labels.endLabels.color"
+                    :font-size="FINAL_CONFIG.style.chart.labels.endLabels.fontSize"
+                    text-anchor="middle"
+                    
+                >
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.labels.formatter,
+                        plot.end,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.labels.prefix,
+                            v: plot.end,
+                            s: FINAL_CONFIG.style.chart.labels.suffix,
+                            r: FINAL_CONFIG.style.chart.labels.endLabels.rounding
+                        }),
+                        { datapoint: plot, seriesIndex: i }
+                        )
+                    }}
+                </text>
             </g>
             <slot name="svg" :svg="drawingArea"/>
         </svg>
