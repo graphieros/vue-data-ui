@@ -559,7 +559,8 @@ defineExpose({
 
             <!-- PATHS -->
             <g v-for="datapoint in galaxySet">
-                <path 
+                <path
+                    data-cy="datapoint-border"
                     v-if="datapoint.value"
                     :d="datapoint.path"
                     fill="none"
@@ -568,6 +569,7 @@ defineExpose({
                     stroke-linecap="round"                    
                 />
                 <path
+                    data-cy="datapoint-path"
                     v-if="datapoint.value"
                     :d="datapoint.path"
                     fill="none"
@@ -591,6 +593,7 @@ defineExpose({
             <!-- TRAPS -->
             <g v-for="(datapoint, i) in galaxySet">
                 <path
+                    data-cy="tooltip-trap"
                     v-if="datapoint.value"
                     :d="datapoint.path"
                     fill="none"

@@ -162,7 +162,21 @@ export const components = [
     },
     {
         name: "VueUiGalaxy",
-        dataset: [{ name: "S", values: [1] }],
+        dataset: [
+            { name: "S1", values: [1] },
+            { name: "S2", values: [1] },
+            { name: "S3", values: [1] },
+        ],
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-galaxy",
     },
     {
