@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue';
 import pdf from '../pdf';
 import { useNestedProp } from "../useNestedProp";
 import { useConfig } from '../useConfig';
+import { createUid } from '../lib';
 
 // TODO: prevent default on all chart interactions involving mouse movements
 // TODO: find a way to make height of each item fit the content
@@ -21,7 +22,7 @@ const FINAL_CONFIG = computed(() => {
     });
 });
 
-const uid = ref(`vue-ui-dashboard-${Math.random()}`);
+const uid = ref(createUid());
 
 const isLocked = ref(FINAL_CONFIG.value.locked);
 
@@ -59,7 +60,6 @@ function handleInteractionEnd(event) {
         isPaused.value = false;
     }
 }
-
 
 function generatePdf(){
     isPrinting.value = true;
