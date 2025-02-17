@@ -520,6 +520,7 @@ defineExpose({
             </defs>
 
             <line
+                data-cy="circle-links"
                 v-if="FINAL_CONFIG.style.chart.circleLinks.show"
                 v-bind="circlesLink"
                 :stroke="FINAL_CONFIG.style.chart.circleLinks.color"
@@ -535,6 +536,7 @@ defineExpose({
             />
 
             <circle
+                data-cy="datapoint-circle"
                 v-for="({cx, cy, r, fill}, i) in datapoints"
                 v-bind="{ cx, cy, r, fill }"
                 :stroke="FINAL_CONFIG.style.chart.circles.stroke"
@@ -548,6 +550,7 @@ defineExpose({
             />
 
             <text
+                data-cy="datapoint-label"
                 v-for="(datapoint, i) in datapoints"
                 :x="datapoint.cx"
                 :y="datapoint.cy + fontSizes.circles / 3 + FINAL_CONFIG.style.chart.circles.dataLabels.offsetY"
@@ -577,6 +580,7 @@ defineExpose({
             </text>
 
             <polygon
+                data-cy="funnel-area"
                 v-if="FINAL_CONFIG.style.chart.area.show"
                 :points="funnelArea" 
                 :fill="`url(#funnel_area_${uid})`"
@@ -589,6 +593,7 @@ defineExpose({
             />
         
             <rect
+                data-cy="datapoint-bar"
                 v-for="({x, y, height, width, fill}, i) in datapoints"
                 v-bind="{x, y, height, width, fill }"
                 :stroke="FINAL_CONFIG.style.chart.bars.stroke"
@@ -604,6 +609,7 @@ defineExpose({
 
             <g v-for="(datapoint, i) in datapoints">            
                 <text
+                    data-cy="bar-name"
                     :x="datapoint.x + datapoint.width + FINAL_CONFIG.style.chart.bars.dataLabels.name.offsetX + 12"
                     :y="datapoint.cy - fontSizes.names / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.name.offsetY"
                     text-anchor="start"
@@ -620,6 +626,7 @@ defineExpose({
                     {{ datapoint.name }}
                 </text>
                 <text
+                    data-cy="bar-value"
                     :x="datapoint.x + datapoint.width + FINAL_CONFIG.style.chart.bars.dataLabels.value.offsetX + 12"
                     :y="datapoint.cy + fontSizes.values + FINAL_CONFIG.style.chart.bars.dataLabels.value.offsetY"
                     text-anchor="start"

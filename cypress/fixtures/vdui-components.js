@@ -1595,6 +1595,16 @@ export const components = [
                 value: 1520
             },
         ],
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-funnel'
     },
     {
