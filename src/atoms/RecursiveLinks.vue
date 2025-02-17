@@ -4,6 +4,7 @@
       <template v-for="(coordinate, index) in node.polygonPath.coordinates">
         <template v-if="node.ancestor && node.ancestor.polygonPath">
           <line
+            data-cy="recursive-link-wrapper"
             :x1="coordinate.x"
             :y1="coordinate.y"
             :x2="node.ancestor.polygonPath.coordinates[0].x"
@@ -12,6 +13,7 @@
             :stroke-width="node.circleRadius / 1.5"
           />
           <line
+            data-cy="recursive-link"
             :x1="coordinate.x"
             :y1="coordinate.y"
             :x2="node.ancestor.polygonPath.coordinates[0].x"

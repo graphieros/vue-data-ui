@@ -3,6 +3,7 @@
         <template v-if="node.polygonPath && node.polygonPath.coordinates">
             <template v-for="(coordinate) in node.polygonPath.coordinates">
                 <text
+                    data-cy="recursive-label"
                     :x="coordinate.x" 
                     :y="coordinate.y + node.circleRadius *2" 
                     :fill="color"
