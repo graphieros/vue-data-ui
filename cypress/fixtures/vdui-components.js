@@ -127,7 +127,12 @@ export const components = [
         dataset: [],
         wrapperClass: ".vue-ui-dashboard-container",
     },
-    { name: "VueUiDigits", dataset: 99, wrapperClass: ".vue-ui-digits" },
+    { name: "VueUiDigits", dataset: 99, config: {
+        digits: {
+            color: '#000000',
+            skeletonColor: '#CCCCCC'
+        }
+    }, wrapperClass: ".vue-ui-digits" },
     {
         name: "VueUiDonut",
         dataset: [{ name: "S", values: [1] }],

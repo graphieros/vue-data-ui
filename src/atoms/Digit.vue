@@ -60,25 +60,24 @@ const digit = computed(() => {
 </script>
 
 <template>
-    <g v-if="![undefined, null, '.'].includes(quanta)">
+    <g v-if="![undefined, null, '.'].includes(quanta)" data-cy="digit">
         <!-- BACKGROUND -->
-
         <!-- a -->
-        <path :d="`M ${x} ${y} L ${x+2} ${y-2} L ${x+24} ${y-2} L ${x+26} ${y} L ${x+24} ${y+2} L ${x+2} ${y+2}Z`" :fill="digit[0] == 1 ? color : backgroundColor" stroke="none"/>
+        <path data-cy="digit-a" :d="`M ${x} ${y} L ${x+2} ${y-2} L ${x+24} ${y-2} L ${x+26} ${y} L ${x+24} ${y+2} L ${x+2} ${y+2}Z`" :fill="digit[0] == 1 ? color : backgroundColor" stroke="none"/>
         <!-- b -->
-        <path :d="`M ${x+26} ${y+26} L ${x+26} ${y+4} L ${x+28} ${y+2} L ${x+30} ${y+4} L ${x+30} ${y+26} L ${x+28} ${y+28} L ${x+26} ${y+26}`" :fill="digit[1] == 1 ? color: backgroundColor" stroke="none"/>
+        <path data-cy="digit-b" :d="`M ${x+26} ${y+26} L ${x+26} ${y+4} L ${x+28} ${y+2} L ${x+30} ${y+4} L ${x+30} ${y+26} L ${x+28} ${y+28} L ${x+26} ${y+26}`" :fill="digit[1] == 1 ? color: backgroundColor" stroke="none"/>
         <!-- c -->
-        <path :d="`M ${x+26} ${y+56} L ${x+26} ${y+34} L ${x+28} ${y+32} L ${x+30} ${y+34} L ${x+30} ${y+56} L ${x+28} ${y+58} L ${x+26} ${y+56}`" :fill="digit[2] == 1 ? color : backgroundColor" stroke="none"/>
+        <path data-cy="digit-c" :d="`M ${x+26} ${y+56} L ${x+26} ${y+34} L ${x+28} ${y+32} L ${x+30} ${y+34} L ${x+30} ${y+56} L ${x+28} ${y+58} L ${x+26} ${y+56}`" :fill="digit[2] == 1 ? color : backgroundColor" stroke="none"/>
         <!-- d -->
-        <path :d="`M ${x+2} ${y+58} L ${x} ${y+60} L ${x+2} ${y+62} L ${x+24} ${y+62} L ${x+26} ${y+60} L ${x+24} ${y+58} L ${x+2} ${y+58}`" :fill="digit[3] == 1 ? color : backgroundColor" stroke="none"/>
+        <path data-cy="digit-d" :d="`M ${x+2} ${y+58} L ${x} ${y+60} L ${x+2} ${y+62} L ${x+24} ${y+62} L ${x+26} ${y+60} L ${x+24} ${y+58} L ${x+2} ${y+58}`" :fill="digit[3] == 1 ? color : backgroundColor" stroke="none"/>
         <!-- e -->
-        <path :d="`M ${x} ${y+34} L ${x-2} ${y+32} L ${x-4} ${y+34} L ${x-4} ${y+56} L ${x-2} ${y+58} L ${x} ${y+56} L ${x} ${y+34}`" :fill="digit[4] == 1 ? color : backgroundColor" stroke="none"/>
+        <path data-cy="digit-e" :d="`M ${x} ${y+34} L ${x-2} ${y+32} L ${x-4} ${y+34} L ${x-4} ${y+56} L ${x-2} ${y+58} L ${x} ${y+56} L ${x} ${y+34}`" :fill="digit[4] == 1 ? color : backgroundColor" stroke="none"/>
         <!-- f -->
-        <path :d="`M ${x-2} ${y+2} L ${x} ${y+4} L ${x} ${y+26} L ${x-2} ${y+28} L ${x-4} ${y+26} L ${x-4} ${y+4} L ${x-2} ${y+2}`" :fill="digit[5] == 1 ? color : backgroundColor" stroke="none"/>
+        <path data-cy="digit-f" :d="`M ${x-2} ${y+2} L ${x} ${y+4} L ${x} ${y+26} L ${x-2} ${y+28} L ${x-4} ${y+26} L ${x-4} ${y+4} L ${x-2} ${y+2}`" :fill="digit[5] == 1 ? color : backgroundColor" stroke="none"/>
         <!-- g -->
-        <path :d="`M ${x+2} ${y+28} L ${x} ${y+30} L ${x+2} ${y+32} L ${x+24} ${y+32} L ${x+26} ${y+30} L ${x+24} ${y+28} L ${x+2} ${y+28}`" :fill="digit[6] == 1 ? color : backgroundColor" stroke="none"/>
+        <path data-cy="digit-g" :d="`M ${x+2} ${y+28} L ${x} ${y+30} L ${x+2} ${y+32} L ${x+24} ${y+32} L ${x+26} ${y+30} L ${x+24} ${y+28} L ${x+2} ${y+28}`" :fill="digit[6] == 1 ? color : backgroundColor" stroke="none"/>
     </g>
     <g v-if="quanta == '.'">
-        <circle :cx="x - 8" :cy="y + 60" :r="3" :fill="color"/>
+        <circle data-cy="digit-decimal" :cx="x - 8" :cy="y + 60" :r="3" :fill="color"/>
     </g>
 </template>
