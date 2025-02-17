@@ -1356,6 +1356,16 @@ export const components = [
             { name: 'Norway', start: 5400, end: 6050 },
             { name: 'Ireland', start: 3000, end: 2000 }
         ],
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-dumbbell'
     },
     {
