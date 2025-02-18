@@ -271,7 +271,7 @@ const isInfo = ref({
         <div tabindex="0" :title="isOpen ? titles.close || '' : titles.open || ''" data-cy="user-options-summary" :style="`width:32px; position: absolute; top: 0;${position === 'right' ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:transparent`" @click.stop="toggle" @keypress.enter="toggle">
             <BaseIcon  :name="isOpen ? 'close' : 'menu'" :stroke="color" :stroke-width="2" />
         </div>
-        <div data-cy="user-options-drawer" :data-open="isOpen" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}; ${position === 'right' ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}`">
+        <div :data-open="isOpen" data-cy="user-options-drawer" :class="{'vue-ui-user-options-drawer': true}" :style="`background:${backgroundColor}; ${position === 'right' ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}`">
 
             <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
                 <template v-if="$slots.optionTooltip">
@@ -427,9 +427,8 @@ const isInfo = ref({
     display: flex;
     flex-direction: column;
     gap: 4px;
-    animation: show-user-options 125ms ease-in  forwards;
+    animation: show-user-options 125ms ease-in forwards;
     transform-origin: top;
-    opacity:0;
     border-radius: 0 0 3px 3px;
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.3);
 }
@@ -500,6 +499,7 @@ const isInfo = ref({
 }
 .button-info-right-visible {
     animation: showInfoRight 0.2s ease-in forwards;
+    opacity: 1;
 }
 
 .button-info-left {
@@ -509,6 +509,7 @@ const isInfo = ref({
 
 .button-info-left-visible {
     animation: showInfoLeft 0.2s ease-in forwards;
+    opacity: 1;
 }
 
 @keyframes showInfoRight {

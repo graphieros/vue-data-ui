@@ -372,6 +372,7 @@ defineExpose({
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="moodRadarChart"
             :position="FINAL_CONFIG.userOptions.position"
@@ -436,52 +437,66 @@ defineExpose({
 
             <!-- GRID -->
             <!-- RADIAL LINES -->
-            <line v-for="line in outerPolygon.coordinates" :x1="svg.width / 2" :y1="svg.height / 2" :x2="line.x"
+            <line
+                data-cy="grid-radial" 
+                v-for="line in outerPolygon.coordinates" :x1="svg.width / 2" :y1="svg.height / 2" :x2="line.x"
                 :y2="line.y" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" />
             <!-- OUTER POLYGON -->
-            <path :d="outerPolygon.path" fill="none" :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke"
+            <path
+                data-cy="grid-polygon" 
+                :d="outerPolygon.path" fill="none" :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" stroke-linejoin="round"
                 stroke-linecap="round" />
 
 
             <!-- ICON 5 -->
-            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['5']" stroke-width="1"
+            <path
+                data-cy="icon-5" 
+                fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['5']" stroke-width="1"
                 stroke-linecap="round"
                 d="M119 25A1 1 0 00137 25 1 1 0 00119 25M123 26C124 33 132 33 133 26L123 26M123 22A1 1 0 00126 22 1 1 0 00123 22M130 22A1 1 0 00133 22 1 1 0 00130 22" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 5" @mouseleave="selectedKey = null" cx="128" cy="25" r="20" :fill="selectedKey === 5 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['5'], 20) : 'transparent'"/>
+                <circle data-cy="trap-5" class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 5" @mouseleave="selectedKey = null" cx="128" cy="25" r="20" :fill="selectedKey === 5 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['5'], 20) : 'transparent'"/>
 
             <!-- ICON 4 -->
-            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['4']" stroke-width="1"
+            <path
+                data-cy="icon-4" 
+                fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['4']" stroke-width="1"
                 stroke-linecap="round"
                 d="M218 95A1 1 0 00236 95 1 1 0 00218 95M222 97C225 99 229 99 232 97M222 92A1 1 0 00225 92 1 1 0 00222 92M229 92A1 1 0 00232 92 1 1 0 00229 92" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 4" @mouseleave="selectedKey = null"  cx="227" cy="95.5" r="20" :fill="selectedKey === 4 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['4'], 20) : 'transparent'"/>
+                <circle data-cy="trap-4" class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 4" @mouseleave="selectedKey = null"  cx="227" cy="95.5" r="20" :fill="selectedKey === 4 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['4'], 20) : 'transparent'"/>
 
             <!-- ICON 3 -->
-            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['3']" stroke-width="1"
+            <path
+                data-cy="icon-3" 
+                fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['3']" stroke-width="1"
                 stroke-linecap="round"
                 d="M181 213A1 1 0 00199 213 1 1 0 00181 213M185 210A1 1 0 00188 210 1 1 0 00185 210M192 210A1 1 0 00195 210 1 1 0 00192 210M185 215 195 215" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 3" @mouseleave="selectedKey = null"  cx="190" cy="213.5" r="20" :fill="selectedKey === 3 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['3'], 20) : 'transparent'"/>
+                <circle data-cy="trap-3" class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 3" @mouseleave="selectedKey = null"  cx="190" cy="213.5" r="20" :fill="selectedKey === 3 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['3'], 20) : 'transparent'"/>
 
 
             <!-- ICON 2 -->
-            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['2']" stroke-width="1"
+            <path
+                data-cy="icon-2" 
+                fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['2']" stroke-width="1"
                 stroke-linecap="round"
                 d="M56 213A1 1 0 0074 213 1 1 0 0056 213M60 216C63 214 67 214 70 216M60 210A1 1 0 0063 210 1 1 0 0060 210M67 210A1 1 0 0070 210 1 1 0 0067 210" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 2" @mouseleave="selectedKey = null"  cx="65" cy="213.5" r="20" :fill="selectedKey === 2 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['2'], 20) :  'transparent'"/>
+                <circle data-cy="trap-2" class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 2" @mouseleave="selectedKey = null"  cx="65" cy="213.5" r="20" :fill="selectedKey === 2 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['2'], 20) :  'transparent'"/>
 
             <!-- ICON 1 -->
-            <path fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['1']" stroke-width="1"
+            <path
+                data-cy="icon-1"
+                fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['1']" stroke-width="1"
                 stroke-linecap="round"
                 d="M20 96A1 1 0 0038 96 1 1 0 0020 96M24 100C25 95 33 95 34 100L24 100M24 93A1 1 0 0027 93 1 1 0 0024 93M31 93A1 1 0 0034 93 1 1 0 0031 93" />
                 <!-- TRAP -->
-                <circle class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 1" @mouseleave="selectedKey = null"  cx="29" cy="95.5" r="20" :fill="selectedKey === 1 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['1'], 20) : 'transparent'"/>
+                <circle data-cy="trap-1" class="vue-ui-mood-radar-trap" @mouseenter="selectedKey = 1" @mouseleave="selectedKey = null"  cx="29" cy="95.5" r="20" :fill="selectedKey === 1 ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['1'], 20) : 'transparent'"/>
 
-            <path :d="makePath(radar.map((r) => r.plots))" :stroke="FINAL_CONFIG.style.chart.layout.dataPolygon.stroke"
+            <path data-cy="datapoint-polygon" :d="makePath(radar.map((r) => r.plots))" :stroke="FINAL_CONFIG.style.chart.layout.dataPolygon.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth" stroke-linecap="round"
                 stroke-linejoin="round" :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.gradient.show
                         ? `url(#mood_radar_gradient_${uid})`
@@ -489,17 +504,17 @@ defineExpose({
 
                 <g v-for="(plot, i) in radar.map(r => r.plots)" class="vue-ui-mood-radar-trap" :style="`opacity:${selectedKey == plot.key ? '1' : '0'}`">
                     <line 
-
+                        data-cy="datapoint-selection-line"
                         :x1="plot.x"
                         :y1="plot.y"
                         :x2="128"
                         :y2="128"
                         :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]"
                     />
-                    <circle  :cx="plot.x" :cy="plot.y" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
-                    <circle  :cx="128" :cy="128" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
+                    <circle data-cy="datapoint-selection-circle" :cx="plot.x" :cy="plot.y" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
+                    <circle data-cy="datapoint-selection-circle"  :cx="128" :cy="128" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
                     <text 
-
+                        data-cy="label-value"
                         :x="128"
                         :y="['5', 5].includes(plot.key) ? 145 : 120"
                         :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"
@@ -521,7 +536,7 @@ defineExpose({
                         }}
                     </text>
                     <text 
-
+                        data-cy="label-percentage"
                         :x="128"
                         :y="['5', 5].includes(plot.key) ? 163 : 102"
                         :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"

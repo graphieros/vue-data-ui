@@ -390,6 +390,16 @@ export const components = [
             4: 256,
             5: 384,
         },
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-mood-radar",
     },
     {
