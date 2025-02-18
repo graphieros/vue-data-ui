@@ -254,10 +254,10 @@ function createDatapointCoordinates({ hasAutoScale, series, min, max, scale, yOf
         let autoScalePtoMax;
 
         if (hasAutoScale) {
-            autoScaleMin = Math.abs(scale.min);
-            autoScalePtoMax = proportionToMax(s + autoScaleMin, scale.max + autoScaleMin)
+            autoScaleMin = scale.min;
+            autoScalePtoMax = proportionToMax(s - autoScaleMin, scale.max - autoScaleMin)
         }
-
+        
         let y = 0;
 
         if (stackIndex === null) {
@@ -362,6 +362,7 @@ const formattedDataset = computed(() => {
             }
 
             const autoScaledRatios = ds.series.filter(v => ![null, undefined].includes(v)).map(v => (v - min) / (max - min));
+            
             const autoScale = {
                 ratios: autoScaledRatios,
                 valueMin: min,
