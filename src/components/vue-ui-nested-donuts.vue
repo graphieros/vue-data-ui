@@ -889,6 +889,7 @@ defineExpose({
             <g v-for="(item, i) in donuts">
                 <g v-for="(arc, j) in item.donut">
                     <path
+                        data-cy="datapoint-arc"
                         class="vue-ui-donut-arc-path"
                         :d="arc.arcSlice" 
                         :fill="setOpacity(arc.color, 80)"
@@ -902,6 +903,7 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.chart.useGradient">
                 <g v-for="(gradient, i) in gradientSets">
                     <path
+                        data-cy="donut-gradient"
                         :d="gradient.donut.arcSlice"
                         :fill="`url(#radial_${uid}_${i})`"
                         stroke="transparent"
@@ -914,6 +916,7 @@ defineExpose({
                 <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut">    
                         <text
+                            data-cy="datapoint-name"
                             :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
                             v-if="j === 0 && svg.width && svg.height"
                             :x="svg.width / 2"
@@ -934,6 +937,7 @@ defineExpose({
                 <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut" :filter="getBlurFilter(arc, j)">
                         <text
+                            data-cy="datapoint-percentage"
                             :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
@@ -946,6 +950,7 @@ defineExpose({
                             {{ dataLabel({ v: arc.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingPercentage }) }}
                         </text>
                         <text
+                            data-cy="datapoint-value"
                             :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
@@ -997,7 +1002,7 @@ defineExpose({
             <g v-for="(item, i) in donuts">
                 <g v-for="(arc, j) in item.donut">
                     <path 
-                        data-cy-donut-trap
+                        data-cy="tooltip-trap"
                         :d="arc.arcSlice" 
                         :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
                         @mouseenter="useTooltip({
