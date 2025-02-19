@@ -924,8 +924,7 @@ function drawTimeLabels() {
     }
 }
 
-function drawSelector() {
-    // vertical selector
+function drawVerticalSelector() {
     line(
         ctx.value,
         [
@@ -939,9 +938,11 @@ function drawSelector() {
             linceCap: 'round'
         }
     );
+}
 
-    // horizontal selector
-        line(
+function drawHorizontalSelector() {
+    if (!mouseY.value) return;
+    line(
             ctx.value,
             [
                 { x: drawingArea.value.left, y: mouseY.value },
@@ -1101,11 +1102,10 @@ function drawXBaseLineStacked() {
 
 function draw() {
     setupChart();
+
     if (datasetHasChanged.value) {
 
-        if (tooltipHasChanged.value) {
-            (tooltipIndex.value !== null && FINAL_CONFIG.value.style.chart.selector.show) && drawSelector();
-        }
+        (tooltipIndex.value !== null && FINAL_CONFIG.value.style.chart.selector.show) && drawVerticalSelector();
 
         drawBars();
 
@@ -1131,12 +1131,10 @@ function draw() {
             ctx.value.drawImage(clonedCanvas.value, 0, 0)
         }
 
-        if (tooltipHasChanged.value) {
-            (tooltipIndex.value !== null && FINAL_CONFIG.value.style.chart.selector.show) && drawSelector();
-        }
+        (tooltipIndex.value !== null && FINAL_CONFIG.value.style.chart.selector.show) && drawVerticalSelector();
 
         // PLOT HIGHLIGHTS
-        if (tooltipHasChanged.value && tooltipIndex.value !== null) {
+        if (tooltipIndex.value !== null) {
             formattedDataset.value.forEach(ds => {
                 if (((ds.type === 'line' || !ds.type)) || ds.type === 'plot') {
                     if(!ds.coordinatesLine[tooltipIndex.value]) return
@@ -1162,6 +1160,7 @@ function draw() {
 
     // TIME LABELS
     FINAL_CONFIG.value.style.chart.grid.y.timeLabels.show && drawTimeLabels();
+    FINAL_CONFIG.value.style.chart.selector.show && drawHorizontalSelector();
     datasetHasChanged.value = false;
 }
 
@@ -1175,6 +1174,13 @@ function handleMousemove(e) {
     const { left, top } = canvas.value.getBoundingClientRect()
     const mouseX = e.clientX - left;
     mouseY.value = (e.clientY - top) * 2;
+
+    if (
+        mouseY.value < drawingArea.value.top || 
+        mouseY.value > drawingArea.value.bottom
+    ) {
+        mouseY.value = null;
+    }
 
     if ((mouseX * 2) < drawingArea.value.left || (mouseX * 2) > drawingArea.value.right) {
         isTooltip.value = false;
@@ -1246,6 +1252,12 @@ watch(() => mutableConfig.value.showDataLabels, (_) => {
     draw()
 });
 
+watch(() => mouseY.value, (newVal) => {
+    if (newVal) {
+        draw();
+    }
+})
+
 watch(() => mutableConfig.value.stacked, (_) => {
     datasetHasChanged.value = true;
     tooltipHasChanged.value = true;
@@ -1256,6 +1268,8 @@ function handleMouseLeave() {
     isTooltip.value = false;
     tooltipIndex.value = null;
     tooltipContent.value = '';
+    mouseY.value = null;
+    draw();
 }
 
 const responsiveObserver = ref(null);
