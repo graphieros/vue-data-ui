@@ -687,6 +687,7 @@ defineExpose({
             <g v-for="(scale, i) in scales" style="pointer-events: none;">
                 <!-- AXIS -->
                 <line
+                    data-cy="pcp-axis"
                     :x1="drawingArea.left + (slot * i) + (slot / 2)"
                     :x2="drawingArea.left + (slot * i) + (slot / 2)"
                     :y1="drawingArea.top"
@@ -697,6 +698,7 @@ defineExpose({
 
                 <!-- AXIS NAMES -->
                 <text
+                    data-cy="pcp-axis-label"
                     :x="drawingArea.left + (slot * i) + (slot / 2)"
                     :y="drawingArea.top - 24"
                     :fill="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor"
@@ -711,6 +713,7 @@ defineExpose({
                 <template v-if="FINAL_CONFIG.style.chart.yAxis.labels.ticks.show">                
                     <!-- TICKS -->
                     <line v-for="tick in scale.ticks"
+                        data-cy="scale-tick"
                         :x1="tick.x"
                         :x2="tick.x - 10"
                         :y1="tick.y"
@@ -722,6 +725,7 @@ defineExpose({
                     
                     <!-- TICK LABELS -->
                     <text 
+                        data-cy="scale-label"
                         v-for="(tick) in scale.ticks"
                         :x="tick.x - 12 + FINAL_CONFIG.style.chart.yAxis.labels.ticks.offsetX"
                         :y="tick.y + FINAL_CONFIG.style.chart.yAxis.labels.ticks.offsetY + (chartDimensions.ticksFontSize / 3)"
@@ -787,7 +791,8 @@ defineExpose({
 
                     <!-- LABELS -->
                     <template v-if="mutableConfig.dataLabels.show || (selectedItem && selectedItem === serieSet.id)">
-                        <text 
+                        <text
+                            data-cy="plot-label"
                             v-for="(dp, k) in serieSet.datapoints"
                             :x="dp.x + 12 + FINAL_CONFIG.style.chart.yAxis.labels.datapoints.offsetX"
                             :y="dp.y + FINAL_CONFIG.style.chart.yAxis.labels.datapoints.offsetY + (chartDimensions.datapointFontSize / 3)"
@@ -811,7 +816,8 @@ defineExpose({
                     </template>
 
                     <!-- LINES -->
-                    <path 
+                    <path
+                        data-cy="datapoint-line"
                         :d="`M${FINAL_CONFIG.style.chart.lines.smooth ? serieSet.smoothPath : serieSet.straightPath}`" 
                         :stroke="serie.color" 
                         :stroke-width="FINAL_CONFIG.style.chart.lines.strokeWidth"
@@ -829,6 +835,7 @@ defineExpose({
                     />
                     <!-- TOOLTIP TRAPS -->
                     <path
+                        data-cy="tooltip-trap"
                         v-if="mutableConfig.showTooltip"
                         :d="`M${FINAL_CONFIG.style.chart.lines.smooth ? serieSet.smoothPath : serieSet.straightPath}`" 
                         stroke="transparent" 

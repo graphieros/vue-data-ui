@@ -82,7 +82,7 @@ const d = computed(() => {
 </script>
 
 <template>
-    <g> 
+    <g data-cy="atom-shape"> 
         <circle
             v-if="config && config.points === 1"
             :cx="plot.x"
