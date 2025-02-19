@@ -5573,6 +5573,7 @@ declare module "vue-data-ui" {
                             color?: string;
                             showOnlyAtModulo?: boolean;
                             modulo?: number;
+                            showMarker?: boolean;
                         };
                     };
                     x?: {

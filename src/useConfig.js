@@ -3684,6 +3684,7 @@ export function useConfig() {
                         },
                         timeLabels: {
                             show: true,
+                            showMarker: true,
                             fontSizeRatio: 0.8,
                             values: [],
                             rotation: 0,
