@@ -99,6 +99,7 @@ const source = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
+const mouseY = ref(null);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -257,7 +258,7 @@ function createDatapointCoordinates({ hasAutoScale, series, min, max, scale, yOf
             autoScaleMin = scale.min;
             autoScalePtoMax = proportionToMax(s - autoScaleMin, scale.max - autoScaleMin)
         }
-        
+
         let y = 0;
 
         if (stackIndex === null) {
@@ -924,6 +925,7 @@ function drawTimeLabels() {
 }
 
 function drawSelector() {
+    // vertical selector
     line(
         ctx.value,
         [
@@ -937,6 +939,21 @@ function drawSelector() {
             linceCap: 'round'
         }
     );
+
+    // horizontal selector
+        line(
+            ctx.value,
+            [
+                { x: drawingArea.value.left, y: mouseY.value },
+                { x: drawingArea.value.right, y: mouseY.value },
+            ],
+            {
+                color: FINAL_CONFIG.value.style.chart.selector.color,
+                lineDash: FINAL_CONFIG.value.style.chart.selector.dashed ? [8, 8] : [0, 0],
+                lineWidth: 2,
+                linceCap: 'round'
+            }
+        )
 }
 
 function drawBars() {
@@ -1155,8 +1172,9 @@ const debounceCanvasResize = debounce(() => {
 
 function handleMousemove(e) {
     
-    const { left } = canvas.value.getBoundingClientRect()
+    const { left, top } = canvas.value.getBoundingClientRect()
     const mouseX = e.clientX - left;
+    mouseY.value = (e.clientY - top) * 2;
 
     if ((mouseX * 2) < drawingArea.value.left || (mouseX * 2) > drawingArea.value.right) {
         isTooltip.value = false;
