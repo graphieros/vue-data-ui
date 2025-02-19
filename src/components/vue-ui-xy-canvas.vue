@@ -625,33 +625,6 @@ function setupChart() {
                 }
             );
         }
-
-        // AXES LABELS
-        // if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
-        //     absoluteExtremes.value.yLabels.forEach((label, i) => {
-        //         text(
-        //             ctx.value,
-        //             applyDataLabel(
-        //                 FINAL_CONFIG.value.style.chart.dataLabels.formatter,
-        //                 label.value,
-        //                 dataLabel({
-        //                     p: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
-        //                     v: label.value,
-        //                     s: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
-        //                     r: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
-        //                 }),
-        //                 { datapoint: label, seriesIndex: i }
-        //             ),
-        //             label.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
-        //             label.y,
-        //             {
-        //                 align: 'right',
-        //                 font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-        //                 color: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.color
-        //             }
-        //         );
-        //     });
-        // }
     } else {
         // STACKED
         // VERTICAL LINES
@@ -786,32 +759,6 @@ function setupChart() {
                         color: ds.color
                     }
                 );
-
-                // ds.localYLabels.forEach((entry, i) => {
-                //     text(
-                //         ctx.value,
-                //         applyDataLabel(
-                //             FINAL_CONFIG.value.style.chart.dataLabels.formatter,
-                //             entry.value,
-                //             dataLabel({
-                //                 p: ds.prefix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
-                //                 v: entry.value,
-                //                 s: ds.suffix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
-                //                 r: ds.rounding || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
-                //             }),
-                //             { datapoint: entry, seriesIndex: i}
-                //             ),
-                //         entry.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
-                //         entry.y,
-                //         {
-                //             align: 'right',
-                //             font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                //             color: ds.color,
-                //             globalAlpha: ds.showYMarker && ![null, undefined].includes(tooltipIndex.value) ? 0.3 : 1
-                //         }
-                //     );
-                // });
-
             });
         }
 
