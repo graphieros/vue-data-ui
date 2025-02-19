@@ -998,7 +998,11 @@ function drawDataLabels(ds) {
 
 function drawTimeLabels() {
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
-        if ((slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo || ((slicer.value.end - slicer.value.start) >= FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo && (i % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo) === 0 || i === (tooltipIndex.value + slicer.value.start)))) {
+        if (
+            (slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo || 
+            ((slicer.value.end - slicer.value.start) >= FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo && (i % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo) === 0 ||
+            (i === (tooltipIndex.value + slicer.value.start)) && FINAL_CONFIG.value.style.chart.grid.y.timeLabels.showMarker ))) 
+        {
             text(
                 ctx.value,
                 FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values[i] || i + 1,
@@ -1007,7 +1011,7 @@ function drawTimeLabels() {
                 {
                     align: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation === 0 ? 'center' : FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation > 0 ? 'left' : 'right',
                     font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.timeLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                    color: setOpacity(FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color, tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100),
+                    color: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.showMarker ? setOpacity(FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color, tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100) : FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color,
                     rotation: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation,
                 }
             );
