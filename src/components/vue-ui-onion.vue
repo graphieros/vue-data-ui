@@ -614,7 +614,7 @@ defineExpose({
             <!-- GUTTERS -->
             <circle 
                 v-for="(onion, i) in mutableDataset" 
-                :data-cy="`onion-track-${i}`"
+                data-cy="onion-gutter"
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
                 :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
@@ -630,6 +630,7 @@ defineExpose({
             
             <!-- TRACKS -->
             <circle 
+                data-cy="onion-track"
                 v-for="(onion, i) in mutableDataset" 
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
@@ -653,6 +654,7 @@ defineExpose({
 
             <g :filter="`url(#blur_${uid})`" v-if="FINAL_CONFIG.style.chart.useGradient">
                 <circle
+                    data-cy="onion-gradient"
                     v-for="(onion, i) in mutableDataset" 
                     :cx="drawableArea.centerX" 
                     :cy="drawableArea.centerY" 
@@ -670,7 +672,7 @@ defineExpose({
             <!-- TOOLTIP TRAPS -->
             <circle 
                 v-for="(onion, i) in mutableDataset" 
-                data-cy-trap
+                data-cy="tooltip-trap"
                 :data-cy="`onion-track-${i}`"
                 :cx="drawableArea.centerX" 
                 :cy="drawableArea.centerY" 
@@ -703,6 +705,7 @@ defineExpose({
                     @mouseleave="selectedSerie = undefined; isTooltip = false"
                 >                
                     <text
+                        data-cy="onion-label"
                         v-if="!segregated.includes(onion.id)"
                         :x="svg.width / 2 - onionSkin.gutter * 0.8 + FINAL_CONFIG.style.chart.layout.labels.offsetX"
                         :y="onion.labelY + FINAL_CONFIG.style.chart.layout.labels.offsetY"
