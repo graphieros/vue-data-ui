@@ -5486,6 +5486,7 @@ declare module "vue-data-ui" {
         autoScaling?: boolean;
         scaleMin?: number | null;
         scaleMax?: number | null;
+        showYMarker?: boolean;
     };
 
     export type VueUiXyCanvasConfig = {
@@ -5514,6 +5515,7 @@ declare module "vue-data-ui" {
                     show?: boolean;
                     color?: string;
                     dashed?: boolean;
+                    showHorizontalSelector?: boolean;
                 };
                 tooltip?: {
                     show?: boolean;
@@ -5562,7 +5564,7 @@ declare module "vue-data-ui" {
                             hideUnderXLength?: number;
                             position?: "start" | "middle";
                         };
-                        timeLabels?: {
+                        timeLabels?: { // Oversight! TODO: in v3 move to x (breaking change)
                             show?: boolean;
                             fontSizeRatio?: number;
                             values?: Array<string | number>;
