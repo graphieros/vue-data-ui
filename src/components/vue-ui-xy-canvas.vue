@@ -627,31 +627,31 @@ function setupChart() {
         }
 
         // AXES LABELS
-        if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
-            absoluteExtremes.value.yLabels.forEach((label, i) => {
-                text(
-                    ctx.value,
-                    applyDataLabel(
-                        FINAL_CONFIG.value.style.chart.dataLabels.formatter,
-                        label.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
-                            v: label.value,
-                            s: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
-                            r: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
-                        }),
-                        { datapoint: label, seriesIndex: i }
-                    ),
-                    label.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
-                    label.y,
-                    {
-                        align: 'right',
-                        font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                        color: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.color
-                    }
-                );
-            });
-        }
+        // if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
+        //     absoluteExtremes.value.yLabels.forEach((label, i) => {
+        //         text(
+        //             ctx.value,
+        //             applyDataLabel(
+        //                 FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+        //                 label.value,
+        //                 dataLabel({
+        //                     p: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
+        //                     v: label.value,
+        //                     s: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
+        //                     r: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
+        //                 }),
+        //                 { datapoint: label, seriesIndex: i }
+        //             ),
+        //             label.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
+        //             label.y,
+        //             {
+        //                 align: 'right',
+        //                 font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+        //                 color: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.color
+        //             }
+        //         );
+        //     });
+        // }
     } else {
         // STACKED
         // VERTICAL LINES
@@ -787,29 +787,31 @@ function setupChart() {
                     }
                 );
 
-                ds.localYLabels.forEach((entry, i) => {
-                    text(
-                        ctx.value,
-                        applyDataLabel(
-                            FINAL_CONFIG.value.style.chart.dataLabels.formatter,
-                            entry.value,
-                            dataLabel({
-                                p: ds.prefix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
-                                v: entry.value,
-                                s: ds.suffix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
-                                r: ds.rounding || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
-                            }),
-                            { datapoint: entry, seriesIndex: i}
-                            ),
-                        entry.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
-                        entry.y,
-                        {
-                            align: 'right',
-                            font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                            color: ds.color
-                        }
-                    );
-                });
+                // ds.localYLabels.forEach((entry, i) => {
+                //     text(
+                //         ctx.value,
+                //         applyDataLabel(
+                //             FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                //             entry.value,
+                //             dataLabel({
+                //                 p: ds.prefix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
+                //                 v: entry.value,
+                //                 s: ds.suffix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
+                //                 r: ds.rounding || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
+                //             }),
+                //             { datapoint: entry, seriesIndex: i}
+                //             ),
+                //         entry.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
+                //         entry.y,
+                //         {
+                //             align: 'right',
+                //             font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                //             color: ds.color,
+                //             globalAlpha: ds.showYMarker && ![null, undefined].includes(tooltipIndex.value) ? 0.3 : 1
+                //         }
+                //     );
+                // });
+
             });
         }
 
@@ -874,6 +876,95 @@ function drawPlots(ds) {
                 strokeColor: 'transparent'
             }
         );
+    }
+}
+
+/**
+ * Draw data labels on Y Axis corresponding to the current tooltip data selection.
+ */
+function drawYAxisSelectedDatapoints() {
+    formattedDataset.value.forEach(ds => {
+        if (ds.showYMarker && getYandValueAtIndex(ds)) {
+            text(
+                ctx.value,
+                applyDataLabel(
+                    FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                    getYandValueAtIndex(ds).value,
+                    dataLabel({
+                        p: ds.prefix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
+                        v: getYandValueAtIndex(ds).value,
+                        s: ds.suffix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
+                        r: ds.rounding || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
+                    }),
+                    { datapoint: getYandValueAtIndex(ds), seriesIndex: null}
+                    ),
+                drawingArea.value.left - 8 + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
+                getYandValueAtIndex(ds).y,
+                {
+                    align: 'right',
+                    font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                    color: ds.color
+                }
+            )
+        }
+    })
+}
+
+function drawYAxisScaleLabels() {
+    if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
+        if(!mutableConfig.value.stacked) {
+            absoluteExtremes.value.yLabels.forEach((label, i) => {
+                text(
+                    ctx.value,
+                    applyDataLabel(
+                        FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                        label.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
+                            v: label.value,
+                            s: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
+                            r: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
+                        }),
+                        { datapoint: label, seriesIndex: i }
+                    ),
+                    label.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
+                    label.y,
+                    {
+                        align: 'right',
+                        font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                        color: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.color,
+                        globalAlpha: formattedDataset.value.some(ds => ds.showYMarker) && ![null, undefined].includes(tooltipIndex.value) ? 0.2 : 1
+                    }
+                );
+            });
+        } else {
+            formattedDataset.value.forEach(ds => {
+                ds.localYLabels.forEach((entry, i) => {
+                    text(
+                        ctx.value,
+                        applyDataLabel(
+                            FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                            entry.value,
+                            dataLabel({
+                                p: ds.prefix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.prefix || '',
+                                v: entry.value,
+                                s: ds.suffix || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.suffix || '',
+                                r: ds.rounding || FINAL_CONFIG.value.style.chart.grid.y.axisLabels.rounding || 0
+                            }),
+                            { datapoint: entry, seriesIndex: i}
+                            ),
+                        entry.x + FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
+                        entry.y,
+                        {
+                            align: 'right',
+                            font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                            color: ds.color,
+                            globalAlpha: ds.showYMarker && ![null, undefined].includes(tooltipIndex.value) ? 0.2 : 1
+                        }
+                    );
+                });
+            });
+        }
     }
 }
 
@@ -1102,7 +1193,6 @@ function drawXBaseLineStacked() {
 
 function draw() {
     setupChart();
-
     if (datasetHasChanged.value) {
 
         (tooltipIndex.value !== null && FINAL_CONFIG.value.style.chart.selector.show) && drawVerticalSelector();
@@ -1160,7 +1250,11 @@ function draw() {
 
     // TIME LABELS
     FINAL_CONFIG.value.style.chart.grid.y.timeLabels.show && drawTimeLabels();
-    FINAL_CONFIG.value.style.chart.selector.show && drawHorizontalSelector();
+    FINAL_CONFIG.value.style.chart.selector.show && FINAL_CONFIG.value.style.chart.selector.showHorizontalSelector && drawHorizontalSelector();
+
+    drawYAxisScaleLabels();
+    drawYAxisSelectedDatapoints();
+
     datasetHasChanged.value = false;
 }
 
@@ -1169,9 +1263,14 @@ const debounceCanvasResize = debounce(() => {
     resizeCanvas()
 }, maxSeries.value > 200 ? 10 : 1, !tooltipHasChanged.value);
 
+function getYandValueAtIndex(datapoint) {
+    if ([null, undefined].includes(tooltipIndex.value) || !datapoint.coordinatesLine[tooltipIndex.value]) return false;
+    const { y, value } = datapoint.coordinatesLine[tooltipIndex.value];
+    return { y, value };
+}
+
 function handleMousemove(e) {
-    
-    const { left, top } = canvas.value.getBoundingClientRect()
+    const { left, top } = canvas.value.getBoundingClientRect();
     const mouseX = e.clientX - left;
     mouseY.value = (e.clientY - top) * 2;
 

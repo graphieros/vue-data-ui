@@ -383,13 +383,15 @@ export function text(ctx, text, x, y, options = {}) {
         shadowOffsetX = 0,
         shadowOffsetY = 0,
         strokeColor = null,
-        lineWidth = 1
+        lineWidth = 1,
+        globalAlpha = 1
     } = options;
 
     ctx.font = font;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.textBaseline = baseline;
+    ctx.globalAlpha = globalAlpha;
 
     if (shadowColor) {
         ctx.shadowColor = shadowColor;
